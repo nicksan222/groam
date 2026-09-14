@@ -26,11 +26,11 @@ async function main() {
   const [command = 'help', ...extra] = positionals;
   if (values.help || command === 'help') {
     console.info(
-      'Showcase: capture | edit | render [--draft] | all [--draft]\nCapture needs a running, seeded local Groam app. See tooling/showcase/README.md.'
+      'Showcase: capture | edit | preview | render [--draft] | all [--draft]\nCapture needs a running, seeded local Groam app. See tooling/showcase/README.md.'
     );
     return;
   }
-  if (extra.length || !['capture', 'edit', 'render', 'all'].includes(command))
+  if (extra.length || !['capture', 'edit', 'preview', 'render', 'all'].includes(command))
     throw new Error('Unknown command. Run with --help.');
   await mkdir(publicDir, { recursive: true });
   await mkdir(artifactsDir, { recursive: true });
@@ -54,6 +54,11 @@ async function main() {
     const project = projectSchema.parse(JSON.parse(await readFile(projectPath, 'utf8')));
     const { renderProject } = await import('#src/render');
     await renderProject(project, Boolean(values.draft));
+  }
+  if (command === 'preview') {
+    const project = projectSchema.parse(JSON.parse(await readFile(projectPath, 'utf8')));
+    const { renderRepositoryPreview } = await import('#src/render');
+    await renderRepositoryPreview(project);
   }
 }
 

@@ -163,6 +163,10 @@ check:
 codegen:
     CONVEX_AGENT_MODE=anonymous bun run codegen
 
+# Regenerate every web, desktop, and document brand asset from @groam/brand.
+brand:
+    bun run brand:generate
+
 # Format manifests and source files.
 format:
     bun run format

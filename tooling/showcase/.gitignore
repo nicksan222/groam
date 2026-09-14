@@ -1,5 +1,6 @@
 artifacts/*
 !artifacts/showcase.mp4
+!artifacts/repository-preview.png
 public/captures/
 public/showcase.json
 public/showcase.json.tmp

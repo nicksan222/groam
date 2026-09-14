@@ -6,6 +6,7 @@
     "@groam/env": "workspace:*"
   },
   "devDependencies": {
+    "@groam/brand": "workspace:*",
     "@groam/typescript-config": "workspace:*",
     "@tauri-apps/cli": "^2.11.3",
     "@types/node": "^26.4.1",
@@ -14,7 +15,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "build": "mkdir -p dist && cp index.html dist/index.html",
+    "build": "mkdir -p dist && cp index.html dist/index.html && bun scripts/stage-brand.ts",
     "dev": "bun scripts/run-tauri.ts dev",
     "stage": "bun scripts/stage-resources.ts",
     "tauri": "bun scripts/run-tauri.ts",

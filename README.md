@@ -1,6 +1,10 @@
 <div align="center">
 
-# Groam
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="packages/brand/assets/lockup-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="packages/brand/assets/lockup-light.svg">
+  <img alt="Groam — Plan together. Go further." src="packages/brand/assets/lockup-light.svg" width="460">
+</picture>
 
 **A shared place for group trips, from first idea to agreed itinerary.**
 

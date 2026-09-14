@@ -106,16 +106,20 @@ optional audio and cards can be configured through `presentation` in `video.ts`.
 
 ## Outputs and reproducibility
 
-The generated files committed for visitors are **`artifacts/showcase.mp4`** and
-**`../../docs/assets/groam-demo.gif`**. Capture manifests, lossless frames,
-compiled JSON, posters, drafts, and temporary renders are ignored. Both visitor
-assets are replaced only after successful rendering.
+The generated files committed for visitors are **`artifacts/showcase.mp4`**,
+**`artifacts/repository-preview.png`**, and **`../../docs/assets/groam-demo.gif`**.
+The 1280 × 640 PNG uses the final captured product state and is ready for GitHub's
+repository social preview. Capture manifests, lossless frames, compiled JSON,
+posters, drafts, and temporary renders are ignored. Visitor assets are replaced
+only after successful rendering.
 
-Rebuild the full film from code with `bun run showcase`, then refresh the README
-preview with `just showcase-gif`. Live app timings and surrounding data can vary;
-authored scene durations stay fixed. For an exact rerender of a specific recording,
-retain its manifest and referenced PNG directory outside Git. Failed captures
-preserve the last successful manifest and write ignored diagnostics.
+Rebuild the full film and social preview from code with `bun run showcase`, then
+refresh the README GIF with `just showcase-gif`. Use `bun run --cwd tooling/showcase
+preview` to rerender only the social image from the active capture. Live app timings
+and surrounding data can vary; authored scene durations stay fixed. For an exact
+rerender of a specific recording, retain its manifest and referenced PNG directory
+outside Git. Failed captures preserve the last successful manifest and write ignored
+diagnostics.
 
 Validated configuration comes from `@groam/env/showcase`: `SHOWCASE_BASE_URL`
 (default `http://localhost:5173`), `SHOWCASE_HEADED`, `SHOWCASE_OWNER_EMAIL`,
@@ -126,6 +130,7 @@ Defaults use the local demo accounts created by `just seed` through
 ```bash
 bun run --cwd tooling/showcase typecheck
 bun run --cwd tooling/showcase lint
+bun run --cwd tooling/showcase preview
 bun run --cwd tooling/showcase test
 bun run --cwd tooling/showcase test:browser
 bun run lint:conventions

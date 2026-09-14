@@ -9,8 +9,9 @@ const allowedInternalDependencies = {
   '@groam/ai-contracts': new Set<string>(),
   '@groam/auth': new Set(['@groam/env']),
   '@groam/backend': new Set(['@groam/ai-contracts']),
+  '@groam/brand': new Set<string>(),
   '@groam/env': new Set<string>(),
-  '@groam/ui': new Set(['@groam/ai-contracts', '@groam/backend'])
+  '@groam/ui': new Set(['@groam/ai-contracts', '@groam/backend', '@groam/brand'])
 } as const;
 
 /** Returns runtime boundary violations. Tooling and dev-only dependencies are intentionally excluded. */
