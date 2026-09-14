@@ -11,10 +11,16 @@ const webPublicDir = join(workspaceDir, 'apps/web/public');
 
 function markSvg(title = identity.name) {
   const { colors, geometry, size, viewBox } = identity;
+  const routes = geometry.routePaths
+    .map(
+      (path) =>
+        `  <path d="${path}" stroke="${colors.paper}" stroke-width="${geometry.routeWidth}" stroke-linecap="round" stroke-linejoin="round"/>`
+    )
+    .join('\n');
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" fill="none">
   <title>${title}</title>
   <rect width="${size}" height="${size}" rx="${geometry.frameRadius}" fill="${colors.ink}"/>
-  <path d="${geometry.routePath}" stroke="${colors.paper}" stroke-width="${geometry.routeWidth}" stroke-linecap="round" stroke-linejoin="round"/>
+${routes}
   <circle cx="${geometry.waypoint.cx}" cy="${geometry.waypoint.cy}" r="${geometry.waypoint.radius}" fill="${colors.signal}"/>
 </svg>
 `;
@@ -29,10 +35,16 @@ function lockupSvg(wordColor: string, suffix: string) {
   const waypointX = markOffset + geometry.waypoint.cx * markScale;
   const waypointY = markOffset + geometry.waypoint.cy * markScale;
   const waypointRadius = geometry.waypoint.radius * markScale;
+  const routes = geometry.routePaths
+    .map(
+      (path) =>
+        `  <path d="${path}" stroke="${colors.paper}" stroke-width="${geometry.routeWidth}" stroke-linecap="round" stroke-linejoin="round" transform="translate(${markOffset} ${markOffset}) scale(${markScale})"/>`
+    )
+    .join('\n');
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 160" fill="none">
   <title>${name}: ${tagline}</title>
   <rect x="${markOffset}" y="${markOffset}" width="${frameSize}" height="${frameSize}" rx="${frameRadius}" fill="${colors.ink}"/>
-  <path d="${geometry.routePath}" stroke="${colors.paper}" stroke-width="${geometry.routeWidth}" stroke-linecap="round" stroke-linejoin="round" transform="translate(${markOffset} ${markOffset}) scale(${markScale})"/>
+${routes}
   <circle cx="${waypointX}" cy="${waypointY}" r="${waypointRadius}" fill="${colors.signal}"/>
   <text x="188" y="103" fill="${wordColor}" font-family="Google Sans Flex, Inter, ui-sans-serif, system-ui, sans-serif" font-size="78" font-weight="650" letter-spacing="-4">${name.toLowerCase()}</text>
   <text x="191" y="134" fill="${wordColor}" fill-opacity="0.62" font-family="Google Sans Flex, Inter, ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="550" letter-spacing="1.5">${tagline.toUpperCase()}</text>

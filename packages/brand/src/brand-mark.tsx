@@ -6,7 +6,7 @@ export type BrandMarkProps = React.ComponentProps<'svg'> & {
   monochrome?: boolean;
 };
 
-/** The canonical Groam route-G: collaboration in motion, ending at one shared waypoint. */
+/** The canonical Groam mark: separate paths becoming one shared journey. */
 export function BrandMark({
   className,
   decorative = false,
@@ -33,13 +33,16 @@ export function BrandMark({
         rx={identity.geometry.frameRadius}
         width={identity.size}
       />
-      <path
-        d={identity.geometry.routePath}
-        stroke={foreground}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={identity.geometry.routeWidth}
-      />
+      {identity.geometry.routePaths.map((path) => (
+        <path
+          d={path}
+          key={path}
+          stroke={foreground}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={identity.geometry.routeWidth}
+        />
+      ))}
       <circle
         cx={identity.geometry.waypoint.cx}
         cy={identity.geometry.waypoint.cy}

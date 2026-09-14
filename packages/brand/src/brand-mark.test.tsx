@@ -8,7 +8,9 @@ describe('BrandMark', () => {
     const markup = renderToStaticMarkup(<BrandMark />);
 
     expect(markup).toContain(`aria-label="${identity.name}"`);
-    expect(markup).toContain(`d="${identity.geometry.routePath}"`);
+    for (const path of identity.geometry.routePaths) {
+      expect(markup).toContain(`d="${path}"`);
+    }
   });
 
   test('can be decorative and monochrome', () => {
