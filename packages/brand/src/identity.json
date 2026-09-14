@@ -9,13 +9,13 @@
     "signal": "#b7f34a"
   },
   "geometry": {
-    "frameRadius": 15,
-    "routePath": "M43 20.5C38.8 16 32.3 13.8 26.1 15.1C17.5 16.9 12 24.8 13.2 33.7C14.5 43.2 22.3 49.4 31.5 49.1C40.9 48.8 47.8 42.4 48.3 33.7H34.7",
-    "routeWidth": 7,
+    "frameRadius": 14,
+    "routePaths": ["M16 18C27 18 26 32 36 32H48", "M16 46C27 46 26 32 36 32"],
+    "routeWidth": 6,
     "waypoint": {
-      "cx": 48.3,
-      "cy": 33.7,
-      "radius": 4.4
+      "cx": 48,
+      "cy": 32,
+      "radius": 5.5
     }
   }
 }
