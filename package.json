@@ -78,6 +78,7 @@
     "showcase": "bun run seed -- --scale realistic && bun run --cwd tooling/showcase showcase",
     "showcase:capture": "bun run --cwd tooling/showcase capture",
     "showcase:edit": "bun run --cwd tooling/showcase edit",
+    "showcase:gif": "bun run --cwd tooling/showcase readme:gif",
     "showcase:render": "bun run --cwd tooling/showcase render",
     "showcase:setup": "bun run --cwd tooling/showcase setup",
     "showcase:studio": "bun run --cwd tooling/showcase studio",

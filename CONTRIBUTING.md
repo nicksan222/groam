@@ -3,22 +3,19 @@
 Groam is a collaborative group travel planner. You can run it fully locally
 (anonymous Convex + Vite, or the desktop app) without a Convex Cloud account.
 
-## Prerequisites
+## Development environment
 
-- [Bun](https://bun.sh) `1.3.11` (see `packageManager` in the root `package.json`)
-- [Node.js](https://nodejs.org) `24` (see `convex.json`; required for Convex Node actions)
-- [just](https://just.systems) for the repository's developer command surface
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/nicksan222/groam?quickstart=1)
 
-On Debian, Ubuntu, or WSL, desktop builds also need:
-
-```bash
-sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
-```
+The checked-in [dev container](.devcontainer/devcontainer.json) is the source of
+truth for Bun, Node.js, Rust, native desktop libraries, editor extensions, and
+forwarded ports. Use GitHub Codespaces, or open the repository locally and choose
+**Dev Containers: Reopen in Container**. Its post-create step installs the locked
+workspace automatically.
 
 ## Local development
 
 ```bash
-just install
 just dev
 ```
 
