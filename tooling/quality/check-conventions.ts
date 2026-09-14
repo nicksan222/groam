@@ -76,7 +76,7 @@ const files = execFileSync('git', ['ls-files', '--cached', '--others', '--exclud
 })
   .trim()
   .split('\n')
-  .filter(Boolean);
+  .filter((file) => file && !file.includes('/vendor/'));
 
 const misplacedBrowserSpecs = files.filter(
   (file) => /\.spec\.[cm]?[jt]sx?$/u.test(file) && !file.startsWith('apps/web/e2e/')
