@@ -1,6 +1,6 @@
 'use client';
 
-import { AppIcon } from '@groam/ui/components/app-icon';
+import { BrandMark } from '@groam/brand/mark';
 import { AuroraBackground } from '@groam/ui/components/aurora-background';
 import { useTheme } from 'next-themes';
 import type { ReactNode } from 'react';
@@ -40,7 +40,7 @@ function AuthShell({
           className="flex items-center gap-2 self-start font-medium md:self-center"
           href={homeHref}
         >
-          <AppIcon className="size-8" decorative />
+          <BrandMark className="size-8 shrink-0" decorative />
           <span className="text-base font-semibold tracking-tight">{brandLabel}</span>
         </a>
         {children}

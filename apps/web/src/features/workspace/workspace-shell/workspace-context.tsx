@@ -1,6 +1,6 @@
 import { authClient } from '@groam/auth/client';
+import { BrandMark } from '@groam/brand/mark';
 import { env } from '@groam/env/web-client';
-import { AppIcon } from '@groam/ui/components/app-icon';
 import { Button } from '@groam/ui/components/button';
 import { FormFeedback } from '@groam/ui/components/form-feedback';
 import { Input } from '@groam/ui/components/input';
@@ -108,7 +108,7 @@ function CreateFirstOrganization({ viewerName }: { viewerName: string }) {
   return (
     <main className="flex min-h-dvh items-center justify-center bg-muted/20 p-6">
       <section className="w-full max-w-md rounded-xl border bg-card p-6 shadow-sm">
-        <AppIcon className="mb-5" decorative />
+        <BrandMark className="mb-5 size-8 shrink-0" decorative />
         <h1 className={SHELL_TITLE} data-testid={testIds.onboardingWelcome}>
           Welcome, {viewerName}
         </h1>

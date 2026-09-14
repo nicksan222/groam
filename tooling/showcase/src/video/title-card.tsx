@@ -1,3 +1,5 @@
+import { brandIdentity } from '@groam/brand/identity';
+import { BrandMark } from '@groam/brand/mark';
 import { AbsoluteFill, spring, useCurrentFrame, useVideoConfig } from 'remotion';
 import { designCanvas } from '#src/presets';
 
@@ -27,15 +29,19 @@ export function TitleCard({
     >
       <div
         style={{
-          fontSize: 20,
-          color: 'var(--primary)',
-          letterSpacing: 5,
+          alignItems: 'center',
+          display: 'flex',
+          fontSize: 28,
+          fontWeight: 650,
+          gap: 16,
+          letterSpacing: -1,
           marginBottom: 36,
           opacity: enter,
           transform: `translateY(${(1 - enter) * 25}px)`
         }}
       >
-        GROAM
+        <BrandMark decorative style={{ height: 48, width: 48 }} />
+        {brandIdentity.name.toLowerCase()}
       </div>
       <div
         style={{

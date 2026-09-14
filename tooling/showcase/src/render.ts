@@ -55,5 +55,19 @@ export async function renderProject(project: Project, draft: boolean) {
     output: join(artifactsDir, 'poster.png'),
     frame: Math.max(0, composition.durationInFrames - project.edit.outroFrames - 1)
   });
+  await renderRepositoryPreview(project, serveUrl);
   console.info(`Video: ${outputLocation}`);
+}
+
+export async function renderRepositoryPreview(project: Project, existingServeUrl?: string) {
+  await mkdir(artifactsDir, { recursive: true });
+  const serveUrl = existingServeUrl ?? (await bundle({ entryPoint, publicDir }));
+  const composition = await selectComposition({
+    serveUrl,
+    id: 'GroamRepositoryPreview',
+    inputProps: project
+  });
+  const output = join(artifactsDir, 'repository-preview.png');
+  await renderStill({ serveUrl, composition, inputProps: project, output, frame: 0 });
+  console.info(`Repository preview: ${output}`);
 }

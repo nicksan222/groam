@@ -6,6 +6,7 @@
     "@groam/ai-contracts": "workspace:*",
     "@groam/auth": "workspace:*",
     "@groam/backend": "workspace:*",
+    "@groam/brand": "workspace:*",
     "@groam/env": "workspace:*",
     "@groam/ui": "workspace:*",
     "@tanstack/react-router": "^1.170.33",
