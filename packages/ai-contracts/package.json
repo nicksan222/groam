@@ -1,0 +1,57 @@
+{
+  "name": "@groam/ai-contracts",
+  "version": "0.0.0",
+  "dependencies": {
+    "@json-render/core": "0.20.0",
+    "@json-render/react": "0.20.0",
+    "@json-render/shadcn": "0.20.0",
+    "convex": "^1.45.0",
+    "zod": "^4.6.2"
+  },
+  "devDependencies": {
+    "@groam/typescript-config": "workspace:*",
+    "@groam/vitest-config": "workspace:*",
+    "@types/react": "^19.2.18",
+    "typescript": "~7.0.2",
+    "vitest": "^5.0.0"
+  },
+  "exports": {
+    "./agents/instructions": "./src/agents/instructions/index.ts",
+    "./agents/registry": "./src/agents/registry/index.ts",
+    "./agents/review/schema": "./src/agents/review/schema.ts",
+    "./agents/runs": "./src/agents/runs/index.ts",
+    "./agents/runs/copy": "./src/agents/runs/copy.ts",
+    "./agents/runs/events": "./src/agents/runs/events.ts",
+    "./agents/runs/ids": "./src/agents/runs/ids.ts",
+    "./agents/runs/roster": "./src/agents/runs/roster.ts",
+    "./agents/runs/time": "./src/agents/runs/time.ts",
+    "./agents/screen": "./src/agents/screen/index.ts",
+    "./agents/standalone/issue": "./src/agents/standalone/issue.ts",
+    "./agents/standalone/review": "./src/agents/standalone/review.ts",
+    "./agents/targets": "./src/agents/targets/index.ts",
+    "./errors": "./src/errors/index.ts",
+    "./output": "./src/output/index.ts",
+    "./provider": "./src/providers/index.ts",
+    "./providers": "./src/providers/ids.ts",
+    "./providers/keys": "./src/providers/keys.ts"
+  },
+  "imports": {
+    "#ai-contracts/agents/instructions": "./src/agents/instructions/index.ts",
+    "#ai-contracts/agents/registry": "./src/agents/registry/index.ts",
+    "#ai-contracts/agents/registry/kinds": "./src/agents/registry/kinds/index.ts",
+    "#ai-contracts/agents/registry/tags": "./src/agents/registry/tags/index.ts",
+    "#ai-contracts/agents/runs": "./src/agents/runs/index.ts",
+    "#ai-contracts/agents/screen": "./src/agents/screen/index.ts",
+    "#ai-contracts/errors": "./src/errors/index.ts",
+    "#ai-contracts/output": "./src/output/index.ts",
+    "#ai-contracts/*": "./src/*.ts"
+  },
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "lint": "biome check src",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "type": "module"
+}

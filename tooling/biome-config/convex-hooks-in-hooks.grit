@@ -1,0 +1,11 @@
+engine biome(1.0)
+language js(typescript,jsx)
+
+JsModuleSource() as $source where {
+  $source <: r"^[\x22\x27]convex/react[\x22\x27]$",
+  register_diagnostic(
+    span = $source,
+    severity = "error",
+    message = "Move Convex React hooks into features/<domain>/hooks and expose feature-focused async state to components."
+  )
+}

@@ -1,0 +1,7 @@
+{
+  "extends": "@groam/typescript-config/node.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["../../tooling/bun-globals.d.ts", "runtime/**/*.ts", "scripts/**/*.ts"]
+}

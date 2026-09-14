@@ -1,0 +1,8 @@
+engine biome(1.0)
+language js(typescript,jsx)
+
+or { JsxOpeningElement(), JsxSelfClosingElement() } as $tag where {
+  $tag <: r"(?s)<Shell\.PageBody(?:\s|/|>).*",
+  $tag <: contains or { JsxAttribute() as $attribute where { $attribute <: r"(?s)(?:className|style|variant|innerInset|maxWidthClassName)(?:\s*=.*)?" }, JsxSpreadAttribute() },
+  register_diagnostic(span = $tag, severity = "error", message = "Trip and idea tabs share the default Shell.PageBody design. Remove layout overrides and spread props; change shared defaults in packages/ui.")
+}

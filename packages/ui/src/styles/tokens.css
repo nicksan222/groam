@@ -1,0 +1,366 @@
+/* ========== Light Mode Variables ========== */
+
+:root {
+  color-scheme: light;
+  --background: #fafafa;
+  --canvas: #f5f5f5;
+  --foreground: #171717;
+  --card: #fafafa;
+  --card-foreground: #171717;
+  --popover: #ffffff;
+  --popover-foreground: #171717;
+  --primary: #65a30d;
+  --primary-hover: #4d7c0f;
+  --primary-foreground: #ffffff;
+  --secondary: color-mix(in srgb, var(--muted) 40%, var(--background));
+  --secondary-hover: color-mix(in srgb, var(--muted) 70%, var(--background));
+  --secondary-foreground: #171717;
+  --muted: #f0f0f0;
+  --muted-foreground: #5c5c5c;
+  --accent: #ebebeb;
+  --accent-foreground: #171717;
+  --destructive: #ef4444;
+  --destructive-foreground: #b91c1c;
+  --info: #3b82f6;
+  --info-foreground: #1d4ed8;
+  --success: #10b981;
+  --success-foreground: #047857;
+  --warning: #f59e0b;
+  --warning-foreground: #b45309;
+  --border: #e5e5e5;
+  --lift-card-border-hover: color-mix(in oklch, var(--foreground) 22%, var(--border));
+  --input: #e5e5e5;
+  --ring: #65a30d;
+  --scrim: #17171747;
+  --chart-1: #ea580c;
+  --chart-2: #0d9488;
+  --chart-3: #164e63;
+  --chart-4: #fbbf24;
+  --chart-5: #f59e0b;
+  --sidebar: #f5f5f5;
+  --sidebar-foreground: #737373;
+  --sidebar-primary: #171717;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #ececec;
+  --sidebar-accent-foreground: #171717;
+  --sidebar-border: #e5e5e5;
+  --sidebar-ring: #65a30d;
+  --code: #ffffff;
+  --code-foreground: #171717;
+  --code-highlight: #f5f5f5;
+  /* Auth aurora (React Bits–style) — lime brand stops */
+  --auth-aurora-1: #4d7c0f;
+  --auth-aurora-2: #65a30d;
+  --auth-aurora-3: #a3e635;
+  /* Catppuccin Latte */
+  --catppuccin-rosewater: oklch(0.71 0.1 33);
+  --catppuccin-flamingo: oklch(0.69 0.13 21);
+  --catppuccin-pink: oklch(0.73 0.17 338);
+  --catppuccin-mauve: oklch(0.55 0.25 297);
+  --catppuccin-red: oklch(0.55 0.22 20);
+  --catppuccin-maroon: oklch(0.63 0.2 20);
+  --catppuccin-peach: oklch(0.69 0.2 42);
+  --catppuccin-yellow: oklch(0.71 0.15 68);
+  --catppuccin-green: oklch(0.63 0.18 140);
+  --catppuccin-teal: oklch(0.6 0.1 201);
+  --catppuccin-sky: oklch(0.68 0.14 235);
+  --catppuccin-sapphire: oklch(0.65 0.11 213);
+  --catppuccin-blue: oklch(0.56 0.23 262);
+  --catppuccin-lavender: oklch(0.66 0.18 273);
+  --catppuccin-text: oklch(0.44 0.04 279);
+  --catppuccin-base: oklch(0.96 0.01 265);
+  --catppuccin-crust: oklch(0.91 0.01 265);
+  --avatar-rosewater: color-mix(in srgb, var(--catppuccin-rosewater) 16%, var(--catppuccin-base));
+  --avatar-rosewater-foreground: #7f1d1d;
+  --avatar-flamingo: color-mix(in srgb, var(--catppuccin-flamingo) 16%, var(--catppuccin-base));
+  --avatar-flamingo-foreground: #7f1d1d;
+  --avatar-pink: color-mix(in srgb, var(--catppuccin-pink) 16%, var(--catppuccin-base));
+  --avatar-pink-foreground: #881337;
+  --avatar-mauve: color-mix(in srgb, var(--catppuccin-mauve) 16%, var(--catppuccin-base));
+  --avatar-mauve-foreground: #4c1d95;
+  --avatar-red: color-mix(in srgb, var(--catppuccin-red) 16%, var(--catppuccin-base));
+  --avatar-red-foreground: #7f1d1d;
+  --avatar-maroon: color-mix(in srgb, var(--catppuccin-maroon) 16%, var(--catppuccin-base));
+  --avatar-maroon-foreground: #881337;
+  --avatar-peach: color-mix(in srgb, var(--catppuccin-peach) 16%, var(--catppuccin-base));
+  --avatar-peach-foreground: #7c2d12;
+  --avatar-yellow: color-mix(in srgb, var(--catppuccin-yellow) 16%, var(--catppuccin-base));
+  --avatar-yellow-foreground: #78350f;
+  --avatar-green: color-mix(in srgb, var(--catppuccin-green) 16%, var(--catppuccin-base));
+  --avatar-green-foreground: #064e3b;
+  --avatar-teal: color-mix(in srgb, var(--catppuccin-teal) 16%, var(--catppuccin-base));
+  --avatar-teal-foreground: #134e4a;
+  --avatar-sky: color-mix(in srgb, var(--catppuccin-sky) 16%, var(--catppuccin-base));
+  --avatar-sky-foreground: #164e63;
+  --avatar-sapphire: color-mix(in srgb, var(--catppuccin-sapphire) 16%, var(--catppuccin-base));
+  --avatar-sapphire-foreground: #164e63;
+  --avatar-blue: color-mix(in srgb, var(--catppuccin-blue) 16%, var(--catppuccin-base));
+  --avatar-blue-foreground: #1e3a8a;
+  --avatar-lavender: color-mix(in srgb, var(--catppuccin-lavender) 16%, var(--catppuccin-base));
+  --avatar-lavender-foreground: #312e81;
+  --font-heading: tandelle, sans-serif;
+  --font-sans:
+    'Google Sans Flex Variable', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-serif: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+  --font-mono:
+    'Google Sans Code', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  --radius: 0.625rem;
+  --shadow-2xs: 0px 1px 2px 0px hsl(0 0% 0% / 0.04);
+  --shadow-xs: 0px 1px 2px 0px hsl(0 0% 0% / 0.05);
+  --shadow-sm: 0px 1px 3px 0px hsl(0 0% 0% / 0.08), 0px 1px 2px -1px hsl(0 0% 0% / 0.08);
+  --shadow: 0px 1px 3px 0px hsl(0 0% 0% / 0.1), 0px 1px 2px -1px hsl(0 0% 0% / 0.1);
+  --shadow-md: 0px 2px 4px -1px hsl(0 0% 0% / 0.1), 0px 4px 6px -1px hsl(0 0% 0% / 0.08);
+  --shadow-lg: 0px 4px 6px -1px hsl(0 0% 0% / 0.08), 0px 10px 15px -3px hsl(0 0% 0% / 0.06);
+  --shadow-xl: 0px 8px 10px -1px hsl(0 0% 0% / 0.08), 0px 20px 25px -5px hsl(0 0% 0% / 0.06);
+  --shadow-2xl: 0px 25px 50px -12px hsl(0 0% 0% / 0.2);
+  --shadow-card: 0 2px 8px rgb(0 0 0 / 4%);
+  --tracking-normal: -0.011em;
+  --spacing: 0.25rem;
+}
+
+/* ========== Dark Mode Variables ========== */
+
+.dark {
+  color-scheme: dark;
+  /* Elevation: sidebar < page/card (same); popovers float; muted = soft inset */
+  --background: #171717;
+  --canvas: #121212;
+  --foreground: #fafafa;
+  --card: #171717;
+  --card-foreground: #fafafa;
+  --popover: #2a2a2a;
+  --popover-foreground: #fafafa;
+  --primary: #c7ff62;
+  --primary-hover: #b8ee5a;
+  --primary-foreground: #10110e;
+  --secondary: color-mix(in srgb, var(--muted) 40%, var(--background));
+  --secondary-hover: color-mix(in srgb, var(--muted) 70%, var(--background));
+  --secondary-foreground: #fafafa;
+  --muted: #303030;
+  --muted-foreground: #a3a3a3;
+  --accent: #3a3a3a;
+  --accent-foreground: #fafafa;
+  --destructive: #f87171;
+  --destructive-foreground: #f87171;
+  --info: #3b82f6;
+  --info-foreground: #60a5fa;
+  --success: #10b981;
+  --success-foreground: #34d399;
+  --warning: #f59e0b;
+  --warning-foreground: #fbbf24;
+  --border: #454545;
+  --lift-card-border-hover: color-mix(in oklch, var(--foreground) 22%, var(--border));
+  --input: #454545;
+  --ring: #c7ff62;
+  --scrim: #00000080;
+  --chart-1: #1d4ed8;
+  --chart-2: #10b981;
+  --chart-3: #f59e0b;
+  --chart-4: #a855f7;
+  --chart-5: #f43f5e;
+  --sidebar: #121212;
+  --sidebar-foreground: #a3a3a3;
+  --sidebar-primary: #fafafa;
+  --sidebar-primary-foreground: #171717;
+  --sidebar-accent: #262626;
+  --sidebar-accent-foreground: #fafafa;
+  --sidebar-border: #333333;
+  --sidebar-ring: #c7ff62;
+  --code: #262626;
+  --code-foreground: #fafafa;
+  --code-highlight: #303030;
+  /* Auth aurora (React Bits–style) — lime brand stops */
+  --auth-aurora-1: #65a30d;
+  --auth-aurora-2: #c7ff62;
+  --auth-aurora-3: #b8ee5a;
+  /* Catppuccin Mocha */
+  --catppuccin-rosewater: oklch(0.92 0.02 30);
+  --catppuccin-flamingo: oklch(0.88 0.04 18);
+  --catppuccin-pink: oklch(0.87 0.08 336);
+  --catppuccin-mauve: oklch(0.79 0.12 305);
+  --catppuccin-red: oklch(0.76 0.13 3);
+  --catppuccin-maroon: oklch(0.78 0.09 9);
+  --catppuccin-peach: oklch(0.82 0.1 53);
+  --catppuccin-yellow: oklch(0.92 0.07 87);
+  --catppuccin-green: oklch(0.86 0.11 143);
+  --catppuccin-teal: oklch(0.86 0.08 183);
+  --catppuccin-sky: oklch(0.85 0.08 210);
+  --catppuccin-sapphire: oklch(0.79 0.1 229);
+  --catppuccin-blue: oklch(0.77 0.11 260);
+  --catppuccin-lavender: oklch(0.82 0.09 277);
+  --catppuccin-text: oklch(0.88 0.04 272);
+  --catppuccin-base: oklch(0.24 0.03 284);
+  --catppuccin-crust: oklch(0.18 0.02 284);
+  --avatar-rosewater: color-mix(in srgb, var(--catppuccin-rosewater) 44%, var(--catppuccin-crust));
+  --avatar-rosewater-foreground: var(--catppuccin-text);
+  --avatar-flamingo: color-mix(in srgb, var(--catppuccin-flamingo) 44%, var(--catppuccin-crust));
+  --avatar-flamingo-foreground: var(--catppuccin-text);
+  --avatar-pink: color-mix(in srgb, var(--catppuccin-pink) 44%, var(--catppuccin-crust));
+  --avatar-pink-foreground: var(--catppuccin-text);
+  --avatar-mauve: color-mix(in srgb, var(--catppuccin-mauve) 44%, var(--catppuccin-crust));
+  --avatar-mauve-foreground: var(--catppuccin-text);
+  --avatar-red: color-mix(in srgb, var(--catppuccin-red) 44%, var(--catppuccin-crust));
+  --avatar-red-foreground: var(--catppuccin-text);
+  --avatar-maroon: color-mix(in srgb, var(--catppuccin-maroon) 44%, var(--catppuccin-crust));
+  --avatar-maroon-foreground: var(--catppuccin-text);
+  --avatar-peach: color-mix(in srgb, var(--catppuccin-peach) 44%, var(--catppuccin-crust));
+  --avatar-peach-foreground: var(--catppuccin-text);
+  --avatar-yellow: color-mix(in srgb, var(--catppuccin-yellow) 44%, var(--catppuccin-crust));
+  --avatar-yellow-foreground: var(--catppuccin-text);
+  --avatar-green: color-mix(in srgb, var(--catppuccin-green) 44%, var(--catppuccin-crust));
+  --avatar-green-foreground: var(--catppuccin-text);
+  --avatar-teal: color-mix(in srgb, var(--catppuccin-teal) 44%, var(--catppuccin-crust));
+  --avatar-teal-foreground: var(--catppuccin-text);
+  --avatar-sky: color-mix(in srgb, var(--catppuccin-sky) 44%, var(--catppuccin-crust));
+  --avatar-sky-foreground: var(--catppuccin-text);
+  --avatar-sapphire: color-mix(in srgb, var(--catppuccin-sapphire) 44%, var(--catppuccin-crust));
+  --avatar-sapphire-foreground: var(--catppuccin-text);
+  --avatar-blue: color-mix(in srgb, var(--catppuccin-blue) 44%, var(--catppuccin-crust));
+  --avatar-blue-foreground: var(--catppuccin-text);
+  --avatar-lavender: color-mix(in srgb, var(--catppuccin-lavender) 44%, var(--catppuccin-crust));
+  --avatar-lavender-foreground: var(--catppuccin-text);
+  --font-heading: tandelle, sans-serif;
+  --font-sans:
+    'Google Sans Flex Variable', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-serif: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+  --font-mono:
+    'Google Sans Code', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  --radius: 0.625rem;
+  --shadow-2xs: 0px 1px 2px 0px hsl(0 0% 0% / 0.08);
+  --shadow-xs: 0px 1px 2px 0px hsl(0 0% 0% / 0.1);
+  --shadow-sm: 0px 1px 3px 0px hsl(0 0% 0% / 0.15), 0px 1px 2px -1px hsl(0 0% 0% / 0.12);
+  --shadow: 0px 1px 3px 0px hsl(0 0% 0% / 0.15), 0px 1px 2px -1px hsl(0 0% 0% / 0.12);
+  --shadow-md: 0px 2px 4px -1px hsl(0 0% 0% / 0.15), 0px 4px 6px -1px hsl(0 0% 0% / 0.12);
+  --shadow-lg: 0px 4px 6px -1px hsl(0 0% 0% / 0.12), 0px 10px 15px -3px hsl(0 0% 0% / 0.1);
+  --shadow-xl: 0px 8px 10px -1px hsl(0 0% 0% / 0.15), 0px 20px 25px -5px hsl(0 0% 0% / 0.1);
+  --shadow-2xl: 0px 25px 50px -12px hsl(0 0% 0% / 0.35);
+  --shadow-card: 0 2px 8px rgb(0 0 0 / 15%);
+}
+
+@theme {
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-serif: var(--font-serif);
+  --font-heading: var(--font-heading);
+
+  /* Radius language (tiny / elegant):
+   * sm  — dense chips, subtle accents
+   * md  — menu item hover, compact chrome (xs/icon buttons, tooltips, sidebar rows)
+   * lg  — controls + floating menus (input, button, select, dropdown, popover, tabs)
+   * xl  — surfaces (cards, wells, dialogs, panels, padded notices)
+   * 2xl — soft conversational chrome only (chat bubbles / composers)
+   * none — flush page chrome bands (NoticeBanner)
+   * full — pills, avatars, true circles
+   */
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  --color-background: var(--background);
+  --color-canvas: var(--canvas);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-hover: var(--secondary-hover);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-scrim: var(--scrim);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-code: var(--code);
+  --color-code-foreground: var(--code-foreground);
+  --color-code-highlight: var(--code-highlight);
+  --color-catppuccin-peach: var(--catppuccin-peach);
+  --color-catppuccin-text: var(--catppuccin-text);
+  --color-avatar-rosewater: var(--avatar-rosewater);
+  --color-avatar-rosewater-foreground: var(--avatar-rosewater-foreground);
+  --color-avatar-flamingo: var(--avatar-flamingo);
+  --color-avatar-flamingo-foreground: var(--avatar-flamingo-foreground);
+  --color-avatar-pink: var(--avatar-pink);
+  --color-avatar-pink-foreground: var(--avatar-pink-foreground);
+  --color-avatar-mauve: var(--avatar-mauve);
+  --color-avatar-mauve-foreground: var(--avatar-mauve-foreground);
+  --color-avatar-red: var(--avatar-red);
+  --color-avatar-red-foreground: var(--avatar-red-foreground);
+  --color-avatar-maroon: var(--avatar-maroon);
+  --color-avatar-maroon-foreground: var(--avatar-maroon-foreground);
+  --color-avatar-peach: var(--avatar-peach);
+  --color-avatar-peach-foreground: var(--avatar-peach-foreground);
+  --color-avatar-yellow: var(--avatar-yellow);
+  --color-avatar-yellow-foreground: var(--avatar-yellow-foreground);
+  --color-avatar-green: var(--avatar-green);
+  --color-avatar-green-foreground: var(--avatar-green-foreground);
+  --color-avatar-teal: var(--avatar-teal);
+  --color-avatar-teal-foreground: var(--avatar-teal-foreground);
+  --color-avatar-sky: var(--avatar-sky);
+  --color-avatar-sky-foreground: var(--avatar-sky-foreground);
+  --color-avatar-sapphire: var(--avatar-sapphire);
+  --color-avatar-sapphire-foreground: var(--avatar-sapphire-foreground);
+  --color-avatar-blue: var(--avatar-blue);
+  --color-avatar-blue-foreground: var(--avatar-blue-foreground);
+  --color-avatar-lavender: var(--avatar-lavender);
+  --color-avatar-lavender-foreground: var(--avatar-lavender-foreground);
+
+  --shadow-2xs: var(--shadow-2xs);
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow: var(--shadow);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+  --shadow-2xl: var(--shadow-2xl);
+
+  --tracking-tighter: calc(var(--tracking-normal) - 0.05em);
+  --tracking-tight: calc(var(--tracking-normal) - 0.025em);
+  --tracking-normal: var(--tracking-normal);
+  --tracking-wide: calc(var(--tracking-normal) + 0.025em);
+  --tracking-wider: calc(var(--tracking-normal) + 0.05em);
+  --tracking-widest: calc(var(--tracking-normal) + 0.1em);
+
+  --animate-shimmer: shimmer 2s linear infinite;
+
+  @keyframes shimmer {
+    from {
+      background-position: 100% 0;
+    }
+    to {
+      background-position: 0 0;
+    }
+  }
+}

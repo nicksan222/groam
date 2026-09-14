@@ -1,0 +1,13 @@
+engine biome(1.0)
+language js(typescript,jsx)
+
+or {
+  TsTypeAliasDeclaration() as $decl,
+  TsInterfaceDeclaration() as $decl
+} where {
+  register_diagnostic(
+    span = $decl,
+    severity = "error",
+    message = "Put type and interface definitions in apps/web/src/types. Use a biome-ignore comment only when a definition must stay local."
+  )
+}

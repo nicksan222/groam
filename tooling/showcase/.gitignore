@@ -1,0 +1,6 @@
+artifacts/*
+!artifacts/showcase.mp4
+public/captures/
+public/showcase.json
+public/showcase.json.tmp
+.remotion/

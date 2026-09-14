@@ -1,0 +1,49 @@
+@import url('https://use.typekit.net/btt8uuq.css');
+@import 'tailwindcss';
+@import '@fontsource-variable/google-sans-flex';
+@import '@fontsource/google-sans-code';
+@import 'shadcn/tailwind.css';
+@import 'tw-animate-css';
+@import './tokens.css';
+@import './base.css';
+@import '../ai/styles.css';
+
+@source '../../..';
+
+@custom-variant dark (&:is(.dark *));
+
+/* Halo-style text shimmer for assistant “thinking” / in-progress labels. */
+@utility shimmer {
+  --shimmer-angle: 20deg;
+  --shimmer-spread: calc(3ch + 40px);
+  --shimmer-base: currentColor;
+  --shimmer-highlight: oklch(from currentColor l c h / calc(alpha * 0.2));
+  background-image: linear-gradient(
+    calc(90deg + var(--shimmer-angle)),
+    var(--shimmer-base) calc(50% - var(--shimmer-spread)),
+    color-mix(in oklch, var(--shimmer-highlight), var(--shimmer-base) 50%)
+      calc(50% - var(--shimmer-spread) * 0.5),
+    var(--shimmer-highlight) 50%,
+    color-mix(in oklch, var(--shimmer-highlight), var(--shimmer-base) 50%)
+      calc(50% + var(--shimmer-spread) * 0.5),
+    var(--shimmer-base) calc(50% + var(--shimmer-spread))
+  );
+  background-repeat: no-repeat;
+  background-size: calc(200% + var(--shimmer-spread) * 2) 100%;
+  background-position: 0 0;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 2s linear infinite;
+  @variant dark {
+    --shimmer-highlight: oklch(from currentColor max(0.8, calc(l + 0.4)) c h / calc(alpha + 0.4));
+  }
+  &:where([dir='rtl'], [dir='rtl'] *) {
+    animation-direction: reverse;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    background-image: none;
+    -webkit-text-fill-color: currentColor;
+  }
+}

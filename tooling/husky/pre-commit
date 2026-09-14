@@ -1,0 +1,50 @@
+#!/bin/sh
+set -e
+
+# Keep every generated contract synchronized before validating the commit.
+bun codegen
+git add apps/web/src/routeTree.gen.ts \
+  packages/backend/convex/_generated \
+  packages/backend/convex/components/better-auth/_generated \
+  packages/backend/convex/components/better-auth/generated.ts
+
+# Fix and re-stage only files in the index.
+bunx lint-staged
+
+# Cheap local gates. CI owns `bun run check` (audit / lint / typecheck / test).
+bun run lint:conventions
+
+# Run React Doctor only against the staged React files.
+set +e
+bun run react-doctor:staged
+DOCTOR_RESULT=$?
+
+# Keep unstaged and untracked work out of Fallow's staged-code audit.
+STASH_BEFORE=$(git rev-parse --quiet --verify refs/stash 2>/dev/null || true)
+git stash push --keep-index --include-untracked --quiet -m "pre-commit-fallow-$$" >/dev/null 2>&1 || true
+STASH_AFTER=$(git rev-parse --quiet --verify refs/stash 2>/dev/null || true)
+STASHED=""
+if [ -n "$STASH_AFTER" ] && [ "$STASH_BEFORE" != "$STASH_AFTER" ]; then
+  STASHED=1
+fi
+
+bun run fallow:changed
+FALLOW_RESULT=$?
+
+STASH_POP_RESULT=0
+if [ -n "$STASHED" ]; then
+  git stash pop --quiet
+  STASH_POP_RESULT=$?
+fi
+set -e
+
+if [ "$STASH_POP_RESULT" -ne 0 ]; then
+  echo "pre-commit: git stash pop failed with conflicts; resolve them before committing." >&2
+  exit "$STASH_POP_RESULT"
+fi
+
+if [ "$DOCTOR_RESULT" -ne 0 ]; then
+  exit "$DOCTOR_RESULT"
+fi
+
+exit "$FALLOW_RESULT"

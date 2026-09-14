@@ -1,0 +1,11 @@
+engine biome(1.0)
+language js(typescript,jsx)
+
+JsCallExpression() as $call where {
+  $call <: r"(?s)^(?:window\.)?fetch\s*\(.*",
+  register_diagnostic(
+    span = $call,
+    severity = "error",
+    message = "Move network requests out of TSX components and into a feature hook or focused client adapter."
+  )
+}

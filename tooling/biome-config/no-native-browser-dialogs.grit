@@ -1,0 +1,11 @@
+engine biome(1.0)
+language js(typescript,jsx)
+
+JsCallExpression() as $call where {
+  $call <: r"(?s)window\.(?:alert|confirm|prompt)\s*\(.*",
+  register_diagnostic(
+    span = $call,
+    severity = "error",
+    message = "Use the app dialog abstraction instead of window.alert, window.confirm, or window.prompt. Native dialogs block the browser and bypass Groam UI behavior."
+  )
+}

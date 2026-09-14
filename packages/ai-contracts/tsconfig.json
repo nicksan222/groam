@@ -1,0 +1,10 @@
+{
+  "extends": "@groam/typescript-config/base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM"],
+    "paths": {
+      "#ai-contracts/*": ["./src/*"]
+    }
+  },
+  "include": ["src"]
+}
