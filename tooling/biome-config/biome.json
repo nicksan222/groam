@@ -134,6 +134,7 @@
       "!**/generated.ts",
       "!**/routeTree.gen.ts",
       "!**/node_modules",
+      "!**/vendor",
       "!**/.agents",
       "!**/.claude"
     ]
