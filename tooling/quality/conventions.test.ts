@@ -29,6 +29,7 @@ describe('invalidDirectoryNames', () => {
     expect(invalidDirectoryNames('apps/web/src/features/trips/hooks/use-trips.ts')).toEqual([]);
     expect(invalidDirectoryNames('packages/backend/convex/_generated/api.d.ts')).toEqual([]);
     expect(invalidDirectoryNames('.github/workflows/ci.yml')).toEqual([]);
+    expect(invalidDirectoryNames('.github/ISSUE_TEMPLATE/bug.yml')).toEqual([]);
   });
 
   test('rejects PascalCase or snake_case folders', () => {

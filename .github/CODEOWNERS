@@ -1,0 +1,10 @@
+# Default review ownership for the repository.
+* @nicksan222
+
+# Community health and automation changes require maintainer review.
+/.github/ @nicksan222
+/CODE_OF_CONDUCT.md @nicksan222
+/CONTRIBUTING.md @nicksan222
+/MAINTAINERS.md @nicksan222
+/SECURITY.md @nicksan222
+/SUPPORT.md @nicksan222
