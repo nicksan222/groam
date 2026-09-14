@@ -1,0 +1,7 @@
+{
+  "extends": "./typescript-config/node.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["bun-globals.d.ts", "convex/**/*.ts", "quality/**/*.ts"]
+}

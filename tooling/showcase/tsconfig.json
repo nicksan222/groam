@@ -1,0 +1,14 @@
+{
+  "extends": "@groam/typescript-config/base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"],
+    "paths": {
+      "#showcase": ["./video.ts"],
+      "#src/*": ["./src/*.ts"],
+      "#video/*": ["./src/video/*.tsx"]
+    }
+  },
+  "include": ["src", "video.ts"]
+}

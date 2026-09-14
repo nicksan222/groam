@@ -1,0 +1,7 @@
+engine biome(1.0)
+language js(typescript,jsx)
+
+or { JsxOpeningElement(), JsxSelfClosingElement() } as $tag where {
+  $tag <: r"(?s)<Shell\.PageBody(?:\s|/|>).*",
+  register_diagnostic(span = $tag, severity = "error", message = "TripPageShell already provides the page body. Render tab content directly instead of adding another Shell.PageBody and doubling page padding.")
+}

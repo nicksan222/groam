@@ -1,0 +1,210 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.12/schema.json",
+  "root": false,
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "formatter": {
+    "indentStyle": "space",
+    "lineEnding": "lf",
+    "lineWidth": 100
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "trailingCommas": "none"
+    }
+  },
+  "css": {
+    "formatter": { "enabled": true, "quoteStyle": "single" },
+    "linter": { "enabled": true },
+    "parser": { "tailwindDirectives": true }
+  },
+  "html": {
+    "experimentalFullSupportEnabled": true,
+    "formatter": {
+      "enabled": true,
+      "indentScriptAndStyle": true,
+      "selfCloseVoidElements": "always"
+    },
+    "linter": { "enabled": true }
+  },
+  "linter": {
+    "enabled": true,
+    "domains": {
+      "react": "recommended",
+      "test": "all"
+    },
+    "rules": {
+      "preset": "recommended",
+      "correctness": {
+        "noUnusedFunctionParameters": "error",
+        "noUnusedImports": "error",
+        "useHookAtTopLevel": "error"
+      },
+      "suspicious": {
+        "noArrayIndexKey": "off",
+        "noConsole": {
+          "level": "error",
+          "options": { "allow": ["error", "warn", "info"] }
+        },
+        "noExplicitAny": "error",
+        "noFocusedTests": "error",
+        "noSkippedTests": "error"
+      },
+      "complexity": {
+        "noUselessFragments": "error",
+        "useArrowFunction": "error",
+        "useOptionalChain": "error"
+      },
+      "performance": {
+        "noAccumulatingSpread": "error",
+        "noDelete": "error"
+      },
+      "style": {
+        "noCommonJs": "error",
+        "noHexColors": "error",
+        "noNonNullAssertion": "error",
+        "noParameterAssign": "error",
+        "noProcessEnv": "error",
+        "useConst": "error",
+        "useExportType": "error",
+        "useFilenamingConvention": {
+          "level": "error",
+          "options": {
+            "filenameCases": ["kebab-case"],
+            "requireAscii": true
+          }
+        },
+        "useForOf": "error",
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": {
+              "@groam/ui": "Import UI through @groam/ui/components/*, @groam/ui/hooks/*, @groam/ui/lib/*, or @groam/ui/styles."
+            },
+            "patterns": [
+              {
+                "group": ["@halo", "@halo/**"],
+                "message": "Use @groam/* package names instead of leftover Halo package aliases."
+              }
+            ]
+          }
+        },
+        "useImportType": "error",
+        "useNodejsImportProtocol": "error",
+        "useSelfClosingElements": "error",
+        "useThrowNewError": "error"
+      },
+      "a11y": {
+        "noSvgWithoutTitle": "off",
+        "useKeyWithClickEvents": "off"
+      },
+      "security": {
+        "noDangerouslySetInnerHtml": "off"
+      }
+    }
+  },
+  "files": {
+    "ignoreUnknown": true,
+    "includes": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts",
+      "**/*.json",
+      "**/*.jsonc",
+      "**/*.css",
+      "**/*.html",
+      "**/*.astro",
+      "**/*.vue",
+      "**/*.svelte",
+      "**/*.graphql",
+      "**/*.gql",
+      "!**/.astro",
+      "!**/.turbo",
+      "!**/dist",
+      "!**/_generated",
+      "!**/generated.ts",
+      "!**/routeTree.gen.ts",
+      "!**/node_modules",
+      "!**/.agents",
+      "!**/.claude"
+    ]
+  },
+  "overrides": [
+    {
+      "includes": ["packages/ui/src/styles/globals.css", "packages/ui/src/styles/tokens.css"],
+      "linter": {
+        "rules": {
+          "style": { "noHexColors": "off" }
+        }
+      }
+    },
+    {
+      "includes": ["apps/web/src/routes/**"],
+      "linter": {
+        "rules": {
+          "style": { "useFilenamingConvention": "off" }
+        }
+      }
+    },
+    {
+      "includes": ["tooling/**"],
+      "linter": {
+        "rules": {
+          "style": { "noProcessEnv": "off" },
+          "suspicious": { "noConsole": "off" }
+        }
+      }
+    },
+    {
+      "includes": ["packages/env/**"],
+      "linter": {
+        "rules": {
+          "style": { "noProcessEnv": "off" }
+        }
+      }
+    },
+    {
+      "includes": ["packages/ui/**"],
+      "linter": {
+        "rules": {
+          "performance": { "noImgElement": "off" }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.tsx", "!**/*.test.tsx", "!**/*.spec.tsx"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noExcessiveLinesPerFunction": {
+              "level": "error",
+              "options": {
+                "maxLines": 250,
+                "skipBlankLines": true,
+                "skipIifes": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.test.ts", "**/*.test.tsx", "**/vitest.config.ts"],
+      "linter": {
+        "rules": {
+          "style": { "noNonNullAssertion": "off" },
+          "suspicious": { "noConsole": "off" }
+        }
+      }
+    }
+  ]
+}

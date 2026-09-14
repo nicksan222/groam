@@ -1,0 +1,33 @@
+{
+  "name": "@groam/app-actions",
+  "description": "Shared application capabilities with backend and Playwright adapters.",
+  "version": "0.0.0",
+  "dependencies": {
+    "@groam/backend": "workspace:*",
+    "@groam/env": "workspace:*",
+    "@playwright/test": "^1.63.0",
+    "convex": "^1.45.0"
+  },
+  "devDependencies": {
+    "@groam/typescript-config": "workspace:*",
+    "@types/node": "^26.4.1",
+    "typescript": "~7.0.2",
+    "vitest": "^5.0.0"
+  },
+  "exports": {
+    "./backend": "./src/backend/index.ts",
+    "./ids": "./src/playwright/ids.ts",
+    "./playwright": "./src/playwright/index.ts"
+  },
+  "imports": {
+    "#src/*": "./src/*.ts"
+  },
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "lint": "biome check src",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "type": "module"
+}

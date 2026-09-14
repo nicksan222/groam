@@ -1,0 +1,68 @@
+@import '@groam/ui/styles';
+@source '../node_modules/@json-render/shadcn/dist/*.js';
+
+.dashboard-panel {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: transparent;
+}
+
+.dashboard-lift-card {
+  background: transparent;
+  transition:
+    border-color 180ms ease,
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dashboard-lift-card:hover {
+  border-color: var(--lift-card-border-hover);
+  transform: translateY(-1px);
+}
+
+.dashboard-reveal {
+  animation: dashboard-reveal 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes dashboard-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(0.35rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.trip-page-shell .dashboard-reveal,
+.trip-page-shell [data-slot='skeleton'],
+.dashboard-home .dashboard-reveal,
+.dashboard-home .dashboard-lift-card,
+.dashboard-home [data-slot='skeleton'] {
+  animation: none;
+}
+
+.trip-page-ready {
+  animation: trip-page-ready 140ms ease-out both;
+}
+
+@keyframes trip-page-ready {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-reveal,
+  .dashboard-lift-card,
+  .trip-page-ready {
+    animation: none;
+  }
+
+  .dashboard-lift-card:hover {
+    transform: none;
+  }
+}

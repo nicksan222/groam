@@ -1,0 +1,9 @@
+{
+  "extends": "@groam/typescript-config/base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM"],
+    "paths": { "#src/*": ["./src/*"] },
+    "types": ["node", "vite/client"]
+  },
+  "include": ["src"]
+}

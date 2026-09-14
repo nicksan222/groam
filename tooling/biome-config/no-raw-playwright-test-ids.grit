@@ -1,0 +1,11 @@
+engine biome(1.0)
+language js(typescript,jsx)
+
+JsCallExpression() as $call where {
+  $call <: r"(?s)(?:.*\.getByTestId\s*\(\s*[\x22\x27]|by\s*\([^,]+,\s*[\x22\x27]).*",
+  register_diagnostic(
+    span = $call,
+    severity = "error",
+    message = "Use ids from @groam/app-actions/playwright for browser test locators instead of a raw test-ID string."
+  )
+}

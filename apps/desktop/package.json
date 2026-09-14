@@ -1,0 +1,25 @@
+{
+  "name": "@groam/desktop",
+  "version": "0.1.0",
+  "dependencies": {
+    "@groam/devkit": "workspace:*",
+    "@groam/env": "workspace:*"
+  },
+  "devDependencies": {
+    "@groam/typescript-config": "workspace:*",
+    "@types/node": "^26.4.1",
+    "@tauri-apps/cli": "^2.11.3",
+    "typescript": "~7.0.2"
+  },
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "build": "mkdir -p dist && cp index.html dist/index.html",
+    "dev": "bun scripts/run-tauri.ts dev",
+    "stage": "bun scripts/stage-resources.ts",
+    "tauri": "bun scripts/run-tauri.ts",
+    "tauri:cli": "tauri",
+    "test": "bun test --path-ignore-patterns src-tauri scripts runtime",
+    "typecheck": "tsc --noEmit"
+  }
+}

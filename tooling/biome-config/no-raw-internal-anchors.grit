@@ -1,0 +1,14 @@
+engine biome(1.0)
+language js(typescript,jsx)
+
+or { JsxOpeningElement(), JsxSelfClosingElement() } as $tag where {
+  $tag <: r"(?s)<a(?:\s|>).*",
+  $tag <: contains JsxAttribute() as $attribute where {
+    $attribute <: r"(?s)^href\s*=\s*(?:[\x22\x27]/[^/]|\{\s*[\x22\x27\x60]/[^/]).*"
+  },
+  register_diagnostic(
+    span = $tag,
+    severity = "error",
+    message = "Use TanStack Router Link for internal navigation. Raw anchors reload the app and discard client state."
+  )
+}

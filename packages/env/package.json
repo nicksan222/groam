@@ -1,0 +1,40 @@
+{
+  "name": "@groam/env",
+  "version": "0.0.0",
+  "dependencies": {
+    "envalid": "^8.1.0"
+  },
+  "devDependencies": {
+    "@groam/typescript-config": "workspace:*",
+    "@types/node": "^26.4.1",
+    "typescript": "~7.0.2",
+    "vite": "^8.2.2",
+    "vitest": "^5.0.0"
+  },
+  "exports": {
+    "./auth-client": "./src/apps/auth-client.ts",
+    "./convex-tooling": "./src/apps/convex-tooling.ts",
+    "./desktop-tooling": "./src/apps/desktop-tooling.ts",
+    "./playwright": "./src/apps/playwright.ts",
+    "./runtime": "./src/apps/runtime.ts",
+    "./seeder": "./src/apps/seeder.ts",
+    "./showcase": "./src/apps/showcase.ts",
+    "./vitest": "./src/apps/vitest.ts",
+    "./web": "./src/apps/web.ts",
+    "./web-client": "./src/apps/web-client.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "imports": {
+    "#src/*": "./src/*.ts"
+  },
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "lint": "biome check src",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "type": "module"
+}

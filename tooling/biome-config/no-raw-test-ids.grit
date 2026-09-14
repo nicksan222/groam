@@ -1,0 +1,11 @@
+engine biome(1.0)
+language js(typescript,jsx)
+
+JsxAttribute() as $attribute where {
+  $attribute <: r"(?s)data-testid\s*=\s*(?:\x22[^\x22]*\x22|\x27[^\x27]*\x27|\{\s*(?:\x22[^\x22]*\x22|\x27[^\x27]*\x27|\x60.*\x60)\s*\})\s*$",
+  register_diagnostic(
+    span = $attribute,
+    severity = "error",
+    message = "Use testIds from @/lib/test-ids instead of an inline data-testid string. Centralized IDs keep component tests and browser actions in sync."
+  )
+}

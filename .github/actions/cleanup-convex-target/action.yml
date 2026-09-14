@@ -1,0 +1,20 @@
+name: Cleanup Convex Target
+description: Revoke a short-lived deploy key minted by setup-convex-target
+
+inputs:
+  access-token:
+    description: Convex personal access token
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Revoke deploy key
+      shell: bash
+      env:
+        CONVEX_DEPLOY_KEY: <ignore_deploy_key>
+        CONVEX_OVERRIDE_ACCESS_TOKEN: ${{ inputs.access-token }}
+      run: |
+        if [ -n "${CONVEX_TOKEN_NAME:-}" ] && [ -n "${CONVEX_TARGET_DEPLOYMENT:-}" ]; then
+          bunx convex deployment token delete "$CONVEX_TOKEN_NAME" --deployment "$CONVEX_TARGET_DEPLOYMENT"
+        fi

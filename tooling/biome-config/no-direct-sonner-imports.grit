@@ -1,0 +1,11 @@
+engine biome(1.0)
+language js(typescript,jsx)
+
+JsModuleSource() as $source where {
+  $source <: r"^[\x22\x27]sonner[\x22\x27]$",
+  register_diagnostic(
+    span = $source,
+    severity = "error",
+    message = "Import toast from @groam/ui/components/toast so the app depends on Groam's UI contract instead of Sonner directly."
+  )
+}

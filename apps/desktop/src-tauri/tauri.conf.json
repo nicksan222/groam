@@ -1,0 +1,50 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Groam",
+  "version": "0.1.0",
+  "identifier": "com.groam.desktop",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "bun ../scripts/dev-server.ts",
+    "beforeBuildCommand": "cd ../.. && bun run codegen:routes && bun run codegen:auth && bun run build:web:desktop && bun apps/desktop/scripts/stage-resources.ts && bun apps/desktop/scripts/prepare-binaries.ts && bun run --cwd apps/desktop build"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Groam",
+        "width": 1280,
+        "height": 840,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self' http://127.0.0.1:3211 http://127.0.0.1:3210; connect-src 'self' http://127.0.0.1:3210 http://127.0.0.1:3211 ws://127.0.0.1:3210 http://localhost:5173 ws://localhost:5173 https://commons.wikimedia.org https://en.wikipedia.org https://upload.wikimedia.org https://tile.openstreetmap.org https://photon.komoot.io https://basemaps.cartocdn.com; img-src 'self' data: blob: https: http://127.0.0.1:3211 http://127.0.0.1:3210; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; worker-src 'self' blob:; media-src 'self' blob: http://127.0.0.1:3211; font-src 'self' data:; frame-src 'none'"
+    },
+    "withGlobalTauri": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEFENEM2OTg4RDY1QTFDNDMKUldSREhGcldpR2xNclV4eGVWMVFQUUdOZVo2eU94bU1EMXhVL2pZWGFTVFk4WHpYc29NMjhJemYK",
+      "endpoints": ["https://github.com/nicksan222/Groam/releases/latest/download/latest.json"]
+    }
+  },
+  "bundle": {
+    "active": true,
+    "createUpdaterArtifacts": false,
+    "targets": ["deb", "appimage", "nsis", "app", "dmg"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": {
+      "groam-runtime/": "groam-runtime/"
+    },
+    "externalBin": ["binaries/bun", "binaries/convex-local-backend"]
+  }
+}

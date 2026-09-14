@@ -1,0 +1,21 @@
+{
+  "name": "@groam/vitest-config",
+  "version": "0.0.0",
+  "dependencies": {
+    "@groam/env": "workspace:*"
+  },
+  "exports": {
+    "./convex": "./src/convex.ts",
+    "./web": "./src/web.ts"
+  },
+  "license": "MIT",
+  "peerDependencies": {
+    "vitest": "^5.0.0"
+  },
+  "private": true,
+  "scripts": {
+    "test": "bun test src",
+    "typecheck": "tsc --noEmit"
+  },
+  "type": "module"
+}

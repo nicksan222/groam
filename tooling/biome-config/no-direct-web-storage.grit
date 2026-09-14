@@ -1,0 +1,14 @@
+engine biome(1.0)
+language js(typescript,jsx)
+
+or {
+  JsCallExpression() as $access,
+  JsStaticMemberExpression() as $access
+} where {
+  $access <: r"(?s)(?:window\.)?(?:localStorage|sessionStorage)(?:\.|\s*\(|$).*",
+  register_diagnostic(
+    span = $access,
+    severity = "error",
+    message = "Access browser storage through a feature store or shared adapter. Direct storage calls scatter persistence, validation, and test setup across components."
+  )
+}

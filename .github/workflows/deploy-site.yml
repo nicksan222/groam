@@ -1,0 +1,41 @@
+name: Deploy Site
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to deploy
+        required: true
+        type: choice
+        options:
+          - beta
+          - prod
+        default: beta
+      site:
+        description: Static site to deploy without changing the backend
+        required: true
+        type: choice
+        options:
+          - web
+
+concurrency:
+  group: deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test
+    uses: ./.github/workflows/test-reusable.yml
+
+  site:
+    name: Deploy ${{ inputs.site }} to ${{ inputs.environment }}
+    needs: [test]
+    uses: ./.github/workflows/deploy-site-reusable.yml
+    with:
+      environment: ${{ inputs.environment }}
+      site: ${{ inputs.site }}
+    secrets:
+      CONVEX_ACCESS_TOKEN: ${{ secrets.CONVEX_ACCESS_TOKEN }}

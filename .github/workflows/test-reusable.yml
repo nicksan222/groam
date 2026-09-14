@@ -1,0 +1,240 @@
+name: Test
+
+on:
+  workflow_call:
+    secrets:
+      TAURI_SIGNING_PRIVATE_KEY:
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      CI: 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Lint GitHub Actions
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="${RUNNER_TEMP}/actionlint.tar.gz"
+          curl --fail --location --silent --show-error \
+            --output "$archive" \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  $archive" | sha256sum --check
+          tar --extract --gzip --file "$archive" --directory "$RUNNER_TEMP" actionlint
+          "${RUNNER_TEMP}/actionlint"
+
+      - name: Setup workspace
+        uses: ./.github/actions/setup-workspace
+
+      - name: Format check
+        run: bun run format:check
+
+      - name: Lint, typecheck, and unit tests
+        run: bun run check
+
+  e2e:
+    name: Browser
+    needs: [quality]
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      CI: 'true'
+      CONVEX_AGENT_MODE: anonymous
+      PLAYWRIGHT_BASE_URL: http://127.0.0.1:3211
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup workspace
+        uses: ./.github/actions/setup-workspace
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install Playwright browser
+        run: bunx playwright install --with-deps chromium
+
+      - name: Test showcase recording
+        run: bun run --cwd tooling/showcase test:browser
+
+      - name: Start local Convex backend
+        shell: bash
+        run: |
+          set -euo pipefail
+          bunx convex dev --typecheck-components --tail-logs disable > /tmp/convex.log 2>&1 &
+          echo "$!" > /tmp/convex.pid
+          timeout 600 bash -c '
+            until [ -f .env.local ] && bunx convex run --component web lib:getUrls "{}" >/dev/null 2>&1; do
+              sleep 2
+            done
+          '
+          bunx convex env set BETTER_AUTH_SECRET "ci-only-better-auth-secret-not-for-production"
+          bunx convex env set SITE_URL "$PLAYWRIGHT_BASE_URL/"
+
+      - name: Verify generated code
+        run: |
+          bun run codegen
+          git diff --exit-code
+
+      - name: Run pending migrations
+        run: bun run migrations:run
+
+      - name: Publish local static sites
+        run: bun run hosting:upload
+
+      - name: Verify static routes
+        shell: bash
+        run: |
+          curl --fail --show-error --silent "$PLAYWRIGHT_BASE_URL/" >/dev/null
+          curl --fail --show-error --silent "$PLAYWRIGHT_BASE_URL/settings" >/dev/null
+          test "$(curl --output /dev/null --silent --write-out '%{http_code}' "$PLAYWRIGHT_BASE_URL/missing.js")" = "404"
+
+      - name: Seed browser test data
+        run: bun run seed -- --users 1 --trips 0
+
+      - name: Run browser tests
+        run: bun run test:e2e
+
+      - name: Upload failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: test-failure-${{ github.run_id }}
+          if-no-files-found: ignore
+          retention-days: 7
+          path: |
+            /tmp/convex.log
+            apps/web/playwright-report/
+            apps/web/test-results/
+
+      - name: Stop local Convex backend
+        if: always()
+        shell: bash
+        run: |
+          if [ -f /tmp/convex.pid ]; then
+            kill "$(cat /tmp/convex.pid)" 2>/dev/null || true
+          fi
+
+  desktop:
+    name: Desktop (${{ matrix.platform }})
+    needs: [quality]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    env:
+      CI: 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux
+            runner: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            bundles: deb
+          - platform: macos-arm
+            runner: macos-latest
+            target: aarch64-apple-darwin
+            bundles: app,dmg
+          - platform: windows
+            runner: windows-latest
+            target: x86_64-pc-windows-msvc
+            bundles: nsis
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup workspace
+        uses: ./.github/actions/setup-workspace
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install Linux desktop dependencies
+        if: matrix.platform == 'linux'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            curl \
+            file \
+            libayatana-appindicator3-dev \
+            libgtk-3-dev \
+            librsvg2-dev \
+            libssl-dev \
+            libwebkit2gtk-4.1-dev \
+            libxdo-dev \
+            patchelf \
+            wget \
+            xdg-utils
+
+      - name: Stamp release version
+        run: bun apps/desktop/scripts/updater-release.ts stamp "${{ github.run_number }}"
+
+      - name: Build frontend assets for desktop
+        shell: bash
+        run: |
+          bun run codegen:routes
+          bun run codegen:auth
+          bun run build:web:desktop
+          bun apps/desktop/scripts/stage-resources.ts
+          bun apps/desktop/scripts/prepare-binaries.ts --required --target "${{ matrix.target }}"
+          bun run --cwd apps/desktop build
+
+      - name: Build desktop app
+        shell: bash
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          # linuxdeploy needs this on modern runners; NO_STRIP avoids strip
+          # crashing on the statically linked bun sidecar.
+          APPIMAGE_EXTRACT_AND_RUN: '1'
+          NO_STRIP: 'true'
+        run: |
+          set -euo pipefail
+          export TAURI_SIGNING_PRIVATE_KEY_PASSWORD=
+          bundles="${{ matrix.bundles }}"
+          args=(--ci --target "${{ matrix.target }}")
+          if [ -n "${TAURI_SIGNING_PRIVATE_KEY:-}" ]; then
+            args+=(--config '{"bundle":{"createUpdaterArtifacts":true}}')
+            if [ "${{ matrix.platform }}" = "linux" ]; then
+              bundles="${bundles},appimage"
+            fi
+          fi
+          args+=(--bundles "$bundles")
+          bun run --cwd apps/desktop tauri build "${args[@]}"
+
+      - name: Upload desktop artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: groam-desktop-${{ matrix.platform }}
+          if-no-files-found: error
+          path: |
+            apps/desktop/src-tauri/desktop-version.txt
+            apps/desktop/src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
+            apps/desktop/src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
+            apps/desktop/src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*.exe
+            apps/desktop/src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage
+            apps/desktop/src-tauri/target/${{ matrix.target }}/release/bundle/macos/*.app.tar.gz
+            apps/desktop/src-tauri/target/${{ matrix.target }}/release/bundle/**/*.sig

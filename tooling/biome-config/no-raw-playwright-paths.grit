@@ -1,0 +1,11 @@
+engine biome(1.0)
+language js(typescript,jsx)
+
+JsCallExpression() as $call where {
+  $call <: r"(?s).*\.goto\s*\(\s*[\x22\x27\x60]/.*",
+  register_diagnostic(
+    span = $call,
+    severity = "error",
+    message = "Wrap internal Playwright paths with appHref, or use a reusable app action, so navigation respects the configured app base."
+  )
+}
