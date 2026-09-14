@@ -62,10 +62,10 @@ film (no running app, browser capture, or system FFmpeg installation required):
 just showcase-gif
 ```
 
-The command encodes the complete film continuously at 640 pixels and 5 fps,
+The command encodes the complete film continuously at 1920 x 1080 and 10 fps,
 then creates a palette-optimized `docs/assets/groam-demo.gif`. It fails rather
 than replacing the current asset if generation fails or the result exceeds the
-20 MiB README budget.
+95 MiB repository budget.
 
 Changed actions, new scene IDs, capture settings, or capture pauses need
 `bun run showcase:capture` first. Keep IDs stable when changing captions or

@@ -82,7 +82,7 @@ Open [localhost:5173](http://localhost:5173) and sign in with
 | `just e2e-local` | Run Playwright against the local app |
 | `just desktop` | Start desktop development |
 | `just showcase` | Rebuild the scripted 4K product film |
-| `just showcase-gif` | Rebuild the compact README preview from the committed film |
+| `just showcase-gif` | Rebuild the full-length 1080p README preview from the committed film |
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the container workflow and project
 conventions. The [showcase guide](tooling/showcase/README.md) explains the
