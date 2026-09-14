@@ -94,9 +94,11 @@ optional audio and cards can be configured through `presentation` in `video.ts`.
 
 ## Outputs and reproducibility
 
-Only **`artifacts/showcase.mp4`** is Git-eligible among generated outputs.
-Capture manifests, lossless frames, compiled JSON, posters, drafts, and temporary
-renders are ignored. The final MP4 is replaced only after successful rendering.
+Only **`artifacts/showcase.mp4`** and **`artifacts/repository-preview.png`** are
+Git-eligible among generated outputs. The 1280 × 640 preview uses the final captured
+product state and is ready for GitHub's repository social preview. Capture manifests,
+lossless frames, compiled JSON, posters, drafts, and temporary renders are ignored.
+The final MP4 is replaced only after successful rendering.
 
 Rebuild from code with `bun run showcase`. Live app timings and surrounding data
 can vary; authored scene durations stay fixed. For an exact rerender of a specific
@@ -112,6 +114,7 @@ Defaults use the local demo accounts created by `just seed` through
 ```bash
 bun run --cwd tooling/showcase typecheck
 bun run --cwd tooling/showcase lint
+bun run --cwd tooling/showcase preview
 bun run --cwd tooling/showcase test
 bun run --cwd tooling/showcase test:browser
 bun run lint:conventions

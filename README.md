@@ -1,8 +1,18 @@
-# Groam
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="packages/brand/assets/lockup-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="packages/brand/assets/lockup-light.svg">
+    <img alt="Groam — Plan together. Go further." src="packages/brand/assets/lockup-light.svg" width="460">
+  </picture>
+</p>
+
+<p align="center"><strong>One live workspace for the whole trip.</strong></p>
 
 Plan group trips together without losing decisions in scattered chats and
 spreadsheets. Groam combines shared itineraries, reviewable proposals, issues,
 trip chat, and screen-aware AI in one workspace.
+
+![Groam group travel workspace](tooling/showcase/artifacts/repository-preview.png)
 
 ## See Groam in action
 

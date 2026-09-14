@@ -7,7 +7,8 @@ describe('invalidPackageDependencies', () => {
       invalidPackageDependencies({
         dependencies: {
           '@groam/ai-contracts': 'workspace:*',
-          '@groam/backend': 'workspace:*'
+          '@groam/backend': 'workspace:*',
+          '@groam/brand': 'workspace:*'
         },
         name: '@groam/ui'
       })

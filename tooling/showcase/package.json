@@ -5,6 +5,7 @@
   "dependencies": {
     "@fontsource-variable/google-sans-flex": "^5.3.1",
     "@groam/app-actions": "workspace:*",
+    "@groam/brand": "workspace:*",
     "@groam/env": "workspace:*",
     "@groam/ui": "workspace:*",
     "@playwright/test": "^1.63.0",
@@ -35,6 +36,7 @@
     "capture": "bun src/cli.ts capture",
     "edit": "bun src/cli.ts edit",
     "lint": "biome check .",
+    "preview": "bun src/cli.ts preview",
     "render": "bun src/cli.ts render",
     "setup": "playwright install chromium && remotion browser ensure",
     "showcase": "bun src/cli.ts all",
