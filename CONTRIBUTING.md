@@ -52,11 +52,11 @@ just check
 
 Smaller loops:
 
-| Command | What it does |
-| --- | --- |
-| `just lint` | Conventions, syncpack, Biome |
-| `just typecheck` | TypeScript |
-| `just test` | Unit tests |
+| Command          | What it does                       |
+| ---------------- | ---------------------------------- |
+| `just lint`      | Conventions, syncpack, Biome       |
+| `just typecheck` | TypeScript                         |
+| `just test`      | Unit tests                         |
 | `just e2e-local` | Playwright against Vite on `:5173` |
 
 Do not hand-edit `apps/web/src/routeTree.gen.ts`. Add routes as files under
@@ -72,6 +72,17 @@ Do not hand-edit `apps/web/src/routeTree.gen.ts`. Add routes as files under
 - Environment variables go through `@groam/env/*` or Convex `defineApp({ env })`
 
 Agent-oriented layout notes live in [`AGENTS.md`](AGENTS.md).
+
+## Proposing changes
+
+Search [existing issues](https://github.com/nicksan222/groam/issues) before
+starting work. For a substantial change, open a feature request first so the
+approach can be discussed before implementation.
+
+Keep pull requests focused, explain the motivation and validation performed,
+and link any related issue. Add tests for behavior changes and update docs when
+commands, setup, or user-facing behavior changes. All contributions must follow
+the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## License
 

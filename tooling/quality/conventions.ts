@@ -136,6 +136,7 @@ export function invalidDirectoryNames(filePath: string): string[] {
       directory.length > 0 &&
       !directory.startsWith('.') &&
       directory !== '_generated' &&
+      prefix !== '.github/ISSUE_TEMPLATE' &&
       !kebabDirectory.test(directory)
     ) {
       invalid.push(prefix);

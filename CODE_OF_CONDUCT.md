@@ -12,9 +12,11 @@ appearance, race, caste, color, religion, or sexual identity and orientation.
 
 ## Enforcement
 
-Report unacceptable behavior through GitHub Security Advisories or by opening
-a private maintainer contact if one is listed on the repository. Maintainers
-will review and respond as appropriate.
+Report unacceptable behavior privately through the repository's
+[private reporting form](https://github.com/nicksan222/groam/security/advisories/new).
+Do not open a public issue about an active conduct incident. Maintainers will
+limit disclosure to the people needed to review the report and will respond in
+a manner appropriate to the circumstances.
 
 ## Attribution
 

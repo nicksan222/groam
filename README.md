@@ -51,17 +51,24 @@ Open [http://localhost:5173](http://localhost:5173) and sign in with
 
 Useful commands:
 
-| Command | Purpose |
-| --- | --- |
-| `just check` | Run the complete CI quality suite |
-| `just test` | Run unit and integration tests |
+| Command          | Purpose                              |
+| ---------------- | ------------------------------------ |
+| `just check`     | Run the complete CI quality suite    |
+| `just test`      | Run unit and integration tests       |
 | `just e2e-local` | Run Playwright against the local app |
-| `just desktop` | Start desktop development |
-| `just showcase` | Rebuild the scripted 4K showcase |
+| `just desktop`   | Start desktop development            |
+| `just showcase`  | Rebuild the scripted 4K showcase     |
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for conventions and setup details. See
 [`packages/backend/convex/README.md`](packages/backend/convex/README.md) for
 Convex Cloud deployment.
+
+## Community
+
+Contributions are welcome. Read the [contribution guide](CONTRIBUTING.md), ask
+for help through [SUPPORT.md](SUPPORT.md), and follow the
+[Code of Conduct](CODE_OF_CONDUCT.md). Report security vulnerabilities privately
+as described in [SECURITY.md](SECURITY.md).
 
 ## License
 
