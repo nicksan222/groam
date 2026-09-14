@@ -3,7 +3,6 @@ import {
   by,
   createTrip,
   ideaRow,
-  idFromPath,
   ids,
   openIdeaFromList,
   openSharedTrip,
@@ -36,9 +35,7 @@ test('starts an idea and opens first-class idea routes', async ({ page }) => {
   await expect(ideaRow(page, ideaName)).toBeVisible();
 
   await openIdeaFromList(page, ideaName);
-  const proposalReference = idFromPath(page, 'ideas');
-  expect(proposalReference).toMatch(/^[a-z]{6}$/u);
   await expect(page).toHaveURL(
-    new RegExp(`/trips/${tripId}/ideas/${proposalReference}/overview(?:\\?.*)?$`, 'u')
+    new RegExp(`/trips/${tripId}/ideas/[a-z]{6}/overview(?:\\?.*)?$`, 'u')
   );
 });
