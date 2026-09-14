@@ -1,67 +1,93 @@
+<div align="center">
+
 # Groam
 
-Plan group trips together without losing decisions in scattered chats and
-spreadsheets. Groam combines shared itineraries, reviewable proposals, issues,
-trip chat, and screen-aware AI in one workspace.
+**A shared place for group trips, from first idea to agreed itinerary.**
 
-## See Groam in action
+Plan together without losing decisions across chats and spreadsheets. Groam
+brings live itineraries, reviewable proposals, issues, trip conversations, and
+screen-aware AI into one workspace.
 
-<video src="https://github.com/nicksan222/groam/raw/refs/heads/main/tooling/showcase/artifacts/showcase.mp4" controls title="Planning a Lisbon trip together with Groam"></video>
+[Explore the features](#built-for-planning-together) | [Run it](#run-groam) | [Community](#community)
 
-[Watch the 3:52 showcase in full resolution](tooling/showcase/artifacts/showcase.mp4).
-It follows two travelers as they plan a Lisbon weekend from the first idea to
-an agreed itinerary.
+</div>
 
-## What you can do
+<a href="tooling/showcase/artifacts/showcase.mp4">
+  <img src="docs/assets/groam-demo.gif" alt="Groam demo showing two travelers planning a Lisbon weekend together" width="100%">
+</a>
 
-- **Build a shared itinerary.** Organize destinations, dates, activities, notes,
-  and trip covers in one live plan.
-- **Propose before changing the plan.** Package itinerary edits into ideas that
-  others can inspect, approve, and apply.
-- **Turn feedback into action.** Open issues for changes, link them to proposals,
-  and close them automatically when the approved fix is applied.
-- **Keep trip conversations together.** Start group chats tied to a trip, reply
-  in real time, and react to messages.
-- **Plan with context-aware AI.** Ask the assistant about the screen and trip you
-  are viewing, review itineraries, and use specialized issue and idea agents.
-- **Choose where your data runs.** Use an entirely local Convex backend, package
-  Groam as a desktop app, or deploy it to Convex Cloud.
+<p align="center">
+  <sub>Two travelers take a Lisbon weekend from an idea to a shared plan. <a href="tooling/showcase/artifacts/showcase.mp4">Watch the complete 3:59 showcase in 4K.</a></sub>
+</p>
 
-AI supports OpenAI, Anthropic, Google, OpenRouter, and local OpenAI-compatible
-providers such as Ollama. Group API keys stay private to the active workspace.
+## Built for planning together
 
-## Develop locally
+| | |
+| --- | --- |
+| **Live trip plans** | Organize destinations, dates, activities, notes, and trip covers in one shared itinerary. |
+| **Reviewable ideas** | Package changes into proposals that travelers can inspect, approve, revise, and apply. |
+| **Issues that resolve** | Turn feedback into tracked work and close an issue automatically when its linked fix lands. |
+| **Trip conversations** | Keep group chats, replies, and reactions beside the trip they belong to. |
+| **Context-aware AI** | Ask about the trip and screen in view, review itineraries, and work with specialized issue and idea agents. |
+| **Local-first development** | Run the web app and Convex backend locally without a cloud account, or package the same app for desktop. |
 
-You need [Bun](https://bun.sh) 1.3.11, Node.js 24, and
-[`just`](https://just.systems). No Convex account is required.
+Groam supports OpenAI, Anthropic, Google, OpenRouter, and local
+OpenAI-compatible providers such as Ollama. Provider keys are scoped to the
+active workspace.
+
+## How it fits together
+
+```text
+TanStack Router + React                    Tauri desktop shell
+             |                                    |
+             +----------- shared Groam UI --------+
+                              |
+                    reactive Convex backend
+                              |
+             auth | trips | ideas | issues | chat | AI
+```
+
+The monorepo keeps the web and desktop clients thin while sharing UI, auth,
+AI contracts, and a type-safe Convex backend. The complete stack can run on one
+machine; Convex Cloud deployment is optional.
+
+## Run Groam
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/nicksan222/groam?quickstart=1)
+
+The checked-in [dev container](.devcontainer/devcontainer.json) is the development
+environment and source of truth. Open the repository in GitHub Codespaces or
+choose **Dev Containers: Reopen in Container** locally; the toolchain and
+dependencies are provisioned automatically.
 
 ```bash
-just install
 just dev
 ```
 
-In another terminal, load the demo workspace:
+In another terminal, seed the demo workspace:
 
 ```bash
 just seed
 ```
 
-Open [http://localhost:5173](http://localhost:5173) and sign in with
+Open [localhost:5173](http://localhost:5173) and sign in with
 `demo@groam.example` / `GroamDemo123!`.
 
-Useful commands:
+## Work on Groam
 
-| Command          | Purpose                              |
-| ---------------- | ------------------------------------ |
-| `just check`     | Run the complete CI quality suite    |
-| `just test`      | Run unit and integration tests       |
+| Command | Purpose |
+| --- | --- |
+| `just check` | Run the complete CI quality suite |
+| `just test` | Run unit and integration tests |
 | `just e2e-local` | Run Playwright against the local app |
-| `just desktop`   | Start desktop development            |
-| `just showcase`  | Rebuild the scripted 4K showcase     |
+| `just desktop` | Start desktop development |
+| `just showcase` | Rebuild the scripted 4K product film |
+| `just showcase-gif` | Rebuild the compact README preview from the committed film |
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for conventions and setup details. See
-[`packages/backend/convex/README.md`](packages/backend/convex/README.md) for
-Convex Cloud deployment.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the container workflow and project
+conventions. The [showcase guide](tooling/showcase/README.md) explains the
+reproducible Playwright and Remotion film pipeline. For deployment details, see the
+[Convex backend guide](packages/backend/convex/README.md).
 
 ## Community
 
@@ -70,6 +96,9 @@ for help through [SUPPORT.md](SUPPORT.md), and follow the
 [Code of Conduct](CODE_OF_CONDUCT.md). Report security vulnerabilities privately
 as described in [SECURITY.md](SECURITY.md).
 
+Project governance and current maintainers are documented in
+[MAINTAINERS.md](MAINTAINERS.md).
+
 ## License
 
-Groam is available under the [MIT License](LICENSE).
+Groam is open source under the [MIT License](LICENSE).

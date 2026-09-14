@@ -17,6 +17,7 @@
     "zod": "^4.6.2"
   },
   "devDependencies": {
+    "@ffmpeg-installer/ffmpeg": "1.1.0",
     "@groam/typescript-config": "workspace:*",
     "@types/node": "^26.4.1",
     "@types/react": "^19.2.18",
@@ -35,6 +36,7 @@
     "capture": "bun src/cli.ts capture",
     "edit": "bun src/cli.ts edit",
     "lint": "biome check .",
+    "readme:gif": "bun src/readme-gif.ts",
     "render": "bun src/cli.ts render",
     "setup": "playwright install chromium && remotion browser ensure",
     "showcase": "bun src/cli.ts all",

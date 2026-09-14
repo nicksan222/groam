@@ -55,6 +55,18 @@ bun run showcase:render              # final 4K MP4
 bun run showcase:render -- --draft    # optional 1080p preview
 ```
 
+Rebuild the compact preview embedded in the repository README from the committed
+film (no running app, browser capture, or system FFmpeg installation required):
+
+```bash
+just showcase-gif
+```
+
+The command encodes the complete film continuously at 640 pixels and 5 fps,
+then creates a palette-optimized `docs/assets/groam-demo.gif`. It fails rather
+than replacing the current asset if generation fails or the result exceeds the
+20 MiB README budget.
+
 Changed actions, new scene IDs, capture settings, or capture pauses need
 `bun run showcase:capture` first. Keep IDs stable when changing captions or
 pacing. Run one capture/edit command at a time; they share the active manifest.
@@ -94,14 +106,16 @@ optional audio and cards can be configured through `presentation` in `video.ts`.
 
 ## Outputs and reproducibility
 
-Only **`artifacts/showcase.mp4`** is Git-eligible among generated outputs.
-Capture manifests, lossless frames, compiled JSON, posters, drafts, and temporary
-renders are ignored. The final MP4 is replaced only after successful rendering.
+The generated files committed for visitors are **`artifacts/showcase.mp4`** and
+**`../../docs/assets/groam-demo.gif`**. Capture manifests, lossless frames,
+compiled JSON, posters, drafts, and temporary renders are ignored. Both visitor
+assets are replaced only after successful rendering.
 
-Rebuild from code with `bun run showcase`. Live app timings and surrounding data
-can vary; authored scene durations stay fixed. For an exact rerender of a specific
-recording, retain its manifest and referenced PNG directory outside Git. Failed
-captures preserve the last successful manifest and write ignored diagnostics.
+Rebuild the full film from code with `bun run showcase`, then refresh the README
+preview with `just showcase-gif`. Live app timings and surrounding data can vary;
+authored scene durations stay fixed. For an exact rerender of a specific recording,
+retain its manifest and referenced PNG directory outside Git. Failed captures
+preserve the last successful manifest and write ignored diagnostics.
 
 Validated configuration comes from `@groam/env/showcase`: `SHOWCASE_BASE_URL`
 (default `http://localhost:5173`), `SHOWCASE_HEADED`, `SHOWCASE_OWNER_EMAIL`,

@@ -211,6 +211,10 @@ showcase-capture:
 showcase-studio:
     bun run showcase:studio
 
+# Rebuild the compact README GIF from the committed showcase film.
+showcase-gif:
+    bun run showcase:gif
+
 # Start the installed-app local runtime.
 runtime:
     GROAM_DATA_DIR=/data GROAM_REPLACE_CONVEX_DIR=1 GROAM_SITE_ORIGIN=http://127.0.0.1:3211 bun apps/desktop/runtime/start.ts
