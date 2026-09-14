@@ -48,7 +48,7 @@
     "e2e:local:headed": "PLAYWRIGHT_BASE_URL=http://localhost:5173 env -u NO_COLOR -u FORCE_COLOR playwright test --headed",
     "lint": "biome check .",
     "preview": "vite preview --host 0.0.0.0",
-    "routes:generate": "tsr generate",
+    "routes:generate": "NODE_ENV=production tsr generate",
     "test": "vitest run",
     "typecheck": "tsc -b"
   },
