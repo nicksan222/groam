@@ -13,7 +13,7 @@ import {
 import { cn } from '@groam/ui/lib/utils';
 import { Archive, ExternalLink, Link2, MoreHorizontal, Star } from 'lucide-react';
 import type { TripListItem } from '@/features/trips/hooks/use-trips';
-import { Link } from '@/features/workspace/navigation/router';
+import { CanonicalLink } from '@/features/workspace/navigation/router';
 
 const ACTION_BUTTON_CLASS =
   'top-1/2 right-0.5 size-5 -translate-y-1/2 text-muted-foreground/45 transition-opacity duration-150 hover:bg-transparent hover:text-muted-foreground data-[state=open]:opacity-100 md:opacity-0 md:group-hover/trip-item:opacity-100 md:group-focus-within/trip-item:opacity-100 [&>svg]:size-3.5';
@@ -52,16 +52,16 @@ export function TripSidebarRow({
       )}
     >
       <SidebarMenuSubButton asChild className="pr-7" isActive={active}>
-        <Link
+        <CanonicalLink
           onClick={onOpenMobile}
-          params={{ section: 'overview', tripId: trip.id }}
+          params={{ section: 'overview', tripId: trip.shortId ?? trip.id }}
           title={trip.favorite ? `Favourite · ${title}` : title}
           to="/trips/$tripId/$section"
         >
           <span className={cn('truncate', trip.favorite && 'font-medium tracking-tight')}>
             {trip.name}
           </span>
-        </Link>
+        </CanonicalLink>
       </SidebarMenuSubButton>
       <DropdownMenu onOpenChange={onMenuOpenChange} open={menuOpen}>
         <DropdownMenuTrigger asChild>
