@@ -2,7 +2,7 @@ import type { AuthenticatedAppUser, BackendAppActions } from '@groam/app-actions
 import { buildWorkspaceSeedPlans } from './build-workspace-seed-plans';
 import { mapWithConcurrency } from './map-with-concurrency';
 
-const TRIP_BATCH_SIZE = 8;
+const TRIPS_PER_MUTATION = 1;
 
 export type SeedWorkspaceTripsInput = {
   concurrency: number;
@@ -29,7 +29,7 @@ export async function seedWorkspaceTrips(
   input: SeedWorkspaceTripsInput
 ): Promise<SeedWorkspaceTripsResult> {
   const plans = buildWorkspaceSeedPlans(input.tripCount);
-  await mapWithConcurrency(batches(plans, TRIP_BATCH_SIZE), input.concurrency, (batch) =>
+  await mapWithConcurrency(batches(plans, TRIPS_PER_MUTATION), input.concurrency, (batch) =>
     app.createTrips(input.owner, batch)
   );
 
