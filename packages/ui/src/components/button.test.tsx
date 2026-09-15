@@ -10,14 +10,14 @@ test('renders a native button with default variant styles', () => {
   const button = screen.getByRole('button', { name: 'Save' });
   expect(button.getAttribute('data-slot')).toBe('button');
   expect(button.className).toContain('bg-primary');
-  expect(button.className).toContain('h-9');
+  expect(button.className).toContain('h-8');
 });
 
 test.each([
   ['destructive', 'bg-destructive'],
   ['outline', 'border'],
   ['secondary', 'bg-secondary'],
-  ['ghost', 'hover:bg-accent'],
+  ['ghost', 'hover:bg-muted'],
   ['link', 'underline-offset-4']
 ] as const)('applies the %s variant', (variant, expectedClass) => {
   render(<Button variant={variant}>Action</Button>);
@@ -25,9 +25,9 @@ test.each([
 });
 
 test.each([
-  ['sm', 'h-8'],
-  ['lg', 'h-10'],
-  ['icon', 'size-9']
+  ['sm', 'h-7'],
+  ['lg', 'h-9'],
+  ['icon', 'size-8']
 ] as const)('applies the %s size', (size, expectedClass) => {
   render(
     <Button aria-label="Icon action" size={size}>

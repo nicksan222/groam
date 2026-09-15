@@ -220,7 +220,7 @@ export function DataTable<TData, TValue>({
         <Table
           className={dataTableTableClassName}
           containerClassName={dataTableTableContainerClassName}
-          variant="card"
+          variant="list"
         >
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
