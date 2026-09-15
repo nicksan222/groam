@@ -86,7 +86,7 @@ test('wraps toolbar and content with data-table list spacing', () => {
 
   const section = screen.getByText('Results').parentElement;
   expect(section?.getAttribute('data-slot')).toBe('list-filter-section');
-  expect(section?.className).toContain('space-y-3');
+  expect(section?.className).toContain('space-y-2.5');
 });
 
 test('forwards search changes and shows a clear action when filters are active', () => {
