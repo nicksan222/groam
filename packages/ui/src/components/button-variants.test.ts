@@ -4,9 +4,11 @@ import { type ButtonSize, type ButtonVariant, buttonVariants } from './button-va
 describe('buttonVariants', () => {
   test('builds the default accessible button styles', () => {
     expect(buttonVariants()).toContain('bg-primary');
-    expect(buttonVariants()).toContain('h-9');
+    expect(buttonVariants()).toContain('h-8');
+    expect(buttonVariants()).toContain('rounded-sm');
+    expect(buttonVariants()).toContain('font-semibold');
     expect(buttonVariants()).toContain('focus-visible:ring-2');
-    expect(buttonVariants()).toContain('inset-shadow-[0_1px_--theme(--color-white/16%)]');
+    expect(buttonVariants()).toContain('shadow-xs');
   });
 
   test.each<[ButtonVariant, string]>([
@@ -20,13 +22,13 @@ describe('buttonVariants', () => {
   });
 
   test.each<[ButtonSize, string]>([
-    ['xs', 'h-7'],
-    ['sm', 'h-8'],
-    ['lg', 'h-10'],
-    ['icon', 'size-9'],
-    ['icon-xs', 'size-7'],
-    ['icon-sm', 'size-8'],
-    ['icon-lg', 'size-10']
+    ['xs', 'h-6'],
+    ['sm', 'h-7'],
+    ['lg', 'h-9'],
+    ['icon', 'size-8'],
+    ['icon-xs', 'size-6'],
+    ['icon-sm', 'size-7'],
+    ['icon-lg', 'size-9']
   ])('includes the expected %s dimensions', (size, expectedClass) => {
     const classes = buttonVariants({ size });
     expect(classes).toContain(expectedClass);
@@ -34,13 +36,13 @@ describe('buttonVariants', () => {
   });
 
   test('keeps the default button at its standard height on larger screens', () => {
-    expect(buttonVariants()).not.toContain('sm:h-8');
+    expect(buttonVariants()).not.toContain('sm:h-7');
   });
 
   test('preserves caller classes and treats null options as defaults', () => {
     const classes = buttonVariants({ className: 'w-full', size: null, variant: null });
     expect(classes).toContain('w-full');
     expect(classes).toContain('bg-primary');
-    expect(classes).toContain('h-9');
+    expect(classes).toContain('h-8');
   });
 });

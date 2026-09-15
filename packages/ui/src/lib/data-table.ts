@@ -34,9 +34,9 @@ export function dataTableFilterLabels(
 /** Keeps rows visible while query/status filters are applied outside the table. */
 export const dataTablePassThroughFilterFn: FilterFn<unknown> = () => true;
 
-/** Select trigger style for compact filters beside a search field (Halo dashed outline). */
+/** Select trigger style for compact filters beside a search field. */
 export const listFilterTriggerClassName =
-  'max-w-48 shrink-0 gap-1.5 border-dashed bg-background shadow-xs/5 hover:bg-accent/50 dark:hover:bg-muted data-[has-value=true]:border-solid data-[state=open]:border-solid';
+  'max-w-48 shrink-0 gap-1.5 bg-background shadow-none hover:bg-muted/60 data-[has-value=true]:border-primary/40 data-[state=open]:border-ring';
 
 /** Keeps fixed-layout columns from blowing out table width. */
 export const dataTableColumnFillClassName = 'min-w-0 max-w-0';
@@ -48,17 +48,17 @@ export const dataTableMetaTimeClassName = 'font-mono text-xs tabular-nums text-m
 export const dataTableSortHeaderClassName = '-ml-2 h-8';
 
 /** Root wrapper around toolbar + table chrome. */
-export const dataTableRootClassName = 'w-full min-w-0 space-y-3';
+export const dataTableRootClassName = 'w-full min-w-0 space-y-2.5';
 
-/** Toolbar row above the table. */
+/** Compact, open command row above a list. */
 export const dataTableToolbarClassName = 'flex min-w-0 flex-wrap items-center gap-2';
 
 /** Search field width inside list filter toolbars. */
 export const dataTableSearchInputClassName = 'w-full min-w-0 sm:max-w-56 lg:max-w-72';
 
-/** Scroll host around Halo card tables (no outer border — card cells own chrome). */
+/** Scroll host and continuous panel chrome around list tables. */
 export const dataTableChromeClassName =
-  'w-full min-h-min min-w-0 overflow-x-auto overscroll-x-contain';
+  'w-full min-h-min min-w-0 overflow-x-auto overscroll-x-contain rounded-lg border border-border bg-card shadow-xs/5';
 
 /**
  * Table wrapper inside DataTable chrome — chrome owns horizontal scroll so nested
@@ -66,11 +66,11 @@ export const dataTableChromeClassName =
  */
 export const dataTableTableContainerClassName = 'w-full min-w-0 overflow-x-visible';
 
-/** Table layout inside the chrome (Halo `table-fixed`). */
+/** Table layout inside the chrome. */
 export const dataTableTableClassName = 'w-full min-w-[max(40rem,max-content)] table-fixed';
 
 /** Default header cell typography. */
-export const dataTableHeaderClassName = 'truncate text-xs font-medium text-muted-foreground';
+export const dataTableHeaderClassName = 'truncate text-xs font-semibold text-muted-foreground';
 
 /** Header row should not pick up body hover fill. */
 export const dataTableHeaderRowClassName = 'hover:bg-transparent';
@@ -79,7 +79,7 @@ export const dataTableHeaderRowClassName = 'hover:bg-transparent';
 export const listFilterCountBadgeClassName = 'rounded-sm px-1.5 font-normal tabular-nums';
 
 /** Outline companion controls in the toolbar (Columns, etc.). */
-export const listFilterOutlineButtonClassName = 'shrink-0 border-dashed shadow-xs/5';
+export const listFilterOutlineButtonClassName = 'shrink-0 shadow-none';
 
 /** Skeleton for the status filter beside search in loading state. */
 export const dataTableStatusFilterSkeletonClassName = 'h-8 w-36 shrink-0 rounded-lg';

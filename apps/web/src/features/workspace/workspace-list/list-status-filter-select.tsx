@@ -13,7 +13,7 @@ export function ListStatusFilterSelect<TStatus extends string>({
   value
 }: {
   ariaLabel: string;
-  /** When true, Halo solid border — typically status ≠ default. */
+  /** When true, use the active-filter border — typically status ≠ default. */
   hasValue?: boolean;
   labels: Record<TStatus, string>;
   onChange: (value: TStatus) => void;

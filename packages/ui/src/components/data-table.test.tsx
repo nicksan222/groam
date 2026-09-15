@@ -4,7 +4,7 @@ import { DataTable } from './data-table';
 
 afterEach(cleanup);
 
-test('keeps a min-width Halo card table inside a horizontally scrollable chrome', () => {
+test('keeps a min-width repository list inside a bordered horizontal scroll panel', () => {
   const { container } = render(
     <DataTable
       columns={[
@@ -25,14 +25,14 @@ test('keeps a min-width Halo card table inside a horizontally scrollable chrome'
   expect(chrome?.className).toContain('min-h-min');
   expect(chrome?.className).toContain('min-w-0');
   expect(chrome?.className).toContain('w-full');
-  expect(chrome?.className).not.toContain('bg-card');
+  expect(chrome?.className).toContain('bg-card');
+  expect(chrome?.className).toContain('border-border');
+  expect(chrome?.className).toContain('rounded-lg');
   expect(chrome?.className).not.toContain('bg-muted');
   expect(chrome?.className).not.toContain('rounded-2xl');
   expect(chrome?.className).not.toContain('overflow-y-clip');
-  expect(container.querySelector('[data-slot="table-header"]')?.className).not.toContain(
-    'bg-muted'
-  );
-  expect(tableContainer?.getAttribute('data-variant')).toBe('card');
+  expect(container.querySelector('[data-slot="table-header"]')?.className).toContain('bg-muted/40');
+  expect(tableContainer?.getAttribute('data-variant')).toBe('list');
   expect(tableContainer?.className).toContain('overflow-x-visible');
   expect(tableContainer?.className).toContain('w-full');
   expect(tableContainer?.className).not.toContain('w-max');
@@ -43,6 +43,9 @@ test('keeps a min-width Halo card table inside a horizontally scrollable chrome'
   expect(table?.className).toContain('table-fixed');
   expect(table?.className).not.toContain('pr-3');
   expect(toolbar?.className).toContain('flex-wrap');
+  expect(toolbar?.className).not.toContain('bg-card');
+  expect(toolbar?.className).not.toContain('border-border');
+  expect(toolbar?.className).not.toContain('rounded-lg');
 });
 
 test('derives filter labels from resourceLabel', () => {
