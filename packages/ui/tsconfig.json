@@ -1,0 +1,12 @@
+{
+  "extends": "@groam/typescript-config/react.json",
+  "compilerOptions": {
+    "paths": {
+      "#src/*": ["./src/*"],
+      "#tsx/*": ["./src/*.tsx"],
+      "@groam/ui/*": ["./src/*"]
+    },
+    "types": ["node", "react", "react-dom", "vite/client"]
+  },
+  "include": ["src"]
+}

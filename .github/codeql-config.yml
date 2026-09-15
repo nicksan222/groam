@@ -1,0 +1,4 @@
+name: Groam CodeQL configuration
+
+paths-ignore:
+  - apps/desktop/src-tauri/vendor/**

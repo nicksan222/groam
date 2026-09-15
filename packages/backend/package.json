@@ -1,0 +1,74 @@
+{
+  "name": "@groam/backend",
+  "version": "0.0.0",
+  "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.49",
+    "@ai-sdk/google": "^4.0.64",
+    "@ai-sdk/openai": "^4.0.60",
+    "@ai-sdk/provider": "^4.0.10",
+    "@convex-dev/agent": "^0.7.1",
+    "@convex-dev/better-auth": "0.12.5",
+    "@convex-dev/geospatial": "0.2.1",
+    "@convex-dev/migrations": "^0.3.6",
+    "@convex-dev/rate-limiter": "^0.3.2",
+    "@convex-dev/static-hosting": "0.2.1",
+    "@groam/ai-contracts": "workspace:*",
+    "ai": "^7.0.93",
+    "better-auth": "1.6.26",
+    "convex": "^1.45.0",
+    "convex-helpers": "^0.1.124",
+    "isomorphic-git": "^1.41.9",
+    "memfs": "^4.71.0",
+    "unique-names-generator": "^4.7.1",
+    "zod": "^4.6.2"
+  },
+  "devDependencies": {
+    "@edge-runtime/vm": "^5.0.0",
+    "@groam/auth": "workspace:*",
+    "@groam/vitest-config": "workspace:*",
+    "@types/node": "^26.4.1",
+    "@vitest/coverage-istanbul": "5.0.0",
+    "convex-test": "^0.0.56",
+    "jose": "^6.2.12",
+    "typescript": "~7.0.2",
+    "vitest": "^5.0.0"
+  },
+  "exports": {
+    "./api": {
+      "types": "./convex/_generated/api.d.ts",
+      "default": "./convex/_generated/api.js"
+    },
+    "./auth-schema": "./convex/components/better-auth/auth.ts",
+    "./data-model": "./convex/_generated/dataModel.d.ts",
+    "./convex/*": "./convex/*.ts",
+    "./convex/_generated/api": {
+      "types": "./convex/_generated/api.d.ts",
+      "default": "./convex/_generated/api.js"
+    },
+    "./convex/_generated/dataModel": {
+      "types": "./convex/_generated/dataModel.d.ts",
+      "default": "./convex/_generated/dataModel.js"
+    }
+  },
+  "imports": {
+    "#backend/*": "./*.ts",
+    "#convex/*": "./convex/*.ts",
+    "#convex-generated/*": {
+      "types": "./convex/_generated/*.d.ts",
+      "default": "./convex/_generated/*.js"
+    },
+    "#testing/*": "./testing/*.ts"
+  },
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "auth:schema": "bun scripts/generate-auth-schema.ts",
+    "dev": "CONVEX_AGENT_MODE=anonymous bun --cwd ../.. node_modules/.bin/convex dev --typecheck-components --start 'convex dashboard'",
+    "lint": "biome check convex testing",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "type": "module"
+}

@@ -1,0 +1,51 @@
+{
+  "name": "@groam/showcase",
+  "description": "Scripted multi-user product films with Playwright and Remotion.",
+  "version": "0.0.0",
+  "dependencies": {
+    "@fontsource-variable/google-sans-flex": "^5.3.1",
+    "@groam/app-actions": "workspace:*",
+    "@groam/brand": "workspace:*",
+    "@groam/env": "workspace:*",
+    "@groam/ui": "workspace:*",
+    "@playwright/test": "^1.63.0",
+    "@remotion/bundler": "4.0.523",
+    "@remotion/cli": "4.0.523",
+    "@remotion/renderer": "4.0.523",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "remotion": "4.0.523",
+    "zod": "^4.6.2"
+  },
+  "devDependencies": {
+    "@ffmpeg-installer/ffmpeg": "1.1.0",
+    "@groam/typescript-config": "workspace:*",
+    "@types/node": "^26.4.1",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "typescript": "~7.0.2",
+    "vitest": "^5.0.0"
+  },
+  "imports": {
+    "#showcase": "./video.ts",
+    "#src/*": "./src/*.ts",
+    "#video/*": "./src/video/*.tsx"
+  },
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "capture": "bun src/cli.ts capture",
+    "edit": "bun src/cli.ts edit",
+    "lint": "biome check .",
+    "preview": "bun src/cli.ts preview",
+    "readme:gif": "bun src/readme-gif.ts",
+    "render": "bun src/cli.ts render",
+    "setup": "playwright install chromium && remotion browser ensure",
+    "showcase": "bun src/cli.ts all",
+    "studio": "remotion studio src/video/index.tsx --props public/showcase.json",
+    "test": "vitest run src/model.test.ts src/timeline.test.ts src/storyboard.test.ts",
+    "test:browser": "vitest run src/capture/record.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "type": "module"
+}

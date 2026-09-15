@@ -1,0 +1,7 @@
+engine biome(1.0)
+language js(typescript,jsx)
+
+JsxAttribute() as $attribute where {
+  $attribute <: r"(?s)className\s*=.*(?:\s|\x22|\x27|\x60|:)has-data-\[variant=.*",
+  register_diagnostic(span = $attribute, severity = "error", message = "Scope descendant variant selectors to a component data-slot. A generic has-data-[variant=...] selector also matches unrelated cards and can change the whole page.")
+}

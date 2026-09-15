@@ -1,0 +1,18 @@
+engine biome(1.0)
+language js(typescript,jsx)
+
+or {
+  or { JsxOpeningElement(), JsxSelfClosingElement() } as $tag where {
+    $tag <: r"(?s)<Shell\.(?:Split(?:\.(?:Main|Aside))?|SplitMain|SplitAside)(?:\s|/|>).*",
+    register_diagnostic(span = $tag, severity = "error", message = "Use Shell.TwoColumns, Shell.LeftColumn and Shell.RightColumn. The legacy split API is reserved for compatibility inside packages/ui.")
+  },
+  or { JsxOpeningElement(), JsxSelfClosingElement() } as $tag where {
+    $tag <: r"(?s)<Shell\.(?:TwoColumns|LeftColumn|RightColumn|DesktopRightColumn)(?:\s|/|>).*",
+    $tag <: contains or { JsxAttribute() as $attribute where { $attribute <: r"(?s)(?:className|style|rightWidth|gap|breakpoint|stack|sticky|order|mobileDivider)(?:\s*=.*)?" }, JsxSpreadAttribute() },
+    register_diagnostic(span = $tag, severity = "error", message = "Shell columns share one design by default. Do not override the scaffold with layout props, className, style or spread props; put content inside the named columns.")
+  },
+  JsxAttribute() as $attribute where {
+    $attribute <: r"(?s)className\s*=.*grid-cols-\[minmax\(0,1fr\)_[^\s\]_]+\].*",
+    register_diagnostic(span = $attribute, severity = "error", message = "Use Shell.TwoColumns with LeftColumn and RightColumn for primary/supporting page layouts. Define reusable column geometry in packages/ui.")
+  }
+}

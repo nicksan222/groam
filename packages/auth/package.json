@@ -1,0 +1,40 @@
+{
+  "name": "@groam/auth",
+  "version": "0.0.0",
+  "dependencies": {
+    "@convex-dev/better-auth": "0.12.5",
+    "@groam/env": "workspace:*",
+    "better-auth": "1.6.26"
+  },
+  "devDependencies": {
+    "@groam/typescript-config": "workspace:*",
+    "@groam/vitest-config": "workspace:*",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "convex": "^1.45.0",
+    "jsdom": "30.0.1",
+    "react": "^19.2.5",
+    "typescript": "~7.0.2",
+    "vite": "^8.2.2",
+    "vitest": "^5.0.0"
+  },
+  "exports": {
+    "./browser-client": "./src/browser-client.ts",
+    "./client": "./src/client.ts",
+    "./client-plugins": "./src/client-plugins.ts",
+    "./provider": "./src/provider.tsx"
+  },
+  "license": "MIT",
+  "peerDependencies": {
+    "convex": "^1.45.0",
+    "react": ">=19.0.0",
+    "react-dom": ">=19.0.0"
+  },
+  "private": true,
+  "scripts": {
+    "lint": "biome check src",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "type": "module"
+}

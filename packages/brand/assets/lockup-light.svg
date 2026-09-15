@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 160" fill="none">
+  <title>Groam: Plan together. Go further.</title>
+  <rect x="8" y="8" width="144" height="144" rx="31.5" fill="#151712"/>
+  <path d="M16 18C27 18 26 32 36 32H48" stroke="#f7f5ec" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" transform="translate(8 8) scale(2.25)"/>
+  <path d="M16 46C27 46 26 32 36 32" stroke="#f7f5ec" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" transform="translate(8 8) scale(2.25)"/>
+  <circle cx="116" cy="80" r="12.375" fill="#b7f34a"/>
+  <text x="188" y="103" fill="#151712" font-family="Google Sans Flex, Inter, ui-sans-serif, system-ui, sans-serif" font-size="78" font-weight="650" letter-spacing="-4">groam</text>
+  <text x="191" y="134" fill="#151712" fill-opacity="0.62" font-family="Google Sans Flex, Inter, ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="550" letter-spacing="1.5">PLAN TOGETHER. GO FURTHER.</text>
+  <!-- generated:light -->
+</svg>

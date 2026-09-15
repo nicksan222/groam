@@ -1,0 +1,21 @@
+{
+  "name": "Groam",
+  "tagline": "Plan together. Go further.",
+  "size": 64,
+  "viewBox": "0 0 64 64",
+  "colors": {
+    "ink": "#151712",
+    "paper": "#f7f5ec",
+    "signal": "#b7f34a"
+  },
+  "geometry": {
+    "frameRadius": 14,
+    "routePaths": ["M16 18C27 18 26 32 36 32H48", "M16 46C27 46 26 32 36 32"],
+    "routeWidth": 6,
+    "waypoint": {
+      "cx": 48,
+      "cy": 32,
+      "radius": 5.5
+    }
+  }
+}

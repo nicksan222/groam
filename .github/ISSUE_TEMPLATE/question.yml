@@ -1,0 +1,43 @@
+name: Question
+description: Ask for help using, running, or contributing to Groam
+title: "[Question]: "
+labels:
+  - question
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Read the [support guide](https://github.com/nicksan222/groam/blob/main/SUPPORT.md) and search existing issues before asking. Public issues must not contain secrets or personal data.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I read the support guide and searched the existing issues.
+          required: true
+        - label: This is not a security vulnerability.
+          required: true
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: Explain what you are trying to accomplish and where you are blocked.
+    validations:
+      required: true
+  - type: textarea
+    id: attempted
+    attributes:
+      label: What have you tried?
+      description: Include relevant commands, documentation, or approaches you already tried.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: If relevant, include your operating system, browser, Groam version, or commit SHA.
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Remove API keys, tokens, personal data, and other sensitive information before posting.

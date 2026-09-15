@@ -1,0 +1,17 @@
+{
+  "$schema": "../node_modules/syncpack/schema.json",
+  "semverGroups": [
+    {
+      "dependencies": ["typescript"],
+      "label": "Keep TypeScript updates within the selected minor release",
+      "range": "~"
+    }
+  ],
+  "versionGroups": [
+    {
+      "dependencyTypes": ["peer"],
+      "isIgnored": true,
+      "label": "Packages may intentionally support wider peer ranges"
+    }
+  ]
+}

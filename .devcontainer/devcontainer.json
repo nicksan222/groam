@@ -1,0 +1,107 @@
+{
+  "name": "Groam Convex",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "PI_VERSION": "0.83.0"
+    }
+  },
+
+  "features": {
+    "ghcr.io/devcontainers-extra/features/bun:1": {
+      "version": "1.3.11"
+    },
+    "ghcr.io/devcontainers/features/rust:1": {
+      "profile": "minimal",
+      "version": "stable"
+    }
+  },
+
+  "remoteUser": "node",
+  "updateRemoteUserUID": true,
+  "runArgs": ["--init"],
+
+  "mounts": [
+    "source=${localWorkspaceFolderBasename}-node-modules,target=${containerWorkspaceFolder}/node_modules,type=volume",
+    "source=${localWorkspaceFolderBasename}-bun-cache,target=/home/node/.bun/install/cache,type=volume",
+    "source=${localEnv:HOME}/.pi,target=/home/node/.pi,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.convex,target=/home/node/.convex,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.claude,target=/home/node/.claude,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.codex,target=/home/node/.codex,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.copilot,target=/home/node/.copilot,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.config/gh,target=/home/node/.config/gh,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.config/gcloud,target=/home/node/.config/gcloud,type=bind,consistency=cached"
+  ],
+
+  "remoteEnv": {
+    "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}",
+    "ANTHROPIC_BASE_URL": "${localEnv:ANTHROPIC_BASE_URL}",
+    "OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY}",
+    "OPENAI_BASE_URL": "${localEnv:OPENAI_BASE_URL}",
+    "GEMINI_API_KEY": "${localEnv:GEMINI_API_KEY}",
+    "GOOGLE_API_KEY": "${localEnv:GOOGLE_API_KEY}",
+    "DEEPSEEK_API_KEY": "${localEnv:DEEPSEEK_API_KEY}",
+    "KIMI_API_KEY": "${localEnv:KIMI_API_KEY}",
+    "OPENROUTER_API_KEY": "${localEnv:OPENROUTER_API_KEY}"
+  },
+
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+
+  "forwardPorts": [3210, 3211, 4321, 5173, 6790],
+  "portsAttributes": {
+    "3210": {
+      "label": "Convex API",
+      "onAutoForward": "silent"
+    },
+    "3211": {
+      "label": "Convex HTTP and hosting",
+      "onAutoForward": "silent"
+    },
+    "4321": {
+      "label": "Landing (Astro)",
+      "onAutoForward": "silent"
+    },
+    "5173": {
+      "label": "Web app (Vite)",
+      "onAutoForward": "openPreview"
+    },
+    "6790": {
+      "label": "Convex dashboard",
+      "onAutoForward": "openBrowser"
+    }
+  },
+  "otherPortsAttributes": {
+    "onAutoForward": "ignore"
+  },
+
+  "hostRequirements": {
+    "cpus": 2,
+    "memory": "4gb",
+    "storage": "16gb"
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "astro-build.astro-vscode",
+        "bradlc.vscode-tailwindcss",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "oven.bun-vscode"
+      ],
+      "settings": {
+        "typescript.tsdk": "node_modules/typescript/lib",
+        "typescript.enablePromptUseWorkspaceTsdk": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit"
+        },
+        "files.watcherExclude": {
+          "**/node_modules/**": true,
+          "**/dist/**": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,38 @@
+name: Setup Convex Target
+description: Mint a short-lived deploy key for one Groam environment
+
+inputs:
+  access-token:
+    description: Convex personal access token
+    required: true
+  environment:
+    description: beta or prod
+    required: true
+  scope:
+    description: Unique token suffix for concurrent jobs
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Mint deploy key
+      shell: bash
+      env:
+        CONVEX_OVERRIDE_ACCESS_TOKEN: ${{ inputs.access-token }}
+        TARGET_ENVIRONMENT: ${{ inputs.environment }}
+        TOKEN_SCOPE: ${{ inputs.scope }}
+      run: |
+        set -euo pipefail
+        case "$TARGET_ENVIRONMENT" in
+          beta|prod) ;;
+          *) echo "Unsupported environment: $TARGET_ENVIRONMENT" >&2; exit 1 ;;
+        esac
+
+        TOKEN_NAME="github-actions-${TARGET_ENVIRONMENT}-${TOKEN_SCOPE}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+        DEPLOYMENT="groam:${TARGET_ENVIRONMENT}"
+        DEPLOY_KEY="$(bunx convex deployment token create "$TOKEN_NAME" --deployment "$DEPLOYMENT")"
+
+        echo "::add-mask::$DEPLOY_KEY"
+        echo "CONVEX_DEPLOY_KEY=$DEPLOY_KEY" >> "$GITHUB_ENV"
+        echo "CONVEX_TOKEN_NAME=$TOKEN_NAME" >> "$GITHUB_ENV"
+        echo "CONVEX_TARGET_DEPLOYMENT=$DEPLOYMENT" >> "$GITHUB_ENV"

@@ -1,0 +1,122 @@
+name: Bootstrap Groam
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: bootstrap-groam
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+  TURBO_TELEMETRY_DISABLED: '1'
+
+jobs:
+  provision:
+    name: Create Convex project and environments
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup workspace
+        uses: ./.github/actions/setup-workspace
+
+      - name: Provision project, beta, and prod
+        shell: bash
+        env:
+          CONVEX_OVERRIDE_ACCESS_TOKEN: ${{ secrets.CONVEX_ACCESS_TOKEN }}
+        run: |
+          # Creation is intentionally retried on every bootstrap. Existing-resource
+          # errors are harmless; the deploy jobs below validate both targets.
+          bunx convex project create groam || true
+          bunx convex deployment create groam:beta --type prod || true
+          bunx convex deployment create groam:prod --type prod --default || true
+
+          for environment in beta prod; do
+            token_name="bootstrap-validation-${environment}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+            token="$(bunx convex deployment token create "$token_name" --deployment "groam:${environment}")"
+            echo "::add-mask::$token"
+            bunx convex deployment token delete "$token_name" --deployment "groam:${environment}"
+          done
+
+  test:
+    name: Test
+    uses: ./.github/workflows/test-reusable.yml
+
+  deploy:
+    name: Bring ${{ matrix.environment }} online
+    needs: [provision, test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [beta, prod]
+    environment:
+      name: ${{ matrix.environment }}
+      url: ${{ steps.urls.outputs.site-url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup workspace
+        uses: ./.github/actions/setup-workspace
+
+      - name: Select Convex environment
+        uses: ./.github/actions/setup-convex-target
+        with:
+          access-token: ${{ secrets.CONVEX_ACCESS_TOKEN }}
+          environment: ${{ matrix.environment }}
+          scope: bootstrap
+
+      - name: Deploy Convex backend
+        run: bun run convex:deploy
+
+      - name: Configure deployment URLs
+        id: urls
+        shell: bash
+        run: |
+          URLS="$(bunx convex run --component web lib:getUrls '{}')"
+          SITE_URL="$(jq --raw-output '.siteUrl' <<< "$URLS")"
+          SITE_URL="${SITE_URL%/}"
+          bunx convex env set SITE_URL "$SITE_URL/"
+          echo "site-url=$SITE_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Configure Better Auth
+        shell: bash
+        run: |
+          if ! bunx convex env list --names-only | grep --quiet '^BETTER_AUTH_SECRET$'; then
+            bunx convex env set BETTER_AUTH_SECRET "$(openssl rand -base64 48)"
+          fi
+
+      - name: Run pending migrations
+        run: bun run migrations:run
+
+      - name: Deploy web app
+        run: bun run hosting:upload:web:prod
+
+      - name: Smoke test
+        shell: bash
+        env:
+          SITE_URL: ${{ steps.urls.outputs.site-url }}
+        run: |
+          curl --fail --show-error --silent "$SITE_URL/" >/dev/null
+          curl --fail --show-error --silent "$SITE_URL/settings" >/dev/null
+          test "$(curl --output /dev/null --silent --write-out '%{http_code}' "$SITE_URL/missing")" = "404"
+
+      - name: Revoke deploy key
+        if: always()
+        uses: ./.github/actions/cleanup-convex-target
+        with:
+          access-token: ${{ secrets.CONVEX_ACCESS_TOKEN }}

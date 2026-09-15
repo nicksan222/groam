@@ -1,0 +1,105 @@
+{
+  "root": true,
+  "$schema": "https://biomejs.dev/schemas/2.5.12/schema.json",
+  "extends": ["./tooling/biome-config/biome.json"],
+  "plugins": [
+    {
+      "path": "./tooling/biome-config/no-local-type-definitions.grit",
+      "includes": [
+        "**/apps/web/src/**",
+        "!**/apps/web/src/types/**",
+        "!**/apps/web/src/routeTree.gen.ts",
+        "!**/apps/web/src/**/*.test.ts",
+        "!**/apps/web/src/**/*.test.tsx"
+      ]
+    },
+    {
+      "path": "./tooling/biome-config/shell-columns.grit",
+      "includes": [
+        "**/apps/web/src/**",
+        "!**/apps/web/src/**/*.test.ts",
+        "!**/apps/web/src/**/*.test.tsx"
+      ]
+    },
+    {
+      "path": "./tooling/biome-config/planning-page-body.grit",
+      "includes": ["**/apps/web/src/features/trips/trip-detail/trip-page-shell.tsx"]
+    },
+    {
+      "path": "./tooling/biome-config/no-nested-planning-page-body.grit",
+      "includes": [
+        "**/apps/web/src/features/trips/**",
+        "**/apps/web/src/features/ideas/**",
+        "!**/apps/web/src/features/trips/trip-detail/trip-page-shell.tsx",
+        "!**/apps/web/src/**/*.test.ts",
+        "!**/apps/web/src/**/*.test.tsx"
+      ]
+    },
+    {
+      "path": "./tooling/biome-config/scoped-descendant-variants.grit",
+      "includes": ["**/packages/ui/src/**", "**/apps/web/src/**", "!**/*.test.ts", "!**/*.test.tsx"]
+    },
+    {
+      "path": "./tooling/biome-config/no-raw-test-ids.grit",
+      "includes": [
+        "**/apps/web/src/**",
+        "!**/apps/web/src/**/*.test.ts",
+        "!**/apps/web/src/**/*.test.tsx"
+      ]
+    },
+    {
+      "path": "./tooling/biome-config/no-native-browser-dialogs.grit",
+      "includes": [
+        "**/apps/web/src/**",
+        "!**/apps/web/src/features/workspace/workspace-shell/use-confirm-dialog.tsx",
+        "!**/apps/web/src/**/*.test.ts",
+        "!**/apps/web/src/**/*.test.tsx"
+      ]
+    },
+    {
+      "path": "./tooling/biome-config/no-direct-web-storage.grit",
+      "includes": [
+        "**/apps/web/src/**",
+        "!**/apps/web/src/**/*.test.ts",
+        "!**/apps/web/src/**/*.test.tsx"
+      ]
+    },
+    {
+      "path": "./tooling/biome-config/convex-hooks-in-hooks.grit",
+      "includes": [
+        "**/apps/web/src/features/**",
+        "!**/apps/web/src/features/**/hooks/**",
+        "!**/apps/web/src/**/*.test.ts",
+        "!**/apps/web/src/**/*.test.tsx"
+      ]
+    },
+    {
+      "path": "./tooling/biome-config/no-fetch-in-components.grit",
+      "includes": ["**/apps/web/src/**/*.tsx", "!**/apps/web/src/**/*.test.tsx"]
+    },
+    {
+      "path": "./tooling/biome-config/no-direct-sonner-imports.grit",
+      "includes": [
+        "**/apps/web/src/**",
+        "!**/apps/web/src/**/*.test.ts",
+        "!**/apps/web/src/**/*.test.tsx"
+      ]
+    },
+    {
+      "path": "./tooling/biome-config/no-raw-internal-anchors.grit",
+      "includes": [
+        "**/apps/web/src/**",
+        "!**/apps/web/src/**/*.test.ts",
+        "!**/apps/web/src/**/*.test.tsx"
+      ]
+    },
+    {
+      "path": "./tooling/biome-config/no-raw-playwright-test-ids.grit",
+      "includes": ["**/apps/web/e2e/**", "**/tooling/app-actions/src/playwright/**"]
+    },
+    {
+      "path": "./tooling/biome-config/no-raw-playwright-paths.grit",
+      "includes": ["**/apps/web/e2e/**"]
+    }
+  ]
+}

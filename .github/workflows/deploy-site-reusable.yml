@@ -1,0 +1,60 @@
+name: Deploy Static Site
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: beta or prod
+        required: true
+        type: string
+      site:
+        description: Static-hosting component and package script suffix
+        required: true
+        type: string
+    secrets:
+      CONVEX_ACCESS_TOKEN:
+        required: true
+
+permissions:
+  contents: read
+
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+  TURBO_TELEMETRY_DISABLED: '1'
+
+jobs:
+  deploy:
+    name: Deploy ${{ inputs.site }} to ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: ${{ inputs.environment }}
+    env:
+      STATIC_SITE: ${{ inputs.site }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup workspace
+        uses: ./.github/actions/setup-workspace
+
+      - name: Select Convex environment
+        uses: ./.github/actions/setup-convex-target
+        with:
+          access-token: ${{ secrets.CONVEX_ACCESS_TOKEN }}
+          environment: ${{ inputs.environment }}
+          scope: site-${{ inputs.site }}
+
+      - name: Deploy static site
+        shell: bash
+        run: bun run "hosting:upload:${STATIC_SITE}:prod"
+
+      - name: Revoke deploy key
+        if: always()
+        uses: ./.github/actions/cleanup-convex-target
+        with:
+          access-token: ${{ secrets.CONVEX_ACCESS_TOKEN }}

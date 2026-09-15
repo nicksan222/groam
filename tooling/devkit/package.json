@@ -1,0 +1,28 @@
+{
+  "name": "@groam/devkit",
+  "version": "0.0.0",
+  "dependencies": {
+    "@groam/env": "workspace:*"
+  },
+  "devDependencies": {
+    "@groam/typescript-config": "workspace:*",
+    "@types/node": "^26.4.1",
+    "typescript": "~7.0.2"
+  },
+  "exports": {
+    "./configure-auth": "./configure-auth.ts",
+    "./constants": "./constants.ts",
+    "./http-readiness": "./http-readiness.ts",
+    "./repo-root": "./repo-root.ts",
+    "./run-convex": "./run-convex.ts",
+    "./sync-ai-env": "./sync-ai-env.ts",
+    "./wait-for-backend": "./wait-for-backend.ts"
+  },
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "test": "bun test .",
+    "typecheck": "tsc --noEmit"
+  },
+  "type": "module"
+}

@@ -1,0 +1,114 @@
+name: Deploy Environment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to deploy
+        required: true
+        type: choice
+        options:
+          - beta
+          - prod
+        default: beta
+
+concurrency:
+  group: deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+  TURBO_TELEMETRY_DISABLED: '1'
+
+jobs:
+  test:
+    name: Test
+    uses: ./.github/workflows/test-reusable.yml
+
+  backend:
+    name: Deploy backend and migrations to ${{ inputs.environment }}
+    needs: [test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ steps.urls.outputs.site-url }}
+    outputs:
+      site-url: ${{ steps.urls.outputs.site-url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup workspace
+        uses: ./.github/actions/setup-workspace
+
+      - name: Select Convex environment
+        uses: ./.github/actions/setup-convex-target
+        with:
+          access-token: ${{ secrets.CONVEX_ACCESS_TOKEN }}
+          environment: ${{ inputs.environment }}
+          scope: backend
+
+      - name: Deploy Convex backend
+        run: bun run convex:deploy
+
+      - name: Configure deployment URLs
+        id: urls
+        shell: bash
+        run: |
+          URLS="$(bunx convex run --component web lib:getUrls '{}')"
+          SITE_URL="$(jq --raw-output '.siteUrl' <<< "$URLS")"
+          SITE_URL="${SITE_URL%/}"
+          bunx convex env set SITE_URL "$SITE_URL/"
+          echo "site-url=$SITE_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure Better Auth secret
+        shell: bash
+        run: |
+          if ! bunx convex env list --names-only | grep --quiet '^BETTER_AUTH_SECRET$'; then
+            bunx convex env set BETTER_AUTH_SECRET "$(openssl rand -base64 48)"
+          fi
+
+      - name: Run pending migrations
+        run: bun run migrations:run
+
+      - name: Revoke deploy key
+        if: always()
+        uses: ./.github/actions/cleanup-convex-target
+        with:
+          access-token: ${{ secrets.CONVEX_ACCESS_TOKEN }}
+
+  sites:
+    name: Deploy web
+    needs: [backend]
+    uses: ./.github/workflows/deploy-site-reusable.yml
+    with:
+      environment: ${{ inputs.environment }}
+      site: web
+    secrets:
+      CONVEX_ACCESS_TOKEN: ${{ secrets.CONVEX_ACCESS_TOKEN }}
+
+  smoke-test:
+    name: Smoke test ${{ inputs.environment }}
+    needs: [backend, sites]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ needs.backend.outputs.site-url }}
+    env:
+      SITE_URL: ${{ needs.backend.outputs.site-url }}
+    steps:
+      - name: Verify all hosted routes
+        shell: bash
+        run: |
+          curl --fail --show-error --silent "$SITE_URL/" >/dev/null
+          curl --fail --show-error --silent "$SITE_URL/settings" >/dev/null
+          test "$(curl --output /dev/null --silent --write-out '%{http_code}' "$SITE_URL/missing")" = "404"

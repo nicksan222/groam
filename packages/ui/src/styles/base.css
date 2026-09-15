@@ -1,0 +1,120 @@
+body {
+  letter-spacing: var(--tracking-normal);
+}
+
+:where(#root) {
+  min-height: 100dvh;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    font-family: var(--font-sans);
+  }
+
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: var(--font-mono);
+  }
+
+  ::selection {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+@utility safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Portaled overlays (including json-render selects) need viewport clamps. */
+[data-slot='select-content'] {
+  max-width: min(22rem, calc(100vw - 1rem));
+}
+
+[data-slot='select-item'] {
+  max-width: calc(100vw - 2rem);
+}
+
+[data-slot='select-item'] > span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ========== View Transition (page navigation fade) ========== */
+
+::view-transition-old(root) {
+  animation: fade-out 120ms ease-out;
+}
+
+::view-transition-new(root) {
+  animation: fade-in 120ms ease-in;
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ========== Auth card (smooth resize between steps/states) ========== */
+
+/* The shared `auth-card` element morphs its box (size + position) as the form
+   swaps steps. `height: auto` on the snapshots keeps each one at its natural
+   height so growth reveals downward instead of vertically stretching. */
+::view-transition-group(auth-card) {
+  animation-duration: 300ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+::view-transition-old(auth-card),
+::view-transition-new(auth-card) {
+  height: auto;
+  animation-duration: 300ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+::view-transition-old(auth-card) {
+  animation-name: fade-out;
+}
+
+::view-transition-new(auth-card) {
+  animation-name: fade-in;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(auth-card),
+  ::view-transition-old(auth-card),
+  ::view-transition-new(auth-card) {
+    animation: none;
+  }
+}
