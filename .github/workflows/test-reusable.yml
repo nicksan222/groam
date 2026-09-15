@@ -152,7 +152,9 @@ jobs:
       matrix:
         include:
           - platform: linux
-            runner: ubuntu-latest
+            # Build portable Linux bundles against the oldest supported glibc
+            # baseline instead of following ubuntu-latest image rollouts.
+            runner: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
             bundles: deb
           - platform: macos-arm
@@ -221,7 +223,7 @@ jobs:
           set -euo pipefail
           export TAURI_SIGNING_PRIVATE_KEY_PASSWORD=
           bundles="${{ matrix.bundles }}"
-          args=(--ci --target "${{ matrix.target }}")
+          args=(--ci --verbose --target "${{ matrix.target }}")
           if [ -n "${TAURI_SIGNING_PRIVATE_KEY:-}" ]; then
             args+=(--config '{"bundle":{"createUpdaterArtifacts":true}}')
             if [ "${{ matrix.platform }}" = "linux" ]; then
