@@ -37,6 +37,7 @@ import type * as modules_assistant_standalone_index from "../modules/assistant/s
 import type * as modules_assistant_standalone_session from "../modules/assistant/standalone/session.js";
 import type * as modules_assistant_validators_index from "../modules/assistant/validators/index.js";
 import type * as modules_auth_auth from "../modules/auth/auth.js";
+import type * as modules_auth_origins from "../modules/auth/origins.js";
 import type * as modules_auth_workspace from "../modules/auth/workspace.js";
 import type * as modules_dev_local from "../modules/dev/local.js";
 import type * as modules_dev_populate from "../modules/dev/populate.js";
@@ -280,6 +281,7 @@ declare const fullApi: ApiFromModules<{
   "modules/assistant/standalone/session": typeof modules_assistant_standalone_session;
   "modules/assistant/validators/index": typeof modules_assistant_validators_index;
   "modules/auth/auth": typeof modules_auth_auth;
+  "modules/auth/origins": typeof modules_auth_origins;
   "modules/auth/workspace": typeof modules_auth_workspace;
   "modules/dev/local": typeof modules_dev_local;
   "modules/dev/populate": typeof modules_dev_populate;
