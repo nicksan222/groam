@@ -11,9 +11,9 @@ const CODE_ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
 const CODE_LENGTH = 12;
 const INVITATION_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000;
 const EXPIRED_CODE_CLEANUP_LIMIT = 50;
-const MAX_VISIBLE_CODES = 100;
+const MAX_ACTIVE_CODES = 100;
 
-type InvitationRole = 'admin' | 'member';
+export type InvitationRole = 'admin' | 'member';
 
 function formatCode(compactCode: string): string {
   return compactCode.match(/.{1,4}/g)?.join('-') ?? compactCode;
@@ -51,10 +51,11 @@ export async function createInvitationCode(
   role: InvitationRole
 ) {
   assertOrganizationManager(workspace);
+  const now = Date.now();
   const expiredInvitations = await ctx.db
     .query('organizationInvitationCodes')
     .withIndex('by_organizationId_and_expiresAt', (query) =>
-      query.eq('organizationId', workspace.organizationId).lte('expiresAt', Date.now())
+      query.eq('organizationId', workspace.organizationId).lte('expiresAt', now)
     )
     .take(EXPIRED_CODE_CLEANUP_LIMIT);
   await Promise.all(expiredInvitations.map((invitation) => ctx.db.delete(invitation._id)));
@@ -67,10 +68,21 @@ export async function createInvitationCode(
       .unique();
     if (collision) continue;
 
+    const activeInvitations = await ctx.db
+      .query('organizationInvitationCodes')
+      .withIndex('by_organizationId_and_expiresAt', (query) =>
+        query.eq('organizationId', workspace.organizationId).gt('expiresAt', now)
+      )
+      .order('asc')
+      .take(MAX_ACTIVE_CODES);
+    if (activeInvitations.length === MAX_ACTIVE_CODES) {
+      await ctx.db.delete(activeInvitations[0]._id);
+    }
+
     const id = await ctx.db.insert('organizationInvitationCodes', {
       code,
       createdBy: workspace.userId,
-      expiresAt: Date.now() + INVITATION_LIFETIME_MS,
+      expiresAt: now + INVITATION_LIFETIME_MS,
       organizationId: workspace.organizationId,
       role
     });
@@ -90,7 +102,7 @@ export async function listInvitationCodes(ctx: QueryCtx, workspace: Workspace, n
       query.eq('organizationId', workspace.organizationId).gt('expiresAt', now)
     )
     .order('desc')
-    .take(MAX_VISIBLE_CODES);
+    .take(MAX_ACTIVE_CODES);
   return invitations.map(invitationCodeRecord);
 }
 

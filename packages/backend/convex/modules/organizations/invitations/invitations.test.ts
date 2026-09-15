@@ -61,3 +61,44 @@ test('only managers can create, list, and revoke invitation codes', {
     owner.client.query(api.routes.organizations.invitations.list.run, { now: Date.now() })
   ).resolves.toEqual([]);
 });
+
+test('revokes the oldest code before creating code 101', { timeout: 15_000 }, async () => {
+  const { owner } = await setupGroup();
+  const organizationId = owner.organizationId;
+  if (!organizationId) throw new Error('Expected an organization');
+  const now = Date.now();
+  const oldestCode = 'CODE00000000';
+
+  await owner.test.run(async (ctx) => {
+    await Promise.all(
+      Array.from({ length: 100 }, (_, index) =>
+        ctx.db.insert('organizationInvitationCodes', {
+          code: `CODE${index.toString().padStart(8, '0')}`,
+          createdBy: owner.userId,
+          expiresAt: now + 1_000_000 + index,
+          organizationId,
+          role: 'member'
+        })
+      )
+    );
+  });
+
+  const newest = await owner.client.mutation(api.routes.organizations.invitations.create.run, {
+    role: 'member'
+  });
+  const visible = await owner.client.query(api.routes.organizations.invitations.list.run, { now });
+  const stored = await owner.test.run((ctx) =>
+    ctx.db
+      .query('organizationInvitationCodes')
+      .withIndex('by_organizationId_and_expiresAt', (query) =>
+        query.eq('organizationId', organizationId).gt('expiresAt', now)
+      )
+      .collect()
+  );
+
+  expect(visible).toHaveLength(100);
+  expect(stored).toHaveLength(100);
+  expect(visible.map(({ id }) => id).sort()).toEqual(stored.map(({ _id }) => _id).sort());
+  expect(visible.some(({ code }) => code === oldestCode)).toBe(false);
+  expect(visible.some(({ id }) => id === newest.id)).toBe(true);
+});
