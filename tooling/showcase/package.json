@@ -43,7 +43,7 @@
     "setup": "playwright install chromium && remotion browser ensure",
     "showcase": "bun src/cli.ts all",
     "studio": "remotion studio src/video/index.tsx --props public/showcase.json",
-    "test": "vitest run src/model.test.ts src/timeline.test.ts src/storyboard.test.ts",
+    "test": "vitest run src/model.test.ts src/timeline.test.ts src/storyboard.test.ts src/readme-gif.test.ts",
     "test:browser": "vitest run src/capture/record.test.ts",
     "typecheck": "tsc --noEmit"
   },
