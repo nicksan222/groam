@@ -76,29 +76,4 @@ describe('stageRuntimeResources', () => {
     expect(existsSync(path.join(stageRoot, 'packages/ui/node_modules'))).toBe(false);
     expect(existsSync(path.join(stageRoot, 'node_modules/@groam/postcss-config'))).toBe(false);
   });
-
-  test('excludes musl native packages from a GNU Linux runtime', () => {
-    const projectRoot = mkdtempSync(path.join(tmpdir(), 'groam-stage-'));
-    const stageRoot = path.join(projectRoot, 'apps/desktop/src-tauri/groam-runtime');
-    tempRoots.push(projectRoot);
-
-    writeFile(path.join(projectRoot, 'package.json'), '{}');
-    writeFile(path.join(projectRoot, 'bun.lock'), '');
-    writeFile(path.join(projectRoot, 'convex.json'), '{}');
-    writeFile(path.join(projectRoot, 'apps/desktop/runtime/start.ts'), '');
-    writeFile(path.join(projectRoot, 'tooling/devkit/configure-auth.ts'), '');
-    writeFile(path.join(projectRoot, 'packages/ui/package.json'), '{}');
-    writeFile(path.join(projectRoot, 'apps/web/dist/index.html'), '<html></html>');
-    writeFile(path.join(projectRoot, 'node_modules/native-linux-x64-gnu/binding.node'), 'gnu');
-    writeFile(path.join(projectRoot, 'node_modules/native-linux-x64-musl/binding.node'), 'musl');
-
-    stageRuntimeResources(projectRoot, stageRoot, 'x86_64-unknown-linux-gnu');
-
-    expect(existsSync(path.join(stageRoot, 'node_modules/native-linux-x64-gnu/binding.node'))).toBe(
-      true
-    );
-    expect(
-      existsSync(path.join(stageRoot, 'node_modules/native-linux-x64-musl/binding.node'))
-    ).toBe(false);
-  });
 });

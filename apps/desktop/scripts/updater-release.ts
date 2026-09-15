@@ -6,7 +6,7 @@ const root = fileURLToPath(new URL('../../..', import.meta.url));
 const configPath = path.join(root, 'apps/desktop/src-tauri/tauri.conf.json');
 
 const platforms = [
-  ['linux-x86_64', '.AppImage'],
+  ['linux-x86_64', '.deb'],
   ['darwin-aarch64', '.app.tar.gz'],
   ['windows-x86_64', '-setup.exe']
 ] as const;

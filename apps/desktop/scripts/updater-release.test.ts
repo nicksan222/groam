@@ -13,7 +13,7 @@ describe('releaseVersion', () => {
 describe('writeLatestJson', () => {
   test('maps signed bundles to updater platform keys', () => {
     const dir = mkdtempSync(path.join(tmpdir(), 'groam-manifest-'));
-    for (const name of ['Groam.AppImage', 'Groam.app.tar.gz', 'Groam-setup.exe']) {
+    for (const name of ['Groam_amd64.deb', 'Groam.app.tar.gz', 'Groam-setup.exe']) {
       writeFileSync(path.join(dir, name), 'bundle');
       writeFileSync(path.join(dir, `${name}.sig`), `sig-${name}`);
     }
@@ -33,7 +33,7 @@ describe('writeLatestJson', () => {
       'linux-x86_64',
       'windows-x86_64'
     ]);
-    expect(manifest.platforms['linux-x86_64'].url).toContain('Groam.AppImage');
+    expect(manifest.platforms['linux-x86_64'].url).toContain('Groam_amd64.deb');
 
     rmSync(dir, { force: true, recursive: true });
   });
