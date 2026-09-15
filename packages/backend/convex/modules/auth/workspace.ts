@@ -23,7 +23,7 @@ export type WorkspaceFunctionCtx = ActionCtx | MutationCtx | QueryCtx;
 
 const ORGANIZATION_MANAGER_ROLES = new Set(['admin', 'owner']);
 
-async function getBetterAuth(ctx: WorkspaceFunctionCtx) {
+export async function getBetterAuth(ctx: WorkspaceFunctionCtx) {
   return await authComponent.getAuth(createAuth, ctx);
 }
 

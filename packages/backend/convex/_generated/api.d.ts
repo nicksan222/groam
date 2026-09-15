@@ -58,6 +58,7 @@ import type * as modules_media_library_index from "../modules/media/library/inde
 import type * as modules_media_library_validators from "../modules/media/library/validators.js";
 import type * as modules_notifications_index from "../modules/notifications/index.js";
 import type * as modules_organizations_cleanup from "../modules/organizations/cleanup.js";
+import type * as modules_organizations_invitations_index from "../modules/organizations/invitations/index.js";
 import type * as modules_references_index from "../modules/references/index.js";
 import type * as modules_travel_activities_index from "../modules/travel/activities/index.js";
 import type * as modules_travel_activities_timeblocks from "../modules/travel/activities/timeblocks.js";
@@ -170,6 +171,10 @@ import type * as routes_media_upload from "../routes/media/upload.js";
 import type * as routes_notifications_list from "../routes/notifications/list.js";
 import type * as routes_notifications_mark_all from "../routes/notifications/mark/all.js";
 import type * as routes_notifications_mark_read from "../routes/notifications/mark/read.js";
+import type * as routes_organizations_invitations_create from "../routes/organizations/invitations/create.js";
+import type * as routes_organizations_invitations_list from "../routes/organizations/invitations/list.js";
+import type * as routes_organizations_invitations_redeem from "../routes/organizations/invitations/redeem.js";
+import type * as routes_organizations_invitations_revoke from "../routes/organizations/invitations/revoke.js";
 import type * as routes_references_resolve from "../routes/references/resolve.js";
 import type * as routes_settings_ai_get from "../routes/settings/ai/get.js";
 import type * as routes_settings_ai_set from "../routes/settings/ai/set.js";
@@ -301,6 +306,7 @@ declare const fullApi: ApiFromModules<{
   "modules/media/library/validators": typeof modules_media_library_validators;
   "modules/notifications/index": typeof modules_notifications_index;
   "modules/organizations/cleanup": typeof modules_organizations_cleanup;
+  "modules/organizations/invitations/index": typeof modules_organizations_invitations_index;
   "modules/references/index": typeof modules_references_index;
   "modules/travel/activities/index": typeof modules_travel_activities_index;
   "modules/travel/activities/timeblocks": typeof modules_travel_activities_timeblocks;
@@ -413,6 +419,10 @@ declare const fullApi: ApiFromModules<{
   "routes/notifications/list": typeof routes_notifications_list;
   "routes/notifications/mark/all": typeof routes_notifications_mark_all;
   "routes/notifications/mark/read": typeof routes_notifications_mark_read;
+  "routes/organizations/invitations/create": typeof routes_organizations_invitations_create;
+  "routes/organizations/invitations/list": typeof routes_organizations_invitations_list;
+  "routes/organizations/invitations/redeem": typeof routes_organizations_invitations_redeem;
+  "routes/organizations/invitations/revoke": typeof routes_organizations_invitations_revoke;
   "routes/references/resolve": typeof routes_references_resolve;
   "routes/settings/ai/get": typeof routes_settings_ai_get;
   "routes/settings/ai/set": typeof routes_settings_ai_set;
