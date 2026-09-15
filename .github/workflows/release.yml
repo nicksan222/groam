@@ -1,9 +1,6 @@
 name: Release
 
 on:
-  # Temporary branch-only trigger used to prove the signed release path before merge.
-  push:
-    branches: [fix/weekly-github-release]
   schedule:
     # Monday at 06:17 UTC; offset from the hour to reduce scheduler congestion.
     - cron: '17 6 * * 1'
@@ -15,7 +12,7 @@ on:
         type: string
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-main
   cancel-in-progress: false
 
 permissions:
@@ -41,7 +38,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [ "$EVENT_NAME" != "push" ] && [ "$REF" != "refs/heads/main" ]; then
+          if [ "$REF" != "refs/heads/main" ]; then
             echo '::error::Releases must run from main.'
             exit 1
           fi
@@ -129,7 +126,6 @@ jobs:
   publish:
     name: Create GitHub Release
     needs: [prepare]
-    if: github.event_name != 'push'
     environment: release
     runs-on: ubuntu-latest
     steps:
