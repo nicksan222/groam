@@ -15,7 +15,6 @@ import { Route as WorkspaceChatRouteImport } from './routes/_workspace.chat'
 import { Route as WorkspaceGroupRouteImport } from './routes/_workspace.group'
 import { Route as WorkspaceInboxRouteImport } from './routes/_workspace.inbox'
 import { Route as WorkspaceSettingsRouteImport } from './routes/_workspace.settings'
-import { Route as InvitationInvitationIdRouteImport } from './routes/invitation.$invitationId'
 import { Route as WorkspaceAgentsIndexRouteImport } from './routes/_workspace.agents.index'
 import { Route as WorkspaceAgentsAgentIdRouteImport } from './routes/_workspace.agents.$agentId'
 import { Route as WorkspaceChatIndexRouteImport } from './routes/_workspace.chat.index'
@@ -66,11 +65,6 @@ const WorkspaceSettingsRoute = WorkspaceSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
   getParentRoute: () => WorkspaceRoute,
-} as any)
-const InvitationInvitationIdRoute = InvitationInvitationIdRouteImport.update({
-  id: '/invitation/$invitationId',
-  path: '/invitation/$invitationId',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const WorkspaceAgentsIndexRoute = WorkspaceAgentsIndexRouteImport.update({
   id: '/agents/',
@@ -194,7 +188,6 @@ export interface FileRoutesByFullPath {
   '/group': typeof WorkspaceGroupRouteWithChildren
   '/inbox': typeof WorkspaceInboxRoute
   '/settings': typeof WorkspaceSettingsRouteWithChildren
-  '/invitation/$invitationId': typeof InvitationInvitationIdRoute
   '/agents/$agentId': typeof WorkspaceAgentsAgentIdRouteWithChildren
   '/chat/$discussionId': typeof WorkspaceChatDiscussionIdRoute
   '/group/$section': typeof WorkspaceGroupSectionRoute
@@ -219,7 +212,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/inbox': typeof WorkspaceInboxRoute
-  '/invitation/$invitationId': typeof InvitationInvitationIdRoute
   '/': typeof WorkspaceIndexRoute
   '/chat/$discussionId': typeof WorkspaceChatDiscussionIdRoute
   '/group/$section': typeof WorkspaceGroupSectionRoute
@@ -247,7 +239,6 @@ export interface FileRoutesById {
   '/_workspace/group': typeof WorkspaceGroupRouteWithChildren
   '/_workspace/inbox': typeof WorkspaceInboxRoute
   '/_workspace/settings': typeof WorkspaceSettingsRouteWithChildren
-  '/invitation/$invitationId': typeof InvitationInvitationIdRoute
   '/_workspace/': typeof WorkspaceIndexRoute
   '/_workspace/agents/$agentId': typeof WorkspaceAgentsAgentIdRouteWithChildren
   '/_workspace/chat/$discussionId': typeof WorkspaceChatDiscussionIdRoute
@@ -279,7 +270,6 @@ export interface FileRouteTypes {
     | '/group'
     | '/inbox'
     | '/settings'
-    | '/invitation/$invitationId'
     | '/agents/$agentId'
     | '/chat/$discussionId'
     | '/group/$section'
@@ -304,7 +294,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/inbox'
-    | '/invitation/$invitationId'
     | '/'
     | '/chat/$discussionId'
     | '/group/$section'
@@ -331,7 +320,6 @@ export interface FileRouteTypes {
     | '/_workspace/group'
     | '/_workspace/inbox'
     | '/_workspace/settings'
-    | '/invitation/$invitationId'
     | '/_workspace/'
     | '/_workspace/agents/$agentId'
     | '/_workspace/chat/$discussionId'
@@ -358,7 +346,6 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   WorkspaceRoute: typeof WorkspaceRouteWithChildren
-  InvitationInvitationIdRoute: typeof InvitationInvitationIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -404,13 +391,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/settings'
       preLoaderRoute: typeof WorkspaceSettingsRouteImport
       parentRoute: typeof WorkspaceRoute
-    }
-    '/invitation/$invitationId': {
-      id: '/invitation/$invitationId'
-      path: '/invitation/$invitationId'
-      fullPath: '/invitation/$invitationId'
-      preLoaderRoute: typeof InvitationInvitationIdRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/_workspace/agents/': {
       id: '/_workspace/agents/'
@@ -691,7 +671,6 @@ const WorkspaceRouteWithChildren = WorkspaceRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   WorkspaceRoute: WorkspaceRouteWithChildren,
-  InvitationInvitationIdRoute: InvitationInvitationIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

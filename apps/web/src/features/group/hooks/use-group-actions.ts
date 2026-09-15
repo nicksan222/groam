@@ -1,5 +1,4 @@
 import { authClient } from '@groam/auth/client';
-import { cancelInvitationKey } from '@/features/group/group-shell/group-action-keys';
 import { errorMessage } from '@/lib/errors';
 import { useGroupActionsStore } from '@/lib/stores/group-actions-store';
 
@@ -20,16 +19,6 @@ export function useGroupActions({ organizationId }: { organizationId: string }) 
       setPendingAction(null);
     }
   };
-
-  const cancelInvitation = (invitationId: string) =>
-    runAction(
-      cancelInvitationKey(invitationId),
-      async () => {
-        const result = await authClient.organization.cancelInvitation({ invitationId });
-        if (result.error) throw new Error(result.error.message ?? 'Unable to cancel invitation');
-      },
-      'Unable to cancel invitation'
-    );
 
   const leaveGroup = () =>
     runAction(
@@ -69,7 +58,6 @@ export function useGroupActions({ organizationId }: { organizationId: string }) 
     );
 
   return {
-    cancelInvitation,
     error,
     leaveGroup,
     pendingAction,
