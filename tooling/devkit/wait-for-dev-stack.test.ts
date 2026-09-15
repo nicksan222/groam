@@ -50,4 +50,31 @@ describe('waitForDevStack', () => {
     expect(authProbes).toBe(2);
     expect(dashboardReady).toBe(false);
   });
+
+  test('uses one timeout budget for every required service', async () => {
+    let currentTime = 0;
+
+    await expect(
+      waitForDevStack(localOrigins.convexApi, {
+        fetchBackend: async (input) => {
+          if (input.toString().includes('/instance_name')) {
+            return new Response(currentTime >= 4_000 ? 'anonymous-agent' : '', {
+              status: currentTime >= 4_000 ? 200 : 503
+            });
+          }
+          if (input.toString().includes('/api/auth/get-session')) {
+            return new Response('', { status: 404 });
+          }
+          return new Response('ok');
+        },
+        now: () => currentTime,
+        sleep: async (milliseconds) => {
+          currentTime += milliseconds;
+        },
+        timeoutMs: 5_000
+      })
+    ).rejects.toThrow('Dev stack did not become ready within 5000ms');
+
+    expect(currentTime).toBe(6_000);
+  });
 });
