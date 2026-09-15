@@ -27,7 +27,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEFENEM2OTg4RDY1QTFDNDMKUldSREhGcldpR2xNclV4eGVWMVFQUUdOZVo2eU94bU1EMXhVL2pZWGFTVFk4WHpYc29NMjhJemYK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDYwMEUzMjBDRjZFQjk4RgpSV1NQdVc3UElPTUFCcm5HWkZvb28vSkU0aEswaHhQMWlwTTZ5UUJaTklrK0JBbXYvYUsyem5CUAo=",
       "endpoints": ["https://github.com/nicksan222/Groam/releases/latest/download/latest.json"]
     }
   },
