@@ -17,7 +17,7 @@ export function JoinFirstGroupForm() {
           autoCapitalize="characters"
           autoComplete="off"
           data-testid={testIds.joinGroupCode}
-          disabled={join.isPending}
+          disabled={join.isPending || join.hasJoined}
           id="first-organization-code"
           onChange={(event) => join.setCode(event.target.value)}
           placeholder="ABCD-EFGH-JKLM"
@@ -25,9 +25,13 @@ export function JoinFirstGroupForm() {
         />
       </div>
       <FormFeedback error={join.error} />
-      <Button className="w-full" disabled={join.isPending || !join.code.trim()} type="submit">
+      <Button
+        className="w-full"
+        disabled={join.isPending || (!join.hasJoined && !join.code.trim())}
+        type="submit"
+      >
         {join.isPending && <Spinner />}
-        Join group
+        {join.hasJoined ? 'Open joined group' : 'Join group'}
       </Button>
     </form>
   );

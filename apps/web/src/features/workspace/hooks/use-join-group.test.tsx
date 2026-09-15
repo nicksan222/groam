@@ -49,3 +49,32 @@ test('keeps the code visible when redemption fails', async () => {
   expect(result.current.error).toBe('Invitation code not found or already used');
   expect(result.current.code).toBe('BAD-CODE');
 });
+
+test('retries activation without redeeming the consumed code again', async () => {
+  const onJoined = vi.fn();
+  mocks.setActive
+    .mockResolvedValueOnce({ data: null, error: { message: 'Session update failed' } })
+    .mockResolvedValueOnce({ data: {}, error: null });
+  const { result } = renderHook(() => useJoinGroup({ onJoined }));
+  act(() => result.current.setCode('abcd-efgh-jklm'));
+
+  await act(async () => {
+    await result.current.submit({ preventDefault: vi.fn() } as unknown as FormEvent);
+  });
+
+  expect(result.current.error).toBe(
+    'You joined the group, but it could not be opened. Try again. Session update failed'
+  );
+  expect(result.current.code).toBe('');
+  expect(result.current.hasJoined).toBe(true);
+
+  await act(async () => {
+    await result.current.submit({ preventDefault: vi.fn() } as unknown as FormEvent);
+  });
+
+  expect(mocks.redeem).toHaveBeenCalledOnce();
+  expect(mocks.setActive).toHaveBeenCalledTimes(2);
+  expect(result.current.hasJoined).toBe(false);
+  expect(result.current.error).toBe(null);
+  expect(onJoined).toHaveBeenCalledOnce();
+});
