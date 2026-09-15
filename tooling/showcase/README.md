@@ -47,6 +47,13 @@ bun run showcase                    # reset + full seed + capture + edit + rende
 bun run showcase:studio             # inspect the Remotion timeline
 ```
 
+To regenerate every committed output without a local stack, manually run the
+**Regenerate Showcase** workflow in GitHub Actions. It builds the checked-in dev
+container, starts the anonymous Convex and Vite development stack inside it, runs
+the full seed/capture/edit/render pipeline, rebuilds the README GIF, and opens a
+pull request when any generated asset changed. Concurrent regenerations are
+serialized, and failed runs upload the development-stack log for diagnosis.
+
 For presentation changes, reuse the recording:
 
 ```bash
