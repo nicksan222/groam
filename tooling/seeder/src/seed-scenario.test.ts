@@ -9,6 +9,7 @@ describe('resolveSeedScenario', () => {
       userCount: 6
     });
     expect(resolveSeedScenario({ scale: 'realistic' })).toMatchObject({
+      concurrency: 1,
       tripCount: 40,
       userCount: 30
     });
