@@ -1,0 +1,174 @@
+name: Regenerate Showcase
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: regenerate-showcase
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+  TURBO_TELEMETRY_DISABLED: '1'
+
+jobs:
+  regenerate:
+    name: Regenerate showcase and open PR
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - name: Checkout default branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Prepare dev container mounts
+        shell: bash
+        run: |
+          mkdir -p \
+            "$HOME/.pi" \
+            "$HOME/.convex" \
+            "$HOME/.claude" \
+            "$HOME/.codex" \
+            "$HOME/.copilot" \
+            "$HOME/.config/gh" \
+            "$HOME/.config/gcloud"
+
+      - name: Regenerate showcase in dev container
+        uses: devcontainers/ci@513af61f4de4f75d37e4438f184ba4358f0fc1ca # v0.3.1900000450
+        env:
+          CI: 'true'
+          CONVEX_AGENT_MODE: anonymous
+        with:
+          env: |
+            CI
+            CONVEX_AGENT_MODE
+            TURBO_TELEMETRY_DISABLED
+          push: never
+          runCmd: |
+            set -Eeuo pipefail
+
+            readonly dev_log="${PWD}/tooling/showcase/artifacts/ci-dev.log"
+            dev_pid=''
+
+            cleanup() {
+              status=$?
+              trap - EXIT
+              if [ -n "$dev_pid" ]; then
+                kill "$dev_pid" 2>/dev/null || true
+                wait "$dev_pid" 2>/dev/null || true
+              fi
+              if [ "$status" -ne 0 ]; then
+                echo 'Showcase regeneration failed. Recent dev stack output:'
+                tail -n 100 "$dev_log" 2>/dev/null || true
+              fi
+              exit "$status"
+            }
+            trap cleanup EXIT
+
+            sudo bunx playwright install-deps chromium
+            bun run showcase:setup
+
+            bun run dev >"$dev_log" 2>&1 &
+            dev_pid=$!
+            bun tooling/devkit/wait-for-dev-stack.ts
+
+            bun run showcase
+            bun run showcase:gif
+
+      - name: Upload failure log
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: showcase-failure-${{ github.run_id }}
+          if-no-files-found: ignore
+          path: tooling/showcase/artifacts/ci-dev.log
+          retention-days: 7
+
+      - name: Verify generated file scope
+        shell: bash
+        run: |
+          if ! git diff --quiet -- . \
+            ':(exclude)docs/assets/groam-demo.gif' \
+            ':(exclude)tooling/showcase/artifacts/repository-preview.png' \
+            ':(exclude)tooling/showcase/artifacts/showcase.mp4'; then
+            echo '::error::Showcase regeneration changed files outside the committed showcase outputs.'
+            git status --short
+            exit 1
+          fi
+
+      - name: Detect showcase changes
+        id: changes
+        shell: bash
+        run: |
+          if git diff --quiet -- \
+            docs/assets/groam-demo.gif \
+            tooling/showcase/artifacts/repository-preview.png \
+            tooling/showcase/artifacts/showcase.mp4; then
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+            echo 'The regenerated showcase already matches the repository.' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+            git diff --stat -- \
+              docs/assets/groam-demo.gif \
+              tooling/showcase/artifacts/repository-preview.png \
+              tooling/showcase/artifacts/showcase.mp4
+          fi
+
+      - name: Create showcase pull request
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          BASE_BRANCH: ${{ github.event.repository.default_branch }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          branch="automation/showcase-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          body_file="${RUNNER_TEMP}/showcase-pr.md"
+          run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -c "$branch"
+          git add \
+            docs/assets/groam-demo.gif \
+            tooling/showcase/artifacts/repository-preview.png \
+            tooling/showcase/artifacts/showcase.mp4
+          git commit -m 'docs: regenerate product showcase'
+
+          gh auth setup-git
+          git push --set-upstream origin "$branch"
+
+          printf '%s\n' \
+            '## Summary' \
+            '' \
+            '- Regenerate the complete 4K product showcase from the current default branch.' \
+            '- Refresh the repository social preview and README GIF from the same capture.' \
+            '- Produce every asset inside the checked-in dev container.' \
+            '' \
+            '## Validation' \
+            '' \
+            "- \`bun run showcase\`" \
+            "- \`bun run showcase:gif\`" \
+            "- [Workflow run](${run_url})" \
+            '' \
+            '## Screenshots' \
+            '' \
+            'The regenerated README GIF and social preview are included in this PR.' \
+            > "$body_file"
+
+          pr_url="$(gh pr create \
+            --base "$BASE_BRANCH" \
+            --head "$branch" \
+            --title 'docs: regenerate product showcase' \
+            --body-file "$body_file")"
+          printf 'Created showcase pull request: %s\n' "$pr_url" >> "$GITHUB_STEP_SUMMARY"
