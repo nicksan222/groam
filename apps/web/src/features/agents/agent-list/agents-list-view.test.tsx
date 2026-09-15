@@ -146,9 +146,9 @@ describe('AgentsListView', () => {
     expect(roster).toBeTruthy();
     expect(roster.className).not.toContain('dashboard-lift-card');
     expect(roster.className).not.toContain('rounded-2xl');
-    expect(roster.className).not.toContain('bg-card');
+    expect(roster.className).toContain('bg-card');
     const tableContainer = roster.querySelector('[data-slot="table-container"]');
-    expect(tableContainer?.getAttribute('data-variant')).toBe('card');
+    expect(tableContainer?.getAttribute('data-variant')).toBe('list');
     expect(roster.querySelector('table')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Run' })).toBeTruthy();
     expect(screen.getByText('Agent')).toBeTruthy();

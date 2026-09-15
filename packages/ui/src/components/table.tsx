@@ -1,7 +1,7 @@
 import { cn } from '@groam/ui/lib/utils';
 import type * as React from 'react';
 
-export type TableVariant = 'default' | 'card';
+export type TableVariant = 'default' | 'card' | 'list';
 
 function Table({
   className,
@@ -31,7 +31,13 @@ function Table({
 }
 
 function TableHeader({ className, ...props }: React.ComponentProps<'thead'>) {
-  return <thead className={cn('[&_tr]:border-b', className)} data-slot="table-header" {...props} />;
+  return (
+    <thead
+      className={cn('[&_tr]:border-b in-data-[variant=list]:bg-muted/40', className)}
+      data-slot="table-header"
+      {...props}
+    />
+  );
 }
 
 function TableBody({ className, ...props }: React.ComponentProps<'tbody'>) {
@@ -64,7 +70,7 @@ function TableRow({ className, ...props }: React.ComponentProps<'tr'>) {
   return (
     <tr
       className={cn(
-        'relative border-b not-in-data-[variant=card]:hover:bg-[color-mix(in_srgb,var(--background),var(--color-black)_2%)] not-in-data-[variant=card]:data-[state=selected]:bg-[color-mix(in_srgb,var(--background),var(--color-black)_4%)] dark:not-in-data-[variant=card]:hover:bg-[color-mix(in_srgb,var(--background),var(--color-white)_2%)] dark:not-in-data-[variant=card]:data-[state=selected]:bg-[color-mix(in_srgb,var(--background),var(--color-white)_4%)]',
+        'relative border-b transition-colors not-in-data-[variant=card]:hover:bg-muted/50 not-in-data-[variant=card]:data-[state=selected]:bg-muted',
         className
       )}
       data-slot="table-row"
@@ -77,7 +83,7 @@ function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
   return (
     <th
       className={cn(
-        'h-10 px-2.5 text-left align-middle text-sm leading-none font-medium whitespace-nowrap text-muted-foreground has-[[role=checkbox]]:w-px first:has-[[role=checkbox]]:pe-0 last:has-[[role=checkbox]]:ps-0',
+        'h-10 px-2.5 text-left align-middle text-sm leading-none font-medium whitespace-nowrap text-muted-foreground in-data-[variant=list]:h-9 in-data-[variant=list]:px-4 has-[[role=checkbox]]:w-px first:has-[[role=checkbox]]:pe-0 last:has-[[role=checkbox]]:ps-0',
         className
       )}
       data-slot="table-head"
@@ -90,7 +96,7 @@ function TableCell({ className, ...props }: React.ComponentProps<'td'>) {
   return (
     <td
       className={cn(
-        'bg-clip-padding p-2.5 align-middle text-sm leading-none whitespace-nowrap in-data-[slot=table-footer]:py-3.5 in-data-[variant=card]:first:ps-[calc(--spacing(2.5)-1px)] in-data-[variant=card]:last:pe-[calc(--spacing(2.5)-1px)] has-[[role=checkbox]]:w-px first:has-[[role=checkbox]]:pe-0 last:has-[[role=checkbox]]:ps-0',
+        'bg-clip-padding p-2.5 align-middle text-sm leading-none whitespace-nowrap in-data-[slot=table-footer]:py-3.5 in-data-[variant=card]:first:ps-[calc(--spacing(2.5)-1px)] in-data-[variant=card]:last:pe-[calc(--spacing(2.5)-1px)] in-data-[variant=list]:px-4 in-data-[variant=list]:py-3 in-data-[variant=list]:leading-normal has-[[role=checkbox]]:w-px first:has-[[role=checkbox]]:pe-0 last:has-[[role=checkbox]]:ps-0',
         className
       )}
       data-slot="table-cell"
