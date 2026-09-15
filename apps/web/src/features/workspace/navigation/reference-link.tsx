@@ -3,6 +3,8 @@ import { type ComponentProps, useContext } from 'react';
 import { ReferenceContext } from '@/features/workspace/hooks/reference-context';
 import { ShortReferenceLink } from '@/features/workspace/navigation/short-reference-link';
 
+export { Link as CanonicalLink } from '@tanstack/react-router';
+
 export const Link = ((props: ComponentProps<typeof RouterLink>) => {
   const context = useContext(ReferenceContext);
   return context ? <ShortReferenceLink {...props} /> : <RouterLink {...props} />;

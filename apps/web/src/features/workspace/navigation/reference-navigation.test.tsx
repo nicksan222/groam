@@ -8,18 +8,19 @@ import {
 } from '@tanstack/react-router';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { useResolvedParams } from '@/features/workspace/hooks/reference-context';
-import { Link } from '@/features/workspace/navigation/reference-link';
+import { ReferenceContext, useResolvedParams } from '@/features/workspace/hooks/reference-context';
+import { CanonicalLink, Link } from '@/features/workspace/navigation/reference-link';
 import { ReferenceContent } from '@/features/workspace/workspace-shell/reference-content';
 import { ReferenceProvider } from '@/features/workspace/workspace-shell/reference-provider';
 
 afterEach(cleanup);
 beforeEach(() => {
+  mocks.useQueries.mockClear();
   vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
 });
 
-vi.mock('convex/react', () => ({
-  useQueries: (queries: Record<string, { args: { reference: string } }>) =>
+const mocks = vi.hoisted(() => ({
+  useQueries: vi.fn((queries: Record<string, { args: { reference: string } }>) =>
     Object.fromEntries(
       Object.entries(queries).map(([key, { args }]) => [
         key,
@@ -30,6 +31,11 @@ vi.mock('convex/react', () => ({
             : null
       ])
     )
+  )
+}));
+
+vi.mock('convex/react', () => ({
+  useQueries: mocks.useQueries
 }));
 
 function mount(path: string) {
@@ -93,4 +99,28 @@ test('keeps workspace navigation mounted while an idea reference loads', async (
   expect(await screen.findByRole('status', { name: 'Opening page…' })).toBeTruthy();
   expect(screen.getByRole('complementary', { name: 'Workspace navigation' })).toBeTruthy();
   expect(screen.queryByText('Record: pending')).toBeNull();
+});
+
+test('renders a known canonical reference without resolving it again', async () => {
+  const root = createRootRoute({
+    component: () => (
+      <ReferenceContext value={{ tripId: 'long-trip-id' }}>
+        <CanonicalLink params={{ tripId: 'abcdef' }} to="/trips/$tripId">
+          Canonical trip
+        </CanonicalLink>
+      </ReferenceContext>
+    )
+  });
+  const trip = createRoute({ getParentRoute: () => root, path: '/trips/$tripId' });
+  const router = createRouter({
+    routeTree: root.addChildren([trip]),
+    history: createMemoryHistory({ initialEntries: ['/'] })
+  });
+
+  render(<RouterProvider router={router} />);
+
+  expect((await screen.findByRole('link', { name: 'Canonical trip' })).getAttribute('href')).toBe(
+    '/trips/abcdef'
+  );
+  expect(mocks.useQueries).not.toHaveBeenCalled();
 });
