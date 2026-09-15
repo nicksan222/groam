@@ -1,8 +1,8 @@
-import { authClient } from '@groam/auth/client';
 import { api } from '@groam/backend/api';
 import { useMutation } from 'convex/react';
 import { type FormEvent, useState } from 'react';
 import { errorMessage } from '@/lib/errors';
+import { activateOrganization } from './use-organization-activation';
 
 export function useJoinGroup({ onJoined }: { onJoined?: () => void } = {}) {
   const redeemInvitation = useMutation(api.routes.organizations.invitations.redeem.run);
@@ -23,10 +23,7 @@ export function useJoinGroup({ onJoined }: { onJoined?: () => void } = {}) {
         setJoinedOrganizationId(organizationId);
         setCode('');
       }
-      const activation = await authClient.organization.setActive({ organizationId });
-      if (activation.error) {
-        throw new Error(activation.error.message ?? 'Unable to open the joined group');
-      }
+      await activateOrganization(organizationId);
       setJoinedOrganizationId(null);
       onJoined?.();
     } catch (caughtError: unknown) {

@@ -4,6 +4,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import { useJoinGroup } from './use-join-group';
 
 const mocks = vi.hoisted(() => ({
+  getSession: vi.fn(),
   redeem: vi.fn(),
   setActive: vi.fn()
 }));
@@ -13,13 +14,14 @@ vi.mock('@groam/backend/api', () => ({
   api: { routes: { organizations: { invitations: { redeem: { run: {} } } } } }
 }));
 vi.mock('@groam/auth/client', () => ({
-  authClient: { organization: { setActive: mocks.setActive } }
+  authClient: { getSession: mocks.getSession, organization: { setActive: mocks.setActive } }
 }));
 
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.redeem.mockResolvedValue({ organizationId: 'organization-a' });
   mocks.setActive.mockResolvedValue({ data: {}, error: null });
+  mocks.getSession.mockResolvedValue({ data: {}, error: null });
 });
 
 test('redeems a code and activates the joined group', async () => {
@@ -33,6 +35,7 @@ test('redeems a code and activates the joined group', async () => {
 
   expect(mocks.redeem).toHaveBeenCalledWith({ code: 'abcd-efgh-jklm' });
   expect(mocks.setActive).toHaveBeenCalledWith({ organizationId: 'organization-a' });
+  expect(mocks.getSession).toHaveBeenCalledOnce();
   expect(onJoined).toHaveBeenCalledOnce();
   expect(result.current.code).toBe('');
 });
@@ -74,6 +77,7 @@ test('retries activation without redeeming the consumed code again', async () =>
 
   expect(mocks.redeem).toHaveBeenCalledOnce();
   expect(mocks.setActive).toHaveBeenCalledTimes(2);
+  expect(mocks.getSession).toHaveBeenCalledOnce();
   expect(result.current.hasJoined).toBe(false);
   expect(result.current.error).toBe(null);
   expect(onJoined).toHaveBeenCalledOnce();

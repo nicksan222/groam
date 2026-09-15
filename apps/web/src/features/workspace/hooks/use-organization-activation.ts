@@ -2,7 +2,7 @@ import { authClient } from '@groam/auth/client';
 import { useCallback, useEffect, useState } from 'react';
 import { errorMessage } from '@/lib/errors';
 
-async function activateOrganization(organizationId: string) {
+export async function activateOrganization(organizationId: string) {
   const result = await authClient.organization.setActive({ organizationId });
   if (result.error) throw new Error(result.error.message ?? 'Unable to activate workspace');
   // Ensure Convex/Better Auth session cookies pick up activeOrganizationId before
