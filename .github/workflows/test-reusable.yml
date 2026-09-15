@@ -207,7 +207,7 @@ jobs:
           bun run codegen:routes
           bun run codegen:auth
           bun run build:web:desktop
-          bun apps/desktop/scripts/stage-resources.ts
+          bun apps/desktop/scripts/stage-resources.ts --target "${{ matrix.target }}"
           bun apps/desktop/scripts/prepare-binaries.ts --required --target "${{ matrix.target }}"
           bun run --cwd apps/desktop build
 

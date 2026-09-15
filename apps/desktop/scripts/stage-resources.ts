@@ -16,6 +16,10 @@ const copyPaths = [
 const isNodeModulesSegment = (filePath: string) =>
   filePath.split(/[\\/]/u).includes('node_modules');
 
+const isIncompatibleNodeModule = (filePath: string, target?: string) =>
+  target?.endsWith('-linux-gnu') === true &&
+  filePath.split(/[\\/]/u).some((segment) => segment.includes('musl'));
+
 export const pruneDanglingSymlinks = (root: string) => {
   const pending = [root];
 
@@ -41,7 +45,7 @@ export const pruneDanglingSymlinks = (root: string) => {
   }
 };
 
-export const stageRuntimeResources = (projectRoot: string, stageRoot: string) => {
+export const stageRuntimeResources = (projectRoot: string, stageRoot: string, target?: string) => {
   rmSync(stageRoot, { force: true, recursive: true });
   mkdirSync(stageRoot, { recursive: true });
 
@@ -54,7 +58,12 @@ export const stageRuntimeResources = (projectRoot: string, stageRoot: string) =>
 
     // fallow-ignore-next-line security-sink -- destination is from the closed copyPaths list above
     cpSync(sourcePath, path.join(stageRoot, destination ?? source), {
-      filter: source === 'packages' ? (entry) => !isNodeModulesSegment(entry) : undefined,
+      filter:
+        source === 'packages'
+          ? (entry) => !isNodeModulesSegment(entry)
+          : source === 'node_modules'
+            ? (entry) => !isIncompatibleNodeModule(entry, target)
+            : undefined,
       recursive: true
     });
   }
@@ -67,5 +76,10 @@ export const stageRuntimeResources = (projectRoot: string, stageRoot: string) =>
 if (import.meta.main) {
   const projectRoot = fileURLToPath(new URL('../../..', import.meta.url));
   const stageRoot = path.join(projectRoot, 'apps/desktop/src-tauri/groam-runtime');
-  stageRuntimeResources(projectRoot, stageRoot);
+  const targetFlag = process.argv.indexOf('--target');
+  const target = targetFlag === -1 ? undefined : process.argv[targetFlag + 1];
+  if (targetFlag !== -1 && !target) {
+    throw new Error('--target requires a Rust target triple');
+  }
+  stageRuntimeResources(projectRoot, stageRoot, target);
 }
