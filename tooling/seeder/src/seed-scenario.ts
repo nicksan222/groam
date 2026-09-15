@@ -9,7 +9,7 @@ export type SeedScenario = {
 
 const presets: Record<SeedScale, SeedScenario> = {
   large: { concurrency: 12, tripCount: 150, userCount: 80 },
-  realistic: { concurrency: 8, tripCount: 40, userCount: 30 },
+  realistic: { concurrency: 1, tripCount: 40, userCount: 30 },
   small: { concurrency: 8, tripCount: 8, userCount: 6 }
 };
 
