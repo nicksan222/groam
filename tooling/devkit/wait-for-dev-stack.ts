@@ -51,6 +51,15 @@ export const waitForDevStack = async (
   };
 };
 
+export const parseDevStackTimeoutMs = (args: string[]) => {
+  const timeoutFlag = args.indexOf('--timeout-ms');
+  if (timeoutFlag !== -1 && args[timeoutFlag + 1]) {
+    const parsed = Number(args[timeoutFlag + 1]);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  }
+  return resolveWaitTimeoutMs();
+};
+
 if (import.meta.main) {
   const args = process.argv.slice(2);
   const once = args.includes('--once');
@@ -64,7 +73,7 @@ if (import.meta.main) {
       }
     } else {
       const { dashboardReady } = await waitForDevStack(backendUrl, {
-        timeoutMs: resolveWaitTimeoutMs()
+        timeoutMs: parseDevStackTimeoutMs(args)
       });
       const dashboardNote = dashboardReady
         ? `dashboard :${localPorts.dashboard}`

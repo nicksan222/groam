@@ -79,7 +79,8 @@ jobs:
 
             bun run dev >"$dev_log" 2>&1 &
             dev_pid=$!
-            bun tooling/devkit/wait-for-dev-stack.ts
+            # Cover the 3-minute Convex bootstrap plus the subsequent dev watcher startup.
+            bun tooling/devkit/wait-for-dev-stack.ts --timeout-ms 420000
 
             bun run showcase
             bun run showcase:gif
