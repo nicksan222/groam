@@ -7,11 +7,13 @@ import {
 } from './wait-for-backend';
 
 export type DevStackUrls = {
+  auth: string;
   dashboard: string;
   vite: string;
 };
 
 const defaultDevStackUrls = (): DevStackUrls => ({
+  auth: `${localOrigins.convexSite}/api/auth/get-session`,
   dashboard: `${localOrigins.dashboard}/`,
   vite: `${localOrigins.viteLoopback}/`
 });
@@ -21,11 +23,12 @@ export const isDevStackResponding = async (
   urls: DevStackUrls = defaultDevStackUrls(),
   fetchTarget: FetchLike = fetch
 ) => {
-  const [backend, vite] = await Promise.all([
+  const [auth, backend, vite] = await Promise.all([
+    isHttpOk(urls.auth, fetchTarget),
     isConvexBackendResponding(backendUrl, fetchTarget),
     isHttpOk(urls.vite, fetchTarget)
   ]);
-  return backend && vite;
+  return auth && backend && vite;
 };
 
 export const waitForDevStack = async (
@@ -42,6 +45,12 @@ export const waitForDevStack = async (
 
   await waitForBackend(backendUrl, {
     fetchBackend: options.fetchBackend,
+    now: options.now,
+    sleep: options.sleep,
+    timeoutMs: options.timeoutMs
+  });
+  await waitForHttp(urls.auth, {
+    fetchTarget: options.fetchBackend,
     now: options.now,
     sleep: options.sleep,
     timeoutMs: options.timeoutMs
