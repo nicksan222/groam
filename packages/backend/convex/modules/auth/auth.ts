@@ -7,11 +7,12 @@ import authSchema from '#convex/components/better-auth/schema';
 import { components, internal } from '#convex-generated/api';
 import type { DataModel } from '#convex-generated/dataModel';
 import { env } from '#convex-generated/server';
+import { resolveAuthTrustedOrigins } from './origins';
 
 const authBaseUrl = env.CONVEX_SITE_URL ?? 'http://127.0.0.1:3211';
 
 export const authSiteUrl = env.SITE_URL ?? authBaseUrl;
-export const authTrustedOrigins = [new URL(authSiteUrl).origin];
+export const authTrustedOrigins = resolveAuthTrustedOrigins(authSiteUrl, authBaseUrl);
 
 // Better Auth component triggers keep app-owned records synchronized in the
 // same transaction as changes to the local Better Auth component.
