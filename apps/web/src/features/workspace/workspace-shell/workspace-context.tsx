@@ -13,6 +13,7 @@ import { useAsyncPending } from '@/features/workspace/hooks/use-async-pending';
 import { useWorkspaceData } from '@/features/workspace/hooks/use-workspace-data';
 import { errorMessage } from '@/lib/errors';
 import { testIds } from '@/lib/test-ids';
+import { JoinFirstGroupForm } from './join-first-group-form';
 import { createSlug, WorkspaceContext, type WorkspaceContextValue } from './workspace-state';
 
 // biome-ignore lint/plugin/no-local-type-definitions: local hold for Better Auth refetch flicker
@@ -146,6 +147,12 @@ function CreateFirstOrganization({ viewerName }: { viewerName: string }) {
             Create group
           </Button>
         </form>
+        <div className="my-5 flex items-center gap-3" aria-hidden>
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-xs uppercase tracking-wide text-muted-foreground">or</span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+        <JoinFirstGroupForm />
       </section>
     </main>
   );

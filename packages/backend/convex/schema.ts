@@ -4,6 +4,7 @@ import { assistantRunTables } from './modules/assistant/runs/schema';
 import { discussionTables } from './modules/discussions/threads/schema';
 import { mediaTables } from './modules/media/library/schema';
 import { notificationTables } from './modules/notifications/schema';
+import { organizationInvitationTables } from './modules/organizations/invitations/schema';
 import { tripActivityTables } from './modules/travel/activities/schema';
 import { tripAuditTables } from './modules/travel/audit/schema';
 import { tripDestinationTables } from './modules/travel/destinations/schema';
@@ -22,6 +23,7 @@ export default defineSchema({
   ...mediaTables,
   ...discussionTables,
   ...notificationTables,
+  ...organizationInvitationTables,
   ...tripTables,
   ...tripAuditTables,
   ...tripDestinationTables,

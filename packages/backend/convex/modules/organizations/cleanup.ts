@@ -1,6 +1,7 @@
 import { v } from 'convex/values';
 import { Discussions } from '#convex/modules/discussions/threads/index';
 import { Media } from '#convex/modules/media/library/index';
+import { OrganizationInvitations } from '#convex/modules/organizations/invitations/index';
 import { deleteTripBatch } from '#convex/modules/travel/trips/index';
 import { internal } from '#convex-generated/api';
 import { internalMutation, type MutationCtx } from '#convex-generated/server';
@@ -19,6 +20,7 @@ class OrganizationCleanup {
     if (await this.removeNextTrip()) return await this.continueInNextTransaction();
     if (await this.removeDiscussionBatch()) return await this.continueInNextTransaction();
     if (await this.removeMediaBatch()) return await this.continueInNextTransaction();
+    if (await this.removeInvitationCodeBatch()) return await this.continueInNextTransaction();
     return null;
   }
 
@@ -53,6 +55,14 @@ class OrganizationCleanup {
 
   private async removeMediaBatch(): Promise<boolean> {
     return await Media.deleteOrganizationBatch(
+      this.ctx,
+      this.args.organizationId,
+      DELETE_BATCH_SIZE
+    );
+  }
+
+  private async removeInvitationCodeBatch(): Promise<boolean> {
+    return await OrganizationInvitations.deleteOrganization(
       this.ctx,
       this.args.organizationId,
       DELETE_BATCH_SIZE

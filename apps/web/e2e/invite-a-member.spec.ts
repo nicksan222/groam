@@ -15,7 +15,7 @@ import {
 } from '@groam/app-actions/playwright';
 import { expect, test } from '@playwright/test';
 
-test('invites a member who can propose ideas but not edit the shared trip', async ({
+test('copies and pastes an invitation code that joins a member to the group', async ({
   browser,
   page
 }) => {
@@ -26,11 +26,11 @@ test('invites a member who can propose ideas but not edit the shared trip', asyn
   const tripName = `Shared trip ${suffix}`;
 
   await createTrip(page, { name: tripName });
-  const invitationUrl = await inviteGroupMember(page, member.email);
+  const invitationCode = await inviteGroupMember(page);
 
   const memberContext = await browser.newContext();
   const memberPage = await memberContext.newPage();
-  await acceptGroupInvitation(memberPage, invitationUrl, member);
+  await acceptGroupInvitation(memberPage, invitationCode, member);
   await openTripFromList(memberPage, tripName);
   await expect(by(memberPage, ids.tripRole)).toHaveAttribute('data-role', 'participant');
   await expect(by(memberPage, ids.sharedTripBanner)).toBeVisible();

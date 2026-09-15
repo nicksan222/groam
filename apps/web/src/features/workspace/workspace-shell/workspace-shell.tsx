@@ -26,7 +26,7 @@ import {
 import { toast } from '@groam/ui/components/toast';
 import { useSidebar } from '@groam/ui/hooks/use-sidebar';
 import { Outlet, useLocation, useNavigate } from '@tanstack/react-router';
-import { Check, ChevronsUpDown, Menu, Plus, Settings } from 'lucide-react';
+import { Check, ChevronsUpDown, LogIn, Menu, Plus, Settings } from 'lucide-react';
 import { ChatsSidebarNav } from '@/features/discussions/chats-sidebar-nav';
 import { IdeasSidebarNav } from '@/features/ideas/ideas-sidebar-nav';
 import { InboxSidebarNav } from '@/features/inbox/inbox-sidebar-nav';
@@ -254,6 +254,16 @@ function OrganizationMenu() {
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
+        <DropdownMenuItem
+          data-testid={testIds.groupSwitcherJoin}
+          onClick={() => {
+            setOpenMobile(false);
+            openDialog('join');
+          }}
+        >
+          <LogIn />
+          Join with code
+        </DropdownMenuItem>
         <DropdownMenuItem
           data-testid={testIds.groupSwitcherNew}
           onClick={() => {
