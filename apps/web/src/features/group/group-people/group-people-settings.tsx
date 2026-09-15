@@ -1,8 +1,9 @@
 import { FormFeedback } from '@groam/ui/components/form-feedback';
-import { Mail, Users } from 'lucide-react';
+import { KeyRound, Users } from 'lucide-react';
 import { InvitationsSection } from '@/features/group/group-invitations/invitations-section';
 import { MembersSection } from '@/features/group/group-members/members-section';
 import { useGroupActions } from '@/features/group/hooks/use-group-actions';
+import { useInvitationCodes } from '@/features/group/hooks/use-invitation-codes';
 import {
   SettingsPanel,
   SettingsPanelHeading,
@@ -13,14 +14,15 @@ import { useWorkspace } from '@/features/workspace/workspace-shell/workspace-sta
 export function GroupPeopleSettings() {
   const { activeOrganization, activeRole, session } = useWorkspace();
   const canManage = activeRole === 'owner' || activeRole === 'admin';
-  const { cancelInvitation, error, leaveGroup, pendingAction, removeMember, updateMemberRole } =
-    useGroupActions({
-      organizationId: activeOrganization.id
-    });
+  const { error, leaveGroup, pendingAction, removeMember, updateMemberRole } = useGroupActions({
+    organizationId: activeOrganization.id
+  });
+  const invitationCodes = useInvitationCodes(canManage);
 
   return (
     <SettingsStack>
       <FormFeedback error={error} />
+      <FormFeedback error={invitationCodes.error} />
       <SettingsPanel>
         <SettingsPanelHeading
           description="Everyone here shares this group’s trips and planning workspace."
@@ -37,23 +39,29 @@ export function GroupPeopleSettings() {
           viewerUserId={session.user.id}
         />
       </SettingsPanel>
-      <SettingsPanel>
-        <SettingsPanelHeading
-          description="People invited to join who have not accepted yet."
-          icon={Mail}
-          title="Invitations"
-        />
-        {activeOrganization.invitations.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No pending invitations.</p>
-        ) : (
-          <InvitationsSection
-            canManage={canManage}
-            onCancel={(invitationId) => void cancelInvitation(invitationId)}
-            organization={activeOrganization}
-            pendingAction={pendingAction}
+      {canManage && (
+        <SettingsPanel>
+          <SettingsPanelHeading
+            description="One-time codes that have not been used or revoked. Codes expire after seven days."
+            icon={KeyRound}
+            title="Invitation codes"
           />
-        )}
-      </SettingsPanel>
+          {invitationCodes.codes.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              {invitationCodes.isLoading
+                ? 'Loading invitation codes…'
+                : 'No active invitation codes.'}
+            </p>
+          ) : (
+            <InvitationsSection
+              codes={invitationCodes.codes}
+              onCopy={(code) => void navigator.clipboard.writeText(code)}
+              onRevoke={(invitationCodeId) => void invitationCodes.revoke(invitationCodeId)}
+              pendingId={invitationCodes.pendingId}
+            />
+          )}
+        </SettingsPanel>
+      )}
     </SettingsStack>
   );
 }

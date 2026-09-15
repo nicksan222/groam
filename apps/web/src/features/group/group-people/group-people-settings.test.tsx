@@ -25,7 +25,6 @@ vi.mock('@/features/workspace/workspace-shell/workspace-state', () => ({
 
 vi.mock('@/features/group/hooks/use-group-actions', () => ({
   useGroupActions: () => ({
-    cancelInvitation: vi.fn(),
     error: null,
     leaveGroup: vi.fn(),
     pendingAction: null,
@@ -34,17 +33,36 @@ vi.mock('@/features/group/hooks/use-group-actions', () => ({
   })
 }));
 
+vi.mock('@/features/group/hooks/use-invitation-codes', () => ({
+  useInvitationCodes: () => ({
+    codes: [
+      {
+        code: 'ABCD-EFGH-JKLM',
+        createdAt: Date.now(),
+        expiresAt: Date.now() + 1000,
+        id: 'code-a',
+        role: 'member'
+      }
+    ],
+    error: null,
+    isLoading: false,
+    pendingId: null,
+    revoke: vi.fn()
+  })
+}));
+
 afterEach(cleanup);
 
 describe('GroupPeopleSettings', () => {
-  test('lists members and pending invitations for the active group', () => {
+  test('lists members and active invitation codes for the active group', () => {
     render(<GroupPeopleSettings />);
 
     expect(screen.getByText('Members')).toBeTruthy();
     expect(
       screen.getByText('Everyone here shares this group’s trips and planning workspace.')
     ).toBeTruthy();
-    expect(screen.getByText('Invitations')).toBeTruthy();
+    expect(screen.getByText('Invitation codes')).toBeTruthy();
+    expect(screen.getByText('ABCD-EFGH-JKLM')).toBeTruthy();
     expect(screen.getByText('A (you)')).toBeTruthy();
     expect(screen.getAllByText('a@x').length).toBeGreaterThan(0);
   });

@@ -21,6 +21,10 @@ vi.mock('@groam/auth/client', () => ({
   authClient: { organization: { create: vi.fn() } }
 }));
 
+vi.mock('./join-first-group-form', () => ({
+  JoinFirstGroupForm: () => <p>Join with invitation code</p>
+}));
+
 const workspace = {
   activeOrganization: { id: 'organization-a', members: [] },
   activeRole: 'owner',
@@ -107,4 +111,5 @@ test('drops the held workspace once auth settles without an active organization'
 
   expect(screen.queryByText('Trip page')).toBeNull();
   expect(screen.getByText('Welcome, Ada')).toBeTruthy();
+  expect(screen.getByText('Join with invitation code')).toBeTruthy();
 });

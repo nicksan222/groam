@@ -27,20 +27,17 @@ import type { WorkspaceDialogControlProps } from './types';
 export function InviteDialog({ onClose, open }: WorkspaceDialogControlProps) {
   const { activeOrganization } = useWorkspace();
   const invite = useInviteDialog({
-    groupName: activeOrganization.name,
-    onClose,
-    organizationId: activeOrganization.id
+    onClose
   });
 
-  if (invite.inviteLink) {
+  if (invite.invitationCode) {
     return (
       <InvitationCreatedDialog
         copied={invite.copied}
-        email={invite.email}
         error={invite.request.error}
-        inviteLink={invite.inviteLink}
+        invitationCode={invite.invitationCode}
         onClose={invite.close}
-        onCopy={() => void invite.copyLink()}
+        onCopy={() => void invite.copyCode()}
         open={open}
       />
     );
@@ -48,28 +45,16 @@ export function InviteDialog({ onClose, open }: WorkspaceDialogControlProps) {
 
   return (
     <FormDialog
-      description={`Invite a member to ${activeOrganization.name}. They join the group and share all of its trips.`}
+      description={`Create a one-time code for ${activeOrganization.name}. Share it directly with the person you want to invite.`}
       error={invite.request.error}
       isPending={invite.request.isPending}
       onClose={invite.close}
       onSubmit={(event) => void invite.submit(event)}
       open={open}
-      submitLabel="Create invitation"
+      submitLabel="Create code"
       testId={testIds.inviteDialog}
-      title="Invite group member"
+      title="Create invitation code"
     >
-      <FormField label="Email">
-        <Input
-          autoFocus
-          data-testid={testIds.inviteEmail}
-          disabled={invite.request.isPending}
-          onChange={(event) => invite.setEmail(event.target.value)}
-          placeholder="teammate@company.com"
-          required
-          type="email"
-          value={invite.email}
-        />
-      </FormField>
       <FormField label="Role">
         <Select
           disabled={invite.request.isPending}
@@ -91,17 +76,15 @@ export function InviteDialog({ onClose, open }: WorkspaceDialogControlProps) {
 
 function InvitationCreatedDialog({
   copied,
-  email,
   error,
-  inviteLink,
+  invitationCode,
   onClose,
   onCopy,
   open
 }: {
   copied: boolean;
-  email: string;
   error: string | null;
-  inviteLink: string;
+  invitationCode: string;
   onClose: () => void;
   onCopy: () => void;
   open: boolean;
@@ -112,19 +95,23 @@ function InvitationCreatedDialog({
         <DialogHeader>
           <DialogTitle>Invitation created</DialogTitle>
           <DialogDescription>
-            Share this one-time link with {email}. They can sign in and join.
+            Share this code directly. It can be used once and expires in seven days.
           </DialogDescription>
         </DialogHeader>
         <div className="flex gap-2">
           <Input
-            aria-label="Invitation link"
-            data-testid={testIds.invitationLink}
+            aria-label="Invitation code"
+            data-testid={testIds.invitationCode}
             readOnly
-            value={inviteLink}
+            value={invitationCode}
           />
-          <Button onClick={onCopy} size="icon" variant="outline">
+          <Button
+            aria-label={copied ? 'Invitation code copied' : 'Copy invitation code'}
+            onClick={onCopy}
+            variant="outline"
+          >
             {copied ? <Check /> : <Copy />}
-            <span className="sr-only">Copy invitation link</span>
+            {copied ? 'Copied' : 'Copy code'}
           </Button>
         </div>
         <FormFeedback error={error} />

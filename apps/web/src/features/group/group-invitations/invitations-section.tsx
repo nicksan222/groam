@@ -2,72 +2,71 @@ import { Badge } from '@groam/ui/components/badge';
 import { Button } from '@groam/ui/components/button';
 import { type ColumnDef, DataTable, type FilterFn } from '@groam/ui/components/data-table';
 import { dataTableColumnFillClassName } from '@groam/ui/lib/data-table';
+import { Copy } from 'lucide-react';
 import { useMemo } from 'react';
-import { cancelInvitationKey } from '@/features/group/group-shell/group-action-keys';
-import type { ActiveOrganization } from '@/features/workspace/workspace-shell/workspace-state';
+import type { InvitationCode } from '@/types/invitation-codes';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
-type Invitation = ActiveOrganization['invitations'][number];
-
-const invitationFilter: FilterFn<Invitation> = (row, _columnId, value) => {
+const invitationFilter: FilterFn<InvitationCode> = (row, _columnId, value) => {
   const query = String(value).trim().toLowerCase();
   if (!query) return true;
-  const invitation = row.original;
-  return `${invitation.email} ${invitation.role} ${invitation.status}`
-    .toLowerCase()
-    .includes(query);
+  return `${row.original.code} ${row.original.role}`.toLowerCase().includes(query);
 };
 
 function invitationColumns({
-  canManage,
-  onCancel,
-  pendingAction
+  onCopy,
+  onRevoke,
+  pendingId
 }: {
-  canManage: boolean;
-  onCancel: (invitationId: string) => void;
-  pendingAction: string | null;
-}): ColumnDef<Invitation, unknown>[] {
+  onCopy: (code: string) => void;
+  onRevoke: (invitationCodeId: InvitationCode['id']) => void;
+  pendingId: InvitationCode['id'] | null;
+}): ColumnDef<InvitationCode, unknown>[] {
   return [
     {
-      accessorKey: 'email',
-      cell: ({ row }) => {
-        const invitation = row.original;
-        return (
-          <span className="block min-w-0">
-            <span className="block truncate font-medium">{invitation.email}</span>
-            <span className="mt-0.5 block truncate text-xs capitalize text-muted-foreground">
-              {invitation.role}
-            </span>
-          </span>
-        );
-      },
+      accessorKey: 'code',
+      cell: ({ row }) => (
+        <span className="flex min-w-0 items-center gap-2">
+          <span className="font-mono font-medium tracking-wide">{row.original.code}</span>
+          <Button
+            aria-label={`Copy ${row.original.code}`}
+            onClick={() => onCopy(row.original.code)}
+            size="icon-sm"
+            variant="ghost"
+          >
+            <Copy />
+          </Button>
+        </span>
+      ),
       enableHiding: false,
-      header: 'Invite',
-      id: 'email',
-      meta: { className: `w-[48%] ${dataTableColumnFillClassName} whitespace-normal` }
+      header: 'Code',
+      id: 'code',
+      meta: { className: `w-[50%] ${dataTableColumnFillClassName} whitespace-normal` }
     },
     {
-      accessorKey: 'status',
-      cell: ({ row }) => <Badge variant="secondary">{row.original.status}</Badge>,
-      header: 'Status',
-      id: 'status',
+      accessorKey: 'role',
+      cell: ({ row }) => <Badge variant="secondary">{row.original.role}</Badge>,
+      header: 'Role',
+      id: 'role',
+      meta: { className: 'w-28 capitalize' }
+    },
+    {
+      accessorKey: 'expiresAt',
+      cell: ({ row }) => new Date(row.original.expiresAt).toLocaleDateString(),
+      header: 'Expires',
+      id: 'expiresAt',
       meta: { className: 'w-32' }
     },
     {
-      cell: ({ row }) => {
-        const invitation = row.original;
-        if (!(canManage && invitation.status === 'pending')) return null;
-        return (
-          <Button
-            disabled={pendingAction === cancelInvitationKey(invitation.id)}
-            onClick={() => onCancel(invitation.id)}
-            size="sm"
-            variant="ghost"
-          >
-            Cancel
-          </Button>
-        );
-      },
+      cell: ({ row }) => (
+        <Button
+          disabled={pendingId === row.original.id}
+          onClick={() => onRevoke(row.original.id)}
+          size="sm"
+          variant="ghost"
+        >
+          Revoke
+        </Button>
+      ),
       enableHiding: false,
       enableSorting: false,
       header: () => <span className="sr-only">Actions</span>,
@@ -78,30 +77,29 @@ function invitationColumns({
 }
 
 export function InvitationsSection({
-  canManage,
-  onCancel,
-  organization,
-  pendingAction
+  codes,
+  onCopy,
+  onRevoke,
+  pendingId
 }: {
-  canManage: boolean;
-  onCancel: (invitationId: string) => void;
-  organization: ActiveOrganization;
-  pendingAction: string | null;
+  codes: InvitationCode[];
+  onCopy: (code: string) => void;
+  onRevoke: (invitationCodeId: InvitationCode['id']) => void;
+  pendingId: InvitationCode['id'] | null;
 }) {
   const columns = useMemo(
-    () => invitationColumns({ canManage, onCancel, pendingAction }),
-    [canManage, onCancel, pendingAction]
+    () => invitationColumns({ onCopy, onRevoke, pendingId }),
+    [onCopy, onRevoke, pendingId]
   );
 
-  if (organization.invitations.length === 0) return null;
-
+  if (codes.length === 0) return null;
   return (
     <DataTable
       columns={columns}
-      data={organization.invitations}
+      data={codes}
       getRowId={(invitation) => invitation.id}
       globalFilterFn={invitationFilter}
-      resourceLabel={{ plural: 'invitations', singular: 'invitation' }}
+      resourceLabel={{ plural: 'invitation codes', singular: 'invitation code' }}
     />
   );
 }

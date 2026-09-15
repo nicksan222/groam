@@ -25,7 +25,7 @@ test('group people live in settings, not the sidebar', async ({ page }) => {
   await openSettingsGroupSection(page);
   await expect(by(page, ids.inviteMember)).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Members' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Invitations' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Invitation codes' })).toBeVisible();
 
   await openAppPath(page, 'group');
   await expect(page).toHaveURL(/\/settings\/group\/?$/u);

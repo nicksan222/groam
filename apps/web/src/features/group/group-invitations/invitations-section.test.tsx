@@ -1,83 +1,50 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
-import type { ActiveOrganization } from '@/features/workspace/workspace-shell/workspace-state';
+import type { InvitationCode } from '@/types/invitation-codes';
 import { InvitationsSection } from './invitations-section';
 
 afterEach(cleanup);
 
-const organization = {
-  invitations: [
-    {
-      email: 'pending@company.com',
-      id: 'invite-pending',
-      role: 'member',
-      status: 'pending'
-    },
-    {
-      email: 'accepted@company.com',
-      id: 'invite-accepted',
-      role: 'admin',
-      status: 'accepted'
-    }
-  ]
-} as ActiveOrganization;
+const codes = [
+  {
+    code: 'ABCD-EFGH-JKLM',
+    createdAt: Date.UTC(2026, 8, 15),
+    expiresAt: Date.UTC(2026, 8, 22),
+    id: 'invitation-code-a',
+    role: 'member'
+  }
+] as InvitationCode[];
 
-test('renders pending invitations and lets managers cancel them', () => {
-  const onCancel = vi.fn();
-  render(
-    <InvitationsSection
-      canManage
-      onCancel={onCancel}
-      organization={organization}
-      pendingAction={null}
-    />
-  );
+test('renders active codes and lets managers copy or revoke them', () => {
+  const onCopy = vi.fn();
+  const onRevoke = vi.fn();
+  render(<InvitationsSection codes={codes} onCopy={onCopy} onRevoke={onRevoke} pendingId={null} />);
 
-  expect(screen.getByText('pending@company.com')).toBeTruthy();
-  expect(screen.getByText('accepted@company.com')).toBeTruthy();
-  expect(screen.getAllByRole('button', { name: 'Cancel' })).toHaveLength(1);
-  expect(document.querySelector('table')).toBeTruthy();
-  expect(screen.getByLabelText('Search invitations')).toBeTruthy();
+  expect(screen.getByText('ABCD-EFGH-JKLM')).toBeTruthy();
+  expect(screen.getByText('member')).toBeTruthy();
+  expect(screen.getByLabelText('Search invitation codes')).toBeTruthy();
 
-  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
-  expect(onCancel).toHaveBeenCalledWith('invite-pending');
+  fireEvent.click(screen.getByRole('button', { name: 'Copy ABCD-EFGH-JKLM' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Revoke' }));
+  expect(onCopy).toHaveBeenCalledWith('ABCD-EFGH-JKLM');
+  expect(onRevoke).toHaveBeenCalledWith('invitation-code-a');
 });
 
-test('hides cancel actions for members and already-resolved invites', () => {
+test('disables revoke while the code is pending', () => {
   render(
     <InvitationsSection
-      canManage={false}
-      onCancel={vi.fn()}
-      organization={organization}
-      pendingAction={null}
+      codes={codes}
+      onCopy={vi.fn()}
+      onRevoke={vi.fn()}
+      pendingId={codes[0]!.id}
     />
   );
-
-  expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull();
+  expect(screen.getByRole('button', { name: 'Revoke' })).toHaveProperty('disabled', true);
 });
 
-test('disables cancel while the matching invitation is pending', () => {
-  render(
-    <InvitationsSection
-      canManage
-      onCancel={vi.fn()}
-      organization={organization}
-      pendingAction="invite-invite-pending"
-    />
-  );
-
-  expect(screen.getByRole('button', { name: 'Cancel' })).toHaveProperty('disabled', true);
-});
-
-test('renders nothing when the invitation list is empty', () => {
+test('renders nothing when there are no active codes', () => {
   const { container } = render(
-    <InvitationsSection
-      canManage
-      onCancel={vi.fn()}
-      organization={{ ...organization, invitations: [] }}
-      pendingAction={null}
-    />
+    <InvitationsSection codes={[]} onCopy={vi.fn()} onRevoke={vi.fn()} pendingId={null} />
   );
-
   expect(container.innerHTML).toBe('');
 });
