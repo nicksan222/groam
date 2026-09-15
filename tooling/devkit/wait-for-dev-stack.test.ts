@@ -1,6 +1,10 @@
 import { describe, expect, test } from 'bun:test';
 import { localOrigins } from './constants';
-import { isDevStackResponding, waitForDevStack } from './wait-for-dev-stack';
+import {
+  isDevStackResponding,
+  parseDevStackTimeoutMs,
+  waitForDevStack
+} from './wait-for-dev-stack';
 
 describe('isDevStackResponding', () => {
   test('requires the Convex backend, deployed auth route, and Vite', async () => {
@@ -30,6 +34,10 @@ describe('isDevStackResponding', () => {
 });
 
 describe('waitForDevStack', () => {
+  test('accepts a separate outer readiness timeout', () => {
+    expect(parseDevStackTimeoutMs(['--timeout-ms', '420000'])).toBe(420_000);
+  });
+
   test('waits for the deployed auth route before reporting readiness', async () => {
     let authProbes = 0;
 
