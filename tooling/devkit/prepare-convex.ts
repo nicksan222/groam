@@ -3,7 +3,11 @@ import { configureAuth } from '@groam/devkit/configure-auth';
 import { localOrigins } from '@groam/devkit/constants';
 import { runConvex } from '@groam/devkit/run-convex';
 import { syncOptionalAiEnvironment } from '@groam/devkit/sync-ai-env';
-import { isConvexBackendResponding, waitForBackend } from '@groam/devkit/wait-for-backend';
+import {
+  isConvexBackendResponding,
+  resolveWaitTimeoutMs,
+  waitForBackend
+} from '@groam/devkit/wait-for-backend';
 import { env } from '@groam/env/convex-tooling';
 import { stopLocalBackend } from './local-backend';
 
@@ -18,7 +22,7 @@ if (!(await isConvexBackendResponding(backendUrl))) {
 }
 
 try {
-  await waitForBackend(backendUrl, { timeoutMs: 60_000 });
+  await waitForBackend(backendUrl, { timeoutMs: resolveWaitTimeoutMs() });
 } catch (error) {
   console.info(error instanceof Error ? error.message : error);
   console.info('Skipping auth and AI env until Convex is running.');

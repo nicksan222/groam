@@ -1,17 +1,15 @@
 import { localOrigins, localPorts } from './constants';
-import { type FetchLike, isHttpOk, waitForHttp } from './http-readiness';
-import {
-  isConvexBackendResponding,
-  resolveWaitTimeoutMs,
-  waitForBackend
-} from './wait-for-backend';
+import { type FetchLike, isHttpOk, waitUntil } from './http-readiness';
+import { isConvexBackendResponding, resolveWaitTimeoutMs } from './wait-for-backend';
 
 export type DevStackUrls = {
+  auth: string;
   dashboard: string;
   vite: string;
 };
 
 const defaultDevStackUrls = (): DevStackUrls => ({
+  auth: `${localOrigins.convexSite}/api/auth/get-session`,
   dashboard: `${localOrigins.dashboard}/`,
   vite: `${localOrigins.viteLoopback}/`
 });
@@ -21,11 +19,12 @@ export const isDevStackResponding = async (
   urls: DevStackUrls = defaultDevStackUrls(),
   fetchTarget: FetchLike = fetch
 ) => {
-  const [backend, vite] = await Promise.all([
+  const [auth, backend, vite] = await Promise.all([
+    isHttpOk(urls.auth, fetchTarget),
     isConvexBackendResponding(backendUrl, fetchTarget),
     isHttpOk(urls.vite, fetchTarget)
   ]);
-  return backend && vite;
+  return auth && backend && vite;
 };
 
 export const waitForDevStack = async (
@@ -39,22 +38,16 @@ export const waitForDevStack = async (
   } = {}
 ) => {
   const urls = options.urls ?? defaultDevStackUrls();
+  const fetchTarget = options.fetchBackend ?? fetch;
 
-  await waitForBackend(backendUrl, {
-    fetchBackend: options.fetchBackend,
-    now: options.now,
-    sleep: options.sleep,
-    timeoutMs: options.timeoutMs
-  });
-  await waitForHttp(urls.vite, {
-    fetchTarget: options.fetchBackend,
-    now: options.now,
-    sleep: options.sleep,
-    timeoutMs: options.timeoutMs
-  });
+  await waitUntil(
+    () => isDevStackResponding(backendUrl, urls, fetchTarget),
+    (timeoutMs) => `Dev stack did not become ready within ${timeoutMs}ms`,
+    options
+  );
 
   return {
-    dashboardReady: await isHttpOk(urls.dashboard, options.fetchBackend ?? fetch)
+    dashboardReady: await isHttpOk(urls.dashboard, fetchTarget)
   };
 };
 
