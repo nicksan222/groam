@@ -144,7 +144,7 @@ jobs:
             docs/assets/groam-demo.gif \
             tooling/showcase/artifacts/repository-preview.png \
             tooling/showcase/artifacts/showcase.mp4
-          git commit -m 'docs: regenerate product showcase'
+          HUSKY=0 git commit -m 'docs: regenerate product showcase'
 
           gh auth setup-git
           git push --set-upstream origin "$branch"
