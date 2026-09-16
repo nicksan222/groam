@@ -16,7 +16,11 @@ const scaledFrames = 'fps=10,scale=1920:1080:flags=lanczos';
 const paletteFilter = `${scaledFrames},palettegen=max_colors=128:stats_mode=diff`;
 const gifFilter = `[0:v]${scaledFrames}[frames];[frames][1:v]paletteuse=dither=bayer:bayer_scale=3:diff_mode=rectangle`;
 
-export function createFfmpegPasses(paths: { input: string; output: string; palette: string }) {
+export function createFfmpegPasses(paths: {
+  input: string;
+  output: string;
+  palette: string;
+}): [string[], string[]] {
   return [
     [
       '-hide_banner',
@@ -53,13 +57,13 @@ if (import.meta.main) {
   await mkdir(dirname(output), { recursive: true });
 
   try {
-    for (const args of createFfmpegPasses({
+    const [palettePass, gifPass] = createFfmpegPasses({
       input,
       output: temporaryOutput,
       palette: temporaryPalette
-    })) {
-      await run(ffmpeg.path, args);
-    }
+    });
+    await run(ffmpeg.path, palettePass);
+    await run(ffmpeg.path, gifPass);
 
     const { size } = await stat(temporaryOutput);
     if (size > maxBytes) {
