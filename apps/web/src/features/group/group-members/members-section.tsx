@@ -15,21 +15,16 @@ import { initials } from '@groam/ui/lib/avatar';
 import { dataTableColumnFillClassName } from '@groam/ui/lib/data-table';
 import { useMemo } from 'react';
 import type { ActiveOrganization } from '@/features/workspace/workspace-shell/workspace-state';
+import { userIdentityLabel } from '@/lib/user-identity';
 
 // biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
 type Member = ActiveOrganization['members'][number];
-
-function memberUsername(member: Member): string | null {
-  return 'username' in member.user && typeof member.user.username === 'string'
-    ? member.user.username
-    : null;
-}
 
 const memberFilter: FilterFn<Member> = (row, _columnId, value) => {
   const query = String(value).trim().toLowerCase();
   if (!query) return true;
   const member = row.original;
-  return `${member.user.name} ${memberUsername(member) ?? ''} ${member.role}`
+  return `${member.user.name} ${userIdentityLabel(member.user)} ${member.role}`
     .toLowerCase()
     .includes(query);
 };
@@ -54,7 +49,6 @@ function memberColumns({
       accessorFn: (member) => member.user.name,
       cell: ({ row }) => {
         const member = row.original;
-        const username = memberUsername(member);
         const isYou = member.userId === viewerUserId;
         return (
           <span className="flex min-w-0 items-center gap-3">
@@ -68,7 +62,7 @@ function memberColumns({
                 {isYou ? ' (you)' : ''}
               </span>
               <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                {username ? `@${username}` : member.user.name}
+                {userIdentityLabel(member.user)}
               </span>
             </span>
           </span>
