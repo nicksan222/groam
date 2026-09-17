@@ -18,56 +18,69 @@ export function useTwoFactorSettings(initiallyEnabled: boolean) {
   const [isPending, setPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  const run = async (action: () => Promise<void>, failureMessage: string) => {
+  const run = async <T extends { error: { message?: null | string } | null }>(
+    request: Promise<T>,
+    failureMessage: string
+  ): Promise<null | T> => {
     setPending(true);
     setError(null);
     try {
-      await action();
+      const result = await request;
+      if (result.error) throw new Error(result.error.message ?? failureMessage);
+      return result;
     } catch (cause: unknown) {
       setError(errorMessage(cause, failureMessage));
+      return null;
     } finally {
       setPending(false);
     }
   };
 
-  const startEnrollment = (password: string) => {
+  const startEnrollment = async (password: string) => {
     setMessage(null);
-    return run(async () => {
-      const result = await authClient.twoFactor.enable({ password });
-      if (result.error) throw new Error(result.error.message ?? 'Unable to start two-factor setup');
-      setEnrollment(result.data);
-    }, 'Unable to start two-factor setup');
+    const result = await run(
+      authClient.twoFactor.enable({ password }),
+      'Unable to start two-factor setup'
+    );
+    if (result) setEnrollment(result.data);
   };
 
-  const confirmEnrollment = (code: string) =>
-    run(async () => {
-      const result = await authClient.twoFactor.verifyTotp({
+  const confirmEnrollment = async (code: string) => {
+    const result = await run(
+      authClient.twoFactor.verifyTotp({
         code: code.trim(),
         trustDevice: true
-      });
-      if (result.error) throw new Error(result.error.message ?? 'Invalid authenticator code');
+      }),
+      'Invalid authenticator code'
+    );
+    if (result) {
       setEnabled(true);
       setMessage('Two-factor authentication is enabled. Your saved backup codes are ready to use.');
-    }, 'Invalid authenticator code');
+    }
+  };
 
-  const regenerate = (password: string) =>
-    run(async () => {
-      const result = await authClient.twoFactor.generateBackupCodes({ password });
-      if (result.error)
-        throw new Error(result.error.message ?? 'Unable to regenerate backup codes');
+  const regenerate = async (password: string) => {
+    const result = await run(
+      authClient.twoFactor.generateBackupCodes({ password }),
+      'Unable to regenerate backup codes'
+    );
+    if (result?.data) {
       downloadBackupCodes(result.data.backupCodes);
       setMessage('New backup codes downloaded. Previous codes no longer work.');
-    }, 'Unable to regenerate backup codes');
+    }
+  };
 
-  const disable = (password: string) =>
-    run(async () => {
-      const result = await authClient.twoFactor.disable({ password });
-      if (result.error)
-        throw new Error(result.error.message ?? 'Unable to disable two-factor authentication');
+  const disable = async (password: string) => {
+    const result = await run(
+      authClient.twoFactor.disable({ password }),
+      'Unable to disable two-factor authentication'
+    );
+    if (result) {
       setEnabled(false);
       setEnrollment(null);
       setMessage('Two-factor authentication is disabled.');
-    }, 'Unable to disable two-factor authentication');
+    }
+  };
 
   return {
     confirmEnrollment,
