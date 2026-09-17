@@ -1,18 +1,21 @@
+import { passkey } from '@better-auth/passkey';
 import { type AuthFunctions, createClient, type GenericCtx } from '@convex-dev/better-auth';
 import { convex, crossDomain } from '@convex-dev/better-auth/plugins';
 import { type BetterAuthOptions, betterAuth } from 'better-auth/minimal';
-import { organization } from 'better-auth/plugins';
+import { organization, twoFactor, username } from 'better-auth/plugins';
 import authConfig from '#convex/auth.config';
 import authSchema from '#convex/components/better-auth/schema';
 import { components, internal } from '#convex-generated/api';
 import type { DataModel } from '#convex-generated/dataModel';
 import { env } from '#convex-generated/server';
 import { resolveAuthTrustedOrigins } from './origins';
+import { accountRecovery } from './recovery';
 
 const authBaseUrl = env.CONVEX_SITE_URL ?? 'http://127.0.0.1:3211';
 
 export const authSiteUrl = env.SITE_URL ?? authBaseUrl;
 export const authTrustedOrigins = resolveAuthTrustedOrigins(authSiteUrl, authBaseUrl);
+const passkeyOrigin = new URL(authSiteUrl).origin;
 
 // Better Auth component triggers keep app-owned records synchronized in the
 // same transaction as changes to the local Better Auth component.
@@ -52,9 +55,20 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
     database: authComponent.adapter(ctx),
     emailAndPassword: {
       enabled: true,
-      requireEmailVerification: false
+      requireEmailVerification: false,
+      revokeSessionsOnPasswordReset: true
     },
     plugins: [
+      username(),
+      accountRecovery(),
+      passkey({
+        origin: passkeyOrigin,
+        rpID: new URL(passkeyOrigin).hostname,
+        rpName: 'Groam'
+      }),
+      twoFactor({
+        issuer: 'Groam'
+      }),
       organization({
         membershipLimit: 100,
         organizationLimit: 10

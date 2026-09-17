@@ -21,11 +21,15 @@ export const tables = {
     image: v.optional(v.union(v.null(), v.string())),
     createdAt: v.number(),
     updatedAt: v.number(),
+    username: v.optional(v.union(v.null(), v.string())),
+    displayUsername: v.optional(v.union(v.null(), v.string())),
+    twoFactorEnabled: v.optional(v.union(v.null(), v.boolean())),
     userId: v.optional(v.union(v.null(), v.string())),
   })
     .index("email_name", ["email","name"])
     .index("name", ["name"])
-    .index("userId", ["userId"]),
+    .index("userId", ["userId"])
+    .index("username", ["username"]),
   session: defineTable({
     expiresAt: v.number(),
     token: v.string(),
@@ -67,6 +71,28 @@ export const tables = {
   })
     .index("expiresAt", ["expiresAt"])
     .index("identifier", ["identifier"]),
+  passkey: defineTable({
+    name: v.optional(v.union(v.null(), v.string())),
+    publicKey: v.string(),
+    userId: v.string(),
+    credentialID: v.string(),
+    counter: v.number(),
+    deviceType: v.string(),
+    backedUp: v.boolean(),
+    transports: v.optional(v.union(v.null(), v.string())),
+    createdAt: v.optional(v.union(v.null(), v.number())),
+    aaguid: v.optional(v.union(v.null(), v.string())),
+  })
+    .index("userId", ["userId"]),
+  twoFactor: defineTable({
+    secret: v.string(),
+    backupCodes: v.string(),
+    userId: v.string(),
+    verified: v.optional(v.union(v.null(), v.boolean())),
+    failedVerificationCount: v.optional(v.union(v.null(), v.number())),
+    lockedUntil: v.optional(v.union(v.null(), v.number())),
+  })
+    .index("userId", ["userId"]),
   organization: defineTable({
     name: v.string(),
     slug: v.string(),
