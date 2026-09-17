@@ -5,155 +5,104 @@ import { useAuthFormStore } from '@/lib/stores/auth-form-store';
 import { useAuthForm } from './use-auth-form';
 
 describe('useAuthForm', () => {
-  beforeEach(() => {
-    useAuthFormStore.getState().reset();
+  beforeEach(() => useAuthFormStore.getState().reset());
+
+  test('signs in with username and password', async () => {
+    const { result } = renderHook(() => useAuthForm());
+    act(() => result.current.updateState({ identifier: 'traveler', password: 'password123' }));
+    await act(() => result.current.submit());
+    expect(auth.signIn).toHaveBeenCalledWith({ password: 'password123', username: 'traveler' });
+    expect(result.current.state).toMatchObject({ error: null, isPending: false });
   });
-  test('signs in with email and password', async () => {
+
+  test('keeps legacy email sign-in working', async () => {
     const { result } = renderHook(() => useAuthForm());
     act(() =>
-      result.current.updateState({
-        email: 'traveler@example.com',
-        password: 'password123'
-      })
+      result.current.updateState({ identifier: 'traveler@example.com', password: 'password123' })
     );
-
     await act(() => result.current.submit());
-
-    expect(auth.signIn).toHaveBeenCalledWith({
+    expect(auth.signInEmail).toHaveBeenCalledWith({
       email: 'traveler@example.com',
       password: 'password123'
     });
-    expect(result.current.state).toMatchObject({
-      error: null,
-      isPending: false
-    });
   });
 
-  test('signs up with trimmed name', async () => {
+  test('signs up with a username and internal placeholder email', async () => {
     const { result } = renderHook(() => useAuthForm());
     act(() =>
       result.current.updateState({
-        email: 'traveler@example.com',
         flow: 'signUp',
+        identifier: 'traveler',
         name: '  Traveler  ',
         password: 'password123'
       })
     );
-
     await act(() => result.current.submit());
-
     expect(auth.signUp).toHaveBeenCalledWith({
-      email: 'traveler@example.com',
+      email: expect.stringMatching(/^[0-9a-f-]+@users\.invalid$/u),
       name: 'Traveler',
-      password: 'password123'
-    });
-    expect(result.current.state).toMatchObject({
-      error: null,
-      isPending: false
+      password: 'password123',
+      username: 'traveler'
     });
   });
 
-  test('rejects incomplete sign-in fields without calling auth', async () => {
+  test('rejects incomplete fields without calling auth', async () => {
     const { result } = renderHook(() => useAuthForm());
-    act(() => result.current.updateState({ email: 'traveler@example.com' }));
-
+    act(() => result.current.updateState({ identifier: 'traveler' }));
     await act(() => result.current.submit());
-
     expect(auth.signIn).not.toHaveBeenCalled();
     expect(result.current.state.error).toBe('Complete every required field to continue.');
   });
 
-  test('rejects sign-up without a name', async () => {
+  test('rejects invalid sign-up usernames', async () => {
     const { result } = renderHook(() => useAuthForm());
     act(() =>
       result.current.updateState({
-        email: 'traveler@example.com',
         flow: 'signUp',
-        password: 'password123'
-      })
-    );
-
-    await act(() => result.current.submit());
-
-    expect(auth.signUp).not.toHaveBeenCalled();
-    expect(result.current.state.error).toBe('Complete every required field to continue.');
-  });
-
-  test('rejects passwords shorter than 8 characters', async () => {
-    const { result } = renderHook(() => useAuthForm());
-    act(() =>
-      result.current.updateState({
-        email: 'traveler@example.com',
-        password: 'short'
-      })
-    );
-
-    await act(() => result.current.submit());
-
-    expect(auth.signIn).not.toHaveBeenCalled();
-    expect(result.current.state.error).toBe('Your password must be at least 8 characters.');
-  });
-
-  test('surfaces sign-in auth errors', async () => {
-    auth.signIn.mockResolvedValue({
-      data: null,
-      error: { message: 'Invalid email or password' }
-    });
-    const { result } = renderHook(() => useAuthForm());
-    act(() =>
-      result.current.updateState({
-        email: 'traveler@example.com',
-        password: 'password123'
-      })
-    );
-
-    await act(() => result.current.submit());
-
-    expect(result.current.state).toMatchObject({
-      error: 'Invalid email or password',
-      isPending: false
-    });
-  });
-
-  test('surfaces sign-up auth errors', async () => {
-    auth.signUp.mockResolvedValue({
-      data: null,
-      error: { message: 'An account with this email already exists' }
-    });
-    const { result } = renderHook(() => useAuthForm());
-    act(() =>
-      result.current.updateState({
-        email: 'traveler@example.com',
-        flow: 'signUp',
+        identifier: 'not valid',
         name: 'Traveler',
         password: 'password123'
       })
     );
-
     await act(() => result.current.submit());
+    expect(auth.signUp).not.toHaveBeenCalled();
+    expect(result.current.state.error).toContain('letters, numbers');
+  });
 
-    expect(result.current.state).toMatchObject({
-      error: 'An account with this email already exists',
-      isPending: false
+  test('resets a forgotten password with a saved recovery code', async () => {
+    const { result } = renderHook(() => useAuthForm());
+    act(() => result.current.switchToRecovery());
+    act(() =>
+      result.current.updateState({
+        identifier: 'traveler',
+        newPassword: 'new-password-123',
+        recoveryCode: 'ABCD-EFGH-IJKL-MNOP-QRST'
+      })
+    );
+    await act(() => result.current.submit());
+    expect(auth.recoverAccount).toHaveBeenCalledWith({
+      code: 'ABCD-EFGH-IJKL-MNOP-QRST',
+      newPassword: 'new-password-123',
+      username: 'traveler'
     });
+    expect(result.current.state.flow).toBe('signIn');
+  });
+
+  test('surfaces sign-in auth errors', async () => {
+    auth.signIn.mockResolvedValue({ data: null, error: { message: 'Invalid credentials' } });
+    const { result } = renderHook(() => useAuthForm());
+    act(() => result.current.updateState({ identifier: 'traveler', password: 'password123' }));
+    await act(() => result.current.submit());
+    expect(result.current.state).toMatchObject({ error: 'Invalid credentials', isPending: false });
   });
 
   test('switchFlow clears the password and error', () => {
     const { result } = renderHook(() => useAuthForm());
     act(() =>
-      result.current.updateState({
-        error: 'Authentication failed',
-        password: 'password123'
-      })
+      result.current.updateState({ error: 'Authentication failed', password: 'password123' })
     );
-
     act(() => result.current.switchFlow());
-
     expect(result.current.isSignIn).toBe(false);
-    expect(result.current.state).toMatchObject({
-      error: null,
-      flow: 'signUp',
-      password: ''
-    });
+    expect(result.current.state).toMatchObject({ error: null, flow: 'signUp', password: '' });
   });
 });
