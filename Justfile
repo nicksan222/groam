@@ -163,6 +163,14 @@ check:
 codegen:
     CONVEX_AGENT_MODE=anonymous bun run codegen
 
+# Refresh the Convex-managed guidelines and agent skills.
+update-convex-agent-files:
+    CONVEX_AGENT_MODE=anonymous bunx convex ai-files update
+
+# Enable squash auto-merge for a pull request after its required checks pass.
+enable-pr-auto-merge pull-request:
+    gh pr merge --auto --squash {{ pull-request }}
+
 # Regenerate every web, desktop, and document brand asset from @groam/brand.
 brand:
     bun run brand:generate
