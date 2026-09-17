@@ -71,6 +71,7 @@ describe('SettingsView', () => {
   test('keeps people management on the group settings section', () => {
     render(<SettingsView activeSection="group" onSectionChange={vi.fn()} />);
     expect(screen.getByTestId('invite-member')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'New group' })).toBeNull();
     expect(screen.getByText('Group settings')).toBeTruthy();
     expect(screen.getByText('People settings')).toBeTruthy();
   });
