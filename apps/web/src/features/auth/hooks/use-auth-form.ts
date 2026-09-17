@@ -4,6 +4,12 @@ import { errorMessage } from '@/lib/errors';
 import { useAuthFormStore } from '@/lib/stores/auth-form-store';
 import { isValidUsername, usernameRequirements } from '@/lib/username';
 
+function signInWithIdentifier(identifier: string, password: string) {
+  return identifier.includes('@')
+    ? authClient.signIn.email({ email: identifier, password })
+    : authClient.signIn.username({ password, username: identifier });
+}
+
 export function useAuthForm() {
   const state = useAuthFormStore(
     useShallow((store) => ({
@@ -47,9 +53,7 @@ export function useAuthForm() {
     try {
       const identifier = state.identifier.trim();
       const result = isSignIn
-        ? identifier.includes('@')
-          ? await authClient.signIn.email({ email: identifier, password: state.password })
-          : await authClient.signIn.username({ password: state.password, username: identifier })
+        ? await signInWithIdentifier(identifier, state.password)
         : await signUp(identifier);
       if (result.error) {
         throw new Error(result.error.message ?? 'Authentication failed');
