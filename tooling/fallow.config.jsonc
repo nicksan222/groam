@@ -16,6 +16,7 @@
   // These packages are runtime-loaded by Vitest or ESLint.
   "ignoreDependencies": ["@edge-runtime/vm", "jiti"],
   "entry": [
+    "tooling/showcase/src/ci-regenerate.ts",
     "tooling/showcase/src/video/index.tsx",
     "apps/web/src/main.tsx",
     "apps/web/src/routes/**/*.tsx",

@@ -207,6 +207,10 @@ dashboard:
 showcase:
     bun run showcase
 
+# Run the complete showcase regeneration used by CI.
+showcase-ci:
+    bun run showcase:ci
+
 # Capture showcase browser footage from a running app.
 showcase-capture:
     bun run showcase:capture

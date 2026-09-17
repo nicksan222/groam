@@ -53,37 +53,7 @@ jobs:
             CONVEX_AGENT_MODE
             TURBO_TELEMETRY_DISABLED
           push: never
-          runCmd: |
-            set -Eeuo pipefail
-
-            readonly dev_log="${PWD}/tooling/showcase/artifacts/ci-dev.log"
-            dev_pid=''
-
-            cleanup() {
-              status=$?
-              trap - EXIT
-              if [ -n "$dev_pid" ]; then
-                kill "$dev_pid" 2>/dev/null || true
-                wait "$dev_pid" 2>/dev/null || true
-              fi
-              if [ "$status" -ne 0 ]; then
-                echo 'Showcase regeneration failed. Recent dev stack output:'
-                tail -n 100 "$dev_log" 2>/dev/null || true
-              fi
-              exit "$status"
-            }
-            trap cleanup EXIT
-
-            sudo bunx playwright install-deps chromium
-            bun run showcase:setup
-
-            bun run dev >"$dev_log" 2>&1 &
-            dev_pid=$!
-            # Cover the 3-minute Convex bootstrap plus the subsequent dev watcher startup.
-            bun tooling/devkit/wait-for-dev-stack.ts --timeout-ms 420000
-
-            bun run showcase
-            bun run showcase:gif
+          runCmd: bun run showcase:ci
 
       - name: Upload failure log
         if: failure()

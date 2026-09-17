@@ -1,6 +1,8 @@
 name: CI
 
 on:
+  merge_group:
+    types: [checks_requested]
   pull_request:
     branches: [main]
   push:
@@ -17,6 +19,8 @@ jobs:
   test:
     name: Test
     uses: ./.github/workflows/test-reusable.yml
+    with:
+      validate_showcase: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
     secrets:
       # Never expose the signing key on pull_request runs (including same-repo PRs).
       TAURI_SIGNING_PRIVATE_KEY: ${{ github.event_name == 'push' && secrets.TAURI_SIGNING_PRIVATE_KEY || '' }}

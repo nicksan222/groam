@@ -2,6 +2,12 @@ name: Test
 
 on:
   workflow_call:
+    inputs:
+      validate_showcase:
+        description: Run the complete showcase regeneration as a pre-merge rehearsal
+        default: false
+        required: false
+        type: boolean
     secrets:
       TAURI_SIGNING_PRIVATE_KEY:
         required: false
@@ -242,3 +248,88 @@ jobs:
             apps/desktop/src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*.exe
             apps/desktop/src-tauri/target/${{ matrix.target }}/release/bundle/macos/*.app.tar.gz
             apps/desktop/src-tauri/target/${{ matrix.target }}/release/bundle/**/*.sig
+
+  showcase:
+    name: Showcase regeneration
+    if: inputs.validate_showcase
+    needs: [quality]
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    env:
+      CI: 'true'
+      CONVEX_AGENT_MODE: anonymous
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Prepare dev container mounts
+        shell: bash
+        run: |
+          mkdir -p \
+            "$HOME/.pi" \
+            "$HOME/.convex" \
+            "$HOME/.claude" \
+            "$HOME/.codex" \
+            "$HOME/.copilot" \
+            "$HOME/.config/gh" \
+            "$HOME/.config/gcloud"
+
+      - name: Rehearse showcase regeneration in dev container
+        uses: devcontainers/ci@513af61f4de4f75d37e4438f184ba4358f0fc1ca # v0.3.1900000450
+        with:
+          env: |
+            CI
+            CONVEX_AGENT_MODE
+            TURBO_TELEMETRY_DISABLED
+          push: never
+          runCmd: bun run showcase:ci
+
+      - name: Verify generated file scope
+        shell: bash
+        run: |
+          if ! git diff --quiet -- . \
+            ':(exclude)docs/assets/groam-demo.gif' \
+            ':(exclude)tooling/showcase/artifacts/repository-preview.png' \
+            ':(exclude)tooling/showcase/artifacts/showcase.mp4'; then
+            echo '::error::Showcase regeneration changed files outside the committed showcase outputs.'
+            git status --short
+            exit 1
+          fi
+
+      - name: Upload failure log
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: showcase-rehearsal-failure-${{ github.run_id }}
+          if-no-files-found: ignore
+          path: tooling/showcase/artifacts/ci-dev.log
+          retention-days: 7
+
+  merge-gate:
+    name: Merge Gate
+    if: always()
+    needs: [quality, e2e, desktop, showcase]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      BROWSER_RESULT: ${{ needs.e2e.result }}
+      DESKTOP_RESULT: ${{ needs.desktop.result }}
+      QUALITY_RESULT: ${{ needs.quality.result }}
+      SHOWCASE_RESULT: ${{ needs.showcase.result }}
+      VALIDATE_SHOWCASE: ${{ inputs.validate_showcase }}
+    steps:
+      - name: Require every pre-merge check
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$QUALITY_RESULT" = success
+          test "$BROWSER_RESULT" = success
+          test "$DESKTOP_RESULT" = success
+          if [ "$VALIDATE_SHOWCASE" = true ]; then
+            test "$SHOWCASE_RESULT" = success
+          else
+            test "$SHOWCASE_RESULT" = skipped
+          fi

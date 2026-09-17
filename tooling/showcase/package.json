@@ -35,6 +35,7 @@
   "private": true,
   "scripts": {
     "capture": "bun src/cli.ts capture",
+    "ci:regenerate": "bun src/ci-regenerate.ts",
     "edit": "bun src/cli.ts edit",
     "lint": "biome check .",
     "preview": "bun src/cli.ts preview",
