@@ -72,24 +72,9 @@ export function useStartIdeaFlow({
   const start = useCallback(
     (intent: StartIdeaIntent = {}) => {
       if (!trip || trip.proposal || !trip.permissions.canPropose) return;
-      const firstDestination =
-        intent.firstDestination ||
-        (Boolean(intent.addDestination) && trip.destinations.length === 0);
-      const resolved: StartIdeaIntent = {
-        ...intent,
-        firstDestination,
-        section:
-          intent.section ?? (firstDestination || intent.addDestination ? 'itinerary' : 'overview'),
-        titleHint: titleForIntent(intent)
-      };
-      if (firstDestination) {
-        if (pendingDraft) {
-          openIdea(pendingDraft, resolved);
-          return;
-        }
-        void ideaDialog.createForIntent(toCreateIntent(resolved), resolved.titleHint);
-        return;
-      }
+      const resolved = resolveStartIdeaIntent(intent, trip.destinations.length);
+      if (resolved.firstDestination)
+        return startFirstDestinationIdea({ ideaDialog, openIdea, pendingDraft, resolved });
       if (pendingDraft) {
         setPendingIntent(resolved);
         existingDraftDialog.openPanel();
@@ -125,4 +110,34 @@ export function useStartIdeaFlow({
     startAnotherIdea,
     titleHint: titleForIntent(pendingIntent)
   };
+}
+
+function resolveStartIdeaIntent(
+  intent: StartIdeaIntent,
+  destinationCount: number
+): StartIdeaIntent {
+  const firstDestination =
+    intent.firstDestination || (Boolean(intent.addDestination) && destinationCount === 0);
+  return {
+    ...intent,
+    firstDestination,
+    section:
+      intent.section ?? (firstDestination || intent.addDestination ? 'itinerary' : 'overview'),
+    titleHint: titleForIntent(intent)
+  };
+}
+
+function startFirstDestinationIdea({
+  ideaDialog,
+  openIdea,
+  pendingDraft,
+  resolved
+}: {
+  ideaDialog: ReturnType<typeof useCreateTripIdeaDialog>;
+  openIdea: (proposal: { id: Id<'tripProposals'> }, intent: StartIdeaIntent) => void;
+  pendingDraft: { id: Id<'tripProposals'> } | undefined;
+  resolved: StartIdeaIntent;
+}) {
+  if (pendingDraft) return openIdea(pendingDraft, resolved);
+  void ideaDialog.createForIntent(toCreateIntent(resolved), resolved.titleHint);
 }

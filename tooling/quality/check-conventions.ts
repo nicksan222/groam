@@ -5,6 +5,7 @@ import {
   type ConventionFinding,
   inspectFile,
   invalidDirectoryNames,
+  missingFeatureHookTests,
   packageExportPatternsFromMap,
   routePackageAllowlistFromWebDependencies,
   uiExportSubpathsFromMap
@@ -167,6 +168,7 @@ if (manualProductInteractions.length > 0) {
 
 const directoryNames = new Set<string>();
 const findings: ConventionFinding[] = [];
+findings.push(...missingFeatureHookTests(files));
 
 const packageBoundaryFindings = packageManifestPaths.flatMap((path) =>
   invalidPackageDependencies(JSON.parse(readFileSync(path, 'utf8')) as PackageManifest)
@@ -213,12 +215,14 @@ for (const finding of findings) {
 const messages: Record<ConventionFinding['category'], string> = {
   'ai-imports': 'Import AI contracts through an exported @groam/ai-contracts/* entrypoint',
   'component-files':
-    'Feature TSX files must export at most one component and stay under 300 lines — split extra components into their own kebab-case files',
+    'Feature TSX files must export at most one component — split extra components into their own kebab-case files',
   directories: 'Folder names must use kebab-case',
   'export-targets': 'Package exports must point at files that exist on disk',
   gradients: 'Use flat semantic colors instead of gradients',
   'halo-imports': 'Use @groam/* package names instead of leftover Halo package aliases',
   'hardcoded-colors': 'Use semantic color tokens instead of hardcoded colors',
+  'hook-tests':
+    'Feature capability hooks need a co-located use-*.test.ts(x) file; add coverage beside the hook instead of in a distant test folder',
   'import-meta-env':
     'Read environment variables from @groam/env/* instead of unvalidated Vite env access',
   'legacy-modules': 'Use TypeScript instead of .mjs for repository-owned modules',
@@ -235,7 +239,7 @@ const messages: Record<ConventionFinding['category'], string> = {
 
 if (byCategory.size === 0) {
   console.log(
-    'Folder names, source filenames, imports, environment access, UI entrypoints, route composition, flat color usage, and Convex database access follow repository conventions.'
+    'Folder names, source filenames, imports, hook tests, environment access, UI entrypoints, route composition, flat color usage, and Convex database access follow repository conventions.'
   );
   process.exit(0);
 }

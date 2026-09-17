@@ -1,4 +1,5 @@
 import { BubbleReactions } from '@groam/ui/components/bubble';
+import { Button } from '@groam/ui/components/button';
 import { cn } from '@groam/ui/lib/utils';
 import type { ThreadReactionStamp } from './thread-message-stamps';
 
@@ -20,7 +21,7 @@ export function ThreadMessageReactions({
       side="bottom"
     >
       {stamps.map((stamp) => (
-        <button
+        <Button
           aria-label={`${stamp.label}${stamp.count > 1 ? `, ${stamp.count}` : ''}`}
           aria-pressed={stamp.mine}
           className={cn(
@@ -33,12 +34,13 @@ export function ThreadMessageReactions({
           key={stamp.emoji}
           onClick={() => onReact(stamp.emoji)}
           type="button"
+          unstyled
         >
           <span aria-hidden="true">{stamp.emoji}</span>
           {stamp.count > 1 ? (
             <span className="font-medium tabular-nums text-muted-foreground">{stamp.count}</span>
           ) : null}
-        </button>
+        </Button>
       ))}
     </BubbleReactions>
   );

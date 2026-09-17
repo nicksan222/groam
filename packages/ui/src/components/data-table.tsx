@@ -42,6 +42,7 @@ import type {
   Column,
   ColumnDef,
   FilterFn,
+  Row,
   SortingState,
   VisibilityState
 } from '@tanstack/table-core';
@@ -243,64 +244,18 @@ export function DataTable<TData, TValue>({
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows.length > 0 ? (
-              table.getRowModel().rows.map((row) => {
-                const extra = getRowProps?.(row.original) ?? {};
-                return (
-                  <TableRow
-                    {...extra}
-                    className={cn(
-                      extra.className,
-                      onRowActivate ? 'cursor-pointer' : undefined,
-                      rowClassName?.(row.original)
-                    )}
-                    data-testid={
-                      extra['data-testid'] ??
-                      (typeof rowTestId === 'function' ? rowTestId(row.original) : rowTestId)
-                    }
+              table
+                .getRowModel()
+                .rows.map((row) => (
+                  <DataTableRow
+                    getRowProps={getRowProps}
                     key={row.id}
-                    onClick={
-                      onRowActivate
-                        ? (event) => {
-                            extra.onClick?.(event);
-                            if (event.defaultPrevented) return;
-                            if (
-                              (event.target as HTMLElement).closest('a, button, [role="menuitem"]')
-                            ) {
-                              return;
-                            }
-                            onRowActivate(row.original);
-                          }
-                        : extra.onClick
-                    }
-                    onKeyDown={
-                      onRowActivate
-                        ? (event) => {
-                            extra.onKeyDown?.(event);
-                            if (event.defaultPrevented) return;
-                            if (event.key === 'Enter' || event.key === ' ') {
-                              event.preventDefault();
-                              onRowActivate(row.original);
-                            }
-                          }
-                        : extra.onKeyDown
-                    }
-                    tabIndex={onRowActivate ? 0 : extra.tabIndex}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell
-                        className={cn(
-                          'truncate',
-                          cell.column.columnDef.meta?.className,
-                          cell.column.columnDef.meta?.cellClassName
-                        )}
-                        key={cell.id}
-                      >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                );
-              })
+                    onRowActivate={onRowActivate}
+                    row={row}
+                    rowClassName={rowClassName}
+                    rowTestId={rowTestId}
+                  />
+                ))
             ) : (
               <TableRow className="hover:bg-transparent">
                 <TableCell
@@ -315,6 +270,78 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
     </div>
+  );
+}
+
+type DataTableRowProps<TData> = {
+  getRowProps?: (
+    row: TData
+  ) => HTMLAttributes<HTMLTableRowElement> &
+    Record<`data-${string}`, string | boolean | number | undefined>;
+  onRowActivate?: (row: TData) => void;
+  row: Row<TData>;
+  rowClassName?: (row: TData) => string | undefined;
+  rowTestId?: string | ((row: TData) => string);
+};
+
+function DataTableRow<TData>({
+  getRowProps,
+  onRowActivate,
+  row,
+  rowClassName,
+  rowTestId
+}: DataTableRowProps<TData>) {
+  const extra = getRowProps?.(row.original) ?? {};
+  const activate = () => onRowActivate?.(row.original);
+  return (
+    <TableRow
+      {...extra}
+      className={cn(
+        extra.className,
+        onRowActivate ? 'cursor-pointer' : undefined,
+        rowClassName?.(row.original)
+      )}
+      data-testid={
+        extra['data-testid'] ??
+        (typeof rowTestId === 'function' ? rowTestId(row.original) : rowTestId)
+      }
+      onClick={
+        onRowActivate
+          ? (event) => {
+              extra.onClick?.(event);
+              if (event.defaultPrevented) return;
+              if ((event.target as HTMLElement).closest('a, button, [role="menuitem"]')) return;
+              activate();
+            }
+          : extra.onClick
+      }
+      onKeyDown={
+        onRowActivate
+          ? (event) => {
+              extra.onKeyDown?.(event);
+              if (event.defaultPrevented) return;
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                activate();
+              }
+            }
+          : extra.onKeyDown
+      }
+      tabIndex={onRowActivate ? 0 : extra.tabIndex}
+    >
+      {row.getVisibleCells().map((cell) => (
+        <TableCell
+          className={cn(
+            'truncate',
+            cell.column.columnDef.meta?.className,
+            cell.column.columnDef.meta?.cellClassName
+          )}
+          key={cell.id}
+        >
+          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+        </TableCell>
+      ))}
+    </TableRow>
   );
 }
 

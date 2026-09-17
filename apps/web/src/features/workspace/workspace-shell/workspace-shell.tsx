@@ -1,6 +1,7 @@
 import { Avatar } from '@groam/ui/components/avatar';
 import { AvatarFallback } from '@groam/ui/components/avatar-fallback';
 import { AvatarImage } from '@groam/ui/components/avatar-image';
+import { Button } from '@groam/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -86,50 +87,61 @@ function MobileNavigation() {
         className="safe-bottom fixed inset-x-0 bottom-0 z-50 flex h-16 items-stretch border-t border-border/50 bg-background/80 backdrop-blur-xl md:hidden"
         data-testid={testIds.mobileNav}
       >
-        {mobileNavigation.map(({ icon: Icon, label, to }) => {
-          const isActive = navigationItemIsActive(pathname, to);
-          const navTestId =
-            to === '/'
-              ? testIds.mobileNavHome
-              : to === '/trips'
-                ? testIds.mobileNavTrips
-                : to === '/ideas'
-                  ? testIds.mobileNavPlan
-                  : to === '/chat'
-                    ? testIds.mobileNavChat
-                    : testIds.navSettings;
-          return (
-            <Link
-              aria-current={isActive ? 'page' : undefined}
-              aria-label={label}
-              className="relative flex flex-1 flex-col items-center justify-center gap-0.5 py-1.5 text-[10px] font-medium text-muted-foreground transition-colors"
-              data-testid={navTestId}
-              key={to}
-              to={to}
-            >
-              <Icon
-                className={isActive ? 'size-5 text-primary' : 'size-5'}
-                strokeWidth={isActive ? 2.5 : 2}
-              />
-              <span className={isActive ? 'font-semibold text-primary' : undefined}>{label}</span>
-              {isActive && (
-                <span className="absolute -top-0.5 left-1/2 h-0.5 w-6 -translate-x-1/2 rounded-full bg-primary" />
-              )}
-            </Link>
-          );
-        })}
-        <button
+        {mobileNavigation.map((item) => (
+          <MobileNavigationItem item={item} key={item.to} pathname={pathname} />
+        ))}
+        <Button
           aria-label="More"
           className="relative flex flex-1 flex-col items-center justify-center gap-0.5 py-1.5 text-[10px] font-medium text-muted-foreground transition-colors"
           data-testid={testIds.mobileNavMore}
           onClick={toggleSidebar}
           type="button"
+          unstyled
         >
           <Menu className="size-5" />
           <span>More</span>
-        </button>
+        </Button>
       </nav>
     </>
+  );
+}
+
+function MobileNavigationItem({
+  item: { icon: Icon, label, to },
+  pathname
+}: {
+  item: (typeof mobileNavigation)[number];
+  pathname: string;
+}) {
+  const isActive = navigationItemIsActive(pathname, to);
+  return (
+    <Link
+      aria-current={isActive ? 'page' : undefined}
+      aria-label={label}
+      className="relative flex flex-1 flex-col items-center justify-center gap-0.5 py-1.5 text-[10px] font-medium text-muted-foreground transition-colors"
+      data-testid={mobileNavigationTestId(to)}
+      to={to}
+    >
+      <Icon
+        className={isActive ? 'size-5 text-primary' : 'size-5'}
+        strokeWidth={isActive ? 2.5 : 2}
+      />
+      <span className={isActive ? 'font-semibold text-primary' : undefined}>{label}</span>
+      {isActive && (
+        <span className="absolute -top-0.5 left-1/2 h-0.5 w-6 -translate-x-1/2 rounded-full bg-primary" />
+      )}
+    </Link>
+  );
+}
+
+function mobileNavigationTestId(to: string) {
+  return (
+    {
+      '/': testIds.mobileNavHome,
+      '/chat': testIds.mobileNavChat,
+      '/ideas': testIds.mobileNavPlan,
+      '/trips': testIds.mobileNavTrips
+    }[to] ?? testIds.navSettings
   );
 }
 

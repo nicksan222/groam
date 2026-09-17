@@ -178,7 +178,10 @@ function DayStrip({
       onPointerDown={(event) => {
         if (disabled || event.button !== 0) return;
         const day = dayFromPoint(event.clientX, event.clientY);
-        if (day == null || isDayBlocked(day, minimumDay, maximumDay, takenDays, startDay, endDay)) {
+        if (
+          day == null ||
+          isDayBlocked({ day, endDay, maximumDay, minimumDay, startDay, takenDays })
+        ) {
           return;
         }
         originRef.current = day;
@@ -190,7 +193,7 @@ function DayStrip({
         if (originRef.current == null) return;
         const day = dayFromPoint(event.clientX, event.clientY);
         if (day == null || day === originRef.current) return;
-        if (isDayBlocked(day, minimumDay, maximumDay, takenDays, startDay, endDay)) return;
+        if (isDayBlocked({ day, endDay, maximumDay, minimumDay, startDay, takenDays })) return;
         skipClickRef.current = true;
         setAnchorDay(null);
         const [nextStart, nextEnd] = orderedRange(originRef.current, day);
@@ -198,128 +201,224 @@ function DayStrip({
       }}
       onPointerUp={endPointer}
     >
-      {days.map((day) => {
-        const inRange =
-          startDay !== undefined && endDay !== undefined && day >= startDay && day <= endDay;
-        const isStart = startDay !== undefined && day === startDay;
-        const isEnd = endDay !== undefined && day === endDay;
-        const isPendingStart = endDay === undefined && startDay !== undefined && day === startDay;
-        const isAnchor = day === anchorDay;
-        const isTaken = Boolean(takenDays?.has(day) && !inRange && !isPendingStart);
-        const isOutOfBounds = day < minimumDay || day > maximumDay;
-        const isBlocked = isDayBlocked(day, minimumDay, maximumDay, takenDays, startDay, endDay);
-        const date = startDate ? dayOfMonthForDay(startDate, day) : null;
-        return (
-          <button
-            aria-label={dayCellLabel({
-              date: startDate ? dateForDay(startDate, day) : null,
-              day,
-              endLabel,
-              isEnd,
-              isStart: isStart || isPendingStart,
-              isTaken,
-              startLabel
-            })}
-            aria-pressed={inRange || isPendingStart}
-            className={cn(
-              'flex min-h-12 flex-col items-center justify-center rounded-lg border border-border bg-background px-1 py-1.5 text-center shadow-xs transition-colors',
-              'focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-              inRange && 'bg-primary text-primary-foreground',
-              isPendingStart &&
-                !inRange &&
-                'bg-primary/15 text-foreground ring-1 ring-inset ring-primary/40',
-              !inRange &&
-                !isPendingStart &&
-                !isTaken &&
-                !isOutOfBounds &&
-                'text-muted-foreground hover:border-primary/50 hover:text-foreground hover:shadow-sm',
-              isTaken &&
-                'cursor-not-allowed bg-muted/60 text-muted-foreground line-through decoration-muted-foreground/70',
-              isOutOfBounds && !isTaken && 'cursor-not-allowed text-muted-foreground/45',
-              stayCellRadius({
-                inRange: inRange || isPendingStart,
-                isEnd,
-                isStart: isStart || isPendingStart
-              }),
-              isAnchor && 'z-10 ring-2 ring-ring ring-offset-2 ring-offset-background'
-            )}
-            data-day={day}
-            data-taken={isTaken ? '' : undefined}
-            disabled={disabled || isBlocked}
-            key={day}
-            onClick={() => {
-              if (skipClickRef.current) {
-                skipClickRef.current = false;
-                return;
-              }
-              if (isBlocked) return;
-
-              if (startDay !== undefined && endDay !== undefined) {
-                if (day === startDay && day === endDay) {
-                  onChange(undefined, undefined);
-                  setAnchorDay(null);
-                  return;
-                }
-                onChange(day, undefined);
-                setAnchorDay(day);
-                return;
-              }
-
-              const anchor = anchorDay ?? startDay;
-              if (anchor == null) {
-                onChange(day, undefined);
-                setAnchorDay(day);
-                return;
-              }
-
-              if (anchor === day) {
-                onChange(undefined, undefined);
-                setAnchorDay(null);
-                return;
-              }
-
-              const [nextStart, nextEnd] = orderedRange(anchor, day);
-              onChange(nextStart, nextEnd);
-              setAnchorDay(null);
-            }}
-            type="button"
-          >
-            <span className="text-sm font-semibold tabular-nums leading-none">{day}</span>
-            {date && (
-              <span
-                className={cn(
-                  'mt-1 text-[10px] tabular-nums leading-none',
-                  inRange || isPendingStart
-                    ? inRange
-                      ? 'text-primary-foreground/80'
-                      : 'text-foreground/70'
-                    : 'text-muted-foreground'
-                )}
-              >
-                {date}
-              </span>
-            )}
-          </button>
-        );
-      })}
+      {days.map((day) => (
+        <DayCell
+          anchorDay={anchorDay}
+          day={day}
+          disabled={disabled}
+          endDay={endDay}
+          endLabel={endLabel}
+          key={day}
+          maximumDay={maximumDay}
+          minimumDay={minimumDay}
+          onChange={onChange}
+          setAnchorDay={setAnchorDay}
+          skipClickRef={skipClickRef}
+          startDate={startDate}
+          startDay={startDay}
+          startLabel={startLabel}
+          takenDays={takenDays}
+        />
+      ))}
     </div>
   );
 }
 
-function isDayBlocked(
-  day: number,
-  minimumDay: number,
-  maximumDay: number,
-  takenDays: ReadonlySet<number> | undefined,
-  startDay: number | undefined,
-  endDay: number | undefined
-) {
+function isDayBlocked({
+  day,
+  endDay,
+  maximumDay,
+  minimumDay,
+  startDay,
+  takenDays
+}: {
+  day: number;
+  endDay: number | undefined;
+  maximumDay: number;
+  minimumDay: number;
+  startDay: number | undefined;
+  takenDays: ReadonlySet<number> | undefined;
+}) {
   if (day < minimumDay || day > maximumDay) return true;
   const inRange =
     startDay !== undefined && endDay !== undefined && day >= startDay && day <= endDay;
   const isPendingStart = endDay === undefined && startDay !== undefined && day === startDay;
   if (takenDays?.has(day) && !inRange && !isPendingStart) return true;
   return false;
+}
+
+type DayCellProps = {
+  anchorDay: number | null;
+  day: number;
+  disabled: boolean;
+  endDay: number | undefined;
+  endLabel: string;
+  maximumDay: number;
+  minimumDay: number;
+  onChange: (startDay: number | undefined, endDay: number | undefined) => void;
+  setAnchorDay: (day: number | null) => void;
+  skipClickRef: { current: boolean };
+  startDate?: null | string;
+  startDay: number | undefined;
+  startLabel: string;
+  takenDays?: ReadonlySet<number>;
+};
+
+function DayCell(props: DayCellProps) {
+  const { day, endDay, maximumDay, minimumDay, startDay, takenDays } = props;
+  const selection = daySelectionState(day, startDay, endDay);
+  const availability = dayAvailabilityState({
+    day,
+    endDay,
+    maximumDay,
+    minimumDay,
+    startDay,
+    takenDays
+  });
+  const date = props.startDate ? dayOfMonthForDay(props.startDate, day) : null;
+  return (
+    <button
+      aria-label={dayCellLabel({
+        date: props.startDate ? dateForDay(props.startDate, day) : null,
+        day,
+        endLabel: props.endLabel,
+        isEnd: selection.isEnd,
+        isStart: selection.isStart || selection.isPendingStart,
+        isTaken: availability.isTaken,
+        startLabel: props.startLabel
+      })}
+      aria-pressed={selection.inRange || selection.isPendingStart}
+      className={dayCellClassName(selection, availability, day === props.anchorDay)}
+      data-day={day}
+      data-taken={availability.isTaken ? '' : undefined}
+      disabled={props.disabled || availability.isBlocked}
+      onClick={() => selectDay(props, availability.isBlocked)}
+      type="button"
+    >
+      <span className="text-sm font-semibold tabular-nums leading-none">{day}</span>
+      {date && (
+        <span className={dateClassName(selection.inRange, selection.isPendingStart)}>{date}</span>
+      )}
+    </button>
+  );
+}
+
+function daySelectionState(day: number, startDay: number | undefined, endDay: number | undefined) {
+  const inRange =
+    startDay !== undefined && endDay !== undefined && day >= startDay && day <= endDay;
+  return {
+    inRange,
+    isEnd: endDay !== undefined && day === endDay,
+    isPendingStart: endDay === undefined && startDay !== undefined && day === startDay,
+    isStart: startDay !== undefined && day === startDay
+  };
+}
+
+function dayAvailabilityState({
+  day,
+  endDay,
+  maximumDay,
+  minimumDay,
+  startDay,
+  takenDays
+}: {
+  day: number;
+  endDay: number | undefined;
+  maximumDay: number;
+  minimumDay: number;
+  startDay: number | undefined;
+  takenDays?: ReadonlySet<number>;
+}) {
+  const selection = daySelectionState(day, startDay, endDay);
+  const isTaken = Boolean(takenDays?.has(day) && !selection.inRange && !selection.isPendingStart);
+  return {
+    isBlocked: isDayBlocked({ day, endDay, maximumDay, minimumDay, startDay, takenDays }),
+    isOutOfBounds: day < minimumDay || day > maximumDay,
+    isTaken
+  };
+}
+
+function dayCellClassName(
+  selection: ReturnType<typeof daySelectionState>,
+  availability: ReturnType<typeof dayAvailabilityState>,
+  isAnchor: boolean
+) {
+  return cn(
+    'flex min-h-12 flex-col items-center justify-center rounded-lg border border-border bg-background px-1 py-1.5 text-center shadow-xs transition-colors',
+    'focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+    selectedDayClassName(selection),
+    availableDayClassName(selection, availability),
+    stayCellRadius({
+      inRange: selection.inRange || selection.isPendingStart,
+      isEnd: selection.isEnd,
+      isStart: selection.isStart || selection.isPendingStart
+    }),
+    isAnchor && 'z-10 ring-2 ring-ring ring-offset-2 ring-offset-background'
+  );
+}
+
+function selectedDayClassName({ inRange, isPendingStart }: ReturnType<typeof daySelectionState>) {
+  if (inRange) return 'bg-primary text-primary-foreground';
+  return isPendingStart
+    ? 'bg-primary/15 text-foreground ring-1 ring-inset ring-primary/40'
+    : undefined;
+}
+
+function availableDayClassName(
+  { inRange, isPendingStart }: ReturnType<typeof daySelectionState>,
+  { isOutOfBounds, isTaken }: ReturnType<typeof dayAvailabilityState>
+) {
+  if (isTaken) {
+    return 'cursor-not-allowed bg-muted/60 text-muted-foreground line-through decoration-muted-foreground/70';
+  }
+  if (isOutOfBounds) return 'cursor-not-allowed text-muted-foreground/45';
+  if (!inRange && !isPendingStart) {
+    return 'text-muted-foreground hover:border-primary/50 hover:text-foreground hover:shadow-sm';
+  }
+  return undefined;
+}
+
+function selectDay(props: DayCellProps, isBlocked: boolean) {
+  if (props.skipClickRef.current) {
+    props.skipClickRef.current = false;
+    return;
+  }
+  if (isBlocked) return;
+  const next = nextDaySelection(props.day, props.anchorDay, props.startDay, props.endDay);
+  props.onChange(next.startDay, next.endDay);
+  props.setAnchorDay(next.anchorDay);
+}
+
+function nextDaySelection(
+  day: number,
+  anchorDay: number | null,
+  startDay: number | undefined,
+  endDay: number | undefined
+) {
+  if (startDay !== undefined && endDay !== undefined) {
+    return startDay === day && endDay === day
+      ? { anchorDay: null, endDay: undefined, startDay: undefined }
+      : { anchorDay: day, endDay: undefined, startDay: day };
+  }
+  const anchor = anchorDay ?? startDay;
+  if (anchor == null || anchor === day) {
+    return anchor == null
+      ? { anchorDay: day, endDay: undefined, startDay: day }
+      : { anchorDay: null, endDay: undefined, startDay: undefined };
+  }
+  const [nextStart, nextEnd] = orderedRange(anchor, day);
+  return { anchorDay: null, endDay: nextEnd, startDay: nextStart };
+}
+
+function dateClassName(inRange: boolean, isPendingStart: boolean) {
+  return cn(
+    'mt-1 text-[10px] tabular-nums leading-none',
+    inRange
+      ? 'text-primary-foreground/80'
+      : isPendingStart
+        ? 'text-foreground/70'
+        : 'text-muted-foreground'
+  );
 }
 
 function stayCellRadius({

@@ -58,6 +58,18 @@ test('merges custom class names onto variant output', () => {
   expect(screen.getByRole('button', { name: 'Full width' }).className).toContain('w-full');
 });
 
+test('supports bespoke interaction surfaces without injecting control dimensions', () => {
+  render(
+    <Button className="grid w-full" unstyled>
+      Open card
+    </Button>
+  );
+
+  const button = screen.getByRole('button', { name: 'Open card' });
+  expect(button.className).toBe('grid w-full');
+  expect(button.getAttribute('data-slot')).toBe('button');
+});
+
 test('renders asChild by merging props onto the child element', () => {
   render(
     <Button asChild variant="outline">

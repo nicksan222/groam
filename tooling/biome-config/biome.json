@@ -55,13 +55,24 @@
         "noSkippedTests": "error"
       },
       "complexity": {
+        "noExcessiveCognitiveComplexity": {
+          "level": "error",
+          "options": { "maxAllowedComplexity": 15 }
+        },
+        "noExcessiveNestedTestSuites": "error",
+        "noImportantStyles": "error",
         "noUselessFragments": "error",
         "useArrowFunction": "error",
+        "useMaxParams": {
+          "level": "error",
+          "options": { "max": 4 }
+        },
         "useOptionalChain": "error"
       },
       "performance": {
         "noAccumulatingSpread": "error",
-        "noDelete": "error"
+        "noDelete": "error",
+        "noReExportAll": "error"
       },
       "style": {
         "noCommonJs": "error",
@@ -192,6 +203,29 @@
                 "maxLines": 250,
                 "skipBlankLines": true,
                 "skipIifes": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "apps/web/src/features/**/*.ts",
+        "apps/web/src/features/**/*.tsx",
+        "!apps/web/src/features/**/*.test.ts",
+        "!apps/web/src/features/**/*.test.tsx",
+        "!apps/web/src/features/**/*.spec.ts",
+        "!apps/web/src/features/**/*.spec.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noExcessiveLinesPerFile": {
+              "level": "error",
+              "options": {
+                "maxLines": 300,
+                "skipBlankLines": true
               }
             }
           }

@@ -19,13 +19,19 @@ function formatLocalTime(value: string): string {
   return tripTimeFormatter.format(new Date(`2000-01-01T${value}:00.000Z`));
 }
 
-export function formatDayTimeRange(
-  startDate: null | string,
-  startDay: number,
-  startTime: null | string,
-  endDay: number,
-  endTime: null | string
-): string | null {
+export function formatDayTimeRange({
+  endDay,
+  endTime,
+  startDate,
+  startDay,
+  startTime
+}: {
+  endDay: number;
+  endTime: null | string;
+  startDate: null | string;
+  startDay: number;
+  startTime: null | string;
+}): string | null {
   if (!startTime) return null;
   const start = `${formatTripDay(startDate, startDay)} at ${formatLocalTime(startTime)}`;
   if (!endTime) {

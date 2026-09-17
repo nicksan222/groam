@@ -50,28 +50,7 @@ export function TripVersionDetail({
   const { pendingAction, run } = useProposalActionRunner();
   const showLoading = isLoading || !proposal;
 
-  if (showLoading) {
-    return (
-      <Shell.PageStack aria-busy="true" aria-label="Loading idea…" role="status">
-        {embedded ? null : (
-          <div className="space-y-2">
-            <Skeleton className="h-7 w-[min(100%,16rem)]" />
-            <Skeleton className="h-4 w-[min(100%,12rem)]" />
-          </div>
-        )}
-        <Shell.TwoColumns>
-          <Shell.LeftColumn>
-            <Skeleton className="h-32 w-full rounded-xl" />
-            <Skeleton className="h-48 w-full rounded-xl" />
-          </Shell.LeftColumn>
-          <Shell.RightColumn>
-            <Skeleton className="h-24 w-full rounded-xl" />
-            <Skeleton className="h-32 w-full rounded-xl" />
-          </Shell.RightColumn>
-        </Shell.TwoColumns>
-      </Shell.PageStack>
-    );
-  }
+  if (showLoading) return <VersionLoading embedded={embedded} />;
 
   const openCopy = () => {
     void navigate(ideaOpenHref(proposal));
@@ -84,51 +63,14 @@ export function TripVersionDetail({
 
   return (
     <Shell.PageStack>
-      {embedded ? null : (
-        <header className="border-b pb-5">
-          <div className="flex flex-wrap items-start justify-between gap-5">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-start gap-3">
-                <VersionStatusIcon status={proposal.status} />
-                <div className="min-w-0">
-                  <Shell.Title className="truncate">{proposal.title}</Shell.Title>
-                  <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                    <TripIdeaBadge name={proposal.ideaName} />
-                    {proposal.status === 'draft' ? <Badge>Your draft</Badge> : null}
-                    <VersionBadge
-                      conflictCount={proposal.conflicts.length}
-                      status={proposal.status}
-                    />
-                    <span>
-                      <strong className="font-medium text-foreground">
-                        {proposal.author.name}
-                      </strong>{' '}
-                      {proposal.status === 'draft'
-                        ? `is shaping ${proposal.changes.length} change${proposal.changes.length === 1 ? '' : 's'} on this idea`
-                        : `suggested ${proposal.changes.length} change${proposal.changes.length === 1 ? '' : 's'} to the shared trip`}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              <Button onClick={openCopy} size="sm" variant="outline">
-                <Pencil /> {proposal.status === 'draft' ? 'Continue editing' : 'Open this idea'}
-              </Button>
-              {proposal.canClose ? (
-                <PassOnIdea
-                  appearance="header"
-                  close={close}
-                  pendingAction={pendingAction}
-                  proposal={proposal}
-                  run={run}
-                  triggerTestId={testIds.closeIdeaHeader}
-                />
-              ) : null}
-            </div>
-          </div>
-        </header>
-      )}
+      <VersionHeader
+        close={close}
+        embedded={embedded}
+        onOpen={openCopy}
+        pendingAction={pendingAction}
+        proposal={proposal}
+        run={run}
+      />
 
       {embedded || !notice ? null : (
         <WorkspaceNotice
@@ -206,10 +148,93 @@ export function TripVersionDetail({
   );
 }
 
+function VersionLoading({ embedded }: { embedded: boolean }) {
+  return (
+    <Shell.PageStack aria-busy="true" aria-label="Loading idea…" role="status">
+      {embedded ? null : (
+        <div className="space-y-2">
+          <Skeleton className="h-7 w-[min(100%,16rem)]" />
+          <Skeleton className="h-4 w-[min(100%,12rem)]" />
+        </div>
+      )}
+      <Shell.TwoColumns>
+        <Shell.LeftColumn>
+          <Skeleton className="h-32 w-full rounded-xl" />
+          <Skeleton className="h-48 w-full rounded-xl" />
+        </Shell.LeftColumn>
+        <Shell.RightColumn>
+          <Skeleton className="h-24 w-full rounded-xl" />
+          <Skeleton className="h-32 w-full rounded-xl" />
+        </Shell.RightColumn>
+      </Shell.TwoColumns>
+    </Shell.PageStack>
+  );
+}
+
+function VersionHeader({
+  close,
+  embedded,
+  onOpen,
+  pendingAction,
+  proposal,
+  run
+}: {
+  close: ReturnType<typeof useTripVersion>['close'];
+  embedded: boolean;
+  onOpen: () => void;
+  pendingAction: string | null;
+  proposal: NonNullable<ReturnType<typeof useTripVersion>['proposal']>;
+  run: ReturnType<typeof useProposalActionRunner>['run'];
+}) {
+  if (embedded) return null;
+  const draft = proposal.status === 'draft';
+  const changeCount = `${proposal.changes.length} change${proposal.changes.length === 1 ? '' : 's'}`;
+  return (
+    <header className="border-b pb-5">
+      <div className="flex flex-wrap items-start justify-between gap-5">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start gap-3">
+            <VersionStatusIcon status={proposal.status} />
+            <div className="min-w-0">
+              <Shell.Title className="truncate">{proposal.title}</Shell.Title>
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                <TripIdeaBadge name={proposal.ideaName} />
+                {draft ? <Badge>Your draft</Badge> : null}
+                <VersionBadge conflictCount={proposal.conflicts.length} status={proposal.status} />
+                <span>
+                  <strong className="font-medium text-foreground">{proposal.author.name}</strong>{' '}
+                  {draft
+                    ? `is shaping ${changeCount} on this idea`
+                    : `suggested ${changeCount} to the shared trip`}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <Button onClick={onOpen} size="sm" variant="outline">
+            <Pencil /> {draft ? 'Continue editing' : 'Open this idea'}
+          </Button>
+          {proposal.canClose ? (
+            <PassOnIdea
+              appearance="header"
+              close={close}
+              pendingAction={pendingAction}
+              proposal={proposal}
+              run={run}
+              triggerTestId={testIds.closeIdeaHeader}
+            />
+          ) : null}
+        </div>
+      </div>
+    </header>
+  );
+}
+
 function LinkedTripIssue({ issue }: { issue: NonNullable<ProposalDetail['issue']> }) {
   const navigate = useNavigate();
   return (
-    <button
+    <Button
       className="w-full px-3 py-4 text-left transition-colors hover:bg-muted/30"
       onClick={() => {
         void navigate({
@@ -218,6 +243,7 @@ function LinkedTripIssue({ issue }: { issue: NonNullable<ProposalDetail['issue']
         });
       }}
       type="button"
+      unstyled
     >
       <div className="flex items-center gap-2">
         <CircleDot className="size-4 text-primary" />
@@ -231,6 +257,6 @@ function LinkedTripIssue({ issue }: { issue: NonNullable<ProposalDetail['issue']
       <Badge className="mt-3 capitalize" variant="outline">
         {issue.status}
       </Badge>
-    </button>
+    </Button>
   );
 }

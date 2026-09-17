@@ -68,4 +68,27 @@ describe('useSessionSettings', () => {
     expect(result.current.state.error).toBeNull();
     expect(result.current.state.sessions).toHaveLength(2);
   });
+
+  test('keeps sessions and reports revoke failures', async () => {
+    auth.revokeSession.mockResolvedValue({ error: { message: 'Session is already revoked' } });
+    const { result } = renderHook(() => useSessionSettings());
+
+    await waitFor(() => expect(result.current.state.sessions).toHaveLength(2));
+    await act(() => result.current.revoke('other-token'));
+
+    expect(result.current.state.sessions).toHaveLength(2);
+    expect(result.current.state.error).toBe('Session is already revoked');
+    expect(result.current.state.pendingAction).toBeNull();
+  });
+
+  test('keeps all sessions when signing out others fails', async () => {
+    auth.revokeOtherSessions.mockResolvedValue({ error: {} });
+    const { result } = renderHook(() => useSessionSettings());
+
+    await waitFor(() => expect(result.current.state.sessions).toHaveLength(2));
+    await act(() => result.current.revokeOthers('current-token'));
+
+    expect(result.current.state.sessions).toHaveLength(2);
+    expect(result.current.state.error).toBe('Unable to sign out other sessions');
+  });
 });

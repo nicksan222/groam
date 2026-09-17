@@ -48,13 +48,13 @@ test('detectConflictPaths lists only paths changed on both sides', () => {
 });
 
 test('resolveConflictSnapshot applies chosen sides for each conflict path', () => {
-  const resolved = VersionMerge.resolve(
+  const resolved = VersionMerge.resolve({
     base,
+    conflictPaths: ['trip.json'],
     current,
     proposed,
-    ['trip.json'],
-    [{ choice: 'proposed', path: 'trip.json' }]
-  );
+    resolutions: [{ choice: 'proposed', path: 'trip.json' }]
+  });
   expect(resolved.files).toEqual([
     file('destinations/lisbon.json', '{"name":"Lisbon"}\n'),
     file('trip.json', '{"name":"Proposed"}\n')
@@ -62,23 +62,23 @@ test('resolveConflictSnapshot applies chosen sides for each conflict path', () =
 });
 
 test('resolveConflictSnapshot keeps auto-mergeable paths when branches diverged safely', () => {
-  const resolved = VersionMerge.resolve(
+  const resolved = VersionMerge.resolve({
     base,
-    {
+    current: {
       files: [
         file('trip.json', '{"name":"Base"}\n'),
         file('destinations/lisbon.json', '{"name":"Lisbon","notes":"Current"}\n')
       ]
     },
-    {
+    proposed: {
       files: [
         file('trip.json', '{"name":"Proposed"}\n'),
         file('destinations/lisbon.json', '{"name":"Lisbon"}\n')
       ]
     },
-    ['trip.json'],
-    [{ choice: 'current', path: 'trip.json' }]
-  );
+    conflictPaths: ['trip.json'],
+    resolutions: [{ choice: 'current', path: 'trip.json' }]
+  });
   expect(resolved.files).toEqual([
     file('destinations/lisbon.json', '{"name":"Lisbon","notes":"Current"}\n'),
     file('trip.json', '{"name":"Base"}\n')
@@ -86,49 +86,49 @@ test('resolveConflictSnapshot keeps auto-mergeable paths when branches diverged 
 });
 
 test('resolveConflictSnapshot rejects incomplete or stale resolutions', () => {
-  expect(() => VersionMerge.resolve(base, current, proposed, ['trip.json'], [])).toThrow(
-    'Choose a resolution for every conflict'
-  );
   expect(() =>
-    VersionMerge.resolve(
+    VersionMerge.resolve({ base, conflictPaths: ['trip.json'], current, proposed, resolutions: [] })
+  ).toThrow('Choose a resolution for every conflict');
+  expect(() =>
+    VersionMerge.resolve({
       base,
+      conflictPaths: ['trip.json'],
       current,
       proposed,
-      ['trip.json'],
-      [
+      resolutions: [
         { choice: 'current', path: 'trip.json' },
         { choice: 'proposed', path: 'trip.json' }
       ]
-    )
+    })
   ).toThrow('Choose a resolution for every conflict');
   expect(() =>
-    VersionMerge.resolve(
+    VersionMerge.resolve({
       base,
-      {
+      current: {
         files: [
           file('trip.json', '{"name":"Base"}\n'),
           file('destinations/lisbon.json', '{"name":"Lisbon","notes":"Source edit"}\n')
         ]
       },
-      {
+      proposed: {
         files: [
           file('trip.json', '{"name":"Base"}\n'),
           file('destinations/lisbon.json', '{"name":"Lisbon","notes":"Proposal edit"}\n')
         ]
       },
-      ['trip.json'],
-      [{ choice: 'current', path: 'trip.json' }]
-    )
+      conflictPaths: ['trip.json'],
+      resolutions: [{ choice: 'current', path: 'trip.json' }]
+    })
   ).toThrow('Recheck conflicts before applying');
 });
 
 test('resolveConflictSnapshot omits deleted files when no side retains them', () => {
-  const resolved = VersionMerge.resolve(
-    { files: [file('trip.json', '{"name":"Base"}\n'), file('activities/old.json', '{}')] },
-    { files: [file('trip.json', '{"name":"Current"}\n')] },
-    { files: [file('trip.json', '{"name":"Proposed"}\n')] },
-    ['trip.json'],
-    [{ choice: 'proposed', path: 'trip.json' }]
-  );
+  const resolved = VersionMerge.resolve({
+    base: { files: [file('trip.json', '{"name":"Base"}\n'), file('activities/old.json', '{}')] },
+    conflictPaths: ['trip.json'],
+    current: { files: [file('trip.json', '{"name":"Current"}\n')] },
+    proposed: { files: [file('trip.json', '{"name":"Proposed"}\n')] },
+    resolutions: [{ choice: 'proposed', path: 'trip.json' }]
+  });
   expect(resolved.files).toEqual([file('trip.json', '{"name":"Proposed"}\n')]);
 });

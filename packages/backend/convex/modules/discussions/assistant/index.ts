@@ -36,15 +36,14 @@ export const finishResponse = internalMutation({
     ctx,
     { discussionId, error, expectedUpdatedAt, promptMessageId, responseText, runId }
   ) => {
-    await Discussions.finishAssistantResponse(
-      ctx,
+    await Discussions.finishAssistantResponse(ctx, {
       discussionId,
-      promptMessageId,
+      error,
       expectedUpdatedAt,
+      promptMessageId,
       responseText,
-      runId,
-      error
-    );
+      runId
+    });
     return null;
   }
 });

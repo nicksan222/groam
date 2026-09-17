@@ -78,6 +78,10 @@
       "includes": ["**/apps/web/src/**/*.tsx", "!**/apps/web/src/**/*.test.tsx"]
     },
     {
+      "path": "./tooling/biome-config/no-native-interactive-elements.grit",
+      "includes": ["**/apps/web/src/features/**/*.tsx", "!**/apps/web/src/features/**/*.test.tsx"]
+    },
+    {
       "path": "./tooling/biome-config/no-direct-sonner-imports.grit",
       "includes": [
         "**/apps/web/src/**",

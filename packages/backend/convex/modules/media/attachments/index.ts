@@ -137,10 +137,17 @@ export class Attachments {
 
   static async viewForTarget(
     ctx: ReadCtx,
-    tripId: Id<'trips'>,
-    target: AttachmentTarget,
-    maximum: number,
-    organizationId: string
+    {
+      tripId,
+      target,
+      maximum,
+      organizationId
+    }: {
+      tripId: Id<'trips'>;
+      target: AttachmentTarget;
+      maximum: number;
+      organizationId: string;
+    }
   ): Promise<AttachmentView[]> {
     const references = await Attachments.forTarget(ctx, tripId, target, maximum);
     const rows = await Promise.all(
@@ -184,12 +191,21 @@ export class Attachments {
   /** Replace the ordered pin list. Same ids in the same order is a no-op. */
   static async setTarget(
     ctx: MutationCtx,
-    tripId: Id<'trips'>,
-    target: AttachmentTarget,
-    mediaIds: Id<'media'>[] | undefined,
-    organizationId: string,
-    maximum: number,
-    label = 'Attachments'
+    {
+      tripId,
+      target,
+      mediaIds,
+      organizationId,
+      maximum,
+      label = 'Attachments'
+    }: {
+      tripId: Id<'trips'>;
+      target: AttachmentTarget;
+      mediaIds: Id<'media'>[] | undefined;
+      organizationId: string;
+      maximum: number;
+      label?: string;
+    }
   ): Promise<boolean> {
     const ids = mediaIds ?? [];
     const singular = singularLabel(label);

@@ -205,7 +205,7 @@ function UpdateChoice({
   onClick: () => void;
 }) {
   return (
-    <button
+    <Button
       aria-label={label}
       aria-pressed={checked}
       className={`rounded-lg border p-3 text-left transition-colors ${
@@ -214,6 +214,7 @@ function UpdateChoice({
       disabled={disabled}
       onClick={onClick}
       type="button"
+      unstyled
     >
       <span className="flex items-center gap-2 text-sm font-medium">
         <span
@@ -228,6 +229,6 @@ function UpdateChoice({
       <span className="mt-1.5 block pl-6 text-xs leading-4 text-muted-foreground">
         {description}
       </span>
-    </button>
+    </Button>
   );
 }

@@ -1,4 +1,5 @@
 import { Badge } from '@groam/ui/components/badge';
+import { Button } from '@groam/ui/components/button';
 import { DashedEmpty } from '@groam/ui/components/dashed-empty';
 import {
   Dialog,
@@ -93,7 +94,7 @@ export function TripDestinationPicker({
 
   return (
     <>
-      <button
+      <Button
         aria-haspopup="dialog"
         className="flex min-h-14 w-full items-center gap-3 rounded-lg border border-input bg-background px-3 py-2 text-left transition-colors hover:border-primary/40 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         data-testid={testIds.addStopPlace}
@@ -101,6 +102,7 @@ export function TripDestinationPicker({
         id={id}
         onClick={open}
         type="button"
+        unstyled
       >
         <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10">
           {status === 'known' ? (
@@ -120,7 +122,7 @@ export function TripDestinationPicker({
           </span>
         </span>
         <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
-      </button>
+      </Button>
 
       <Dialog onOpenChange={onOpenChange} open={isOpen}>
         <DialogContent

@@ -65,4 +65,13 @@ describe('useStartIdeaDialog', () => {
     });
     expect(deps.createIdea).not.toHaveBeenCalled();
   });
+
+  test('stops creating without navigation when the idea service returns no version', async () => {
+    deps.createIdea.mockResolvedValue(null);
+    const { result } = renderHook(() => useStartIdeaDialog());
+    act(() => result.current.setSelectedTripId('trip-1' as Id<'trips'>));
+    await act(() => result.current.startIdea());
+    expect(result.current.isCreating).toBe(false);
+    expect(deps.navigate).not.toHaveBeenCalled();
+  });
 });

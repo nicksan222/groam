@@ -48,172 +48,147 @@ async function deleteRows(
   return rows.length > 0;
 }
 
-// fallow-ignore-next-line complexity
-async function deleteBatch(ctx: MutationCtx, trip: Doc<'trips'>): Promise<void> {
-  const sourceProposal = await ctx.db
-    .query('tripProposals')
-    .withIndex('by_sourceTripId_and_updatedAt', (query) => query.eq('sourceTripId', trip._id))
+async function deleteProposalBatch(
+  ctx: MutationCtx,
+  proposalId: Id<'tripProposals'>
+): Promise<boolean> {
+  const operation = await ctx.db
+    .query('tripProposalOperations')
+    .withIndex('by_proposalId', (query) => query.eq('proposalId', proposalId))
     .first();
-  if (sourceProposal) {
-    const operation = await ctx.db
-      .query('tripProposalOperations')
-      .withIndex('by_proposalId', (query) => query.eq('proposalId', sourceProposal._id))
-      .first();
-    if (operation) {
-      await ctx.db.delete('tripProposalOperations', operation._id);
-      return;
-    }
-    if (
-      await deleteRows(
-        ctx,
-        ctx.db
-          .query('tripProposalComments')
-          .withIndex('by_proposalId', (query) => query.eq('proposalId', sourceProposal._id))
-          .take(DELETE_BATCH_SIZE)
-      )
-    ) {
-      return;
-    }
-    if (
-      await deleteRows(
-        ctx,
-        ctx.db
-          .query('tripProposalApprovals')
-          .withIndex('by_proposalId', (query) => query.eq('proposalId', sourceProposal._id))
-          .take(DELETE_BATCH_SIZE)
-      )
-    ) {
-      return;
-    }
-    const snapshot = await ctx.db
-      .query('tripProposalSnapshots')
-      .withIndex('by_proposalId', (query) => query.eq('proposalId', sourceProposal._id))
-      .unique();
-    if (snapshot) await ctx.db.delete('tripProposalSnapshots', snapshot._id);
-    else await ctx.db.delete('tripProposals', sourceProposal._id);
-    return;
+  if (operation) {
+    await ctx.db.delete('tripProposalOperations', operation._id);
+    return true;
   }
+  if (
+    await deleteRows(
+      ctx,
+      ctx.db
+        .query('tripProposalComments')
+        .withIndex('by_proposalId', (query) => query.eq('proposalId', proposalId))
+        .take(DELETE_BATCH_SIZE)
+    )
+  ) {
+    return true;
+  }
+  if (
+    await deleteRows(
+      ctx,
+      ctx.db
+        .query('tripProposalApprovals')
+        .withIndex('by_proposalId', (query) => query.eq('proposalId', proposalId))
+        .take(DELETE_BATCH_SIZE)
+    )
+  ) {
+    return true;
+  }
+  const snapshot = await ctx.db
+    .query('tripProposalSnapshots')
+    .withIndex('by_proposalId', (query) => query.eq('proposalId', proposalId))
+    .unique();
+  if (snapshot) {
+    await ctx.db.delete('tripProposalSnapshots', snapshot._id);
+    return true;
+  }
+  await ctx.db.delete('tripProposals', proposalId);
+  return false;
+}
+
+async function deleteIssueBatch(ctx: MutationCtx, tripId: Id<'trips'>): Promise<boolean> {
   const issue = await ctx.db
     .query('tripIssues')
-    .withIndex('by_tripId_and_updatedAt', (query) => query.eq('tripId', trip._id))
+    .withIndex('by_tripId_and_updatedAt', (query) => query.eq('tripId', tripId))
     .first();
-  if (issue) {
-    if (
-      await deleteRows(
-        ctx,
-        ctx.db
-          .query('tripIssueComments')
-          .withIndex('by_issueId', (query) => query.eq('issueId', issue._id))
-          .take(DELETE_BATCH_SIZE)
-      )
-    ) {
-      return;
-    }
-    await ctx.db.delete('tripIssues', issue._id);
-    return;
+  if (!issue) return false;
+  if (
+    await deleteRows(
+      ctx,
+      ctx.db
+        .query('tripIssueComments')
+        .withIndex('by_issueId', (query) => query.eq('issueId', issue._id))
+        .take(DELETE_BATCH_SIZE)
+    )
+  ) {
+    return true;
   }
+  await ctx.db.delete('tripIssues', issue._id);
+  return true;
+}
+
+async function deleteAttachmentRows(ctx: MutationCtx, tripId: Id<'trips'>): Promise<boolean> {
   if (
     await deleteRows(
       ctx,
       ctx.db
         .query('attachmentReferences')
         .withIndex('by_tripId_and_target_type_and_target_id_and_position', (query) =>
-          query.eq('tripId', trip._id)
+          query.eq('tripId', tripId)
         )
         .take(DELETE_BATCH_SIZE)
     )
   ) {
-    return;
+    return true;
   }
-  if (
-    await deleteRows(
-      ctx,
-      ctx.db
-        .query('attachments')
-        .withIndex('by_tripId_and_mediaId', (query) => query.eq('tripId', trip._id))
-        .take(DELETE_BATCH_SIZE)
-    )
-  ) {
-    return;
-  }
-  const proposal = await ctx.db
-    .query('tripProposals')
-    .withIndex('by_workingTripId', (query) => query.eq('workingTripId', trip._id))
-    .unique();
-  if (proposal) {
-    const operation = await ctx.db
-      .query('tripProposalOperations')
-      .withIndex('by_proposalId', (query) => query.eq('proposalId', proposal._id))
-      .first();
-    if (operation) {
-      await ctx.db.delete('tripProposalOperations', operation._id);
-      return;
-    }
-    if (
-      await deleteRows(
-        ctx,
-        ctx.db
-          .query('tripProposalComments')
-          .withIndex('by_proposalId', (query) => query.eq('proposalId', proposal._id))
-          .take(DELETE_BATCH_SIZE)
-      )
-    ) {
-      return;
-    }
-    if (
-      await deleteRows(
-        ctx,
-        ctx.db
-          .query('tripProposalApprovals')
-          .withIndex('by_proposalId', (query) => query.eq('proposalId', proposal._id))
-          .take(DELETE_BATCH_SIZE)
-      )
-    ) {
-      return;
-    }
-    const snapshot = await ctx.db
-      .query('tripProposalSnapshots')
-      .withIndex('by_proposalId', (query) => query.eq('proposalId', proposal._id))
-      .unique();
-    if (snapshot) {
-      await ctx.db.delete('tripProposalSnapshots', snapshot._id);
-      return;
-    }
-    await ctx.db.delete('tripProposals', proposal._id);
-  }
+  return await deleteRows(
+    ctx,
+    ctx.db
+      .query('attachments')
+      .withIndex('by_tripId_and_mediaId', (query) => query.eq('tripId', tripId))
+      .take(DELETE_BATCH_SIZE)
+  );
+}
+
+async function deleteTransferRows(ctx: MutationCtx, tripId: Id<'trips'>): Promise<boolean> {
   if (
     await deleteRows(
       ctx,
       ctx.db
         .query('tripActivityTransfers')
-        .withIndex('by_tripId_and_fromActivityId', (query) => query.eq('tripId', trip._id))
+        .withIndex('by_tripId_and_fromActivityId', (query) => query.eq('tripId', tripId))
         .take(DELETE_BATCH_SIZE)
     )
   ) {
-    return;
+    return true;
   }
   if (
     await deleteRows(
       ctx,
       ctx.db
         .query('tripBoundaryTransfers')
-        .withIndex('by_tripId_and_boundary', (query) => query.eq('tripId', trip._id))
+        .withIndex('by_tripId_and_boundary', (query) => query.eq('tripId', tripId))
         .take(DELETE_BATCH_SIZE)
     )
   ) {
+    return true;
+  }
+  return await deleteRows(
+    ctx,
+    ctx.db
+      .query('tripDestinationTransfers')
+      .withIndex('by_tripId_and_fromDestinationId', (query) => query.eq('tripId', tripId))
+      .take(DELETE_BATCH_SIZE)
+  );
+}
+
+async function deleteBatch(ctx: MutationCtx, trip: Doc<'trips'>): Promise<void> {
+  const sourceProposal = await ctx.db
+    .query('tripProposals')
+    .withIndex('by_sourceTripId_and_updatedAt', (query) => query.eq('sourceTripId', trip._id))
+    .first();
+  if (sourceProposal) {
+    await deleteProposalBatch(ctx, sourceProposal._id);
     return;
   }
-  if (
-    await deleteRows(
-      ctx,
-      ctx.db
-        .query('tripDestinationTransfers')
-        .withIndex('by_tripId_and_fromDestinationId', (query) => query.eq('tripId', trip._id))
-        .take(DELETE_BATCH_SIZE)
-    )
-  ) {
-    return;
+  if (await deleteIssueBatch(ctx, trip._id)) return;
+  if (await deleteAttachmentRows(ctx, trip._id)) return;
+  const proposal = await ctx.db
+    .query('tripProposals')
+    .withIndex('by_workingTripId', (query) => query.eq('workingTripId', trip._id))
+    .unique();
+  if (proposal) {
+    if (await deleteProposalBatch(ctx, proposal._id)) return;
   }
+  if (await deleteTransferRows(ctx, trip._id)) return;
 
   const activities = await ctx.db
     .query('tripDestinationActivities')
@@ -293,14 +268,22 @@ async function synchronizePrimaryDestination(
     if (primary) {
       throw new ConvexError('Remove itinerary destinations before marking the trip undecided');
     }
-    await TripLocations.setTrip(ctx, ctx.trip._id, ctx.workspace.organizationId, undefined);
+    await TripLocations.setTrip(ctx, {
+      coordinates: undefined,
+      organizationId: ctx.workspace.organizationId,
+      tripId: ctx.trip._id
+    });
     return;
   }
   if (!('coordinates' in destination)) {
     if (primary) {
       throw new ConvexError('Select a verified place when changing the primary destination');
     }
-    await TripLocations.setTrip(ctx, ctx.trip._id, ctx.workspace.organizationId, undefined);
+    await TripLocations.setTrip(ctx, {
+      coordinates: undefined,
+      organizationId: ctx.workspace.organizationId,
+      tripId: ctx.trip._id
+    });
     return;
   }
 
@@ -330,13 +313,12 @@ async function synchronizePrimaryDestination(
     ) {
       await ctx.db.patch('tripDestinations', primary._id, location);
       await DestinationCover.queue(ctx, { ...primary, ...location });
-      await TripLocations.setDestination(
-        ctx,
-        primary._id,
-        ctx.trip._id,
-        ctx.workspace.organizationId,
-        location.coordinates
-      );
+      await TripLocations.setDestination(ctx, {
+        coordinates: location.coordinates,
+        destinationId: primary._id,
+        organizationId: ctx.workspace.organizationId,
+        tripId: ctx.trip._id
+      });
     }
   } else {
     const destinationId = await ctx.db.insert('tripDestinations', {
@@ -346,20 +328,18 @@ async function synchronizePrimaryDestination(
       tripId: ctx.trip._id
     });
     await DestinationCover.schedule(ctx, destinationId, 1);
-    await TripLocations.setDestination(
-      ctx,
+    await TripLocations.setDestination(ctx, {
+      coordinates: location.coordinates,
       destinationId,
-      ctx.trip._id,
-      ctx.workspace.organizationId,
-      location.coordinates
-    );
+      organizationId: ctx.workspace.organizationId,
+      tripId: ctx.trip._id
+    });
   }
-  await TripLocations.setTrip(
-    ctx,
-    ctx.trip._id,
-    ctx.workspace.organizationId,
-    destination.coordinates
-  );
+  await TripLocations.setTrip(ctx, {
+    coordinates: destination.coordinates,
+    organizationId: ctx.workspace.organizationId,
+    tripId: ctx.trip._id
+  });
 }
 
 async function create(

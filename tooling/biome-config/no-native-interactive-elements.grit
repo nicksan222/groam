@@ -1,0 +1,11 @@
+engine biome(1.0)
+language js(typescript,jsx)
+
+or { JsxOpeningElement(), JsxSelfClosingElement() } as $tag where {
+  $tag <: r"(?s)<(?:button|input|select|textarea)(?:\s|/|>).*",
+  register_diagnostic(
+    span = $tag,
+    severity = "error",
+    message = "Use an exported @groam/ui component instead of a native interactive element. Shared controls centralize accessibility, states, styling, and test behavior."
+  )
+}

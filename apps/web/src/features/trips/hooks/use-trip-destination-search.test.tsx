@@ -78,4 +78,21 @@ describe('useTripDestinationSearch', () => {
     act(() => result.current.setQuery(''));
     expect(result.current.isLoading).toBe(false);
   });
+
+  test('shows search errors and handles non-Error rejections', async () => {
+    search.searchLocations.mockRejectedValue('offline');
+    const { result } = renderHook(() => useTripDestinationSearch());
+    act(() => {
+      result.current.open();
+      result.current.setQuery('Rome');
+    });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(350);
+    });
+
+    expect(result.current.error).toBe('Location search is unavailable');
+    expect(result.current.results).toEqual([]);
+    expect(result.current.isLoading).toBe(false);
+  });
 });

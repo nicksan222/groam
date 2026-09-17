@@ -128,15 +128,83 @@ function projectBoundaryTransfer(
     : null;
 }
 
-function projectTripDestinations(
-  ctx: QueryCtx,
-  destinations: Doc<'tripDestinations'>[],
-  itineraryActivities: Doc<'tripDestinationActivities'>[],
-  stays: Doc<'tripDestinationStays'>[],
-  destinationTransfers: Doc<'tripDestinationTransfers'>[],
-  activityTransfers: Doc<'tripActivityTransfers'>[],
+function projectActivity({
+  activity,
+  activityTransfers,
+  attachments
+}: {
+  activity: Doc<'tripDestinationActivities'>;
+  activityTransfers: Doc<'tripActivityTransfers'>[];
+  attachments: AttachmentProjection;
+}) {
+  const transfer = activityTransfers.find((item) => item.fromActivityId === activity._id);
+  return {
+    address: activity.address ?? null,
+    attachments: attachments.project(attachments.forTarget('activity', activity._id)),
+    ...projectCost(activity.cost),
+    dayNumber: activity.schedule.day,
+    endDayNumber: activity.schedule.endDay ?? activity.schedule.day,
+    endTime: activity.schedule.endTime ?? null,
+    id: activity._id,
+    sourceId: activity.sourceId ?? null,
+    notes: activity.notes ?? null,
+    position: activity.position,
+    startTime: activity.schedule.startTime ?? null,
+    timeBlock: activity.schedule.timeBlock,
+    title: activity.title,
+    transferToNext: transfer
+      ? {
+          attachments: attachments.project(
+            attachments.forTarget('activity_transfer', transfer._id)
+          ),
+          ...projectCost(transfer.cost),
+          durationMinutes: transfer.duration?.minutes ?? null,
+          id: transfer._id,
+          sourceId: transfer.sourceId ?? null,
+          mode: transfer.mode,
+          notes: transfer.notes ?? null,
+          timing: projectTransferTiming(transfer.timing),
+          toActivityId: transfer.toActivityId
+        }
+      : null
+  };
+}
+
+function projectDestinationTransfer(
+  transfer: Doc<'tripDestinationTransfers'> | undefined,
   attachments: AttachmentProjection
 ) {
+  if (!transfer) return null;
+  return {
+    attachments: attachments.project(attachments.forTarget('destination_transfer', transfer._id)),
+    ...projectCost(transfer.cost),
+    durationMinutes: transfer.duration?.minutes ?? null,
+    id: transfer._id,
+    sourceId: transfer.sourceId ?? null,
+    mode: transfer.mode,
+    notes: transfer.notes ?? null,
+    timing: projectTransferTiming(transfer.timing),
+    toDestinationId: transfer.toDestinationId
+  };
+}
+
+function projectTripDestinations({
+  ctx,
+  destinations,
+  itineraryActivities,
+  stays,
+  destinationTransfers,
+  activityTransfers,
+  attachments
+}: {
+  ctx: QueryCtx;
+  destinations: Doc<'tripDestinations'>[];
+  itineraryActivities: Doc<'tripDestinationActivities'>[];
+  stays: Doc<'tripDestinationStays'>[];
+  destinationTransfers: Doc<'tripDestinationTransfers'>[];
+  activityTransfers: Doc<'tripActivityTransfers'>[];
+  attachments: AttachmentProjection;
+}) {
   return Promise.all(
     destinations.map(async (destination) => {
       const destinationTransfer = destinationTransfers.find(
@@ -149,39 +217,7 @@ function projectTripDestinations(
       const activities = itineraryActivities
         .filter((activity) => activity.destinationId === destination._id)
         .sort((left, right) => left.position - right.position)
-        .map((activity) => {
-          const transfer = activityTransfers.find((item) => item.fromActivityId === activity._id);
-          return {
-            address: activity.address ?? null,
-            attachments: attachments.project(attachments.forTarget('activity', activity._id)),
-            ...projectCost(activity.cost),
-            dayNumber: activity.schedule.day,
-            endDayNumber: activity.schedule.endDay ?? activity.schedule.day,
-            endTime: activity.schedule.endTime ?? null,
-            id: activity._id,
-            sourceId: activity.sourceId ?? null,
-            notes: activity.notes ?? null,
-            position: activity.position,
-            startTime: activity.schedule.startTime ?? null,
-            timeBlock: activity.schedule.timeBlock,
-            title: activity.title,
-            transferToNext: transfer
-              ? {
-                  attachments: attachments.project(
-                    attachments.forTarget('activity_transfer', transfer._id)
-                  ),
-                  ...projectCost(transfer.cost),
-                  durationMinutes: transfer.duration?.minutes ?? null,
-                  id: transfer._id,
-                  sourceId: transfer.sourceId ?? null,
-                  mode: transfer.mode,
-                  notes: transfer.notes ?? null,
-                  timing: projectTransferTiming(transfer.timing),
-                  toActivityId: transfer.toActivityId
-                }
-              : null
-          };
-        });
+        .map((activity) => projectActivity({ activity, activityTransfers, attachments }));
       return {
         activities,
         ...(destination.countryCode ? { countryCode: destination.countryCode } : {}),
@@ -214,21 +250,7 @@ function projectTripDestinations(
             position: stay.position,
             title: stay.title
           })),
-        transferToNext: destinationTransfer
-          ? {
-              attachments: attachments.project(
-                attachments.forTarget('destination_transfer', destinationTransfer._id)
-              ),
-              ...projectCost(destinationTransfer.cost),
-              durationMinutes: destinationTransfer.duration?.minutes ?? null,
-              id: destinationTransfer._id,
-              sourceId: destinationTransfer.sourceId ?? null,
-              mode: destinationTransfer.mode,
-              notes: destinationTransfer.notes ?? null,
-              timing: projectTransferTiming(destinationTransfer.timing),
-              toDestinationId: destinationTransfer.toDestinationId
-            }
-          : null
+        transferToNext: projectDestinationTransfer(destinationTransfer, attachments)
       };
     })
   );
@@ -254,15 +276,21 @@ async function projectCover(ctx: QueryCtx, trip: TripQueryCtx) {
   };
 }
 
-function projectedDuration(
-  trip: TripQueryCtx,
-  destinations: Doc<'tripDestinations'>[],
-  activities: Doc<'tripDestinationActivities'>[],
-  stays: Doc<'tripDestinationStays'>[],
+function projectedDuration({
+  trip,
+  destinations,
+  activities,
+  stays,
+  transfers
+}: {
+  trip: TripQueryCtx;
+  destinations: Doc<'tripDestinations'>[];
+  activities: Doc<'tripDestinationActivities'>[];
+  stays: Doc<'tripDestinationStays'>[];
   transfers: Array<{
     timing?: { endDay?: number; endTime?: string; startDay: number; startTime: string };
-  }>
-) {
+  }>;
+}) {
   return (
     (tripTotalDays(trip) ??
       Math.max(
@@ -335,15 +363,15 @@ export async function projectTrip(ctx: QueryCtx, trip: TripQueryCtx) {
     dateNotes: trip.trip.dateNotes ?? null,
     departureTransfer: projectBoundaryTransfer('departure', boundaryTransfers, attachments),
     destination: trip.trip.destination,
-    destinations: await projectTripDestinations(
+    destinations: await projectTripDestinations({
+      activityTransfers,
+      attachments,
       ctx,
+      destinationTransfers,
       destinations,
       itineraryActivities,
-      stays,
-      destinationTransfers,
-      activityTransfers,
-      attachments
-    ),
+      stays
+    }),
     id: trip.trip._id,
     idealDurationDays: trip.trip.duration?.idealDays ?? null,
     initialBudget: trip.trip.budget?.amount ?? null,
@@ -362,11 +390,13 @@ export async function projectTrip(ctx: QueryCtx, trip: TripQueryCtx) {
       : null,
     role: trip.role,
     startDate: trip.trip.startDate ?? null,
-    totalDurationDays: projectedDuration(trip, destinations, itineraryActivities, stays, [
-      ...boundaryTransfers,
-      ...destinationTransfers,
-      ...activityTransfers
-    ]),
+    totalDurationDays: projectedDuration({
+      activities: itineraryActivities,
+      destinations,
+      stays,
+      transfers: [...boundaryTransfers, ...destinationTransfers, ...activityTransfers],
+      trip
+    }),
     totalPlannedCost
   };
 }

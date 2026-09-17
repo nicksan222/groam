@@ -46,4 +46,32 @@ describe('useTripSidebarActions', () => {
     expect(notifications.error).toHaveBeenCalledWith('Offline');
     expect(result.current.pendingTripId).toBeNull();
   });
+
+  test('uses the archive fallback when archiving fails', async () => {
+    const archive = vi.fn().mockRejectedValue(new Error('Server Error'));
+    const favorite = vi.fn().mockResolvedValue(null);
+    convex.useMutation.mockReturnValueOnce(archive).mockReturnValueOnce(favorite);
+
+    const { result } = renderHook(() => useTripSidebarActions());
+    await act(async () => {
+      await result.current.archiveTrip(tripId);
+    });
+
+    expect(notifications.error).toHaveBeenCalledWith('Unable to archive trip');
+    expect(result.current.pendingTripId).toBeNull();
+  });
+
+  test('inverts an existing favourite and uses the unfavourite fallback', async () => {
+    const archive = vi.fn().mockResolvedValue(null);
+    const favorite = vi.fn().mockRejectedValue(new Error('Server Error'));
+    convex.useMutation.mockReturnValueOnce(archive).mockReturnValueOnce(favorite);
+
+    const { result } = renderHook(() => useTripSidebarActions());
+    await act(async () => {
+      await result.current.toggleFavorite(tripId, true);
+    });
+
+    expect(favorite).toHaveBeenCalledWith({ favorite: false, tripId });
+    expect(notifications.error).toHaveBeenCalledWith('Unable to unfavourite trip');
+  });
 });

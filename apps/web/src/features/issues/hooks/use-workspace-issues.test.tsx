@@ -35,9 +35,30 @@ describe('useWorkspaceIssues', () => {
     expect(result.current.issues).toEqual([{ id: 'issue-1', title: 'Coast day' }]);
     expect(result.current.isLoading).toBe(false);
   });
+
+  test('skips pagination on request and reports first-page loading', () => {
+    convex.usePaginatedQuery.mockReturnValue({
+      loadMore: vi.fn(),
+      results: [],
+      status: 'LoadingFirstPage'
+    });
+    const { result } = renderHook(() => useWorkspaceIssues('skip'));
+    expect(convex.usePaginatedQuery).toHaveBeenCalledWith(expect.anything(), 'skip', {
+      initialNumItems: 25
+    });
+    expect(result.current.isLoading).toBe(true);
+  });
 });
 
 describe('useCreateIssue', () => {
+  test('creates an issue with its trip context', async () => {
+    const create = vi.fn().mockResolvedValue('issue-1');
+    convex.useMutation.mockReturnValue(create);
+    const { result } = renderHook(() => useCreateIssue());
+    await expect(result.current(tripId, 'Coast day', 'Add a coast day.')).resolves.toBe('issue-1');
+    expect(create).toHaveBeenCalledWith({ body: 'Add a coast day.', title: 'Coast day', tripId });
+  });
+
   test('returns null and toasts when issue creation fails', async () => {
     const create = vi.fn().mockRejectedValue(new Error('Trip is archived'));
     convex.useMutation.mockReturnValue(create);

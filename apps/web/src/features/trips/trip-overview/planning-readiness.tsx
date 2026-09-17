@@ -122,7 +122,7 @@ export function PlanningReadiness(props: PlanningReadinessProps) {
       <Progress className="h-1.5" value={(completedSteps / 3) * 100} />
       <Shell.Card variant="inset">
         {items.map((item, index) => (
-          <button
+          <Button
             className={cn(
               'flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm transition-colors hover:bg-foreground/[0.03]',
               index > 0 && 'border-t border-border'
@@ -130,6 +130,7 @@ export function PlanningReadiness(props: PlanningReadinessProps) {
             key={item.label}
             onClick={item.onClick}
             type="button"
+            unstyled
           >
             <span
               className={
@@ -148,7 +149,7 @@ export function PlanningReadiness(props: PlanningReadinessProps) {
               {item.label}
             </span>
             {!item.complete && <ArrowRight className="ml-auto size-3.5 text-muted-foreground" />}
-          </button>
+          </Button>
         ))}
       </Shell.Card>
       <div className="space-y-2">

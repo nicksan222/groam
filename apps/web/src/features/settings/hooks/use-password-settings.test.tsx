@@ -72,4 +72,25 @@ describe('usePasswordSettings', () => {
     expect(auth.changePassword).not.toHaveBeenCalled();
     expect(result.current.state.error).toBe('Your new password must be at least 8 characters.');
   });
+
+  test('surfaces an auth error without clearing the entered fields', async () => {
+    auth.changePassword.mockResolvedValue({
+      data: null,
+      error: { message: 'Current password is wrong' }
+    });
+    const { result } = renderHook(() => usePasswordSettings());
+    act(() =>
+      result.current.updateState({
+        confirmPassword: 'new-password',
+        currentPassword: 'wrong',
+        newPassword: 'new-password'
+      })
+    );
+    await act(() => result.current.save());
+    expect(result.current.state).toMatchObject({
+      error: 'Current password is wrong',
+      isPending: false,
+      newPassword: 'new-password'
+    });
+  });
 });

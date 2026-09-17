@@ -112,25 +112,42 @@ export function AgentRunLogEvent({
             {agentRunTime(event.at)}
           </time>
         </div>
-        {event.toolName || failed ? (
-          <p className="mt-1 break-words text-xs text-muted-foreground">
-            {event.toolName}
-            {failed ? `${event.toolName ? ' · ' : ''}Failed` : null}
-          </p>
-        ) : null}
-        {event.detail && !issueStarted && !(event.kind === 'error' && event.detail === error) ? (
-          <p
-            className={
-              event.kind === 'thought'
-                ? 'mt-2 break-words whitespace-pre-wrap text-sm leading-6 text-muted-foreground italic [overflow-wrap:anywhere]'
-                : 'mt-2 break-words whitespace-pre-wrap text-sm leading-6 text-muted-foreground [overflow-wrap:anywhere]'
-            }
-          >
-            {event.detail}
-          </p>
-        ) : null}
+        <EventMeta event={event} failed={failed} />
+        <EventDetail error={error} event={event} issueStarted={Boolean(issueStarted)} />
         {event.kind === 'tool' ? <ToolPayload input={event.input} output={event.output} /> : null}
       </Timeline.Body>
     </Timeline.Item>
+  );
+}
+
+function EventMeta({ event, failed }: { event: AgentRunEvent; failed: boolean }) {
+  if (!event.toolName && !failed) return null;
+  return (
+    <p className="mt-1 break-words text-xs text-muted-foreground">
+      {event.toolName}
+      {failed ? `${event.toolName ? ' · ' : ''}Failed` : null}
+    </p>
+  );
+}
+
+function EventDetail({
+  error,
+  event,
+  issueStarted
+}: {
+  error?: string | null;
+  event: AgentRunEvent;
+  issueStarted: boolean;
+}) {
+  const showDetail =
+    event.detail && !issueStarted && !(event.kind === 'error' && event.detail === error);
+  if (!showDetail) return null;
+  const thoughtStyle = event.kind === 'thought' ? ' italic' : '';
+  return (
+    <p
+      className={`mt-2 break-words whitespace-pre-wrap text-sm leading-6 text-muted-foreground${thoughtStyle} [overflow-wrap:anywhere]`}
+    >
+      {event.detail}
+    </p>
   );
 }

@@ -39,6 +39,7 @@ export type TripUpdateInput = FunctionArgs<typeof api.routes.trips.update.run>['
 export type TripSection = (typeof tripSections)[number];
 
 export type TripState = ReturnType<typeof useTrip>;
+export type LoadedTrip = NonNullable<TripState['trip']>;
 
 export type TripNavigation = {
   closeAddDestination: () => void;

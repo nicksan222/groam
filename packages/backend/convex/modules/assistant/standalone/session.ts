@@ -73,13 +73,11 @@ async function executeIssue(ctx: ActionCtx, run: AgentRunView): Promise<string> 
     screen: issueStandaloneScreen(issue),
     tripId: run.tripId
   });
-  await AgentRunTracking.record(
-    ctx,
-    run.id,
-    'status',
-    'Started working on this issue',
-    issue.title
-  );
+  await AgentRunTracking.record(ctx, run.id, {
+    detail: issue.title,
+    kind: 'status',
+    label: 'Started working on this issue'
+  });
   const result = await assistant.generateText(
     ctx,
     { userId: run.createdBy.userId },
@@ -107,7 +105,11 @@ async function issueReportFromResult(
     (attached?.proposalId
       ? 'Started a draft idea for this issue. Review and apply it when you are ready.'
       : 'Finished working on this issue.');
-  await AgentRunTracking.record(ctx, run.id, 'report', 'Report ready', report.slice(0, 500));
+  await AgentRunTracking.record(ctx, run.id, {
+    detail: report.slice(0, 500),
+    kind: 'report',
+    label: 'Report ready'
+  });
   return report;
 }
 
@@ -138,7 +140,11 @@ async function executeReview(
     }),
     tripId: context.workingTripId
   });
-  await AgentRunTracking.record(ctx, run.id, 'status', 'Reviewing idea', context.title);
+  await AgentRunTracking.record(ctx, run.id, {
+    detail: context.title,
+    kind: 'status',
+    label: 'Reviewing idea'
+  });
   const result = await assistant.generateText(
     ctx,
     { userId: run.createdBy.userId },
@@ -161,7 +167,11 @@ async function executeReview(
     proposalId: run.proposalId,
     summary: output.summary
   });
-  await AgentRunTracking.record(ctx, run.id, 'report', 'Review complete', output.summary);
+  await AgentRunTracking.record(ctx, run.id, {
+    detail: output.summary,
+    kind: 'report',
+    label: 'Review complete'
+  });
   return { commentCount: output.comments.length, summary: output.summary };
 }
 
@@ -195,7 +205,11 @@ async function execute(
     if (await AgentRunTracking.isAborted(ctx, runId)) return null;
     const message = AssistantErrors.message(error);
     console.error('standalone agent run failed:', message, error);
-    await AgentRunTracking.record(ctx, runId, 'error', 'Run failed', message);
+    await AgentRunTracking.record(ctx, runId, {
+      detail: message,
+      kind: 'error',
+      label: 'Run failed'
+    });
     await ctx.runMutation(internal.modules.assistant.runs.functions.finishRun, {
       error: message,
       runId,

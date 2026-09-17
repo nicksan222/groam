@@ -49,3 +49,17 @@ test('useInviteDialog creates an invitation code and resets on close', async () 
   expect(onClose).toHaveBeenCalledOnce();
   expect(result.current.invitationCode).toBeNull();
 });
+
+test('keeps the dialog actionable when creating or copying a code fails', async () => {
+  backend.createInvitation.mockRejectedValue(new Error('Invitation limit reached'));
+  const { result } = renderHook(() => useInviteDialog({ onClose: vi.fn() }));
+  await act(async () => {
+    await result.current.submit({ preventDefault: vi.fn() } as unknown as FormEvent);
+    await result.current.copyCode();
+  });
+  expect(result.current.request).toMatchObject({
+    error: 'Invitation limit reached',
+    isPending: false
+  });
+  expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
+});

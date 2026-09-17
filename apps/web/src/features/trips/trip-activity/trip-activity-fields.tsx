@@ -89,7 +89,7 @@ export function TripActivityFields({
         <ActivityDayRange editor={editor} />
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {timeBlocks.map(({ icon: Icon, label, value }) => (
-            <button
+            <Button
               aria-pressed={editor.timeBlock === value}
               className={`flex min-h-12 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-medium transition-colors ${
                 editor.timeBlock === value
@@ -99,9 +99,10 @@ export function TripActivityFields({
               key={value}
               onClick={() => editor.patch({ timeBlock: value })}
               type="button"
+              unstyled
             >
               <Icon className="size-4" /> {label}
-            </button>
+            </Button>
           ))}
         </div>
       </section>

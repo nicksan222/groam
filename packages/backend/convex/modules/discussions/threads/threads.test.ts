@@ -44,13 +44,15 @@ export const respondWithMockModel = action({
         },
         threadId: claim.threadId
       },
-      promptMessageId,
-      mockModel({
-        content: [
-          { text: 'Bring one universal adapter and one spare charging cable.', type: 'text' }
-        ]
-      }),
-      claim.runId
+      {
+        languageModel: mockModel({
+          content: [
+            { text: 'Bring one universal adapter and one spare charging cable.', type: 'text' }
+          ]
+        }),
+        promptMessageId,
+        runId: claim.runId
+      }
     );
     await ctx.runMutation(internal.modules.discussions.assistant.index.finishResponse, {
       discussionId,

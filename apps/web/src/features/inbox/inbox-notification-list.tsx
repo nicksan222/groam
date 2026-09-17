@@ -1,3 +1,4 @@
+import { Button } from '@groam/ui/components/button';
 import { Skeleton } from '@groam/ui/components/skeleton';
 import { cn } from '@groam/ui/lib/utils';
 import { useNavigate } from '@tanstack/react-router';
@@ -43,7 +44,7 @@ export function InboxNotificationList({
   return (
     <div className="divide-y overflow-hidden rounded-xl border border-border bg-card shadow-xs/5">
       {notifications.map((item) => (
-        <button
+        <Button
           className={cn(
             'flex w-full flex-col items-start gap-1 px-4 py-3 text-left transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset focus-visible:outline-none',
             item.readAt === null && 'bg-primary/[0.03]'
@@ -55,12 +56,13 @@ export function InboxNotificationList({
             void navigate({ to: item.href as never });
           }}
           type="button"
+          unstyled
         >
           <span className={cn('text-sm', item.readAt === null ? 'font-medium' : undefined)}>
             {item.title}
           </span>
           <span className="line-clamp-2 text-sm text-muted-foreground">{item.body}</span>
-        </button>
+        </Button>
       ))}
     </div>
   );

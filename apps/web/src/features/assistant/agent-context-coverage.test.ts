@@ -33,26 +33,31 @@ function featurePageFor(
   visited = new Set<string>(),
   importerPath?: string
 ): { path: string; source: string } | null {
-  const imports = [...routeSource.matchAll(/from ['"](@\/features\/[^'"]+|\.\/[^'"]+)['"]/gu)];
-  for (const match of imports) {
-    const specifier = match[1];
-    if (!specifier) continue;
-    const basePath = specifier.startsWith('@/features/')
-      ? `../${specifier.slice('@/features/'.length)}`
-      : `${importerPath?.slice(0, importerPath.lastIndexOf('/') + 1)}${specifier.slice(2)}`;
-    const candidates = [`${basePath}.tsx`, `${basePath}.ts`];
-    for (const path of candidates) {
-      const source = featureSources[path];
-      if (!(source && !visited.has(path))) continue;
-      visited.add(path);
-      if (/use(?:Set|[A-Z][A-Za-z0-9]*)AgentContext\s*\(/u.test(source)) {
-        return { path, source };
-      }
-      const nested = featurePageFor(source, visited, path);
-      if (nested) return nested;
-    }
+  for (const path of importedFeaturePaths(routeSource, importerPath)) {
+    const source = featureSources[path];
+    if (!source || visited.has(path)) continue;
+    visited.add(path);
+    if (hasAgentContext(source)) return { path, source };
+    const nested = featurePageFor(source, visited, path);
+    if (nested) return nested;
   }
   return null;
+}
+
+function importedFeaturePaths(routeSource: string, importerPath?: string): string[] {
+  return [...routeSource.matchAll(/from ['"](@\/features\/[^'"]+|\.\/[^'"]+)['"]/gu)].flatMap(
+    ([, specifier]) => {
+      if (!specifier) return [];
+      const basePath = specifier.startsWith('@/features/')
+        ? `../${specifier.slice('@/features/'.length)}`
+        : `${importerPath?.slice(0, importerPath.lastIndexOf('/') + 1)}${specifier.slice(2)}`;
+      return [`${basePath}.tsx`, `${basePath}.ts`];
+    }
+  );
+}
+
+function hasAgentContext(source: string): boolean {
+  return /use(?:Set|[A-Z][A-Za-z0-9]*)AgentContext\s*\(/u.test(source);
 }
 
 describe('agent page context coverage', () => {

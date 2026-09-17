@@ -12,6 +12,24 @@ function requiredString(value: unknown, label: string): string {
   return value;
 }
 
+function importState(snapshot: unknown): Record<string, unknown> {
+  if (typeof snapshot !== 'object' || snapshot === null || !('state' in snapshot)) {
+    throw new Error('Local Convex import status was invalid');
+  }
+  const state = snapshot.state;
+  if (typeof state !== 'object' || state === null || !('state' in state)) {
+    throw new Error('Local Convex import status was invalid');
+  }
+  return state;
+}
+
+async function confirmPendingImport(credentials: LocalConvexCredentials, importId: string) {
+  await localConvexAdminJson(credentials, '/api/perform_import', {
+    body: JSON.stringify({ importId }),
+    method: 'POST'
+  });
+}
+
 async function waitForImport(credentials: LocalConvexCredentials, importId: string): Promise<void> {
   const startedAt = Date.now();
   while (Date.now() - startedAt < IMPORT_TIMEOUT_MS) {
@@ -21,13 +39,7 @@ async function waitForImport(credentials: LocalConvexCredentials, importId: stri
       undefined,
       { importId }
     );
-    if (typeof snapshot !== 'object' || snapshot === null || !('state' in snapshot)) {
-      throw new Error('Local Convex import status was invalid');
-    }
-    const state = snapshot.state;
-    if (typeof state !== 'object' || state === null || !('state' in state)) {
-      throw new Error('Local Convex import status was invalid');
-    }
+    const state = importState(snapshot);
     const status = state.state;
     if (status === 'completed') return;
     if (status === 'failed') {
@@ -37,12 +49,7 @@ async function waitForImport(credentials: LocalConvexCredentials, importId: stri
           : 'import failed';
       throw new Error(message);
     }
-    if (status === 'waiting_for_confirmation') {
-      await localConvexAdminJson(credentials, '/api/perform_import', {
-        body: JSON.stringify({ importId }),
-        method: 'POST'
-      });
-    }
+    if (status === 'waiting_for_confirmation') await confirmPendingImport(credentials, importId);
     await new Promise((resolve) => setTimeout(resolve, 25));
   }
   throw new Error(`Timed out resetting import ${importId}`);

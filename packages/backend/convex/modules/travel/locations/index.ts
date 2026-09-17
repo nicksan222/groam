@@ -30,11 +30,19 @@ export class TripLocations {
 
   static async nearest(
     ctx: QueryCtx,
-    organizationId: string,
-    point: Point,
-    type: TripLocationType,
-    limit: number,
-    maxDistance: number
+    {
+      organizationId,
+      point,
+      type,
+      limit,
+      maxDistance
+    }: {
+      organizationId: string;
+      point: Point;
+      type: TripLocationType;
+      limit: number;
+      maxDistance: number;
+    }
   ) {
     return await index.nearest(ctx, {
       filter: (query) => query.eq('organizationId', organizationId).eq('type', type),
@@ -46,11 +54,19 @@ export class TripLocations {
 
   static async queryRegion(
     ctx: QueryCtx,
-    organizationId: string,
-    rectangle: { east: number; north: number; south: number; west: number },
-    type: TripLocationType,
-    limit: number,
-    cursor?: string
+    {
+      organizationId,
+      rectangle,
+      type,
+      limit,
+      cursor
+    }: {
+      organizationId: string;
+      rectangle: { east: number; north: number; south: number; west: number };
+      type: TripLocationType;
+      limit: number;
+      cursor?: string;
+    }
   ) {
     return await index.query(
       ctx,
@@ -77,10 +93,17 @@ export class TripLocations {
 
   static async setActivity(
     ctx: MutationCtx,
-    activityId: Id<'tripDestinationActivities'>,
-    tripId: Id<'trips'>,
-    organizationId: string,
-    coordinates: Point | undefined
+    {
+      activityId,
+      tripId,
+      organizationId,
+      coordinates
+    }: {
+      activityId: Id<'tripDestinationActivities'>;
+      tripId: Id<'trips'>;
+      organizationId: string;
+      coordinates: Point | undefined;
+    }
   ) {
     const pointKey = TripLocations.activityKey(activityId);
     if (!coordinates) {
@@ -96,10 +119,17 @@ export class TripLocations {
 
   static async setDestination(
     ctx: MutationCtx,
-    destinationId: Id<'tripDestinations'>,
-    tripId: Id<'trips'>,
-    organizationId: string,
-    coordinates: Point
+    {
+      destinationId,
+      tripId,
+      organizationId,
+      coordinates
+    }: {
+      destinationId: Id<'tripDestinations'>;
+      tripId: Id<'trips'>;
+      organizationId: string;
+      coordinates: Point;
+    }
   ) {
     await index.insert(ctx, TripLocations.destinationKey(destinationId), coordinates, {
       organizationId,
@@ -110,9 +140,15 @@ export class TripLocations {
 
   static async setTrip(
     ctx: MutationCtx,
-    tripId: Id<'trips'>,
-    organizationId: string,
-    coordinates: Point | undefined
+    {
+      tripId,
+      organizationId,
+      coordinates
+    }: {
+      tripId: Id<'trips'>;
+      organizationId: string;
+      coordinates: Point | undefined;
+    }
   ) {
     const pointKey = key('trip', tripId);
     if (!coordinates) {

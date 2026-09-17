@@ -29,33 +29,37 @@ function seedActivitiesFor(
 }
 
 export function buildWorkspaceSeedPlans(tripCount: number): CreateTripPlan[] {
-  return buildTripPlans(tripCount).map((plan, index) => {
-    const known = plan.create.destination.status === 'known' ? plan.create.destination : undefined;
-    const primary = known
-      ? { dayNotes: 'Arrive and explore the first stop', endDay: 2, startDay: 1 }
-      : undefined;
-    const activities = seedActivitiesFor([
-      ...(known ? [{ endDay: 2, name: known.name, startDay: 1 }] : []),
-      ...plan.additionalDestinations.map((stop) => ({
-        endDay: stop.schedule?.endDay,
-        name: stop.name,
-        startDay: stop.schedule?.startDay
-      }))
-    ]);
-    const proposal =
-      !plan.archived && index % 3 === 0 && known
-        ? {
-            notes: 'A proposed addition for the group to review',
-            title: index % 2 === 0 ? 'Add a local highlight' : 'Refine the first day'
-          }
-        : undefined;
-    return {
-      activities,
-      additionalDestinations: plan.additionalDestinations,
-      archived: plan.archived,
-      create: plan.create,
-      ...(primary ? { primary } : {}),
-      ...(proposal ? { proposal } : {})
-    };
-  });
+  return buildTripPlans(tripCount).map(buildWorkspaceSeedPlan);
+}
+
+function buildWorkspaceSeedPlan(plan: ReturnType<typeof buildTripPlans>[number], index: number) {
+  const known = plan.create.destination.status === 'known' ? plan.create.destination : undefined;
+  const primary = known
+    ? { dayNotes: 'Arrive and explore the first stop', endDay: 2, startDay: 1 }
+    : undefined;
+  const activities = seedActivitiesFor([
+    ...(known ? [{ endDay: 2, name: known.name, startDay: 1 }] : []),
+    ...plan.additionalDestinations.map((stop) => ({
+      endDay: stop.schedule?.endDay,
+      name: stop.name,
+      startDay: stop.schedule?.startDay
+    }))
+  ]);
+  const proposal = workspaceProposal(plan.archived, index, known);
+  return {
+    activities,
+    additionalDestinations: plan.additionalDestinations,
+    archived: plan.archived,
+    create: plan.create,
+    ...(primary ? { primary } : {}),
+    ...(proposal ? { proposal } : {})
+  };
+}
+
+function workspaceProposal(archived: boolean, index: number, known: { name: string } | undefined) {
+  if (archived || index % 3 !== 0 || !known) return undefined;
+  return {
+    notes: 'A proposed addition for the group to review',
+    title: index % 2 === 0 ? 'Add a local highlight' : 'Refine the first day'
+  };
 }

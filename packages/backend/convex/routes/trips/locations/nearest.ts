@@ -20,5 +20,5 @@ export const run = workspaceQuery({
     })
   ),
   handler: (ctx, { limit, maxDistance, point, type }) =>
-    TripLocationQueries.nearest(ctx, point, type, limit, maxDistance)
+    TripLocationQueries.nearest(ctx, { limit, maxDistance, point, type })
 });

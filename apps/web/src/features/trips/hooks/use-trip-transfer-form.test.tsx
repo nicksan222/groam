@@ -200,4 +200,53 @@ describe('useTripTransferForm', () => {
     await act(() => fresh.result.current.remove());
     expect(onRemove).toHaveBeenCalledTimes(1);
   });
+
+  test('preserves an existing transfer when removal is declined', async () => {
+    const onRemove = vi.fn().mockResolvedValue(false);
+    const initial = {
+      attachments: [],
+      durationMinutes: null,
+      mode: 'train' as const,
+      notes: null,
+      timing: null
+    };
+    const { result } = renderHook(() => useTripTransferForm(options({ initial, onRemove })));
+
+    await act(() => result.current.remove());
+
+    expect(result.current.status).toEqual({
+      kind: 'error',
+      message: 'The travel connection could not be removed.'
+    });
+    expect(result.current.isPending).toBe(false);
+  });
+
+  test('reports thrown saves and a full attachment list', async () => {
+    const onSave = vi.fn().mockRejectedValue(new Error('offline'));
+    const initial = {
+      attachments: [1, 2, 3, 4, 5].map((value) => ({
+        id: mediaId(`media-${value}`),
+        name: `${value}.pdf`
+      })),
+      durationMinutes: null,
+      mode: 'train' as const,
+      notes: null,
+      timing: null
+    };
+    const { result } = renderHook(() =>
+      useTripTransferForm(options({ initial, kind: 'destination', onSave }))
+    );
+
+    act(() => result.current.setNotes('Delayed'));
+    await act(() => result.current.save());
+    expect(result.current.status).toEqual({
+      kind: 'error',
+      message: 'Travel details could not be saved. Your draft is still here.'
+    });
+    await act(() => result.current.uploadFiles([new File(['x'], 'extra.pdf')]));
+    expect(result.current.status).toEqual({
+      kind: 'warning',
+      message: 'Remove a file before uploading another.'
+    });
+  });
 });

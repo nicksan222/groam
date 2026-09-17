@@ -2,7 +2,6 @@ import { useUIMessages } from '@convex-dev/agent/react';
 import { api } from '@groam/backend/api';
 import type { Id } from '@groam/backend/data-model';
 import { useCurrentAgentContext } from '@groam/ui/ai/context/agent-context';
-import { serializeAgentScreenContext } from '@groam/ui/ai/context/agent-screen-context';
 import { toast } from '@groam/ui/components/toast';
 import { useAction, useMutation, useQuery } from 'convex/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -19,6 +18,11 @@ import type {
   DiscussionMessageMedia,
   DiscussionSendInput
 } from '@/types/discussions';
+import {
+  canSendDiscussion,
+  clearDiscussionPreviews,
+  sendDiscussionMessage
+} from './discussion-send';
 import {
   createDiscussionSendStore,
   type DiscussionPendingUserMessage
@@ -115,13 +119,15 @@ function useDiscussionSend({
       const normalizedPrompt = text.trim();
       const sendState = store.getState();
       if (
-        !threadId ||
-        (!normalizedPrompt && files.length === 0) ||
-        sendState.isSending ||
-        hasStreamingResponse
-      ) {
+        !canSendDiscussion({
+          files,
+          hasStreamingResponse,
+          normalizedPrompt,
+          sending: sendState.isSending,
+          threadId
+        })
+      )
         return false;
-      }
       if (files.length > MAX_MEDIA_PER_MESSAGE) {
         toast.error(`You can attach up to ${MAX_MEDIA_PER_MESSAGE} files`);
         return false;
@@ -133,7 +139,6 @@ function useDiscussionSend({
         size: file.size,
         url: isPreviewableMedia(file.type) ? createPendingPreviewUrl(file) : null
       }));
-
       store.getState().setPending({
         baselineKeys: new Set(messages.map((message) => message.key)),
         createdAt: Date.now(),
@@ -145,43 +150,24 @@ function useDiscussionSend({
           url: item.url
         })),
         prompt: normalizedPrompt,
-        threadId
+        threadId: threadId as string
       });
       store.getState().setSending(true);
       try {
-        const mediaIds: Id<'media'>[] = [];
-        for (const file of files) {
-          const mediaId = await uploadMedia(file, null);
-          if (!mediaId) {
-            for (const item of previewMedia) {
-              if (item.url?.startsWith('blob:')) URL.revokeObjectURL(item.url);
-            }
-            store.getState().clearPending();
-            return false;
-          }
-          mediaIds.push(mediaId);
-        }
-        const result = await sendMutation({
-          clientRequestId: crypto.randomUUID(),
+        return await sendDiscussionMessage({
+          context,
           discussionId,
-          ...(mediaIds.length > 0 ? { mediaIds } : {}),
-          text: normalizedPrompt
+          files,
+          normalizedPrompt,
+          previewMedia,
+          respondAction,
+          sendMutation,
+          store,
+          uploadMedia
         });
-        if (result.assistantAgent && context) {
-          void respondAction({
-            discussionId,
-            promptMessageId: result.messageId,
-            screen: serializeAgentScreenContext(context)
-          }).catch((error: unknown) => {
-            toast.error(errorMessage(error, 'Unable to get Groam’s reply'));
-          });
-        }
-        return true;
       } catch (error: unknown) {
         store.getState().clearPending();
-        for (const item of previewMedia) {
-          if (item.url?.startsWith('blob:')) URL.revokeObjectURL(item.url);
-        }
+        clearDiscussionPreviews(previewMedia);
         toast.error(errorMessage(error, 'Unable to send your message'));
         return false;
       } finally {
@@ -202,13 +188,7 @@ function useDiscussionSend({
   );
 
   const clearPendingUserMessage = useCallback(() => store.getState().clearPending(), [store]);
-
-  return {
-    clearPendingUserMessage,
-    isSending,
-    pendingUserMessage,
-    send
-  };
+  return { clearPendingUserMessage, isSending, pendingUserMessage, send };
 }
 
 function useDiscussionStop({

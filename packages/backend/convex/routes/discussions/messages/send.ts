@@ -20,12 +20,11 @@ export const run = mutation({
     messageId: v.string()
   }),
   handler: (ctx, args) =>
-    Discussions.send(
-      ctx,
-      args.discussionId,
-      args.text,
-      args.clientRequestId,
-      args.assistantAgent,
-      args.mediaIds
-    )
+    Discussions.send(ctx, {
+      clientRequestId: args.clientRequestId,
+      discussionId: args.discussionId,
+      mediaIds: args.mediaIds,
+      requestedAssistantAgent: args.assistantAgent,
+      text: args.text
+    })
 });

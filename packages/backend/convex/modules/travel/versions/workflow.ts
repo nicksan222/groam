@@ -24,7 +24,13 @@ export const finishSubmit = internalMutation({
   },
   returns: v.null(),
   handler: (ctx, args) =>
-    TripVersions.finishSubmit(ctx, args.proposalId, args.token, args.baseCommit, args.tipCommit)
+    TripVersions.finishSubmit({
+      baseCommit: args.baseCommit,
+      ctx,
+      proposalId: args.proposalId,
+      tipCommit: args.tipCommit,
+      token: args.token
+    })
 });
 
 export const prepareMerge = internalMutation({
@@ -74,15 +80,15 @@ export const finishRebase = internalMutation({
   },
   returns: v.null(),
   handler: (ctx, args) =>
-    TripVersions.finishRebase(
+    TripVersions.finishRebase({
+      baseCommit: args.baseCommit,
+      baseSnapshot: args.baseSnapshot,
       ctx,
-      args.proposalId,
-      args.token,
-      args.baseCommit,
-      args.tipCommit,
-      args.rebasedSnapshot,
-      args.baseSnapshot
-    )
+      proposalId: args.proposalId,
+      rebasedSnapshot: args.rebasedSnapshot,
+      tipCommit: args.tipCommit,
+      token: args.token
+    })
 });
 
 export const finishMerge = internalMutation({
@@ -96,15 +102,15 @@ export const finishMerge = internalMutation({
   },
   returns: v.null(),
   handler: (ctx, args) =>
-    TripVersions.finishMerge(
+    TripVersions.finishMerge({
+      baseCommit: args.baseCommit,
       ctx,
-      args.proposalId,
-      args.token,
-      args.baseCommit,
-      args.tipCommit,
-      args.mergeCommit,
-      args.mergedSnapshot
-    )
+      mergeCommit: args.mergeCommit,
+      mergedSnapshot: args.mergedSnapshot,
+      proposalId: args.proposalId,
+      tipCommit: args.tipCommit,
+      token: args.token
+    })
 });
 
 export const markConflict = internalMutation({

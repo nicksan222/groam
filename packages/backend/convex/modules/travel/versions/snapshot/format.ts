@@ -44,13 +44,98 @@ function parseItem<Value>(
   };
 }
 
+type ParsedSnapshotCollections = Omit<ParsedVersionSnapshot, 'trip'> & {
+  trip: ParsedVersionSnapshot['trip'] | null;
+};
+
+function appendPackingItem(
+  result: ParsedSnapshotCollections,
+  file: VersionSnapshotFile,
+  key: string
+): void {
+  const value = parseObject(file.value, file.path);
+  if (
+    typeof value.label !== 'string' ||
+    !value.label.trim() ||
+    value.label.length > MAX_PACKING_LABEL_LENGTH ||
+    typeof value.packed !== 'boolean' ||
+    typeof value.sortOrder !== 'number' ||
+    !Number.isSafeInteger(value.sortOrder) ||
+    value.sortOrder < 0
+  ) {
+    throw new ConvexError('Idea change history produced invalid packing data');
+  }
+  result.packingItems.push({
+    key,
+    value: { label: value.label, packed: value.packed, sortOrder: value.sortOrder }
+  });
+  if (result.packingItems.length > MAX_PACKING_ITEMS) {
+    throw new ConvexError(`Trips support up to ${MAX_PACKING_ITEMS} packing items`);
+  }
+}
+
+function appendTransferItem(
+  result: ParsedSnapshotCollections,
+  file: VersionSnapshotFile,
+  key: string
+): void {
+  if (key.startsWith('activity-')) {
+    result.activityTransfers.push(parseItem(file.path, key.slice('activity-'.length), file.value));
+    return;
+  }
+  if (key.startsWith('destination-')) {
+    result.destinationTransfers.push(
+      parseItem(file.path, key.slice('destination-'.length), file.value)
+    );
+    return;
+  }
+  if (key.startsWith('boundary-')) {
+    result.boundaryTransfers.push(parseItem(file.path, key.slice('boundary-'.length), file.value));
+    return;
+  }
+  throw new ConvexError('Idea change history produced an unknown trip transfer file');
+}
+
+function appendSnapshotFile(result: ParsedSnapshotCollections, file: VersionSnapshotFile): void {
+  if (file.path === 'trip.json') {
+    const value = parseObject(file.value, file.path);
+    result.trip = {
+      ...value,
+      attachments: parseAttachments(value, file.path)
+    } as ParsedVersionSnapshot['trip'];
+    return;
+  }
+  const match = /^(activities|destinations|packing|stays|transfers)\/([^/]+)\.json$/u.exec(
+    file.path
+  );
+  if (!match?.[1] || !match[2]) {
+    throw new ConvexError('Idea change history produced an unknown trip file');
+  }
+  const [, directory, key] = match;
+  if (directory === 'packing') {
+    appendPackingItem(result, file, key);
+    return;
+  }
+  if (directory === 'activities') {
+    result.activities.push(parseItem(file.path, key, file.value));
+    return;
+  }
+  if (directory === 'destinations') {
+    result.destinations.push(parseItem(file.path, key, file.value));
+    return;
+  }
+  if (directory === 'stays') {
+    result.stays.push(parseItem(file.path, key, file.value));
+    return;
+  }
+  appendTransferItem(result, file, key);
+}
+
 function parseVersionSnapshot(snapshot: VersionSnapshot): ParsedVersionSnapshot {
   if (snapshot.files.length > MAX_VERSION_FILES) {
     throw new ConvexError(`Trip versions support at most ${MAX_VERSION_FILES} version files`);
   }
-  const result: Omit<ParsedVersionSnapshot, 'trip'> & {
-    trip: ParsedVersionSnapshot['trip'] | null;
-  } = {
+  const result: ParsedSnapshotCollections = {
     activities: [],
     activityTransfers: [],
     boundaryTransfers: [],
@@ -65,64 +150,7 @@ function parseVersionSnapshot(snapshot: VersionSnapshot): ParsedVersionSnapshot 
     if (paths.has(file.path))
       throw new ConvexError('Idea change history produced duplicate trip files');
     paths.add(file.path);
-    if (file.path === 'trip.json') {
-      const value = parseObject(file.value, file.path);
-      result.trip = {
-        ...value,
-        attachments: parseAttachments(value, file.path)
-      } as ParsedVersionSnapshot['trip'];
-      continue;
-    }
-    const match = /^(activities|destinations|packing|stays|transfers)\/([^/]+)\.json$/u.exec(
-      file.path
-    );
-    if (!match?.[1] || !match[2])
-      throw new ConvexError('Idea change history produced an unknown trip file');
-    const [, directory, key] = match;
-    if (directory === 'packing') {
-      const value = parseObject(file.value, file.path);
-      if (
-        typeof value.label !== 'string' ||
-        !value.label.trim() ||
-        value.label.length > MAX_PACKING_LABEL_LENGTH ||
-        typeof value.packed !== 'boolean' ||
-        typeof value.sortOrder !== 'number' ||
-        !Number.isSafeInteger(value.sortOrder) ||
-        value.sortOrder < 0
-      )
-        throw new ConvexError('Idea change history produced invalid packing data');
-      result.packingItems.push({
-        key,
-        value: {
-          label: value.label,
-          packed: value.packed,
-          sortOrder: value.sortOrder
-        }
-      });
-      if (result.packingItems.length > MAX_PACKING_ITEMS) {
-        throw new ConvexError(`Trips support up to ${MAX_PACKING_ITEMS} packing items`);
-      }
-    } else if (directory === 'activities') {
-      result.activities.push(parseItem(file.path, key, file.value));
-    } else if (directory === 'destinations') {
-      result.destinations.push(parseItem(file.path, key, file.value));
-    } else if (directory === 'stays') {
-      result.stays.push(parseItem(file.path, key, file.value));
-    } else if (key.startsWith('activity-')) {
-      result.activityTransfers.push(
-        parseItem(file.path, key.slice('activity-'.length), file.value)
-      );
-    } else if (key.startsWith('destination-')) {
-      result.destinationTransfers.push(
-        parseItem(file.path, key.slice('destination-'.length), file.value)
-      );
-    } else if (key.startsWith('boundary-')) {
-      result.boundaryTransfers.push(
-        parseItem(file.path, key.slice('boundary-'.length), file.value)
-      );
-    } else {
-      throw new ConvexError('Idea change history produced an unknown trip transfer file');
-    }
+    appendSnapshotFile(result, file);
   }
   if (!result.trip) throw new ConvexError('Idea change history did not produce trip details');
   return result as ParsedVersionSnapshot;

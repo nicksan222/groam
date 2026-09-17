@@ -41,6 +41,18 @@ export type { DiscussionAccess } from '#convex/modules/discussions/threads/entit
 
 const assistantAuthor = { name: 'Groam', userId: 'groam-ai' };
 
+function messageContentForMedia(
+  content: ReturnType<typeof Messages.normalizeContent>,
+  media: Parameters<typeof DiscussionMedia.previewLabel>[0]
+) {
+  const agentPrompt = content.text.length > 0 ? content.text : DiscussionMedia.previewLabel(media);
+  return {
+    agentPrompt,
+    storedContent:
+      content.text.length > 0 ? content : { format: 'plain_text' as const, text: agentPrompt }
+  };
+}
+
 export type DiscussionAssistantClaim = {
   agent: ChatAgentId;
   expectedUpdatedAt: number;
@@ -156,60 +168,73 @@ export class Discussions {
       syncStreams(ctx, components.agent, args)
     ]);
     const membersById = new Map(discussion.members.map((member) => [member.userId, member]));
-    const page = await Promise.all(
-      messages.page.map(async (message) => {
-        const receipt =
-          message.role === 'user'
-            ? await ctx.db
-                .query('discussionMessages')
-                .withIndex('by_discussionId_and_agentMessageId', (query) =>
-                  query.eq('discussionId', args.discussionId).eq('agentMessageId', message.id)
-                )
-                .unique()
-            : null;
-        const participant =
-          (message.userId ? membersById.get(message.userId) : null) ?? receipt?.author;
-        const attachments = receipt
-          ? await DiscussionMedia.load(
-              ctx,
-              discussion.organizationId,
-              await DiscussionMedia.idsForReceipt(ctx, receipt)
+    const receiptForMessage = async (message: (typeof messages.page)[number]) =>
+      message.role === 'user'
+        ? await ctx.db
+            .query('discussionMessages')
+            .withIndex('by_discussionId_and_agentMessageId', (query) =>
+              query.eq('discussionId', args.discussionId).eq('agentMessageId', message.id)
             )
-          : [];
-        const receiptText = receipt?.deletedAt ? '' : (receipt?.content.text?.trim() ?? '');
-        const displayText = receipt?.deletedAt
-          ? 'This message was deleted'
-          : message.role === 'user' && receipt
-            ? displayUserMessageText(receiptText, message.text, attachments)
-            : message.text;
-        return {
-          ...message,
-          attachments,
-          author:
-            message.role === 'assistant'
-              ? assistantAuthor
-              : (participant ?? {
-                  name: 'Former participant',
-                  userId: message.userId ?? 'former-participant'
-                }),
-          deleted: receipt?.deletedAt !== undefined,
-          edited: receipt?.editedAt !== undefined,
-          // Keep legacy `media` for older clients / optimistic messages.
-          media: attachments,
-          mine: message.role === 'user' && message.userId === workspace.userId,
-          text: displayText
-        };
-      })
-    );
+            .unique()
+        : null;
+    const attachmentsForReceipt = async (receipt: Awaited<ReturnType<typeof receiptForMessage>>) =>
+      receipt
+        ? await DiscussionMedia.load(
+            ctx,
+            discussion.organizationId,
+            await DiscussionMedia.idsForReceipt(ctx, receipt)
+          )
+        : [];
+    const displayTextFor = (
+      message: (typeof messages.page)[number],
+      receipt: Awaited<ReturnType<typeof receiptForMessage>>,
+      attachments: Awaited<ReturnType<typeof attachmentsForReceipt>>
+    ) => {
+      if (receipt?.deletedAt) return 'This message was deleted';
+      const receiptText = receipt?.content.text?.trim() ?? '';
+      return message.role === 'user' && receipt
+        ? displayUserMessageText(receiptText, message.text, attachments)
+        : message.text;
+    };
+    const presentMessage = async (message: (typeof messages.page)[number]) => {
+      const receipt = await receiptForMessage(message);
+      const attachments = await attachmentsForReceipt(receipt);
+      const participant =
+        (message.userId ? membersById.get(message.userId) : null) ?? receipt?.author;
+      return {
+        ...message,
+        attachments,
+        author:
+          message.role === 'assistant'
+            ? assistantAuthor
+            : (participant ?? {
+                name: 'Former participant',
+                userId: message.userId ?? 'former-participant'
+              }),
+        deleted: receipt?.deletedAt !== undefined,
+        edited: receipt?.editedAt !== undefined,
+        media: attachments,
+        mine: message.role === 'user' && message.userId === workspace.userId,
+        text: displayTextFor(message, receipt, attachments)
+      };
+    };
+    const page = await Promise.all(messages.page.map(presentMessage));
     return { ...messages, page, streams };
   }
 
   static async create(
     ctx: MutationCtx,
-    title: string,
-    memberUserIds: string[],
-    clientRequestId: string,
-    tripId?: Id<'trips'>
+    {
+      title,
+      memberUserIds,
+      clientRequestId,
+      tripId
+    }: {
+      title: string;
+      memberUserIds: string[];
+      clientRequestId: string;
+      tripId?: Id<'trips'>;
+    }
   ): Promise<Id<'discussions'>> {
     const workspace = await requireWorkspace(ctx);
     const normalizedTitle = normalizeTitle(title);
@@ -368,11 +393,19 @@ export class Discussions {
    */
   static async send(
     ctx: MutationCtx,
-    discussionId: Id<'discussions'>,
-    text: string,
-    clientRequestId: string,
-    requestedAssistantAgent?: ChatAgentId,
-    mediaIds: Id<'media'>[] = []
+    {
+      discussionId,
+      text,
+      clientRequestId,
+      requestedAssistantAgent,
+      mediaIds = []
+    }: {
+      discussionId: Id<'discussions'>;
+      text: string;
+      clientRequestId: string;
+      requestedAssistantAgent?: ChatAgentId;
+      mediaIds?: Id<'media'>[];
+    }
   ): Promise<DiscussionSendResult> {
     const { discussion, workspace } = await DiscussionAccess.require(ctx, discussionId);
     if (!discussion.threadId) {
@@ -389,14 +422,7 @@ export class Discussions {
     if (normalizedContent.text.length === 0 && media.length === 0) {
       throw new ConvexError('Message text must be between 1 and 5000 characters');
     }
-    const agentPrompt =
-      normalizedContent.text.length > 0
-        ? normalizedContent.text
-        : DiscussionMedia.previewLabel(media);
-    const storedContent =
-      normalizedContent.text.length > 0
-        ? normalizedContent
-        : { format: 'plain_text' as const, text: agentPrompt };
+    const { agentPrompt, storedContent } = messageContentForMedia(normalizedContent, media);
     const normalizedRequestId = Messages.normalizeRequestId(clientRequestId, 'Message');
     const assistantAgent =
       requestedAssistantAgent ?? mentionedAssistantAgent(normalizedContent.text)?.id ?? null;
@@ -544,12 +570,21 @@ export class Discussions {
   /** Persist success/failure. Skips the last-message preview if the thread moved on. */
   static async finishAssistantResponse(
     ctx: MutationCtx,
-    discussionId: Id<'discussions'>,
-    promptMessageId: string,
-    expectedUpdatedAt: number,
-    responseText: string | null,
-    runId: Id<'agentRuns'>,
-    error?: string
+    {
+      discussionId,
+      promptMessageId,
+      expectedUpdatedAt,
+      responseText,
+      runId,
+      error
+    }: {
+      discussionId: Id<'discussions'>;
+      promptMessageId: string;
+      expectedUpdatedAt: number;
+      responseText: string | null;
+      runId: Id<'agentRuns'>;
+      error?: string;
+    }
   ): Promise<void> {
     const { discussion } = await DiscussionAccess.require(ctx, discussionId);
     const request = await ctx.db

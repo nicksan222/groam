@@ -48,12 +48,12 @@ describe('centralized test IDs', () => {
 
   test('allows shared and forwarded test IDs', () => {
     expect(
-      lint('export const view = <button data-testid={testIds.saveTrip}>Save</button>;').status
+      lint('export const view = <Button data-testid={testIds.saveTrip}>Save</Button>;').status
     ).toBe(0);
-    expect(lint('export const view = <button data-testid={testId}>Save</button>;').status).toBe(0);
+    expect(lint('export const view = <Button data-testid={testId}>Save</Button>;').status).toBe(0);
     expect(
       lint(
-        "export const view = <button data-testid={'testId' in item ? item.testId : undefined}>Save</button>;"
+        "export const view = <Button data-testid={'testId' in item ? item.testId : undefined}>Save</Button>;"
       ).status
     ).toBe(0);
   });
@@ -145,6 +145,29 @@ describe('browser API boundaries', () => {
 });
 
 describe('feature architecture boundaries', () => {
+  test('uses shared UI primitives for interactive controls', () => {
+    for (const tag of [
+      '<button type="button">Save</button>',
+      '<input aria-label="Name" />',
+      '<select aria-label="Status" />',
+      '<textarea aria-label="Notes" />'
+    ]) {
+      const result = lint(`export const view = ${tag};`);
+      expect(result.status).toBe(1);
+      expect(result.output).toContain('Use an exported @groam/ui component');
+    }
+
+    expect(
+      lint(
+        "import { Button } from '@groam/ui/components/button';\nexport const view = <Button>Save</Button>;"
+      ).status
+    ).toBe(0);
+  });
+
+  test('allows semantic containers without a design-system replacement', () => {
+    expect(lint('export const view = <form><fieldset /></form>;').status).toBe(0);
+  });
+
   test('keeps Convex React hooks in feature hook modules', () => {
     const source =
       "import { useQuery } from 'convex/react';\nexport function View() { return useQuery(api.example); }";

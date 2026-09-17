@@ -65,15 +65,14 @@ export class TripStay {
       position: destinationStays.length,
       tripId
     });
-    await Attachments.setTarget(
-      ctx,
-      tripId,
-      { id: stayId, type: 'stay' },
-      input.attachmentIds,
-      trip.workspace.organizationId,
-      TripStay.MAX_ATTACHMENTS,
-      'Stays'
-    );
+    await Attachments.setTarget(ctx, {
+      label: 'Stays',
+      maximum: TripStay.MAX_ATTACHMENTS,
+      mediaIds: input.attachmentIds,
+      organizationId: trip.workspace.organizationId,
+      target: { id: stayId, type: 'stay' },
+      tripId
+    });
     await patchTrip(trip, { updatedAt: Date.now() });
     await recordActivity(
       trip,
@@ -104,15 +103,14 @@ export class TripStay {
     assertMutable(this.trip);
     const normalized = TripStay.normalize(input, this.destination);
     assertDayWithinTrip(this.trip, normalized.schedule.checkOutDay, 'Stay checkout day');
-    const attachmentsChanged = await Attachments.setTarget(
-      this.ctx,
-      this.trip.trip._id,
-      { id: this.data._id, type: 'stay' },
-      input.attachmentIds,
-      this.trip.workspace.organizationId,
-      TripStay.MAX_ATTACHMENTS,
-      'Stays'
-    );
+    const attachmentsChanged = await Attachments.setTarget(this.ctx, {
+      label: 'Stays',
+      maximum: TripStay.MAX_ATTACHMENTS,
+      mediaIds: input.attachmentIds,
+      organizationId: this.trip.workspace.organizationId,
+      target: { id: this.data._id, type: 'stay' },
+      tripId: this.trip.trip._id
+    });
     const detailsMatch = TripStay.matches(this.data, normalized);
     if (detailsMatch && !attachmentsChanged) return null;
     await patchTrip(this.trip, { updatedAt: Date.now() });
@@ -232,13 +230,13 @@ export class TripStay {
     ) {
       throw new ConvexError('stay days must fall within the destination day range');
     }
-    const times = LocalDateTime.normalizeDayTimeRange(
-      checkInDay,
-      input.schedule.checkInTime,
-      checkOutDay,
-      input.schedule.checkOutTime,
-      'stay time'
-    );
+    const times = LocalDateTime.normalizeDayTimeRange({
+      endDay: checkOutDay,
+      endTimeValue: input.schedule.checkOutTime,
+      label: 'stay time',
+      startDay: checkInDay,
+      startTimeValue: input.schedule.checkInTime
+    });
     const address = TripStay.optionalText(input.address, 'stay address', MAX_ADDRESS_LENGTH);
     const notes = TripStay.optionalText(input.notes, 'stay notes', MAX_NOTES_LENGTH);
     const cost = normalizeCostRecord(input.cost, 'stay cost');

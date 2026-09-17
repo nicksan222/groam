@@ -80,7 +80,7 @@ export function ThreadMessageToolbar({
             {THREAD_REACTION_STAMPS.map((stamp) => {
               const isPressed = pressed.has(stamp.emoji);
               return (
-                <button
+                <Button
                   aria-label={stamp.label}
                   aria-pressed={isPressed}
                   className={cn(
@@ -94,9 +94,10 @@ export function ThreadMessageToolbar({
                     setPickerOpen(false);
                   }}
                   type="button"
+                  unstyled
                 >
                   <span aria-hidden="true">{stamp.emoji}</span>
-                </button>
+                </Button>
               );
             })}
           </fieldset>

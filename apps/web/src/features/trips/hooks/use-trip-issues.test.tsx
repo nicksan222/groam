@@ -36,6 +36,18 @@ beforeEach(() => {
 });
 
 describe('useTripIssues', () => {
+  test('creates an issue and exposes the issue query result', async () => {
+    const create = vi.fn().mockResolvedValue(issueId);
+    convex.useQuery.mockReturnValue([{ id: issueId }]);
+    convex.useMutation.mockReturnValue(create);
+    const { result } = renderHook(() => useTripIssues(tripId));
+
+    await act(async () => {
+      expect(await result.current.createIssue('Coast day', 'Body')).toBe(issueId);
+    });
+    expect(result.current.issues).toEqual([{ id: issueId }]);
+  });
+
   test('returns null and toasts when issue creation fails', async () => {
     const create = vi.fn().mockRejectedValue(new Error('Trip is archived'));
     convex.useMutation.mockReturnValue(create);
@@ -57,6 +69,42 @@ describe('useTripIssues', () => {
 });
 
 describe('useTripIssue', () => {
+  test('runs successful comment, assignment, due-date, and status actions', async () => {
+    const comment = vi.fn().mockResolvedValue(null);
+    const status = vi.fn().mockResolvedValue(null);
+    const due = vi.fn().mockResolvedValue(null);
+    const assign = vi.fn().mockResolvedValue(null);
+    convex.useQuery.mockReturnValue(openIssue);
+    convex.useMutation
+      .mockReturnValueOnce(vi.fn())
+      .mockReturnValueOnce(comment)
+      .mockReturnValueOnce(status)
+      .mockReturnValueOnce(due)
+      .mockReturnValueOnce(assign);
+    const { result } = renderHook(() => useTripIssue(issueId));
+
+    await act(async () => {
+      expect(await result.current.addComment('A note')).toBe(true);
+      expect(await result.current.assignUser('user-sam', 'Sam')).toBe(true);
+      expect(await result.current.setDueAt(null)).toBe(true);
+      expect(await result.current.setStatus('closed')).toBe(true);
+    });
+    expect(assign).toHaveBeenCalledWith({
+      assignee: { kind: 'user', name: 'Sam', userId: 'user-sam' },
+      issueId
+    });
+    expect(due).toHaveBeenCalledWith({ dueAt: null, issueId });
+  });
+
+  test('does not implement without an issue', async () => {
+    const createVersion = vi.fn();
+    convex.useQuery.mockReturnValue(undefined);
+    convex.useMutation.mockReturnValue(createVersion);
+    const { result } = renderHook(() => useTripIssue(issueId));
+
+    await act(async () => expect(await result.current.implement()).toBeNull());
+    expect(createVersion).not.toHaveBeenCalled();
+  });
   test('reports failed comments without claiming success', async () => {
     const comment = vi.fn().mockRejectedValue(new Error('Issue is closed'));
     convex.useQuery.mockReturnValue(openIssue);

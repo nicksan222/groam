@@ -45,13 +45,19 @@ function foldIcsLine(line: string) {
   return chunks.map((chunk, index) => (index === 0 ? chunk : ` ${chunk}`)).join('\r\n');
 }
 
-function allDayEvent(
-  summary: string,
-  start: string,
-  endExclusive: string,
-  uid: string,
-  dtstamp: string
-) {
+function allDayEvent({
+  endExclusive,
+  start,
+  summary,
+  uid,
+  dtstamp
+}: {
+  endExclusive: string;
+  start: string;
+  summary: string;
+  uid: string;
+  dtstamp: string;
+}) {
   return [
     'BEGIN:VEVENT',
     `UID:${escapeIcs(uid)}`,
@@ -75,24 +81,24 @@ export function tripCalendarIcs(
   for (const destination of trip.destinations) {
     if (destination.startDay !== null && destination.endDay !== null) {
       events.push(
-        allDayEvent(
-          `${trip.name} · ${destination.name}`,
-          icsDay(trip.startDate, destination.startDay),
-          icsDay(trip.startDate, destination.endDay + 1),
-          `groam-destination-${destination.id}@groam.local`,
+        allDayEvent({
+          summary: `${trip.name} · ${destination.name}`,
+          start: icsDay(trip.startDate, destination.startDay),
+          endExclusive: icsDay(trip.startDate, destination.endDay + 1),
+          uid: `groam-destination-${destination.id}@groam.local`,
           dtstamp
-        )
+        })
       );
     }
     for (const activity of destination.activities) {
       events.push(
-        allDayEvent(
-          `${destination.name} · ${activity.title}`,
-          icsDay(trip.startDate, activity.dayNumber),
-          icsDay(trip.startDate, activity.endDayNumber + 1),
-          `groam-activity-${activity.id}@groam.local`,
+        allDayEvent({
+          summary: `${destination.name} · ${activity.title}`,
+          start: icsDay(trip.startDate, activity.dayNumber),
+          endExclusive: icsDay(trip.startDate, activity.endDayNumber + 1),
+          uid: `groam-activity-${activity.id}@groam.local`,
           dtstamp
-        )
+        })
       );
     }
   }

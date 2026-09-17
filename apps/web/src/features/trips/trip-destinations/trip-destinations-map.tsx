@@ -1,3 +1,4 @@
+import { Button } from '@groam/ui/components/button';
 import Shell from '@groam/ui/components/shell/client';
 import { cn } from '@groam/ui/lib/utils';
 import { useState } from 'react';
@@ -71,14 +72,15 @@ export function TripDestinationsMap({
             latitude={destination.latitude}
             longitude={destination.longitude}
           >
-            <button
+            <Button
               aria-label={`Show ${destination.name} on map`}
               className="grid size-9 place-items-center rounded-full border-2 border-background bg-primary text-sm font-bold text-primary-foreground"
               onClick={() => setSelectedId(destination.id)}
               type="button"
+              unstyled
             >
               {index + 1}
-            </button>
+            </Button>
           </Marker>
         ))}
         {selected && (

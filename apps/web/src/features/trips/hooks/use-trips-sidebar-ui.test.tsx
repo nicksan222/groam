@@ -33,4 +33,15 @@ describe('useTripsSidebarUi', () => {
     expect(result.current.isArchiveOpen).toBe(false);
     expect(result.current.isCreateOpen).toBe(false);
   });
+
+  test('sets create state from a controlled open-change callback', () => {
+    const { result } = renderHook(() => useTripsSidebarUi());
+
+    act(() => result.current.setCreateOpen(true));
+    expect(result.current.isCreateOpen).toBe(true);
+    act(() => result.current.setCreateOpen(false));
+    expect(result.current.isCreateOpen).toBe(false);
+    act(() => result.current.clearArchive());
+    expect(result.current.tripToArchive).toBeNull();
+  });
 });

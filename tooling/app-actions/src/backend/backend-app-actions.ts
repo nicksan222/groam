@@ -97,7 +97,7 @@ export class BackendAppActions extends AppActions<AuthenticatedAppUser> {
     workspace: AppWorkspace,
     isMember: boolean
   ) {
-    return joinWorkspace(this.backend, owner, member, workspace, isMember);
+    return joinWorkspace(this.backend, { isMember, member, owner, workspace });
   }
   listWorkspaceMemberIds(owner: AuthenticatedAppUser, organizationId: string) {
     return listWorkspaceMemberIds(this.backend, owner, organizationId);

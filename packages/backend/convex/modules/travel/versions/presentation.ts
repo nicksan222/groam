@@ -140,13 +140,19 @@ function sanitizedValue(format: VersionDiffValueFormat, value: unknown): unknown
     : { name: typeof destination.name === 'string' ? destination.name : '' };
 }
 
-async function presentField(
-  change: TripVersionChange,
-  key: string,
-  before: Record<string, unknown>,
-  after: Record<string, unknown>,
-  presentMedia: PresentMedia
-): Promise<PresentedVersionField | null> {
+async function presentField({
+  change,
+  key,
+  before,
+  after,
+  presentMedia
+}: {
+  change: TripVersionChange;
+  key: string;
+  before: Record<string, unknown>;
+  after: Record<string, unknown>;
+  presentMedia: PresentMedia;
+}): Promise<PresentedVersionField | null> {
   const tag = fieldsByEntity[change.entity][key];
   if (!tag) throw new ConvexError(`Versioned field ${change.entity}.${key} has no presentation`);
   if (tag.display === 'hidden') return null;
@@ -181,7 +187,7 @@ async function presentVersionChanges(
       const after = parse(change.after);
       const fields = await Promise.all(
         changedKeys(change, before, after).map((key) =>
-          presentField(change, key, before, after, presentMedia)
+          presentField({ after, before, change, key, presentMedia })
         )
       );
       return {

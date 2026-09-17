@@ -1,3 +1,4 @@
+import { Button } from '@groam/ui/components/button';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { DestinationStopMarker } from '@/features/trips/trip-destinations/destination-stop-marker';
 
@@ -18,10 +19,11 @@ export function RouteStopCard({
       : 'Days not assigned';
   return (
     <li className="min-w-0">
-      <button
+      <Button
         className="flex w-full items-center gap-4 rounded-xl border border-border p-3 text-left transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         onClick={onOpenItinerary}
         type="button"
+        unstyled
       >
         <span className="relative block size-16 shrink-0 overflow-hidden rounded-lg">
           <DestinationStopMarker
@@ -39,7 +41,7 @@ export function RouteStopCard({
             {destination.activities.length === 1 ? 'activity' : 'activities'}
           </span>
         </span>
-      </button>
+      </Button>
     </li>
   );
 }

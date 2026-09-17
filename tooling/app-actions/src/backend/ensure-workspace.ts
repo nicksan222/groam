@@ -75,13 +75,12 @@ export async function ensureWorkspace(
     selected = organization(await responseJson(response, 'organization'));
   }
 
-  await postRequired(
-    backend,
-    new URL('organization/set-active', authUrl),
-    { organizationId: selected.id },
-    owner.cookie,
-    'activate the demo organization'
-  );
+  await postRequired(backend, {
+    body: { organizationId: selected.id },
+    cookie: owner.cookie,
+    operation: 'activate the demo organization',
+    url: new URL('organization/set-active', authUrl)
+  });
 
   return {
     organizationId: selected.id,

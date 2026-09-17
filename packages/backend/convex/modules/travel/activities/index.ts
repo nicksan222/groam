@@ -93,22 +93,20 @@ export class ItineraryActivity {
       position: activities.length,
       tripId
     });
-    await Attachments.setTarget(
-      ctx,
-      tripId,
-      { id: activityId, type: 'activity' },
-      input.attachmentIds,
-      trip.workspace.organizationId,
-      ItineraryActivity.MAX_ATTACHMENTS,
-      'Activities'
-    );
-    await TripLocations.setActivity(
-      ctx,
+    await Attachments.setTarget(ctx, {
+      label: 'Activities',
+      maximum: ItineraryActivity.MAX_ATTACHMENTS,
+      mediaIds: input.attachmentIds,
+      organizationId: trip.workspace.organizationId,
+      target: { id: activityId, type: 'activity' },
+      tripId
+    });
+    await TripLocations.setActivity(ctx, {
       activityId,
-      tripId,
-      trip.workspace.organizationId,
-      normalized.coordinates
-    );
+      coordinates: normalized.coordinates,
+      organizationId: trip.workspace.organizationId,
+      tripId
+    });
     await patchTrip(trip, { updatedAt: Date.now() });
     await recordActivity(
       trip,
@@ -204,28 +202,26 @@ export class ItineraryActivity {
         normalized.schedule
       );
     }
-    const attachmentsChanged = await Attachments.setTarget(
-      this.ctx,
-      this.trip.trip._id,
-      { id: this.data._id, type: 'activity' },
-      input.attachmentIds,
-      this.trip.workspace.organizationId,
-      ItineraryActivity.MAX_ATTACHMENTS,
-      'Activities'
-    );
+    const attachmentsChanged = await Attachments.setTarget(this.ctx, {
+      label: 'Activities',
+      maximum: ItineraryActivity.MAX_ATTACHMENTS,
+      mediaIds: input.attachmentIds,
+      organizationId: this.trip.workspace.organizationId,
+      target: { id: this.data._id, type: 'activity' },
+      tripId: this.trip.trip._id
+    });
     const detailsMatch = this.detailsMatch(normalized, scheduleMatches);
     if (detailsMatch && !attachmentsChanged) return null;
 
     await patchTrip(this.trip, { updatedAt: Date.now() });
     if (!detailsMatch) {
       await this.ctx.db.patch('tripDestinationActivities', this.data._id, normalized);
-      await TripLocations.setActivity(
-        this.ctx,
-        this.data._id,
-        this.trip.trip._id,
-        this.trip.workspace.organizationId,
-        normalized.coordinates
-      );
+      await TripLocations.setActivity(this.ctx, {
+        activityId: this.data._id,
+        coordinates: normalized.coordinates,
+        organizationId: this.trip.workspace.organizationId,
+        tripId: this.trip.trip._id
+      });
     }
     await recordActivity(
       this.trip,
@@ -272,46 +268,57 @@ export class ItineraryActivity {
     return null;
   }
 
-  // fallow-ignore-next-line complexity
-  static normalize(input: ItineraryActivityInput, destination: Doc<'tripDestinations'>) {
-    const { day } = input.schedule;
-    const endDay = input.schedule.endDay ?? day;
+  static validateDays(day: number, endDay: number, destination: Doc<'tripDestinations'>): void {
     if (!Number.isInteger(day) || day < 1 || day > 365) {
       throw new ConvexError('activity day must be a whole number between 1 and 365');
     }
     if (!Number.isInteger(endDay) || endDay < 1 || endDay > 365) {
       throw new ConvexError('activity end day must be a whole number between 1 and 365');
     }
-    if (endDay < day) {
-      throw new ConvexError('activity end day cannot be before its start day');
-    }
+    if (endDay < day) throw new ConvexError('activity end day cannot be before its start day');
     if (
       destination.schedule &&
       (day < destination.schedule.startDay || endDay > destination.schedule.endDay)
     ) {
       throw new ConvexError('activity days must fall within the destination day range');
     }
-    const address = input.address?.trim();
-    if (address && address.length > MAX_ACTIVITY_ADDRESS_LENGTH) {
-      throw new ConvexError(
-        `activity address must be ${MAX_ACTIVITY_ADDRESS_LENGTH} characters or fewer`
-      );
+  }
+
+  static optionalText(
+    value: string | undefined,
+    label: string,
+    maximum: number
+  ): string | undefined {
+    const normalized = value?.trim();
+    if (normalized && normalized.length > maximum) {
+      throw new ConvexError(`${label} must be ${maximum} characters or fewer`);
     }
-    const cost = normalizeCostRecord(input.cost, 'activity cost');
-    const notes = input.notes?.trim();
-    if (notes && notes.length > MAX_ACTIVITY_NOTES_LENGTH) {
-      throw new ConvexError(
-        `activity notes must be ${MAX_ACTIVITY_NOTES_LENGTH} characters or fewer`
-      );
-    }
-    if (input.coordinates) validateCoordinates(input.coordinates, 'activity');
-    const exactTiming = LocalDateTime.normalizeDayTimeRange(
-      day,
-      input.schedule.startTime,
-      endDay,
-      input.schedule.endTime,
-      'activity time'
+    return normalized || undefined;
+  }
+
+  static normalize(input: ItineraryActivityInput, destination: Doc<'tripDestinations'>) {
+    const { day } = input.schedule;
+    const endDay = input.schedule.endDay ?? day;
+    ItineraryActivity.validateDays(day, endDay, destination);
+    const address = ItineraryActivity.optionalText(
+      input.address,
+      'activity address',
+      MAX_ACTIVITY_ADDRESS_LENGTH
     );
+    const cost = normalizeCostRecord(input.cost, 'activity cost');
+    const notes = ItineraryActivity.optionalText(
+      input.notes,
+      'activity notes',
+      MAX_ACTIVITY_NOTES_LENGTH
+    );
+    if (input.coordinates) validateCoordinates(input.coordinates, 'activity');
+    const exactTiming = LocalDateTime.normalizeDayTimeRange({
+      endDay,
+      endTimeValue: input.schedule.endTime,
+      label: 'activity time',
+      startDay: day,
+      startTimeValue: input.schedule.startTime
+    });
     return {
       address: address || undefined,
       coordinates: input.coordinates,

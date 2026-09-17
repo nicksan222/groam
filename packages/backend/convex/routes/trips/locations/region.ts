@@ -27,7 +27,7 @@ export const run = workspaceQuery({
     )
   }),
   handler: async (ctx, { cursor, limit, rectangle, type }) => {
-    const result = await TripLocationQueries.region(ctx, rectangle, type, limit, cursor);
+    const result = await TripLocationQueries.region(ctx, { cursor, limit, rectangle, type });
     return { nextCursor: result.nextCursor ?? null, results: result.results };
   }
 });

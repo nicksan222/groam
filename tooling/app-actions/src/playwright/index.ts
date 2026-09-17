@@ -26,22 +26,41 @@ export {
   completeOnboarding
 } from './complete-onboarding';
 export { createFirstGroup } from './create-first-group';
-export * from './create-group';
+export { type CreateGroupInput, createGroup } from './create-group';
 export { type CreateGroupChatInput, createGroupChat } from './create-group-chat';
-export * from './delete-current-group';
+export { type DeleteCurrentGroupInput, deleteCurrentGroup } from './delete-current-group';
 export { type EditActivityInput, editActivity } from './edit-activity';
 export { expectHomeDashboard } from './expect-home-dashboard';
 export { expectIssueStatus, type IssueStatus } from './expect-issue-status';
 export { expectWorkspaceReady } from './expect-workspace-ready';
 export { filterIssuesByStatus, type IssueStatusFilter } from './filter-issues-by-status';
 export { filterWorkspaceIdeas } from './filter-workspace-ideas';
-export * from './ids';
+export { ids, type TestId } from './ids';
 export { inspectIdeaChanges } from './inspect-idea-changes';
-export * from './interaction';
+export { type UiTarget, type UiUser, ui } from './interaction';
 export { inviteGroupMember } from './invite-group-member';
-export * from './locators';
+export {
+  activityCard,
+  by,
+  calendarDay,
+  chatMember,
+  chatMessage,
+  chatRow,
+  destinationCard,
+  destinationResult,
+  dialogSubmit,
+  groupSwitcherItem,
+  ideaRow,
+  idFromPath,
+  issueRow,
+  issueStatusOption,
+  named,
+  planTravel,
+  stayCard,
+  tripCard
+} from './locators';
 export { mockDestinationSearch } from './mock-destination-search';
-export * from './navigation';
+export { openSettingsGroupSection } from './navigation';
 export { onePixelPng } from './one-pixel-png';
 export { openAppPath, reloadAppPage } from './open-app-path';
 export { openBackgroundActivity } from './open-background-activity';
@@ -53,7 +72,7 @@ export { openIdeaComparison } from './open-idea-comparison';
 export { openIdeaFromList } from './open-idea-from-list';
 export { openIdeaItinerary } from './open-idea-itinerary';
 export { openIssueFromInbox } from './open-issue-from-inbox';
-export * from './open-issue-with-status';
+export { type OpenIssueWithStatusInput, openIssueWithStatus } from './open-issue-with-status';
 export { openIssuesInbox } from './open-issues-inbox';
 export { openItinerary } from './open-itinerary';
 export { openMobileChat } from './open-mobile-chat';
@@ -63,9 +82,12 @@ export { openTripFromList } from './open-trip-from-list';
 export { openTripSection, type TripSection } from './open-trip-section';
 export { openTrips } from './open-trips';
 export { openWorkspaceIdeas } from './open-workspace-ideas';
-export * from './page-canvas';
-export * from './playwright-app-actions';
-export * from './propose-trip-dates-for-review';
+export { pageCanvas, resolvedBackground, twoColumnPageLayout } from './page-canvas';
+export { createPlaywrightActions, PlaywrightAppActions } from './playwright-app-actions';
+export {
+  type ProposeTripDatesForReviewInput,
+  proposeTripDatesForReview
+} from './propose-trip-dates-for-review';
 export { reactToChatMessage } from './react-to-chat-message';
 export { recoverFromNotFound } from './recover-from-not-found';
 export { redeemGroupInvitationCode } from './redeem-group-invitation-code';
@@ -100,7 +122,7 @@ export { signUp } from './sign-up';
 export { startIdeaFromIssue } from './start-idea-from-issue';
 export { startItineraryIdea } from './start-itinerary-idea';
 export { submitIdeaForReview } from './submit-idea-for-review';
-export * from './switch-group';
+export { type SwitchGroupInput, switchGroup } from './switch-group';
 export { transferPdf } from './transfer-pdf';
 export { uniqueSuffix } from './unique-suffix';
 export { type TestUserCredentials, uniqueTestUser } from './unique-test-user';

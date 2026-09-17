@@ -162,10 +162,16 @@ async function proposalWithSource<Ctx extends MutationCtx | QueryCtx>(
   return { proposal, source };
 }
 
-async function beginOperation(
-  ctx: MutationCtx,
-  proposal: Doc<'tripProposals'>,
-  source: MutableTripCtx,
+async function beginOperation({
+  ctx,
+  proposal,
+  source,
+  operation,
+  requestedAt
+}: {
+  ctx: MutationCtx;
+  proposal: Doc<'tripProposals'>;
+  source: MutableTripCtx;
   operation:
     | { expectedWorkingUpdatedAt: number; kind: 'submit' }
     | {
@@ -173,9 +179,9 @@ async function beginOperation(
         expectedSourceUpdatedAt: number;
         expectedWorkingUpdatedAt: number;
         kind: 'merge' | 'rebase';
-      },
-  requestedAt: number
-): Promise<string> {
+      };
+  requestedAt: number;
+}): Promise<string> {
   const token = crypto.randomUUID();
   const existing = await ctx.db
     .query('tripProposalOperations')
@@ -369,6 +375,49 @@ async function adoptOpenProposalForIssue(
   };
 }
 
+async function issueForProposal(
+  ctx: MutationCtx,
+  source: MutableTripCtx,
+  issueId: Id<'tripIssues'> | undefined
+): Promise<Doc<'tripIssues'> | null> {
+  if (!issueId) return null;
+  const issue = await ctx.db.get('tripIssues', issueId);
+  if (
+    !issue ||
+    issue.tripId !== source.trip._id ||
+    issue.organizationId !== source.workspace.organizationId
+  ) {
+    throw new ConvexError('Trip issue not found');
+  }
+  return issue;
+}
+
+function proposalIdeaName({
+  source,
+  now,
+  proposalCount,
+  takenNames,
+  requestedName
+}: {
+  source: MutableTripCtx;
+  now: number;
+  proposalCount: number;
+  takenNames: Set<string>;
+  requestedName: string | undefined;
+}): string {
+  if (requestedName === undefined) {
+    return IdeaNames.uniqueFriendly(
+      `${source.trip._id}:${source.workspace.userId}:${now}:${proposalCount}`,
+      takenNames
+    );
+  }
+  const ideaName = IdeaNames.custom(requestedName);
+  if (takenNames.has(ideaName)) {
+    throw new ConvexError(`An idea named “${ideaName}” already exists for this trip`);
+  }
+  return ideaName;
+}
+
 async function create(
   ctx: MutationCtx,
   sourceTripId: Id<'trips'>,
@@ -376,15 +425,7 @@ async function create(
 ) {
   const source = await loadTripContext(ctx, sourceTripId);
   await assertSharedTripIdeaSource(ctx, source);
-  const issue = options?.issueId ? await ctx.db.get('tripIssues', options.issueId) : null;
-  if (
-    options?.issueId &&
-    (!issue ||
-      issue.tripId !== source.trip._id ||
-      issue.organizationId !== source.workspace.organizationId)
-  ) {
-    throw new ConvexError('Trip issue not found');
-  }
+  const issue = await issueForProposal(ctx, source, options?.issueId);
   if (options?.issueId) {
     const adopted = await adoptOpenProposalForIssue(ctx, source, options.issueId, issue);
     if (adopted) return adopted;
@@ -402,18 +443,13 @@ async function create(
   const now = Date.now();
   const settings = await ReviewSettings.forOrganization(ctx, source.workspace.organizationId);
   const takenNames = new Set(proposals.map(ideaNameFor));
-  let ideaName: string;
-  if (options?.ideaName === undefined) {
-    ideaName = IdeaNames.uniqueFriendly(
-      `${source.trip._id}:${source.workspace.userId}:${now}:${proposals.length}`,
-      takenNames
-    );
-  } else {
-    ideaName = IdeaNames.custom(options.ideaName);
-    if (takenNames.has(ideaName)) {
-      throw new ConvexError(`An idea named “${ideaName}” already exists for this trip`);
-    }
-  }
+  const ideaName = proposalIdeaName({
+    now,
+    proposalCount: proposals.length,
+    requestedName: options?.ideaName,
+    source,
+    takenNames
+  });
   const baseSnapshot = await VersionSnapshots.create(ctx, source.trip);
   const baseSnapshotText = JSON.stringify(baseSnapshot);
   const workingTripId = await insertWithShortId(
@@ -577,6 +613,14 @@ async function get(ctx: QueryCtx, proposalId: Id<'tripProposals'>) {
     isTripAdmin(source) &&
     eligibleApprovals.length >= quorum &&
     (proposal.unresolvedFeedbackCount ?? 0) === 0;
+  const capabilities = proposalCapabilities({
+    eligibleIds,
+    proposal,
+    reviewReady,
+    source,
+    sourceChanged
+  });
+  const issue = await linkedIssue(ctx, proposal.issueId);
   return {
     approvalCount: eligibleApprovals.length,
     approvals: eligibleApprovals
@@ -591,19 +635,7 @@ async function get(ctx: QueryCtx, proposalId: Id<'tripProposals'>) {
     baseCommit: proposal.baseCommit ?? null,
     baseUpdatedAt: proposal.baseUpdatedAt,
     ideaName: ideaNameFor(proposal),
-    canApprove: proposal.status === 'in_review' && eligibleIds.has(source.workspace.userId),
-    canClose:
-      (proposal.status === 'draft' ||
-        proposal.status === 'in_review' ||
-        proposal.status === 'conflicted') &&
-      (proposal.author.userId === source.workspace.userId || source.role === 'organizer'),
-    canManageReviewers:
-      proposal.status !== 'merged' &&
-      proposal.status !== 'closed' &&
-      (proposal.author.userId === source.workspace.userId || source.role === 'organizer'),
-    canMerge: proposal.status === 'in_review' && reviewReady,
-    canRebase: canUpdateWorkingCopy(proposal, source) && rebaseIsNeeded(proposal, sourceChanged),
-    canResolve: proposal.status === 'conflicted' && reviewReady,
+    ...capabilities,
     changes: await VersionPresentation.present(
       ctx,
       VersionChanges.diff(base, proposed),
@@ -617,13 +649,7 @@ async function get(ctx: QueryCtx, proposalId: Id<'tripProposals'>) {
       (approval) => approval.approver.userId === source.workspace.userId
     ),
     id: proposal._id,
-    issue: proposal.issueId
-      ? await ctx.db
-          .get('tripIssues', proposal.issueId)
-          .then((linked) =>
-            linked ? { id: linked._id, status: linked.status, title: linked.title } : null
-          )
-      : null,
+    issue,
     mergeCommit: proposal.mergeCommit ?? null,
     requiredApprovals: quorum,
     reviewers: proposal.reviewers ?? [],
@@ -637,6 +663,39 @@ async function get(ctx: QueryCtx, proposalId: Id<'tripProposals'>) {
     updatedAt: proposal.updatedAt,
     workingTripId: proposal.workingTripId
   };
+}
+
+function isOpenProposal(proposal: Doc<'tripProposals'>): boolean {
+  return ['draft', 'in_review', 'conflicted'].includes(proposal.status);
+}
+
+function proposalCapabilities({
+  proposal,
+  source,
+  eligibleIds,
+  reviewReady,
+  sourceChanged
+}: {
+  proposal: Doc<'tripProposals'>;
+  source: TripCtx<QueryCtx>;
+  eligibleIds: Set<string>;
+  reviewReady: boolean;
+  sourceChanged: boolean;
+}) {
+  return {
+    canApprove: proposal.status === 'in_review' && eligibleIds.has(source.workspace.userId),
+    canClose: isOpenProposal(proposal) && canManageReviewers(proposal, source),
+    canManageReviewers: reviewersCanBeChanged(proposal) && canManageReviewers(proposal, source),
+    canMerge: proposal.status === 'in_review' && reviewReady,
+    canRebase: canUpdateWorkingCopy(proposal, source) && rebaseIsNeeded(proposal, sourceChanged),
+    canResolve: proposal.status === 'conflicted' && reviewReady
+  };
+}
+
+async function linkedIssue(ctx: QueryCtx, issueId: Id<'tripIssues'> | undefined) {
+  if (!issueId) return null;
+  const issue = await ctx.db.get('tripIssues', issueId);
+  return issue ? { id: issue._id, status: issue.status, title: issue.title } : null;
 }
 
 async function listFeedback(ctx: QueryCtx, proposalId: Id<'tripProposals'>) {
@@ -705,57 +764,45 @@ async function finishAgentReview(
   return null;
 }
 
-async function setReviewers(
-  ctx: MutationCtx,
-  proposalId: Id<'tripProposals'>,
-  reviewers: NonNullable<Doc<'tripProposals'>['reviewers']>
-): Promise<null> {
-  const { proposal, source } = await proposalWithSource(ctx, proposalId);
-  if (proposal.author.userId !== source.workspace.userId && source.role !== 'organizer') {
-    throw new ConvexError('Only the idea author or an organizer can request reviewers');
-  }
-  if (proposal.status === 'merged' || proposal.status === 'closed') {
-    throw new ConvexError('Closed ideas cannot request reviewers');
-  }
-  const uniqueHumans = reviewers.filter(
-    (reviewer): reviewer is Extract<ProposalReviewer, { kind: 'user' }> => {
-      if (reviewer.kind !== 'user') return false;
-      return (
-        reviewers.findIndex(
-          (candidate) => candidate.kind === 'user' && candidate.userId === reviewer.userId
-        ) === reviewers.indexOf(reviewer)
-      );
-    }
+function uniqueUserReviewers(reviewers: NonNullable<Doc<'tripProposals'>['reviewers']>) {
+  return reviewers.filter(
+    (reviewer): reviewer is Extract<ProposalReviewer, { kind: 'user' }> =>
+      reviewer.kind === 'user' &&
+      reviewers.findIndex(
+        (candidate) => candidate.kind === 'user' && candidate.userId === reviewer.userId
+      ) === reviewers.indexOf(reviewer)
   );
-  const unique = withIdeaReviewer(uniqueHumans);
-  if (unique.length > MAX_GROUP_MEMBERS) throw new ConvexError('Too many reviewers');
+}
+
+async function assertEligibleReviewers(
+  source: MutableTripCtx,
+  proposal: Doc<'tripProposals'>,
+  reviewers: Extract<ProposalReviewer, { kind: 'user' }>[]
+): Promise<void> {
   const voters = await eligibleVoters(source);
   const voterIds = new Set(voters.map((voter) => voter.userId));
   if (
-    uniqueHumans.some(
+    reviewers.some(
       (reviewer) => reviewer.userId === proposal.author.userId || !voterIds.has(reviewer.userId)
     )
   ) {
     throw new ConvexError('Requested reviewers must be group members other than the author');
   }
-  await ctx.db.patch('tripProposals', proposalId, { reviewers: unique, updatedAt: Date.now() });
-  return null;
 }
 
-async function addFeedback(
-  ctx: MutationCtx,
-  proposalId: Id<'tripProposals'>,
-  rawContent: string,
-  parentCommentId?: Id<'tripProposalComments'>,
-  changeKey?: string,
-  kind: FeedbackKind = 'comment'
-): Promise<Id<'tripProposalComments'>> {
-  const { proposal, source } = await proposalWithSource(ctx, proposalId);
-  if (
-    proposal.status !== 'draft' &&
-    proposal.status !== 'in_review' &&
-    proposal.status !== 'conflicted'
-  ) {
+function canManageReviewers(
+  proposal: Doc<'tripProposals'>,
+  source: TripCtx<MutationCtx | QueryCtx>
+): boolean {
+  return proposal.author.userId === source.workspace.userId || source.role === 'organizer';
+}
+
+function reviewersCanBeChanged(proposal: Doc<'tripProposals'>): boolean {
+  return proposal.status !== 'merged' && proposal.status !== 'closed';
+}
+
+function assertFeedbackContent(proposal: Doc<'tripProposals'>, rawContent: string): string {
+  if (!['draft', 'in_review', 'conflicted'].includes(proposal.status)) {
     throw new ConvexError('Feedback can only be added to an open idea');
   }
   const content = rawContent.trim();
@@ -765,19 +812,63 @@ async function addFeedback(
   if ((proposal.feedbackCount ?? 0) >= MAX_PROPOSAL_FEEDBACK) {
     throw new ConvexError(`Ideas support up to ${MAX_PROPOSAL_FEEDBACK} feedback items`);
   }
-  if (parentCommentId) {
-    const parent = await ctx.db.get('tripProposalComments', parentCommentId);
-    if (
-      !parent ||
-      parent.proposalId !== proposalId ||
-      parent.organizationId !== source.workspace.organizationId
-    ) {
-      throw new ConvexError('The conversation being replied to was not found');
-    }
-    if (parent.parentCommentId) {
-      throw new ConvexError('Replies must belong to a top-level conversation');
-    }
+  return content;
+}
+
+async function assertReplyTarget(
+  ctx: MutationCtx,
+  proposalId: Id<'tripProposals'>,
+  organizationId: string,
+  parentCommentId: Id<'tripProposalComments'> | undefined
+): Promise<void> {
+  if (!parentCommentId) return;
+  const parent = await ctx.db.get('tripProposalComments', parentCommentId);
+  if (!parent || parent.proposalId !== proposalId || parent.organizationId !== organizationId) {
+    throw new ConvexError('The conversation being replied to was not found');
   }
+  if (parent.parentCommentId) {
+    throw new ConvexError('Replies must belong to a top-level conversation');
+  }
+}
+
+async function setReviewers(
+  ctx: MutationCtx,
+  proposalId: Id<'tripProposals'>,
+  reviewers: NonNullable<Doc<'tripProposals'>['reviewers']>
+): Promise<null> {
+  const { proposal, source } = await proposalWithSource(ctx, proposalId);
+  if (!canManageReviewers(proposal, source)) {
+    throw new ConvexError('Only the idea author or an organizer can request reviewers');
+  }
+  if (!reviewersCanBeChanged(proposal)) {
+    throw new ConvexError('Closed ideas cannot request reviewers');
+  }
+  const uniqueHumans = uniqueUserReviewers(reviewers);
+  const unique = withIdeaReviewer(uniqueHumans);
+  if (unique.length > MAX_GROUP_MEMBERS) throw new ConvexError('Too many reviewers');
+  await assertEligibleReviewers(source, proposal, uniqueHumans);
+  await ctx.db.patch('tripProposals', proposalId, { reviewers: unique, updatedAt: Date.now() });
+  return null;
+}
+
+async function addFeedback({
+  ctx,
+  proposalId,
+  rawContent,
+  parentCommentId,
+  changeKey,
+  kind = 'comment'
+}: {
+  ctx: MutationCtx;
+  proposalId: Id<'tripProposals'>;
+  rawContent: string;
+  parentCommentId?: Id<'tripProposalComments'>;
+  changeKey?: string;
+  kind?: FeedbackKind;
+}): Promise<Id<'tripProposalComments'>> {
+  const { proposal, source } = await proposalWithSource(ctx, proposalId);
+  const content = assertFeedbackContent(proposal, rawContent);
+  await assertReplyTarget(ctx, proposalId, source.workspace.organizationId, parentCommentId);
   const now = Date.now();
   const commentId = await ctx.db.insert('tripProposalComments', {
     author: { name: source.workspace.viewerName, userId: source.workspace.userId },
@@ -863,13 +954,13 @@ async function prepareSubmit(ctx: MutationCtx, proposalId: Id<'tripProposals'>) 
     throw new ConvexError('Make at least one change before requesting review');
   }
   const timestamp = Date.now();
-  const token = await beginOperation(
+  const token = await beginOperation({
     ctx,
+    operation: { expectedWorkingUpdatedAt: working.updatedAt, kind: 'submit' },
     proposal,
-    source,
-    { expectedWorkingUpdatedAt: working.updatedAt, kind: 'submit' },
-    timestamp
-  );
+    requestedAt: timestamp,
+    source
+  });
   return {
     history: {
       base: {
@@ -889,13 +980,19 @@ async function prepareSubmit(ctx: MutationCtx, proposalId: Id<'tripProposals'>) 
   };
 }
 
-async function finishSubmit(
-  ctx: MutationCtx,
-  proposalId: Id<'tripProposals'>,
-  token: string,
-  baseCommit: string,
-  tipCommit: string
-): Promise<null> {
+async function finishSubmit({
+  ctx,
+  proposalId,
+  token,
+  baseCommit,
+  tipCommit
+}: {
+  ctx: MutationCtx;
+  proposalId: Id<'tripProposals'>;
+  token: string;
+  baseCommit: string;
+  tipCommit: string;
+}): Promise<null> {
   GitCommits.assertOid(baseCommit, 'base tip');
   GitCommits.assertOid(tipCommit, 'idea tip');
   const { proposal, source } = await proposalWithSource(ctx, proposalId);
@@ -1032,18 +1129,18 @@ async function prepareMerge(ctx: MutationCtx, proposalId: Id<'tripProposals'>) {
     VersionSnapshots.create(ctx, working)
   ]);
   const timestamp = Date.now();
-  const token = await beginOperation(
+  const token = await beginOperation({
     ctx,
-    proposal,
-    source,
-    {
+    operation: {
       expectedProposalUpdatedAt: proposal.updatedAt,
       expectedSourceUpdatedAt: source.trip.updatedAt,
       expectedWorkingUpdatedAt: working.updatedAt,
       kind: 'merge'
     },
-    timestamp
-  );
+    proposal,
+    requestedAt: timestamp,
+    source
+  });
   return {
     history: {
       base: {
@@ -1074,15 +1171,23 @@ async function prepareMerge(ctx: MutationCtx, proposalId: Id<'tripProposals'>) {
   };
 }
 
-async function finishMerge(
-  ctx: MutationCtx,
-  proposalId: Id<'tripProposals'>,
-  token: string,
-  baseCommit: string,
-  tipCommit: string,
-  mergeCommit: string,
-  mergedSnapshot: VersionSnapshot
-): Promise<null> {
+async function finishMerge({
+  ctx,
+  proposalId,
+  token,
+  baseCommit,
+  tipCommit,
+  mergeCommit,
+  mergedSnapshot
+}: {
+  ctx: MutationCtx;
+  proposalId: Id<'tripProposals'>;
+  token: string;
+  baseCommit: string;
+  tipCommit: string;
+  mergeCommit: string;
+  mergedSnapshot: VersionSnapshot;
+}): Promise<null> {
   GitCommits.assertOid(baseCommit, 'base tip');
   GitCommits.assertOid(tipCommit, 'idea tip');
   GitCommits.assertOid(mergeCommit, 'applied tip');
@@ -1228,25 +1333,25 @@ async function prepareResolution(
     VersionSnapshots.create(ctx, working)
   ]);
   const timestamp = Date.now();
-  const resolution = VersionMerge.resolve(
+  const resolution = VersionMerge.resolve({
     base,
+    conflictPaths: proposal.conflictPaths,
     current,
     proposed,
-    proposal.conflictPaths,
     resolutions
-  );
-  const token = await beginOperation(
+  });
+  const token = await beginOperation({
     ctx,
-    proposal,
-    source,
-    {
+    operation: {
       expectedProposalUpdatedAt: proposal.updatedAt,
       expectedSourceUpdatedAt: source.trip.updatedAt,
       expectedWorkingUpdatedAt: working.updatedAt,
       kind: 'merge'
     },
-    timestamp
-  );
+    proposal,
+    requestedAt: timestamp,
+    source
+  });
   return {
     history: {
       base: {
@@ -1325,20 +1430,26 @@ async function prepareRebase(
     return { kind: 'noop' as const };
   }
   const selected = details ? withResolvedDetails(current, proposed, details) : proposed;
-  const resolved = VersionMerge.resolve(base, current, selected, conflictPaths, chosenResolutions);
+  const resolved = VersionMerge.resolve({
+    base,
+    conflictPaths,
+    current,
+    proposed: selected,
+    resolutions: chosenResolutions
+  });
   const timestamp = Date.now();
-  const token = await beginOperation(
+  const token = await beginOperation({
     ctx,
-    proposal,
-    source,
-    {
+    operation: {
       expectedProposalUpdatedAt: proposal.updatedAt,
       expectedSourceUpdatedAt: source.trip.updatedAt,
       expectedWorkingUpdatedAt: working.updatedAt,
       kind: 'rebase'
     },
-    timestamp
-  );
+    proposal,
+    requestedAt: timestamp,
+    source
+  });
   return {
     history: {
       base: {
@@ -1360,15 +1471,23 @@ async function prepareRebase(
   };
 }
 
-async function finishRebase(
-  ctx: MutationCtx,
-  proposalId: Id<'tripProposals'>,
-  token: string,
-  baseCommit: string,
-  tipCommit: string,
-  rebasedSnapshot: VersionSnapshot,
-  baseSnapshot: VersionSnapshot
-): Promise<null> {
+async function finishRebase({
+  ctx,
+  proposalId,
+  token,
+  baseCommit,
+  tipCommit,
+  rebasedSnapshot,
+  baseSnapshot
+}: {
+  ctx: MutationCtx;
+  proposalId: Id<'tripProposals'>;
+  token: string;
+  baseCommit: string;
+  tipCommit: string;
+  rebasedSnapshot: VersionSnapshot;
+  baseSnapshot: VersionSnapshot;
+}): Promise<null> {
   GitCommits.assertOid(baseCommit, 'base tip');
   GitCommits.assertOid(tipCommit, 'idea tip');
   const { proposal, source } = await assertCanRebase(ctx, proposalId);

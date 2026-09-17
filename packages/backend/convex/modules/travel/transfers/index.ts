@@ -68,15 +68,14 @@ async function setBoundary(
     .unique();
   const detailsMatch = existing !== null && transferDetailsMatch(existing, normalized);
   if (existing && detailsMatch) {
-    const attachmentsChanged = await Attachments.setTarget(
-      ctx,
-      tripId,
-      { id: existing._id, type: 'boundary_transfer' },
-      input.attachmentIds,
-      trip.workspace.organizationId,
-      MAX_ATTACHMENTS,
-      'Transfers'
-    );
+    const attachmentsChanged = await Attachments.setTarget(ctx, {
+      label: 'Transfers',
+      maximum: MAX_ATTACHMENTS,
+      mediaIds: input.attachmentIds,
+      organizationId: trip.workspace.organizationId,
+      target: { id: existing._id, type: 'boundary_transfer' },
+      tripId
+    });
     if (!attachmentsChanged) return existing._id;
     await touchTrip(trip);
     await recordActivity(
@@ -100,15 +99,14 @@ async function setBoundary(
     });
   } else {
   }
-  await Attachments.setTarget(
-    ctx,
-    tripId,
-    { id: transferId, type: 'boundary_transfer' },
-    input.attachmentIds,
-    trip.workspace.organizationId,
-    MAX_ATTACHMENTS,
-    'Transfers'
-  );
+  await Attachments.setTarget(ctx, {
+    label: 'Transfers',
+    maximum: MAX_ATTACHMENTS,
+    mediaIds: input.attachmentIds,
+    organizationId: trip.workspace.organizationId,
+    target: { id: transferId, type: 'boundary_transfer' },
+    tripId
+  });
   await touchTrip(trip);
   await recordActivity(
     trip,
@@ -141,13 +139,19 @@ async function removeBoundary(
   return null;
 }
 
-async function setDestination(
-  ctx: MutationCtx,
-  tripId: Id<'trips'>,
-  fromDestinationId: Id<'tripDestinations'>,
-  toDestinationId: Id<'tripDestinations'>,
-  input: TripTransferInput
-): Promise<Id<'tripDestinationTransfers'>> {
+async function setDestination({
+  ctx,
+  tripId,
+  fromDestinationId,
+  toDestinationId,
+  input
+}: {
+  ctx: MutationCtx;
+  tripId: Id<'trips'>;
+  fromDestinationId: Id<'tripDestinations'>;
+  toDestinationId: Id<'tripDestinations'>;
+  input: TripTransferInput;
+}): Promise<Id<'tripDestinationTransfers'>> {
   const [trip, from, to] = await Promise.all([
     loadTripContext(ctx, tripId),
     ctx.db.get('tripDestinations', fromDestinationId),
@@ -182,15 +186,14 @@ async function setDestination(
     existing.toDestinationId === toDestinationId &&
     transferDetailsMatch(existing, normalized);
   if (existing && detailsMatch) {
-    const attachmentsChanged = await Attachments.setTarget(
-      ctx,
-      tripId,
-      { id: existing._id, type: 'destination_transfer' },
-      input.attachmentIds,
-      trip.workspace.organizationId,
-      MAX_ATTACHMENTS,
-      'Transfers'
-    );
+    const attachmentsChanged = await Attachments.setTarget(ctx, {
+      label: 'Transfers',
+      maximum: MAX_ATTACHMENTS,
+      mediaIds: input.attachmentIds,
+      organizationId: trip.workspace.organizationId,
+      target: { id: existing._id, type: 'destination_transfer' },
+      tripId
+    });
     if (!attachmentsChanged) return existing._id;
     await touchTrip(trip);
     await recordActivity(
@@ -220,15 +223,14 @@ async function setDestination(
     });
   } else {
   }
-  await Attachments.setTarget(
-    ctx,
-    tripId,
-    { id: transferId, type: 'destination_transfer' },
-    input.attachmentIds,
-    trip.workspace.organizationId,
-    MAX_ATTACHMENTS,
-    'Transfers'
-  );
+  await Attachments.setTarget(ctx, {
+    label: 'Transfers',
+    maximum: MAX_ATTACHMENTS,
+    mediaIds: input.attachmentIds,
+    organizationId: trip.workspace.organizationId,
+    target: { id: transferId, type: 'destination_transfer' },
+    tripId
+  });
   await touchTrip(trip);
   await recordActivity(
     trip,
@@ -265,13 +267,19 @@ async function removeDestination(
   return null;
 }
 
-async function setActivity(
-  ctx: MutationCtx,
-  tripId: Id<'trips'>,
-  fromActivityId: Id<'tripDestinationActivities'>,
-  toActivityId: Id<'tripDestinationActivities'>,
-  input: TripTransferInput
-): Promise<Id<'tripActivityTransfers'>> {
+async function setActivity({
+  ctx,
+  tripId,
+  fromActivityId,
+  toActivityId,
+  input
+}: {
+  ctx: MutationCtx;
+  tripId: Id<'trips'>;
+  fromActivityId: Id<'tripDestinationActivities'>;
+  toActivityId: Id<'tripDestinationActivities'>;
+  input: TripTransferInput;
+}): Promise<Id<'tripActivityTransfers'>> {
   const [trip, from, to] = await Promise.all([
     loadTripContext(ctx, tripId),
     ctx.db.get('tripDestinationActivities', fromActivityId),
@@ -306,15 +314,14 @@ async function setActivity(
     existing.toActivityId === toActivityId &&
     transferDetailsMatch(existing, normalized);
   if (existing && detailsMatch) {
-    const attachmentsChanged = await Attachments.setTarget(
-      ctx,
-      tripId,
-      { id: existing._id, type: 'activity_transfer' },
-      input.attachmentIds,
-      trip.workspace.organizationId,
-      MAX_ATTACHMENTS,
-      'Transfers'
-    );
+    const attachmentsChanged = await Attachments.setTarget(ctx, {
+      label: 'Transfers',
+      maximum: MAX_ATTACHMENTS,
+      mediaIds: input.attachmentIds,
+      organizationId: trip.workspace.organizationId,
+      target: { id: existing._id, type: 'activity_transfer' },
+      tripId
+    });
     if (!attachmentsChanged) return existing._id;
     await touchTrip(trip);
     await recordActivity(
@@ -346,15 +353,14 @@ async function setActivity(
     });
   } else {
   }
-  await Attachments.setTarget(
-    ctx,
-    tripId,
-    { id: transferId, type: 'activity_transfer' },
-    input.attachmentIds,
-    trip.workspace.organizationId,
-    MAX_ATTACHMENTS,
-    'Transfers'
-  );
+  await Attachments.setTarget(ctx, {
+    label: 'Transfers',
+    maximum: MAX_ATTACHMENTS,
+    mediaIds: input.attachmentIds,
+    organizationId: trip.workspace.organizationId,
+    target: { id: transferId, type: 'activity_transfer' },
+    tripId
+  });
   await touchTrip(trip);
   await recordActivity(
     trip,
@@ -560,13 +566,19 @@ async function assertActivityScheduleChange(
   }
 }
 
-function assertConnectedDestinationTimings(
-  incoming: Doc<'tripDestinationTransfers'> | null,
-  outgoing: Doc<'tripDestinationTransfers'> | null,
-  previous: Doc<'tripDestinations'> | undefined,
-  next: Doc<'tripDestinations'> | undefined,
-  schedule: Doc<'tripDestinations'>['schedule']
-) {
+function assertConnectedDestinationTimings({
+  incoming,
+  outgoing,
+  previous,
+  next,
+  schedule
+}: {
+  incoming: Doc<'tripDestinationTransfers'> | null;
+  outgoing: Doc<'tripDestinationTransfers'> | null;
+  previous: Doc<'tripDestinations'> | undefined;
+  next: Doc<'tripDestinations'> | undefined;
+  schedule: Doc<'tripDestinations'>['schedule'];
+}) {
   if (incoming?.timing && previous?.schedule && schedule) {
     assertTimingWithinDays(
       incoming,
@@ -585,13 +597,19 @@ function assertConnectedDestinationTimings(
   }
 }
 
-function assertBoundaryScheduleTimings(
-  boundaries: Doc<'tripBoundaryTransfers'>[],
-  index: number,
-  destinationCount: number,
-  trip: MutableTripCtx,
-  schedule: Doc<'tripDestinations'>['schedule']
-) {
+function assertBoundaryScheduleTimings({
+  boundaries,
+  index,
+  destinationCount,
+  trip,
+  schedule
+}: {
+  boundaries: Doc<'tripBoundaryTransfers'>[];
+  index: number;
+  destinationCount: number;
+  trip: MutableTripCtx;
+  schedule: Doc<'tripDestinations'>['schedule'];
+}) {
   const arrival = boundaries.find((row) => row.boundary === 'arrival');
   if (index === 0 && arrival?.timing) {
     assertTimingWithinDays(arrival, 1, schedule?.startDay ?? 1, 'Arrival travel');
@@ -603,13 +621,19 @@ function assertBoundaryScheduleTimings(
   }
 }
 
-async function assertDestinationScheduleChange(
-  ctx: MutationCtx,
-  trip: MutableTripCtx,
-  destination: Doc<'tripDestinations'>,
-  schedule: Doc<'tripDestinations'>['schedule'],
-  destinations: Doc<'tripDestinations'>[]
-): Promise<void> {
+async function assertDestinationScheduleChange({
+  ctx,
+  trip,
+  destination,
+  schedule,
+  destinations
+}: {
+  ctx: MutationCtx;
+  trip: MutableTripCtx;
+  destination: Doc<'tripDestinations'>;
+  schedule: Doc<'tripDestinations'>['schedule'];
+  destinations: Doc<'tripDestinations'>[];
+}): Promise<void> {
   const index = destinations.findIndex((item) => item._id === destination._id);
   const previous = destinations[index - 1];
   const next = destinations[index + 1];
@@ -628,8 +652,14 @@ async function assertDestinationScheduleChange(
       .unique(),
     boundaryForTrip(ctx, trip.trip._id)
   ]);
-  assertConnectedDestinationTimings(incoming, outgoing, previous, next, schedule);
-  assertBoundaryScheduleTimings(boundaries, index, destinations.length, trip, schedule);
+  assertConnectedDestinationTimings({ incoming, next, outgoing, previous, schedule });
+  assertBoundaryScheduleTimings({
+    boundaries,
+    destinationCount: destinations.length,
+    index,
+    schedule,
+    trip
+  });
 }
 
 async function shiftActivityTimingsForDestination(
@@ -767,13 +797,13 @@ function normalizeTiming(input: TripTransferInput['timing']): NormalizedTransfer
   if (hasInvalidDay) {
     throw new ConvexError('transfer days must be a valid chronological range');
   }
-  const normalizedTimes = LocalDateTime.normalizeDayTimeRange(
-    startDay,
-    input.startTime,
+  const normalizedTimes = LocalDateTime.normalizeDayTimeRange({
     endDay,
-    input.endTime,
-    'transfer time'
-  );
+    endTimeValue: input.endTime,
+    label: 'transfer time',
+    startDay,
+    startTimeValue: input.startTime
+  });
   if (!normalizedTimes.startTime) {
     throw new ConvexError('transfer time start must be a valid time');
   }

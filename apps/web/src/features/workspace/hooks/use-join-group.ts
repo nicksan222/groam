@@ -30,14 +30,7 @@ export function useJoinGroup({ onJoined }: { onJoined?: () => void } = {}) {
       setPendingActivation(null);
       onJoined?.();
     } catch (caughtError: unknown) {
-      const message = errorMessage(caughtError, 'Unable to join group');
-      setError(
-        activation
-          ? activation.membership === 'existing'
-            ? `You already belong to this group, but it could not be opened. Try again. ${message}`
-            : `You joined the group, but it could not be opened. Try again. ${message}`
-          : message
-      );
+      setError(joinGroupError(caughtError, activation));
     } finally {
       setIsPending(false);
     }
@@ -51,4 +44,17 @@ export function useJoinGroup({ onJoined }: { onJoined?: () => void } = {}) {
     setCode,
     submit
   };
+}
+
+function joinGroupError(
+  error: unknown,
+  activation: { membership: 'existing' | 'joined'; organizationId: string } | null
+) {
+  const message = errorMessage(error, 'Unable to join group');
+  if (!activation) return message;
+  const prefix =
+    activation.membership === 'existing'
+      ? 'You already belong to this group'
+      : 'You joined the group';
+  return `${prefix}, but it could not be opened. Try again. ${message}`;
 }

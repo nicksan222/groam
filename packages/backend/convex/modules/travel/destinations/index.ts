@@ -118,13 +118,12 @@ export class TripDestination {
       schedule: destination.schedule,
       tripId
     });
-    await TripLocations.setDestination(
-      ctx,
+    await TripLocations.setDestination(ctx, {
+      coordinates: destination.coordinates,
       destinationId,
-      tripId,
-      ctx.workspace.organizationId,
-      destination.coordinates
-    );
+      organizationId: ctx.workspace.organizationId,
+      tripId
+    });
     await patchTrip(ctx, {
       ...(coverRefresh ? { cover: coverRefresh.cover } : {}),
       ...(destinations.length === 0
@@ -133,12 +132,11 @@ export class TripDestination {
       updatedAt: Date.now()
     });
     if (destinations.length === 0) {
-      await TripLocations.setTrip(
-        ctx,
-        ctx.trip._id,
-        ctx.workspace.organizationId,
-        destination.coordinates
-      );
+      await TripLocations.setTrip(ctx, {
+        coordinates: destination.coordinates,
+        organizationId: ctx.workspace.organizationId,
+        tripId: ctx.trip._id
+      });
     }
     await recordActivity(
       ctx,
@@ -200,13 +198,13 @@ export class TripDestination {
       )
     );
     if (scheduleChanged) {
-      await TripTransfer.assertDestinationScheduleChange(
-        this.ctx,
-        this.trip,
-        this.data,
-        normalized.schedule,
-        destinations
-      );
+      await TripTransfer.assertDestinationScheduleChange({
+        ctx: this.ctx,
+        destination: this.data,
+        destinations,
+        schedule: normalized.schedule,
+        trip: this.trip
+      });
     }
 
     await patchTrip(this.trip, { updatedAt: Date.now() });
@@ -380,12 +378,11 @@ export class TripDestination {
       updatedAt: Date.now()
     });
     if (primaryChanged) {
-      await TripLocations.setTrip(
-        this.ctx,
-        this.trip.trip._id,
-        this.trip.workspace.organizationId,
-        primaryDestination.coordinates
-      );
+      await TripLocations.setTrip(this.ctx, {
+        coordinates: primaryDestination.coordinates,
+        organizationId: this.trip.workspace.organizationId,
+        tripId: this.trip.trip._id
+      });
     }
     if (coverRefresh) {
       await cover.schedule(coverRefresh.generation);
@@ -441,12 +438,11 @@ export class TripDestination {
       destination: remaining[0] ? TripDestination.summary(remaining[0]) : { status: 'undecided' },
       updatedAt: Date.now()
     });
-    await TripLocations.setTrip(
-      this.ctx,
-      this.trip.trip._id,
-      this.trip.workspace.organizationId,
-      remaining[0]?.coordinates
-    );
+    await TripLocations.setTrip(this.ctx, {
+      coordinates: remaining[0]?.coordinates,
+      organizationId: this.trip.workspace.organizationId,
+      tripId: this.trip.trip._id
+    });
     await recordActivity(
       this.trip,
       'destination_removed',

@@ -82,7 +82,7 @@ export function RouteBoard(props: RouteBoardProps) {
 
       {stopCount === 0 ? (
         <Shell.Card asChild className="grid w-full place-items-center" variant="dashed">
-          <button onClick={onAddDestination} type="button">
+          <Button onClick={onAddDestination} type="button" unstyled>
             <span>
               <IconTile className="mx-auto" radius="xl" size="lg" variant="outline-muted">
                 <MapPinned className="size-4" />
@@ -92,7 +92,7 @@ export function RouteBoard(props: RouteBoardProps) {
                 Add the first destination to start planning.
               </span>
             </span>
-          </button>
+          </Button>
         </Shell.Card>
       ) : (
         <ul aria-label="Route stops" className="space-y-2">

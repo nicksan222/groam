@@ -4,6 +4,7 @@ import {
   inspectFiles,
   invalidDirectoryNames,
   matchesPackageExport,
+  missingFeatureHookTests,
   packageExportPatternsFromMap,
   routePackageAllowlistFromWebDependencies,
   uiExportSubpathsFromMap
@@ -55,7 +56,7 @@ describe('inspectFile', () => {
     expect(inspectFile('apps/web/src/routes/_workspace.trips.index.tsx', 'export {}')).toEqual([]);
   });
 
-  test('keeps feature TSX files to one exported component under 300 lines', () => {
+  test('keeps feature TSX files to one exported component', () => {
     expect(
       inspectFile(
         'apps/web/src/features/trips/trip-list.tsx',
@@ -71,14 +72,6 @@ describe('inspectFile', () => {
       {
         category: 'component-files',
         location: 'apps/web/src/features/trips/trip-list.tsx exports TripList, TripRow'
-      }
-    ]);
-    expect(
-      inspectFile('apps/web/src/features/trips/trip-list.tsx', `${'a\n'.repeat(300)}export {}`)
-    ).toEqual([
-      {
-        category: 'component-files',
-        location: 'apps/web/src/features/trips/trip-list.tsx (301 lines, max 300)'
       }
     ]);
     expect(
@@ -284,6 +277,35 @@ describe('inspectFile', () => {
         }
       )
     ).toEqual([]);
+  });
+});
+
+describe('missingFeatureHookTests', () => {
+  test('requires new feature hooks to have a co-located test', () => {
+    expect(
+      missingFeatureHookTests(['apps/web/src/features/trips/hooks/use-new-capability.ts'])
+    ).toEqual([
+      {
+        category: 'hook-tests',
+        location: 'apps/web/src/features/trips/hooks/use-new-capability.ts'
+      }
+    ]);
+
+    expect(
+      missingFeatureHookTests([
+        'apps/web/src/features/trips/hooks/use-new-capability.ts',
+        'apps/web/src/features/trips/hooks/use-new-capability.test.tsx'
+      ])
+    ).toEqual([]);
+  });
+
+  test('does not let distant tests satisfy the co-location rule', () => {
+    expect(
+      missingFeatureHookTests([
+        'apps/web/src/features/trips/hooks/use-new-capability.ts',
+        'apps/web/src/features/trips/use-new-capability.test.ts'
+      ]).length
+    ).toBe(1);
   });
 });
 

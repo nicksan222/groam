@@ -48,15 +48,25 @@ function chatScreenContext(screenContext: string) {
   }
 }
 
-function createAssistant(
-  agentId: AssistantAgentId,
-  screen: AssistantTarget['screen'],
-  tripId: Id<'trips'> | null,
-  threadId: string,
-  configuration: AssistantConfiguration,
-  prompt: string,
-  scope: AssistantConversationScope
-) {
+type CreateAssistantOptions = {
+  agentId: AssistantAgentId;
+  configuration: AssistantConfiguration;
+  prompt: string;
+  scope: AssistantConversationScope;
+  screen: AssistantTarget['screen'];
+  threadId: string;
+  tripId: Id<'trips'> | null;
+};
+
+function createAssistant({
+  agentId,
+  configuration,
+  prompt,
+  scope,
+  screen,
+  threadId,
+  tripId
+}: CreateAssistantOptions) {
   const registered = createRegisteredAssistantTools({
     activeTripId: tripId,
     agentId,
@@ -105,52 +115,35 @@ async function continueAssistantWithConfiguration(
   AssistantScreens.validate(target.screen);
   const access = await workspaceAccess(ctx, target.threadId, options.scope);
   const activeTripId = AssistantTargets.activeTripId(access.tags, target.screen);
-  const assistant = createAssistant(
-    target.agent,
-    target.screen,
-    activeTripId,
-    target.threadId,
+  const assistant = createAssistant({
+    agentId: target.agent,
     configuration,
     prompt,
-    options.scope
-  );
-  let promptMessageId = options.promptMessageId;
-  if (!promptMessageId) {
-    await purgeLegacySystemMessages(ctx, assistant, target.threadId);
-    const { messages } = await assistant.saveMessages(ctx, {
-      messages: [{ content: prompt, role: 'user' }],
-      skipEmbeddings: true,
-      threadId: target.threadId,
-      userId: access.userId
-    });
-    promptMessageId = messages[messages.length - 1]?._id;
-    if (!promptMessageId) throw new ConvexError('Unable to save the assistant message');
-    const generatedTitle = isDefaultAssistantChatTitle(access.threadTitle)
-      ? prompt
-          .replace(/^\s*@[a-z][a-z-]*\s*/iu, '')
-          .slice(0, 80)
-          .trim()
-      : '';
-    await updateThreadMetadata(ctx, components.agent, {
-      patch: {
-        summary: assistantThreadSummary(
-          access.organizationId,
-          access.tags,
-          Date.now(),
-          JSON.stringify(target.screen)
-        ),
-        ...(generatedTitle ? { title: generatedTitle } : {})
-      },
-      threadId: target.threadId
-    });
-  }
+    scope: options.scope,
+    screen: target.screen,
+    threadId: target.threadId,
+    tripId: activeTripId
+  });
+  const promptMessageId = await savedPromptMessageId({
+    access,
+    assistant,
+    ctx,
+    prompt,
+    promptMessageId: options.promptMessageId,
+    screen: target.screen,
+    threadId: target.threadId
+  });
   const { thread } = await assistant.continueThread(ctx, {
     threadId: target.threadId,
     userId: access.userId
   });
   const runId = options.runId;
   if (runId) {
-    await AgentRunTracking.record(ctx, runId, 'status', 'Responding', prompt.slice(0, 160));
+    await AgentRunTracking.record(ctx, runId, {
+      detail: prompt.slice(0, 160),
+      kind: 'status',
+      label: 'Responding'
+    });
   }
   let streamFailure: unknown;
   const result = await thread.streamText(
@@ -176,13 +169,68 @@ async function continueAssistantWithConfiguration(
     const responseText = await result.text;
     if (runId) {
       const report = responseText.trim() || 'Finished this discussion turn.';
-      await AgentRunTracking.record(ctx, runId, 'report', 'Report ready', report.slice(0, 500));
+      await AgentRunTracking.record(ctx, runId, {
+        detail: report.slice(0, 500),
+        kind: 'report',
+        label: 'Report ready'
+      });
     }
     return responseText;
   } catch (error: unknown) {
     if (isAbortError(error)) return null;
     throw AssistantErrors.from(streamFailure ?? error);
   }
+}
+
+async function savedPromptMessageId({
+  access,
+  assistant,
+  ctx,
+  prompt,
+  promptMessageId,
+  screen,
+  threadId
+}: {
+  access: Awaited<ReturnType<typeof workspaceAccess>>;
+  assistant: ReturnType<typeof createAssistant>;
+  ctx: ActionCtx;
+  prompt: string;
+  promptMessageId: string | undefined;
+  screen: AssistantTarget['screen'];
+  threadId: string;
+}): Promise<string> {
+  if (promptMessageId) return promptMessageId;
+  await purgeLegacySystemMessages(ctx, assistant, threadId);
+  const { messages } = await assistant.saveMessages(ctx, {
+    messages: [{ content: prompt, role: 'user' }],
+    skipEmbeddings: true,
+    threadId,
+    userId: access.userId
+  });
+  const savedMessageId = messages[messages.length - 1]?._id;
+  if (!savedMessageId) throw new ConvexError('Unable to save the assistant message');
+  const generatedTitle = generatedChatTitle(access.threadTitle, prompt);
+  await updateThreadMetadata(ctx, components.agent, {
+    patch: {
+      summary: assistantThreadSummary(
+        access.organizationId,
+        access.tags,
+        Date.now(),
+        JSON.stringify(screen)
+      ),
+      ...(generatedTitle ? { title: generatedTitle } : {})
+    },
+    threadId
+  });
+  return savedMessageId;
+}
+
+function generatedChatTitle(threadTitle: string | null, prompt: string): string {
+  if (!isDefaultAssistantChatTitle(threadTitle)) return '';
+  return prompt
+    .replace(/^\s*@[a-z][a-z-]*\s*/iu, '')
+    .slice(0, 80)
+    .trim();
 }
 
 function isAbortError(error: unknown): boolean {
@@ -268,15 +316,15 @@ export class AssistantSession {
       access.organizationId
     );
     const activeTripId = AssistantTargets.activeTripId(access.tags, target.screen);
-    const assistant = createAssistant(
-      target.agent,
-      target.screen,
-      activeTripId,
-      target.threadId,
+    const assistant = createAssistant({
+      agentId: target.agent,
       configuration,
-      target.prompt,
-      'private'
-    );
+      prompt: target.prompt,
+      scope: 'private',
+      screen: target.screen,
+      threadId: target.threadId,
+      tripId: activeTripId
+    });
     const [promptMessage] = await ctx.runQuery(components.agent.messages.getMessagesByIds, {
       messageIds: [target.messageId]
     });
@@ -340,15 +388,17 @@ export class AssistantSession {
   static async continueDiscussionWithModel(
     ctx: ActionCtx,
     target: AssistantTarget,
-    promptMessageId: string,
-    languageModel: AssistantLanguageModel,
-    runId: Id<'agentRuns'>
+    options: {
+      languageModel: AssistantLanguageModel;
+      promptMessageId: string;
+      runId: Id<'agentRuns'>;
+    }
   ): Promise<string | null> {
     return await continueAssistantWithConfiguration(
       ctx,
       target,
-      { languageModel },
-      { promptMessageId, runId, scope: 'discussion' }
+      { languageModel: options.languageModel },
+      { promptMessageId: options.promptMessageId, runId: options.runId, scope: 'discussion' }
     );
   }
 }

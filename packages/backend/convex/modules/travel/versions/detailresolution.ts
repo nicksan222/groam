@@ -68,14 +68,13 @@ export async function applyDetailResolution(
       target,
       Attachments.limitFor(target)
     );
-    await Attachments.setTarget(
-      ctx,
-      ctx.trip._id,
-      { id: ctx.trip._id, type: 'trip' },
-      files.map(({ mediaId }) => mediaId),
-      ctx.workspace.organizationId,
-      Attachments.limitFor(target)
-    );
+    await Attachments.setTarget(ctx, {
+      maximum: Attachments.limitFor(target),
+      mediaIds: files.map(({ mediaId }) => mediaId),
+      organizationId: ctx.workspace.organizationId,
+      target: { id: ctx.trip._id, type: 'trip' },
+      tripId: ctx.trip._id
+    });
   }
   // Preserve the reviewed cover when a destination change suggests a new image.
   const updated = await loadTripContext(ctx, ctx.trip._id, ctx.workspace);

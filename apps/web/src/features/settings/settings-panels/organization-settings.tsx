@@ -113,7 +113,7 @@ function OrganizationProfile({
           title="Group profile"
         />
         <form className="space-y-5" onSubmit={submit}>
-          <input
+          <Input
             accept="image/*"
             aria-label="Choose group logo"
             className="sr-only"

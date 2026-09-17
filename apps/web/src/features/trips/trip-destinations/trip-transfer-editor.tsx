@@ -132,7 +132,7 @@ function EmptyTransfer({
   const label = kind === 'destination' ? 'Plan travel' : `Plan travel to ${toLabel}`;
 
   return (
-    <button
+    <Button
       aria-label={`Plan travel from ${fromLabel} to ${toLabel}`}
       className="group flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border px-3 py-2.5 text-left text-xs font-medium text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       data-from={fromLabel}
@@ -140,10 +140,11 @@ function EmptyTransfer({
       data-to={toLabel}
       onClick={onEdit}
       type="button"
+      unstyled
     >
       <Plus className="size-3.5 shrink-0" />
       {label}
-    </button>
+    </Button>
   );
 }
 
@@ -166,13 +167,13 @@ function TransferSummary({
 }) {
   const selectedMode = transportModeFor(transfer.mode);
   const exactTiming = transfer.timing
-    ? formatDayTimeRange(
-        tripStartDate,
-        transfer.timing.startDay,
-        transfer.timing.startTime,
-        transfer.timing.endDay,
-        transfer.timing.endTime
-      )
+    ? formatDayTimeRange({
+        startDate: tripStartDate,
+        startDay: transfer.timing.startDay,
+        startTime: transfer.timing.startTime,
+        endDay: transfer.timing.endDay,
+        endTime: transfer.timing.endTime
+      })
     : null;
   const ModeIcon = selectedMode.icon;
 

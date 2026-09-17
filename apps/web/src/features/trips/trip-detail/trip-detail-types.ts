@@ -1,1 +1,1 @@
-export type { TripNavigation, TripState } from '@/types/trips';
+export type { LoadedTrip, TripNavigation, TripState } from '@/types/trips';

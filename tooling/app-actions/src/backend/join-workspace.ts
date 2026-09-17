@@ -6,10 +6,16 @@ import type { AppWorkspace } from './ensure-workspace';
 
 export async function joinWorkspace(
   backend: BackendSession,
-  owner: AuthenticatedAppUser,
-  member: AuthenticatedAppUser,
-  _workspace: AppWorkspace,
-  isMember: boolean
+  {
+    isMember,
+    member,
+    owner
+  }: {
+    isMember: boolean;
+    member: AuthenticatedAppUser;
+    owner: AuthenticatedAppUser;
+    workspace: AppWorkspace;
+  }
 ) {
   if (isMember) return 'existing' as const;
 

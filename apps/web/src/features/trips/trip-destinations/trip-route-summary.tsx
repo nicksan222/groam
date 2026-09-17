@@ -39,13 +39,14 @@ export function TripRouteSummary({
           <ol className="space-y-1">
             {destinations.map((destination, index) => (
               <li className="relative min-w-0" key={destination.id}>
-                <button
+                <Button
                   aria-label={`Jump to ${destination.name}`}
                   className="group flex w-full items-center gap-3 rounded-2xl px-2 py-3 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   onClick={() =>
                     jumpToStop(destination.id, dayPlanner ? destination.startDay : null)
                   }
                   type="button"
+                  unstyled
                 >
                   <span className="relative grid size-8 shrink-0 place-items-center rounded-full border border-border bg-background text-[11px] font-semibold tabular-nums transition-colors group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground">
                     {String(index + 1).padStart(2, '0')}
@@ -75,7 +76,7 @@ export function TripRouteSummary({
                       className="size-4 text-muted-foreground/50 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary motion-reduce:transform-none"
                     />
                   )}
-                </button>
+                </Button>
               </li>
             ))}
           </ol>

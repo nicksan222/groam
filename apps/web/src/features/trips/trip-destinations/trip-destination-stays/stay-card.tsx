@@ -22,13 +22,13 @@ export function StayCard({
   stay: Stay;
   tripStartDate: null | string;
 }) {
-  const timing = formatDayTimeRange(
-    tripStartDate,
-    stay.checkInDay,
-    stay.checkInTime,
-    stay.checkOutDay,
-    stay.checkOutTime
-  );
+  const timing = formatDayTimeRange({
+    startDate: tripStartDate,
+    startDay: stay.checkInDay,
+    startTime: stay.checkInTime,
+    endDay: stay.checkOutDay,
+    endTime: stay.checkOutTime
+  });
   return (
     <Timeline.Card
       className="rounded-xl border-border bg-card"

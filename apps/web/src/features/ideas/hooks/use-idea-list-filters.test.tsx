@@ -75,4 +75,17 @@ describe('useIdeaListFilters', () => {
     });
     expect(result.current.visibleProposals.map((item) => item.id)).toEqual(['p2']);
   });
+
+  test('accepts an explicit all filter when proposals have not loaded', () => {
+    const { result } = renderHook(() =>
+      useIdeaListFilters({
+        defaultStatus: 'all',
+        emptyFilterMessage: () => 'none',
+        proposals: undefined,
+        viewerUserId: null
+      })
+    );
+    expect(result.current.visibleProposals).toEqual([]);
+    expect(result.current.statusFilter).toBe('all');
+  });
 });

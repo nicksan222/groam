@@ -113,90 +113,22 @@ export function AiSettings() {
           </p>
         ) : null}
         {canManage ? (
-          <form className="space-y-4" onSubmit={submit}>
-            <FormField label="Provider">
-              <Select onValueChange={selectProvider} value={provider}>
-                <SelectTrigger className="w-full" data-testid={testIds.settingsAiProvider}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {aiKeyProviders.map((option) => (
-                    <SelectItem key={option.id} value={option.id}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FormField>
-            <FormField description={preset.hint} label="API key">
-              <Input
-                autoComplete="off"
-                data-testid={testIds.settingsAiKey}
-                disabled={draft.isPending}
-                onChange={(event) => updateDraft({ apiKey: event.target.value })}
-                placeholder={configured ? '••••••••' : preset.keyPlaceholder}
-                type="password"
-                value={draft.apiKey}
-              />
-            </FormField>
-            {preset.requiresBaseUrl ? (
-              <FormField
-                description="Ollama defaults to http://127.0.0.1:11434/v1. LM Studio often uses http://127.0.0.1:1234/v1."
-                label="Base URL"
-              >
-                <Input
-                  autoComplete="off"
-                  data-testid={testIds.settingsAiBaseUrl}
-                  disabled={draft.isPending}
-                  onChange={(event) => updateDraft({ baseUrl: event.target.value })}
-                  placeholder={preset.baseURL ?? 'http://127.0.0.1:11434/v1'}
-                  value={baseUrl}
-                />
-              </FormField>
-            ) : null}
-            {preset.webSearch === false ? (
-              <p className="text-sm text-muted-foreground">
-                Web search is off for this host. Groam can still plan from your trips and notes.
-              </p>
-            ) : null}
-            <FormField
-              description={
-                preset.defaultModel
-                  ? `Leave blank to use ${preset.defaultModel}.`
-                  : 'Leave blank to use the provider default.'
-              }
-              label="Model"
-            >
-              <Input
-                autoComplete="off"
-                data-testid={testIds.settingsAiModel}
-                disabled={draft.isPending}
-                onChange={(event) => updateDraft({ model: event.target.value })}
-                placeholder={preset.defaultModel ?? 'Provider default'}
-                value={model}
-              />
-            </FormField>
-            <FormFeedback error={draft.error} message={draft.message} />
-            <SettingsFooter>
-              <Button
-                data-testid={testIds.settingsAiRemove}
-                disabled={draft.isPending || !configured}
-                onClick={() => void remove()}
-                type="button"
-                variant="outline"
-              >
-                Remove key
-              </Button>
-              <Button
-                data-testid={testIds.settingsAiSave}
-                disabled={draft.isPending || !canSave}
-                type="submit"
-              >
-                {draft.isPending && <Spinner />}
-                {draft.apiKey.trim() ? 'Save key' : 'Save'}
-              </Button>
-            </SettingsFooter>
-          </form>
+          <AiSettingsForm
+            settings={{
+              baseUrl,
+              canSave,
+              configured,
+              draft,
+              model,
+              preset,
+              provider,
+              remove,
+              save,
+              selectProvider,
+              updateDraft
+            }}
+            submit={submit}
+          />
         ) : (
           <p className="text-sm text-muted-foreground">
             {managementNotice(configured, fromEnvironment)}
@@ -204,5 +136,125 @@ export function AiSettings() {
         )}
       </SettingsPanel>
     </SettingsSplitLayout>
+  );
+}
+
+function AiSettingsForm({
+  settings,
+  submit
+}: {
+  settings: Pick<
+    ReturnType<typeof useAiSettings>,
+    | 'baseUrl'
+    | 'canSave'
+    | 'configured'
+    | 'draft'
+    | 'model'
+    | 'preset'
+    | 'provider'
+    | 'remove'
+    | 'save'
+    | 'selectProvider'
+    | 'updateDraft'
+  >;
+  submit: (event: FormEvent) => void;
+}) {
+  const {
+    baseUrl,
+    canSave,
+    configured,
+    draft,
+    model,
+    preset,
+    provider,
+    remove,
+    selectProvider,
+    updateDraft
+  } = settings;
+  return (
+    <form className="space-y-4" onSubmit={submit}>
+      <FormField label="Provider">
+        <Select onValueChange={selectProvider} value={provider}>
+          <SelectTrigger className="w-full" data-testid={testIds.settingsAiProvider}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {aiKeyProviders.map((option) => (
+              <SelectItem key={option.id} value={option.id}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </FormField>
+      <FormField description={preset.hint} label="API key">
+        <Input
+          autoComplete="off"
+          data-testid={testIds.settingsAiKey}
+          disabled={draft.isPending}
+          onChange={(event) => updateDraft({ apiKey: event.target.value })}
+          placeholder={configured ? '••••••••' : preset.keyPlaceholder}
+          type="password"
+          value={draft.apiKey}
+        />
+      </FormField>
+      {preset.requiresBaseUrl ? (
+        <FormField
+          description="Ollama defaults to http://127.0.0.1:11434/v1. LM Studio often uses http://127.0.0.1:1234/v1."
+          label="Base URL"
+        >
+          <Input
+            autoComplete="off"
+            data-testid={testIds.settingsAiBaseUrl}
+            disabled={draft.isPending}
+            onChange={(event) => updateDraft({ baseUrl: event.target.value })}
+            placeholder={preset.baseURL ?? 'http://127.0.0.1:11434/v1'}
+            value={baseUrl}
+          />
+        </FormField>
+      ) : null}
+      {preset.webSearch === false ? (
+        <p className="text-sm text-muted-foreground">
+          Web search is off for this host. Groam can still plan from your trips and notes.
+        </p>
+      ) : null}
+      <FormField
+        description={
+          preset.defaultModel
+            ? `Leave blank to use ${preset.defaultModel}.`
+            : 'Leave blank to use the provider default.'
+        }
+        label="Model"
+      >
+        <Input
+          autoComplete="off"
+          data-testid={testIds.settingsAiModel}
+          disabled={draft.isPending}
+          onChange={(event) => updateDraft({ model: event.target.value })}
+          placeholder={preset.defaultModel ?? 'Provider default'}
+          value={model}
+        />
+      </FormField>
+      <FormFeedback error={draft.error} message={draft.message} />
+      <SettingsFooter>
+        <Button
+          data-testid={testIds.settingsAiRemove}
+          disabled={draft.isPending || !configured}
+          onClick={() => void remove()}
+          type="button"
+          variant="outline"
+        >
+          Remove key
+        </Button>
+        <Button
+          data-testid={testIds.settingsAiSave}
+          disabled={draft.isPending || !canSave}
+          type="submit"
+        >
+          {draft.isPending && <Spinner />}
+          {draft.apiKey.trim() ? 'Save key' : 'Save'}
+        </Button>
+      </SettingsFooter>
+    </form>
   );
 }

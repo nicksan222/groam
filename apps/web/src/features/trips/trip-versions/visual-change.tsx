@@ -129,13 +129,14 @@ export function VisualChange({
   return (
     <Shell.Card as="article" className="overflow-hidden">
       <div className="flex items-center gap-2 px-4 py-3">
-        <button
+        <Button
           aria-controls={detailId}
           aria-expanded={expanded}
           aria-label={`${expanded ? 'Collapse' : 'Expand'} ${change.label}`}
           className="group flex min-w-0 flex-1 items-center gap-3 rounded-md py-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
           onClick={onToggle}
           type="button"
+          unstyled
         >
           <span className={`grid size-9 shrink-0 place-items-center rounded-lg border ${tone}`}>
             <Icon className="size-4" />
@@ -151,7 +152,7 @@ export function VisualChange({
             aria-hidden
             className={`size-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none ${expanded ? '' : '-rotate-90'}`}
           />
-        </button>
+        </Button>
         {onComment && (
           <Button
             aria-label={`Comment on ${change.label}`}

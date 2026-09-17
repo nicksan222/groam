@@ -45,4 +45,18 @@ describe('useReviewComment', () => {
     });
     expect(result.current.isReplying).toBe(false);
   });
+
+  test('does not submit blank or failed replies and keeps the draft', async () => {
+    const onReply = vi.fn().mockResolvedValue(false);
+    const { result } = renderHook(() =>
+      useReviewComment({ onReply, onResolve: vi.fn().mockResolvedValue(false), resolvedAt: null })
+    );
+
+    await act(async () => expect(await result.current.submitReply()).toBe(false));
+    expect(onReply).not.toHaveBeenCalled();
+    act(() => result.current.setReply('Needs context'));
+    await act(async () => expect(await result.current.submitReply()).toBe(false));
+    expect(result.current.reply).toBe('Needs context');
+    await act(async () => expect(await result.current.toggleResolved()).toBe(false));
+  });
 });

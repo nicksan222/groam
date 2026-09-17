@@ -1,4 +1,5 @@
 import { Button } from '@groam/ui/components/button';
+import { Input } from '@groam/ui/components/input';
 import { LiftCard } from '@groam/ui/components/lift-card';
 import { Spinner } from '@groam/ui/components/spinner';
 import { Camera, Map as MapIcon, MapPinned, Plus, RotateCcw } from 'lucide-react';
@@ -119,7 +120,7 @@ export function TripCover({
 
         {trip.permissions.canEditCover && (
           <>
-            <input
+            <Input
               accept="image/avif,image/jpeg,image/png,image/webp"
               aria-label="Choose replacement cover image"
               className="sr-only"

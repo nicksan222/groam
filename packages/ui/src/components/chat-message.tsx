@@ -89,42 +89,95 @@ function DiscussionChatMessage({
             {authorName ?? 'Participant'}
           </p>
         )}
-        <div className={cn('relative', reactions && 'pb-4')}>
-          <div className="space-y-1.5">
-            {hasAttachments && (
-              <div className={`flex flex-col gap-2 ${mine ? 'items-end' : 'items-start'}`}>
-                {attachments.map((attachment) => (
-                  <MessageAttachmentChip
-                    attachment={attachment}
-                    key={`${attachment.name}-${attachment.url}`}
-                    mediaOnly={mediaOnly}
-                    mine={mine}
-                  />
-                ))}
-              </div>
-            )}
-            {hasText && (
-              <div
-                className={
-                  mine
-                    ? 'rounded-2xl rounded-br-md bg-secondary px-3 py-2 text-left text-sm leading-5 text-secondary-foreground shadow-xs/5'
-                    : 'rounded-2xl rounded-bl-md bg-transparent px-3 py-2 text-sm leading-5'
-                }
-              >
-                <p className="whitespace-pre-wrap wrap-break-word">{text}</p>
-              </div>
-            )}
-          </div>
-          {actions}
-          {reactions}
-        </div>
-        {(status === 'pending' || createdAt) && (
-          <DeliveryStatus>
-            {status === 'pending' ? 'Sending…' : formatMessageTime(createdAt ?? 0)}
-          </DeliveryStatus>
-        )}
+        <DiscussionMessageBody
+          actions={actions}
+          attachments={attachments}
+          hasText={hasText}
+          mediaOnly={mediaOnly}
+          mine={mine}
+          reactions={reactions}
+          text={text}
+        />
+        <DiscussionMessageStatus createdAt={createdAt} status={status} />
       </div>
     </div>
+  );
+}
+
+function DiscussionMessageBody({
+  actions,
+  attachments,
+  hasText,
+  mediaOnly,
+  mine,
+  reactions,
+  text
+}: {
+  actions?: ReactNode;
+  attachments: ChatMessageAttachment[];
+  hasText: boolean;
+  mediaOnly: boolean;
+  mine: boolean;
+  reactions?: ReactNode;
+  text: string;
+}) {
+  return (
+    <div className={cn('relative', reactions && 'pb-4')}>
+      <div className="space-y-1.5">
+        {attachments.length > 0 && (
+          <DiscussionAttachments attachments={attachments} mediaOnly={mediaOnly} mine={mine} />
+        )}
+        {hasText && <DiscussionText mine={mine} text={text} />}
+      </div>
+      {actions}
+      {reactions}
+    </div>
+  );
+}
+
+function DiscussionAttachments({
+  attachments,
+  mediaOnly,
+  mine
+}: {
+  attachments: ChatMessageAttachment[];
+  mediaOnly: boolean;
+  mine: boolean;
+}) {
+  return (
+    <div className={`flex flex-col gap-2 ${mine ? 'items-end' : 'items-start'}`}>
+      {attachments.map((attachment) => (
+        <MessageAttachmentChip
+          attachment={attachment}
+          key={`${attachment.name}-${attachment.url}`}
+          mediaOnly={mediaOnly}
+          mine={mine}
+        />
+      ))}
+    </div>
+  );
+}
+
+function DiscussionText({ mine, text }: { mine: boolean; text: string }) {
+  return (
+    <div
+      className={
+        mine
+          ? 'rounded-2xl rounded-br-md bg-secondary px-3 py-2 text-left text-sm leading-5 text-secondary-foreground shadow-xs/5'
+          : 'rounded-2xl rounded-bl-md bg-transparent px-3 py-2 text-sm leading-5'
+      }
+    >
+      <p className="whitespace-pre-wrap wrap-break-word">{text}</p>
+    </div>
+  );
+}
+
+function DiscussionMessageStatus({ createdAt, status }: { createdAt?: number; status?: string }) {
+  if (status !== 'pending' && !createdAt) return null;
+  return (
+    <DeliveryStatus>
+      {status === 'pending' ? 'Sending…' : formatMessageTime(createdAt ?? 0)}
+    </DeliveryStatus>
   );
 }
 
