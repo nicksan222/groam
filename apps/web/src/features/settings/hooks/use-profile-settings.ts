@@ -4,6 +4,7 @@ import { useShallow } from 'zustand/react/shallow';
 import type { Session } from '@/features/workspace/workspace-shell/workspace-state';
 import { errorMessage } from '@/lib/errors';
 import { useProfileSettingsStore } from '@/lib/stores/settings-stores';
+import { isValidUsername, usernameRequirements } from '@/lib/username';
 
 export function useProfileSettings(user: Session['user']) {
   const state = useProfileSettingsStore(
@@ -24,8 +25,8 @@ export function useProfileSettings(user: Session['user']) {
   }, [resetFromUser, user]);
 
   const save = async () => {
-    if (!/^[a-zA-Z0-9_.]{3,30}$/u.test(state.username)) {
-      patch({ error: 'Use 3–30 letters, numbers, underscores, or dots for your username.' });
+    if (!isValidUsername(state.username)) {
+      patch({ error: usernameRequirements });
       return;
     }
     patch({ error: null, isPending: true, message: null });

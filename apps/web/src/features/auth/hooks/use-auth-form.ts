@@ -2,6 +2,7 @@ import { authClient } from '@groam/auth/client';
 import { useShallow } from 'zustand/react/shallow';
 import { errorMessage } from '@/lib/errors';
 import { useAuthFormStore } from '@/lib/stores/auth-form-store';
+import { isValidUsername, usernameRequirements } from '@/lib/username';
 
 export function useAuthForm() {
   const state = useAuthFormStore(
@@ -106,9 +107,7 @@ export function useAuthForm() {
   };
 
   const signUp = async (username: string) => {
-    if (!/^[a-zA-Z0-9_.]{3,30}$/u.test(username)) {
-      throw new Error('Use 3–30 letters, numbers, underscores, or dots for your username.');
-    }
+    if (!isValidUsername(username)) throw new Error(usernameRequirements);
     return await authClient.signUp.email({
       email: `${crypto.randomUUID()}@users.invalid`,
       name: state.name.trim(),
