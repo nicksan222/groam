@@ -5,7 +5,7 @@ import { AvatarImage } from '@groam/ui/components/avatar-image';
 import { Button } from '@groam/ui/components/button';
 import Shell from '@groam/ui/components/shell/client';
 import { initials } from '@groam/ui/lib/avatar';
-import { KeyRound, Plus } from 'lucide-react';
+import { KeyRound } from 'lucide-react';
 import { GroupPeopleSettings } from '@/features/group/group-people/group-people-settings';
 import { AiSettings } from '@/features/settings/settings-panels/ai-settings';
 import { AppearanceSettings } from '@/features/settings/settings-panels/appearance-settings';
@@ -82,27 +82,15 @@ export function SettingsView({
           <Shell.BannerHeading
             actions={
               activeSection === 'group' ? (
-                <>
-                  <Button
-                    data-testid={testIds.inviteMember}
-                    onClick={() => openDialog('invite')}
-                    size="sm"
-                    variant="outline"
-                  >
-                    <KeyRound />
-                    <span className="max-sm:sr-only">Create code</span>
-                  </Button>
-                  <Button
-                    className="shrink-0"
-                    data-testid={testIds.settingsNewGroup}
-                    onClick={() => openDialog('create-organization')}
-                    size="sm"
-                    variant="outline"
-                  >
-                    <Plus />
-                    <span className="max-sm:sr-only">New group</span>
-                  </Button>
-                </>
+                <Button
+                  data-testid={testIds.inviteMember}
+                  onClick={() => openDialog('invite')}
+                  size="sm"
+                  variant="outline"
+                >
+                  <KeyRound />
+                  <span className="max-sm:sr-only">Create code</span>
+                </Button>
               ) : (
                 <SettingsHeaderAvatar user={session.user} />
               )

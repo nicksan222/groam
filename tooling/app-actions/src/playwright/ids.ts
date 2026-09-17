@@ -178,7 +178,6 @@ export const ids = {
   settingsDataExport: 'settings-data-export',
   settingsDataImport: 'settings-data-import',
   settingsDataPath: 'settings-data-path',
-  settingsNewGroup: 'settings-new-group',
   settingsSectionAi: 'settings-section-ai',
   settingsSectionAppearance: 'settings-section-appearance',
   settingsSectionData: 'settings-section-data',
