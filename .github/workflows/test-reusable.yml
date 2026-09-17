@@ -58,7 +58,9 @@ jobs:
     env:
       CI: 'true'
       CONVEX_AGENT_MODE: anonymous
-      PLAYWRIGHT_BASE_URL: http://127.0.0.1:3211
+      # WebAuthn rejects IP addresses as relying-party domains. Keep the local
+      # static site on the same loopback service, but address it by hostname.
+      PLAYWRIGHT_BASE_URL: http://localhost:3211
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
