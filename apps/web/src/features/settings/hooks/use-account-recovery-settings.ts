@@ -1,5 +1,6 @@
 import { authClient } from '@groam/auth/client';
 import { useState } from 'react';
+import { downloadTextFile } from '@/lib/download-text-file';
 import { errorMessage } from '@/lib/errors';
 
 function downloadAccountRecoveryCodes(codes: string[]) {
@@ -10,12 +11,7 @@ function downloadAccountRecoveryCodes(codes: string[]) {
     '',
     'Any one code can reset your password. A successful reset or a new set invalidates this entire set.'
   ].join('\n');
-  const href = URL.createObjectURL(new Blob([contents], { type: 'text/plain;charset=utf-8' }));
-  const link = document.createElement('a');
-  link.download = 'groam-account-recovery-codes.txt';
-  link.href = href;
-  link.click();
-  URL.revokeObjectURL(href);
+  downloadTextFile('groam-account-recovery-codes.txt', contents);
 }
 
 export function useAccountRecoverySettings() {

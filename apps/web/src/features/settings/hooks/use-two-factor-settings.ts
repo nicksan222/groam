@@ -1,5 +1,6 @@
 import { authClient } from '@groam/auth/client';
 import { useState } from 'react';
+import { downloadTextFile } from '@/lib/download-text-file';
 import { errorMessage } from '@/lib/errors';
 import type { TwoFactorEnrollment } from '@/types/account-security';
 
@@ -7,12 +8,7 @@ export function downloadBackupCodes(codes: string[]) {
   const contents = ['Groam backup codes', '', ...codes, '', 'Each code can be used once.'].join(
     '\n'
   );
-  const href = URL.createObjectURL(new Blob([contents], { type: 'text/plain;charset=utf-8' }));
-  const link = document.createElement('a');
-  link.download = 'groam-backup-codes.txt';
-  link.href = href;
-  link.click();
-  URL.revokeObjectURL(href);
+  downloadTextFile('groam-backup-codes.txt', contents);
 }
 
 export function useTwoFactorSettings(initiallyEnabled: boolean) {
