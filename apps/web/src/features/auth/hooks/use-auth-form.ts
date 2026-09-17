@@ -80,9 +80,9 @@ export function useAuthForm() {
     patch({ error: null, isPending: true });
     try {
       const result = await authClient.accountRecovery.resetPassword({
-        code: state.recoveryCode,
+        code: state.recoveryCode.trim(),
         newPassword: state.newPassword,
-        username: state.identifier
+        username: state.identifier.trim()
       });
       if (result.error) throw new Error(result.error.message ?? 'Account recovery failed');
       patch({

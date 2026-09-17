@@ -74,9 +74,9 @@ describe('useAuthForm', () => {
     act(() => result.current.switchToRecovery());
     act(() =>
       result.current.updateState({
-        identifier: 'traveler',
+        identifier: '  traveler  ',
         newPassword: 'new-password-123',
-        recoveryCode: 'ABCD-EFGH-IJKL-MNOP-QRST'
+        recoveryCode: '  ABCD-EFGH-IJKL-MNOP-QRST  '
       })
     );
     await act(() => result.current.submit());
