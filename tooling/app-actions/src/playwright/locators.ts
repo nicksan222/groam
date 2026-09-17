@@ -1,6 +1,12 @@
 import type { Locator, Page } from '@playwright/test';
 import { ids } from './ids';
 
+const idPathPatterns = {
+  ideas: /\/ideas\/([^/]+)/u,
+  issues: /\/issues\/([^/]+)/u,
+  trips: /\/trips\/([^/]+)/u
+} as const;
+
 export function by(page: Page, id: (typeof ids)[keyof typeof ids]): Locator {
   return page.getByTestId(id);
 }
@@ -80,7 +86,7 @@ export function calendarDay(page: Page, dayValue?: string): Locator {
 }
 
 export function idFromPath(page: Page, kind: 'ideas' | 'issues' | 'trips'): string {
-  const match = new URL(page.url()).pathname.match(new RegExp(`/${kind}/([^/]+)`, 'u'));
+  const match = new URL(page.url()).pathname.match(idPathPatterns[kind]);
   if (!match?.[1]) throw new Error(`Expected a /${kind}/:id URL, got ${page.url()}`);
   return match[1];
 }
