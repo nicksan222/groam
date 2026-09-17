@@ -54,6 +54,16 @@ describe('useAuthForm', () => {
     expect(result.current.state.error).toBe('Complete every required field to continue.');
   });
 
+  test('rejects passwords shorter than the shared minimum', async () => {
+    const { result } = renderHook(() => useAuthForm());
+    act(() => result.current.updateState({ identifier: 'traveler', password: 'short' }));
+
+    await act(() => result.current.submit());
+
+    expect(auth.signIn).not.toHaveBeenCalled();
+    expect(result.current.state.error).toBe('Your password must be at least 8 characters.');
+  });
+
   test('rejects invalid sign-up usernames', async () => {
     const { result } = renderHook(() => useAuthForm());
     act(() =>
@@ -88,6 +98,46 @@ describe('useAuthForm', () => {
     expect(result.current.state.flow).toBe('signIn');
   });
 
+  test('validates recovery fields before calling the provider', async () => {
+    const { result } = renderHook(() => useAuthForm());
+    act(() => result.current.switchToRecovery());
+
+    await act(() => result.current.submit());
+    expect(result.current.state.error).toBe('Complete every required field to continue.');
+
+    act(() =>
+      result.current.updateState({
+        identifier: 'traveler',
+        newPassword: 'short',
+        recoveryCode: 'ABCD-EFGH-IJKL-MNOP-QRST'
+      })
+    );
+    await act(() => result.current.submit());
+
+    expect(auth.recoverAccount).not.toHaveBeenCalled();
+    expect(result.current.state.error).toBe('Your password must be at least 8 characters.');
+  });
+
+  test('surfaces recovery and passkey provider errors', async () => {
+    auth.recoverAccount.mockResolvedValue({ data: null, error: { message: 'Code expired' } });
+    auth.passkey.mockResolvedValue({ data: null, error: { message: 'Passkey cancelled' } });
+    const { result } = renderHook(() => useAuthForm());
+    act(() => result.current.switchToRecovery());
+    act(() =>
+      result.current.updateState({
+        identifier: 'traveler',
+        newPassword: 'new-password-123',
+        recoveryCode: 'ABCD-EFGH-IJKL-MNOP-QRST'
+      })
+    );
+
+    await act(() => result.current.submit());
+    expect(result.current.state.error).toBe('Code expired');
+
+    await act(() => result.current.signInWithPasskey());
+    expect(result.current.state).toMatchObject({ error: 'Passkey cancelled', isPending: false });
+  });
+
   test('surfaces sign-in auth errors', async () => {
     auth.signIn.mockResolvedValue({ data: null, error: { message: 'Invalid credentials' } });
     const { result } = renderHook(() => useAuthForm());
@@ -118,6 +168,21 @@ describe('useAuthForm', () => {
       code: 'backup-code',
       trustDevice: false
     });
+  });
+
+  test('requires a two-factor code and surfaces invalid backup codes', async () => {
+    const { result } = renderHook(() => useAuthForm());
+    act(() => result.current.updateState({ needsTwoFactor: true }));
+
+    await act(() => result.current.submit());
+    expect(result.current.state.error).toBe('Enter an authenticator or backup code.');
+
+    auth.verifyTotp.mockResolvedValue({ data: null, error: { message: 'Invalid TOTP' } });
+    auth.verifyBackupCode.mockResolvedValue({ data: null, error: { message: 'Invalid backup' } });
+    act(() => result.current.updateState({ twoFactorCode: 'invalid-code' }));
+    await act(() => result.current.submit());
+
+    expect(result.current.state).toMatchObject({ error: 'Invalid backup', isPending: false });
   });
 
   test('switchFlow clears the password and error', () => {

@@ -34,6 +34,9 @@ export const auth = {
   get recoverAccount() {
     return doubles.resetPasswordWithRecoveryCode;
   },
+  get passkey() {
+    return doubles.passkey;
+  },
   get signIn() {
     return doubles.signInUsername;
   },

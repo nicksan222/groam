@@ -10,6 +10,24 @@ function signInWithIdentifier(identifier: string, password: string) {
     : authClient.signIn.username({ password, username: identifier });
 }
 
+function authenticationValidationError({
+  identifier,
+  isSignIn,
+  name,
+  password
+}: {
+  identifier: string;
+  isSignIn: boolean;
+  name: string;
+  password: string;
+}) {
+  if (!identifier || !password || (!isSignIn && !name.trim())) {
+    return 'Complete every required field to continue.';
+  }
+  if (password.length < 8) return 'Your password must be at least 8 characters.';
+  return null;
+}
+
 export function useAuthForm() {
   const state = useAuthFormStore(
     useShallow((store) => ({
@@ -40,12 +58,19 @@ export function useAuthForm() {
       await verifyTwoFactor();
       return;
     }
-    if (!state.identifier || !state.password || (!isSignIn && !state.name.trim())) {
-      patch({ error: 'Complete every required field to continue.' });
-      return;
-    }
-    if (state.password.length < 8) {
-      patch({ error: 'Your password must be at least 8 characters.' });
+
+    await authenticate();
+  };
+
+  const authenticate = async () => {
+    const validationError = authenticationValidationError({
+      identifier: state.identifier,
+      isSignIn,
+      name: state.name,
+      password: state.password
+    });
+    if (validationError) {
+      patch({ error: validationError });
       return;
     }
 

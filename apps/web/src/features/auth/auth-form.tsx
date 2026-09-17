@@ -105,48 +105,53 @@ function AuthFields({
   state,
   updateState
 }: Pick<AuthFormProps, 'isRecovery' | 'isSignIn' | 'state' | 'updateState'>) {
-  return (
-    <div className="flex flex-col gap-5">
-      {isRecovery ? (
-        <>
-          <FormField label="Username" required>
-            <Input
-              autoCapitalize="none"
-              autoComplete="username"
-              autoFocus
-              data-testid={testIds.authRecoveryUsername}
-              disabled={state.isPending}
-              onChange={(event) => updateState({ error: null, identifier: event.target.value })}
-              required
-              value={state.identifier}
-            />
-          </FormField>
-          <FormField label="Saved recovery code" required>
-            <Input
-              autoCapitalize="characters"
-              autoComplete="off"
-              data-testid={testIds.authRecoveryCode}
-              disabled={state.isPending}
-              onChange={(event) => updateState({ error: null, recoveryCode: event.target.value })}
-              placeholder="XXXX-XXXX-XXXX-XXXX-XXXX"
-              required
-              value={state.recoveryCode}
-            />
-          </FormField>
-          <FormField description="Use at least 8 characters." label="New password" required>
-            <Input
-              autoComplete="new-password"
-              data-testid={testIds.authRecoveryNewPassword}
-              disabled={state.isPending}
-              minLength={8}
-              onChange={(event) => updateState({ error: null, newPassword: event.target.value })}
-              required
-              type="password"
-              value={state.newPassword}
-            />
-          </FormField>
-        </>
-      ) : state.needsTwoFactor ? (
+  if (isRecovery) {
+    return (
+      <div className="flex flex-col gap-5">
+        <FormField label="Username" required>
+          <Input
+            autoCapitalize="none"
+            autoComplete="username"
+            autoFocus
+            data-testid={testIds.authRecoveryUsername}
+            disabled={state.isPending}
+            onChange={(event) => updateState({ error: null, identifier: event.target.value })}
+            required
+            value={state.identifier}
+          />
+        </FormField>
+        <FormField label="Saved recovery code" required>
+          <Input
+            autoCapitalize="characters"
+            autoComplete="off"
+            data-testid={testIds.authRecoveryCode}
+            disabled={state.isPending}
+            onChange={(event) => updateState({ error: null, recoveryCode: event.target.value })}
+            placeholder="XXXX-XXXX-XXXX-XXXX-XXXX"
+            required
+            value={state.recoveryCode}
+          />
+        </FormField>
+        <FormField description="Use at least 8 characters." label="New password" required>
+          <Input
+            autoComplete="new-password"
+            data-testid={testIds.authRecoveryNewPassword}
+            disabled={state.isPending}
+            minLength={8}
+            onChange={(event) => updateState({ error: null, newPassword: event.target.value })}
+            required
+            type="password"
+            value={state.newPassword}
+          />
+        </FormField>
+        <FormFeedback error={state.error} />
+      </div>
+    );
+  }
+
+  if (state.needsTwoFactor) {
+    return (
+      <div className="flex flex-col gap-5">
         <FormField
           description="Use your authenticator app or one of your downloaded backup codes."
           label="Verification code"
@@ -163,54 +168,57 @@ function AuthFields({
             value={state.twoFactorCode}
           />
         </FormField>
-      ) : (
-        <>
-          {!isSignIn ? (
-            <FormField label="Name" required>
-              <Input
-                autoComplete="name"
-                data-testid={testIds.authName}
-                disabled={state.isPending}
-                onChange={(event) => updateState({ error: null, name: event.target.value })}
-                placeholder="Your name"
-                required
-                value={state.name}
-              />
-            </FormField>
-          ) : null}
-          <FormField label={isSignIn ? 'Username or email' : 'Username'} required>
-            <Input
-              autoCapitalize="none"
-              autoComplete="username"
-              data-testid={testIds.authEmail}
-              disabled={state.isPending}
-              maxLength={isSignIn ? undefined : 30}
-              minLength={isSignIn ? undefined : 3}
-              onChange={(event) => updateState({ error: null, identifier: event.target.value })}
-              placeholder={isSignIn ? 'username' : 'choose-a-username'}
-              required
-              value={state.identifier}
-            />
-          </FormField>
-          <FormField
-            description={isSignIn ? undefined : 'Use at least 8 characters.'}
-            label="Password"
+        <FormFeedback error={state.error} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-5">
+      {!isSignIn ? (
+        <FormField label="Name" required>
+          <Input
+            autoComplete="name"
+            data-testid={testIds.authName}
+            disabled={state.isPending}
+            onChange={(event) => updateState({ error: null, name: event.target.value })}
+            placeholder="Your name"
             required
-          >
-            <Input
-              autoComplete={isSignIn ? 'current-password' : 'new-password'}
-              data-testid={testIds.authPassword}
-              disabled={state.isPending}
-              minLength={8}
-              onChange={(event) => updateState({ error: null, password: event.target.value })}
-              placeholder="Password"
-              required
-              type="password"
-              value={state.password}
-            />
-          </FormField>
-        </>
-      )}
+            value={state.name}
+          />
+        </FormField>
+      ) : null}
+      <FormField label={isSignIn ? 'Username or email' : 'Username'} required>
+        <Input
+          autoCapitalize="none"
+          autoComplete="username"
+          data-testid={testIds.authEmail}
+          disabled={state.isPending}
+          maxLength={isSignIn ? undefined : 30}
+          minLength={isSignIn ? undefined : 3}
+          onChange={(event) => updateState({ error: null, identifier: event.target.value })}
+          placeholder={isSignIn ? 'username' : 'choose-a-username'}
+          required
+          value={state.identifier}
+        />
+      </FormField>
+      <FormField
+        description={isSignIn ? undefined : 'Use at least 8 characters.'}
+        label="Password"
+        required
+      >
+        <Input
+          autoComplete={isSignIn ? 'current-password' : 'new-password'}
+          data-testid={testIds.authPassword}
+          disabled={state.isPending}
+          minLength={8}
+          onChange={(event) => updateState({ error: null, password: event.target.value })}
+          placeholder="Password"
+          required
+          type="password"
+          value={state.password}
+        />
+      </FormField>
       <FormFeedback error={state.error} />
     </div>
   );

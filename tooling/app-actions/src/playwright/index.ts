@@ -65,7 +65,7 @@ export {
   tripCard
 } from './locators';
 export { mockDestinationSearch } from './mock-destination-search';
-export { openSettingsGroupSection } from './navigation';
+export { openSettingsGroupSection, openSettingsSecuritySection } from './navigation';
 export { onePixelPng } from './one-pixel-png';
 export { openAppPath, reloadAppPage } from './open-app-path';
 export { openBackgroundActivity } from './open-background-activity';

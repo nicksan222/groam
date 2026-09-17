@@ -34,6 +34,24 @@ describe('usePasskeySettings', () => {
     expect(result.current.error).toBeNull();
   });
 
+  test('loads an empty list when the provider returns no data', async () => {
+    auth.listUserPasskeys.mockResolvedValue({ data: null, error: null });
+    const { result } = renderHook(() => usePasskeySettings());
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.passkeys).toEqual([]);
+  });
+
+  test('surfaces passkey loading errors', async () => {
+    auth.listUserPasskeys.mockResolvedValue({ data: null, error: { message: 'Loading failed' } });
+    const { result } = renderHook(() => usePasskeySettings());
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.error).toBe('Loading failed');
+  });
+
   test('adds a named passkey and refreshes the list', async () => {
     const { result } = renderHook(() => usePasskeySettings());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -43,6 +61,17 @@ describe('usePasskeySettings', () => {
     expect(auth.addPasskey).toHaveBeenCalledWith({ name: 'Phone' });
     expect(auth.listUserPasskeys).toHaveBeenCalledTimes(2);
     expect(result.current.pendingId).toBeNull();
+  });
+
+  test('uses the default passkey name and reports registration failures', async () => {
+    auth.addPasskey.mockResolvedValue({ data: null, error: { message: 'Registration failed' } });
+    const { result } = renderHook(() => usePasskeySettings());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(() => result.current.add('   '));
+
+    expect(auth.addPasskey).toHaveBeenCalledWith({ name: 'Passkey' });
+    expect(result.current).toMatchObject({ error: 'Registration failed', pendingId: null });
   });
 
   test('removes a passkey from local state', async () => {

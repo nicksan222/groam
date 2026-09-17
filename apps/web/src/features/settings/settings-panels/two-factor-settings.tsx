@@ -20,17 +20,7 @@ import { CurrentPasswordField } from './current-password-field';
 
 export function TwoFactorSettings({ enabled }: { enabled: boolean }) {
   const settings = useTwoFactorSettings(enabled);
-  const [code, setCode] = useState('');
   const [password, setPassword] = useState('');
-  const [qrCode, setQrCode] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!settings.enrollment) {
-      setQrCode(null);
-      return;
-    }
-    void QRCode.toDataURL(settings.enrollment.totpURI, { margin: 1, width: 224 }).then(setQrCode);
-  }, [settings.enrollment]);
 
   return (
     <SettingsPanel>
@@ -47,46 +37,7 @@ export function TwoFactorSettings({ enabled }: { enabled: boolean }) {
           </span>
         </p>
         {settings.enrollment && !settings.isEnabled ? (
-          <div className="space-y-4">
-            {qrCode ? (
-              <img
-                alt="Authenticator setup QR code"
-                className="size-56 rounded-lg border border-border"
-                src={qrCode}
-              />
-            ) : null}
-            <p
-              className="break-all rounded-lg bg-muted p-3 font-mono text-xs"
-              data-testid={testIds.settingsTwoFactorUri}
-            >
-              {settings.enrollment.totpURI}
-            </p>
-            <Button
-              data-testid={testIds.settingsTwoFactorDownload}
-              onClick={() => downloadBackupCodes(settings.enrollment?.backupCodes ?? [])}
-              type="button"
-              variant="outline"
-            >
-              <Download /> Download backup codes
-            </Button>
-            <FormField label="Authenticator code">
-              <Input
-                autoComplete="one-time-code"
-                data-testid={testIds.settingsTwoFactorCode}
-                inputMode="numeric"
-                onChange={(event) => setCode(event.target.value)}
-                value={code}
-              />
-            </FormField>
-            <Button
-              data-testid={testIds.settingsTwoFactorConfirm}
-              disabled={settings.isPending || !code.trim()}
-              onClick={() => void settings.confirmEnrollment(code)}
-              type="button"
-            >
-              {settings.isPending ? <Spinner /> : null} Confirm and enable
-            </Button>
-          </div>
+          <TwoFactorEnrollment enrollment={settings.enrollment} settings={settings} />
         ) : (
           <CurrentPasswordField
             disabled={settings.isPending}
@@ -96,44 +47,114 @@ export function TwoFactorSettings({ enabled }: { enabled: boolean }) {
           />
         )}
         <FormFeedback error={settings.error} message={settings.message} />
-        {!settings.enrollment || settings.isEnabled ? (
-          <SettingsFooter>
-            <p className="max-w-md text-xs text-muted-foreground">
-              Backup codes are single-use. Store the downloaded file somewhere separate from your
-              password.
-            </p>
-            {settings.isEnabled ? (
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  disabled={settings.isPending || !password}
-                  onClick={() => void settings.regenerate(password)}
-                  type="button"
-                  variant="outline"
-                >
-                  Regenerate codes
-                </Button>
-                <Button
-                  disabled={settings.isPending || !password}
-                  onClick={() => void settings.disable(password)}
-                  type="button"
-                  variant="destructive"
-                >
-                  Disable 2FA
-                </Button>
-              </div>
-            ) : (
-              <Button
-                data-testid={testIds.settingsTwoFactorStart}
-                disabled={settings.isPending || !password}
-                onClick={() => void settings.startEnrollment(password)}
-                type="button"
-              >
-                {settings.isPending ? <Spinner /> : null} Set up authenticator
-              </Button>
-            )}
-          </SettingsFooter>
-        ) : null}
+        <TwoFactorFooter password={password} settings={settings} />
       </div>
     </SettingsPanel>
+  );
+}
+
+function TwoFactorEnrollment({
+  enrollment,
+  settings
+}: {
+  enrollment: NonNullable<ReturnType<typeof useTwoFactorSettings>['enrollment']>;
+  settings: ReturnType<typeof useTwoFactorSettings>;
+}) {
+  const [code, setCode] = useState('');
+  const [qrCode, setQrCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    void QRCode.toDataURL(enrollment.totpURI, { margin: 1, width: 224 }).then(setQrCode);
+  }, [enrollment.totpURI]);
+
+  return (
+    <div className="space-y-4">
+      {qrCode ? (
+        <img
+          alt="Authenticator setup QR code"
+          className="size-56 rounded-lg border border-border"
+          src={qrCode}
+        />
+      ) : null}
+      <p
+        className="break-all rounded-lg bg-muted p-3 font-mono text-xs"
+        data-testid={testIds.settingsTwoFactorUri}
+      >
+        {enrollment.totpURI}
+      </p>
+      <Button
+        data-testid={testIds.settingsTwoFactorDownload}
+        onClick={() => downloadBackupCodes(enrollment.backupCodes)}
+        type="button"
+        variant="outline"
+      >
+        <Download /> Download backup codes
+      </Button>
+      <FormField label="Authenticator code">
+        <Input
+          autoComplete="one-time-code"
+          data-testid={testIds.settingsTwoFactorCode}
+          inputMode="numeric"
+          onChange={(event) => setCode(event.target.value)}
+          value={code}
+        />
+      </FormField>
+      <Button
+        data-testid={testIds.settingsTwoFactorConfirm}
+        disabled={settings.isPending || !code.trim()}
+        onClick={() => void settings.confirmEnrollment(code)}
+        type="button"
+      >
+        {settings.isPending ? <Spinner /> : null} Confirm and enable
+      </Button>
+    </div>
+  );
+}
+
+function TwoFactorFooter({
+  password,
+  settings
+}: {
+  password: string;
+  settings: ReturnType<typeof useTwoFactorSettings>;
+}) {
+  if (settings.enrollment && !settings.isEnabled) return null;
+
+  return (
+    <SettingsFooter>
+      <p className="max-w-md text-xs text-muted-foreground">
+        Backup codes are single-use. Store the downloaded file somewhere separate from your
+        password.
+      </p>
+      {settings.isEnabled ? (
+        <div className="flex flex-wrap gap-2">
+          <Button
+            disabled={settings.isPending || !password}
+            onClick={() => void settings.regenerate(password)}
+            type="button"
+            variant="outline"
+          >
+            Regenerate codes
+          </Button>
+          <Button
+            disabled={settings.isPending || !password}
+            onClick={() => void settings.disable(password)}
+            type="button"
+            variant="destructive"
+          >
+            Disable 2FA
+          </Button>
+        </div>
+      ) : (
+        <Button
+          data-testid={testIds.settingsTwoFactorStart}
+          disabled={settings.isPending || !password}
+          onClick={() => void settings.startEnrollment(password)}
+          type="button"
+        >
+          {settings.isPending ? <Spinner /> : null} Set up authenticator
+        </Button>
+      )}
+    </SettingsFooter>
   );
 }
