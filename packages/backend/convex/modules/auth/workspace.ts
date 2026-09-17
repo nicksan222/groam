@@ -33,7 +33,7 @@ type BetterAuthSession = NonNullable<
 >;
 
 export type OrganizationRosterMember = {
-  email: string;
+  handle: string;
   image: string | null;
   name: string;
   organizationRole: string;
@@ -114,7 +114,10 @@ export async function workspaceRoster(
 
   return {
     members: roster.members.map((member) => ({
-      email: member.user.email,
+      handle:
+        'username' in member.user && typeof member.user.username === 'string'
+          ? `@${member.user.username}`
+          : member.user.name,
       image: member.user.image ?? null,
       name: member.user.name,
       organizationRole: member.role,

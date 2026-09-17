@@ -70,7 +70,7 @@ export function TripTravelersSheet({
                     {traveler.name}
                     {isYou ? ' (you)' : ''}
                   </p>
-                  <p className="truncate text-xs text-muted-foreground">{traveler.email}</p>
+                  <p className="truncate text-xs text-muted-foreground">{traveler.handle}</p>
                 </div>
                 <Select
                   onValueChange={(value) =>

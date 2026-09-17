@@ -19,6 +19,7 @@ import {
   SettingsStack
 } from '@/features/settings/settings-shell/settings-panel';
 import type { Session } from '@/features/workspace/workspace-shell/workspace-state';
+import { userIdentityLabel } from '@/lib/user-identity';
 
 export function ProfileSettings({ user }: { user: Session['user'] }) {
   const { save, state, updateState } = useProfileSettings(user);
@@ -48,7 +49,9 @@ export function ProfileSettings({ user }: { user: Session['user'] }) {
                 </Avatar>
                 <div className="min-w-0 space-y-0.5 text-center">
                   <p className="truncate text-sm font-semibold tracking-tight">{displayName}</p>
-                  <p className="truncate text-[11px] text-muted-foreground">{user.email}</p>
+                  <p className="truncate text-[11px] text-muted-foreground">
+                    {userIdentityLabel(user)}
+                  </p>
                 </div>
               </div>
               <div className="space-y-2 p-3.5">
@@ -83,10 +86,19 @@ export function ProfileSettings({ user }: { user: Session['user'] }) {
                 />
               </FormField>
               <FormField
-                description="Your sign-in email is managed by your account."
-                label="Email address"
+                description="Used to sign in and shown instead of your email. Use 3–30 letters, numbers, underscores, or dots."
+                label="Username"
               >
-                <Input disabled readOnly type="email" value={user.email} />
+                <Input
+                  autoCapitalize="none"
+                  autoComplete="username"
+                  disabled={state.isPending}
+                  maxLength={30}
+                  minLength={3}
+                  onChange={(event) => updateState({ username: event.target.value })}
+                  required
+                  value={state.username}
+                />
               </FormField>
               <FormField
                 description="Leave blank to use your initials instead."
@@ -106,7 +118,10 @@ export function ProfileSettings({ user }: { user: Session['user'] }) {
           <FormFeedback error={state.error} message={state.message} />
           <SettingsFooter>
             <p className="text-xs text-muted-foreground">Visible to people in your groups.</p>
-            <Button disabled={state.isPending || !state.name.trim()} type="submit">
+            <Button
+              disabled={state.isPending || !state.name.trim() || !state.username.trim()}
+              type="submit"
+            >
               {state.isPending && <Spinner />}
               Save profile
             </Button>

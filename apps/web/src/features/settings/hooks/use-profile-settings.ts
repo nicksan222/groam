@@ -12,7 +12,8 @@ export function useProfileSettings(user: Session['user']) {
       image: store.image,
       isPending: store.isPending,
       message: store.message,
-      name: store.name
+      name: store.name,
+      username: store.username
     }))
   );
   const patch = useProfileSettingsStore((store) => store.patch);
@@ -23,11 +24,16 @@ export function useProfileSettings(user: Session['user']) {
   }, [resetFromUser, user]);
 
   const save = async () => {
+    if (!/^[a-zA-Z0-9_.]{3,30}$/u.test(state.username)) {
+      patch({ error: 'Use 3–30 letters, numbers, underscores, or dots for your username.' });
+      return;
+    }
     patch({ error: null, isPending: true, message: null });
     try {
       const result = await authClient.updateUser({
         image: state.image.trim() || null,
-        name: state.name.trim()
+        name: state.name.trim(),
+        username: state.username.trim()
       });
       if (result.error) throw new Error(result.error.message ?? 'Unable to update profile');
       patch({ message: 'Profile saved.' });

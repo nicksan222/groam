@@ -9,7 +9,7 @@ const status = v.union(
 );
 
 const traveler = v.object({
-  email: v.union(v.string(), v.null()),
+  handle: v.string(),
   id: v.string(),
   image: v.union(v.string(), v.null()),
   invitationId: v.union(v.string(), v.null()),
@@ -26,6 +26,7 @@ export const TripTravelerValidators = {
 export const tripTravelerTables = {
   tripTravelers: defineTable({
     email: v.optional(v.string()),
+    handle: v.optional(v.string()),
     invitationId: v.optional(v.string()),
     name: v.string(),
     organizationId: v.string(),
