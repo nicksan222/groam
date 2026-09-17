@@ -10,6 +10,10 @@ function signInWithIdentifier(identifier: string, password: string) {
     : authClient.signIn.username({ password, username: identifier });
 }
 
+function isAuthenticatorCode(code: string) {
+  return /^\d{6}$/u.test(code);
+}
+
 function authenticationValidationError({
   identifier,
   isSignIn,
@@ -153,10 +157,11 @@ export function useAuthForm() {
     }
     patch({ error: null, isPending: true });
     try {
-      const totp = await authClient.twoFactor.verifyTotp({ code, trustDevice: false });
-      if (!totp.error) return;
-      const backup = await authClient.twoFactor.verifyBackupCode({ code, trustDevice: false });
-      if (backup.error) throw new Error(backup.error.message ?? 'Invalid verification code');
+      const result = isAuthenticatorCode(code)
+        ? await authClient.twoFactor.verifyTotp({ code, trustDevice: false })
+        : await authClient.twoFactor.verifyBackupCode({ code, trustDevice: false });
+      if (result.error) throw new Error(result.error.message ?? 'Invalid verification code');
+      patch({ needsTwoFactor: false, twoFactorCode: '' });
     } catch (error: unknown) {
       patch({ error: errorMessage(error, 'Invalid verification code') });
     } finally {

@@ -156,18 +156,20 @@ describe('useAuthForm', () => {
 
     expect(auth.verifyTotp).toHaveBeenCalledWith({ code: '123456', trustDevice: false });
     expect(auth.verifyBackupCode).not.toHaveBeenCalled();
+    expect(result.current.state).toMatchObject({ needsTwoFactor: false, twoFactorCode: '' });
   });
 
   test('does not trust the browser after backup-code verification', async () => {
-    auth.verifyTotp.mockResolvedValue({ data: null, error: { message: 'Invalid code' } });
     const { result } = renderHook(() => useAuthForm());
-    act(() => result.current.updateState({ needsTwoFactor: true, twoFactorCode: 'backup-code' }));
+    act(() => result.current.updateState({ needsTwoFactor: true, twoFactorCode: 'ABCDE-12345' }));
     await act(() => result.current.submit());
 
+    expect(auth.verifyTotp).not.toHaveBeenCalled();
     expect(auth.verifyBackupCode).toHaveBeenCalledWith({
-      code: 'backup-code',
+      code: 'ABCDE-12345',
       trustDevice: false
     });
+    expect(result.current.state).toMatchObject({ needsTwoFactor: false, twoFactorCode: '' });
   });
 
   test('requires a two-factor code and surfaces invalid backup codes', async () => {
@@ -177,12 +179,29 @@ describe('useAuthForm', () => {
     await act(() => result.current.submit());
     expect(result.current.state.error).toBe('Enter an authenticator or backup code.');
 
-    auth.verifyTotp.mockResolvedValue({ data: null, error: { message: 'Invalid TOTP' } });
     auth.verifyBackupCode.mockResolvedValue({ data: null, error: { message: 'Invalid backup' } });
     act(() => result.current.updateState({ twoFactorCode: 'invalid-code' }));
     await act(() => result.current.submit());
 
+    expect(auth.verifyTotp).not.toHaveBeenCalled();
     expect(result.current.state).toMatchObject({ error: 'Invalid backup', isPending: false });
+  });
+
+  test('does not consume a backup-code attempt when an authenticator code fails', async () => {
+    auth.verifyTotp.mockResolvedValue({ data: null, error: { message: 'Invalid TOTP' } });
+    const { result } = renderHook(() => useAuthForm());
+    act(() => result.current.updateState({ needsTwoFactor: true, twoFactorCode: '654321' }));
+
+    await act(() => result.current.submit());
+
+    expect(auth.verifyTotp).toHaveBeenCalledWith({ code: '654321', trustDevice: false });
+    expect(auth.verifyBackupCode).not.toHaveBeenCalled();
+    expect(result.current.state).toMatchObject({
+      error: 'Invalid TOTP',
+      isPending: false,
+      needsTwoFactor: true,
+      twoFactorCode: '654321'
+    });
   });
 
   test('switchFlow clears the password and error', () => {
