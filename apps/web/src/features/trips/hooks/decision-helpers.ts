@@ -28,19 +28,22 @@ export function applyBlockReason({
   if (canMerge) return null;
   if (status === 'conflicted') return 'Update this idea from the shared trip before applying.';
   if (!reviewReady && !conversationsReady) {
-    if (selfApproval && canApprove) {
-      return `Approve this idea and resolve ${unresolvedFeedback} conversation${unresolvedFeedback === 1 ? '' : 's'} first.`;
-    }
-    return `Waiting on ${remainingApprovals} approval${remainingApprovals === 1 ? '' : 's'} and ${unresolvedFeedback} conversation${unresolvedFeedback === 1 ? '' : 's'}.`;
+    return selfApproval && canApprove
+      ? `Approve this idea and resolve ${pluralize(unresolvedFeedback, 'conversation')} first.`
+      : `Waiting on ${pluralize(remainingApprovals, 'approval')} and ${pluralize(unresolvedFeedback, 'conversation')}.`;
   }
   if (!reviewReady) {
     if (selfApproval && canApprove) return 'Approve this idea first.';
-    return `Waiting on ${remainingApprovals} more approval${remainingApprovals === 1 ? '' : 's'}.`;
+    return `Waiting on ${remainingApprovals} more ${pluralize(remainingApprovals, 'approval').replace(/^\d+ /u, '')}.`;
   }
   if (!conversationsReady) {
-    return `Resolve ${unresolvedFeedback} conversation${unresolvedFeedback === 1 ? '' : 's'} first.`;
+    return `Resolve ${pluralize(unresolvedFeedback, 'conversation')} first.`;
   }
   return 'Only organizers can apply this idea to the shared trip.';
+}
+
+function pluralize(count: number, noun: string) {
+  return `${count} ${noun}${count === 1 ? '' : 's'}`;
 }
 
 export function decisionHeadline({
@@ -56,44 +59,10 @@ export function decisionHeadline({
   status: ProposalDetail['status'];
   unresolvedFeedback: number;
 }) {
-  if (status === 'merged') {
-    return {
-      description: 'These changes are on the shared trip.',
-      title: 'Applied',
-      tone: 'ready' as const
-    };
-  }
-  if (status === 'closed') {
-    return {
-      description: 'This idea was closed without being applied to the shared trip.',
-      title: 'Closed',
-      tone: 'closed' as const
-    };
-  }
-  if (status === 'draft') {
-    return {
-      description:
-        'Review the changes, then invite the group to comment and approve. The shared trip stays unchanged.',
-      title: 'Review and send',
-      tone: 'draft' as const
-    };
-  }
-  if (status === 'conflicted' && checksPassed) {
-    return {
-      description: 'Update this idea from the shared trip before applying it.',
-      title: 'Update from the shared trip first',
-      tone: 'blocked' as const
-    };
-  }
-  if (checksPassed) {
-    return {
-      description: selfApproval
-        ? 'This idea is approved. Applying it updates the shared trip for everyone.'
-        : 'The group approved this result. Applying it updates the shared trip for everyone.',
-      title: 'Ready to apply',
-      tone: 'ready' as const
-    };
-  }
+  const terminal = terminalHeadline(status);
+  if (terminal) return terminal;
+  const ready = readyHeadline({ checksPassed, selfApproval, status });
+  if (ready) return ready;
   if (selfApproval && remainingApprovals > 0 && unresolvedFeedback === 0) {
     return {
       description: 'No other reviewers are required. Approve this result, then apply it.',
@@ -117,6 +86,53 @@ export function decisionHeadline({
     title: selfApproval ? 'Almost ready' : 'Waiting on the group',
     tone: 'blocked' as const
   };
+}
+
+function readyHeadline({
+  checksPassed,
+  selfApproval,
+  status
+}: {
+  checksPassed: boolean;
+  selfApproval?: boolean;
+  status: ProposalDetail['status'];
+}) {
+  if (!checksPassed) return null;
+  if (status === 'conflicted')
+    return {
+      description: 'Update this idea from the shared trip before applying it.',
+      title: 'Update from the shared trip first',
+      tone: 'blocked' as const
+    };
+  return {
+    description: selfApproval
+      ? 'This idea is approved. Applying it updates the shared trip for everyone.'
+      : 'The group approved this result. Applying it updates the shared trip for everyone.',
+    title: 'Ready to apply',
+    tone: 'ready' as const
+  };
+}
+
+function terminalHeadline(status: ProposalDetail['status']) {
+  const headlines = {
+    closed: {
+      description: 'This idea was closed without being applied to the shared trip.',
+      title: 'Closed',
+      tone: 'closed' as const
+    },
+    draft: {
+      description:
+        'Review the changes, then invite the group to comment and approve. The shared trip stays unchanged.',
+      title: 'Review and send',
+      tone: 'draft' as const
+    },
+    merged: {
+      description: 'These changes are on the shared trip.',
+      title: 'Applied',
+      tone: 'ready' as const
+    }
+  };
+  return headlines[status as keyof typeof headlines] ?? null;
 }
 
 export function approveActionLabel({

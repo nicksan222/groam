@@ -141,40 +141,64 @@ export function SessionSettings({ currentToken }: { currentToken: string }) {
           </Shell.Card>
         ) : null}
 
-        {state.isLoading && state.sessions.length === 0 ? (
-          <div aria-busy="true" aria-label="Loading sessions…" className="space-y-2" role="status">
-            {[0, 1, 2].map((index) => (
-              <LiftCard key={index} className="p-3">
-                <div className="flex items-center gap-3">
-                  <Skeleton className="size-9 rounded-lg" />
-                  <div className="min-w-0 flex-1 space-y-1.5">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-3 w-48" />
-                  </div>
-                  <Skeleton className="h-8 w-20 rounded-md" />
-                </div>
-              </LiftCard>
-            ))}
-          </div>
-        ) : state.sessions.length === 0 ? (
-          <DashedEmpty className="px-4 py-8">No active sessions found.</DashedEmpty>
-        ) : (
-          <div className="space-y-2">
-            {state.sessions.map((session, index) => (
-              <SessionCard
-                currentToken={currentToken}
-                index={index}
-                isPending={isPending}
-                key={session.id}
-                pendingAction={state.pendingAction}
-                revoke={revoke}
-                session={session}
-              />
-            ))}
-          </div>
-        )}
+        <SessionList
+          currentToken={currentToken}
+          isPending={isPending}
+          revoke={revoke}
+          state={state}
+        />
       </div>
     </SettingsPanel>
+  );
+}
+
+function SessionList({
+  currentToken,
+  isPending,
+  revoke,
+  state
+}: {
+  currentToken: string;
+  isPending: boolean;
+  revoke: ReturnType<typeof useSessionSettings>['revoke'];
+  state: ReturnType<typeof useSessionSettings>['state'];
+}) {
+  if (state.isLoading && state.sessions.length === 0) return <SessionSkeleton />;
+  if (state.sessions.length === 0)
+    return <DashedEmpty className="px-4 py-8">No active sessions found.</DashedEmpty>;
+  return (
+    <div className="space-y-2">
+      {state.sessions.map((session, index) => (
+        <SessionCard
+          currentToken={currentToken}
+          index={index}
+          isPending={isPending}
+          key={session.id}
+          pendingAction={state.pendingAction}
+          revoke={revoke}
+          session={session}
+        />
+      ))}
+    </div>
+  );
+}
+
+function SessionSkeleton() {
+  return (
+    <div aria-busy="true" aria-label="Loading sessions…" className="space-y-2" role="status">
+      {[0, 1, 2].map((index) => (
+        <LiftCard key={index} className="p-3">
+          <div className="flex items-center gap-3">
+            <Skeleton className="size-9 rounded-lg" />
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-48" />
+            </div>
+            <Skeleton className="h-8 w-20 rounded-md" />
+          </div>
+        </LiftCard>
+      ))}
+    </div>
   );
 }
 

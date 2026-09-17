@@ -16,6 +16,13 @@ import {
 const MAX_TARGET_ATTACHMENTS = 10;
 type Target = Exclude<Doc<'attachmentReferences'>['target'], { type: 'comment' }>;
 type ApplyOptions = { retainSourceKeys?: boolean };
+type ReconcileOptions = {
+  ctx: MutationCtx;
+  retainSourceKeys?: boolean;
+  snapshot: ParsedVersionSnapshot;
+  source: MutableTripCtx;
+  sourceContent: Awaited<ReturnType<typeof VersionContent.load>>;
+};
 
 type SourceLinkedTable =
   | 'tripActivityTransfers'
@@ -56,24 +63,23 @@ async function setAttachments(
   target: Target,
   mediaIds: Id<'media'>[]
 ): Promise<boolean> {
-  return await Attachments.setTarget(
-    ctx,
-    source.trip._id,
-    target,
+  return await Attachments.setTarget(ctx, {
+    label: 'Version items',
+    maximum: MAX_TARGET_ATTACHMENTS,
     mediaIds,
-    source.workspace.organizationId,
-    MAX_TARGET_ATTACHMENTS,
-    'Version items'
-  );
+    organizationId: source.workspace.organizationId,
+    target,
+    tripId: source.trip._id
+  });
 }
 
-async function reconcileDestinations(
-  ctx: MutationCtx,
-  source: MutableTripCtx,
-  snapshot: ParsedVersionSnapshot,
-  sourceContent: Awaited<ReturnType<typeof VersionContent.load>>,
-  retainSourceKeys?: boolean
-) {
+async function reconcileDestinations({
+  ctx,
+  source,
+  snapshot,
+  sourceContent,
+  retainSourceKeys
+}: ReconcileOptions) {
   const existingByKey = new Map(
     sourceContent.destinations.map((destination) => [
       sourceKey(destination.sourceId, destination._id),
@@ -99,13 +105,12 @@ async function reconcileDestinations(
         await ctx.db.patch('tripDestinations', id, { ...fields, sourceId: undefined });
       }
       if (!existing || detailsChanged) {
-        await TripLocations.setDestination(
-          ctx,
-          id,
-          source.trip._id,
-          source.workspace.organizationId,
-          fields.coordinates
-        );
+        await TripLocations.setDestination(ctx, {
+          coordinates: fields.coordinates,
+          destinationId: id,
+          organizationId: source.workspace.organizationId,
+          tripId: source.trip._id
+        });
       }
       await setAttachments(ctx, source, { id, type: 'destination' }, attachments);
       destinationMap.set(key, id);
@@ -115,14 +120,14 @@ async function reconcileDestinations(
   return { destinationMap, retained };
 }
 
-async function reconcileActivities(
-  ctx: MutationCtx,
-  source: MutableTripCtx,
-  snapshot: ParsedVersionSnapshot,
-  sourceContent: Awaited<ReturnType<typeof VersionContent.load>>,
-  destinationMap: Map<string, Id<'tripDestinations'>>,
-  retainSourceKeys?: boolean
-) {
+async function reconcileActivities({
+  ctx,
+  source,
+  snapshot,
+  sourceContent,
+  destinationMap,
+  retainSourceKeys
+}: ReconcileOptions & { destinationMap: Map<string, Id<'tripDestinations'>> }) {
   const existingByKey = new Map(
     sourceContent.activities.map((activity) => [
       sourceKey(activity.sourceId, activity._id),
@@ -153,13 +158,12 @@ async function reconcileActivities(
         await ctx.db.patch('tripDestinationActivities', id, { ...fields, sourceId: undefined });
       }
       if (!existing || detailsChanged) {
-        await TripLocations.setActivity(
-          ctx,
-          id,
-          source.trip._id,
-          source.workspace.organizationId,
-          fields.coordinates
-        );
+        await TripLocations.setActivity(ctx, {
+          activityId: id,
+          coordinates: fields.coordinates,
+          organizationId: source.workspace.organizationId,
+          tripId: source.trip._id
+        });
       }
       await setAttachments(ctx, source, { id, type: 'activity' }, attachments);
       activityMap.set(key, id);
@@ -170,14 +174,14 @@ async function reconcileActivities(
   return { activityDestinationMap, activityMap, retained };
 }
 
-async function reconcileStays(
-  ctx: MutationCtx,
-  source: MutableTripCtx,
-  snapshot: ParsedVersionSnapshot,
-  sourceContent: Awaited<ReturnType<typeof VersionContent.load>>,
-  destinationMap: Map<string, Id<'tripDestinations'>>,
-  retainSourceKeys?: boolean
-) {
+async function reconcileStays({
+  ctx,
+  source,
+  snapshot,
+  sourceContent,
+  destinationMap,
+  retainSourceKeys
+}: ReconcileOptions & { destinationMap: Map<string, Id<'tripDestinations'>> }) {
   const existingByKey = new Map(
     sourceContent.stays.map((stay) => [sourceKey(stay.sourceId, stay._id), stay])
   );
@@ -209,12 +213,12 @@ async function reconcileStays(
   return retained;
 }
 
-async function reconcileBoundaryTransfers(
-  ctx: MutationCtx,
-  source: MutableTripCtx,
-  snapshot: ParsedVersionSnapshot,
-  sourceContent: Awaited<ReturnType<typeof VersionContent.load>>
-) {
+async function reconcileBoundaryTransfers({
+  ctx,
+  source,
+  snapshot,
+  sourceContent
+}: ReconcileOptions) {
   const existingByBoundary = new Map(
     sourceContent.boundaryTransfers.map((transfer) => [transfer.boundary, transfer])
   );
@@ -239,14 +243,14 @@ async function reconcileBoundaryTransfers(
   return retained;
 }
 
-async function reconcileDestinationTransfers(
-  ctx: MutationCtx,
-  source: MutableTripCtx,
-  snapshot: ParsedVersionSnapshot,
-  sourceContent: Awaited<ReturnType<typeof VersionContent.load>>,
-  destinationMap: Map<string, Id<'tripDestinations'>>,
-  retainSourceKeys?: boolean
-) {
+async function reconcileDestinationTransfers({
+  ctx,
+  source,
+  snapshot,
+  sourceContent,
+  destinationMap,
+  retainSourceKeys
+}: ReconcileOptions & { destinationMap: Map<string, Id<'tripDestinations'>> }) {
   const existingByKey = new Map(
     sourceContent.destinationTransfers.map((transfer) => [
       sourceKey(transfer.sourceId, transfer._id),
@@ -287,15 +291,18 @@ async function reconcileDestinationTransfers(
   return retained;
 }
 
-async function reconcileActivityTransfers(
-  ctx: MutationCtx,
-  source: MutableTripCtx,
-  snapshot: ParsedVersionSnapshot,
-  sourceContent: Awaited<ReturnType<typeof VersionContent.load>>,
-  activityMap: Map<string, Id<'tripDestinationActivities'>>,
-  activityDestinationMap: Map<string, Id<'tripDestinations'>>,
-  retainSourceKeys?: boolean
-) {
+async function reconcileActivityTransfers({
+  ctx,
+  source,
+  snapshot,
+  sourceContent,
+  activityMap,
+  activityDestinationMap,
+  retainSourceKeys
+}: ReconcileOptions & {
+  activityDestinationMap: Map<string, Id<'tripDestinations'>>;
+  activityMap: Map<string, Id<'tripDestinationActivities'>>;
+}) {
   const existingByKey = new Map(
     sourceContent.activityTransfers.map((transfer) => [
       sourceKey(transfer.sourceId, transfer._id),
@@ -382,50 +389,29 @@ async function applyVersionSnapshot(
     sourceContent.packingItems,
     options?.retainSourceKeys
   );
-  const destinations = await reconcileDestinations(
+  const reconcileOptions: ReconcileOptions = {
     ctx,
-    source,
+    retainSourceKeys: options?.retainSourceKeys,
     snapshot,
-    sourceContent,
-    options?.retainSourceKeys
-  );
+    source,
+    sourceContent
+  };
+  const destinations = await reconcileDestinations(reconcileOptions);
   const [activities, stays] = await Promise.all([
-    reconcileActivities(
-      ctx,
-      source,
-      snapshot,
-      sourceContent,
-      destinations.destinationMap,
-      options?.retainSourceKeys
-    ),
-    reconcileStays(
-      ctx,
-      source,
-      snapshot,
-      sourceContent,
-      destinations.destinationMap,
-      options?.retainSourceKeys
-    )
+    reconcileActivities({ ...reconcileOptions, destinationMap: destinations.destinationMap }),
+    reconcileStays({ ...reconcileOptions, destinationMap: destinations.destinationMap })
   ]);
   const [activityTransfers, boundaryTransfers, destinationTransfers] = await Promise.all([
-    reconcileActivityTransfers(
-      ctx,
-      source,
-      snapshot,
-      sourceContent,
-      activities.activityMap,
-      activities.activityDestinationMap,
-      options?.retainSourceKeys
-    ),
-    reconcileBoundaryTransfers(ctx, source, snapshot, sourceContent),
-    reconcileDestinationTransfers(
-      ctx,
-      source,
-      snapshot,
-      sourceContent,
-      destinations.destinationMap,
-      options?.retainSourceKeys
-    )
+    reconcileActivityTransfers({
+      ...reconcileOptions,
+      activityDestinationMap: activities.activityDestinationMap,
+      activityMap: activities.activityMap
+    }),
+    reconcileBoundaryTransfers(reconcileOptions),
+    reconcileDestinationTransfers({
+      ...reconcileOptions,
+      destinationMap: destinations.destinationMap
+    })
   ]);
   await removeMissingTransfers(ctx, source, sourceContent, {
     activity: activityTransfers,
@@ -470,14 +456,14 @@ async function applyVersionSnapshot(
     startDate: startDate ?? undefined,
     updatedAt: Math.max(Date.now(), source.trip.updatedAt + 1)
   });
-  await TripLocations.setTrip(
-    ctx,
-    source.trip._id,
-    source.workspace.organizationId,
-    tripDetails.destination.status === 'known' && 'coordinates' in tripDetails.destination
-      ? tripDetails.destination.coordinates
-      : undefined
-  );
+  await TripLocations.setTrip(ctx, {
+    coordinates:
+      tripDetails.destination.status === 'known' && 'coordinates' in tripDetails.destination
+        ? tripDetails.destination.coordinates
+        : undefined,
+    organizationId: source.workspace.organizationId,
+    tripId: source.trip._id
+  });
   await DestinationCover.ensureForTrip(ctx, source.trip._id);
 }
 

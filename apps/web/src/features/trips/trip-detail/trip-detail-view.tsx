@@ -19,7 +19,8 @@ import { Link } from '@/features/workspace/navigation/router';
 import { useConfirm } from '@/features/workspace/workspace-shell/use-confirm-dialog';
 import { useOptionalWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
 import { useReadyValue } from '@/lib/use-ready-value';
-import type { TripNavigation } from './trip-detail-types';
+import { createTripNavigation } from './trip-detail-navigation';
+import type { LoadedTrip, TripNavigation, TripState } from './trip-detail-types';
 import { TripNavigationActions } from './trip-navigation-actions';
 import { TripNotFound } from './trip-not-found';
 import { TripPageHero } from './trip-page-hero';
@@ -77,152 +78,238 @@ export function TripDetailView({
   const showLoading = pageLoading || !trip || waitingOnProposalRedirect;
   const viewerDraft = findViewerDrafts(proposals ?? [], viewerUserId)[0];
 
-  const openSection = (nextSection: TripSection) => {
-    void navigate({
-      params: { section: nextSection, tripId },
-      search: {},
-      to: '/trips/$tripId/$section'
-    });
-  };
   const editDetails = () => {
     if (!trip) return;
     if (trip.permissions.canEdit) editing.openPanel();
     else if (trip.permissions.canPropose) ideaFlow.start({ section: 'overview' });
   };
-  const navigation: TripNavigation = {
-    closeAddDestination: () => {
-      void navigate({
-        params: { section: 'itinerary', tripId },
-        replace: true,
-        search: {},
-        to: '/trips/$tripId/$section'
-      });
-    },
-    openAddDestination: () => {
-      if (!trip) return;
-      if (!trip.permissions.canEdit && trip.permissions.canPropose) {
-        ideaFlow.start({ addDestination: true, section: 'itinerary' });
-        return;
-      }
-      void (async () => {
-        if (
-          trip.departureTransfer &&
-          !(await confirm(
-            'Clear return travel?',
-            'Adding another stop will clear the existing return travel details.'
-          ))
-        ) {
-          return;
-        }
-        void navigate({
-          params: { section: 'itinerary', tripId },
-          search: { addDestination: true },
-          to: '/trips/$tripId/$section'
-        });
-      })();
-    },
-    openSection
-  };
+  const navigation = createTripNavigation({ confirm, ideaFlow, navigate, trip, tripId });
 
   return (
     <TripPageShell
       body={
-        showLoading ? (
-          <TripOverview isLoading />
-        ) : (
-          <ActiveTripSection
-            addDestinationOpen={addDestinationOpen}
-            navigation={navigation}
-            onEdit={editDetails}
-            section={section}
-            trip={trip}
-            tripState={tripState}
-          />
-        )
+        <TripDetailBody
+          addDestinationOpen={addDestinationOpen}
+          navigation={navigation}
+          onEdit={editDetails}
+          section={section}
+          showLoading={showLoading}
+          trip={trip}
+          tripState={tripState}
+        />
       }
-      crumb={
-        showLoading ? (
-          <PageCrumbNav isLoading inset={false} parent={{ href: '/trips', label: 'All trips' }} />
-        ) : (
-          <PageCrumbNav
-            current={trip.name}
-            inset={false}
-            parent={{
-              asChild: true,
-              children: <Link to="/trips" />,
-              label: 'All trips'
-            }}
-          />
-        )
-      }
+      crumb={<TripDetailCrumb showLoading={showLoading} trip={trip} />}
       hero={
-        showLoading ? (
-          <TripPageHero isLoading />
-        ) : (
-          <TripPageHero
-            actions={
-              <TripNavigationActions
-                onEdit={editDetails}
-                section={section}
-                trip={trip}
-                tripState={tripState}
-              />
-            }
-            onRosterOpenChange={roster.setOpen}
-            retryCover={tripState.retryCover}
-            rosterOpen={roster.open}
-            trip={trip}
-            tripId={tripId}
-          />
-        )
+        <TripDetailHero
+          onEdit={editDetails}
+          roster={roster}
+          section={section}
+          showLoading={showLoading}
+          trip={trip}
+          tripId={tripId}
+          tripState={tripState}
+        />
       }
       isLoading={showLoading}
       nav={
-        showLoading ? (
-          <TripSectionNav isLoading section={section} />
-        ) : (
-          <TripSectionNav onOpen={openSection} section={section} trip={trip} tripId={tripId} />
-        )
+        <TripDetailNav
+          navigation={navigation}
+          section={section}
+          showLoading={showLoading}
+          trip={trip}
+          tripId={tripId}
+        />
       }
       banner={
-        showLoading || !trip || trip.proposal || trip.permissions.canEdit ? undefined : (
-          <SharedTripBanner
-            archived={trip.archivedAt !== null}
-            continueDraftTitle={viewerDraft?.title}
-            onContinueDraft={
-              viewerDraft
-                ? () => {
-                    void navigate(ideaCloneHref({ id: viewerDraft.id, sourceTripId: trip.id }));
-                  }
-                : undefined
-            }
-            onStartIdea={trip.permissions.canPropose ? () => ideaFlow.start() : undefined}
-          />
-        )
+        <TripDetailBanner
+          ideaFlow={ideaFlow}
+          navigate={navigate}
+          showLoading={showLoading}
+          trip={trip}
+          viewerDraft={viewerDraft}
+        />
       }
     >
-      {!showLoading && (
-        <>
-          <CreateTripIdeaDialog
-            defaultTitle={ideaFlow.titleHint}
-            isCreating={ideaFlow.isCreating}
-            onCreate={ideaFlow.create}
-            onOpenChange={ideaFlow.setDialogOpen}
-            open={ideaFlow.dialogOpen}
-            sharedTripName={trip.name}
-          />
-          <ContinueDraftDialog
-            onContinue={ideaFlow.continueDraft}
-            onOpenChange={ideaFlow.setExistingDraftOpen}
-            onStartAnother={ideaFlow.startAnotherIdea}
-            open={ideaFlow.existingDraftOpen}
-            title={ideaFlow.pendingDraft?.title ?? ''}
-          />
-          {editing.open && (
-            <TripDetailsEditor onClose={editing.closePanel} trip={trip} update={tripState.update} />
-          )}
-        </>
-      )}
+      <TripDetailDialogs
+        editing={editing}
+        ideaFlow={ideaFlow}
+        showLoading={showLoading}
+        trip={trip}
+        update={tripState.update}
+      />
     </TripPageShell>
+  );
+}
+
+function TripDetailBody({
+  addDestinationOpen,
+  navigation,
+  onEdit,
+  section,
+  showLoading,
+  trip,
+  tripState
+}: {
+  addDestinationOpen: boolean;
+  navigation: TripNavigation;
+  onEdit: () => void;
+  section: TripSection;
+  showLoading: boolean;
+  trip: LoadedTrip | undefined;
+  tripState: TripState;
+}) {
+  if (showLoading || !trip) return <TripOverview isLoading />;
+  return (
+    <ActiveTripSection
+      addDestinationOpen={addDestinationOpen}
+      navigation={navigation}
+      onEdit={onEdit}
+      section={section}
+      trip={trip}
+      tripState={tripState}
+    />
+  );
+}
+
+function TripDetailCrumb({
+  showLoading,
+  trip
+}: {
+  showLoading: boolean;
+  trip: LoadedTrip | undefined;
+}) {
+  if (showLoading || !trip)
+    return <PageCrumbNav isLoading inset={false} parent={{ href: '/trips', label: 'All trips' }} />;
+  return (
+    <PageCrumbNav
+      current={trip.name}
+      inset={false}
+      parent={{ asChild: true, children: <Link to="/trips" />, label: 'All trips' }}
+    />
+  );
+}
+
+function TripDetailHero({
+  onEdit,
+  roster,
+  section,
+  showLoading,
+  trip,
+  tripId,
+  tripState
+}: {
+  onEdit: () => void;
+  roster: ReturnType<typeof useOpenState>;
+  section: TripSection;
+  showLoading: boolean;
+  trip: LoadedTrip | undefined;
+  tripId: Id<'trips'>;
+  tripState: TripState;
+}) {
+  if (showLoading || !trip) return <TripPageHero isLoading />;
+  return (
+    <TripPageHero
+      actions={
+        <TripNavigationActions
+          onEdit={onEdit}
+          section={section}
+          trip={trip}
+          tripState={tripState}
+        />
+      }
+      onRosterOpenChange={roster.setOpen}
+      retryCover={tripState.retryCover}
+      rosterOpen={roster.open}
+      trip={trip}
+      tripId={tripId}
+    />
+  );
+}
+
+function TripDetailNav({
+  navigation,
+  section,
+  showLoading,
+  trip,
+  tripId
+}: {
+  navigation: TripNavigation;
+  section: TripSection;
+  showLoading: boolean;
+  trip: LoadedTrip | undefined;
+  tripId: Id<'trips'>;
+}) {
+  if (showLoading || !trip) return <TripSectionNav isLoading section={section} />;
+  return (
+    <TripSectionNav onOpen={navigation.openSection} section={section} trip={trip} tripId={tripId} />
+  );
+}
+
+function TripDetailBanner({
+  ideaFlow,
+  navigate,
+  showLoading,
+  trip,
+  viewerDraft
+}: {
+  ideaFlow: ReturnType<typeof useStartIdeaFlow>;
+  navigate: ReturnType<typeof useNavigate>;
+  showLoading: boolean;
+  trip: LoadedTrip | undefined;
+  viewerDraft: ReturnType<typeof findViewerDrafts>[number] | undefined;
+}) {
+  if (showLoading || !trip || trip.proposal || trip.permissions.canEdit) return undefined;
+  return (
+    <SharedTripBanner
+      archived={trip.archivedAt !== null}
+      continueDraftTitle={viewerDraft?.title}
+      onContinueDraft={
+        viewerDraft
+          ? () =>
+              void navigate(
+                ideaCloneHref({ id: viewerDraft.id as Id<'tripProposals'>, sourceTripId: trip.id })
+              )
+          : undefined
+      }
+      onStartIdea={trip.permissions.canPropose ? () => ideaFlow.start() : undefined}
+    />
+  );
+}
+
+function TripDetailDialogs({
+  editing,
+  ideaFlow,
+  showLoading,
+  trip,
+  update
+}: {
+  editing: ReturnType<typeof useOpenState>;
+  ideaFlow: ReturnType<typeof useStartIdeaFlow>;
+  showLoading: boolean;
+  trip: LoadedTrip | undefined;
+  update: TripState['update'];
+}) {
+  if (showLoading || !trip) return null;
+  return (
+    <>
+      <CreateTripIdeaDialog
+        defaultTitle={ideaFlow.titleHint}
+        isCreating={ideaFlow.isCreating}
+        onCreate={ideaFlow.create}
+        onOpenChange={ideaFlow.setDialogOpen}
+        open={ideaFlow.dialogOpen}
+        sharedTripName={trip.name}
+      />
+      <ContinueDraftDialog
+        onContinue={ideaFlow.continueDraft}
+        onOpenChange={ideaFlow.setExistingDraftOpen}
+        onStartAnother={ideaFlow.startAnotherIdea}
+        open={ideaFlow.existingDraftOpen}
+        title={ideaFlow.pendingDraft?.title ?? ''}
+      />
+      {editing.open && (
+        <TripDetailsEditor onClose={editing.closePanel} trip={trip} update={update} />
+      )}
+    </>
   );
 }

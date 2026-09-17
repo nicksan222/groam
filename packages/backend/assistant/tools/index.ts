@@ -173,20 +173,16 @@ function isAdviceQuestion(prompt: string) {
   if (hasWriteVerbThenAdvice(words)) return true;
   // "What steps…" / "Is it okay to approve…" are advice even without "?".
   // Leading `do` is advice only as an auxiliary ("Do I…"), not "Do it" / "Do approve…".
-  if (
-    first === 'what' ||
-    first === 'who' ||
-    first === 'which' ||
-    first === 'how' ||
-    first === 'when' ||
-    first === 'why' ||
-    first === 'if' ||
-    first === 'is' ||
-    first === 'are' ||
-    first === 'does'
-  ) {
-    return true;
-  }
+  if (isLeadingAdviceWord(first)) return true;
+  return questionSeeksAdvice(prompt, words, contentIndex, first);
+}
+
+function questionSeeksAdvice(
+  prompt: string,
+  words: readonly string[],
+  contentIndex: number,
+  first: string | undefined
+): boolean {
   if (first === 'do') {
     const second = words[contentIndex + 1];
     if (second === 'it' || hasWriteVerbBefore(words.slice(contentIndex + 1), 1)) return false;
@@ -201,17 +197,12 @@ function isAdviceQuestion(prompt: string) {
       prompt
     );
   }
-  return (
-    first === 'what' ||
-    first === 'who' ||
-    first === 'which' ||
-    first === 'how' ||
-    first === 'when' ||
-    first === 'why' ||
-    first === 'is' ||
-    first === 'are' ||
-    first === 'do' ||
-    first === 'does'
+  return isLeadingAdviceWord(first) || first === 'do';
+}
+
+function isLeadingAdviceWord(word: string | undefined): boolean {
+  return ['what', 'who', 'which', 'how', 'when', 'why', 'if', 'is', 'are', 'does'].includes(
+    word ?? ''
   );
 }
 
@@ -233,24 +224,34 @@ function matchIntentRange(
   if (!first || first.length === 0) return null;
   for (let start = 0; start <= words.length - first.length; start += 1) {
     if (!wordsMatchAt(words, first, start)) continue;
-    let cursor = start + first.length;
-    let matched = true;
-    for (const part of parts.slice(1)) {
-      if (part.length === 0) continue;
-      let found = -1;
-      for (let index = cursor; index <= words.length - part.length; index += 1) {
-        if (wordsMatchAt(words, part, index)) {
-          found = index;
-          break;
-        }
-      }
-      if (found < 0) {
-        matched = false;
-        break;
-      }
-      cursor = found + part.length;
-    }
-    if (matched) return { end: cursor, start };
+    const end = matchIntentParts(words, parts.slice(1), start + first.length);
+    if (end !== null) return { end, start };
+  }
+  return null;
+}
+
+function matchIntentParts(
+  words: readonly string[],
+  parts: readonly (readonly string[])[],
+  initialCursor: number
+): number | null {
+  let cursor = initialCursor;
+  for (const part of parts) {
+    if (part.length === 0) continue;
+    const found = findPhraseAtOrAfter(words, part, cursor);
+    if (found === null) return null;
+    cursor = found + part.length;
+  }
+  return cursor;
+}
+
+function findPhraseAtOrAfter(
+  words: readonly string[],
+  phrase: readonly string[],
+  cursor: number
+): number | null {
+  for (let index = cursor; index <= words.length - phrase.length; index += 1) {
+    if (wordsMatchAt(words, phrase, index)) return index;
   }
   return null;
 }
@@ -315,21 +316,37 @@ export function createRegisteredAssistantTools(runtime: AssistantToolRuntime): {
   const tools: ToolSet = {};
   for (const registration of AssistantToolKind.all()) {
     if (!allowed.has(registration.id)) continue;
-    const created = AssistantToolKind.toolSet(registration, runtime);
-    if (!created) continue;
-    const writeAllowed =
-      runtime.scope === 'standalone' ||
-      !(registration.writeIntent || registration.writeIntentExact) ||
-      explicitlyRequestsWrite(
-        runtime.prompt,
-        registration.writeIntent ?? [],
-        registration.writeIntentExact ?? []
-      );
-    for (const [toolName, tool] of Object.entries(created)) {
-      if (tools[toolName]) throw new ConvexError(`Duplicate assistant runtime tool: ${toolName}`);
-      tools[toolName] = writeAllowed ? tool : denyUnrequestedWrite(toolName, tool);
-    }
+    registerAssistantToolSet(tools, runtime, registration);
     if (registration.guidance) guidance.push(registration.guidance);
   }
   return { guidance, tools };
+}
+
+function registerAssistantToolSet(
+  tools: ToolSet,
+  runtime: AssistantToolRuntime,
+  registration: ReturnType<typeof AssistantToolKind.all>[number]
+): void {
+  const created = AssistantToolKind.toolSet(registration, runtime);
+  if (!created) return;
+  const writeAllowed = writeIsAllowed(runtime, registration);
+  for (const [toolName, tool] of Object.entries(created)) {
+    if (tools[toolName]) throw new ConvexError(`Duplicate assistant runtime tool: ${toolName}`);
+    tools[toolName] = writeAllowed ? tool : denyUnrequestedWrite(toolName, tool);
+  }
+}
+
+function writeIsAllowed(
+  runtime: AssistantToolRuntime,
+  registration: ReturnType<typeof AssistantToolKind.all>[number]
+): boolean {
+  return (
+    runtime.scope === 'standalone' ||
+    !(registration.writeIntent || registration.writeIntentExact) ||
+    explicitlyRequestsWrite(
+      runtime.prompt,
+      registration.writeIntent ?? [],
+      registration.writeIntentExact ?? []
+    )
+  );
 }

@@ -12,14 +12,13 @@ export const run = mutableTripMutation({
   returns: v.null(),
   handler: async (ctx, { mediaIds, target }) => {
     await TripTargets.assertBelongsToTrip(ctx, ctx, target);
-    const changed = await Attachments.setTarget(
-      ctx,
-      ctx.trip._id,
-      target,
+    const changed = await Attachments.setTarget(ctx, {
+      maximum: Attachments.limitFor(target),
       mediaIds,
-      ctx.workspace.organizationId,
-      Attachments.limitFor(target)
-    );
+      organizationId: ctx.workspace.organizationId,
+      target,
+      tripId: ctx.trip._id
+    });
     if (changed) await patchTrip(ctx, { updatedAt: Date.now() });
     return null;
   }

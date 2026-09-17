@@ -137,6 +137,25 @@ function stayPatchFromTool(input: {
   };
 }
 
+function assertStayPatchFits(
+  input: Parameters<typeof stayPatchFromTool>[0],
+  found: NonNullable<ReturnType<typeof findStay>>,
+  context: TripAssistantContext
+): void {
+  if (input.checkInDay === undefined && input.checkOutDay === undefined) return;
+  const destination = schedulableDestinations(context).find(
+    (candidate) => candidate.id === found.destination.id
+  );
+  if (!destination) throw new ConvexError('That destination is not available for scheduling');
+  const checkInDay = input.checkInDay ?? found.stay.checkInDay;
+  const checkOutDay = input.checkOutDay ?? found.stay.checkOutDay;
+  if (checkInDay < destination.minimumDay || checkOutDay > destination.maximumDay) {
+    throw new ConvexError(
+      `${destination.name} stays must fit between trip days ${destination.minimumDay} and ${destination.maximumDay}`
+    );
+  }
+}
+
 export function createUpdateStayTool(activeTripId: Id<'trips'> | null) {
   return createTool({
     description:
@@ -154,21 +173,7 @@ export function createUpdateStayTool(activeTripId: Id<'trips'> | null) {
       if (Object.keys(patch).length === 0) {
         throw new ConvexError('Provide at least one field to update');
       }
-      const checkInDay = input.checkInDay ?? found.stay.checkInDay;
-      const checkOutDay = input.checkOutDay ?? found.stay.checkOutDay;
-      if (input.checkInDay !== undefined || input.checkOutDay !== undefined) {
-        const destination = schedulableDestinations(context).find(
-          (candidate) => candidate.id === found.destination.id
-        );
-        if (!destination) {
-          throw new ConvexError('That destination is not available for scheduling');
-        }
-        if (checkInDay < destination.minimumDay || checkOutDay > destination.maximumDay) {
-          throw new ConvexError(
-            `${destination.name} stays must fit between trip days ${destination.minimumDay} and ${destination.maximumDay}`
-          );
-        }
-      }
+      assertStayPatchFits(input, found, context);
       await toolCtx.runMutation(internal.modules.assistant.model.writes.updateStay, {
         patch,
         stayId: found.stay.id,

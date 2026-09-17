@@ -22,5 +22,14 @@ describe('useSidebarNestedVisible', () => {
     expect(result.current.isCreateOpen).toBe(true);
     expect(result.current.visibleCount).toBe(SIDEBAR_NESTED_PAGE_SIZE + 3);
     expect(result.current.canExpandVisible(SIDEBAR_NESTED_PAGE_SIZE + 3)).toBe(false);
+
+    act(() => {
+      result.current.setCreateOpen(false);
+      result.current.setVisibleCount(2);
+      result.current.closeCreate();
+      result.current.showMore();
+    });
+    expect(result.current.isCreateOpen).toBe(false);
+    expect(result.current.visibleCount).toBe(2 + SIDEBAR_NESTED_PAGE_SIZE);
   });
 });

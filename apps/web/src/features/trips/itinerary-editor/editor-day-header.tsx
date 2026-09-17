@@ -1,3 +1,4 @@
+import { Button } from '@groam/ui/components/button';
 import { ArrowUpRight } from 'lucide-react';
 import { plannerDate } from '@/features/trips/hooks/trip-day-planner';
 import type { Destination } from '@/types/trips';
@@ -39,12 +40,13 @@ export function EditorDayHeader({
       {destinations.length ? (
         <div className="flex flex-wrap gap-2">
           {destinations.map((stop) => (
-            <button
+            <Button
               key={stop.id}
               type="button"
               onClick={() => onOpenDestination(stop.id)}
               aria-label={`Open ${stop.name} details for Day ${day}`}
               className="group flex min-w-0 max-w-full items-center gap-3 rounded-lg border border-border p-2 text-left transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              unstyled
             >
               <EditorDestinationPhoto
                 src={stop.coverUrl}
@@ -65,7 +67,7 @@ export function EditorDayHeader({
                 aria-hidden="true"
                 className="mr-1 size-3.5 shrink-0 text-muted-foreground transition-colors group-hover:text-primary"
               />
-            </button>
+            </Button>
           ))}
         </div>
       ) : null}

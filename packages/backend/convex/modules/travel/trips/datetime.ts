@@ -29,13 +29,19 @@ function normalizeLocalTime(value: string | undefined, label: string): string | 
   return normalized;
 }
 
-function normalizeDayTimeRange(
-  startDay: number,
-  startTimeValue: string | undefined,
-  endDay: number,
-  endTimeValue: string | undefined,
-  label: string
-) {
+function normalizeDayTimeRange({
+  startDay,
+  startTimeValue,
+  endDay,
+  endTimeValue,
+  label
+}: {
+  startDay: number;
+  startTimeValue: string | undefined;
+  endDay: number;
+  endTimeValue: string | undefined;
+  label: string;
+}) {
   const startTime = normalizeLocalTime(startTimeValue, `${label} start`);
   const endTime = normalizeLocalTime(endTimeValue, `${label} end`);
   if (endTime && !startTime) {

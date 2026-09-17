@@ -110,6 +110,27 @@ describe('useOrganizationSettings', () => {
     });
   });
 
+  test('keeps the form usable when uploading or clearing a logo fails', async () => {
+    logo.upload.mockRejectedValueOnce(new Error('Server Error'));
+    logo.clear.mockRejectedValueOnce(new Error('Storage unavailable'));
+    const { result } = renderHook(() => useOrganizationSettings(organization));
+    const file = new File(['logo'], 'logo.png', { type: 'image/png' });
+
+    await act(() => result.current.uploadLogo(file));
+    expect(result.current.state).toMatchObject({
+      error: 'Unable to update group logo',
+      isPending: false,
+      message: null
+    });
+
+    await act(() => result.current.clearLogo());
+    expect(result.current.state).toMatchObject({
+      error: 'Storage unavailable',
+      isPending: false,
+      message: null
+    });
+  });
+
   test('switches to a fallback before deleting the selected organization', async () => {
     const { result } = renderHook(() => useOrganizationSettings(organization));
 
@@ -120,5 +141,40 @@ describe('useOrganizationSettings', () => {
     expect(auth.setActive.mock.invocationCallOrder[0]).toBeLessThan(
       auth.remove.mock.invocationCallOrder[0] ?? Number.POSITIVE_INFINITY
     );
+  });
+
+  test('deletes the final organization without switching first', async () => {
+    auth.list.mockResolvedValue({ data: [organization], error: null });
+    const { result } = renderHook(() => useOrganizationSettings(organization));
+
+    await act(() => result.current.remove());
+
+    expect(auth.setActive).not.toHaveBeenCalled();
+    expect(auth.remove).toHaveBeenCalledWith({ organizationId: organization.id });
+    expect(result.current.state).toMatchObject({ error: null, message: null });
+  });
+
+  test('surfaces list, activation, and deletion failures when removing a group', async () => {
+    const { result } = renderHook(() => useOrganizationSettings(organization));
+    auth.list.mockResolvedValueOnce({ data: null, error: { message: 'Cannot list groups' } });
+
+    await act(() => result.current.remove());
+    expect(result.current.state.error).toBe('Cannot list groups');
+
+    auth.list.mockResolvedValueOnce({
+      data: [organization, { id: 'organization-b', name: 'Other group', slug: 'other-group' }],
+      error: null
+    });
+    auth.setActive.mockResolvedValueOnce({
+      data: null,
+      error: { message: 'Cannot switch groups' }
+    });
+    await act(() => result.current.remove());
+    expect(result.current.state.error).toBe('Cannot switch groups');
+
+    auth.list.mockResolvedValueOnce({ data: [organization], error: null });
+    auth.remove.mockResolvedValueOnce({ data: null, error: { message: 'Cannot delete group' } });
+    await act(() => result.current.remove());
+    expect(result.current.state.error).toBe('Cannot delete group');
   });
 });

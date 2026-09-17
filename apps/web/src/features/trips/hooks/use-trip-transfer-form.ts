@@ -139,40 +139,10 @@ export function useTripTransferForm({
       });
       return;
     }
-
-    const selectedFiles = files.slice(0, availableSlots);
     dispatch({ operation: 'uploading', type: 'setOperation' });
     dispatch({ status: null, type: 'setStatus' });
     try {
-      const results = await Promise.all(
-        selectedFiles.map(async (file): Promise<AttachmentDraft | null> => {
-          try {
-            const mediaId = await uploadMedia(file, null);
-            return mediaId ? { id: mediaId, name: file.name } : null;
-          } catch {
-            return null;
-          }
-        })
-      );
-      const uploaded = results.filter(
-        (attachment): attachment is AttachmentDraft => attachment !== null
-      );
-      if (uploaded.length > 0) {
-        dispatch({ attachments: uploaded, type: 'appendAttachments' });
-      }
-      const omittedCount = files.length - selectedFiles.length;
-      const failedCount = selectedFiles.length - uploaded.length;
-      if (omittedCount > 0 || failedCount > 0) {
-        const messages = [
-          ...(omittedCount > 0
-            ? [`${omittedCount} file${omittedCount === 1 ? '' : 's'} exceeded the 5-file limit.`]
-            : []),
-          ...(failedCount > 0
-            ? [`${failedCount} file${failedCount === 1 ? '' : 's'} could not be uploaded.`]
-            : [])
-        ];
-        dispatch({ status: { kind: 'warning', message: messages.join(' ') }, type: 'setStatus' });
-      }
+      await uploadTransferAttachments({ availableSlots, dispatch, files, uploadMedia });
     } finally {
       dispatch({ operation: 'idle', type: 'setOperation' });
     }
@@ -212,4 +182,54 @@ export function useTripTransferForm({
     timingError,
     uploadFiles
   };
+}
+
+async function uploadTransferAttachments({
+  availableSlots,
+  dispatch,
+  files,
+  uploadMedia
+}: {
+  availableSlots: number;
+  dispatch: (action: TransferFormAction) => void;
+  files: File[];
+  uploadMedia: (file: File, successMessage?: null | string) => Promise<Id<'media'> | null>;
+}) {
+  const selectedFiles = files.slice(0, availableSlots);
+  const results = await Promise.all(
+    selectedFiles.map((file) => uploadTransferAttachment(file, uploadMedia))
+  );
+  const uploaded = results.filter(
+    (attachment): attachment is AttachmentDraft => attachment !== null
+  );
+  if (uploaded.length > 0) dispatch({ attachments: uploaded, type: 'appendAttachments' });
+  const warning = transferUploadWarning(
+    files.length - selectedFiles.length,
+    selectedFiles.length - uploaded.length
+  );
+  if (warning) dispatch({ status: { kind: 'warning', message: warning }, type: 'setStatus' });
+}
+
+async function uploadTransferAttachment(
+  file: File,
+  uploadMedia: (file: File, successMessage?: null | string) => Promise<Id<'media'> | null>
+): Promise<AttachmentDraft | null> {
+  try {
+    const mediaId = await uploadMedia(file, null);
+    return mediaId ? { id: mediaId, name: file.name } : null;
+  } catch {
+    return null;
+  }
+}
+
+function transferUploadWarning(omittedCount: number, failedCount: number): string | null {
+  const messages = [
+    omittedCount > 0
+      ? `${omittedCount} file${omittedCount === 1 ? '' : 's'} exceeded the 5-file limit.`
+      : null,
+    failedCount > 0
+      ? `${failedCount} file${failedCount === 1 ? '' : 's'} could not be uploaded.`
+      : null
+  ].filter((message): message is string => Boolean(message));
+  return messages.join(' ') || null;
 }

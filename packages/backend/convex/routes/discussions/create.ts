@@ -11,5 +11,10 @@ export const run = mutation({
   },
   returns: v.id('discussions'),
   handler: (ctx, args) =>
-    Discussions.create(ctx, args.title, args.memberUserIds, args.clientRequestId, args.tripId)
+    Discussions.create(ctx, {
+      clientRequestId: args.clientRequestId,
+      memberUserIds: args.memberUserIds,
+      title: args.title,
+      tripId: args.tripId
+    })
 });

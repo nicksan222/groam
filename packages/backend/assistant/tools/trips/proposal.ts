@@ -6,6 +6,43 @@ import { CURRENCIES, DEFAULT_TRIP_CURRENCY } from '#backend/assistant/tools/trip
 import { internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
 
+const tripProposalSchema = z.object({
+  budgetAmount: z
+    .number()
+    .positive()
+    .optional()
+    .describe('Total group budget in the trip currency — not a per-person amount.'),
+  countryCode: z.string().length(2).optional(),
+  currency: z.enum(CURRENCIES).optional(),
+  dateNotes: z.string().max(240).optional(),
+  destination: z.string().min(1).max(120).optional(),
+  name: z.string().min(1).max(100),
+  startDate: z.string().max(10).optional(),
+  totalDays: z.number().int().min(1).max(365).optional()
+});
+
+type TripProposalInput = z.infer<typeof tripProposalSchema>;
+
+function createTripInput(input: TripProposalInput) {
+  const destination = input.destination
+    ? {
+        ...(input.countryCode ? { countryCode: input.countryCode.toUpperCase() } : {}),
+        name: input.destination,
+        status: 'known' as const
+      }
+    : { status: 'undecided' as const };
+  return {
+    ...(input.budgetAmount ? { budget: { amount: input.budgetAmount } } : {}),
+    clientRequestId: `assistant-${crypto.randomUUID()}`,
+    currency: input.currency ?? DEFAULT_TRIP_CURRENCY,
+    ...(input.dateNotes ? { dateNotes: input.dateNotes } : {}),
+    destination,
+    ...(input.totalDays ? { duration: { totalDays: input.totalDays } } : {}),
+    name: input.name,
+    ...(input.startDate ? { startDate: input.startDate } : {})
+  };
+}
+
 export function createTripProposalTool(threadId: string, scope: 'discussion' | 'private') {
   return createTool({
     description:
@@ -13,22 +50,7 @@ export function createTripProposalTool(threadId: string, scope: 'discussion' | '
     execute: async (toolCtx, input) => {
       const [tripId, access]: [Id<'trips'>, { tags: AssistantContextTag[] }] = await Promise.all([
         toolCtx.runMutation(internal.modules.travel.trips.commit.create, {
-          input: {
-            ...(input.budgetAmount ? { budget: { amount: input.budgetAmount } } : {}),
-            clientRequestId: `assistant-${crypto.randomUUID()}`,
-            currency: input.currency ?? DEFAULT_TRIP_CURRENCY,
-            ...(input.dateNotes ? { dateNotes: input.dateNotes } : {}),
-            destination: input.destination
-              ? {
-                  ...(input.countryCode ? { countryCode: input.countryCode.toUpperCase() } : {}),
-                  name: input.destination,
-                  status: 'known' as const
-                }
-              : { status: 'undecided' as const },
-            ...(input.totalDays ? { duration: { totalDays: input.totalDays } } : {}),
-            name: input.name,
-            ...(input.startDate ? { startDate: input.startDate } : {})
-          },
+          input: createTripInput(input),
           signatureValid: true
         }),
         toolCtx.runQuery(internal.modules.assistant.model.index.access, { scope, threadId })
@@ -48,19 +70,6 @@ export function createTripProposalTool(threadId: string, scope: 'discussion' | '
         tripId
       };
     },
-    inputSchema: z.object({
-      budgetAmount: z
-        .number()
-        .positive()
-        .optional()
-        .describe('Total group budget in the trip currency — not a per-person amount.'),
-      countryCode: z.string().length(2).optional(),
-      currency: z.enum(CURRENCIES).optional(),
-      dateNotes: z.string().max(240).optional(),
-      destination: z.string().min(1).max(120).optional(),
-      name: z.string().min(1).max(100),
-      startDate: z.string().max(10).optional(),
-      totalDays: z.number().int().min(1).max(365).optional()
-    })
+    inputSchema: tripProposalSchema
   });
 }

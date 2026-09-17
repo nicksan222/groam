@@ -55,22 +55,28 @@ export async function writeSeedWorkspaceTrips(
 ): Promise<Id<'trips'>[]> {
   return await withSeedWrites(async () => {
     const tripIds: Id<'trips'>[] = [];
-    await writeSeedWorkspaceTripAt(ctx, plans, workspace, 0, tripIds);
+    await writeSeedWorkspaceTripAt({ ctx, plans, workspace, index: 0, tripIds });
     return tripIds;
   });
 }
 
-async function writeSeedWorkspaceTripAt(
-  ctx: MutationCtx,
-  plans: SeedWorkspaceTripPlan[],
-  workspace: Workspace,
-  index: number,
-  tripIds: Id<'trips'>[]
-): Promise<void> {
+async function writeSeedWorkspaceTripAt({
+  ctx,
+  plans,
+  workspace,
+  index,
+  tripIds
+}: {
+  ctx: MutationCtx;
+  plans: SeedWorkspaceTripPlan[];
+  workspace: Workspace;
+  index: number;
+  tripIds: Id<'trips'>[];
+}): Promise<void> {
   const plan = plans[index];
   if (plan === undefined) return;
   tripIds.push(await writeSeedWorkspaceTrip(ctx, plan, workspace));
-  await writeSeedWorkspaceTripAt(ctx, plans, workspace, index + 1, tripIds);
+  await writeSeedWorkspaceTripAt({ ctx, plans, workspace, index: index + 1, tripIds });
 }
 
 async function writeSeedWorkspaceTrip(

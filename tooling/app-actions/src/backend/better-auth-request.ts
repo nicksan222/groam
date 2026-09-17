@@ -31,10 +31,17 @@ export async function authRequest(
 
 export async function postRequired(
   backend: BackendSession,
-  url: URL,
-  body: Record<string, unknown>,
-  cookie: string,
-  operation: string
+  {
+    body,
+    cookie,
+    operation,
+    url
+  }: {
+    body: Record<string, unknown>;
+    cookie: string;
+    operation: string;
+    url: URL;
+  }
 ): Promise<void> {
   const response = await authRequest(backend, url, body, cookie);
   await assertResponse(response, operation);

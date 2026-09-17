@@ -20,41 +20,7 @@ export function ResolveDiffContent({
         {files.length === 0 ? (
           <p className="font-mono text-xs text-muted-foreground">No files</p>
         ) : (
-          files.map((file) => (
-            <div className="flex items-start gap-3" key={file.id}>
-              <span
-                className={cn(
-                  'mt-1 font-mono text-xs',
-                  tone === 'removed' ? 'text-destructive-foreground' : 'text-primary'
-                )}
-              >
-                {tone === 'removed' ? '−' : tone === 'added' ? '+' : '·'}
-              </span>
-              {file.url && file.contentType.startsWith('image/') ? (
-                <img
-                  alt={file.name}
-                  className="h-24 w-32 shrink-0 rounded-md border border-border object-cover"
-                  src={file.url}
-                />
-              ) : (
-                <FileText className="mt-1 size-5 shrink-0 text-muted-foreground" />
-              )}
-              <div className="min-w-0">
-                <a
-                  className="break-all text-xs font-medium underline-offset-4 hover:underline"
-                  href={file.url ?? undefined}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  {file.name}
-                </a>
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  {file.size > 0 ? formatBytes(file.size) : 'Image preview'}
-                  {!file.url && ' · Preview unavailable'}
-                </p>
-              </div>
-            </div>
-          ))
+          files.map((file) => <ResolveDiffFile file={file} key={file.id} tone={tone} />)
         )}
       </div>
     );
@@ -80,6 +46,52 @@ export function ResolveDiffContent({
           <span className="min-w-0 whitespace-pre-wrap break-words pr-4">{line || ' '}</span>
         </div>
       ))}
+    </div>
+  );
+}
+
+function ResolveDiffFile({
+  file,
+  tone
+}: {
+  file: ResolutionMedia;
+  tone: 'removed' | 'added' | 'neutral';
+}) {
+  const image = file.url && file.contentType.startsWith('image/');
+  const marker = tone === 'removed' ? '−' : tone === 'added' ? '+' : '·';
+  return (
+    <div className="flex items-start gap-3">
+      <span
+        className={cn(
+          'mt-1 font-mono text-xs',
+          tone === 'removed' ? 'text-destructive-foreground' : 'text-primary'
+        )}
+      >
+        {marker}
+      </span>
+      {image ? (
+        <img
+          alt={file.name}
+          className="h-24 w-32 shrink-0 rounded-md border border-border object-cover"
+          src={file.url ?? undefined}
+        />
+      ) : (
+        <FileText className="mt-1 size-5 shrink-0 text-muted-foreground" />
+      )}
+      <div className="min-w-0">
+        <a
+          className="break-all text-xs font-medium underline-offset-4 hover:underline"
+          href={file.url ?? undefined}
+          rel="noreferrer"
+          target="_blank"
+        >
+          {file.name}
+        </a>
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          {file.size > 0 ? formatBytes(file.size) : 'Image preview'}
+          {!file.url && ' · Preview unavailable'}
+        </p>
+      </div>
     </div>
   );
 }

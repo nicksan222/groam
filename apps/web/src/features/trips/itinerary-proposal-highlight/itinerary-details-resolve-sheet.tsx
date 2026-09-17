@@ -94,22 +94,7 @@ export function ItineraryDetailsResolveSheet({
           if (pending) event.preventDefault();
         }}
       >
-        {pending && (
-          <div
-            className="absolute inset-0 z-50 grid place-items-center bg-background/90 backdrop-blur-sm"
-            role="status"
-          >
-            <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-5 py-4 shadow-lg">
-              <Spinner className="size-5" />
-              <div>
-                <p className="text-sm font-semibold">Applying your choices…</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  Updating your idea and its files.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+        <ResolveSheetPendingOverlay pending={pending} />
         <DialogHeader className="shrink-0 border-b border-border px-5 py-5 text-left sm:px-6">
           <DialogTitle className="flex items-center gap-2.5 text-lg">
             <GitMerge className="size-5 text-primary" />
@@ -124,49 +109,13 @@ export function ItineraryDetailsResolveSheet({
             sharedBranchName={sharedBranchName}
           />
         </DialogHeader>
-        <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-3 sm:px-6">
-          <fieldset className="flex gap-1 rounded-lg border border-border p-1">
-            <legend className="sr-only">Diff view</legend>
-            <Button
-              disabled={pending}
-              size="sm"
-              variant={view === 'diff' ? 'secondary' : 'ghost'}
-              aria-pressed={view === 'diff'}
-              onClick={() => setView('diff')}
-            >
-              <Columns2 className="size-3.5" />
-              Split diff
-            </Button>
-            <Button
-              disabled={pending}
-              size="sm"
-              variant={view === 'result' ? 'secondary' : 'ghost'}
-              aria-pressed={view === 'result'}
-              onClick={() => setView('result')}
-            >
-              <ListChecks className="size-3.5" />
-              Result preview
-            </Button>
-          </fieldset>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={disabled}
-              onClick={() => chooseAll('shared')}
-            >
-              Use all shared
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={disabled}
-              onClick={() => chooseAll('mine')}
-            >
-              Keep all mine
-            </Button>
-          </div>
-        </div>
+        <ResolveSheetControls
+          disabled={disabled}
+          onChooseAll={chooseAll}
+          onViewChange={setView}
+          pending={pending}
+          view={view}
+        />
         <div className="flex min-h-0 flex-1 overflow-hidden">
           <nav
             aria-label="Changed fields"
@@ -176,7 +125,7 @@ export function ItineraryDetailsResolveSheet({
               Changed details
             </p>
             {resolveRows.map((row) => (
-              <button
+              <Button
                 disabled={pending}
                 type="button"
                 key={row.key}
@@ -189,6 +138,7 @@ export function ItineraryDetailsResolveSheet({
                   );
                 }}
                 className="flex w-full items-center gap-2 rounded-md px-2 py-2.5 text-left text-xs transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50"
+                unstyled
               >
                 {choices[row.key] ? (
                   <Check className="size-3.5 shrink-0 text-primary" />
@@ -196,16 +146,11 @@ export function ItineraryDetailsResolveSheet({
                   <CircleDot className="size-3.5 shrink-0 text-muted-foreground" />
                 )}
                 {row.label}
-              </button>
+              </Button>
             ))}
           </nav>
           <div className="min-h-0 min-w-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-4 sm:p-6">
-            {changed && Object.keys(selection.choices).length > 0 && (
-              <p role="alert" className="rounded-lg border border-warning/40 px-4 py-3 text-sm">
-                The trip changed during your review. Your choices were cleared so you can review the
-                latest values.
-              </p>
-            )}
+            <ResolveSheetRevisionNotice changed={changed} choices={selection.choices} />
             {otherConflicts > 0 && proposalId && (
               <p className="text-xs text-muted-foreground">
                 {otherConflicts} other itinerary conflicts need review.{' '}
@@ -290,5 +235,94 @@ export function ItineraryDetailsResolveSheet({
         </footer>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function ResolveSheetPendingOverlay({ pending }: { pending: boolean }) {
+  if (!pending) return null;
+  return (
+    <div
+      className="absolute inset-0 z-50 grid place-items-center bg-background/90 backdrop-blur-sm"
+      role="status"
+    >
+      <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-5 py-4 shadow-lg">
+        <Spinner className="size-5" />
+        <div>
+          <p className="text-sm font-semibold">Applying your choices…</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">Updating your idea and its files.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ResolveSheetControls({
+  disabled,
+  onChooseAll,
+  onViewChange,
+  pending,
+  view
+}: {
+  disabled: boolean;
+  onChooseAll: (choice: DetailsResolveChoice) => void;
+  onViewChange: (view: 'diff' | 'result') => void;
+  pending: boolean;
+  view: 'diff' | 'result';
+}) {
+  return (
+    <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-3 sm:px-6">
+      <fieldset className="flex gap-1 rounded-lg border border-border p-1">
+        <legend className="sr-only">Diff view</legend>
+        <Button
+          aria-pressed={view === 'diff'}
+          disabled={pending}
+          onClick={() => onViewChange('diff')}
+          size="sm"
+          variant={view === 'diff' ? 'secondary' : 'ghost'}
+        >
+          <Columns2 className="size-3.5" />
+          Split diff
+        </Button>
+        <Button
+          aria-pressed={view === 'result'}
+          disabled={pending}
+          onClick={() => onViewChange('result')}
+          size="sm"
+          variant={view === 'result' ? 'secondary' : 'ghost'}
+        >
+          <ListChecks className="size-3.5" />
+          Result preview
+        </Button>
+      </fieldset>
+      <div className="flex gap-2">
+        <Button
+          disabled={disabled}
+          onClick={() => onChooseAll('shared')}
+          size="sm"
+          variant="outline"
+        >
+          Use all shared
+        </Button>
+        <Button disabled={disabled} onClick={() => onChooseAll('mine')} size="sm" variant="outline">
+          Keep all mine
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function ResolveSheetRevisionNotice({
+  changed,
+  choices
+}: {
+  changed: boolean;
+  choices: Record<string, DetailsResolveChoice>;
+}) {
+  if (!changed || Object.keys(choices).length === 0) return null;
+  return (
+    <p className="rounded-lg border border-warning/40 px-4 py-3 text-sm" role="alert">
+      The trip changed during your review. Your choices were cleared so you can review the latest
+      values.
+    </p>
   );
 }

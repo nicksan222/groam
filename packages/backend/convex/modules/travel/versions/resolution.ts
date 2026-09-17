@@ -35,13 +35,19 @@ function detectConflictPaths(
  * Builds the merged snapshot that applies manual conflict resolutions before Git merge.
  * Each conflict path must receive exactly one resolution choice.
  */
-function resolveConflictSnapshot(
-  base: VersionSnapshot,
-  current: VersionSnapshot,
-  proposed: VersionSnapshot,
-  conflictPaths: string[],
-  resolutions: ConflictResolution[]
-): VersionSnapshot {
+function resolveConflictSnapshot({
+  base,
+  current,
+  proposed,
+  conflictPaths,
+  resolutions
+}: {
+  base: VersionSnapshot;
+  current: VersionSnapshot;
+  proposed: VersionSnapshot;
+  conflictPaths: string[];
+  resolutions: ConflictResolution[];
+}): VersionSnapshot {
   const resolutionByPath = new Map(resolutions.map((resolution) => [resolution.path, resolution]));
   if (
     resolutionByPath.size !== resolutions.length ||

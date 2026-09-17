@@ -1,4 +1,5 @@
 import type { Id } from '@groam/backend/data-model';
+import { Button } from '@groam/ui/components/button';
 import { FormDialog } from '@groam/ui/components/form-dialog';
 import { IconTile } from '@groam/ui/components/icon-tile';
 import { toast } from '@groam/ui/components/toast';
@@ -70,30 +71,7 @@ export function CreateTripDialog({ createTrip, onClose, onCreated }: CreateTripD
 
     await submitting.run(async () => {
       const tripId = await createTrip(
-        {
-          clientRequestId,
-          ...(budgetAmount === undefined ? {} : { budget: { amount: budgetAmount } }),
-          currency: information.currency,
-          dateNotes: information.dateNotes.trim() || undefined,
-          destination:
-            information.destinationStatus === 'known' && information.destination
-              ? {
-                  ...(information.destination.countryCode
-                    ? { countryCode: information.destination.countryCode }
-                    : {}),
-                  coordinates: {
-                    latitude: information.destination.latitude,
-                    longitude: information.destination.longitude
-                  },
-                  name: information.destination.name,
-                  placeId: information.destination.placeId,
-                  status: 'known'
-                }
-              : { status: 'undecided' },
-          ...(totalDays === undefined ? {} : { duration: { totalDays } }),
-          name: information.name,
-          ...(information.startDate ? { startDate: information.startDate } : {})
-        },
+        createTripInput({ budgetAmount, clientRequestId, information, totalDays }),
         null
       );
       if (tripId) {
@@ -154,15 +132,53 @@ export function CreateTripDialog({ createTrip, onClose, onCreated }: CreateTripD
             );
           })}
         </div>
-        <button
+        <Button
           className="text-left text-sm text-primary underline-offset-2 hover:underline"
           disabled={submitting.isPending}
           onClick={() => openDialog('invite')}
           type="button"
+          unstyled
         >
           Invite to this group
-        </button>
+        </Button>
       </section>
     </FormDialog>
   );
+}
+
+function createTripInput({
+  budgetAmount,
+  clientRequestId,
+  information,
+  totalDays
+}: {
+  budgetAmount: number | undefined;
+  clientRequestId: string;
+  information: TripInformationFormState;
+  totalDays: number | undefined;
+}): CreateTripInput {
+  const destination =
+    information.destinationStatus === 'known' && information.destination
+      ? knownDestination(information.destination)
+      : { status: 'undecided' as const };
+  return {
+    clientRequestId,
+    ...(budgetAmount === undefined ? {} : { budget: { amount: budgetAmount } }),
+    currency: information.currency,
+    dateNotes: information.dateNotes.trim() || undefined,
+    destination,
+    ...(totalDays === undefined ? {} : { duration: { totalDays } }),
+    name: information.name,
+    ...(information.startDate ? { startDate: information.startDate } : {})
+  };
+}
+
+function knownDestination(destination: NonNullable<TripInformationFormState['destination']>) {
+  return {
+    ...(destination.countryCode ? { countryCode: destination.countryCode } : {}),
+    coordinates: { latitude: destination.latitude, longitude: destination.longitude },
+    name: destination.name,
+    placeId: destination.placeId,
+    status: 'known' as const
+  };
 }

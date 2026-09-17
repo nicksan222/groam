@@ -19,12 +19,11 @@ export const run = tripQuery({
   returns: v.array(attachmentView),
   handler: async (ctx, { target }) => {
     await TripTargets.assertBelongsToTrip(ctx, ctx, target);
-    return await Attachments.viewForTarget(
-      ctx,
-      ctx.trip._id,
+    return await Attachments.viewForTarget(ctx, {
+      maximum: Attachments.limitFor(target),
+      organizationId: ctx.workspace.organizationId,
       target,
-      Attachments.limitFor(target),
-      ctx.workspace.organizationId
-    );
+      tripId: ctx.trip._id
+    });
   }
 });

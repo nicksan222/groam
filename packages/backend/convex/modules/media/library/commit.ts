@@ -43,5 +43,5 @@ export const save = internalMutation({
   },
   returns: saveMediaResultValidator,
   handler: (ctx, { contentType, name, signatureValid, storageId }) =>
-    Media.save(ctx, storageId, name, contentType, signatureValid)
+    Media.save(ctx, { name, signatureValid, storageId, uploadedContentType: contentType })
 });

@@ -1,3 +1,4 @@
+import { Button } from '@groam/ui/components/button';
 import { BedDouble, MapPin, Pencil, Route } from 'lucide-react';
 import {
   activityChangeKey,
@@ -33,12 +34,13 @@ export function EditorDayRow({
       change={change}
       className="rounded-none [&>div]:ps-0 [&>p]:mb-0 [&>p]:px-4 [&>p]:pt-2"
     >
-      <button
+      <Button
         type="button"
         aria-label={overnight ? `Edit overnight stay at ${entry.title}` : `Edit ${entry.title}`}
         aria-description={`${overnight ? 'Overnight' : entryTime(entry, day)} · ${entry.location}`}
         onClick={() => onEdit(entry)}
         className="group relative grid w-full grid-cols-[5.5rem_minmax(0,1fr)] items-stretch text-left transition-colors hover:bg-muted/40 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:grid-cols-[7.5rem_minmax(0,1fr)_minmax(0,0.7fr)]"
+        unstyled
       >
         <span className="px-3 py-4 text-xs font-medium leading-5 tabular-nums sm:px-4">
           {overnight ? 'Overnight' : entryTime(entry, day)}
@@ -63,7 +65,7 @@ export function EditorDayRow({
           aria-hidden="true"
           className="absolute right-3 top-5 hidden size-3 text-muted-foreground opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 sm:block"
         />
-      </button>
+      </Button>
     </ItineraryProposalHighlight>
   );
 }

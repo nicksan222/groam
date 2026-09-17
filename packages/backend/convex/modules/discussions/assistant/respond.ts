@@ -84,7 +84,11 @@ export class DiscussionAssistant {
       // Convex "Server Error / An error occurred" toast on top of the failed assistant bubble.
       const message = AssistantErrors.message(error);
       console.error('discussion assistant respond failed:', message, error);
-      await AgentRunTracking.record(ctx, claim.runId, 'error', 'Run failed', message);
+      await AgentRunTracking.record(ctx, claim.runId, {
+        detail: message,
+        kind: 'error',
+        label: 'Run failed'
+      });
       await ctx.runMutation(internal.modules.discussions.assistant.index.finishResponse, {
         discussionId: args.discussionId,
         error: message,

@@ -19,15 +19,13 @@ type ToolStepResult = {
 async function record(
   ctx: ActionCtx,
   runId: Id<'agentRuns'>,
-  kind: EventKind,
-  label: string,
-  detail?: string
+  event: { detail?: string; kind: EventKind; label: string }
 ) {
   await ctx.runMutation(internal.modules.assistant.runs.functions.recordEvent, {
-    kind,
-    label,
+    kind: event.kind,
+    label: event.label,
     runId,
-    ...(detail ? { detail } : {})
+    ...(event.detail ? { detail: event.detail } : {})
   });
 }
 

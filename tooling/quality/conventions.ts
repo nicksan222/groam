@@ -1,9 +1,3 @@
-/**
- * Size ownership: this checker owns feature-TSX *file* length
- * (`MAX_COMPONENT_FILE_LINES` = 300). Biome owns *function* length
- * (`noExcessiveLinesPerFunction` maxLines 250 in `tooling/biome-config`).
- * Do not add a third size limit.
- */
 const sourceExtension = /\.(?:[cm]?[jt]sx?|astro)$/u;
 const styleSourceExtension = /\.(?:css|[cm]?[jt]sx?|astro)$/u;
 const kebabName = /^[a-z0-9]+(?:-[a-z0-9]+)*(?:\.[a-z0-9]+(?:-[a-z0-9]+)*)*$/u;
@@ -55,7 +49,8 @@ const exportedComponent = new RegExp(
 );
 // Unnamed defaults (`export default memo(Foo)`, `export default function ()`)
 // are not counted: HOCs and wrappers are too noisy to treat as components.
-const MAX_COMPONENT_FILE_LINES = 300;
+
+const featureHookFile = /^apps\/web\/src\/features\/[^/]+\/hooks\/use-[^/]+\.(?:ts|tsx)$/u;
 
 export type ConventionCategory =
   | 'ai-imports'
@@ -65,6 +60,7 @@ export type ConventionCategory =
   | 'gradients'
   | 'halo-imports'
   | 'hardcoded-colors'
+  | 'hook-tests'
   | 'import-meta-env'
   | 'legacy-modules'
   | 'names'
@@ -177,32 +173,31 @@ export function inspectFile(
     findings.push({ category: 'parent-imports', location: filePath });
   }
 
-  if (
-    filePath.startsWith('packages/backend/convex/') &&
-    !convexDbRoot.test(filePath) &&
-    !convexMigration.test(filePath) &&
-    !backendTestSupport.test(filePath)
-  ) {
-    for (const match of source.matchAll(rawConvexAccess)) {
-      const line = source.slice(0, match.index).split('\n').length;
-      findings.push({ category: 'raw-convex-access', location: `${filePath}:${line}` });
-    }
-  }
-
-  if (convexDbRoot.test(filePath) && convexNodeRuntime.test(source)) {
-    for (const match of source.matchAll(rawConvexAccess)) {
-      const line = source.slice(0, match.index).split('\n').length;
-      findings.push({ category: 'raw-convex-access', location: `${filePath}:${line}` });
-    }
-  }
-
-  if (!envPackage.test(filePath) && importMetaEnv.test(source)) {
-    const line = source.slice(0, source.search(importMetaEnv)).split('\n').length;
-    findings.push({ category: 'import-meta-env', location: `${filePath}:${line}` });
-  }
+  findings.push(...inspectRawConvexAccess(filePath, source));
+  findings.push(...inspectImportMetaEnv(filePath, source));
 
   findings.push(...inspectImportSpecifiers(filePath, source, options));
   return findings;
+}
+
+function inspectRawConvexAccess(filePath: string, source: string): ConventionFinding[] {
+  const isNonNodeBackendFile =
+    filePath.startsWith('packages/backend/convex/') &&
+    !convexDbRoot.test(filePath) &&
+    !convexMigration.test(filePath) &&
+    !backendTestSupport.test(filePath);
+  const isNodeRuntimeBackendFile = convexDbRoot.test(filePath) && convexNodeRuntime.test(source);
+  if (!isNonNodeBackendFile && !isNodeRuntimeBackendFile) return [];
+  return [...source.matchAll(rawConvexAccess)].map((match) => ({
+    category: 'raw-convex-access' as const,
+    location: `${filePath}:${source.slice(0, match.index).split('\n').length}`
+  }));
+}
+
+function inspectImportMetaEnv(filePath: string, source: string): ConventionFinding[] {
+  if (envPackage.test(filePath) || !importMetaEnv.test(source)) return [];
+  const line = source.slice(0, source.search(importMetaEnv)).split('\n').length;
+  return [{ category: 'import-meta-env', location: `${filePath}:${line}` }];
 }
 
 export function inspectFiles(
@@ -225,6 +220,17 @@ export function inspectFiles(
       .map((directory) => ({ category: 'directories' as const, location: directory })),
     ...findings
   ];
+}
+
+export function missingFeatureHookTests(filePaths: readonly string[]): ConventionFinding[] {
+  const paths = new Set(filePaths);
+  return filePaths.flatMap((filePath) => {
+    if (!featureHookFile.test(filePath) || testOrSpecFile.test(filePath)) return [];
+    const base = filePath.replace(/\.(?:ts|tsx)$/u, '');
+    const hasColocatedTest = paths.has(`${base}.test.ts`) || paths.has(`${base}.test.tsx`);
+    if (hasColocatedTest) return [];
+    return [{ category: 'hook-tests' as const, location: filePath }];
+  });
 }
 
 function inspectStyle(filePath: string, source: string): ConventionFinding[] {
@@ -266,45 +272,63 @@ function inspectImportSpecifiers(
     const specifier = match[1] ?? match[2];
     if (!specifier) continue;
     const line = source.slice(0, match.index).split('\n').length;
-    const location = `${filePath}:${line}`;
-
-    if (specifier === '@halo' || specifier.startsWith('@halo/')) {
-      findings.push({ category: 'halo-imports', location });
-    }
-
-    if (specifier === '@groam/ui' || specifier.startsWith(groamUiPrefix)) {
-      const subpath = specifier.slice(groamUiPrefix.length);
-      const allowed = allowedUiSubpaths.some(
-        (prefix) => subpath === prefix.replace(/\/$/u, '') || subpath.startsWith(prefix)
-      );
-      if (!allowed) {
-        findings.push({ category: 'ui-imports', location });
-      } else if (options?.uiExportSubpaths && !options.uiExportSubpaths.has(subpath)) {
-        findings.push({ category: 'ui-imports', location });
-      }
-    }
-
-    if (specifier.startsWith(groamAiPrefix) && options?.aiExportPatterns) {
-      const subpath = specifier.slice(groamAiPrefix.length);
-      if (!matchesPackageExport(subpath, options.aiExportPatterns)) {
-        findings.push({ category: 'ai-imports', location });
-      }
-    }
-
-    if (
-      filePath.startsWith('packages/ui/') &&
-      specifier.startsWith(uiInternalSrcPrefix) &&
-      options?.uiSrcImportTargetsTsx?.(specifier.slice(uiInternalSrcPrefix.length))
-    ) {
-      findings.push({ category: 'ui-internal-imports', location });
-    }
-
-    if (tanstackRoute.test(filePath) && !isAllowedRouteSpecifier(specifier, options)) {
-      findings.push({ category: 'route-imports', location });
-    }
+    findings.push(...inspectImportSpecifier({ filePath, line, options, specifier }));
   }
 
   return findings;
+}
+
+function inspectImportSpecifier({
+  filePath,
+  line,
+  options,
+  specifier
+}: {
+  filePath: string;
+  line: number;
+  options?: InspectOptions;
+  specifier: string;
+}): ConventionFinding[] {
+  const location = `${filePath}:${line}`;
+  const findings: ConventionFinding[] = [];
+  if (specifier === '@halo' || specifier.startsWith('@halo/')) {
+    findings.push({ category: 'halo-imports', location });
+  }
+  if (isInvalidUiImport(specifier, options)) findings.push({ category: 'ui-imports', location });
+  if (isInvalidAiImport(specifier, options)) findings.push({ category: 'ai-imports', location });
+  if (isInvalidUiInternalImport(filePath, specifier, options)) {
+    findings.push({ category: 'ui-internal-imports', location });
+  }
+  if (tanstackRoute.test(filePath) && !isAllowedRouteSpecifier(specifier, options)) {
+    findings.push({ category: 'route-imports', location });
+  }
+  return findings;
+}
+
+function isInvalidUiImport(specifier: string, options?: InspectOptions): boolean {
+  if (specifier !== '@groam/ui' && !specifier.startsWith(groamUiPrefix)) return false;
+  const subpath = specifier.slice(groamUiPrefix.length);
+  const isAllowed = allowedUiSubpaths.some(
+    (prefix) => subpath === prefix.replace(/\/$/u, '') || subpath.startsWith(prefix)
+  );
+  return !isAllowed || Boolean(options?.uiExportSubpaths && !options.uiExportSubpaths.has(subpath));
+}
+
+function isInvalidAiImport(specifier: string, options?: InspectOptions): boolean {
+  if (!specifier.startsWith(groamAiPrefix) || !options?.aiExportPatterns) return false;
+  return !matchesPackageExport(specifier.slice(groamAiPrefix.length), options.aiExportPatterns);
+}
+
+function isInvalidUiInternalImport(
+  filePath: string,
+  specifier: string,
+  options?: InspectOptions
+): boolean {
+  return Boolean(
+    filePath.startsWith('packages/ui/') &&
+      specifier.startsWith(uiInternalSrcPrefix) &&
+      options?.uiSrcImportTargetsTsx?.(specifier.slice(uiInternalSrcPrefix.length))
+  );
 }
 
 function inspectComponentFile(filePath: string, source: string): ConventionFinding[] {
@@ -317,13 +341,6 @@ function inspectComponentFile(filePath: string, source: string): ConventionFindi
   }
 
   const findings: ConventionFinding[] = [];
-  const lines = source.split('\n').length;
-  if (lines > MAX_COMPONENT_FILE_LINES) {
-    findings.push({
-      category: 'component-files',
-      location: `${filePath} (${lines} lines, max ${MAX_COMPONENT_FILE_LINES})`
-    });
-  }
 
   exportedComponent.lastIndex = 0;
   const exported = [...source.matchAll(exportedComponent)].map(

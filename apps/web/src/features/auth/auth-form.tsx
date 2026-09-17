@@ -35,14 +35,15 @@ export function AuthForm({ isSignIn, state, submit, switchFlow, updateState }: A
           </Button>
           <p className="text-center text-sm text-muted-foreground">
             {isSignIn ? "Don't have an account?" : 'Already have an account?'}{' '}
-            <button
+            <Button
               className="font-medium text-foreground underline underline-offset-4 hover:text-primary"
               data-testid={testIds.authSwitchFlow}
               onClick={switchFlow}
               type="button"
+              unstyled
             >
               {isSignIn ? 'Sign up' : 'Sign in'}
-            </button>
+            </Button>
           </p>
         </div>
       </div>

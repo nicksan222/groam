@@ -14,39 +14,52 @@ export function isEmptyDiffField(field: VisualDiffField, side: 'after' | 'before
 
 export function formatDiffValue(format: VisualDiffField['format'], value: unknown): string | null {
   if (value === null || value === undefined || format === null || format === 'text') return null;
-  if (format === 'date' && typeof value === 'string') {
-    const date = new Date(`${value}T00:00:00`);
-    return Number.isNaN(date.valueOf()) ? value : mediumDateTime.format(date);
-  }
-  if (format === 'money' && typeof value === 'object') {
-    const amount = (value as { amount?: unknown }).amount;
-    return typeof amount === 'number' ? amount.toLocaleString() : null;
-  }
-  if (format === 'duration' && typeof value === 'object') {
-    const duration = value as {
-      idealDays?: unknown;
-      minimumDays?: unknown;
-      minutes?: unknown;
-      totalDays?: unknown;
-    };
-    if (typeof duration.minutes === 'number') return `${duration.minutes} min`;
-    if (typeof duration.totalDays === 'number') return `${duration.totalDays} days`;
-    if (typeof duration.idealDays === 'number') return `${duration.idealDays} ideal days`;
-    if (typeof duration.minimumDays === 'number') return `${duration.minimumDays} minimum days`;
-  }
-  if (format === 'destination' && typeof value === 'object') {
-    const destination = value as { name?: unknown; status?: unknown };
-    return destination.status === 'undecided'
-      ? 'Undecided'
-      : typeof destination.name === 'string'
-        ? destination.name
-        : null;
-  }
-  if (format === 'travelMode' && typeof value === 'string') {
-    return fieldLabel(value);
-  }
-  if (format === 'schedule' && typeof value === 'object') return formatSchedule(value);
-  return null;
+  return diffValueFormatters[format]?.(value) ?? null;
+}
+
+const diffValueFormatters: Partial<
+  Record<NonNullable<VisualDiffField['format']>, (value: unknown) => string | null>
+> = {
+  date: (value) => (typeof value === 'string' ? formatDiffDate(value) : null),
+  destination: (value) =>
+    typeof value === 'object' && value ? formatDiffDestination(value) : null,
+  duration: (value) => (typeof value === 'object' && value ? formatDiffDuration(value) : null),
+  money: (value) => (typeof value === 'object' && value ? formatDiffMoney(value) : null),
+  schedule: (value) => (typeof value === 'object' && value ? formatSchedule(value) : null),
+  travelMode: (value) => (typeof value === 'string' ? fieldLabel(value) : null)
+};
+
+function formatDiffDate(value: string) {
+  const date = new Date(`${value}T00:00:00`);
+  return Number.isNaN(date.valueOf()) ? value : mediumDateTime.format(date);
+}
+function formatDiffMoney(value: object) {
+  const amount = (value as { amount?: unknown }).amount;
+  return typeof amount === 'number' ? amount.toLocaleString() : null;
+}
+function formatDiffDuration(value: object) {
+  const duration = value as {
+    idealDays?: unknown;
+    minimumDays?: unknown;
+    minutes?: unknown;
+    totalDays?: unknown;
+  };
+  const values = [
+    [duration.minutes, 'min'],
+    [duration.totalDays, 'days'],
+    [duration.idealDays, 'ideal days'],
+    [duration.minimumDays, 'minimum days']
+  ] as const;
+  const match = values.find(([amount]) => typeof amount === 'number');
+  return match ? `${match[0]} ${match[1]}` : null;
+}
+function formatDiffDestination(value: object) {
+  const destination = value as { name?: unknown; status?: unknown };
+  return destination.status === 'undecided'
+    ? 'Undecided'
+    : typeof destination.name === 'string'
+      ? destination.name
+      : null;
 }
 
 function formatSchedule(value: object) {

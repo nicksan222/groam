@@ -11,5 +11,11 @@ export const run = mutableTripMutation({
   },
   returns: v.id('tripDestinationTransfers'),
   handler: (ctx, { fromDestinationId, input, toDestinationId }) =>
-    TripTransfer.setDestination(ctx, ctx.trip._id, fromDestinationId, toDestinationId, input)
+    TripTransfer.setDestination({
+      ctx,
+      fromDestinationId,
+      input,
+      toDestinationId,
+      tripId: ctx.trip._id
+    })
 });

@@ -59,25 +59,40 @@ export function buildDetailResolutionRows({
   sharedTrip?: TripDetail | null;
   trip: TripDetail;
 }): ResolutionRow[] {
-  return change.fields.map((field) => {
-    const media = field.display === 'media';
-    const sharedMedia =
-      field.key === 'cover' && sharedTrip ? coverMedia(sharedTrip) : sharedAttachments;
-    const mineMedia = field.key === 'cover' ? coverMedia(trip) : mineAttachments;
-    return {
-      key: field.key,
-      label: field.label,
-      media,
-      mineMedia: media ? mineMedia : [],
-      sharedMedia: media ? sharedMedia : [],
-      mine: media
-        ? `${mineMedia.length} ${field.key === 'cover' ? 'image' : 'files'}`
-        : detailValue(trip, field.key),
-      shared: media
-        ? `${sharedMedia.length} ${field.key === 'cover' ? 'image' : 'files'}`
-        : sharedTrip
-          ? detailValue(sharedTrip, field.key)
-          : 'Loading…'
-    };
-  });
+  return change.fields.map((field) =>
+    buildResolutionRow({ field, mineAttachments, sharedAttachments, sharedTrip, trip })
+  );
+}
+
+function buildResolutionRow({
+  field,
+  mineAttachments,
+  sharedAttachments,
+  sharedTrip,
+  trip
+}: {
+  field: ItineraryChange['fields'][number];
+  mineAttachments: ResolutionMedia[];
+  sharedAttachments: ResolutionMedia[];
+  sharedTrip?: TripDetail | null;
+  trip: TripDetail;
+}): ResolutionRow {
+  const media = field.display === 'media';
+  const mineMedia = field.key === 'cover' ? coverMedia(trip) : mineAttachments;
+  const sharedMedia =
+    field.key === 'cover' && sharedTrip ? coverMedia(sharedTrip) : sharedAttachments;
+  const fileLabel = field.key === 'cover' ? 'image' : 'files';
+  return {
+    key: field.key,
+    label: field.label,
+    media,
+    mineMedia: media ? mineMedia : [],
+    sharedMedia: media ? sharedMedia : [],
+    mine: media ? `${mineMedia.length} ${fileLabel}` : detailValue(trip, field.key),
+    shared: media
+      ? `${sharedMedia.length} ${fileLabel}`
+      : sharedTrip
+        ? detailValue(sharedTrip, field.key)
+        : 'Loading…'
+  };
 }

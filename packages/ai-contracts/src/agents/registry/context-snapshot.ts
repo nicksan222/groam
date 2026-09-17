@@ -21,48 +21,58 @@ export function assistantContextMessage(snapshot: AssistantContextSnapshot): str
   return `${CONTEXT_MESSAGE_PREFIX}${JSON.stringify(snapshot)}`;
 }
 
+function contextPrefix(message: string): string | null {
+  if (message.startsWith(CONTEXT_MESSAGE_PREFIX)) return CONTEXT_MESSAGE_PREFIX;
+  if (message.startsWith(LEGACY_CONTEXT_MESSAGE_PREFIX)) return LEGACY_CONTEXT_MESSAGE_PREFIX;
+  return null;
+}
+
+function parseContextTarget(
+  target: Record<string, unknown>
+): AssistantContextSnapshot['target'] | null {
+  if (target.kind === 'workspace') return { kind: 'workspace' };
+  if (
+    target.kind === 'trip' &&
+    typeof target.section === 'string' &&
+    typeof target.tripId === 'string'
+  ) {
+    return { kind: 'trip', section: target.section, tripId: target.tripId };
+  }
+  return null;
+}
+
+function parseContextSnapshot(value: unknown): AssistantContextSnapshot | null {
+  if (!isRecord(value)) return null;
+  const { agent, key, target, title } = value;
+  const rawTags = value.tags ?? [];
+  if (
+    typeof agent !== 'string' ||
+    !isAssistantAgentId(agent) ||
+    typeof key !== 'string' ||
+    !Array.isArray(rawTags) ||
+    !isRecord(target) ||
+    typeof title !== 'string'
+  ) {
+    return null;
+  }
+  const tags = rawTags.map(parseAssistantContextTag);
+  const parsedTarget = parseContextTarget(target);
+  const definition = assistantAgents[agent];
+  if (tags.some((tag) => tag === null) || !parsedTarget || !isChatAgent(definition)) return null;
+  return {
+    agent: definition.id,
+    key,
+    tags: tags as AssistantContextTag[],
+    target: parsedTarget,
+    title
+  };
+}
+
 export function parseAssistantContextMessage(message: string): AssistantContextSnapshot | null {
-  const prefix = message.startsWith(CONTEXT_MESSAGE_PREFIX)
-    ? CONTEXT_MESSAGE_PREFIX
-    : message.startsWith(LEGACY_CONTEXT_MESSAGE_PREFIX)
-      ? LEGACY_CONTEXT_MESSAGE_PREFIX
-      : null;
+  const prefix = contextPrefix(message);
   if (!prefix) return null;
   try {
-    const value: unknown = JSON.parse(message.slice(prefix.length));
-    if (!isRecord(value)) return null;
-    const { agent, key, target, title } = value;
-    const rawTags = value.tags ?? [];
-    if (
-      typeof agent !== 'string' ||
-      !isAssistantAgentId(agent) ||
-      typeof key !== 'string' ||
-      !Array.isArray(rawTags) ||
-      !isRecord(target) ||
-      typeof title !== 'string'
-    ) {
-      return null;
-    }
-    const parsedTags = rawTags.map(parseAssistantContextTag);
-    if (parsedTags.some((tag) => tag === null)) return null;
-    const parsedTarget =
-      target.kind === 'workspace'
-        ? ({ kind: 'workspace' } as const)
-        : target.kind === 'trip' &&
-            typeof target.section === 'string' &&
-            typeof target.tripId === 'string'
-          ? ({ kind: 'trip', section: target.section, tripId: target.tripId } as const)
-          : null;
-    if (!parsedTarget) return null;
-    const definition = assistantAgents[agent];
-    if (!isChatAgent(definition)) return null;
-    return {
-      agent: definition.id,
-      key,
-      tags: parsedTags as AssistantContextTag[],
-      target: parsedTarget,
-      title
-    };
+    return parseContextSnapshot(JSON.parse(message.slice(prefix.length)) as unknown);
   } catch {
     return null;
   }

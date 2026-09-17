@@ -13,5 +13,12 @@ export const run = workspaceMutation({
   },
   returns: v.id('tripProposalComments'),
   handler: (ctx, { changeKey, content, kind, parentCommentId, proposalId }) =>
-    TripVersions.addFeedback(ctx, proposalId, content, parentCommentId, changeKey, kind)
+    TripVersions.addFeedback({
+      changeKey,
+      ctx,
+      kind,
+      parentCommentId,
+      proposalId,
+      rawContent: content
+    })
 });

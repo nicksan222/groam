@@ -94,32 +94,34 @@ function formatChangeDestination(value: object): string | null {
 
 function compactValue(format: ItineraryChangeField['format'], value: unknown): string {
   if (value === undefined || value === null || value === '') return 'Not set';
-  if (format === 'money' && typeof value === 'object') {
-    return formatChangeMoney(value) ?? 'Not set';
-  }
-  if (format === 'duration' && typeof value === 'object') {
-    return formatChangeDuration(value) ?? 'Not set';
-  }
-  if (format === 'destination' && typeof value === 'object') {
-    return formatChangeDestination(value) ?? 'Not set';
-  }
+  const formatted = formatChangeObject(format, value);
+  if (formatted) return formatted;
   if (format === 'travelMode' && typeof value === 'string') {
     return value.replace(/_/g, ' ');
   }
-  if (format === 'schedule' && typeof value === 'object') {
-    const schedule = value as {
-      day?: unknown;
-      endDay?: unknown;
-      startDay?: unknown;
-    };
-    if (typeof schedule.startDay === 'number' && typeof schedule.endDay === 'number') {
-      return `Days ${schedule.startDay}–${schedule.endDay}`;
-    }
-    if (typeof schedule.day === 'number') return `Day ${schedule.day}`;
-  }
+  if (format === 'schedule' && typeof value === 'object')
+    return formatCompactSchedule(value) ?? 'Updated';
   if (typeof value === 'string' || typeof value === 'number') return String(value);
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
   return 'Updated';
+}
+
+function formatChangeObject(format: ItineraryChangeField['format'], value: unknown): string | null {
+  if (typeof value !== 'object' || !value) return null;
+  const formatters = {
+    destination: formatChangeDestination,
+    duration: formatChangeDuration,
+    money: formatChangeMoney
+  };
+  const formatter = formatters[format as keyof typeof formatters];
+  return formatter?.(value) ?? null;
+}
+
+function formatCompactSchedule(value: object): string | null {
+  const schedule = value as { day?: unknown; endDay?: unknown; startDay?: unknown };
+  if (typeof schedule.startDay === 'number' && typeof schedule.endDay === 'number')
+    return `Days ${schedule.startDay}–${schedule.endDay}`;
+  return typeof schedule.day === 'number' ? `Day ${schedule.day}` : null;
 }
 
 export function itineraryChangeFieldRows(change: ItineraryChange): ItineraryChangeFieldRow[] {

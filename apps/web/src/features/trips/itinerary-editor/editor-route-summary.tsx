@@ -1,3 +1,4 @@
+import { Button } from '@groam/ui/components/button';
 import Shell from '@groam/ui/components/shell/client';
 import { destinationChangeKey } from '@/features/trips/hooks/itinerary-proposal-changes';
 import { useItineraryProposalChangeList } from '@/features/trips/hooks/use-itinerary-proposal-changes';
@@ -37,13 +38,14 @@ export function EditorRouteSummary({
             <ItineraryProposalHighlight
               change={changes?.find((item) => item.key === destinationChangeKey(stop)) ?? null}
             >
-              <button
+              <Button
                 type="button"
                 aria-pressed={activeStops.has(stop.id)}
                 onClick={() => {
                   onSelect(stop.id);
                 }}
                 className="group flex w-full items-center gap-3 rounded-lg border border-border p-2 text-left transition-colors hover:bg-muted/50 aria-pressed:border-primary/20 aria-pressed:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                unstyled
               >
                 <span className="relative shrink-0">
                   <EditorDestinationPhoto
@@ -65,7 +67,7 @@ export function EditorRouteSummary({
                       : 'Days not assigned'}
                   </span>
                 </span>
-              </button>
+              </Button>
             </ItineraryProposalHighlight>
           </li>
         ))}

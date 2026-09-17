@@ -94,6 +94,19 @@ function bunBinaryInExtract(
 }
 
 export function prepareBun({ binariesDir, io = {}, required, target }: PrepareBunOptions): number {
+  const runtime = resolvePrepareBunIo(io);
+  runtime.mkdir(binariesDir, { recursive: true });
+  const sidecarPath = path.join(binariesDir, bunSidecarFileName(target));
+  if (runtime.exists(sidecarPath) && !required) {
+    runtime.write(`Using existing Bun sidecar at ${sidecarPath}`);
+    return 0;
+  }
+  return downloadBunSidecar({ required, runtime, sidecarPath, target });
+}
+
+type BunRuntime = Required<PrepareBunIo>;
+
+function resolvePrepareBunIo(io: Partial<PrepareBunIo>): BunRuntime {
   const copyFile = io.copyFile ?? copyFileSync;
   const download = io.download ?? downloadFile;
   const exists = io.exists ?? existsSync;
@@ -104,13 +117,21 @@ export function prepareBun({ binariesDir, io = {}, required, target }: PrepareBu
   const tempDir =
     io.tempDir ?? (() => mkdtempSync(path.join(tmpdir(), 'groam-bun-'), { encoding: 'utf8' }));
 
-  mkdir(binariesDir, { recursive: true });
-  const sidecarPath = path.join(binariesDir, bunSidecarFileName(target));
-  if (exists(sidecarPath) && !required) {
-    write(`Using existing Bun sidecar at ${sidecarPath}`);
-    return 0;
-  }
+  return { copyFile, download, exists, extract, hashFile, mkdir, tempDir, write };
+}
 
+function downloadBunSidecar({
+  required,
+  runtime,
+  sidecarPath,
+  target
+}: {
+  required: boolean;
+  runtime: BunRuntime;
+  sidecarPath: string;
+  target: string;
+}): number {
+  const { copyFile, download, exists, extract, hashFile, mkdir, tempDir, write } = runtime;
   const workDir = tempDir();
   const archive = path.join(workDir, bunReleaseAsset(target));
   const extractDir = path.join(workDir, 'extract');

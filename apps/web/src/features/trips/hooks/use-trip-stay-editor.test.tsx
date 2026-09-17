@@ -61,4 +61,65 @@ describe('useTripStayEditor', () => {
     expect(result.current.isEditing).toBe(false);
     expect(result.current.isPending).toBe(false);
   });
+
+  test('keeps editing open for invalid and failed saves', async () => {
+    const addStay = vi.fn().mockResolvedValue(false);
+    const { result } = renderHook(() =>
+      useTripStayEditor({ addStay, destination: destination as never, updateStay: vi.fn() })
+    );
+
+    act(() => result.current.open());
+    await act(async () => expect(await result.current.save()).toBe(false));
+    expect(addStay).not.toHaveBeenCalled();
+    act(() => result.current.patch({ title: 'Hotel' }));
+    await act(async () => expect(await result.current.save()).toBe(false));
+    expect(addStay).toHaveBeenCalled();
+    expect(result.current.isEditing).toBe(true);
+  });
+
+  test('updates an existing stay and appends successful uploads', async () => {
+    const updateStay = vi.fn().mockResolvedValue(true);
+    media.upload.mockResolvedValue('media-1' as Id<'media'>);
+    const stay = {
+      checkInDay: 1,
+      checkInTime: null,
+      checkOutDay: 2,
+      checkOutTime: null,
+      id: 'stay-1' as Id<'tripDestinationStays'>,
+      title: 'Hotel',
+      attachments: []
+    };
+    const { result } = renderHook(() =>
+      useTripStayEditor({ addStay: vi.fn(), destination: destination as never, updateStay })
+    );
+
+    act(() => result.current.open(stay as never));
+    await act(async () => expect(await result.current.save()).toBe(true));
+    expect(updateStay).toHaveBeenCalledWith(stay.id, expect.anything());
+
+    const files = {
+      0: new File(['x'], 'receipt.pdf'),
+      length: 1,
+      item: () => null
+    } as unknown as FileList;
+    await act(async () => result.current.uploadFiles(files));
+    expect(result.current.draft.attachments).toEqual([{ id: 'media-1', name: 'receipt.pdf' }]);
+  });
+
+  test('closes and safely ignores empty upload selections', async () => {
+    const { result } = renderHook(() =>
+      useTripStayEditor({
+        addStay: vi.fn(),
+        destination: destination as never,
+        updateStay: vi.fn()
+      })
+    );
+    act(() => {
+      result.current.open();
+      result.current.close();
+    });
+    expect(result.current.isEditing).toBe(false);
+    await act(async () => result.current.uploadFiles(null));
+    expect(media.upload).not.toHaveBeenCalled();
+  });
 });

@@ -1,3 +1,4 @@
+import { Button } from '@groam/ui/components/button';
 import { testIds } from '@/lib/test-ids';
 
 export function TripHeroMeta({
@@ -45,13 +46,14 @@ export function TripHeroMeta({
         {isProposal ? null : (
           <>
             <span aria-hidden>·</span>
-            <button
+            <Button
               className="shrink-0 underline-offset-2 hover:underline"
               onClick={onOpenRoster}
               type="button"
+              unstyled
             >
               {travelerCount} traveler{travelerCount === 1 ? '' : 's'}
-            </button>
+            </Button>
           </>
         )}
       </p>

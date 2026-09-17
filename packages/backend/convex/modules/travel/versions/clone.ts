@@ -13,27 +13,33 @@ function targetKey(target: Doc<'attachmentReferences'>['target']): string {
   return `${target.type}:${target.id}`;
 }
 
-async function copyTargetAttachments(
-  ctx: MutationCtx,
-  sourceContent: TripVersionContent,
-  sourceTarget: Target,
-  target: Target,
-  targetTripId: Id<'trips'>,
-  organizationId: string
-): Promise<boolean> {
+async function copyTargetAttachments({
+  ctx,
+  sourceContent,
+  sourceTarget,
+  target,
+  targetTripId,
+  organizationId
+}: {
+  ctx: MutationCtx;
+  sourceContent: TripVersionContent;
+  sourceTarget: Target;
+  target: Target;
+  targetTripId: Id<'trips'>;
+  organizationId: string;
+}): Promise<boolean> {
   const mediaIds = sourceContent.attachments
     .filter((attachment) => targetKey(attachment.target) === targetKey(sourceTarget))
     .sort((left, right) => left.position - right.position)
     .map((attachment) => attachment.mediaId);
-  return await Attachments.setTarget(
-    ctx,
-    targetTripId,
-    target,
+  return await Attachments.setTarget(ctx, {
+    label: 'Version items',
+    maximum: 10,
     mediaIds,
     organizationId,
-    10,
-    'Version items'
-  );
+    target,
+    tripId: targetTripId
+  });
 }
 
 // fallow-ignore-next-line complexity
@@ -58,14 +64,14 @@ export async function cloneTripContent(
   );
   const destinationIds = new Map<Id<'tripDestinations'>, Id<'tripDestinations'>>();
   const activityIds = new Map<Id<'tripDestinationActivities'>, Id<'tripDestinationActivities'>>();
-  await copyTargetAttachments(
+  await copyTargetAttachments({
     ctx,
-    content,
-    { id: source.trip._id, type: 'trip' },
-    { id: workingTripId, type: 'trip' },
-    workingTripId,
-    source.workspace.organizationId
-  );
+    organizationId: source.workspace.organizationId,
+    sourceContent: content,
+    sourceTarget: { id: source.trip._id, type: 'trip' },
+    target: { id: workingTripId, type: 'trip' },
+    targetTripId: workingTripId
+  });
 
   const copiedDestinations = await Promise.all(
     content.destinations.map(async (destination) => {
@@ -80,21 +86,20 @@ export async function cloneTripContent(
         sourceId: destination._id,
         tripId: workingTripId
       });
-      await TripLocations.setDestination(
-        ctx,
+      await TripLocations.setDestination(ctx, {
+        coordinates: destination.coordinates,
         destinationId,
-        workingTripId,
-        source.workspace.organizationId,
-        destination.coordinates
-      );
-      await copyTargetAttachments(
+        organizationId: source.workspace.organizationId,
+        tripId: workingTripId
+      });
+      await copyTargetAttachments({
         ctx,
-        content,
-        { id: destination._id, type: 'destination' },
-        { id: destinationId, type: 'destination' },
-        workingTripId,
-        source.workspace.organizationId
-      );
+        organizationId: source.workspace.organizationId,
+        sourceContent: content,
+        sourceTarget: { id: destination._id, type: 'destination' },
+        target: { id: destinationId, type: 'destination' },
+        targetTripId: workingTripId
+      });
       return [destination._id, destinationId] as const;
     })
   );
@@ -118,21 +123,20 @@ export async function cloneTripContent(
         title: activity.title,
         tripId: workingTripId
       });
-      await TripLocations.setActivity(
-        ctx,
+      await TripLocations.setActivity(ctx, {
         activityId,
-        workingTripId,
-        source.workspace.organizationId,
-        activity.coordinates
-      );
-      await copyTargetAttachments(
+        coordinates: activity.coordinates,
+        organizationId: source.workspace.organizationId,
+        tripId: workingTripId
+      });
+      await copyTargetAttachments({
         ctx,
-        content,
-        { id: activity._id, type: 'activity' },
-        { id: activityId, type: 'activity' },
-        workingTripId,
-        source.workspace.organizationId
-      );
+        organizationId: source.workspace.organizationId,
+        sourceContent: content,
+        sourceTarget: { id: activity._id, type: 'activity' },
+        target: { id: activityId, type: 'activity' },
+        targetTripId: workingTripId
+      });
       return [activity._id, activityId] as const;
     })
   );
@@ -155,14 +159,14 @@ export async function cloneTripContent(
         title: stay.title,
         tripId: workingTripId
       });
-      await copyTargetAttachments(
+      await copyTargetAttachments({
         ctx,
-        content,
-        { id: stay._id, type: 'stay' },
-        { id: stayId, type: 'stay' },
-        workingTripId,
-        source.workspace.organizationId
-      );
+        organizationId: source.workspace.organizationId,
+        sourceContent: content,
+        sourceTarget: { id: stay._id, type: 'stay' },
+        target: { id: stayId, type: 'stay' },
+        targetTripId: workingTripId
+      });
     })
   );
 
@@ -178,14 +182,14 @@ export async function cloneTripContent(
         timing: transfer.timing,
         tripId: workingTripId
       });
-      await copyTargetAttachments(
+      await copyTargetAttachments({
         ctx,
-        content,
-        { id: transfer._id, type: 'boundary_transfer' },
-        { id: transferId, type: 'boundary_transfer' },
-        workingTripId,
-        source.workspace.organizationId
-      );
+        organizationId: source.workspace.organizationId,
+        sourceContent: content,
+        sourceTarget: { id: transfer._id, type: 'boundary_transfer' },
+        target: { id: transferId, type: 'boundary_transfer' },
+        targetTripId: workingTripId
+      });
     })
   );
 
@@ -207,14 +211,14 @@ export async function cloneTripContent(
         toDestinationId,
         tripId: workingTripId
       });
-      await copyTargetAttachments(
+      await copyTargetAttachments({
         ctx,
-        content,
-        { id: transfer._id, type: 'destination_transfer' },
-        { id: transferId, type: 'destination_transfer' },
-        workingTripId,
-        source.workspace.organizationId
-      );
+        organizationId: source.workspace.organizationId,
+        sourceContent: content,
+        sourceTarget: { id: transfer._id, type: 'destination_transfer' },
+        target: { id: transferId, type: 'destination_transfer' },
+        targetTripId: workingTripId
+      });
     })
   );
 
@@ -238,24 +242,23 @@ export async function cloneTripContent(
         toActivityId,
         tripId: workingTripId
       });
-      await copyTargetAttachments(
+      await copyTargetAttachments({
         ctx,
-        content,
-        { id: transfer._id, type: 'activity_transfer' },
-        { id: transferId, type: 'activity_transfer' },
-        workingTripId,
-        source.workspace.organizationId
-      );
+        organizationId: source.workspace.organizationId,
+        sourceContent: content,
+        sourceTarget: { id: transfer._id, type: 'activity_transfer' },
+        target: { id: transferId, type: 'activity_transfer' },
+        targetTripId: workingTripId
+      });
     })
   );
 
   if (source.trip.destination.status === 'known' && 'coordinates' in source.trip.destination) {
-    await TripLocations.setTrip(
-      ctx,
-      workingTripId,
-      source.workspace.organizationId,
-      source.trip.destination.coordinates
-    );
+    await TripLocations.setTrip(ctx, {
+      coordinates: source.trip.destination.coordinates,
+      organizationId: source.workspace.organizationId,
+      tripId: workingTripId
+    });
   }
   await DestinationCover.ensureForTrip(ctx, workingTripId);
 }

@@ -57,4 +57,26 @@ describe('useDiscussionMessageActions', () => {
     expect(react).toHaveBeenCalledWith({ discussionId, emoji: '👍', messageId: 'm1' });
     expect(removeMessage).toHaveBeenCalledWith({ discussionId, messageId: 'm1' });
   });
+
+  test('uses an empty reaction list until the reaction query resolves', () => {
+    convex.useQuery.mockReturnValue(undefined);
+
+    const { result } = renderHook(() => useDiscussionMessageActions(discussionId));
+
+    expect(result.current.reactions).toEqual([]);
+  });
+
+  test('marks the replacement discussion read when its id changes', () => {
+    const markRead = vi.fn().mockResolvedValue(null);
+    convex.useMutation.mockReturnValue(markRead);
+    const nextDiscussionId = 'discussion-2' as Id<'discussions'>;
+    const { rerender } = renderHook(({ id }) => useDiscussionMessageActions(id), {
+      initialProps: { id: discussionId }
+    });
+
+    rerender({ id: nextDiscussionId });
+
+    expect(markRead).toHaveBeenNthCalledWith(1, { discussionId });
+    expect(markRead).toHaveBeenNthCalledWith(2, { discussionId: nextDiscussionId });
+  });
 });

@@ -51,10 +51,17 @@ export class Media {
    */
   static async save(
     ctx: MutationCtx,
-    storageId: Id<'_storage'>,
-    name: string,
-    uploadedContentType: string,
-    signatureValid: boolean
+    {
+      storageId,
+      name,
+      uploadedContentType,
+      signatureValid
+    }: {
+      storageId: Id<'_storage'>;
+      name: string;
+      uploadedContentType: string;
+      signatureValid: boolean;
+    }
   ): Promise<SaveMediaResult> {
     const workspace = await requireWorkspace(ctx);
     const existingResult = await Media.resultForExistingStorage(ctx, workspace, storageId);

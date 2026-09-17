@@ -8,6 +8,7 @@
 | `convex-hooks-in-hooks.grit` | Keeps Convex subscriptions and mutations in feature hooks |
 | `no-local-type-definitions.grit` | Keeps web app domain types in `apps/web/src/types` |
 | `no-fetch-in-components.grit` | Keeps network requests out of TSX components |
+| `no-native-interactive-elements.grit` | Keeps app controls on shared accessible UI primitives |
 | `no-direct-sonner-imports.grit` | Keeps app notifications behind the shared UI facade |
 | `no-raw-test-ids.grit` | Keeps production web locators in the shared `testIds` contract |
 | `no-raw-internal-anchors.grit` | Keeps internal navigation in TanStack Router |
@@ -23,3 +24,7 @@
 Custom rules should enforce a repository-owned abstraction that Biome cannot express with a
 built-in rule. Scope each plugin narrowly in the root config, give its diagnostic an actionable
 replacement, and add accepted and rejected fixtures under `tooling/quality`.
+
+Built-in rules also enforce maintainability: feature source files stay under 300 non-blank lines,
+cognitive complexity stays at or below 15, functions accept no more than four parameters, tests
+avoid deep suite nesting, CSS avoids `!important`, and public entrypoints use explicit exports.

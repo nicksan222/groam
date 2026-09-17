@@ -7,16 +7,18 @@ export function Button({
   variant,
   size,
   asChild = false,
+  unstyled = false,
   ...props
 }: Omit<React.ComponentProps<'button'>, 'size'> &
   ButtonVariantProps & {
     asChild?: boolean;
+    unstyled?: boolean;
   }) {
   const Component = asChild ? Slot : 'button';
 
   return (
     <Component
-      className={buttonVariants({ variant, size, className })}
+      className={unstyled ? className : buttonVariants({ variant, size, className })}
       data-slot="button"
       {...props}
     />

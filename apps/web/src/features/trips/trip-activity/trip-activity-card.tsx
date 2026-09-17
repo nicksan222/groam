@@ -52,13 +52,13 @@ export function TripActivityCard({
   onRemove: (activity: TripActivity) => Promise<void>;
   tripStartDate: null | string;
 }) {
-  const exactTiming = formatDayTimeRange(
-    tripStartDate,
-    activity.dayNumber,
-    activity.startTime,
-    activity.endDayNumber,
-    activity.endTime
-  );
+  const exactTiming = formatDayTimeRange({
+    startDate: tripStartDate,
+    startDay: activity.dayNumber,
+    startTime: activity.startTime,
+    endDay: activity.endDayNumber,
+    endTime: activity.endTime
+  });
   return (
     <Timeline.Card
       className="rounded-xl border-border bg-transparent"

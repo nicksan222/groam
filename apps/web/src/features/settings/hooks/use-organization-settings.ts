@@ -79,22 +79,21 @@ export function useOrganizationSettings(organization: ActiveOrganization) {
       'Group logo removed.'
     );
 
-  const remove = () =>
-    run(async () => {
-      const organizations = await authClient.organization.list();
-      if (organizations.error) {
-        throw new Error(organizations.error.message ?? 'Unable to list groups');
-      }
-      const fallback = organizations.data?.find(({ id }) => id !== organization.id);
-      if (fallback) {
-        const activation = await authClient.organization.setActive({ organizationId: fallback.id });
-        if (activation.error) {
-          throw new Error(activation.error.message ?? 'Unable to switch groups');
-        }
-      }
-      const result = await authClient.organization.delete({ organizationId: organization.id });
-      if (result.error) throw new Error(result.error.message ?? 'Unable to delete group');
-    }, 'Unable to delete group');
+  const remove = () => run(() => removeOrganization(organization.id), 'Unable to delete group');
 
   return { clearLogo, remove, save, state, updateState: patch, uploadLogo };
+}
+
+async function removeOrganization(organizationId: string) {
+  const organizations = await authClient.organization.list();
+  if (organizations.error) throw new Error(organizations.error.message ?? 'Unable to list groups');
+  const fallback = organizations.data?.find(({ id }) => id !== organizationId);
+  if (fallback) await activateOrganization(fallback.id);
+  const result = await authClient.organization.delete({ organizationId });
+  if (result.error) throw new Error(result.error.message ?? 'Unable to delete group');
+}
+
+async function activateOrganization(organizationId: string) {
+  const activation = await authClient.organization.setActive({ organizationId });
+  if (activation.error) throw new Error(activation.error.message ?? 'Unable to switch groups');
 }

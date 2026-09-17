@@ -176,32 +176,23 @@ async function readSnapshot(
   return snapshot;
 }
 
-async function createTripGitHistory({ base, current, merge, tip }: GitHistoryInput) {
-  const repository = await initializeRepository();
-  const baseCommit = await commitSnapshot(repository, base);
-  const tipCommit = tip ? await commitSnapshot(repository, tip, [baseCommit]) : null;
-  const currentCommit = current
-    ? snapshotsMatch(base.snapshot, current.snapshot)
-      ? baseCommit
-      : await commitSnapshot(repository, current, [baseCommit])
-    : null;
-  let mergeCommit: string | null = null;
-  let mergedSnapshot: GitSnapshot | null = null;
-  if (merge && tipCommit && currentCommit) {
-    await git.writeRef({
-      ...repository,
-      force: true,
-      ref: 'refs/heads/main',
-      value: currentCommit
-    });
-    await git.writeRef({
-      ...repository,
-      force: true,
-      ref: 'refs/heads/proposal',
-      value: tipCommit
-    });
-    if (merge.resolution) {
-      mergeCommit = await commitSnapshot(
+async function mergeSnapshotHistory({
+  repository,
+  merge,
+  tipCommit,
+  currentCommit
+}: {
+  repository: Awaited<ReturnType<typeof initializeRepository>>;
+  merge: GitHistoryInput['merge'];
+  tipCommit: string | null;
+  currentCommit: string | null;
+}): Promise<{ mergeCommit: string | null; mergedSnapshot: GitSnapshot | null }> {
+  if (!(merge && tipCommit && currentCommit)) return { mergeCommit: null, mergedSnapshot: null };
+  await git.writeRef({ ...repository, force: true, ref: 'refs/heads/main', value: currentCommit });
+  await git.writeRef({ ...repository, force: true, ref: 'refs/heads/proposal', value: tipCommit });
+  if (merge.resolution) {
+    return {
+      mergeCommit: await commitSnapshot(
         repository,
         {
           identity: merge.identity,
@@ -210,41 +201,58 @@ async function createTripGitHistory({ base, current, merge, tip }: GitHistoryInp
           timestamp: merge.timestamp
         },
         [currentCommit, tipCommit]
-      );
-      mergedSnapshot = merge.resolution;
-    } else {
-      const mergeIdentity = author(merge.identity, merge.timestamp);
-      try {
-        const merged = await git.merge({
-          ...repository,
-          abortOnConflict: true,
-          author: mergeIdentity,
-          committer: mergeIdentity,
-          fastForward: false,
-          message: merge.message,
-          ours: 'main',
-          theirs: 'proposal'
-        });
-        if (!merged.oid) throw new Error('Git did not create a merge commit');
-        mergeCommit = merged.oid;
-        mergedSnapshot = await readSnapshot(repository, mergeCommit);
-      } catch (error: unknown) {
-        if (error instanceof git.Errors.MergeConflictError) {
-          const paths = error.data.filepaths.join(', ');
-          throw new ConvexError({
-            code: 'trip_merge_conflict',
-            message: `Unable to automatically combine ${paths}`,
-            paths: error.data.filepaths
-          });
-        }
-        throw error;
-      }
-    }
-  } else if (merge || current) {
-    throw new Error('Git merge history is incomplete');
+      ),
+      mergedSnapshot: merge.resolution
+    };
   }
+  return await createAutomaticMerge(repository, merge);
+}
+
+async function createAutomaticMerge(
+  repository: Awaited<ReturnType<typeof initializeRepository>>,
+  merge: NonNullable<GitHistoryInput['merge']>
+): Promise<{ mergeCommit: string; mergedSnapshot: GitSnapshot }> {
+  const mergeIdentity = author(merge.identity, merge.timestamp);
+  try {
+    const merged = await git.merge({
+      ...repository,
+      abortOnConflict: true,
+      author: mergeIdentity,
+      committer: mergeIdentity,
+      fastForward: false,
+      message: merge.message,
+      ours: 'main',
+      theirs: 'proposal'
+    });
+    if (!merged.oid) throw new Error('Git did not create a merge commit');
+    return { mergeCommit: merged.oid, mergedSnapshot: await readSnapshot(repository, merged.oid) };
+  } catch (error: unknown) {
+    if (error instanceof git.Errors.MergeConflictError) {
+      const paths = error.data.filepaths.join(', ');
+      throw new ConvexError({
+        code: 'trip_merge_conflict',
+        message: `Unable to automatically combine ${paths}`,
+        paths: error.data.filepaths
+      });
+    }
+    throw error;
+  }
+}
+
+async function historyMetadata({
+  repository,
+  baseCommit,
+  tipCommit,
+  currentCommit,
+  mergeCommit
+}: {
+  repository: Awaited<ReturnType<typeof initializeRepository>>;
+  baseCommit: string;
+  tipCommit: string | null;
+  currentCommit: string | null;
+  mergeCommit: string | null;
+}) {
   const baseObject = await git.readCommit({ ...repository, oid: baseCommit });
-  const baseParents = baseObject.commit.parent;
   const baseFiles: string[] = [];
   await git.walk({
     ...repository,
@@ -254,27 +262,53 @@ async function createTripGitHistory({ base, current, merge, tip }: GitHistoryInp
     },
     trees: [git.TREE({ ref: baseCommit })]
   });
-  const tipParents = tipCommit
-    ? (await git.readCommit({ ...repository, oid: tipCommit })).commit.parent
-    : [];
-  const currentParents =
-    currentCommit && currentCommit !== baseCommit
-      ? (await git.readCommit({ ...repository, oid: currentCommit })).commit.parent
-      : [];
-  const mergeParents = mergeCommit
-    ? (await git.readCommit({ ...repository, oid: mergeCommit })).commit.parent
-    : [];
+  const parentsFor = async (oid: string | null) =>
+    oid ? (await git.readCommit({ ...repository, oid })).commit.parent : [];
+  return {
+    baseFiles: baseFiles.sort(),
+    baseParents: baseObject.commit.parent,
+    currentParents:
+      currentCommit && currentCommit !== baseCommit ? await parentsFor(currentCommit) : [],
+    mergeParents: await parentsFor(mergeCommit),
+    tipParents: await parentsFor(tipCommit)
+  };
+}
+
+async function createTripGitHistory({ base, current, merge, tip }: GitHistoryInput) {
+  const repository = await initializeRepository();
+  const baseCommit = await commitSnapshot(repository, base);
+  const tipCommit = tip ? await commitSnapshot(repository, tip, [baseCommit]) : null;
+  const currentCommit = current
+    ? snapshotsMatch(base.snapshot, current.snapshot)
+      ? baseCommit
+      : await commitSnapshot(repository, current, [baseCommit])
+    : null;
+  if (!tipCommit || !currentCommit) {
+    if (merge || current) throw new Error('Git merge history is incomplete');
+  }
+  const { mergeCommit, mergedSnapshot } = await mergeSnapshotHistory({
+    currentCommit,
+    merge,
+    repository,
+    tipCommit
+  });
+  if ((merge || current) && !(mergeCommit || (!merge && !current))) {
+    throw new Error('Git merge history is incomplete');
+  }
+  const metadata = await historyMetadata({
+    baseCommit,
+    currentCommit,
+    mergeCommit,
+    repository,
+    tipCommit
+  });
   return {
     baseCommit,
-    baseFiles: baseFiles.sort(),
-    baseParents,
+    ...metadata,
     currentCommit,
-    currentParents,
     mergeCommit,
     mergedSnapshot,
-    mergeParents,
-    tipCommit,
-    tipParents
+    tipCommit
   };
 }
 

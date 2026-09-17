@@ -71,4 +71,16 @@ describe('useIssueListFilters', () => {
     expect(result.current.statusFilter).toBe('open');
     expect(result.current.hasExtraFilters).toBe(false);
   });
+
+  test('handles an unloaded issue list and all-status selection', () => {
+    const { result } = renderHook(() =>
+      useIssueListFilters({
+        defaultStatus: 'all',
+        emptyFilterMessage: () => 'none',
+        issues: undefined
+      })
+    );
+    expect(result.current.visibleIssues).toEqual([]);
+    expect(result.current.statusFilter).toBe('all');
+  });
 });

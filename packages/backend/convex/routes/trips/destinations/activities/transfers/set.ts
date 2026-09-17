@@ -11,5 +11,11 @@ export const run = mutableTripMutation({
   },
   returns: v.id('tripActivityTransfers'),
   handler: (ctx, { fromActivityId, input, toActivityId }) =>
-    TripTransfer.setActivity(ctx, ctx.trip._id, fromActivityId, toActivityId, input)
+    TripTransfer.setActivity({
+      ctx,
+      fromActivityId,
+      input,
+      toActivityId,
+      tripId: ctx.trip._id
+    })
 });

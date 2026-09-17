@@ -52,66 +52,94 @@ export function plannerDate(startDate: string | null, day: number): string | nul
 
 export function buildTripPlanner(trip: PlannerTrip): TripPlanner {
   const entries: PlannerEntry[] = [];
-  const addTravel = (
-    transfer: (TransferView & { id: string }) | null,
-    from: string,
-    to: string
-  ) => {
-    if (!transfer) return;
-    entries.push({
-      key: `travel-${transfer.id}`,
-      kind: 'travel',
-      transfer,
-      title: `${transportModeFor(transfer.mode).label} · ${from} → ${to}`,
-      location: 'Travel',
-      startDay: transfer.timing?.startDay ?? null,
-      endDay: transfer.timing?.endDay ?? null,
-      startTime: transfer.timing?.startTime ?? null,
-      endTime: transfer.timing?.endTime ?? null,
-      period: 'full_day'
-    });
-  };
   trip.destinations.forEach((destination, index) => {
-    for (const stay of destination.stays) {
-      for (const event of ['check_in', 'check_out'] as const) {
-        const startDay = event === 'check_in' ? stay.checkInDay : stay.checkOutDay;
-        entries.push({
-          key: `${event}-${stay.id}`,
-          kind: 'stay',
-          stay,
-          title: `${event === 'check_in' ? 'Check in' : 'Check out'} · ${stay.title}`,
-          location: destination.name,
-          startDay,
-          endDay: startDay,
-          startTime: event === 'check_in' ? stay.checkInTime : stay.checkOutTime,
-          endTime: null,
-          period: 'full_day'
-        });
-      }
-    }
-    destination.activities.forEach((activity, activityIndex) => {
-      entries.push({
-        key: `activity-${activity.id}`,
-        kind: 'activity',
-        activity,
-        title: activity.title,
-        location: destination.name,
-        startDay: activity.dayNumber,
-        endDay: activity.endDayNumber,
-        startTime: activity.startTime,
-        endTime: activity.endTime,
-        period: activity.timeBlock
-      });
-      const next = destination.activities[activityIndex + 1];
-      if (next) addTravel(activity.transferToNext, activity.title, next.title);
-    });
-    const next = trip.destinations[index + 1];
-    if (next) addTravel(destination.transferToNext, destination.name, next.name);
+    addDestinationEntries(entries, destination, trip.destinations[index + 1]);
   });
   const first = trip.destinations[0];
   const last = trip.destinations.at(-1);
-  if (first) addTravel(trip.arrivalTransfer, 'Arrival', first.name);
-  if (last) addTravel(trip.departureTransfer, last.name, 'Departure');
+  if (first) addTravel(entries, trip.arrivalTransfer, 'Arrival', first.name);
+  if (last) addTravel(entries, trip.departureTransfer, last.name, 'Departure');
+  const days = plannerDays(trip, entries);
+  return {
+    days,
+    unscheduledDestinations: trip.destinations.filter(
+      (destination) => destination.startDay === null
+    ),
+    unscheduledTravel: entries.filter((entry) => entry.startDay === null)
+  };
+}
+
+function addTravel(
+  entries: PlannerEntry[],
+  transfer: (TransferView & { id: string }) | null,
+  from: string,
+  to: string
+) {
+  if (!transfer) return;
+  entries.push({
+    key: `travel-${transfer.id}`,
+    kind: 'travel',
+    transfer,
+    title: `${transportModeFor(transfer.mode).label} · ${from} → ${to}`,
+    location: 'Travel',
+    startDay: transfer.timing?.startDay ?? null,
+    endDay: transfer.timing?.endDay ?? null,
+    startTime: transfer.timing?.startTime ?? null,
+    endTime: transfer.timing?.endTime ?? null,
+    period: 'full_day'
+  });
+}
+
+function addDestinationEntries(
+  entries: PlannerEntry[],
+  destination: PlannerTrip['destinations'][number],
+  nextDestination: PlannerTrip['destinations'][number] | undefined
+) {
+  for (const stay of destination.stays) addStayEntries(entries, destination.name, stay);
+  destination.activities.forEach((activity, index) => {
+    entries.push({
+      key: `activity-${activity.id}`,
+      kind: 'activity',
+      activity,
+      title: activity.title,
+      location: destination.name,
+      startDay: activity.dayNumber,
+      endDay: activity.endDayNumber,
+      startTime: activity.startTime,
+      endTime: activity.endTime,
+      period: activity.timeBlock
+    });
+    const next = destination.activities[index + 1];
+    if (next) addTravel(entries, activity.transferToNext, activity.title, next.title);
+  });
+  if (nextDestination)
+    addTravel(entries, destination.transferToNext, destination.name, nextDestination.name);
+}
+
+function addStayEntries(
+  entries: PlannerEntry[],
+  location: string,
+  stay: PlannerTrip['destinations'][number]['stays'][number]
+) {
+  for (const event of ['check_in', 'check_out'] as const) {
+    const checkIn = event === 'check_in';
+    const day = checkIn ? stay.checkInDay : stay.checkOutDay;
+    entries.push({
+      key: `${event}-${stay.id}`,
+      kind: 'stay',
+      stay,
+      title: `${checkIn ? 'Check in' : 'Check out'} · ${stay.title}`,
+      location,
+      startDay: day,
+      endDay: day,
+      startTime: checkIn ? stay.checkInTime : stay.checkOutTime,
+      endTime: null,
+      period: 'full_day'
+    });
+  }
+}
+
+function plannerDays(trip: PlannerTrip, entries: PlannerEntry[]): PlannerDay[] {
   const lastDay = Math.max(
     trip.totalDurationDays ?? 0,
     ...trip.destinations.flatMap((destination) => [
@@ -120,46 +148,33 @@ export function buildTripPlanner(trip: PlannerTrip): TripPlanner {
     ]),
     ...entries.map((entry) => entry.endDay ?? 0)
   );
-  const days: PlannerDay[] = Array.from({ length: lastDay }, (_, index) => ({
-    day: index + 1,
-    destinations: [],
-    entries: [],
-    stays: []
-  }));
-  for (const day of days) {
-    for (const destination of trip.destinations) {
-      if (
-        destination.startDay !== null &&
-        destination.endDay !== null &&
-        destination.startDay <= day.day &&
-        destination.endDay >= day.day
-      )
-        day.destinations.push(destination);
-      for (const stay of destination.stays) {
-        if (stay.checkInDay <= day.day && stay.checkOutDay > day.day)
-          day.stays.push({ stay, destination });
-      }
-    }
-    for (const entry of entries) {
-      if (
-        entry.startDay !== null &&
-        entry.endDay !== null &&
-        entry.startDay <= day.day &&
-        entry.endDay >= day.day
-      )
-        day.entries.push(entry);
-    }
-    day.entries.sort((a, b) =>
-      (a.startDay === day.day ? (a.startTime ?? '99:99') : '00:00').localeCompare(
-        b.startDay === day.day ? (b.startTime ?? '99:99') : '00:00'
-      )
-    );
-  }
-  return {
-    days,
-    unscheduledDestinations: trip.destinations.filter(
-      (destination) => destination.startDay === null
-    ),
-    unscheduledTravel: entries.filter((entry) => entry.startDay === null)
-  };
+  return Array.from({ length: lastDay }, (_, index) => buildPlannerDay(index + 1, trip, entries));
+}
+
+function buildPlannerDay(day: number, trip: PlannerTrip, entries: PlannerEntry[]): PlannerDay {
+  const destinations = trip.destinations.filter(
+    (destination) =>
+      destination.startDay !== null &&
+      destination.endDay !== null &&
+      destination.startDay <= day &&
+      destination.endDay >= day
+  );
+  const stays = trip.destinations.flatMap((destination) =>
+    destination.stays.flatMap((stay) =>
+      stay.checkInDay <= day && stay.checkOutDay > day ? [{ stay, destination }] : []
+    )
+  );
+  const dayEntries = entries.filter(
+    (entry) =>
+      entry.startDay !== null &&
+      entry.endDay !== null &&
+      entry.startDay <= day &&
+      entry.endDay >= day
+  );
+  dayEntries.sort((a, b) =>
+    (a.startDay === day ? (a.startTime ?? '99:99') : '00:00').localeCompare(
+      b.startDay === day ? (b.startTime ?? '99:99') : '00:00'
+    )
+  );
+  return { day, destinations, entries: dayEntries, stays };
 }

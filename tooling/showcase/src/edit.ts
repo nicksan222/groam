@@ -3,10 +3,17 @@ import type { Capture, Edit } from '#src/model';
 
 function compactSourceClock(
   capture: Capture,
-  actorIds: readonly string[],
-  startMs: number,
-  endMs: number,
-  maxIdleMs: number
+  {
+    actorIds,
+    endMs,
+    maxIdleMs,
+    startMs
+  }: {
+    actorIds: readonly string[];
+    endMs: number;
+    maxIdleMs: number;
+    startMs: number;
+  }
 ) {
   const selectedActors = new Set(actorIds);
   const points = [startMs];
@@ -64,13 +71,12 @@ export function createEdit(
         sourceClock:
           seconds === undefined
             ? undefined
-            : compactSourceClock(
-                capture,
-                style.actors,
-                startMs,
-                actionEndMs,
-                presentation.maxIdleSeconds * 1000
-              )
+            : compactSourceClock(capture, {
+                actorIds: style.actors,
+                endMs: actionEndMs,
+                maxIdleMs: presentation.maxIdleSeconds * 1000,
+                startMs
+              })
       };
     })
   };

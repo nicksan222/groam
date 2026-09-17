@@ -84,7 +84,7 @@
     "showcase:render": "bun run --cwd tooling/showcase render",
     "showcase:setup": "bun run --cwd tooling/showcase setup",
     "showcase:studio": "bun run --cwd tooling/showcase studio",
-    "test": "bun test --path-ignore-patterns apps/desktop/src-tauri tooling/quality && turbo run test",
+    "test": "bun test --path-ignore-patterns apps/desktop/src-tauri tooling/quality && turbo run test --concurrency=2",
     "test:e2e": "bun run --cwd apps/web e2e",
     "test:e2e:install": "bun run --cwd apps/web e2e:install",
     "test:e2e:local": "bun run --cwd apps/web e2e:local",

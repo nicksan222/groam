@@ -54,6 +54,28 @@ function patchedCost(
   return { amount: normalizeCost(amount, 'itinerary cost') ?? 0, split: tripCostSplit(split) };
 }
 
+function optionalTextField(
+  key: string,
+  patchValue: string | undefined,
+  current: string | undefined
+) {
+  const value = patchValue === undefined ? current : patchValue;
+  return value ? { [key]: value } : {};
+}
+
+function activityScheduleFrom(
+  data: Doc<'tripDestinationActivities'>,
+  patch: Parameters<typeof activityInputFrom>[1]
+) {
+  return {
+    day: patch.day ?? data.schedule.day,
+    timeBlock: patch.timeBlock ?? data.schedule.timeBlock,
+    ...(data.schedule.endDay === undefined ? {} : { endDay: data.schedule.endDay }),
+    ...(data.schedule.endTime ? { endTime: data.schedule.endTime } : {}),
+    ...(data.schedule.startTime ? { startTime: data.schedule.startTime } : {})
+  };
+}
+
 function activityInputFrom(
   data: Doc<'tripDestinationActivities'>,
   patch: {
@@ -68,29 +90,23 @@ function activityInputFrom(
 ) {
   const cost = patchedCost(data.cost, patch.costAmount, patch.costSplit);
   return {
-    ...(patch.address !== undefined
-      ? patch.address
-        ? { address: patch.address }
-        : {}
-      : data.address
-        ? { address: data.address }
-        : {}),
+    ...optionalTextField('address', patch.address, data.address),
     ...(cost ? { cost } : {}),
-    ...(patch.notes !== undefined
-      ? patch.notes
-        ? { notes: patch.notes }
-        : {}
-      : data.notes
-        ? { notes: data.notes }
-        : {}),
-    schedule: {
-      day: patch.day ?? data.schedule.day,
-      timeBlock: patch.timeBlock ?? data.schedule.timeBlock,
-      ...(data.schedule.endDay === undefined ? {} : { endDay: data.schedule.endDay }),
-      ...(data.schedule.endTime ? { endTime: data.schedule.endTime } : {}),
-      ...(data.schedule.startTime ? { startTime: data.schedule.startTime } : {})
-    },
+    ...optionalTextField('notes', patch.notes, data.notes),
+    schedule: activityScheduleFrom(data, patch),
     title: patch.title ?? data.title
+  };
+}
+
+function stayScheduleFrom(
+  data: Doc<'tripDestinationStays'>,
+  patch: Parameters<typeof stayInputFrom>[1]
+) {
+  return {
+    checkInDay: patch.checkInDay ?? data.schedule.checkInDay,
+    checkOutDay: patch.checkOutDay ?? data.schedule.checkOutDay,
+    ...optionalTextField('checkInTime', patch.checkInTime, data.schedule.checkInTime),
+    ...optionalTextField('checkOutTime', patch.checkOutTime, data.schedule.checkOutTime)
   };
 }
 
@@ -110,41 +126,27 @@ function stayInputFrom(
 ) {
   const cost = patchedCost(data.cost, patch.costAmount, patch.costSplit);
   return {
-    ...(patch.address !== undefined
-      ? patch.address
-        ? { address: patch.address }
-        : {}
-      : data.address
-        ? { address: data.address }
-        : {}),
+    ...optionalTextField('address', patch.address, data.address),
     ...(cost ? { cost } : {}),
-    ...(patch.notes !== undefined
-      ? patch.notes
-        ? { notes: patch.notes }
-        : {}
-      : data.notes
-        ? { notes: data.notes }
-        : {}),
-    schedule: {
-      checkInDay: patch.checkInDay ?? data.schedule.checkInDay,
-      checkOutDay: patch.checkOutDay ?? data.schedule.checkOutDay,
-      ...(patch.checkInTime !== undefined
-        ? patch.checkInTime
-          ? { checkInTime: patch.checkInTime }
-          : {}
-        : data.schedule.checkInTime
-          ? { checkInTime: data.schedule.checkInTime }
-          : {}),
-      ...(patch.checkOutTime !== undefined
-        ? patch.checkOutTime
-          ? { checkOutTime: patch.checkOutTime }
-          : {}
-        : data.schedule.checkOutTime
-          ? { checkOutTime: data.schedule.checkOutTime }
-          : {})
-    },
+    ...optionalTextField('notes', patch.notes, data.notes),
+    schedule: stayScheduleFrom(data, patch),
     title: patch.title ?? data.title
   };
+}
+
+function budgetInput(current: Doc<'trips'>, budgetAmount: number | null | undefined) {
+  if (budgetAmount === undefined) return current.budget ? { budget: current.budget } : {};
+  return budgetAmount === null ? {} : { budget: { amount: budgetAmount } };
+}
+
+function dateNotesInput(current: Doc<'trips'>, dateNotes: string | null | undefined) {
+  if (dateNotes === undefined) return current.dateNotes ? { dateNotes: current.dateNotes } : {};
+  return dateNotes ? { dateNotes } : {};
+}
+
+function durationInput(current: Doc<'trips'>, totalDays: number | undefined) {
+  if (totalDays === undefined && !current.duration) return {};
+  return { duration: { ...current.duration, ...(totalDays === undefined ? {} : { totalDays }) } };
 }
 
 export const updateActivity = internalTripMutation({
@@ -261,22 +263,22 @@ export const setTransfer = internalTripMutation({
       return id;
     }
     if (target.kind === 'destination') {
-      const id: Id<'tripDestinationTransfers'> = await TripTransfer.setDestination(
+      const id: Id<'tripDestinationTransfers'> = await TripTransfer.setDestination({
         ctx,
-        tripId,
-        target.fromDestinationId,
-        target.toDestinationId,
-        input
-      );
+        fromDestinationId: target.fromDestinationId,
+        input,
+        toDestinationId: target.toDestinationId,
+        tripId
+      });
       return id;
     }
-    const id: Id<'tripActivityTransfers'> = await TripTransfer.setActivity(
+    const id: Id<'tripActivityTransfers'> = await TripTransfer.setActivity({
       ctx,
-      tripId,
-      target.fromActivityId,
-      target.toActivityId,
-      input
-    );
+      fromActivityId: target.fromActivityId,
+      input,
+      toActivityId: target.toActivityId,
+      tripId
+    });
     return id;
   }
 });
@@ -328,30 +330,11 @@ export const updateTripDetails = internalTripMutation({
     assertAgentCanWrite(ctx);
     const trip = ctx.trip;
     return await updateTrip(ctx, trip._id, {
-      ...(budgetAmount === undefined
-        ? trip.budget
-          ? { budget: trip.budget }
-          : {}
-        : budgetAmount === null
-          ? {}
-          : { budget: { amount: budgetAmount } }),
+      ...budgetInput(trip, budgetAmount),
       currency: trip.currency,
-      ...(dateNotes === undefined
-        ? trip.dateNotes
-          ? { dateNotes: trip.dateNotes }
-          : {}
-        : dateNotes
-          ? { dateNotes }
-          : {}),
+      ...dateNotesInput(trip, dateNotes),
       destination: trip.destination,
-      ...(totalDays === undefined && !trip.duration
-        ? {}
-        : {
-            duration: {
-              ...trip.duration,
-              ...(totalDays === undefined ? {} : { totalDays })
-            }
-          }),
+      ...durationInput(trip, totalDays),
       name: name ?? trip.name,
       ...(trip.startDate ? { startDate: trip.startDate } : {})
     });

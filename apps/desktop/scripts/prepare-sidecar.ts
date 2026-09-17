@@ -126,6 +126,27 @@ export function prepareSidecar({
   required,
   target
 }: PrepareSidecarOptions): number {
+  const runtime = resolvePrepareSidecarIo(io);
+  runtime.mkdir(binariesDir, { recursive: true });
+  const sidecarPath = path.join(binariesDir, sidecarBinaryName(target));
+  if (runtime.exists(sidecarPath) && !required) {
+    runtime.write(`Using existing Convex sidecar at ${sidecarPath}`);
+    return 0;
+  }
+  const cached = required
+    ? null
+    : cachedBackendPath(cacheRoot, target, runtime.exists, runtime.readCache);
+  if (cached) {
+    runtime.copyFile(cached, sidecarPath);
+    runtime.write(`Prepared sidecar binary at ${sidecarPath}`);
+    return 0;
+  }
+  return downloadSidecar({ required, runtime, sidecarPath, target });
+}
+
+type SidecarRuntime = Required<PrepareSidecarIo>;
+
+function resolvePrepareSidecarIo(io: Partial<PrepareSidecarIo>): SidecarRuntime {
   const copyFile = io.copyFile ?? copyFileSync;
   const download = io.download ?? downloadFile;
   const exists = io.exists ?? existsSync;
@@ -138,22 +159,33 @@ export function prepareSidecar({
     io.tempDir ?? (() => mkdtempSync(path.join(tmpdir(), 'groam-convex-'), { encoding: 'utf8' }));
   const write = io.write ?? defaultWrite;
 
-  mkdir(binariesDir, { recursive: true });
-  const sidecarPath = path.join(binariesDir, sidecarBinaryName(target));
-  if (exists(sidecarPath) && !required) {
-    write(`Using existing Convex sidecar at ${sidecarPath}`);
-    return 0;
-  }
+  return {
+    copyFile,
+    download,
+    exists,
+    extract,
+    fetchVersion,
+    mkdir,
+    readCache,
+    sha256,
+    tempDir,
+    write
+  };
+}
 
-  if (!required) {
-    const cached = cachedBackendPath(cacheRoot, target, exists, readCache);
-    if (cached) {
-      copyFile(cached, sidecarPath);
-      write(`Prepared sidecar binary at ${sidecarPath}`);
-      return 0;
-    }
-  }
-
+function downloadSidecar({
+  required,
+  runtime,
+  sidecarPath,
+  target
+}: {
+  required: boolean;
+  runtime: SidecarRuntime;
+  sidecarPath: string;
+  target: string;
+}): number {
+  const { copyFile, download, exists, extract, fetchVersion, mkdir, sha256, tempDir, write } =
+    runtime;
   const version = fetchVersion();
   if (!version) {
     return missingOptionalCache(required, missingVersionMessage, write);

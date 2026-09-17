@@ -166,6 +166,33 @@ function looksLikeCreditFailure(error: unknown, haystack: string): boolean {
   );
 }
 
+function failureMessageForHaystack(haystack: string): string | null {
+  const messages = [
+    {
+      message: 'Groam AI is busy right now. Wait a moment and try again.',
+      matches: ['rate limit', 'too many requests', '429', 'capacity']
+    },
+    { message: UNCONFIGURED_ASSISTANT, matches: ['api key', 'invalid key'] },
+    {
+      message: 'Groam AI lost connection while replying. Try again in a moment.',
+      matches: ['timeout', 'timed out', 'network', 'fetch failed', 'econnreset', 'socket']
+    },
+    {
+      message:
+        'That conversation is too long for Groam AI right now. Start a new chat or send a shorter message.',
+      matches: ['context length', 'too long', 'maximum context']
+    },
+    {
+      message: 'Groam AI could not reply to that message because of a provider safety check.',
+      matches: ['moderation', 'content policy', 'safety']
+    }
+  ];
+  return (
+    messages.find(({ matches }) => matches.some((match) => haystack.includes(match)))?.message ??
+    null
+  );
+}
+
 /** Map provider/backend failures to traveler-facing copy, preferring the provider message. */
 export function assistantFailureMessage(error: unknown): string {
   const candidates: string[] = [];
@@ -182,49 +209,6 @@ export function assistantFailureMessage(error: unknown): string {
 
   if (looksLikeCreditFailure(error, haystack)) return CREDITS_FALLBACK;
 
-  if (
-    haystack.includes('rate limit') ||
-    haystack.includes('too many requests') ||
-    haystack.includes('429') ||
-    haystack.includes('capacity')
-  ) {
-    return 'Groam AI is busy right now. Wait a moment and try again.';
-  }
-
-  if (
-    looksUnconfigured(haystack) ||
-    haystack.includes('api key') ||
-    haystack.includes('invalid key')
-  ) {
-    return UNCONFIGURED_ASSISTANT;
-  }
-
-  if (
-    haystack.includes('timeout') ||
-    haystack.includes('timed out') ||
-    haystack.includes('network') ||
-    haystack.includes('fetch failed') ||
-    haystack.includes('econnreset') ||
-    haystack.includes('socket')
-  ) {
-    return 'Groam AI lost connection while replying. Try again in a moment.';
-  }
-
-  if (
-    haystack.includes('context length') ||
-    haystack.includes('too long') ||
-    haystack.includes('maximum context')
-  ) {
-    return 'That conversation is too long for Groam AI right now. Start a new chat or send a shorter message.';
-  }
-
-  if (
-    haystack.includes('moderation') ||
-    haystack.includes('content policy') ||
-    haystack.includes('safety')
-  ) {
-    return 'Groam AI could not reply to that message because of a provider safety check.';
-  }
-
-  return DEFAULT_ASSISTANT_FAILURE;
+  if (looksUnconfigured(haystack)) return UNCONFIGURED_ASSISTANT;
+  return failureMessageForHaystack(haystack) ?? DEFAULT_ASSISTANT_FAILURE;
 }

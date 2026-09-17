@@ -2,25 +2,31 @@ import { ConvexError } from 'convex/values';
 
 export function isPrivateIpv4(host: string): boolean {
   const octets = host.split('.').map((part) => Number(part));
-  if (
-    octets.length !== 4 ||
-    octets.some((octet) => !Number.isInteger(octet) || octet < 0 || octet > 255)
-  ) {
-    return false;
-  }
+  if (!isIpv4OctetList(octets)) return false;
   const [first, second, third] = octets;
   if (first === undefined || second === undefined || third === undefined) return false;
-  if (first === 0 || first === 10 || first === 127) return true;
-  if (first === 100 && second >= 64 && second <= 127) return true;
-  if (first === 169 && second === 254) return true;
-  if (first === 172 && second >= 16 && second <= 31) return true;
-  if (first === 192 && second === 0 && (third === 0 || third === 2)) return true;
-  if (first === 192 && second === 88 && third === 99) return true;
-  if (first === 192 && second === 168) return true;
-  if (first === 198 && (second === 18 || second === 19)) return true;
-  if (first === 198 && second === 51 && third === 100) return true;
-  if (first === 203 && second === 0 && third === 113) return true;
-  return first >= 224;
+  return isReservedIpv4Range(first, second, third);
+}
+
+function isIpv4OctetList(octets: readonly number[]): octets is [number, number, number, number] {
+  return (
+    octets.length === 4 &&
+    octets.every((octet) => Number.isInteger(octet) && octet >= 0 && octet <= 255)
+  );
+}
+
+function isReservedIpv4Range(first: number, second: number, third: number): boolean {
+  if ([0, 10, 127].includes(first) || first >= 224) return true;
+  if (first === 100) return second >= 64 && second <= 127;
+  if (first === 169) return second === 254;
+  if (first === 172) return second >= 16 && second <= 31;
+  if (first === 192) {
+    return (
+      (second === 0 && [0, 2].includes(third)) || (second === 88 && third === 99) || second === 168
+    );
+  }
+  if (first === 198) return [18, 19].includes(second) || (second === 51 && third === 100);
+  return first === 203 && second === 0 && third === 113;
 }
 
 function ipv4FromMappedHost(host: string): string | undefined {
