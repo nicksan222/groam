@@ -96,6 +96,30 @@ describe('useAuthForm', () => {
     expect(result.current.state).toMatchObject({ error: 'Invalid credentials', isPending: false });
   });
 
+  test('does not trust the browser after authenticator verification', async () => {
+    auth.signIn.mockResolvedValue({ data: { twoFactorRedirect: true }, error: null });
+    const { result } = renderHook(() => useAuthForm());
+    act(() => result.current.updateState({ identifier: 'traveler', password: 'password123' }));
+    await act(() => result.current.submit());
+    act(() => result.current.updateState({ twoFactorCode: '123456' }));
+    await act(() => result.current.submit());
+
+    expect(auth.verifyTotp).toHaveBeenCalledWith({ code: '123456', trustDevice: false });
+    expect(auth.verifyBackupCode).not.toHaveBeenCalled();
+  });
+
+  test('does not trust the browser after backup-code verification', async () => {
+    auth.verifyTotp.mockResolvedValue({ data: null, error: { message: 'Invalid code' } });
+    const { result } = renderHook(() => useAuthForm());
+    act(() => result.current.updateState({ needsTwoFactor: true, twoFactorCode: 'backup-code' }));
+    await act(() => result.current.submit());
+
+    expect(auth.verifyBackupCode).toHaveBeenCalledWith({
+      code: 'backup-code',
+      trustDevice: false
+    });
+  });
+
   test('switchFlow clears the password and error', () => {
     const { result } = renderHook(() => useAuthForm());
     act(() =>

@@ -125,9 +125,9 @@ export function useAuthForm() {
     }
     patch({ error: null, isPending: true });
     try {
-      const totp = await authClient.twoFactor.verifyTotp({ code, trustDevice: true });
+      const totp = await authClient.twoFactor.verifyTotp({ code, trustDevice: false });
       if (!totp.error) return;
-      const backup = await authClient.twoFactor.verifyBackupCode({ code, trustDevice: true });
+      const backup = await authClient.twoFactor.verifyBackupCode({ code, trustDevice: false });
       if (backup.error) throw new Error(backup.error.message ?? 'Invalid verification code');
     } catch (error: unknown) {
       patch({ error: errorMessage(error, 'Invalid verification code') });

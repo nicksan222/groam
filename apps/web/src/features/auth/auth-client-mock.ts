@@ -42,6 +42,12 @@ export const auth = {
   },
   get signUp() {
     return doubles.signUp;
+  },
+  get verifyBackupCode() {
+    return doubles.verifyBackupCode;
+  },
+  get verifyTotp() {
+    return doubles.verifyTotp;
   }
 };
 
