@@ -16,8 +16,8 @@ export function JoinGroupDialog({ onClose, open }: WorkspaceDialogControlProps) 
       onClose={onClose}
       onSubmit={(event) => void join.submit(event)}
       open={open}
-      submitDisabled={!join.hasJoined && !join.code.trim()}
-      submitLabel={join.hasJoined ? 'Open joined group' : 'Join group'}
+      submitDisabled={!join.hasPendingActivation && !join.code.trim()}
+      submitLabel={join.hasPendingActivation ? 'Open group' : 'Join group'}
       testId={testIds.joinGroupDialog}
       title="Join with invitation code"
     >
@@ -27,7 +27,7 @@ export function JoinGroupDialog({ onClose, open }: WorkspaceDialogControlProps) 
           autoComplete="off"
           autoFocus
           data-testid={testIds.joinGroupCode}
-          disabled={join.isPending || join.hasJoined}
+          disabled={join.isPending || join.hasPendingActivation}
           onChange={(event) => join.setCode(event.target.value)}
           placeholder="ABCD-EFGH-JKLM"
           required

@@ -68,6 +68,7 @@ export * from './playwright-app-actions';
 export * from './propose-trip-dates-for-review';
 export { reactToChatMessage } from './react-to-chat-message';
 export { recoverFromNotFound } from './recover-from-not-found';
+export { redeemGroupInvitationCode } from './redeem-group-invitation-code';
 export {
   type ResolveTripDetailConflictInput,
   resolveTripDetailConflict,

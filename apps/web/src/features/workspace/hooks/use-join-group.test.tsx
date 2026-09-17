@@ -19,7 +19,7 @@ vi.mock('@groam/auth/client', () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.redeem.mockResolvedValue({ organizationId: 'organization-a' });
+  mocks.redeem.mockResolvedValue({ membership: 'joined', organizationId: 'organization-a' });
   mocks.setActive.mockResolvedValue({ data: {}, error: null });
   mocks.getSession.mockResolvedValue({ data: {}, error: null });
 });
@@ -69,7 +69,7 @@ test('retries activation without redeeming the consumed code again', async () =>
     'You joined the group, but it could not be opened. Try again. Session update failed'
   );
   expect(result.current.code).toBe('');
-  expect(result.current.hasJoined).toBe(true);
+  expect(result.current.hasPendingActivation).toBe(true);
 
   await act(async () => {
     await result.current.submit({ preventDefault: vi.fn() } as unknown as FormEvent);
@@ -78,7 +78,46 @@ test('retries activation without redeeming the consumed code again', async () =>
   expect(mocks.redeem).toHaveBeenCalledOnce();
   expect(mocks.setActive).toHaveBeenCalledTimes(2);
   expect(mocks.getSession).toHaveBeenCalledOnce();
-  expect(result.current.hasJoined).toBe(false);
+  expect(result.current.hasPendingActivation).toBe(false);
   expect(result.current.error).toBe(null);
   expect(onJoined).toHaveBeenCalledOnce();
+});
+
+test('opens an existing membership without showing a join failure', async () => {
+  const onJoined = vi.fn();
+  mocks.redeem.mockResolvedValue({
+    membership: 'existing',
+    organizationId: 'organization-a'
+  });
+  const { result } = renderHook(() => useJoinGroup({ onJoined }));
+  act(() => result.current.setCode('abcd-efgh-jklm'));
+
+  await act(async () => {
+    await result.current.submit({ preventDefault: vi.fn() } as unknown as FormEvent);
+  });
+
+  expect(mocks.setActive).toHaveBeenCalledWith({ organizationId: 'organization-a' });
+  expect(mocks.getSession).toHaveBeenCalledOnce();
+  expect(result.current.error).toBe(null);
+  expect(onJoined).toHaveBeenCalledOnce();
+});
+
+test('describes an activation retry accurately for an existing member', async () => {
+  mocks.redeem.mockResolvedValue({
+    membership: 'existing',
+    organizationId: 'organization-a'
+  });
+  mocks.setActive.mockResolvedValue({ data: null, error: { message: 'Session update failed' } });
+  const { result } = renderHook(() => useJoinGroup());
+  act(() => result.current.setCode('abcd-efgh-jklm'));
+
+  await act(async () => {
+    await result.current.submit({ preventDefault: vi.fn() } as unknown as FormEvent);
+  });
+
+  expect(result.current.error).toBe(
+    'You already belong to this group, but it could not be opened. Try again. Session update failed'
+  );
+  expect(result.current.code).toBe('');
+  expect(result.current.hasPendingActivation).toBe(true);
 });

@@ -21,7 +21,7 @@ test('creates and redeems a one-time organization invitation code', {
     invitedUser.client.mutation(api.routes.organizations.invitations.redeem.run, {
       code: invitation.code.toLowerCase().replaceAll('-', ' ')
     })
-  ).resolves.toEqual({ organizationId: owner.organizationId });
+  ).resolves.toEqual({ membership: 'joined', organizationId: owner.organizationId });
 
   await expect(
     invitedUser.authClient.organization.setActive({ organizationId: owner.organizationId! })
@@ -36,6 +36,97 @@ test('creates and redeems a one-time organization invitation code', {
       code: invitation.code
     })
   ).rejects.toThrow('Invitation code not found or already used');
+});
+
+test('opens an existing membership without consuming the invitation code', {
+  timeout: 15_000
+}, async () => {
+  const { addUser, owner } = await setupGroup();
+  const existingMember = await addUser('Existing Member');
+  const invitation = await owner.client.mutation(api.routes.organizations.invitations.create.run, {
+    role: 'admin'
+  });
+
+  await expect(
+    existingMember.client.mutation(api.routes.organizations.invitations.redeem.run, {
+      code: invitation.code
+    })
+  ).resolves.toEqual({ membership: 'existing', organizationId: owner.organizationId });
+
+  await expect(
+    owner.client.query(api.routes.organizations.invitations.list.run, { now: Date.now() })
+  ).resolves.toContainEqual(invitation);
+
+  const organization = await existingMember.authClient.organization.getFullOrganization({
+    query: { organizationId: owner.organizationId! }
+  });
+  expect(
+    organization.data?.members.find((member) => member.userId === existingMember.userId)?.role
+  ).toBe('member');
+});
+
+test('returns actionable errors for unusable invitation codes', { timeout: 15_000 }, async () => {
+  const { owner } = await setupGroup();
+  const invitedUser = await createTestUser(owner.test, {
+    email: `edge-case-${crypto.randomUUID()}@example.com`,
+    name: 'Edge Case Traveler'
+  });
+  const organizationId = owner.organizationId;
+  if (!organizationId) throw new Error('Expected an organization');
+
+  await expect(
+    invitedUser.client.mutation(api.routes.organizations.invitations.redeem.run, { code: 'short' })
+  ).rejects.toThrow('Enter a valid invitation code');
+  await expect(
+    invitedUser.client.mutation(api.routes.organizations.invitations.redeem.run, {
+      code: 'AAAA-BBBB-CCCC'
+    })
+  ).rejects.toThrow('Invitation code not found or already used');
+
+  await owner.test.run(async (ctx) => {
+    await ctx.db.insert('organizationInvitationCodes', {
+      code: 'EXPIRED23456',
+      createdBy: owner.userId,
+      expiresAt: Date.now() - 1,
+      organizationId,
+      role: 'member'
+    });
+  });
+  await expect(
+    invitedUser.client.mutation(api.routes.organizations.invitations.redeem.run, {
+      code: 'EXPIRED23456'
+    })
+  ).rejects.toThrow('This invitation code has expired');
+});
+
+test('requires authentication and reports an invitation for a deleted group', {
+  timeout: 15_000
+}, async () => {
+  const { owner } = await setupGroup();
+  const invitedUser = await createTestUser(owner.test, {
+    email: `missing-group-${crypto.randomUUID()}@example.com`,
+    name: 'Missing Group Traveler'
+  });
+  await owner.test.run(async (ctx) => {
+    await ctx.db.insert('organizationInvitationCodes', {
+      code: 'MISSING23456',
+      createdBy: owner.userId,
+      expiresAt: Date.now() + 60_000,
+      organizationId: 'deleted-organization',
+      role: 'member'
+    });
+  });
+
+  await expect(
+    owner.test.mutation(api.routes.organizations.invitations.redeem.run, {
+      code: 'MISSING23456'
+    })
+  ).rejects.toThrow('Not authenticated');
+  await expect(
+    invitedUser.client.mutation(api.routes.organizations.invitations.redeem.run, {
+      code: 'MISSING23456'
+    })
+  ).rejects.toThrow('This group is no longer available');
 });
 
 test('only managers can create, list, and revoke invitation codes', {

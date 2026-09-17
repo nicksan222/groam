@@ -15,6 +15,12 @@ const MAX_ACTIVE_CODES = 100;
 
 export type InvitationRole = 'admin' | 'member';
 
+const BETTER_AUTH_INVITATION_ERRORS = {
+  alreadyMember: 'User is already a member of this organization',
+  memberLimit: 'Organization membership limit reached',
+  organizationNotFound: 'Organization not found'
+} as const;
+
 function formatCode(compactCode: string): string {
   return compactCode.match(/.{1,4}/g)?.join('-') ?? compactCode;
 }
@@ -147,19 +153,39 @@ export async function redeemInvitationCode(ctx: MutationCtx, rawCode: string) {
     .unique();
   if (!invitation) throw new ConvexError('Invitation code not found or already used');
   if (invitation.expiresAt <= Date.now()) {
-    await ctx.db.delete('organizationInvitationCodes', invitation._id);
     throw new ConvexError('This invitation code has expired');
   }
 
-  await authAccess.auth.api.addMember({
-    body: {
-      organizationId: invitation.organizationId,
-      role: invitation.role,
-      userId: session.user.id
-    }
+  const organizations = await authAccess.auth.api.listOrganizations({
+    headers: authAccess.headers
   });
+  if (organizations.some((organization) => organization.id === invitation.organizationId)) {
+    return { membership: 'existing' as const, organizationId: invitation.organizationId };
+  }
+
+  try {
+    await authAccess.auth.api.addMember({
+      body: {
+        organizationId: invitation.organizationId,
+        role: invitation.role,
+        userId: session.user.id
+      }
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : '';
+    if (message.includes(BETTER_AUTH_INVITATION_ERRORS.alreadyMember)) {
+      return { membership: 'existing' as const, organizationId: invitation.organizationId };
+    }
+    if (message.includes(BETTER_AUTH_INVITATION_ERRORS.memberLimit)) {
+      throw new ConvexError('This group has reached its member limit');
+    }
+    if (message.includes(BETTER_AUTH_INVITATION_ERRORS.organizationNotFound)) {
+      throw new ConvexError('This group is no longer available');
+    }
+    throw new ConvexError('Unable to join this group. Try again.');
+  }
   await ctx.db.delete('organizationInvitationCodes', invitation._id);
-  return { organizationId: invitation.organizationId };
+  return { membership: 'joined' as const, organizationId: invitation.organizationId };
 }
 
 export const OrganizationInvitations = {

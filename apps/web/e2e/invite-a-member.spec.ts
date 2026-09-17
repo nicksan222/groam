@@ -7,6 +7,7 @@ import {
   inviteGroupMember,
   openTripFromList,
   openTrips,
+  redeemGroupInvitationCode,
   signIn,
   tripCard,
   uniqueSuffix,
@@ -45,4 +46,19 @@ test('copies and pastes an invitation code that joins a member to the group', as
 
   await openTrips(page);
   await expect(tripCard(page, tripName)).toBeVisible();
+});
+
+test('opens the group gracefully when the code belongs to an existing membership', async ({
+  page
+}) => {
+  test.setTimeout(90_000);
+  await signIn(page);
+  const groupName = await by(page, ids.groupSwitcher).getAttribute('data-group-name');
+  if (!groupName) throw new Error('Expected an active group before redeeming its invitation');
+  const invitationCode = await inviteGroupMember(page);
+
+  await redeemGroupInvitationCode(page, invitationCode);
+
+  await expect(by(page, ids.groupSwitcher)).toHaveAttribute('data-group-name', groupName);
+  await expect(page.getByText('Unable to join group')).toHaveCount(0);
 });

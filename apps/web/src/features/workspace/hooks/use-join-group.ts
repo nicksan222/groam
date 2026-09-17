@@ -9,28 +9,33 @@ export function useJoinGroup({ onJoined }: { onJoined?: () => void } = {}) {
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
-  const [joinedOrganizationId, setJoinedOrganizationId] = useState<string | null>(null);
+  const [pendingActivation, setPendingActivation] = useState<{
+    membership: 'existing' | 'joined';
+    organizationId: string;
+  } | null>(null);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if ((!code.trim() && !joinedOrganizationId) || isPending) return;
+    if ((!code.trim() && !pendingActivation) || isPending) return;
     setError(null);
     setIsPending(true);
-    let organizationId = joinedOrganizationId;
+    let activation = pendingActivation;
     try {
-      if (!organizationId) {
-        ({ organizationId } = await redeemInvitation({ code }));
-        setJoinedOrganizationId(organizationId);
+      if (!activation) {
+        activation = await redeemInvitation({ code });
+        setPendingActivation(activation);
         setCode('');
       }
-      await activateOrganization(organizationId);
-      setJoinedOrganizationId(null);
+      await activateOrganization(activation.organizationId);
+      setPendingActivation(null);
       onJoined?.();
     } catch (caughtError: unknown) {
       const message = errorMessage(caughtError, 'Unable to join group');
       setError(
-        organizationId
-          ? `You joined the group, but it could not be opened. Try again. ${message}`
+        activation
+          ? activation.membership === 'existing'
+            ? `You already belong to this group, but it could not be opened. Try again. ${message}`
+            : `You joined the group, but it could not be opened. Try again. ${message}`
           : message
       );
     } finally {
@@ -38,5 +43,12 @@ export function useJoinGroup({ onJoined }: { onJoined?: () => void } = {}) {
     }
   };
 
-  return { code, error, hasJoined: joinedOrganizationId !== null, isPending, setCode, submit };
+  return {
+    code,
+    error,
+    hasPendingActivation: pendingActivation !== null,
+    isPending,
+    setCode,
+    submit
+  };
 }
