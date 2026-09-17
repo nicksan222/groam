@@ -2,43 +2,93 @@ import { authClient } from '@groam/auth/client';
 import { useShallow } from 'zustand/react/shallow';
 import { errorMessage } from '@/lib/errors';
 import { useAuthFormStore } from '@/lib/stores/auth-form-store';
+import { isValidUsername, usernameRequirements } from '@/lib/username';
+
+function signInWithIdentifier(identifier: string, password: string) {
+  return identifier.includes('@')
+    ? authClient.signIn.email({ email: identifier, password })
+    : authClient.signIn.username({ password, username: identifier });
+}
+
+function isAuthenticatorCode(code: string) {
+  return /^\d{6}$/u.test(code);
+}
+
+function authenticationValidationError({
+  identifier,
+  isSignIn,
+  name,
+  password
+}: {
+  identifier: string;
+  isSignIn: boolean;
+  name: string;
+  password: string;
+}) {
+  if (!identifier || !password || (!isSignIn && !name.trim())) {
+    return 'Complete every required field to continue.';
+  }
+  if (password.length < 8) return 'Your password must be at least 8 characters.';
+  return null;
+}
 
 export function useAuthForm() {
   const state = useAuthFormStore(
     useShallow((store) => ({
-      email: store.email,
       error: store.error,
       flow: store.flow,
+      identifier: store.identifier,
       isPending: store.isPending,
       name: store.name,
-      password: store.password
+      newPassword: store.newPassword,
+      needsTwoFactor: store.needsTwoFactor,
+      password: store.password,
+      recoveryCode: store.recoveryCode,
+      twoFactorCode: store.twoFactorCode
     }))
   );
   const patch = useAuthFormStore((store) => store.patch);
   const switchFlow = useAuthFormStore((store) => store.switchFlow);
+  const switchToRecovery = useAuthFormStore((store) => store.switchToRecovery);
   const isSignIn = state.flow === 'signIn';
+  const isRecovery = state.flow === 'recover';
 
   const submit = async () => {
-    if (!state.email || !state.password || (!isSignIn && !state.name.trim())) {
-      patch({ error: 'Complete every required field to continue.' });
+    if (isRecovery) {
+      await recoverAccount();
       return;
     }
-    if (state.password.length < 8) {
-      patch({ error: 'Your password must be at least 8 characters.' });
+    if (state.needsTwoFactor) {
+      await verifyTwoFactor();
+      return;
+    }
+
+    await authenticate();
+  };
+
+  const authenticate = async () => {
+    const validationError = authenticationValidationError({
+      identifier: state.identifier,
+      isSignIn,
+      name: state.name,
+      password: state.password
+    });
+    if (validationError) {
+      patch({ error: validationError });
       return;
     }
 
     patch({ error: null, isPending: true });
     try {
+      const identifier = state.identifier.trim();
       const result = isSignIn
-        ? await authClient.signIn.email({ email: state.email, password: state.password })
-        : await authClient.signUp.email({
-            email: state.email,
-            name: state.name.trim(),
-            password: state.password
-          });
+        ? await signInWithIdentifier(identifier, state.password)
+        : await signUp(identifier);
       if (result.error) {
         throw new Error(result.error.message ?? 'Authentication failed');
+      }
+      if (result.data && 'twoFactorRedirect' in result.data && result.data.twoFactorRedirect) {
+        patch({ needsTwoFactor: true, password: '' });
       }
     } catch (error: unknown) {
       patch({ error: errorMessage(error, 'Authentication failed') });
@@ -47,5 +97,86 @@ export function useAuthForm() {
     }
   };
 
-  return { isSignIn, state, submit, switchFlow, updateState: patch };
+  const recoverAccount = async () => {
+    if (!state.identifier.trim() || !state.recoveryCode.trim() || !state.newPassword) {
+      patch({ error: 'Complete every required field to continue.' });
+      return;
+    }
+    if (state.newPassword.length < 8) {
+      patch({ error: 'Your password must be at least 8 characters.' });
+      return;
+    }
+    patch({ error: null, isPending: true });
+    try {
+      const result = await authClient.accountRecovery.resetPassword({
+        code: state.recoveryCode.trim(),
+        newPassword: state.newPassword,
+        username: state.identifier.trim()
+      });
+      if (result.error) throw new Error(result.error.message ?? 'Account recovery failed');
+      patch({
+        flow: 'signIn',
+        newPassword: '',
+        password: '',
+        recoveryCode: ''
+      });
+    } catch (error: unknown) {
+      patch({ error: errorMessage(error, 'Account recovery failed') });
+    } finally {
+      patch({ isPending: false });
+    }
+  };
+
+  const signInWithPasskey = async () => {
+    patch({ error: null, isPending: true });
+    try {
+      const result = await authClient.signIn.passkey();
+      if (result?.error) throw new Error(result.error.message ?? 'Passkey sign-in failed');
+    } catch (error: unknown) {
+      patch({ error: errorMessage(error, 'Passkey sign-in failed') });
+    } finally {
+      patch({ isPending: false });
+    }
+  };
+
+  const signUp = async (username: string) => {
+    if (!isValidUsername(username)) throw new Error(usernameRequirements);
+    return await authClient.signUp.email({
+      email: `${crypto.randomUUID()}@users.invalid`,
+      name: state.name.trim(),
+      password: state.password,
+      username
+    });
+  };
+
+  const verifyTwoFactor = async () => {
+    const code = state.twoFactorCode.trim();
+    if (!code) {
+      patch({ error: 'Enter an authenticator or backup code.' });
+      return;
+    }
+    patch({ error: null, isPending: true });
+    try {
+      const result = isAuthenticatorCode(code)
+        ? await authClient.twoFactor.verifyTotp({ code, trustDevice: false })
+        : await authClient.twoFactor.verifyBackupCode({ code, trustDevice: false });
+      if (result.error) throw new Error(result.error.message ?? 'Invalid verification code');
+      patch({ needsTwoFactor: false, twoFactorCode: '' });
+    } catch (error: unknown) {
+      patch({ error: errorMessage(error, 'Invalid verification code') });
+    } finally {
+      patch({ isPending: false });
+    }
+  };
+
+  return {
+    isRecovery,
+    isSignIn,
+    signInWithPasskey,
+    state,
+    submit,
+    switchFlow,
+    switchToRecovery,
+    updateState: patch
+  };
 }

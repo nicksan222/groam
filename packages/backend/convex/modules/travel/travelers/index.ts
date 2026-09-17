@@ -35,7 +35,7 @@ export async function listTravelers(ctx: TripCtx) {
     .map((member) => {
       const row = byUserId.get(member.userId);
       return {
-        email: member.email,
+        handle: member.handle,
         id: member.userId,
         image: member.image ?? null,
         invitationId: row?.invitationId ?? null,
@@ -53,7 +53,7 @@ export async function seedTravelers(ctx: MutationCtx, trip: TripCtx<MutationCtx>
   await Promise.all(
     roster.members.map((member) =>
       ctx.db.insert('tripTravelers', {
-        email: member.email,
+        handle: member.handle,
         name: member.name,
         organizationId: trip.workspace.organizationId,
         status: 'going',
@@ -90,7 +90,7 @@ export async function setTravelerStatus(
     return null;
   }
   await ctx.db.insert('tripTravelers', {
-    email: member.email,
+    handle: member.handle,
     name: member.name,
     organizationId: ctx.workspace.organizationId,
     status,

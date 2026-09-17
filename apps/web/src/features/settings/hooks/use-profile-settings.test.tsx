@@ -12,7 +12,8 @@ vi.mock('@groam/auth/client', () => ({
 const user = {
   email: 'traveler@example.com',
   image: null,
-  name: 'Original name'
+  name: 'Original name',
+  username: 'traveler'
 } as Session['user'];
 
 beforeEach(() => {
@@ -26,7 +27,8 @@ describe('useProfileSettings', () => {
     act(() =>
       result.current.updateState({
         image: '  https://example.com/photo.jpg  ',
-        name: '  Updated name  '
+        name: '  Updated name  ',
+        username: 'updated_traveler'
       })
     );
 
@@ -34,7 +36,8 @@ describe('useProfileSettings', () => {
 
     expect(auth.updateUser).toHaveBeenCalledWith({
       image: 'https://example.com/photo.jpg',
-      name: 'Updated name'
+      name: 'Updated name',
+      username: 'updated_traveler'
     });
     expect(result.current.state).toMatchObject({
       error: null,
@@ -49,7 +52,11 @@ describe('useProfileSettings', () => {
 
     await act(() => result.current.save());
 
-    expect(auth.updateUser).toHaveBeenCalledWith({ image: null, name: 'Original name' });
+    expect(auth.updateUser).toHaveBeenCalledWith({
+      image: null,
+      name: 'Original name',
+      username: 'traveler'
+    });
     expect(result.current.state).toMatchObject({
       error: 'Profile update failed',
       isPending: false,

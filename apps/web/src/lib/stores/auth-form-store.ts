@@ -1,28 +1,39 @@
 import { create } from 'zustand';
 
 // biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
-type AuthFlow = 'signIn' | 'signUp';
+type AuthFlow = 'recover' | 'signIn' | 'signUp';
 
 // biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
 type AuthFormStore = {
-  email: string;
   error: string | null;
   flow: AuthFlow;
+  identifier: string;
   isPending: boolean;
   name: string;
+  newPassword: string;
+  needsTwoFactor: boolean;
   password: string;
-  patch: (update: Partial<Omit<AuthFormStore, 'patch' | 'reset' | 'switchFlow'>>) => void;
+  recoveryCode: string;
+  twoFactorCode: string;
+  patch: (
+    update: Partial<Omit<AuthFormStore, 'patch' | 'reset' | 'switchFlow' | 'switchToRecovery'>>
+  ) => void;
   reset: () => void;
   switchFlow: () => void;
+  switchToRecovery: () => void;
 };
 
 const initialAuthForm = {
-  email: '',
   error: null,
   flow: 'signIn' as AuthFlow,
+  identifier: '',
   isPending: false,
   name: '',
-  password: ''
+  newPassword: '',
+  needsTwoFactor: false,
+  password: '',
+  recoveryCode: '',
+  twoFactorCode: ''
 };
 
 /** Auth screen draft state — submit logic stays in the hook. */
@@ -35,7 +46,17 @@ export const useAuthFormStore = create<AuthFormStore>((set, get) => ({
     set({
       error: null,
       flow: isSignIn ? 'signUp' : 'signIn',
-      password: ''
+      needsTwoFactor: false,
+      password: '',
+      twoFactorCode: ''
     });
-  }
+  },
+  switchToRecovery: () =>
+    set({
+      error: null,
+      flow: 'recover',
+      needsTwoFactor: false,
+      password: '',
+      twoFactorCode: ''
+    })
 }));

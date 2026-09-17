@@ -15,7 +15,7 @@ export function useWorkspaceData() {
     retry: retryActivation,
     switchOrganization
   } = useOrganizationActivation({
-    activeOrganizationId: activeOrganization?.id,
+    activeOrganizationId: sessionQuery.data?.session.activeOrganizationId ?? undefined,
     firstOrganizationId: organizations[0]?.id,
     isPending: activeOrganizationQuery.isPending
   });
@@ -23,6 +23,7 @@ export function useWorkspaceData() {
   const value = useMemo<WorkspaceContextValue | null>(() => {
     const session = sessionQuery.data;
     if (!activeOrganization || !session) return null;
+    if (activeOrganization.id !== session.session.activeOrganizationId) return null;
     return {
       activeOrganization,
       activeRole:

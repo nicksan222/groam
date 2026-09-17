@@ -1,4 +1,9 @@
 export { acceptGroupInvitation } from './accept-group-invitation';
+export {
+  enableTwoFactorAndSignInWithBackupCode,
+  recoverAccountWithDownloadedCode,
+  registerPasskeyAndSignIn
+} from './account-security';
 export { addActivity } from './actions/add-activity';
 export { addDestinationToIdea } from './actions/add-destination-to-idea';
 export { addIdea } from './actions/add-idea';
@@ -60,7 +65,7 @@ export {
   tripCard
 } from './locators';
 export { mockDestinationSearch } from './mock-destination-search';
-export { openSettingsGroupSection } from './navigation';
+export { openSettingsGroupSection, openSettingsSecuritySection } from './navigation';
 export { onePixelPng } from './one-pixel-png';
 export { openAppPath, reloadAppPage } from './open-app-path';
 export { openBackgroundActivity } from './open-background-activity';
@@ -118,6 +123,7 @@ export {
   type SignInOptions,
   signInAs
 } from './sign-in-as';
+export { signOut } from './sign-out';
 export { signUp } from './sign-up';
 export { startIdeaFromIssue } from './start-idea-from-issue';
 export { startItineraryIdea } from './start-itinerary-idea';

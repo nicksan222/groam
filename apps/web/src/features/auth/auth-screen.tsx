@@ -6,29 +6,33 @@ import { useAuthForm } from '@/features/auth/hooks/use-auth-form';
 
 export function AuthScreen() {
   const authForm = useAuthForm();
-  const { isSignIn } = authForm;
+  const { isRecovery, isSignIn } = authForm;
 
   return (
     <AuthShell>
       <AuthCard
         description={
-          isSignIn
-            ? env.isDesktop
-              ? 'Sign in to the group on this computer'
-              : 'Sign in to continue your journey'
-            : env.isDesktop
-              ? 'Create an account stored on this computer'
-              : 'Start building with Groam'
+          isRecovery
+            ? 'Use one of the account recovery codes you downloaded from Security settings'
+            : isSignIn
+              ? env.isDesktop
+                ? 'Sign in to the group on this computer'
+                : 'Sign in to continue your journey'
+              : env.isDesktop
+                ? 'Create an account stored on this computer'
+                : 'Start building with Groam'
         }
         footer={<AuthLegal />}
         headerExtra={
-          isSignIn ? null : (
+          isSignIn || isRecovery ? null : (
             <span className="inline-flex rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground/80">
               Your realtime workspace awaits
             </span>
           )
         }
-        title={isSignIn ? 'Welcome back' : 'Create your account'}
+        title={
+          isRecovery ? 'Recover your account' : isSignIn ? 'Welcome back' : 'Create your account'
+        }
       >
         <AuthForm {...authForm} />
       </AuthCard>

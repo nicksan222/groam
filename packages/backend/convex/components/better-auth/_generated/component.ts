@@ -32,12 +32,15 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | {
                 data: {
                   createdAt: number;
+                  displayUsername?: null | string;
                   email: string;
                   emailVerified: boolean;
                   image?: null | string;
                   name: string;
+                  twoFactorEnabled?: null | boolean;
                   updatedAt: number;
                   userId?: null | string;
+                  username?: null | string;
                 };
                 model: "user";
               }
@@ -80,6 +83,32 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   value: string;
                 };
                 model: "verification";
+              }
+            | {
+                data: {
+                  aaguid?: null | string;
+                  backedUp: boolean;
+                  counter: number;
+                  createdAt?: null | number;
+                  credentialID: string;
+                  deviceType: string;
+                  name?: null | string;
+                  publicKey: string;
+                  transports?: null | string;
+                  userId: string;
+                };
+                model: "passkey";
+              }
+            | {
+                data: {
+                  backupCodes: string;
+                  failedVerificationCount?: null | number;
+                  lockedUntil?: null | number;
+                  secret: string;
+                  userId: string;
+                  verified?: null | boolean;
+                };
+                model: "twoFactor";
               }
             | {
                 data: {
@@ -143,6 +172,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "image"
                     | "createdAt"
                     | "updatedAt"
+                    | "username"
+                    | "displayUsername"
+                    | "twoFactorEnabled"
                     | "userId"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
@@ -253,6 +285,78 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "expiresAt"
                     | "createdAt"
                     | "updatedAt"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: "passkey";
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "name"
+                    | "publicKey"
+                    | "userId"
+                    | "credentialID"
+                    | "counter"
+                    | "deviceType"
+                    | "backedUp"
+                    | "transports"
+                    | "createdAt"
+                    | "aaguid"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: "twoFactor";
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "secret"
+                    | "backupCodes"
+                    | "userId"
+                    | "verified"
+                    | "failedVerificationCount"
+                    | "lockedUntil"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -428,6 +532,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "image"
                     | "createdAt"
                     | "updatedAt"
+                    | "username"
+                    | "displayUsername"
+                    | "twoFactorEnabled"
                     | "userId"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
@@ -538,6 +645,78 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "expiresAt"
                     | "createdAt"
                     | "updatedAt"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: "passkey";
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "name"
+                    | "publicKey"
+                    | "userId"
+                    | "credentialID"
+                    | "counter"
+                    | "deviceType"
+                    | "backedUp"
+                    | "transports"
+                    | "createdAt"
+                    | "aaguid"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: "twoFactor";
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "secret"
+                    | "backupCodes"
+                    | "userId"
+                    | "verified"
+                    | "failedVerificationCount"
+                    | "lockedUntil"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -700,6 +879,8 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | "session"
             | "account"
             | "verification"
+            | "passkey"
+            | "twoFactor"
             | "organization"
             | "member"
             | "invitation"
@@ -748,6 +929,8 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | "session"
             | "account"
             | "verification"
+            | "passkey"
+            | "twoFactor"
             | "organization"
             | "member"
             | "invitation"
@@ -785,12 +968,15 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 model: "user";
                 update: {
                   createdAt?: number;
+                  displayUsername?: null | string;
                   email?: string;
                   emailVerified?: boolean;
                   image?: null | string;
                   name?: string;
+                  twoFactorEnabled?: null | boolean;
                   updatedAt?: number;
                   userId?: null | string;
+                  username?: null | string;
                 };
                 where?: Array<{
                   connector?: "AND" | "OR";
@@ -801,6 +987,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "image"
                     | "createdAt"
                     | "updatedAt"
+                    | "username"
+                    | "displayUsername"
+                    | "twoFactorEnabled"
                     | "userId"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
@@ -942,6 +1131,98 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "expiresAt"
                     | "createdAt"
                     | "updatedAt"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: "passkey";
+                update: {
+                  aaguid?: null | string;
+                  backedUp?: boolean;
+                  counter?: number;
+                  createdAt?: null | number;
+                  credentialID?: string;
+                  deviceType?: string;
+                  name?: null | string;
+                  publicKey?: string;
+                  transports?: null | string;
+                  userId?: string;
+                };
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "name"
+                    | "publicKey"
+                    | "userId"
+                    | "credentialID"
+                    | "counter"
+                    | "deviceType"
+                    | "backedUp"
+                    | "transports"
+                    | "createdAt"
+                    | "aaguid"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: "twoFactor";
+                update: {
+                  backupCodes?: string;
+                  failedVerificationCount?: null | number;
+                  lockedUntil?: null | number;
+                  secret?: string;
+                  userId?: string;
+                  verified?: null | boolean;
+                };
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "secret"
+                    | "backupCodes"
+                    | "userId"
+                    | "verified"
+                    | "failedVerificationCount"
+                    | "lockedUntil"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -1138,12 +1419,15 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 model: "user";
                 update: {
                   createdAt?: number;
+                  displayUsername?: null | string;
                   email?: string;
                   emailVerified?: boolean;
                   image?: null | string;
                   name?: string;
+                  twoFactorEnabled?: null | boolean;
                   updatedAt?: number;
                   userId?: null | string;
+                  username?: null | string;
                 };
                 where?: Array<{
                   connector?: "AND" | "OR";
@@ -1154,6 +1438,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "image"
                     | "createdAt"
                     | "updatedAt"
+                    | "username"
+                    | "displayUsername"
+                    | "twoFactorEnabled"
                     | "userId"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
@@ -1295,6 +1582,98 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "expiresAt"
                     | "createdAt"
                     | "updatedAt"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: "passkey";
+                update: {
+                  aaguid?: null | string;
+                  backedUp?: boolean;
+                  counter?: number;
+                  createdAt?: null | number;
+                  credentialID?: string;
+                  deviceType?: string;
+                  name?: null | string;
+                  publicKey?: string;
+                  transports?: null | string;
+                  userId?: string;
+                };
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "name"
+                    | "publicKey"
+                    | "userId"
+                    | "credentialID"
+                    | "counter"
+                    | "deviceType"
+                    | "backedUp"
+                    | "transports"
+                    | "createdAt"
+                    | "aaguid"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: "twoFactor";
+                update: {
+                  backupCodes?: string;
+                  failedVerificationCount?: null | number;
+                  lockedUntil?: null | number;
+                  secret?: string;
+                  userId?: string;
+                  verified?: null | boolean;
+                };
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "secret"
+                    | "backupCodes"
+                    | "userId"
+                    | "verified"
+                    | "failedVerificationCount"
+                    | "lockedUntil"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
