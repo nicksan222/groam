@@ -6,6 +6,8 @@ import { Spinner } from '@groam/ui/components/spinner';
 import { KeyRound, ShieldCheck } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { usePasswordSettings } from '@/features/settings/hooks/use-password-settings';
+import { AccountRecoverySettings } from '@/features/settings/settings-panels/account-recovery-settings';
+import { PasskeySettings } from '@/features/settings/settings-panels/passkey-settings';
 import { SessionSettings } from '@/features/settings/settings-panels/session-settings';
 import {
   SettingsAside,
@@ -15,6 +17,8 @@ import {
   SettingsSplitLayout
 } from '@/features/settings/settings-shell/settings-panel';
 import type { Session } from '@/features/workspace/workspace-shell/workspace-state';
+import { userIdentityLabel } from '@/lib/user-identity';
+import { TwoFactorSettings } from './two-factor-settings';
 
 export function SecuritySettings({ session }: { session: Session }) {
   const { save, state, updateState } = usePasswordSettings();
@@ -40,67 +44,72 @@ export function SecuritySettings({ session }: { session: Session }) {
       }
       asideWidth="22rem"
     >
-      <SettingsPanel>
-        <SettingsPanelHeading
-          description={`Signed in as ${session.user.email}`}
-          icon={ShieldCheck}
-          title="Change password"
-        />
-        <form className="space-y-4" onSubmit={submit}>
-          <FormField label="Current password">
-            <Input
-              autoComplete="current-password"
-              disabled={state.isPending}
-              onChange={(event) => updateState({ currentPassword: event.target.value })}
-              required
-              type="password"
-              value={state.currentPassword}
-            />
-          </FormField>
-          <div className="grid items-start gap-4 sm:grid-cols-2">
-            <FormField description="Use at least 8 characters." label="New password">
+      <div className="space-y-6">
+        <PasskeySettings />
+        <TwoFactorSettings enabled={session.user.twoFactorEnabled ?? false} />
+        <AccountRecoverySettings />
+        <SettingsPanel>
+          <SettingsPanelHeading
+            description={`Signed in as ${userIdentityLabel(session.user)}`}
+            icon={ShieldCheck}
+            title="Change password"
+          />
+          <form className="space-y-4" onSubmit={submit}>
+            <FormField label="Current password">
               <Input
-                autoComplete="new-password"
+                autoComplete="current-password"
                 disabled={state.isPending}
-                minLength={8}
-                onChange={(event) => updateState({ newPassword: event.target.value })}
+                onChange={(event) => updateState({ currentPassword: event.target.value })}
                 required
                 type="password"
-                value={state.newPassword}
+                value={state.currentPassword}
               />
             </FormField>
-            <FormField label="Confirm new password">
-              <Input
-                autoComplete="new-password"
-                disabled={state.isPending}
-                minLength={8}
-                onChange={(event) => updateState({ confirmPassword: event.target.value })}
-                required
-                type="password"
-                value={state.confirmPassword}
-              />
-            </FormField>
-          </div>
-          <FormFeedback error={state.error} message={state.message} />
-          <SettingsFooter>
-            <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
-              Updating your password signs out every other browser and device on this account.
-            </p>
-            <Button
-              disabled={
-                state.isPending ||
-                !state.currentPassword ||
-                !state.newPassword ||
-                !state.confirmPassword
-              }
-              type="submit"
-            >
-              {state.isPending && <Spinner />}
-              Update password
-            </Button>
-          </SettingsFooter>
-        </form>
-      </SettingsPanel>
+            <div className="grid items-start gap-4 sm:grid-cols-2">
+              <FormField description="Use at least 8 characters." label="New password">
+                <Input
+                  autoComplete="new-password"
+                  disabled={state.isPending}
+                  minLength={8}
+                  onChange={(event) => updateState({ newPassword: event.target.value })}
+                  required
+                  type="password"
+                  value={state.newPassword}
+                />
+              </FormField>
+              <FormField label="Confirm new password">
+                <Input
+                  autoComplete="new-password"
+                  disabled={state.isPending}
+                  minLength={8}
+                  onChange={(event) => updateState({ confirmPassword: event.target.value })}
+                  required
+                  type="password"
+                  value={state.confirmPassword}
+                />
+              </FormField>
+            </div>
+            <FormFeedback error={state.error} message={state.message} />
+            <SettingsFooter>
+              <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
+                Updating your password signs out every other browser and device on this account.
+              </p>
+              <Button
+                disabled={
+                  state.isPending ||
+                  !state.currentPassword ||
+                  !state.newPassword ||
+                  !state.confirmPassword
+                }
+                type="submit"
+              >
+                {state.isPending && <Spinner />}
+                Update password
+              </Button>
+            </SettingsFooter>
+          </form>
+        </SettingsPanel>
+      </div>
     </SettingsSplitLayout>
   );
 }
