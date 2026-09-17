@@ -7,8 +7,18 @@ const workspace = vi.hoisted(() => ({
     id: 'org-demo',
     invitations: [{ id: 'invite-1', email: 'a@x', role: 'member', status: 'pending' }],
     members: [
-      { id: 'member-1', role: 'owner', user: { email: 'a@x', name: 'A' }, userId: 'user-a' },
-      { id: 'member-2', role: 'member', user: { email: 'b@x', name: 'B' }, userId: 'user-b' }
+      {
+        id: 'member-1',
+        role: 'owner',
+        user: { email: 'a@x', name: 'A', username: 'alice' },
+        userId: 'user-a'
+      },
+      {
+        id: 'member-2',
+        role: 'member',
+        user: { email: 'b@x', name: 'B', username: 'bob' },
+        userId: 'user-b'
+      }
     ],
     name: 'Groam Demo'
   },
@@ -64,6 +74,6 @@ describe('GroupPeopleSettings', () => {
     expect(screen.getByText('Invitation codes')).toBeTruthy();
     expect(screen.getByText('ABCD-EFGH-JKLM')).toBeTruthy();
     expect(screen.getByText('A (you)')).toBeTruthy();
-    expect(screen.getAllByText('a@x').length).toBeGreaterThan(0);
+    expect(screen.getByText('@alice')).toBeTruthy();
   });
 });
