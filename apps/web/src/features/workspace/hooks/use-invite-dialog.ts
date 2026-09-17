@@ -1,57 +1,18 @@
-import { authClient } from '@groam/auth/client';
-import { env } from '@groam/env/web-client';
+import { api } from '@groam/backend/api';
+import { useMutation } from 'convex/react';
 import type { FormEvent } from 'react';
 import { errorMessage } from '@/lib/errors';
 import { useInviteDialogStore } from '@/lib/stores/invite-dialog-store';
 
-async function createInvitation({
-  email,
-  organizationId,
-  role,
-  tripName,
-  groupName
-}: {
-  email: string;
-  groupName?: string;
-  organizationId: string;
-  role: 'admin' | 'member';
-  tripName?: string;
-}) {
-  const result = await authClient.organization.inviteMember({
-    email,
-    organizationId,
-    role
-  });
-  if (result.error) throw new Error(result.error.message ?? 'Unable to invite teammate');
-  const basePath = env.baseUrl.endsWith('/') ? env.baseUrl : `${env.baseUrl}/`;
-  const url = new URL(`${basePath}invitation/${result.data.id}`, globalThis.location.origin);
-  if (tripName) url.searchParams.set('trip', tripName);
-  if (groupName) url.searchParams.set('group', groupName);
-  return { invitationId: result.data.id, inviteLink: url.toString() };
-}
-
-export function useInviteDialog({
-  groupName,
-  onClose,
-  onCreated,
-  organizationId,
-  tripName
-}: {
-  groupName?: string;
-  onClose: () => void;
-  onCreated?: (email: string, invitationId: string) => Promise<void> | void;
-  organizationId: string;
-  tripName?: string;
-}) {
-  const email = useInviteDialogStore((state) => state.email);
+export function useInviteDialog({ onClose }: { onClose: () => void }) {
+  const createInvitation = useMutation(api.routes.organizations.invitations.create.run);
   const role = useInviteDialogStore((state) => state.role);
-  const inviteLink = useInviteDialogStore((state) => state.inviteLink);
+  const invitationCode = useInviteDialogStore((state) => state.invitationCode);
   const copied = useInviteDialogStore((state) => state.copied);
   const request = useInviteDialogStore((state) => state.request);
-  const setEmail = useInviteDialogStore((state) => state.setEmail);
   const setRole = useInviteDialogStore((state) => state.setRole);
   const patchRequest = useInviteDialogStore((state) => state.patchRequest);
-  const setInviteLink = useInviteDialogStore((state) => state.setInviteLink);
+  const setInvitationCode = useInviteDialogStore((state) => state.setInvitationCode);
   const setCopied = useInviteDialogStore((state) => state.setCopied);
   const reset = useInviteDialogStore((state) => state.reset);
 
@@ -59,18 +20,14 @@ export function useInviteDialog({
     event.preventDefault();
     patchRequest({ error: null, isPending: true });
     try {
-      const created = await createInvitation({
-        email: email.trim(),
-        groupName,
-        organizationId,
-        role,
-        tripName
-      });
-      await onCreated?.(email.trim(), created.invitationId);
-      setInviteLink(created.inviteLink);
+      const created = await createInvitation({ role });
+      setInvitationCode(created.code);
       patchRequest({ error: null, isPending: false });
     } catch (error: unknown) {
-      patchRequest({ error: errorMessage(error, 'Unable to invite teammate'), isPending: false });
+      patchRequest({
+        error: errorMessage(error, 'Unable to create invitation code'),
+        isPending: false
+      });
     }
   };
 
@@ -79,14 +36,14 @@ export function useInviteDialog({
     onClose();
   };
 
-  const copyLink = async () => {
-    if (!inviteLink) return;
+  const copyCode = async () => {
+    if (!invitationCode) return;
     try {
-      await navigator.clipboard.writeText(inviteLink);
+      await navigator.clipboard.writeText(invitationCode);
       setCopied(true);
     } catch (error: unknown) {
       patchRequest({
-        error: errorMessage(error, 'Unable to copy invitation link'),
+        error: errorMessage(error, 'Unable to copy invitation code'),
         isPending: false
       });
     }
@@ -95,12 +52,10 @@ export function useInviteDialog({
   return {
     close,
     copied,
-    copyLink,
-    email,
-    inviteLink,
+    copyCode,
+    invitationCode,
     request,
     role,
-    setEmail,
     setRole,
     submit
   };

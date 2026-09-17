@@ -3,39 +3,29 @@ import type { FormEvent } from 'react';
 import { beforeEach, expect, test, vi } from 'vitest';
 import { useInviteDialog } from './use-invite-dialog';
 
-const auth = vi.hoisted(() => ({
-  inviteMember: vi.fn()
+const backend = vi.hoisted(() => ({
+  createInvitation: vi.fn()
 }));
 
-vi.mock('@groam/auth/client', () => ({
-  authClient: {
-    organization: {
-      inviteMember: auth.inviteMember
-    }
-  }
+vi.mock('convex/react', () => ({
+  useMutation: () => backend.createInvitation
 }));
 
-vi.mock('@groam/env/web-client', () => ({
-  env: { baseUrl: 'https://app.groam.test/' }
+vi.mock('@groam/backend/api', () => ({
+  api: { routes: { organizations: { invitations: { create: { run: {} } } } } }
 }));
 
 beforeEach(() => {
   vi.clearAllMocks();
-  auth.inviteMember.mockResolvedValue({ data: { id: 'invite-a' }, error: null });
+  backend.createInvitation.mockResolvedValue({ code: 'ABCD-EFGH-JKLM' });
   Object.assign(navigator, {
     clipboard: { writeText: vi.fn().mockResolvedValue(undefined) }
   });
 });
 
-test('useInviteDialog creates an invitation link and resets on close', async () => {
+test('useInviteDialog creates an invitation code and resets on close', async () => {
   const onClose = vi.fn();
-  const { result } = renderHook(() =>
-    useInviteDialog({ onClose, organizationId: 'organization-a' })
-  );
-
-  act(() => {
-    result.current.setEmail('teammate@company.com');
-  });
+  const { result } = renderHook(() => useInviteDialog({ onClose }));
 
   await act(async () => {
     await result.current.submit({
@@ -43,18 +33,19 @@ test('useInviteDialog creates an invitation link and resets on close', async () 
     } as unknown as FormEvent);
   });
 
-  expect(auth.inviteMember).toHaveBeenCalledWith({
-    email: 'teammate@company.com',
-    organizationId: 'organization-a',
-    role: 'member'
+  expect(backend.createInvitation).toHaveBeenCalledWith({ role: 'member' });
+  expect(result.current.invitationCode).toBe('ABCD-EFGH-JKLM');
+
+  await act(async () => {
+    await result.current.copyCode();
   });
-  expect(result.current.inviteLink).toBe('https://app.groam.test/invitation/invite-a');
+  expect(navigator.clipboard.writeText).toHaveBeenCalledWith('ABCD-EFGH-JKLM');
+  expect(result.current.copied).toBe(true);
 
   act(() => {
     result.current.close();
   });
 
   expect(onClose).toHaveBeenCalledOnce();
-  expect(result.current.email).toBe('');
-  expect(result.current.inviteLink).toBeNull();
+  expect(result.current.invitationCode).toBeNull();
 });

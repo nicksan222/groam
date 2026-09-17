@@ -6,6 +6,7 @@ import { register as registerRateLimiter } from '@convex-dev/rate-limiter/test';
 import { convexTest } from 'convex-test';
 import { decodeJwt } from 'jose';
 import schema from '#convex/schema';
+import { api } from '#convex-generated/api';
 import { createTestAuthClient } from './auth/client';
 import { registerBetterAuth } from './better-auth';
 
@@ -120,19 +121,27 @@ export async function createAuthenticatedTest({
   if (organizationId && organization?.membership === 'revoked') {
     const replacementOwnerEmail = `owner-${crypto.randomUUID()}@example.com`;
     const replacementOwner = await createTestUser(test, { email: replacementOwnerEmail });
-    const invitation = requireData(
-      await authClient.organization.inviteMember({
-        email: replacementOwnerEmail,
+    const invitation = await client.mutation(api.routes.organizations.invitations.create.run, {
+      role: 'admin'
+    });
+    await replacementOwner.client.mutation(api.routes.organizations.invitations.redeem.run, {
+      code: invitation.code
+    });
+    const activeOrganization = requireData(
+      await authClient.organization.getFullOrganization(),
+      'load the organization with its replacement owner'
+    );
+    const replacementMembership = activeOrganization.members.find(
+      (member) => member.userId === replacementOwner.userId
+    );
+    if (!replacementMembership) throw new Error('Replacement owner membership was not created');
+    requireData(
+      await authClient.organization.updateMemberRole({
+        memberId: replacementMembership.id,
         organizationId,
         role: 'owner'
       }),
-      'invite a replacement organization owner'
-    );
-    requireData(
-      await replacementOwner.authClient.organization.acceptInvitation({
-        invitationId: invitation.id
-      }),
-      'accept a replacement owner invitation'
+      'promote the replacement organization owner'
     );
     requireData(
       await replacementOwner.authClient.organization.setActive({ organizationId }),

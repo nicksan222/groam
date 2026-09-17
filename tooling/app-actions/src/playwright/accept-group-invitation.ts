@@ -6,12 +6,17 @@ import type { TestUserCredentials } from './unique-test-user';
 
 export async function acceptGroupInvitation(
   page: Page,
-  invitationUrl: string,
+  invitationCode: string,
   member: TestUserCredentials
 ): Promise<void> {
   await signUp(page, member);
-  await page.goto(invitationUrl);
-  await expect(by(page, ids.invitationAccept)).toBeVisible();
-  await by(page, ids.invitationAccept).click();
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.evaluate((code) => navigator.clipboard.writeText(code), invitationCode);
+  const codeInput = by(page, ids.joinGroupCode);
+  await expect(codeInput).toBeVisible();
+  await codeInput.click();
+  await page.keyboard.press('ControlOrMeta+V');
+  await expect(codeInput).toHaveValue(invitationCode);
+  await page.getByRole('button', { name: 'Join group' }).click();
   await expect(by(page, ids.navTrips)).toBeVisible({ timeout: 30_000 });
 }
