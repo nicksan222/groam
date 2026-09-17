@@ -40,10 +40,10 @@ test('creates a trip, makes an issue, and resolves it with a merged idea', async
   await updateTrip(page, { dateNotes: 'Indoor museum day if it rains' });
   await requestIdeaReview(page);
 
-  const invitationUrl = await inviteGroupMember(page, member.email);
+  const invitationCode = await inviteGroupMember(page);
   const memberContext = await browser.newContext();
   const memberPage = await memberContext.newPage();
-  await acceptGroupInvitation(memberPage, invitationUrl, member);
+  await acceptGroupInvitation(memberPage, invitationCode, member);
   await openIdeaFromList(memberPage, ideaName);
   await expect(memberPage).toHaveURL(/\/trips\/[^/]+\/ideas\/[^/]+/u, { timeout: 20_000 });
   await approveIdea(memberPage);

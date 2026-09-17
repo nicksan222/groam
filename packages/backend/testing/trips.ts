@@ -18,19 +18,16 @@ export async function setupGroup() {
   const organizationId = owner.organizationId;
   if (!organizationId) throw new Error('Expected an organization');
 
-  const addUser = async (name: string, role: 'admin' | 'member' | 'owner' = 'member') => {
+  const addUser = async (name: string, role: 'admin' | 'member' = 'member') => {
     const email = `${name.toLowerCase().replaceAll(/[^a-z0-9]+/g, '-')}-${crypto.randomUUID()}@example.com`;
     const user = await createTestUser(owner.test, { email, name });
-    const invitation = requireAuthResult(
-      await owner.authClient.organization.inviteMember({
-        email,
-        organizationId,
-        role
-      })
+    const invitation = await owner.client.mutation(
+      api.routes.organizations.invitations.create.run,
+      { role }
     );
-    requireAuthResult(
-      await user.authClient.organization.acceptInvitation({ invitationId: invitation.id })
-    );
+    await user.client.mutation(api.routes.organizations.invitations.redeem.run, {
+      code: invitation.code
+    });
     requireAuthResult(await user.authClient.organization.setActive({ organizationId }));
     return user;
   };

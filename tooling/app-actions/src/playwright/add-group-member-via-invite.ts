@@ -15,10 +15,10 @@ export async function addGroupMemberViaInvite(
   ownerPage: Page,
   member: TestUserCredentials
 ): Promise<void> {
-  const invitationUrl = await inviteGroupMember(ownerPage, member.email);
+  const invitationCode = await inviteGroupMember(ownerPage);
   const memberContext = await browser.newContext();
   const memberPage = await memberContext.newPage();
-  await acceptGroupInvitation(memberPage, invitationUrl, member);
+  await acceptGroupInvitation(memberPage, invitationCode, member);
   await memberPage.close();
   await memberContext.close();
   await ownerPage.bringToFront();

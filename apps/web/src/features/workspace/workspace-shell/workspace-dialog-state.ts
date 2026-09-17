@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 // biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
-type WorkspaceDialog = 'create-organization' | 'invite' | null;
+type WorkspaceDialog = 'create-organization' | 'invite' | 'join' | null;
 
 // biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
 type InviteDialogContext = {

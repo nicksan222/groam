@@ -7,20 +7,18 @@ import { useAuthForm } from '@/features/auth/hooks/use-auth-form';
 export function AuthScreen() {
   const authForm = useAuthForm();
   const { isSignIn } = authForm;
-  const inviteContext = invitationContext();
 
   return (
     <AuthShell>
       <AuthCard
         description={
-          inviteContext ??
-          (isSignIn
+          isSignIn
             ? env.isDesktop
               ? 'Sign in to the group on this computer'
               : 'Sign in to continue your journey'
             : env.isDesktop
               ? 'Create an account stored on this computer'
-              : 'Start building with Groam')
+              : 'Start building with Groam'
         }
         footer={<AuthLegal />}
         headerExtra={
@@ -36,17 +34,6 @@ export function AuthScreen() {
       </AuthCard>
     </AuthShell>
   );
-}
-
-function invitationContext(): string | null {
-  if (typeof window === 'undefined') return null;
-  const path = window.location.pathname;
-  if (!path.startsWith('/invitation/')) return null;
-  const trip = new URLSearchParams(window.location.search).get('trip');
-  const group = new URLSearchParams(window.location.search).get('group');
-  if (trip) return `You’ve been invited to ${trip}. Sign in to join.`;
-  if (group) return `You’ve been invited to ${group}. Sign in to join.`;
-  return 'You’ve been invited to a group. Sign in to continue.';
 }
 
 function AuthLegal() {
