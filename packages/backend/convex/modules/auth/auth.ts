@@ -53,6 +53,7 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
     appName: 'Groam',
     baseURL: authBaseUrl,
     database: authComponent.adapter(ctx),
+    disabledPaths: ['/is-username-available'],
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: false,
