@@ -18,6 +18,7 @@ import {
 } from '@/features/settings/settings-shell/settings-panel';
 import type { Session } from '@/features/workspace/workspace-shell/workspace-state';
 import { userIdentityLabel } from '@/lib/user-identity';
+import { CurrentPasswordField } from './current-password-field';
 import { TwoFactorSettings } from './two-factor-settings';
 
 export function SecuritySettings({ session }: { session: Session }) {
@@ -55,16 +56,12 @@ export function SecuritySettings({ session }: { session: Session }) {
             title="Change password"
           />
           <form className="space-y-4" onSubmit={submit}>
-            <FormField label="Current password">
-              <Input
-                autoComplete="current-password"
-                disabled={state.isPending}
-                onChange={(event) => updateState({ currentPassword: event.target.value })}
-                required
-                type="password"
-                value={state.currentPassword}
-              />
-            </FormField>
+            <CurrentPasswordField
+              disabled={state.isPending}
+              onChange={(currentPassword) => updateState({ currentPassword })}
+              required
+              value={state.currentPassword}
+            />
             <div className="grid items-start gap-4 sm:grid-cols-2">
               <FormField description="Use at least 8 characters." label="New password">
                 <Input

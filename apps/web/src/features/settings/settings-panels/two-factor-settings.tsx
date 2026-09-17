@@ -16,6 +16,7 @@ import {
   SettingsPanelHeading
 } from '@/features/settings/settings-shell/settings-panel';
 import { testIds } from '@/lib/test-ids';
+import { CurrentPasswordField } from './current-password-field';
 
 export function TwoFactorSettings({ enabled }: { enabled: boolean }) {
   const settings = useTwoFactorSettings(enabled);
@@ -87,16 +88,12 @@ export function TwoFactorSettings({ enabled }: { enabled: boolean }) {
             </Button>
           </div>
         ) : (
-          <FormField label="Current password">
-            <Input
-              autoComplete="current-password"
-              data-testid={testIds.settingsTwoFactorPassword}
-              disabled={settings.isPending}
-              onChange={(event) => setPassword(event.target.value)}
-              type="password"
-              value={password}
-            />
-          </FormField>
+          <CurrentPasswordField
+            disabled={settings.isPending}
+            onChange={setPassword}
+            testId={testIds.settingsTwoFactorPassword}
+            value={password}
+          />
         )}
         <FormFeedback error={settings.error} message={settings.message} />
         {!settings.enrollment || settings.isEnabled ? (

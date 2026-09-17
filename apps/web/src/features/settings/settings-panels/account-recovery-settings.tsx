@@ -1,7 +1,5 @@
 import { Button } from '@groam/ui/components/button';
 import { FormFeedback } from '@groam/ui/components/form-feedback';
-import { FormField } from '@groam/ui/components/form-field';
-import { Input } from '@groam/ui/components/input';
 import { Spinner } from '@groam/ui/components/spinner';
 import { Download, LifeBuoy } from 'lucide-react';
 import { useState } from 'react';
@@ -12,6 +10,7 @@ import {
   SettingsPanelHeading
 } from '@/features/settings/settings-shell/settings-panel';
 import { testIds } from '@/lib/test-ids';
+import { CurrentPasswordField } from './current-password-field';
 
 export function AccountRecoverySettings() {
   const settings = useAccountRecoverySettings();
@@ -31,16 +30,12 @@ export function AccountRecoverySettings() {
           set.
         </p>
         <FormFeedback error={settings.error} message={settings.message} />
-        <FormField label="Current password">
-          <Input
-            autoComplete="current-password"
-            data-testid={testIds.settingsRecoveryPassword}
-            disabled={settings.isPending}
-            onChange={(event) => setPassword(event.target.value)}
-            type="password"
-            value={password}
-          />
-        </FormField>
+        <CurrentPasswordField
+          disabled={settings.isPending}
+          onChange={setPassword}
+          testId={testIds.settingsRecoveryPassword}
+          value={password}
+        />
         <SettingsFooter>
           <p className="max-w-md text-xs text-muted-foreground">
             Recovery codes are the fallback when you forget your password. Authenticator backup
