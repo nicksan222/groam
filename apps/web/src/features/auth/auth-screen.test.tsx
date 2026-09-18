@@ -52,8 +52,8 @@ describe('AuthScreen', () => {
     });
     render(<AuthScreen />);
 
-    fireEvent.change(screen.getByLabelText(/^Email/u), {
-      target: { value: 'traveler@example.com' }
+    fireEvent.change(screen.getByLabelText(/^Username or email/u), {
+      target: { value: 'traveler' }
     });
     fireEvent.change(screen.getByLabelText(/^Password/u), {
       target: { value: 'password123' }
@@ -70,8 +70,8 @@ describe('AuthScreen', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Sign up' }));
     fireEvent.change(screen.getByLabelText(/^Name/u), { target: { value: 'Traveler' } });
-    fireEvent.change(screen.getByLabelText(/^Email/u), {
-      target: { value: 'traveler@example.com' }
+    fireEvent.change(screen.getByLabelText(/^Username/u), {
+      target: { value: 'traveler' }
     });
     fireEvent.change(screen.getByLabelText(/^Password/u), {
       target: { value: 'password123' }
@@ -80,10 +80,21 @@ describe('AuthScreen', () => {
 
     await waitFor(() =>
       expect(auth.signUp).toHaveBeenCalledWith({
-        email: 'traveler@example.com',
+        email: expect.stringMatching(/@users\.invalid$/u),
         name: 'Traveler',
-        password: 'password123'
+        password: 'password123',
+        username: 'traveler'
       })
     );
+  });
+
+  test('shows the saved-code recovery form', () => {
+    render(<AuthScreen />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Recover account with a saved code' }));
+
+    expect(screen.getByText('Recover your account')).toBeTruthy();
+    expect(screen.getByLabelText(/^Saved recovery code/u)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Reset password' })).toBeTruthy();
   });
 });

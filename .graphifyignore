@@ -1,0 +1,14 @@
+# Agent instructions and mirrored third-party skills are not product code.
+.agents/
+.claude/
+
+# Generated code is reproducible from its source definitions.
+apps/web/src/routeTree.gen.ts
+packages/backend/convex/_generated/
+
+# Vendored Rust bindings drown out first-party application relationships.
+apps/desktop/src-tauri/vendor/
+
+# Generated media and captures are not useful to code-only indexing.
+docs/assets/
+tooling/showcase/artifacts/

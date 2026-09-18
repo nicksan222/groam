@@ -21,6 +21,56 @@ formatter and linter. Shared Biome, TypeScript, and React Doctor configuration
 belongs under `tooling`; keep only Biome's required discovery shim at the
 repository root.
 
+### Dev container execution boundary
+
+The checked-in dev container is the only supported development environment and
+the source of truth for every repository tool and dependency. When operating
+from a host environment such as the Codex app, first ensure it is running:
+
+```bash
+.devcontainer/devcontainer up
+```
+
+Run every non-Git shell command inside it:
+
+```bash
+.devcontainer/devcontainer exec <command> [args...]
+```
+
+This includes `just`, Bun, Node, Python, Graphify, `rg`, code generation,
+linters, typechecks, tests, builds, seeders, and development servers. Git
+commands may run directly on the host because the workspace is bind-mounted.
+The checked-in launcher still delegates to the official Dev Container CLI and
+also mounts Git's common directory when Codex or another worktree stores it
+outside the workspace. On a clean host, run
+`.devcontainer/devcontainer exec just check` before
+committing and use `git commit --no-verify` so Husky does not launch repository
+tooling outside the container. The `devcontainer` command itself also runs on
+the host. If Docker or the Dev
+Container CLI is unavailable, stop and ask the user to enable it; do not install
+project tooling on the host and do not fall back to host runtimes. Do not patch
+an ephemeral running container with global installs either; add or pin tooling
+in `.devcontainer/`, rebuild, and keep the setup reproducible. When already
+running inside the dev container or Codespaces, run repository commands
+directly without nesting another `devcontainer exec`.
+
+## Code search with Graphify
+
+The dev container preinstalls the pinned Graphify CLI and builds a local,
+code-only graph at `graphify-out/graph.json`. For architecture, ownership,
+call-flow, or cross-file questions, start with
+`.devcontainer/devcontainer exec just graphify-query "<question>"`,
+then inspect the returned source files. Use the same prefix with
+`just graphify-path "A" "B"` or `just graphify-explain "symbol"`. Omit the
+prefix only when already inside the container. These recipes incrementally
+refresh the graph first. Use containerized `rg` for exact strings.
+
+If Graphify or its graph is missing inside the container, rebuild it with
+`.devcontainer/devcontainer rebuild` and then run
+the containerized `just graphify-refresh`. Never install Graphify, `uv`, Python,
+or any other project tooling on the host. Do not install Graphify's Git hooks;
+this repository already manages hooks through Husky.
+
 ## Web architecture
 
 Add product routes as independent TanStack Router files under
@@ -55,29 +105,17 @@ tokens, Convex `ctx.db` only in `modules/` and `routes/` (never in `'use node'` 
 instead of raw Vite env access, public `@groam/ui` entrypoints, and thin
 TanStack route files that only compose feature views.
 
-## Cursor Cloud specific instructions
+## Development runtime
 
-The Cloud Agent environment is defined in code by `.cursor/environment.json`
-plus the `cloud-install` and `cloud-start` recipes in the root `Justfile`, so
-future agents boot fully provisioned and gated on readiness:
+The dev-container image pins Bun `1.3.11` (`packageManager`), Node `24`
+(`convex.json` `nodeVersion`), native dependencies, Just, and Graphify. Its
+post-create command installs the locked workspace and prepares the local code
+graph. This replaces environment-specific host installers: Cursor Cloud and
+other agents must also enter or invoke the dev container rather than installing
+their own toolchains.
 
-- `just cloud-install` (the `install` step, baked into the Build) installs
-  the pinned toolchain — Bun `1.3.11` (`packageManager`) and Node `24`
-  (`convex.json` `nodeVersion`), prepended ahead of the sandbox's default
-  `/exec-daemon/node` (v22) — runs `bun install --frozen-lockfile`, and seeds the
-  local anonymous Convex backend (see "Seeded demo login" below). It writes a
-  `groam cloud toolchain` block to `~/.bashrc` so `bun`/`node` resolve correctly
-  in any interactive shell.
-- `just cloud-start` (the `start` step) launches the full dev stack via the
-  repo's canonical `bun run dev` (Turbo → Convex API `:3210`, Vite web `:5173`,
-  Convex dashboard `:6790`) and **blocks until every service passes a health
-  check**, so the agent only continues once the environment is fully ready. Live
-  logs stream to `/tmp/groam-dev.log` and the `groam-dev` terminal. Relying on
-  `bun run dev` keeps this scalable — Turbo discovers any new app's `dev` task
-  automatically, so adding an app needs no environment change.
-
-To (re)start the stack manually, run `bun run dev` from the repo root in a login
-shell. It uses Turbo's `--ui=tui` interface when attached to a TTY and falls back
+Inside the container, start the stack with `just dev`. It uses Turbo's `--ui=tui`
+interface when attached to a TTY and falls back
 to streamed output otherwise. The individual steps are also available:
 `CONVEX_AGENT_MODE=anonymous bunx convex dev --typecheck-components` (backend,
 writes `.env.local`), `CONVEX_AGENT_MODE=anonymous bun
@@ -122,12 +160,14 @@ fresh sign-up you must create a group (organization) before the app is usable.
 The onboarding "Create group" button is intentionally disabled until you type a
 group name (placeholder "Acme Labs" is not a value) — this is not a bug.
 
-Use the root `Justfile` as the human-facing command map (`just`, `just dev`,
+Use the root `Justfile` as the in-container command map (`just`, `just dev`,
 `just check`, `just codegen`). The package scripts remain the composable
 primitives used by Just, Turbo, lifecycle hooks, and
 `.github/workflows/test-reusable.yml`; the AI
 assistant features are optional and only need an LLM provider key (see
 `packages/env`). Git pre-commit hooks (`tooling/husky/pre-commit`) run codegen,
 lint-staged, conventions, React Doctor (staged), and Fallow (changed); CI owns
-`bun run check`. Installs use `HUSKY=0` (matching CI) so agent commits are not
-blocked.
+`bun run check`. On hosts without the project toolchain, replace those hooks
+with the full containerized `just check` gate and commit with `--no-verify`.
+Installs use `HUSKY=0` (matching CI) so container setup is independent of where
+Git metadata is mounted.

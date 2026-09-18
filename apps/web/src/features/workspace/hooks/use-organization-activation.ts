@@ -7,7 +7,7 @@ export async function activateOrganization(organizationId: string) {
   if (result.error) throw new Error(result.error.message ?? 'Unable to activate workspace');
   // Ensure Convex/Better Auth session cookies pick up activeOrganizationId before
   // workspace queries mount (avoids "No active organization" after login/reseed).
-  await authClient.getSession();
+  await authClient.getSession({ query: { disableCookieCache: true } });
 }
 
 export function useOrganizationActivation({

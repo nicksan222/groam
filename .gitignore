@@ -16,6 +16,7 @@ playwright-report
 coverage
 **/test-results
 *.local
+graphify-out/
 
 # Editor directories and files
 .vscode/*

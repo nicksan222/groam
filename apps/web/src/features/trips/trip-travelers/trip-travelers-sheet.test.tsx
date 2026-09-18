@@ -13,7 +13,7 @@ vi.mock('@/features/trips/hooks/use-trip-travelers', () => ({
     setStatus: vi.fn(),
     travelers: [
       {
-        email: 'alex@groam.example',
+        handle: '@alex',
         id: 'user-alex',
         image: null,
         invitationId: null,
@@ -22,7 +22,7 @@ vi.mock('@/features/trips/hooks/use-trip-travelers', () => ({
         userId: 'user-alex'
       },
       {
-        email: 'maya@groam.example',
+        handle: '@maya',
         id: 'user-maya',
         image: null,
         invitationId: null,

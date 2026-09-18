@@ -4,6 +4,7 @@ import { useShallow } from 'zustand/react/shallow';
 import type { Session } from '@/features/workspace/workspace-shell/workspace-state';
 import { errorMessage } from '@/lib/errors';
 import { useProfileSettingsStore } from '@/lib/stores/settings-stores';
+import { isValidUsername, usernameRequirements } from '@/lib/username';
 
 export function useProfileSettings(user: Session['user']) {
   const state = useProfileSettingsStore(
@@ -12,7 +13,8 @@ export function useProfileSettings(user: Session['user']) {
       image: store.image,
       isPending: store.isPending,
       message: store.message,
-      name: store.name
+      name: store.name,
+      username: store.username
     }))
   );
   const patch = useProfileSettingsStore((store) => store.patch);
@@ -23,11 +25,16 @@ export function useProfileSettings(user: Session['user']) {
   }, [resetFromUser, user]);
 
   const save = async () => {
+    if (!isValidUsername(state.username)) {
+      patch({ error: usernameRequirements });
+      return;
+    }
     patch({ error: null, isPending: true, message: null });
     try {
       const result = await authClient.updateUser({
         image: state.image.trim() || null,
-        name: state.name.trim()
+        name: state.name.trim(),
+        username: state.username.trim()
       });
       if (result.error) throw new Error(result.error.message ?? 'Unable to update profile');
       patch({ message: 'Profile saved.' });

@@ -11,7 +11,22 @@ The checked-in [dev container](.devcontainer/devcontainer.json) is the source of
 truth for Bun, Node.js, Rust, native desktop libraries, editor extensions, and
 forwarded ports. Use GitHub Codespaces, or open the repository locally and choose
 **Dev Containers: Reopen in Container**. Its post-create step installs the locked
-workspace automatically.
+workspace and builds a local Graphify code index automatically.
+
+From a host terminal, create or start the environment with the Dev Container
+CLI, then run repository commands through it:
+
+```bash
+.devcontainer/devcontainer up
+.devcontainer/devcontainer exec just check
+```
+
+Apart from Git and the `devcontainer` command itself, do not run repository
+tooling on the host. On a clean host, run the containerized `just check` gate
+before `git commit --no-verify`; this avoids launching Husky's repository tools
+on the host. The launcher delegates to the official CLI and makes external Git
+worktree metadata available inside the container. If your terminal is already inside the dev container or a
+Codespace, use the shorter commands shown below directly.
 
 ## Local development
 
@@ -55,6 +70,29 @@ Smaller loops:
 | `just typecheck` | TypeScript                         |
 | `just test`      | Unit tests                         |
 | `just e2e-local` | Playwright against Vite on `:5173` |
+
+## Search the code graph
+
+Graphify is preinstalled and indexed in the dev container. It parses code
+locally with no API key, external database, or hosted service:
+
+```bash
+just graphify-query "how does workspace authorization reach Convex routes?"
+just graphify-explain "workspaceQuery"
+just graphify-path "workspaceQuery" "AgentRuns"
+```
+
+Run `just graphify-refresh` after changing source files. The generated
+`graphify-out/` directory is intentionally local and ignored by Git.
+
+From a host terminal, prefix the same commands with the Dev Container CLI:
+
+```bash
+.devcontainer/devcontainer exec just graphify-query "how does authentication work?"
+```
+
+Graphify and its isolated Python environment are part of the container image;
+nothing is installed into the host or the Bun workspace.
 
 Do not hand-edit `apps/web/src/routeTree.gen.ts`. Add routes as files under
 `apps/web/src/routes` and run `just codegen`.

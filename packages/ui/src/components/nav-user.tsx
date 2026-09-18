@@ -18,7 +18,7 @@ import { cn } from '@groam/ui/lib/utils';
 import { ChevronsUpDown, LogOut, Settings } from 'lucide-react';
 
 export type NavUserProps = {
-  user: { name: string; email: string; avatar: string };
+  user: { avatar: string; detail: string; name: string };
   onLogout?: () => void;
   onSettings?: () => void;
   isLoading?: boolean;
@@ -79,7 +79,7 @@ export function NavUser({ user, onLogout, onSettings, isLoading = false }: NavUs
                 <>
                   <div className="grid min-w-0 flex-1 text-left leading-tight">
                     <span className="truncate text-sm font-medium">{user.name}</span>
-                    <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                    <span className="truncate text-xs text-muted-foreground">{user.detail}</span>
                   </div>
                   <ChevronsUpDown className="ml-auto size-4 shrink-0 text-muted-foreground" />
                 </>
@@ -90,7 +90,7 @@ export function NavUser({ user, onLogout, onSettings, isLoading = false }: NavUs
             <DropdownMenuLabel className="font-normal">
               <div className="grid min-w-0 gap-0.5">
                 <span className="truncate text-sm font-medium">{user.name}</span>
-                <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                <span className="truncate text-xs text-muted-foreground">{user.detail}</span>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />

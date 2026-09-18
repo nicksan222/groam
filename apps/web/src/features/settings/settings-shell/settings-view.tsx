@@ -19,6 +19,7 @@ import { SettingsStack } from '@/features/settings/settings-shell/settings-panel
 import { useWorkspaceDialogs } from '@/features/workspace/workspace-shell/workspace-dialog-state';
 import { useWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
 import { testIds } from '@/lib/test-ids';
+import { userIdentityLabel } from '@/lib/user-identity';
 import { SettingsSectionNav } from './settings-section-nav';
 import type { SettingsSection } from './settings-sections';
 
@@ -141,13 +142,13 @@ export function SettingsView({
 function SettingsHeaderAvatar({
   user
 }: {
-  user: { email: string; image?: null | string; name: string };
+  user: { image?: null | string; name: string; username?: null | string };
 }) {
   return (
     <div className="hidden shrink-0 items-center gap-3 sm:flex">
       <div className="min-w-0 text-right">
         <p className="truncate text-sm font-medium">{user.name}</p>
-        <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+        <p className="truncate text-xs text-muted-foreground">{userIdentityLabel(user)}</p>
       </div>
       <Avatar className="size-10 border border-border">
         <AvatarImage alt={user.name} src={user.image ?? ''} />
