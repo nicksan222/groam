@@ -1,5 +1,10 @@
 import { describe, expect, test } from 'vitest';
-import { hasDeploymentAiCredentials, isAiKeyProviderId, resolveAssistantEnvironment } from './keys';
+import {
+  hasDeploymentAiCredentials,
+  isAiKeyProviderId,
+  resolveAssistantCredentials,
+  resolveAssistantEnvironment
+} from './keys';
 
 describe('hasDeploymentAiCredentials', () => {
   test('is true when the selected provider has a key', () => {
@@ -11,10 +16,37 @@ describe('hasDeploymentAiCredentials', () => {
     ).toBe(true);
   });
 
-  test('is true when AI_AGENT_MODELS is set', () => {
+  test('requires at least one deployment key when AI_AGENT_MODELS selects providers', () => {
     expect(
       hasDeploymentAiCredentials({
         AI_AGENT_MODELS: JSON.stringify({ groam: { model: 'gpt-4.1-mini', provider: 'openai' } })
+      })
+    ).toBe(false);
+    expect(
+      hasDeploymentAiCredentials({
+        AI_AGENT_MODELS: JSON.stringify({
+          groam: { model: 'claude-haiku-4-5', provider: 'anthropic' },
+          issue: { model: 'claude-haiku-4-5', provider: 'anthropic' },
+          reviewer: { model: 'claude-haiku-4-5', provider: 'anthropic' }
+        }),
+        ANTHROPIC_API_KEY: 'env-ant'
+      })
+    ).toBe(true);
+    expect(
+      hasDeploymentAiCredentials({
+        AI_AGENT_MODELS: JSON.stringify({
+          groam: { model: 'claude-haiku-4-5', provider: 'anthropic' }
+        }),
+        ANTHROPIC_API_KEY: 'env-ant'
+      })
+    ).toBe(false);
+    expect(
+      hasDeploymentAiCredentials({
+        AI_AGENT_MODELS: JSON.stringify({
+          groam: { model: 'claude-haiku-4-5', provider: 'anthropic' }
+        }),
+        ANTHROPIC_API_KEY: 'env-ant',
+        OPENAI_API_KEY: 'env-openai'
       })
     ).toBe(true);
   });
@@ -29,6 +61,21 @@ describe('hasDeploymentAiCredentials', () => {
       })
     ).toBe(false);
   });
+
+  test('keeps malformed per-agent configuration deployment-owned when fallback is credentialed', () => {
+    const deployment = {
+      AI_AGENT_MODELS: '{invalid',
+      AI_PROVIDER: 'anthropic' as const,
+      ANTHROPIC_API_KEY: 'env-ant'
+    };
+    expect(hasDeploymentAiCredentials(deployment)).toBe(true);
+    expect(
+      resolveAssistantCredentials(deployment, {
+        apiKey: 'sk-personal',
+        provider: 'openai'
+      })
+    ).toEqual({ environment: deployment, source: 'deployment' });
+  });
 });
 
 describe('resolveAssistantEnvironment', () => {
@@ -37,7 +84,7 @@ describe('resolveAssistantEnvironment', () => {
     expect(resolveAssistantEnvironment(deployment, null)).toEqual(deployment);
   });
 
-  test('keeps deployment credentials when a stored key also exists', () => {
+  test('gives deployment credentials priority over a personal key', () => {
     const deployment = { AI_PROVIDER: 'openai' as const, OPENAI_API_KEY: 'env-key' };
     expect(
       resolveAssistantEnvironment(deployment, {
@@ -142,7 +189,7 @@ describe('resolveAssistantEnvironment', () => {
     expect(resolveAssistantEnvironment(deployment, null)).toEqual(deployment);
   });
 
-  test('does not let a saved group key override AI_AGENT_MODELS', () => {
+  test('gives deployment per-agent models priority over a personal key', () => {
     const deployment = {
       AI_AGENT_MODELS: JSON.stringify({
         groam: { model: 'claude-haiku-4-5', provider: 'anthropic' }
@@ -174,6 +221,31 @@ describe('resolveAssistantEnvironment', () => {
       ANTHROPIC_BASE_URL: undefined,
       GOOGLE_GENERATIVE_AI_BASE_URL: undefined,
       OPENAI_BASE_URL: undefined
+    });
+  });
+});
+
+describe('resolveAssistantCredentials', () => {
+  const organization = { apiKey: 'sk-shared', provider: 'openai' as const };
+  const personal = { apiKey: 'sk-personal', provider: 'anthropic' as const };
+
+  test('reports the centralized deployment, personal, organization, and empty sources', () => {
+    expect(
+      resolveAssistantCredentials(
+        { AI_PROVIDER: 'openai', OPENAI_API_KEY: 'env-key' },
+        personal,
+        organization
+      ).source
+    ).toBe('deployment');
+    expect(resolveAssistantCredentials({}, personal, organization).source).toBe('personal');
+    expect(resolveAssistantCredentials({}, null, organization).source).toBe('organization');
+    expect(resolveAssistantCredentials({}, null, null).source).toBe('unconfigured');
+  });
+
+  test('personal credentials win over organization credentials in the resolved environment', () => {
+    expect(resolveAssistantCredentials({}, personal, organization)).toMatchObject({
+      environment: { AI_PROVIDER: 'anthropic', ANTHROPIC_API_KEY: 'sk-personal' },
+      source: 'personal'
     });
   });
 });

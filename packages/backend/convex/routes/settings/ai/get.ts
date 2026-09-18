@@ -6,12 +6,27 @@ import { workspaceQuery } from '#convex/modules/auth/workspace';
 export const run = workspaceQuery({
   args: {},
   returns: v.object({
-    baseUrl: v.union(v.string(), v.null()),
-    canManage: v.boolean(),
-    configured: v.boolean(),
-    fromEnvironment: v.boolean(),
-    model: v.union(v.string(), v.null()),
-    provider: v.union(aiKeyProviderValidator, v.null())
+    canManageOrganization: v.boolean(),
+    effectiveSource: v.union(
+      v.literal('deployment'),
+      v.literal('organization'),
+      v.literal('personal'),
+      v.literal('unconfigured')
+    ),
+    environmentConfigured: v.boolean(),
+    organizationId: v.string(),
+    organization: v.object({
+      baseUrl: v.union(v.string(), v.null()),
+      configured: v.boolean(),
+      model: v.union(v.string(), v.null()),
+      provider: v.union(aiKeyProviderValidator, v.null())
+    }),
+    personal: v.object({
+      baseUrl: v.union(v.string(), v.null()),
+      configured: v.boolean(),
+      model: v.union(v.string(), v.null()),
+      provider: v.union(aiKeyProviderValidator, v.null())
+    })
   }),
   handler: async (ctx) => await publicAiSettings(ctx)
 });

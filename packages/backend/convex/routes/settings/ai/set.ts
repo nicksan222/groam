@@ -8,7 +8,9 @@ export const run = workspaceMutation({
     apiKey: v.union(v.string(), v.null()),
     baseUrl: v.union(v.string(), v.null()),
     model: v.union(v.string(), v.null()),
-    provider: aiKeyProviderValidator
+    organizationId: v.optional(v.union(v.string(), v.null())),
+    provider: aiKeyProviderValidator,
+    target: v.optional(v.union(v.literal('personal'), v.literal('organization')))
   },
   returns: v.null(),
   handler: async (ctx, args) => await saveAiSettings(ctx, args)

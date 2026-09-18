@@ -32,6 +32,7 @@
     "./errors": "./src/errors/index.ts",
     "./output": "./src/output/index.ts",
     "./provider": "./src/providers/index.ts",
+    "./providers/agent-models": "./src/providers/agent-models.ts",
     "./providers": "./src/providers/ids.ts",
     "./providers/keys": "./src/providers/keys.ts"
   },

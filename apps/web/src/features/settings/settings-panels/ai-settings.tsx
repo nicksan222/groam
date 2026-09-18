@@ -26,41 +26,47 @@ import {
 import { Link } from '@/features/workspace/navigation/router';
 import { testIds } from '@/lib/test-ids';
 
-function providerDescription(configured: boolean, fromEnvironment: boolean) {
-  if (fromEnvironment) {
-    return 'Groam is already connected for this app. You can optionally save a fallback connection for your group.';
-  }
+function providerDescription(
+  configured: boolean,
+  organizationConfigured: boolean,
+  target: 'organization' | 'personal'
+) {
   if (configured) {
-    return 'Groam AI is configured. You can change the model without pasting the key again. Switching providers requires a new key.';
+    return target === 'organization'
+      ? 'The shared organization connection is ready. Members may still override it with a personal key.'
+      : 'Your personal connection is ready and overrides the organization key. Switching providers requires a new key.';
   }
-  return 'Paste a provider API key so Groam AI can reply. Cloud providers and a local OpenAI-compatible host (Ollama, LM Studio) are supported.';
-}
-
-function managementNotice(configured: boolean, fromEnvironment: boolean) {
-  if (fromEnvironment) {
-    return 'Groam is already connected. Ask a group owner or admin to change the group’s connection.';
+  if (target === 'organization') {
+    return 'Set the shared fallback for organization members who have not connected a personal provider.';
   }
-  if (configured) {
-    return 'Groam AI is configured for this group. Ask a group owner or admin to change the API key.';
+  if (organizationConfigured) {
+    return 'Your organization provides an AI connection. Add a personal key only when you want to override it.';
   }
-  return 'Ask a group owner or admin to add an AI API key in Settings.';
+  return 'Use one-click connection when the provider supports it, or paste an API key. Cloud providers and custom OpenAI-compatible endpoints are supported.';
 }
 
 export function AiSettings() {
   const {
-    canManage,
+    canManageOrganization,
     canSave,
     configured,
-    fromEnvironment,
+    environmentConfigured,
+    effectiveModel,
+    effectiveProvider,
+    effectiveSource,
+    organizationConfigured,
     draft,
     isLoading,
     baseUrl,
     model,
     preset,
     provider,
+    providerConnection,
     remove,
     save,
     selectProvider,
+    setTarget,
+    target,
     updateDraft
   } = useAiSettings();
 
@@ -70,15 +76,16 @@ export function AiSettings() {
   };
 
   if (isLoading) return <PageLoading label="Loading AI settings…" />;
+  if (environmentConfigured) return null;
 
   return (
     <SettingsSplitLayout
       aside={
         <SettingsAside
           animationDelay="70ms"
-          description="Your group’s connection is private. Saved keys are protected and used only when the app does not already have a connection."
+          description="A personal key follows your account and overrides the shared organization key. Owners and admins can also manage the shared key."
           icon={Sparkles}
-          title="Private to this group"
+          title={target === 'organization' ? 'Organization connection' : 'Your personal connection'}
         />
       }
     >
@@ -94,46 +101,44 @@ export function AiSettings() {
           </Button>
         </div>
         <SettingsPanelHeading
-          description={providerDescription(configured, fromEnvironment)}
+          description={providerDescription(configured, organizationConfigured, target)}
           icon={KeyRound}
-          title="AI provider"
+          title={target === 'organization' ? 'Organization AI provider' : 'Personal AI provider'}
         />
         <AiSettingsStatus
-          configured={configured}
-          fromEnvironment={fromEnvironment}
-          model={model}
-          provider={provider}
+          model={effectiveModel}
+          provider={effectiveProvider}
+          source={effectiveSource}
         />
-        {fromEnvironment ? (
+        {organizationConfigured && target === 'personal' ? (
           <p
             className="text-sm text-muted-foreground"
             data-testid={testIds.settingsAiEnvironmentNotice}
           >
-            Already connected. A group key is optional.
+            Organization connection available. Add your own key only if you prefer a personal
+            provider.
           </p>
         ) : null}
-        {canManage ? (
-          <AiSettingsForm
-            settings={{
-              baseUrl,
-              canSave,
-              configured,
-              draft,
-              model,
-              preset,
-              provider,
-              remove,
-              save,
-              selectProvider,
-              updateDraft
-            }}
-            submit={submit}
-          />
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            {managementNotice(configured, fromEnvironment)}
-          </p>
-        )}
+        <AiSettingsForm
+          settings={{
+            baseUrl,
+            canSave,
+            configured,
+            draft,
+            model,
+            preset,
+            provider,
+            providerConnection,
+            remove,
+            save,
+            selectProvider,
+            setTarget,
+            target,
+            canManageOrganization,
+            updateDraft
+          }}
+          submit={submit}
+        />
       </SettingsPanel>
     </SettingsSplitLayout>
   );
@@ -146,33 +151,57 @@ function AiSettingsForm({
   settings: Pick<
     ReturnType<typeof useAiSettings>,
     | 'baseUrl'
+    | 'canManageOrganization'
     | 'canSave'
     | 'configured'
     | 'draft'
     | 'model'
     | 'preset'
     | 'provider'
+    | 'providerConnection'
     | 'remove'
     | 'save'
     | 'selectProvider'
+    | 'setTarget'
+    | 'target'
     | 'updateDraft'
   >;
   submit: (event: FormEvent) => void;
 }) {
   const {
     baseUrl,
+    canManageOrganization,
     canSave,
     configured,
     draft,
     model,
     preset,
     provider,
+    providerConnection,
     remove,
     selectProvider,
+    setTarget,
+    target,
     updateDraft
   } = settings;
   return (
     <form className="space-y-4" onSubmit={submit}>
+      {canManageOrganization ? (
+        <FormField
+          description="Personal keys override the organization key."
+          label="Connection for"
+        >
+          <Select onValueChange={setTarget} value={target}>
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="personal">My account</SelectItem>
+              <SelectItem value="organization">Organization members</SelectItem>
+            </SelectContent>
+          </Select>
+        </FormField>
+      ) : null}
       <FormField label="Provider">
         <Select onValueChange={selectProvider} value={provider}>
           <SelectTrigger className="w-full" data-testid={testIds.settingsAiProvider}>
@@ -187,6 +216,19 @@ function AiSettingsForm({
           </SelectContent>
         </Select>
       </FormField>
+      {providerConnection ? (
+        <Button
+          className="w-full"
+          data-testid={testIds.settingsAiConnectProvider}
+          disabled={draft.isPending}
+          onClick={() => void providerConnection.connect()}
+          type="button"
+          variant="outline"
+        >
+          {draft.isPending && <Spinner />}
+          {providerConnection.label}
+        </Button>
+      ) : null}
       <FormField description={preset.hint} label="API key">
         <Input
           autoComplete="off"

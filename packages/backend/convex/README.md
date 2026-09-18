@@ -104,13 +104,14 @@ npx convex env set AI_MODEL "your-openrouter-model-id"
 ```
 
 Local AI values in `.env.local` are synchronized to Convex by `bun run dev`
-(the hosted-web development path). Any shell can also store a private group key
-in **Settings → AI** (OpenAI, Anthropic, Google, OpenRouter, or an
-OpenAI-compatible host such as Ollama). A saved key is used only when dashboard
-environment variables are absent, including `AI_AGENT_MODELS`, and is never
-returned to the browser. `AI_AGENT_MODELS` and the other dashboard AI variables
-still apply when no group key is saved. OpenAI-compatible and OpenRouter keys
-run in `chat` mode, so provider-native web search is disabled for those hosts.
+(the hosted-web development path). Credential selection is centralized and uses
+deployment credentials first, then an account-wide personal key, then the active
+organization's shared key. Personal and organization connections support OpenAI,
+Anthropic, Google, OpenRouter, and OpenAI-compatible hosts such as Ollama. OpenRouter
+can be connected with OAuth PKCE from **Settings → AI**; stored secrets are never
+returned to the browser. When deployment credentials cover every configured agent,
+AI settings are hidden and stored keys are ignored. OpenAI-compatible and OpenRouter
+keys run in `chat` mode, so provider-native web search is disabled for those hosts.
 
 The Convex Cloud deployment owner selects the provider and model with typed variables
 registered in `convex.config.ts`:

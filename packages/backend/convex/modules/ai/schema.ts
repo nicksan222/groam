@@ -8,6 +8,10 @@ export const aiTables = {
     baseUrl: v.optional(v.string()),
     model: v.optional(v.string()),
     organizationId: v.string(),
-    provider: aiKeyProviderValidator
-  }).index('by_organizationId', ['organizationId'])
+    provider: aiKeyProviderValidator,
+    userId: v.optional(v.string())
+  })
+    .index('by_organizationId', ['organizationId'])
+    .index('by_organizationId_and_userId', ['organizationId', 'userId'])
+    .index('by_userId', ['userId'])
 };

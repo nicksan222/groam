@@ -64,7 +64,7 @@ export function AgentRunOutcome({ run }: { run: AgentRun }) {
           <h2 className="text-base font-semibold tracking-tight">{state.title}</h2>
           <p className="mt-1 text-sm leading-6 text-muted-foreground">
             {providerAuthError
-              ? 'The model provider could not authenticate this run. Ask your workspace administrator to check the provider connection before trying again.'
+              ? 'The model provider could not authenticate this run. Reconnect a personal key in AI settings, or ask your organization or deployment admin to update the shared provider.'
               : state.description}
           </p>
           {run.error ? (

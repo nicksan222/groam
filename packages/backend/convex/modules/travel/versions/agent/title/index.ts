@@ -7,6 +7,7 @@ export const context = internalQuery({
   returns: v.union(
     v.null(),
     v.object({
+      credentialOwnerUserId: v.string(),
       changes: v.array(
         v.object({
           change: v.union(v.literal('added'), v.literal('modified'), v.literal('removed')),

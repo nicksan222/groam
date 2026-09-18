@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { useAiSettingsDraftStore } from '@/lib/stores/settings-stores';
+import { useAiProviderAuthStore, useAiSettingsDraftStore } from '@/lib/stores/settings-stores';
 import { useAiSettings } from './use-ai-settings';
 
 const convex = vi.hoisted(() => ({
@@ -14,22 +14,62 @@ vi.mock('convex/react', () => ({
   useQuery: (...args: unknown[]) => convex.useQuery(...args)
 }));
 
+type StoredSettings = {
+  baseUrl: string | null;
+  configured: boolean;
+  model: string | null;
+  provider: 'anthropic' | 'compatible' | 'google' | 'openai' | 'openrouter' | null;
+};
+
+function remoteSettings({
+  canManageOrganization = true,
+  environmentConfigured = false,
+  organization = {},
+  personal = {}
+}: {
+  canManageOrganization?: boolean;
+  environmentConfigured?: boolean;
+  organization?: Partial<StoredSettings>;
+  personal?: Partial<StoredSettings>;
+} = {}) {
+  const empty = { baseUrl: null, configured: false, model: null, provider: null } as const;
+  const personalSettings = { ...empty, ...personal };
+  const organizationSettings = { ...empty, ...organization };
+  return {
+    canManageOrganization,
+    effectiveSource: environmentConfigured
+      ? ('deployment' as const)
+      : personalSettings.configured
+        ? ('personal' as const)
+        : organizationSettings.configured
+          ? ('organization' as const)
+          : ('unconfigured' as const),
+    environmentConfigured,
+    organizationId: 'organization-a',
+    organization: organizationSettings,
+    personal: personalSettings
+  };
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.unstubAllGlobals();
+  sessionStorage.clear();
+  localStorage.clear();
+  window.history.replaceState({}, '', '/');
   useAiSettingsDraftStore.getState().resetDraft();
+  useAiProviderAuthStore.getState().setSession(null);
   convex.useMutation.mockReturnValue(convex.save);
-  convex.useQuery.mockReturnValue({
-    baseUrl: null,
-    canManage: true,
-    configured: false,
-    fromEnvironment: false,
-    model: null,
-    provider: null
-  });
+  convex.useQuery.mockReturnValue(remoteSettings());
   convex.save.mockResolvedValue(null);
 });
 
 describe('useAiSettings', () => {
+  test('recommends OpenRouter when the user has no personal connection', () => {
+    const { result } = renderHook(() => useAiSettings());
+    expect(result.current.provider).toBe('openrouter');
+  });
+
   test('saves an OpenRouter key and optional model', async () => {
     const { result } = renderHook(() => useAiSettings());
     act(() =>
@@ -57,12 +97,9 @@ describe('useAiSettings', () => {
   });
 
   test('removes a stored key', async () => {
-    convex.useQuery.mockReturnValue({
-      canManage: true,
-      configured: true,
-      model: null,
-      provider: 'openai'
-    });
+    convex.useQuery.mockReturnValue(
+      remoteSettings({ personal: { configured: true, provider: 'openai' } })
+    );
     const { result } = renderHook(() => useAiSettings());
 
     await act(() => result.current.remove());
@@ -79,14 +116,62 @@ describe('useAiSettings', () => {
     expect(result.current.provider).toBe('openai');
   });
 
-  test('exposes when Convex env is supplying AI credentials', () => {
-    convex.useQuery.mockReturnValue({
-      canManage: true,
-      configured: false,
-      fromEnvironment: true,
+  test('saves and removes the selected organization connection explicitly', async () => {
+    convex.useQuery.mockReturnValue(
+      remoteSettings({
+        organization: { configured: true, provider: 'openai' }
+      })
+    );
+    const { result } = renderHook(() => useAiSettings());
+
+    act(() => result.current.setTarget('organization'));
+    act(() => result.current.updateDraft({ apiKey: 'sk-shared-new' }));
+    await act(() => result.current.save());
+    expect(convex.save).toHaveBeenLastCalledWith({
+      apiKey: 'sk-shared-new',
+      baseUrl: null,
       model: null,
-      provider: null
+      organizationId: 'organization-a',
+      provider: 'openai',
+      target: 'organization'
     });
+
+    await act(() => result.current.remove());
+    expect(convex.save).toHaveBeenLastCalledWith({
+      apiKey: null,
+      baseUrl: null,
+      model: null,
+      organizationId: 'organization-a',
+      provider: 'openai',
+      target: 'organization'
+    });
+  });
+
+  test('does not let a member select the organization target', () => {
+    convex.useQuery.mockReturnValue(remoteSettings({ canManageOrganization: false }));
+    const { result } = renderHook(() => useAiSettings());
+
+    act(() => result.current.setTarget('organization'));
+
+    expect(result.current.target).toBe('personal');
+  });
+
+  test('uses the backend-selected personal source over an organization fallback', () => {
+    convex.useQuery.mockReturnValue(
+      remoteSettings({
+        organization: { configured: true, model: 'gpt-4.1-mini', provider: 'openai' },
+        personal: { configured: true, model: 'claude-sonnet-4-5', provider: 'anthropic' }
+      })
+    );
+    const { result } = renderHook(() => useAiSettings());
+
+    expect(result.current.effectiveSource).toBe('personal');
+    expect(result.current.effectiveProvider).toBe('anthropic');
+    expect(result.current.effectiveModel).toBe('claude-sonnet-4-5');
+  });
+
+  test('exposes when Convex env is supplying AI credentials', () => {
+    convex.useQuery.mockReturnValue(remoteSettings({ environmentConfigured: true }));
     const { result } = renderHook(() => useAiSettings());
     expect(result.current.fromEnvironment).toBe(true);
     expect(result.current.configured).toBe(false);
@@ -106,24 +191,22 @@ describe('useAiSettings', () => {
   });
 
   test('keeps the saved model while the provider stays the same', () => {
-    convex.useQuery.mockReturnValue({
-      canManage: true,
-      configured: true,
-      model: 'gpt-4.1-mini',
-      provider: 'openai'
-    });
+    convex.useQuery.mockReturnValue(
+      remoteSettings({
+        personal: { configured: true, model: 'gpt-4.1-mini', provider: 'openai' }
+      })
+    );
     const { result } = renderHook(() => useAiSettings());
     expect(result.current.provider).toBe('openai');
     expect(result.current.model).toBe('gpt-4.1-mini');
   });
 
   test('does not keep a saved model after switching providers', async () => {
-    convex.useQuery.mockReturnValue({
-      canManage: true,
-      configured: true,
-      model: 'gpt-4.1-mini',
-      provider: 'openai'
-    });
+    convex.useQuery.mockReturnValue(
+      remoteSettings({
+        personal: { configured: true, model: 'gpt-4.1-mini', provider: 'openai' }
+      })
+    );
     const { result } = renderHook(() => useAiSettings());
 
     act(() => result.current.selectProvider('openrouter'));
@@ -142,12 +225,11 @@ describe('useAiSettings', () => {
   });
 
   test('saves a model change without sending a new key', async () => {
-    convex.useQuery.mockReturnValue({
-      canManage: true,
-      configured: true,
-      model: 'gpt-4.1-mini',
-      provider: 'openai'
-    });
+    convex.useQuery.mockReturnValue(
+      remoteSettings({
+        personal: { configured: true, model: 'gpt-4.1-mini', provider: 'openai' }
+      })
+    );
     const { result } = renderHook(() => useAiSettings());
     expect(result.current.canSave).toBe(true);
 
@@ -164,12 +246,11 @@ describe('useAiSettings', () => {
   });
 
   test('requires a new key after switching providers', () => {
-    convex.useQuery.mockReturnValue({
-      canManage: true,
-      configured: true,
-      model: 'gpt-4.1-mini',
-      provider: 'openai'
-    });
+    convex.useQuery.mockReturnValue(
+      remoteSettings({
+        personal: { configured: true, model: 'gpt-4.1-mini', provider: 'openai' }
+      })
+    );
     const { result } = renderHook(() => useAiSettings());
 
     act(() => result.current.selectProvider('anthropic'));
@@ -177,12 +258,11 @@ describe('useAiSettings', () => {
   });
 
   test('requires a new key after switching from OpenAI to a local host', () => {
-    convex.useQuery.mockReturnValue({
-      canManage: true,
-      configured: true,
-      model: 'gpt-4.1-mini',
-      provider: 'openai'
-    });
+    convex.useQuery.mockReturnValue(
+      remoteSettings({
+        personal: { configured: true, model: 'gpt-4.1-mini', provider: 'openai' }
+      })
+    );
     const { result } = renderHook(() => useAiSettings());
 
     act(() => result.current.selectProvider('compatible'));

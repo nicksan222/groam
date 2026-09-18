@@ -66,6 +66,7 @@ export const access = internalQuery({
     threadId: v.optional(v.string())
   },
   returns: v.object({
+    credentialOwnerUserId: v.string(),
     organizationId: v.string(),
     tags: v.array(assistantContextTagValidator),
     threadTitle: v.union(v.string(), v.null()),
@@ -75,6 +76,7 @@ export const access = internalQuery({
     if (threadId) {
       const { tags, thread, workspace } = await AssistantThreads.require(ctx, threadId, scope);
       return {
+        credentialOwnerUserId: workspace.userId,
         organizationId: workspace.organizationId,
         tags,
         threadTitle: thread.title ?? null,
@@ -83,6 +85,7 @@ export const access = internalQuery({
     }
     const workspace = await requireWorkspace(ctx);
     return {
+      credentialOwnerUserId: workspace.userId,
       organizationId: workspace.organizationId,
       tags: [],
       threadTitle: null,

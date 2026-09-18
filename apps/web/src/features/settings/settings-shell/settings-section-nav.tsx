@@ -22,23 +22,27 @@ const sectionTitles: Record<SettingsSection, string> = {
 
 export function SettingsSectionNav({
   activeSection,
+  hideAi = false,
   onSectionChange
 }: {
   activeSection: SettingsSection;
+  hideAi?: boolean;
   onSectionChange: (section: SettingsSection) => void;
 }) {
   return (
     <Shell.UnderlineNav aria-label="Settings sections">
-      {visibleSettingsSections().map((id) => (
-        <Shell.Tab
-          data-testid={sectionTestIds[id]}
-          isActive={activeSection === id}
-          key={id}
-          onClick={() => onSectionChange(id)}
-          position="top"
-          title={sectionTitles[id]}
-        />
-      ))}
+      {visibleSettingsSections().map((id) =>
+        hideAi && id === 'ai' ? null : (
+          <Shell.Tab
+            data-testid={sectionTestIds[id]}
+            isActive={activeSection === id}
+            key={id}
+            onClick={() => onSectionChange(id)}
+            position="top"
+            title={sectionTitles[id]}
+          />
+        )
+      )}
     </Shell.UnderlineNav>
   );
 }

@@ -1,3 +1,5 @@
+import { assistantAgentIds } from '#ai-contracts/agents/registry/ids';
+import { parseAgentModels } from '#ai-contracts/providers/agent-models';
 import { type AssistantProviderEnvironment, configuredValue } from '#ai-contracts/providers/env';
 import type { AssistantProviderId } from '#ai-contracts/providers/ids';
 
@@ -15,6 +17,13 @@ export type AiKeyCredentials = {
   baseUrl?: string;
   model?: string;
   provider: AiKeyProviderId;
+};
+
+export type AiCredentialSource = 'deployment' | 'organization' | 'personal' | 'unconfigured';
+
+export type ResolvedAssistantCredentials = {
+  environment: AssistantProviderEnvironment;
+  source: AiCredentialSource;
 };
 
 export type AiKeyProvider = {
@@ -103,10 +112,34 @@ function deploymentProviderApiKey(deployment: AssistantProviderEnvironment) {
   return deployment.OPENAI_API_KEY;
 }
 
-/** True when Convex env already has credentials for the selected provider. */
+function providerApiKey(deployment: AssistantProviderEnvironment, provider: AssistantProviderId) {
+  if (provider === 'anthropic') return deployment.ANTHROPIC_API_KEY;
+  if (provider === 'google') return deployment.GOOGLE_GENERATIVE_AI_API_KEY;
+  return deployment.OPENAI_API_KEY;
+}
+
+function requiredDeploymentProviders(raw: string, fallback: AssistantProviderId) {
+  const parsed = parseAgentModels(raw);
+  if (!parsed.valid) return null;
+  const providers = new Set<AssistantProviderId>();
+  for (const selection of Object.values(parsed.selections)) {
+    if (selection) providers.add(selection.provider);
+  }
+  if (Object.keys(parsed.selections).length < assistantAgentIds.length) providers.add(fallback);
+  return providers;
+}
+
+/** True when deployment configuration owns provider selection and has an API key. */
 export function hasDeploymentAiCredentials(deployment: AssistantProviderEnvironment): boolean {
-  if (configuredValue(deployment.AI_AGENT_MODELS)) return true;
-  return Boolean(configuredValue(deploymentProviderApiKey(deployment)));
+  const fallback = deployment.AI_PROVIDER ?? 'openai';
+  const configuredModels = configuredValue(deployment.AI_AGENT_MODELS);
+  if (!configuredModels) return Boolean(configuredValue(deploymentProviderApiKey(deployment)));
+  const providers = requiredDeploymentProviders(configuredModels, fallback);
+  if (!providers) return Boolean(configuredValue(providerApiKey(deployment, fallback)));
+  return Boolean(
+    providers.size > 0 &&
+      [...providers].every((provider) => configuredValue(providerApiKey(deployment, provider)))
+  );
 }
 
 function applyStoredAiKeys(
@@ -130,15 +163,31 @@ function applyStoredAiKeys(
 }
 
 /**
- * Resolve assistant env: Convex deployment variables first, then a Settings → AI
- * key when those variables are absent. A saved group key owns provider, model,
+ * Resolve assistant env: deployment credentials first, then personal and organization
+ * Settings → AI keys. A saved key owns provider, model,
  * and credentials, and official presets clear leftover custom base URLs so that
  * key is not sent to a proxy.
  */
+export function resolveAssistantCredentials(
+  deployment: AssistantProviderEnvironment,
+  personal: AiKeyCredentials | null,
+  organization: AiKeyCredentials | null = null
+): ResolvedAssistantCredentials {
+  if (hasDeploymentAiCredentials(deployment)) {
+    return { environment: deployment, source: 'deployment' };
+  }
+  const stored = personal ?? organization;
+  if (!stored) return { environment: deployment, source: 'unconfigured' };
+  return {
+    environment: applyStoredAiKeys(deployment, stored),
+    source: personal ? 'personal' : 'organization'
+  };
+}
+
 export function resolveAssistantEnvironment(
   deployment: AssistantProviderEnvironment,
-  stored: AiKeyCredentials | null
+  personal: AiKeyCredentials | null,
+  organization: AiKeyCredentials | null = null
 ): AssistantProviderEnvironment {
-  if (hasDeploymentAiCredentials(deployment) || !stored) return deployment;
-  return applyStoredAiKeys(deployment, stored);
+  return resolveAssistantCredentials(deployment, personal, organization).environment;
 }

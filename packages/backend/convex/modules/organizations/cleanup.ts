@@ -21,6 +21,7 @@ class OrganizationCleanup {
     if (await this.removeDiscussionBatch()) return await this.continueInNextTransaction();
     if (await this.removeMediaBatch()) return await this.continueInNextTransaction();
     if (await this.removeInvitationCodeBatch()) return await this.continueInNextTransaction();
+    await this.ctx.runMutation(internal.modules.ai.settings.removeOrganizationSettings, this.args);
     return null;
   }
 

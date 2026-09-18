@@ -1,4 +1,7 @@
-import { resolveAssistantEnvironment } from '@groam/ai-contracts/providers/keys';
+import {
+  hasDeploymentAiCredentials,
+  resolveAssistantCredentials
+} from '@groam/ai-contracts/providers/keys';
 import {
   type AssistantAgentId,
   type AssistantProviderConfiguration,
@@ -13,14 +16,27 @@ export type {
   AssistantProviderId
 } from '#backend/ai/providers/index';
 
-/** Resolve the assistant model from Convex env, falling back to a Settings-saved key. */
+export type AssistantCredentialScope = {
+  organizationId: string;
+  userId: string;
+};
+
+/** Resolve deployment credentials first, then personal and organization settings. */
 export async function configuredAssistantProvider(
   ctx: ActionCtx,
   agentId: AssistantAgentId,
-  organizationId: string
+  scope: AssistantCredentialScope
 ): Promise<AssistantProviderConfiguration> {
-  const stored = await ctx.runQuery(internal.modules.ai.settings.stored, { organizationId });
-  return configuredProvider(agentId, resolveAssistantEnvironment(env, stored));
+  if (hasDeploymentAiCredentials(env)) return configuredProvider(agentId, env);
+  const stored = await ctx.runQuery(internal.modules.ai.settings.effective, {
+    organizationId: scope.organizationId,
+    userId: scope.userId
+  });
+  return configuredProvider(
+    agentId,
+    resolveAssistantCredentials(env, stored?.personal ?? null, stored?.organization ?? null)
+      .environment
+  );
 }
 
 /** Deployment-scoped assistant model provider. */

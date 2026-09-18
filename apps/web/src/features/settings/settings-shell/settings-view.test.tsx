@@ -4,11 +4,22 @@ import { SettingsView } from './settings-view';
 
 const testState = vi.hoisted(() => ({
   aiMounts: 0,
+  environmentConfigured: false,
+  hideAi: false,
+  isAiAvailabilityLoading: false,
   workspace: {
     activeOrganization: { id: 'org-acme', name: 'Acme Labs' },
     activeRole: 'owner',
     session: { user: { email: 'demo@groam.example', name: 'Demo' } }
   }
+}));
+
+vi.mock('@/features/settings/hooks/use-ai-availability', () => ({
+  useAiAvailability: () => ({
+    environmentConfigured: testState.environmentConfigured,
+    hideAi: testState.hideAi,
+    isLoading: testState.isAiAvailabilityLoading
+  })
 }));
 
 vi.mock('@groam/ui/ai/context/agent-context', () => ({
@@ -60,6 +71,9 @@ vi.mock('@/features/settings/settings-panels/security-settings', () => ({
 afterEach(() => {
   cleanup();
   testState.aiMounts = 0;
+  testState.hideAi = false;
+  testState.environmentConfigured = false;
+  testState.isAiAvailabilityLoading = false;
   testState.workspace = {
     activeOrganization: { id: 'org-acme', name: 'Acme Labs' },
     activeRole: 'owner',
@@ -80,6 +94,27 @@ describe('SettingsView', () => {
     render(<SettingsView activeSection="ai" onSectionChange={vi.fn()} />);
     expect(screen.getByTestId('settings-section-ai')).toBeTruthy();
     expect(screen.getByText('AI settings 1')).toBeTruthy();
+  });
+
+  test('hides hosted AI settings and redirects a direct AI section', () => {
+    testState.hideAi = true;
+    testState.environmentConfigured = true;
+    const onSectionChange = vi.fn();
+    render(<SettingsView activeSection="ai" onSectionChange={onSectionChange} />);
+    expect(screen.queryByTestId('settings-section-ai')).toBeNull();
+    expect(screen.queryByText(/AI settings/)).toBeNull();
+    expect(onSectionChange).toHaveBeenCalledWith('profile');
+  });
+
+  test('keeps the AI tab hidden while showing progress for a direct AI section', () => {
+    testState.hideAi = true;
+    testState.isAiAvailabilityLoading = true;
+    const onSectionChange = vi.fn();
+    render(<SettingsView activeSection="ai" onSectionChange={onSectionChange} />);
+    expect(screen.queryByTestId('settings-section-ai')).toBeNull();
+    expect(screen.getByRole('status', { name: 'Loading AI settings…' })).toBeTruthy();
+    expect(screen.queryByText(/AI settings 1/)).toBeNull();
+    expect(onSectionChange).not.toHaveBeenCalled();
   });
 
   test('remounts AI settings when the active group changes', () => {
