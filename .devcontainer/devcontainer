@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if ! command -v devcontainer >/dev/null 2>&1; then
+  echo "The Dev Container CLI is required. Install it or ask the user to enable it." >&2
+  exit 127
+fi
+
+workspace="$(git rev-parse --show-toplevel)"
+git_common_dir="$(git rev-parse --path-format=absolute --git-common-dir)"
+mount_args=()
+
+# Codex and other Git worktrees can keep their common Git directory outside
+# the workspace bind mount. Mirror it at the same absolute path so the .git
+# pointer remains valid inside the container.
+if [[ -f "$workspace/.git" ]]; then
+  mount_args=(
+    --mount
+    "type=bind,source=$git_common_dir,target=$git_common_dir"
+  )
+fi
+
+action="${1:-up}"
+if (($#)); then
+  shift
+fi
+
+case "$action" in
+  up)
+    exec devcontainer up --workspace-folder "$workspace" "${mount_args[@]+"${mount_args[@]}"}" "$@"
+    ;;
+  rebuild)
+    exec devcontainer up --workspace-folder "$workspace" "${mount_args[@]+"${mount_args[@]}"}" \
+      --remove-existing-container "$@"
+    ;;
+  exec)
+    if (($# == 0)); then
+      echo "Usage: .devcontainer/devcontainer exec <command> [args...]" >&2
+      exit 2
+    fi
+    exec devcontainer exec --workspace-folder "$workspace" "$@"
+    ;;
+  *)
+    echo "Usage: .devcontainer/devcontainer {up|rebuild|exec <command> [args...]}" >&2
+    exit 2
+    ;;
+esac

@@ -8,141 +8,6 @@ default:
 install:
     HUSKY=0 bun install --frozen-lockfile
 
-# Provision the pinned toolchain, dependencies, and seeded local backend for Cursor Cloud.
-cloud-install:
-    #!/usr/bin/env bash
-    set -euo pipefail
-
-    seed_scale="${GROAM_SEED_SCALE:-small}"
-    bun_version="$(sed -n 's/.*"packageManager": "bun@\([^"]*\)".*/\1/p' package.json | head -n 1)"
-    node_major="$(sed -n 's/.*"nodeVersion": "\([0-9][0-9]*\)".*/\1/p' convex.json | head -n 1)"
-    export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
-    export BUN_INSTALL="${BUN_INSTALL:-$HOME/.bun}"
-
-    log() { printf '\n[groam-install] %s\n' "$*"; }
-
-    if [ ! -s "$NVM_DIR/nvm.sh" ]; then
-      log "Installing nvm"
-      curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-    fi
-    # shellcheck disable=SC1091
-    . "$NVM_DIR/nvm.sh"
-
-    if ! nvm which "$node_major" >/dev/null 2>&1; then
-      log "Installing Node ${node_major}"
-      nvm install "$node_major"
-    fi
-    nvm alias default "$node_major" >/dev/null
-    nvm use --silent "$node_major"
-    node_bin="$(dirname "$(nvm which "$node_major")")"
-
-    if [ "$("$BUN_INSTALL/bin/bun" --version 2>/dev/null || true)" != "$bun_version" ]; then
-      log "Installing Bun ${bun_version}"
-      curl -fsSL https://bun.sh/install | bash -s "bun-v${bun_version}"
-    fi
-    export PATH="$node_bin:$BUN_INSTALL/bin:$PATH"
-    marker_begin="# >>> groam cloud toolchain >>>"
-    marker_end="# <<< groam cloud toolchain <<<"
-    bashrc="$HOME/.bashrc"
-    touch "$bashrc"
-    temporary_bashrc="$(mktemp)"
-    awk -v b="$marker_begin" -v e="$marker_end" '
-      $0==b {skip=1} skip && $0==e {skip=0; next} !skip {print}
-    ' "$bashrc" > "$temporary_bashrc"
-    {
-      cat "$temporary_bashrc"
-      printf '%s\n' "$marker_begin"
-      printf 'export BUN_INSTALL="%s"\n' "$BUN_INSTALL"
-      printf 'export NVM_DIR="%s"\n' "$NVM_DIR"
-      printf 'export PATH="%s:%s:$PATH"\n' "$node_bin" "$BUN_INSTALL/bin"
-      printf '%s\n' "$marker_end"
-    } > "$bashrc"
-    rm -f "$temporary_bashrc"
-
-    log "Toolchain ready: bun $(bun --version), node $(node --version)"
-    log "Installing workspace dependencies"
-    HUSKY=0 bun install --frozen-lockfile
-
-    export CONVEX_AGENT_MODE=anonymous
-    convex_log=/tmp/groam-install-convex.log
-    : > "$convex_log"
-    log "Starting Convex backend to seed demo data"
-    setsid bunx convex dev --typecheck-components --tail-logs disable > "$convex_log" 2>&1 &
-    convex_pgid=$!
-
-    stop_convex() {
-      if [ -n "${convex_pgid:-}" ]; then
-        log "Stopping Convex backend"
-        kill -TERM "-${convex_pgid}" 2>/dev/null || true
-        sleep 3
-        kill -KILL "-${convex_pgid}" 2>/dev/null || true
-        wait "$convex_pgid" 2>/dev/null || true
-        convex_pgid=""
-      fi
-    }
-    trap stop_convex EXIT
-
-    fail_install() {
-      log "ERROR: $1"
-      tail -n 80 "$convex_log" || true
-      exit 1
-    }
-
-    log "Waiting for Convex"
-    GROAM_STARTUP_TIMEOUT_MS="${GROAM_STARTUP_TIMEOUT_MS:-300000}" \
-      bun tooling/devkit/wait-for-backend.ts || fail_install "Convex did not become ready in time"
-
-    log "Configuring Better Auth"
-    bun tooling/devkit/configure-auth.ts --write-vite-site-url || fail_install "Better Auth setup failed"
-
-    log "Seeding demo data (scale: ${seed_scale})"
-    seeded=0
-    for attempt in 1 2 3; do
-      if bun run seed -- --scale "$seed_scale"; then
-        seeded=1
-        break
-      fi
-      log "Seed attempt ${attempt} failed; retrying in 5s"
-      sleep 5
-    done
-    [ "$seeded" -eq 1 ] || fail_install "seeding did not complete successfully"
-
-    stop_convex
-    trap - EXIT
-    log "Install complete."
-
-# Start Cursor Cloud's detached dev stack and return only when it is healthy.
-cloud-start:
-    #!/usr/bin/env bash
-    set -euo pipefail
-
-    export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
-    export BUN_INSTALL="${BUN_INSTALL:-$HOME/.bun}"
-    # shellcheck disable=SC1091
-    . "$NVM_DIR/nvm.sh"
-    node_major="$(sed -n 's/.*"nodeVersion": "\([0-9][0-9]*\)".*/\1/p' convex.json | head -n 1)"
-    nvm use --silent "$node_major"
-    node_bin="$(dirname "$(nvm which "$node_major")")"
-    export PATH="$node_bin:$BUN_INSTALL/bin:$PATH"
-    export CONVEX_AGENT_MODE=anonymous
-    export GROAM_READY_TIMEOUT_SECONDS="${GROAM_READY_TIMEOUT_SECONDS:-240}"
-    dev_log=/tmp/groam-dev.log
-
-    log() { printf '\n[groam-start] %s\n' "$*"; }
-
-    if ! bun tooling/devkit/wait-for-dev-stack.ts --once; then
-      log "Starting dev stack; logs → ${dev_log}"
-      : > "$dev_log"
-      setsid bash -c 'exec bun run dev' > "$dev_log" 2>&1 &
-    fi
-
-    log "Waiting up to ${GROAM_READY_TIMEOUT_SECONDS}s for the dev stack"
-    if ! bun tooling/devkit/wait-for-dev-stack.ts; then
-      log "ERROR: dev stack did not become healthy. Recent logs:"
-      tail -n 40 "$dev_log" 2>/dev/null || true
-      exit 1
-    fi
-
 # Start Convex, Vite, and the dashboard locally.
 dev:
     CONVEX_AGENT_MODE=anonymous bun run dev
@@ -166,6 +31,22 @@ codegen:
 # Refresh the Convex-managed guidelines and agent skills.
 update-convex-agent-files:
     CONVEX_AGENT_MODE=anonymous bunx convex ai-files update
+
+# Build or incrementally refresh the local, API-key-free code graph.
+graphify-refresh:
+    graphify extract . --code-only --no-cluster
+
+# Refresh, then search the code graph with a natural-language question.
+graphify-query question: graphify-refresh
+    graphify query {{ quote(question) }}
+
+# Refresh, then explain one symbol or concept and its graph neighbors.
+graphify-explain concept: graphify-refresh
+    graphify explain {{ quote(concept) }}
+
+# Refresh, then trace the shortest relationship path between two concepts.
+graphify-path source target: graphify-refresh
+    graphify path {{ quote(source) }} {{ quote(target) }}
 
 # Enable squash auto-merge for a pull request after its required checks pass.
 enable-pr-auto-merge pull-request:
