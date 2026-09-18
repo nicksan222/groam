@@ -28,10 +28,10 @@ fi
 
 case "$action" in
   up)
-    exec devcontainer up --workspace-folder "$workspace" "${mount_args[@]}" "$@"
+    exec devcontainer up --workspace-folder "$workspace" "${mount_args[@]+"${mount_args[@]}"}" "$@"
     ;;
   rebuild)
-    exec devcontainer up --workspace-folder "$workspace" "${mount_args[@]}" \
+    exec devcontainer up --workspace-folder "$workspace" "${mount_args[@]+"${mount_args[@]}"}" \
       --remove-existing-container "$@"
     ;;
   exec)
