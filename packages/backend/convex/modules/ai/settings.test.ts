@@ -218,6 +218,52 @@ test('allows managers to configure an organization key and denies members', asyn
   ).rejects.toThrow('Only organization owners and admins can manage group settings');
 });
 
+test('does not use personal credentials after the user leaves the organization', async () => {
+  const { addUser, owner } = await setupGroup();
+  if (!owner.organizationId) throw new Error('Expected an organization');
+  const member = await addUser('Departing Traveler');
+  await owner.client.mutation(api.routes.settings.ai.set.run, {
+    apiKey: 'sk-shared',
+    baseUrl: null,
+    model: null,
+    organizationId: owner.organizationId,
+    provider: 'openai',
+    target: 'organization'
+  });
+  await member.client.mutation(api.routes.settings.ai.set.run, {
+    apiKey: 'sk-former-member',
+    baseUrl: 'https://former-member.example/v1',
+    model: null,
+    provider: 'compatible'
+  });
+
+  const organization = await owner.authClient.organization.getFullOrganization();
+  if (organization.error || !organization.data) throw new Error('Unable to load organization');
+  const membership = organization.data.members.find((entry) => entry.userId === member.userId);
+  if (!membership) throw new Error('Expected member in organization');
+  const removal = await owner.authClient.organization.removeMember({
+    memberIdOrEmail: membership.id,
+    organizationId: owner.organizationId
+  });
+  if (removal.error) throw new Error(removal.error.message ?? 'Unable to remove member');
+
+  await expect(
+    owner.test.query(internal.modules.ai.settings.effective, {
+      organizationId: owner.organizationId,
+      userId: member.userId
+    })
+  ).resolves.toEqual({
+    organization: { apiKey: 'sk-shared', provider: 'openai' },
+    personal: null
+  });
+  await expect(
+    owner.test.query(internal.modules.ai.settings.stored, { userId: member.userId })
+  ).resolves.toMatchObject({
+    apiKey: 'sk-former-member',
+    baseUrl: 'https://former-member.example/v1'
+  });
+});
+
 test('rejects an organization write after the active organization changes', async () => {
   const { owner } = await setupGroup();
   if (!owner.organizationId) throw new Error('Expected an organization');

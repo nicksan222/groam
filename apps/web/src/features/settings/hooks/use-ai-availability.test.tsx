@@ -15,17 +15,17 @@ beforeEach(() => {
 test('hides the AI tab while deployment availability is loading', () => {
   convex.useQuery.mockReturnValue(undefined);
   const { result } = renderHook(() => useAiAvailability());
-  expect(result.current).toEqual({ environmentConfigured: false, hideAi: true });
+  expect(result.current).toEqual({ environmentConfigured: false, hideAi: true, isLoading: true });
 });
 
 test('hides the AI tab for a deployment-managed provider', () => {
   convex.useQuery.mockReturnValue({ environmentConfigured: true });
   const { result } = renderHook(() => useAiAvailability());
-  expect(result.current).toEqual({ environmentConfigured: true, hideAi: true });
+  expect(result.current).toEqual({ environmentConfigured: true, hideAi: true, isLoading: false });
 });
 
 test('shows the AI tab when users may manage credentials', () => {
   convex.useQuery.mockReturnValue({ environmentConfigured: false });
   const { result } = renderHook(() => useAiAvailability());
-  expect(result.current).toEqual({ environmentConfigured: false, hideAi: false });
+  expect(result.current).toEqual({ environmentConfigured: false, hideAi: false, isLoading: false });
 });

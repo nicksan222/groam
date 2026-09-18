@@ -4,8 +4,9 @@ import { SettingsView } from './settings-view';
 
 const testState = vi.hoisted(() => ({
   aiMounts: 0,
-  hideAi: false,
   environmentConfigured: false,
+  hideAi: false,
+  isAiAvailabilityLoading: false,
   workspace: {
     activeOrganization: { id: 'org-acme', name: 'Acme Labs' },
     activeRole: 'owner',
@@ -16,7 +17,8 @@ const testState = vi.hoisted(() => ({
 vi.mock('@/features/settings/hooks/use-ai-availability', () => ({
   useAiAvailability: () => ({
     environmentConfigured: testState.environmentConfigured,
-    hideAi: testState.hideAi
+    hideAi: testState.hideAi,
+    isLoading: testState.isAiAvailabilityLoading
   })
 }));
 
@@ -71,6 +73,7 @@ afterEach(() => {
   testState.aiMounts = 0;
   testState.hideAi = false;
   testState.environmentConfigured = false;
+  testState.isAiAvailabilityLoading = false;
   testState.workspace = {
     activeOrganization: { id: 'org-acme', name: 'Acme Labs' },
     activeRole: 'owner',
@@ -101,6 +104,17 @@ describe('SettingsView', () => {
     expect(screen.queryByTestId('settings-section-ai')).toBeNull();
     expect(screen.queryByText(/AI settings/)).toBeNull();
     expect(onSectionChange).toHaveBeenCalledWith('profile');
+  });
+
+  test('keeps the AI tab hidden while showing progress for a direct AI section', () => {
+    testState.hideAi = true;
+    testState.isAiAvailabilityLoading = true;
+    const onSectionChange = vi.fn();
+    render(<SettingsView activeSection="ai" onSectionChange={onSectionChange} />);
+    expect(screen.queryByTestId('settings-section-ai')).toBeNull();
+    expect(screen.getByRole('status', { name: 'Loading AI settings…' })).toBeTruthy();
+    expect(screen.queryByText(/AI settings 1/)).toBeNull();
+    expect(onSectionChange).not.toHaveBeenCalled();
   });
 
   test('remounts AI settings when the active group changes', () => {

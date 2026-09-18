@@ -9,6 +9,7 @@ import { normalizeCompatibleBaseUrl } from '#convex/modules/ai/hosts';
 import { aiKeyCredentialsValidator } from '#convex/modules/ai/validators';
 import {
   assertOrganizationManager,
+  hasOrganizationMembership,
   isOrganizationManager,
   requireWorkspace
 } from '#convex/modules/auth/workspace';
@@ -146,10 +147,16 @@ export const effective = internalQuery({
     organization: v.union(v.null(), aiKeyCredentialsValidator),
     personal: v.union(v.null(), aiKeyCredentialsValidator)
   }),
-  handler: async (ctx, { organizationId, userId }) => ({
-    organization: credentials(await organizationSettings(ctx, organizationId)),
-    personal: credentials(await personalSettings(ctx, userId))
-  })
+  handler: async (ctx, { organizationId, userId }) => {
+    const [organization, isMember] = await Promise.all([
+      organizationSettings(ctx, organizationId),
+      hasOrganizationMembership(ctx, organizationId, userId)
+    ]);
+    return {
+      organization: credentials(organization),
+      personal: isMember ? credentials(await personalSettings(ctx, userId)) : null
+    };
+  }
 });
 
 export const stored = internalQuery({

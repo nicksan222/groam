@@ -5,6 +5,7 @@ import {
   customMutation,
   customQuery
 } from 'convex-helpers/server/customFunctions';
+import { components } from '#convex-generated/api';
 import {
   type ActionCtx,
   action,
@@ -97,6 +98,22 @@ export function assertOrganizationManager(workspace: Workspace): void {
   if (!isOrganizationManager(workspace.organizationRole)) {
     throw new ConvexError('Only organization owners and admins can manage group settings');
   }
+}
+
+export async function hasOrganizationMembership(
+  ctx: WorkspaceFunctionCtx,
+  organizationId: string,
+  userId: string
+): Promise<boolean> {
+  const membership = await ctx.runQuery(components.betterAuth.adapter.findOne, {
+    model: 'member',
+    select: ['_id'],
+    where: [
+      { field: 'organizationId', value: organizationId },
+      { field: 'userId', value: userId }
+    ]
+  });
+  return membership !== null;
 }
 
 export async function workspaceRoster(

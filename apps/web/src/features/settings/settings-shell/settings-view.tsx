@@ -3,6 +3,7 @@ import { Avatar } from '@groam/ui/components/avatar';
 import { AvatarFallback } from '@groam/ui/components/avatar-fallback';
 import { AvatarImage } from '@groam/ui/components/avatar-image';
 import { Button } from '@groam/ui/components/button';
+import { PageLoading } from '@groam/ui/components/page-loading';
 import Shell from '@groam/ui/components/shell/client';
 import { initials } from '@groam/ui/lib/avatar';
 import { KeyRound } from 'lucide-react';
@@ -62,7 +63,7 @@ export function SettingsView({
   const { activeOrganization, activeRole, session } = useWorkspace();
   const { openDialog } = useWorkspaceDialogs();
   const canManage = activeRole === 'owner' || activeRole === 'admin';
-  const { environmentConfigured, hideAi } = useAiAvailability();
+  const { environmentConfigured, hideAi, isLoading: isAiAvailabilityLoading } = useAiAvailability();
   const copy = sectionCopy[activeSection];
 
   useEffect(() => {
@@ -130,7 +131,12 @@ export function SettingsView({
               </SettingsStack>
             )}
             {activeSection === 'security' && <SecuritySettings session={session} />}
-            {activeSection === 'ai' && !hideAi && <AiSettings key={activeOrganization.id} />}
+            {activeSection === 'ai' && isAiAvailabilityLoading && (
+              <PageLoading label="Loading AI settings…" />
+            )}
+            {activeSection === 'ai' && !isAiAvailabilityLoading && !environmentConfigured && (
+              <AiSettings key={activeOrganization.id} />
+            )}
             {activeSection === 'data' && <DataSettings />}
           </div>
         </Shell.PageBody>
