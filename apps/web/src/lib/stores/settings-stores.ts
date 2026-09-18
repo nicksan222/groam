@@ -16,6 +16,7 @@ type ProfileSettingsStore = {
   isPending: boolean;
   message: string | null;
   name: string;
+  username: string;
   patch: (update: SettingsPatch<ProfileSettingsStore>) => void;
   resetFromUser: (user: Session['user']) => void;
 };
@@ -26,6 +27,7 @@ export const useProfileSettingsStore = create<ProfileSettingsStore>((set) => ({
   isPending: false,
   message: null,
   name: '',
+  username: '',
   patch: (update) => set((state) => ({ ...state, ...update })),
   resetFromUser: (user) =>
     set((state) => {
@@ -34,14 +36,16 @@ export const useProfileSettingsStore = create<ProfileSettingsStore>((set) => ({
         image: user.image ?? '',
         isPending: false,
         message: null,
-        name: user.name
+        name: user.name,
+        username: user.username ?? ''
       };
       if (
         state.error === next.error &&
         state.image === next.image &&
         state.isPending === next.isPending &&
         state.message === next.message &&
-        state.name === next.name
+        state.name === next.name &&
+        state.username === next.username
       ) {
         return state;
       }

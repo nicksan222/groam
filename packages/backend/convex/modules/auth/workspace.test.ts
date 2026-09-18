@@ -46,7 +46,7 @@ test('roster includes the authenticated caller and teammates in the active organ
   expect(roster.members.map((entry) => entry.userId).sort()).toEqual(
     [member.userId, owner.userId].sort()
   );
-  expect(roster.members.every((entry) => typeof entry.email === 'string')).toBe(true);
+  expect(roster.members.every((entry) => typeof entry.handle === 'string')).toBe(true);
 });
 
 test('recognizes Better Auth owner and admin role lists', () => {

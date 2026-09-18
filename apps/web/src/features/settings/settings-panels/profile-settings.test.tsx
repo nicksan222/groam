@@ -10,7 +10,8 @@ const profile = vi.hoisted(() => ({
     image: '',
     isPending: false,
     message: null as string | null,
-    name: 'Traveler'
+    name: 'Traveler',
+    username: 'traveler'
   },
   updateState: vi.fn()
 }));
@@ -22,7 +23,8 @@ vi.mock('@/features/settings/hooks/use-profile-settings', () => ({
 const user = {
   email: 'traveler@example.com',
   image: null,
-  name: 'Traveler'
+  name: 'Traveler',
+  username: 'traveler'
 } as Session['user'];
 
 beforeEach(() => {
@@ -33,20 +35,21 @@ beforeEach(() => {
     image: '',
     isPending: false,
     message: null,
-    name: 'Traveler'
+    name: 'Traveler',
+    username: 'traveler'
   };
 });
 
 afterEach(cleanup);
 
 describe('ProfileSettings', () => {
-  test('renders profile fields and read-only email', () => {
+  test('renders editable profile and username fields', () => {
     render(<ProfileSettings user={user} />);
 
     expect(screen.getByLabelText('Display name')).toBeTruthy();
-    expect(screen.getByLabelText('Email address')).toBeTruthy();
+    expect(screen.getByLabelText('Username')).toBeTruthy();
     expect(screen.getByLabelText('Profile photo URL')).toBeTruthy();
-    expect(screen.getByDisplayValue('traveler@example.com')).toBeTruthy();
+    expect(screen.getByDisplayValue('traveler')).toBeTruthy();
   });
 
   test('submits the profile form through the settings hook', async () => {

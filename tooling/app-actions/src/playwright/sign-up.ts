@@ -9,7 +9,7 @@ export async function signUp(page: Page, user: TestUserCredentials): Promise<voi
   if (!(await by(page, ids.authName).isVisible())) await by(page, ids.authSwitchFlow).click();
   await expect(by(page, ids.authName)).toBeVisible();
   await by(page, ids.authName).fill(user.name);
-  await by(page, ids.authEmail).fill(user.email);
+  await by(page, ids.authEmail).fill(user.username);
   await by(page, ids.authPassword).fill(user.password);
   await by(page, ids.authSubmit).click();
   await expect(page.getByRole('alert')).toHaveCount(0);

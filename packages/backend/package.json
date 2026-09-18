@@ -6,6 +6,7 @@
     "@ai-sdk/google": "^4.0.64",
     "@ai-sdk/openai": "^4.0.60",
     "@ai-sdk/provider": "^4.0.10",
+    "@better-auth/passkey": "1.6.26",
     "@convex-dev/agent": "^0.7.1",
     "@convex-dev/better-auth": "0.12.5",
     "@convex-dev/geospatial": "0.2.1",
