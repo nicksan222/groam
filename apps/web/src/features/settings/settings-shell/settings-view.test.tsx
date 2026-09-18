@@ -4,11 +4,20 @@ import { SettingsView } from './settings-view';
 
 const testState = vi.hoisted(() => ({
   aiMounts: 0,
+  hideAi: false,
+  environmentConfigured: false,
   workspace: {
     activeOrganization: { id: 'org-acme', name: 'Acme Labs' },
     activeRole: 'owner',
     session: { user: { email: 'demo@groam.example', name: 'Demo' } }
   }
+}));
+
+vi.mock('@/features/settings/hooks/use-ai-availability', () => ({
+  useAiAvailability: () => ({
+    environmentConfigured: testState.environmentConfigured,
+    hideAi: testState.hideAi
+  })
 }));
 
 vi.mock('@groam/ui/ai/context/agent-context', () => ({
@@ -60,6 +69,8 @@ vi.mock('@/features/settings/settings-panels/security-settings', () => ({
 afterEach(() => {
   cleanup();
   testState.aiMounts = 0;
+  testState.hideAi = false;
+  testState.environmentConfigured = false;
   testState.workspace = {
     activeOrganization: { id: 'org-acme', name: 'Acme Labs' },
     activeRole: 'owner',
@@ -80,6 +91,16 @@ describe('SettingsView', () => {
     render(<SettingsView activeSection="ai" onSectionChange={vi.fn()} />);
     expect(screen.getByTestId('settings-section-ai')).toBeTruthy();
     expect(screen.getByText('AI settings 1')).toBeTruthy();
+  });
+
+  test('hides hosted AI settings and redirects a direct AI section', () => {
+    testState.hideAi = true;
+    testState.environmentConfigured = true;
+    const onSectionChange = vi.fn();
+    render(<SettingsView activeSection="ai" onSectionChange={onSectionChange} />);
+    expect(screen.queryByTestId('settings-section-ai')).toBeNull();
+    expect(screen.queryByText(/AI settings/)).toBeNull();
+    expect(onSectionChange).toHaveBeenCalledWith('profile');
   });
 
   test('remounts AI settings when the active group changes', () => {

@@ -4,7 +4,7 @@ import { testIds } from '@/lib/test-ids';
 import { AiSettings } from './ai-settings';
 
 const ai = vi.hoisted(() => ({
-  canManage: true,
+  canManageOrganization: true,
   canSave: false,
   configured: false,
   draft: {
@@ -14,7 +14,11 @@ const ai = vi.hoisted(() => ({
     isPending: false,
     message: null as string | null
   },
-  fromEnvironment: false,
+  effectiveModel: null as string | null,
+  effectiveProvider: null as 'openai' | null,
+  effectiveSource: 'unconfigured' as 'deployment' | 'organization' | 'personal' | 'unconfigured',
+  environmentConfigured: false,
+  organizationConfigured: false,
   isLoading: false,
   baseUrl: '',
   model: '',
@@ -27,9 +31,12 @@ const ai = vi.hoisted(() => ({
     webSearch: undefined as boolean | undefined
   },
   provider: 'openai' as const,
+  providerConnection: null as null | { connect: () => Promise<void>; label: string },
   remove: vi.fn(),
   save: vi.fn(),
   selectProvider: vi.fn(),
+  setTarget: vi.fn(),
+  target: 'personal' as 'organization' | 'personal',
   updateDraft: vi.fn()
 }));
 
@@ -46,24 +53,58 @@ vi.mock('@/features/settings/hooks/use-ai-settings', () => ({
 
 afterEach(() => {
   cleanup();
-  ai.canManage = true;
+  ai.canManageOrganization = true;
   ai.configured = false;
-  ai.fromEnvironment = false;
+  ai.environmentConfigured = false;
+  ai.organizationConfigured = false;
+  ai.effectiveModel = null;
+  ai.effectiveProvider = null;
+  ai.effectiveSource = 'unconfigured';
+  ai.baseUrl = '';
+  ai.provider = 'openai';
+  ai.providerConnection = null;
+  ai.target = 'personal';
+  ai.preset = {
+    baseURL: undefined,
+    defaultModel: undefined,
+    hint: 'Uses OpenAI’s official API.',
+    keyPlaceholder: 'sk-…',
+    requiresBaseUrl: undefined,
+    webSearch: undefined
+  };
 });
 
 describe('AiSettings', () => {
-  test('explains that group keys are a fallback when env is unset', () => {
+  test('explains that saved keys are personal and take priority', () => {
     render(<AiSettings />);
-    expect(screen.getByText(/Saved keys are protected/i)).toBeTruthy();
+    expect(screen.getByText(/personal key follows your account/i)).toBeTruthy();
     expect(screen.queryByTestId(testIds.settingsAiEnvironmentNotice)).toBeNull();
   });
 
-  test('shows an environment notice when Convex env supplies credentials', () => {
-    ai.fromEnvironment = true;
+  test('shows an organization notice when a shared key is available', () => {
+    ai.organizationConfigured = true;
+    ai.effectiveProvider = 'openai';
+    ai.effectiveSource = 'organization';
     render(<AiSettings />);
     expect(screen.getByTestId(testIds.settingsAiEnvironmentNotice).textContent).toMatch(
-      /Already connected/i
+      /Organization connection available/i
     );
+  });
+
+  test('clearly labels the shared organization connection', () => {
+    ai.configured = true;
+    ai.target = 'organization';
+    render(<AiSettings />);
+    expect(screen.getByText('Organization connection')).toBeTruthy();
+    expect(screen.getByText('Organization AI provider')).toBeTruthy();
+    expect(screen.getByText(/shared organization connection is ready/i)).toBeTruthy();
+  });
+
+  test('offers one-click OpenRouter connection when OpenRouter is selected', () => {
+    ai.provider = 'openrouter' as typeof ai.provider;
+    ai.providerConnection = { connect: vi.fn(), label: 'Connect OpenRouter' };
+    render(<AiSettings />);
+    expect(screen.getByTestId(testIds.settingsAiConnectProvider)).toBeTruthy();
   });
 
   test('asks for a base URL and hides web search for local hosts', () => {

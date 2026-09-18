@@ -1,10 +1,12 @@
 import { type AiKeyProviderId, isAiKeyProviderId } from '@groam/ai-contracts/providers/keys';
 import type { authClient } from '@groam/auth/client';
 import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import type {
   ActiveOrganization,
   Session
 } from '@/features/workspace/workspace-shell/workspace-state';
+import type { AiProviderAuthSession } from '@/types/ai-provider-auth';
 
 // biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
 type SettingsPatch<T> = Partial<T> & { patch?: never; reset?: never };
@@ -185,3 +187,22 @@ export const useAiSettingsDraftStore = create<AiSettingsDraftStore>((set, get) =
     set({ baseUrl: null, model: null, provider: value });
   }
 }));
+
+// biome-ignore lint/plugin/no-local-type-definitions: local store implementation shape
+type AiProviderAuthStore = {
+  session: AiProviderAuthSession | null;
+  setSession: (session: AiProviderAuthSession | null) => void;
+};
+
+export const useAiProviderAuthStore = create<AiProviderAuthStore>()(
+  persist(
+    (set) => ({
+      session: null,
+      setSession: (session) => set({ session })
+    }),
+    {
+      name: 'groam.ai-provider-auth',
+      storage: createJSONStorage(() => sessionStorage)
+    }
+  )
+);

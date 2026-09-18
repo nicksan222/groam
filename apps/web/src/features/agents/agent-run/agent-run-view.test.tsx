@@ -598,7 +598,7 @@ test('explains provider authentication failures without offering an unsupported 
     title: 'Review the draft'
   });
   render(<AgentRunView agentId="reviewer" runId="review-failed" />);
-  expect(screen.getByText(/Ask your workspace administrator/u)).toBeTruthy();
+  expect(screen.getByText(/organization or deployment admin/u)).toBeTruthy();
   expect(screen.queryByRole('button', { name: 'Retry from zero' })).toBeNull();
   expect(screen.getByText('No activity recorded')).toBeTruthy();
 });

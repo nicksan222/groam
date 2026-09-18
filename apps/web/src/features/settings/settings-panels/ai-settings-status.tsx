@@ -2,16 +2,15 @@ import { Badge } from '@groam/ui/components/badge';
 import { CheckCircle2, CircleAlert } from 'lucide-react';
 
 export function AiSettingsStatus({
-  configured,
-  fromEnvironment,
   model,
-  provider
+  provider,
+  source
 }: {
-  configured: boolean;
-  fromEnvironment: boolean;
   model: string | null;
-  provider: string;
+  provider: string | null;
+  source: 'deployment' | 'organization' | 'personal' | 'unconfigured';
 }) {
+  const configured = source !== 'unconfigured';
   return (
     <div className="flex items-start gap-3 rounded-lg border border-border p-3">
       {configured ? (
@@ -25,11 +24,17 @@ export function AiSettingsStatus({
             {configured ? 'Groam AI is ready' : 'Groam AI needs setup'}
           </p>
           <Badge variant={configured ? 'secondary' : 'outline'}>
-            {fromEnvironment ? 'Environment' : configured ? 'Group key' : 'Not configured'}
+            {source === 'deployment'
+              ? 'Deployment key'
+              : source === 'personal'
+                ? 'Personal key'
+                : source === 'organization'
+                  ? 'Organization key'
+                  : 'Not configured'}
           </Badge>
         </div>
         <p className="mt-1 text-xs leading-5 text-muted-foreground">
-          {configured
+          {configured && provider
             ? `Using ${provider}${model ? ` · ${model}` : ''}.`
             : 'Add a provider key below to enable AI chat and reviews.'}
         </p>

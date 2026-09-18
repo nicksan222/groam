@@ -6,7 +6,9 @@ import { Button } from '@groam/ui/components/button';
 import Shell from '@groam/ui/components/shell/client';
 import { initials } from '@groam/ui/lib/avatar';
 import { KeyRound } from 'lucide-react';
+import { useEffect } from 'react';
 import { GroupPeopleSettings } from '@/features/group/group-people/group-people-settings';
+import { useAiAvailability } from '@/features/settings/hooks/use-ai-availability';
 import { AiSettings } from '@/features/settings/settings-panels/ai-settings';
 import { AppearanceSettings } from '@/features/settings/settings-panels/appearance-settings';
 import { DataSettings } from '@/features/settings/settings-panels/data-settings';
@@ -24,7 +26,7 @@ export type { SettingsSection };
 
 const sectionCopy: Record<SettingsSection, { description: string; title: string }> = {
   ai: {
-    description: 'Optionally store a private provider key for Groam AI in this group.',
+    description: 'Choose a personal AI connection or manage the organization fallback.',
     title: 'AI'
   },
   appearance: {
@@ -59,7 +61,12 @@ export function SettingsView({
   const { activeOrganization, activeRole, session } = useWorkspace();
   const { openDialog } = useWorkspaceDialogs();
   const canManage = activeRole === 'owner' || activeRole === 'admin';
+  const { environmentConfigured, hideAi } = useAiAvailability();
   const copy = sectionCopy[activeSection];
+
+  useEffect(() => {
+    if (environmentConfigured && activeSection === 'ai') onSectionChange('profile');
+  }, [activeSection, environmentConfigured, onSectionChange]);
 
   useSetAgentContext({
     capabilities: [],
@@ -99,7 +106,11 @@ export function SettingsView({
             title="Settings"
             titleTestId={testIds.settingsTitle}
           />
-          <SettingsSectionNav activeSection={activeSection} onSectionChange={onSectionChange} />
+          <SettingsSectionNav
+            activeSection={activeSection}
+            hideAi={hideAi}
+            onSectionChange={onSectionChange}
+          />
         </Shell.Banner>
 
         <Shell.PageBody variant="compact">
@@ -118,7 +129,7 @@ export function SettingsView({
               </SettingsStack>
             )}
             {activeSection === 'security' && <SecuritySettings session={session} />}
-            {activeSection === 'ai' && <AiSettings key={activeOrganization.id} />}
+            {activeSection === 'ai' && !hideAi && <AiSettings key={activeOrganization.id} />}
             {activeSection === 'data' && <DataSettings />}
           </div>
         </Shell.PageBody>

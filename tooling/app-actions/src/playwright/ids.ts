@@ -169,6 +169,7 @@ export const ids = {
   planTravel: 'plan-travel',
   requestReview: 'request-review',
   settingsAiBaseUrl: 'settings-ai-base-url',
+  settingsAiConnectProvider: 'settings-ai-connect-provider',
   settingsAiEnvironmentNotice: 'settings-ai-environment-notice',
   settingsAiKey: 'settings-ai-key',
   settingsAiModel: 'settings-ai-model',
