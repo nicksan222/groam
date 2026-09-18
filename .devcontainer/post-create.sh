@@ -11,8 +11,14 @@ readonly persistent_dirs=(
 sudo mkdir -p "${persistent_dirs[@]}"
 sudo chown -R "$(id -u):$(id -g)" "${persistent_dirs[@]}"
 
-bun install --frozen-lockfile
+HUSKY=0 bun install --frozen-lockfile
+
+# Build a private, local code graph so search works on the first agent turn.
+# Keep this code-only: repository docs and media would require an LLM pass.
+just graphify-refresh
 
 printf '\nDev container ready.\n'
 printf '  Pi: %s\n' "$(pi --version)"
+printf '  Graphify: %s\n' "$(graphify --version)"
+printf '  Search code: just graphify-query "how does authentication work?"\n'
 printf '  Start everything: bun run dev\n'

@@ -62,7 +62,23 @@ machine; Convex Cloud deployment is optional.
 The checked-in [dev container](.devcontainer/devcontainer.json) is the development
 environment and source of truth. Open the repository in GitHub Codespaces or
 choose **Dev Containers: Reopen in Container** locally; the toolchain and
-dependencies are provisioned automatically.
+dependencies are provisioned automatically, including a private local Graphify
+code index for agent and developer search.
+
+From a host terminal, start it and run commands through the Dev Container CLI:
+
+```bash
+.devcontainer/devcontainer up
+.devcontainer/devcontainer exec just dev
+```
+
+Git may run on the host; all repository tooling runs in the container. On a
+clean host, run the containerized `just check` gate before committing with
+`git commit --no-verify`, so Husky does not launch project tools on the host.
+The launcher delegates to the official Dev Container CLI and automatically
+handles Git metadata stored outside Codex and other Git worktrees.
+When already attached to the container or using Codespaces, run `just dev`
+directly.
 
 ```bash
 just dev
@@ -85,6 +101,8 @@ Open [localhost:5173](http://localhost:5173) and sign in with
 | `just test` | Run unit and integration tests |
 | `just e2e-local` | Run Playwright against the local app |
 | `just desktop` | Start desktop development |
+| `just graphify-query "…"` | Search code relationships in plain language |
+| `just graphify-refresh` | Refresh the local code graph after edits |
 | `just showcase` | Rebuild the scripted 4K product film |
 | `just showcase-gif` | Rebuild the full-length 1080p README preview from the committed film |
 
