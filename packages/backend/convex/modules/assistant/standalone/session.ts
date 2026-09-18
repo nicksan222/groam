@@ -37,7 +37,10 @@ async function generateStandalone(
   }
 ) {
   AssistantScreens.validate(args.screen);
-  const configuration = await AssistantProvider.configured(ctx, run.agentId, args.organizationId);
+  const configuration = await AssistantProvider.configured(ctx, run.agentId, {
+    organizationId: args.organizationId,
+    userId: run.createdBy.userId
+  });
   const registered = createRegisteredAssistantTools({
     activeTripId: args.tripId,
     agentId: run.agentId,

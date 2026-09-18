@@ -1,7 +1,8 @@
 import {
   type AiKeyCredentials,
   aiKeyProvider,
-  hasDeploymentAiCredentials
+  hasDeploymentAiCredentials,
+  resolveAssistantCredentials
 } from '@groam/ai-contracts/providers/keys';
 import { ConvexError, v } from 'convex/values';
 import { normalizeCompatibleBaseUrl } from '#convex/modules/ai/hosts';
@@ -12,20 +13,35 @@ import {
   requireWorkspace
 } from '#convex/modules/auth/workspace';
 import { isLocalBackend } from '#convex/modules/dev/local';
-import { env, internalQuery, type MutationCtx, type QueryCtx } from '#convex-generated/server';
+import {
+  env,
+  internalMutation,
+  internalQuery,
+  type MutationCtx,
+  type QueryCtx
+} from '#convex-generated/server';
 
-async function settingsForOrganization(ctx: MutationCtx | QueryCtx, organizationId: string) {
+export type AiSettingsTarget = 'organization' | 'personal';
+
+async function personalSettings(ctx: MutationCtx | QueryCtx, userId: string) {
   return await ctx.db
     .query('aiSettings')
-    .withIndex('by_organizationId', (query) => query.eq('organizationId', organizationId))
+    .withIndex('by_userId', (q) => q.eq('userId', userId))
     .unique();
 }
 
-export async function readAiSettings(
-  ctx: MutationCtx | QueryCtx,
-  organizationId: string
-): Promise<AiKeyCredentials | null> {
-  const settings = await settingsForOrganization(ctx, organizationId);
+async function organizationSettings(ctx: MutationCtx | QueryCtx, organizationId: string) {
+  return await ctx.db
+    .query('aiSettings')
+    .withIndex('by_organizationId_and_userId', (q) =>
+      q.eq('organizationId', organizationId).eq('userId', undefined)
+    )
+    .unique();
+}
+
+function credentials(
+  settings: Awaited<ReturnType<typeof personalSettings>>
+): AiKeyCredentials | null {
   if (!settings) return null;
   return {
     apiKey: settings.apiKey,
@@ -35,49 +51,78 @@ export async function readAiSettings(
   };
 }
 
-export async function publicAiSettings(ctx: QueryCtx) {
-  const workspace = await requireWorkspace(ctx);
-  const stored = await readAiSettings(ctx, workspace.organizationId);
+export async function readAiSettings(ctx: MutationCtx | QueryCtx, userId: string) {
+  return credentials(await personalSettings(ctx, userId));
+}
+
+function publicStored(settings: Awaited<ReturnType<typeof personalSettings>>) {
   return {
-    canManage: isOrganizationManager(workspace.organizationRole),
-    configured: stored !== null,
-    fromEnvironment: hasDeploymentAiCredentials(env),
-    baseUrl: stored?.baseUrl ?? null,
-    model: stored?.model ?? null,
-    provider: stored?.provider ?? null
+    baseUrl: settings?.baseUrl ?? null,
+    configured: settings !== null,
+    model: settings?.model ?? null,
+    provider: settings?.provider ?? null
   };
 }
 
+export async function publicAiSettings(ctx: QueryCtx) {
+  const workspace = await requireWorkspace(ctx);
+  const environmentConfigured = hasDeploymentAiCredentials(env);
+  const [personal, organization] = environmentConfigured
+    ? [null, null]
+    : await Promise.all([
+        personalSettings(ctx, workspace.userId),
+        organizationSettings(ctx, workspace.organizationId)
+      ]);
+  return {
+    canManageOrganization: isOrganizationManager(workspace.organizationRole),
+    effectiveSource: resolveAssistantCredentials(
+      env,
+      credentials(personal),
+      credentials(organization)
+    ).source,
+    environmentConfigured,
+    organizationId: workspace.organizationId,
+    organization: publicStored(organization),
+    personal: publicStored(personal)
+  };
+}
+
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: validates and upserts both credential targets
 export async function saveAiSettings(
   ctx: MutationCtx,
   input: {
     apiKey: string | null;
     baseUrl: string | null;
     model: string | null;
+    organizationId?: string | null;
     provider: AiKeyCredentials['provider'];
+    target?: AiSettingsTarget;
   }
 ) {
   const workspace = await requireWorkspace(ctx);
-  assertOrganizationManager(workspace);
-  const preset = aiKeyProvider(input.provider);
-
-  const existing = await settingsForOrganization(ctx, workspace.organizationId);
+  if (hasDeploymentAiCredentials(env)) throw new ConvexError('AI is managed by this deployment.');
+  const target = input.target ?? 'personal';
+  if (target === 'organization') {
+    assertOrganizationManager(workspace);
+    if (!input.organizationId || input.organizationId !== workspace.organizationId) {
+      throw new ConvexError('The active organization changed. Start the connection again.');
+    }
+  }
+  const existing =
+    target === 'personal'
+      ? await personalSettings(ctx, workspace.userId)
+      : await organizationSettings(ctx, workspace.organizationId);
   if (input.apiKey === null) {
     if (existing) await ctx.db.delete(existing._id);
     return null;
   }
-
+  const preset = aiKeyProvider(input.provider);
   const nextKey = input.apiKey.trim();
-  if (!nextKey && existing && existing.provider !== input.provider) {
+  if (!nextKey && existing && existing.provider !== input.provider)
     throw new ConvexError('Paste an API key for the selected provider.');
-  }
-
   const apiKey =
     nextKey || existing?.apiKey || (preset.requiresBaseUrl ? preset.keyPlaceholder : undefined);
-  if (!apiKey) {
-    throw new ConvexError('Paste an API key to save these settings.');
-  }
-
+  if (!apiKey) throw new ConvexError('Paste an API key to save these settings.');
   const model = input.model?.trim() || undefined;
   const baseUrl = preset.requiresBaseUrl
     ? normalizeCompatibleBaseUrl(input.baseUrl ?? undefined, true, isLocalBackend())
@@ -86,6 +131,7 @@ export async function saveAiSettings(
     apiKey,
     organizationId: workspace.organizationId,
     provider: input.provider,
+    ...(target === 'personal' ? { userId: workspace.userId } : {}),
     ...(baseUrl ? { baseUrl } : {}),
     ...(model ? { model } : {})
   };
@@ -94,9 +140,38 @@ export async function saveAiSettings(
   return null;
 }
 
-/** Action-side credentials for one group. Never expose this query to the client. */
+export const effective = internalQuery({
+  args: { organizationId: v.string(), userId: v.string() },
+  returns: v.object({
+    organization: v.union(v.null(), aiKeyCredentialsValidator),
+    personal: v.union(v.null(), aiKeyCredentialsValidator)
+  }),
+  handler: async (ctx, { organizationId, userId }) => ({
+    organization: credentials(await organizationSettings(ctx, organizationId)),
+    personal: credentials(await personalSettings(ctx, userId))
+  })
+});
+
 export const stored = internalQuery({
-  args: { organizationId: v.string() },
+  args: { userId: v.string() },
   returns: v.union(v.null(), aiKeyCredentialsValidator),
-  handler: async (ctx, { organizationId }) => await readAiSettings(ctx, organizationId)
+  handler: async (ctx, { userId }) => await readAiSettings(ctx, userId)
+});
+export const removeUserSettings = internalMutation({
+  args: { userId: v.string() },
+  returns: v.null(),
+  handler: async (ctx, { userId }) => {
+    const settings = await personalSettings(ctx, userId);
+    if (settings) await ctx.db.delete(settings._id);
+    return null;
+  }
+});
+export const removeOrganizationSettings = internalMutation({
+  args: { organizationId: v.string() },
+  returns: v.null(),
+  handler: async (ctx, { organizationId }) => {
+    const settings = await organizationSettings(ctx, organizationId);
+    if (settings) await ctx.db.delete(settings._id);
+    return null;
+  }
 });

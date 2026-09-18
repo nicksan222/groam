@@ -299,7 +299,10 @@ export class AssistantSession {
     await continueAssistantWithConfiguration(
       ctx,
       target,
-      await AssistantProvider.configured(ctx, target.agent, access.organizationId),
+      await AssistantProvider.configured(ctx, target.agent, {
+        organizationId: access.organizationId,
+        userId: access.credentialOwnerUserId
+      }),
       { scope: 'private' }
     );
     return null;
@@ -310,11 +313,10 @@ export class AssistantSession {
     target: AssistantTarget & { messageId: string; order: number; stepOrder: number }
   ): Promise<null> {
     const access = await workspaceAccess(ctx, target.threadId);
-    const configuration = await AssistantProvider.configured(
-      ctx,
-      target.agent,
-      access.organizationId
-    );
+    const configuration = await AssistantProvider.configured(ctx, target.agent, {
+      organizationId: access.organizationId,
+      userId: access.credentialOwnerUserId
+    });
     const activeTripId = AssistantTargets.activeTripId(access.tags, target.screen);
     const assistant = createAssistant({
       agentId: target.agent,
@@ -380,7 +382,10 @@ export class AssistantSession {
     return await continueAssistantWithConfiguration(
       ctx,
       target,
-      await AssistantProvider.configured(ctx, target.agent, access.organizationId),
+      await AssistantProvider.configured(ctx, target.agent, {
+        organizationId: access.organizationId,
+        userId: access.credentialOwnerUserId
+      }),
       { promptMessageId, runId, scope: 'discussion' }
     );
   }

@@ -22,6 +22,13 @@ export const authComponent = createClient<DataModel, typeof authSchema>(componen
   authFunctions,
   local: { schema: authSchema },
   triggers: {
+    user: {
+      onDelete: async (ctx, user) => {
+        await ctx.runMutation(internal.modules.ai.settings.removeUserSettings, {
+          userId: user._id
+        });
+      }
+    },
     member: {
       onDelete: async (ctx, member) => {
         await ctx.runMutation(

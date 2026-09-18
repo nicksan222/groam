@@ -1655,6 +1655,7 @@ async function titleContext(ctx: QueryCtx, proposalId: Id<'tripProposals'>, gene
   if (changes.length === 0) return null;
 
   return {
+    credentialOwnerUserId: proposal.author.userId,
     changes,
     issueTitle: issue?.title ?? null,
     organizationId: proposal.organizationId,

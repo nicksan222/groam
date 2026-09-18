@@ -23,6 +23,7 @@ export const run = internalAction({
   handler: async (ctx, { generation, proposalId }): Promise<{ title: string } | null> => {
     const titleContext: {
       changes: unknown[];
+      credentialOwnerUserId: string;
       issueTitle: string | null;
       organizationId: string;
       sourceTripName: string;
@@ -34,10 +35,15 @@ export const run = internalAction({
     if (!titleContext) return null;
 
     try {
-      const { organizationId, ...prompt } = titleContext;
+      const { credentialOwnerUserId, organizationId, ...prompt } = titleContext;
       const result = await generateText({
         maxOutputTokens: MAX_TITLE_OUTPUT_TOKENS,
-        model: (await AssistantProvider.configured(ctx, 'groam', organizationId)).languageModel,
+        model: (
+          await AssistantProvider.configured(ctx, 'groam', {
+            organizationId,
+            userId: credentialOwnerUserId
+          })
+        ).languageModel,
         output: Output.object({ schema: titleOutput }),
         prompt: JSON.stringify(prompt),
         system:
