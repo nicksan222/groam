@@ -5,6 +5,6 @@ export function useAiAvailability() {
   const settings = useQuery(api.routes.settings.ai.get.run, {});
   return {
     environmentConfigured: settings?.environmentConfigured ?? false,
-    hideAi: settings?.environmentConfigured ?? false
+    hideAi: settings?.environmentConfigured ?? true
   };
 }
