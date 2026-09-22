@@ -6,7 +6,7 @@
 @import 'tw-animate-css';
 @import './tokens.css';
 @import './base.css';
-@import '../ai/styles.css';
+@import '@groam/ai/ui/styles';
 
 @source '../../..';
 

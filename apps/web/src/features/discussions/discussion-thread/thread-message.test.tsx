@@ -4,7 +4,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import type { DiscussionMessage } from '@/features/discussions/hooks/use-discussion-thread';
 import { ThreadMessage } from './thread-message';
 
-vi.mock('@groam/ui/ai/chat/assistant-chat-message', () => ({
+vi.mock('@groam/ai/ui/chat/assistant-chat-message', () => ({
   AssistantChatMessage: ({ message }: { message: { text: string } }) => <div>{message.text}</div>
 }));
 

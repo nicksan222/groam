@@ -22,14 +22,14 @@ const designTokenFiles = new Set([
 ]);
 
 const groamUiPrefix = '@groam/ui/';
-const groamAiPrefix = '@groam/ai-contracts/';
+const groamAiPrefix = '@groam/ai/';
 const uiInternalSrcPrefix = '#src/';
-const allowedUiSubpaths = ['ai/', 'components/', 'hooks/', 'lib/', 'styles'] as const;
+const allowedUiSubpaths = ['components/', 'hooks/', 'lib/', 'styles'] as const;
 const routePathAliases = ['@/features/', '@/lib/'] as const;
-const routeUiComposers = ['@groam/ui/ai'] as const;
+const routeUiComposers = ['@groam/ai/ui'] as const;
 const allowedRouteSpecifiers = [
   '@tanstack/react-router',
-  '@groam/ai-contracts',
+  '@groam/ai',
   '@groam/auth',
   '@groam/backend',
   '@groam/env',
@@ -38,7 +38,7 @@ const allowedRouteSpecifiers = [
 ] as const;
 
 /** Feature UI in the web app and AI package: one exported component per file. */
-const componentFileScope = /^(?:apps\/web|packages\/ui\/src\/ai)\//u;
+const componentFileScope = /^(?:apps\/web|packages\/ai\/src\/ui)\//u;
 const testOrSpecFile = /\.(?:test|spec)\./u;
 const componentName = '([A-Z][A-Za-z0-9]*[a-z][A-Za-z0-9]*)';
 const exportedComponent = new RegExp(

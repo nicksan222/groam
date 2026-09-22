@@ -1,6 +1,10 @@
 import { createTool } from '@convex-dev/agent';
 import * as z from 'zod/v3';
-import { LOCAL_DATE_PATTERN, requestedTripId } from '#backend/assistant/tools/trips/shared';
+import {
+  LOCAL_DATE_PATTERN,
+  requestedTripId,
+  workingTripIdField
+} from '#backend/assistant/tools/trips/shared';
 import { internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
 
@@ -41,12 +45,7 @@ export function createSetTripDatesTool(activeTripId: Id<'trips'> | null) {
         .string()
         .regex(LOCAL_DATE_PATTERN)
         .describe('The start date in YYYY-MM-DD format.'),
-      tripId: z
-        .string()
-        .optional()
-        .describe(
-          'The exact workingTripId returned by startTripVersion. Never use the shared trip id.'
-        )
+      tripId: workingTripIdField()
     })
   });
 }

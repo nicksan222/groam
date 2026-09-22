@@ -1,4 +1,4 @@
-import type { AssistantAgentId } from '@groam/ai-contracts/agents/registry';
+import type { AssistantAgentId } from '@groam/ai/agents';
 import { api } from '@groam/backend/api';
 import { usePaginatedQuery, useQuery } from 'convex/react';
 

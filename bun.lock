@@ -44,7 +44,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@convex-dev/agent": "^0.7.1",
-        "@groam/ai-contracts": "workspace:*",
+        "@groam/ai": "workspace:*",
         "@groam/auth": "workspace:*",
         "@groam/backend": "workspace:*",
         "@groam/brand": "workspace:*",
@@ -74,6 +74,7 @@
         "@types/react": "^19.2.18",
         "@types/react-dom": "^19.2.7",
         "@vitejs/plugin-react": "^6.1.1",
+        "@vitest/coverage-istanbul": "5.0.0",
         "jsdom": "30.0.1",
         "tailwindcss": "^4.2.2",
         "typescript": "~7.0.2",
@@ -81,22 +82,32 @@
         "vitest": "^5.0.0",
       },
     },
-    "packages/ai-contracts": {
-      "name": "@groam/ai-contracts",
+    "packages/ai": {
+      "name": "@groam/ai",
       "version": "0.0.0",
       "dependencies": {
+        "@convex-dev/agent": "^0.7.1",
+        "@groam/ui": "workspace:*",
         "@json-render/core": "0.20.0",
         "@json-render/react": "0.20.0",
         "@json-render/shadcn": "0.20.0",
         "convex": "^1.45.0",
+        "lucide-react": "^1.41.0",
         "zod": "^4.6.2",
       },
       "devDependencies": {
         "@groam/typescript-config": "workspace:*",
         "@groam/vitest-config": "workspace:*",
+        "@testing-library/react": "16.3.3",
         "@types/react": "^19.2.18",
+        "@types/react-dom": "^19.2.7",
+        "jsdom": "30.0.1",
         "typescript": "~7.0.2",
         "vitest": "^5.0.0",
+      },
+      "peerDependencies": {
+        "react": "^19.2.3",
+        "react-dom": "^19.2.3",
       },
     },
     "packages/auth": {
@@ -142,7 +153,7 @@
         "@convex-dev/migrations": "^0.3.6",
         "@convex-dev/rate-limiter": "^0.3.2",
         "@convex-dev/static-hosting": "0.2.1",
-        "@groam/ai-contracts": "workspace:*",
+        "@groam/ai": "workspace:*",
         "ai": "^7.0.93",
         "better-auth": "1.6.26",
         "convex": "^1.45.0",
@@ -203,8 +214,6 @@
         "@convex-dev/agent": "^0.7.1",
         "@fontsource-variable/google-sans-flex": "^5.3.1",
         "@fontsource/google-sans-code": "^5.3.0",
-        "@groam/ai-contracts": "workspace:*",
-        "@groam/backend": "workspace:*",
         "@groam/brand": "workspace:*",
         "@json-render/core": "0.20.0",
         "@json-render/react": "0.20.0",
@@ -643,7 +652,7 @@
 
     "@fontsource/google-sans-code": ["@fontsource/google-sans-code@5.3.0", "", {}, "sha512-z1IDzMNX66oWak+RSEwk84DxsglnEuLDERpMnzzuatLTewbFeB/HM/aKXOkpXMKGDT3tm+TQZaX59q8g6+BqQw=="],
 
-    "@groam/ai-contracts": ["@groam/ai-contracts@workspace:packages/ai-contracts"],
+    "@groam/ai": ["@groam/ai@workspace:packages/ai"],
 
     "@groam/app-actions": ["@groam/app-actions@workspace:tooling/app-actions"],
 

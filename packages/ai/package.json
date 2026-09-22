@@ -1,0 +1,78 @@
+{
+  "name": "@groam/ai",
+  "version": "0.0.0",
+  "dependencies": {
+    "@convex-dev/agent": "^0.7.1",
+    "@groam/ui": "workspace:*",
+    "@json-render/core": "0.20.0",
+    "@json-render/react": "0.20.0",
+    "@json-render/shadcn": "0.20.0",
+    "convex": "^1.45.0",
+    "lucide-react": "^1.41.0",
+    "zod": "^4.6.2"
+  },
+  "devDependencies": {
+    "@groam/typescript-config": "workspace:*",
+    "@groam/vitest-config": "workspace:*",
+    "@testing-library/react": "16.3.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "jsdom": "30.0.1",
+    "typescript": "~7.0.2",
+    "vitest": "^5.0.0"
+  },
+  "exports": {
+    "./agents": "./src/agents/index.ts",
+    "./backend/errors": "./src/backend/errors/index.ts",
+    "./backend/instructions": "./src/backend/instructions/index.ts",
+    "./backend/provider": "./src/backend/providers/index.ts",
+    "./backend/providers": "./src/backend/providers/index.ts",
+    "./backend/providers/agent-models": "./src/backend/providers/agent-models.ts",
+    "./backend/providers/ids": "./src/backend/providers/ids.ts",
+    "./backend/providers/keys": "./src/backend/providers/keys.ts",
+    "./backend/review/schema": "./src/backend/review/schema.ts",
+    "./backend/runs": "./src/backend/runs/index.ts",
+    "./backend/runs/copy": "./src/backend/runs/copy.ts",
+    "./backend/runs/events": "./src/backend/runs/events.ts",
+    "./backend/runs/ids": "./src/backend/runs/ids.ts",
+    "./backend/runs/roster": "./src/backend/runs/roster.ts",
+    "./backend/runs/time": "./src/backend/runs/time.ts",
+    "./backend/standalone/issue": "./src/backend/standalone/issue.ts",
+    "./backend/standalone/review": "./src/backend/standalone/review.ts",
+    "./runtime/context-tag": "./src/runtime/context-tag.ts",
+    "./runtime/output": "./src/runtime/output/index.ts",
+    "./runtime/screen": "./src/runtime/screen/index.ts",
+    "./runtime/tags": "./src/runtime/tags/index.ts",
+    "./runtime/targets": "./src/runtime/targets/index.ts",
+    "./runtime/thread-summary": "./src/runtime/thread-summary.ts",
+    "./tools/specs": "./src/tools/specs.ts",
+    "./tools/write-intent": "./src/tools/write-intent.ts",
+    "./ui/chat/ai-assistant-widget": "./src/ui/chat/ai-assistant-widget.tsx",
+    "./ui/chat/assistant-chat-message": "./src/ui/chat/assistant-chat-message.tsx",
+    "./ui/context/agent-context": "./src/ui/context/agent-context.tsx",
+    "./ui/context/agent-screen-context": "./src/ui/context/agent-screen-context.ts",
+    "./ui/hooks/use-assistant": "./src/ui/hooks/use-assistant.ts",
+    "./ui/hooks/use-assistant-chats": "./src/ui/hooks/use-assistant-chats.ts",
+    "./ui/runs/agent-retry-from-zero": "./src/ui/runs/agent-retry-from-zero.tsx",
+    "./ui/runs/agent-run-banner": "./src/ui/runs/agent-run-banner.tsx",
+    "./ui/shared/assistant-error-boundary": "./src/ui/shared/assistant-error-boundary.tsx",
+    "./ui/styles": "./src/ui/styles.css"
+  },
+  "imports": {
+    "#ai/*": "./src/*"
+  },
+  "license": "MIT",
+  "peerDependencies": {
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  },
+  "private": true,
+  "scripts": {
+    "check": "bun run typecheck && bun run lint",
+    "format": "biome check --write src",
+    "lint": "biome check src",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "type": "module"
+}

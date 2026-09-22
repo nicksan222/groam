@@ -1,4 +1,4 @@
-import { type AiKeyProviderId, isAiKeyProviderId } from '@groam/ai-contracts/providers/keys';
+import { type AiKeyProviderId, isAiKeyProviderId } from '@groam/ai/backend/providers/keys';
 import type { authClient } from '@groam/auth/client';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';

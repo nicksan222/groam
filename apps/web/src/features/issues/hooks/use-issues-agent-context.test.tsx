@@ -1,5 +1,5 @@
+import { AgentContextProvider, useCurrentAgentContext } from '@groam/ai/ui/context/agent-context';
 import type { Id } from '@groam/backend/data-model';
-import { AgentContextProvider, useCurrentAgentContext } from '@groam/ui/ai/context/agent-context';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, expect, test } from 'vitest';
 import {

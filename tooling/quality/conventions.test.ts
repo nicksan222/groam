@@ -22,8 +22,8 @@ const groamUiUtils = ['@groam', 'ui', 'lib', 'utils'].join('/');
 const groamUiSource = ['@groam', 'ui', 'src', 'components', 'button'].join('/');
 const haloButton = ['@halo', 'ui', 'components', 'button'].join('/');
 const groamEnv = ['@groam', 'env', 'web-client'].join('/');
-const groamAiRegistry = ['@groam', 'ai-contracts', 'agents', 'registry'].join('/');
-const groamAiMissing = ['@groam', 'ai-contracts', 'tools', 'missing-tool'].join('/');
+const groamAiRegistry = ['@groam', 'ai', 'agents'].join('/');
+const groamAiMissing = ['@groam', 'ai', 'tools', 'missing-tool'].join('/');
 
 describe('invalidDirectoryNames', () => {
   test('accepts kebab-case folders and ignores generated or hidden segments', () => {
@@ -236,9 +236,9 @@ describe('inspectFile', () => {
     ]);
   });
 
-  test('requires @groam/ai-contracts imports to match package exports', () => {
+  test('requires @groam/ai imports to match package exports', () => {
     const aiExportPatterns = packageExportPatternsFromMap({
-      './agents/registry': './src/agents/registry/index.ts',
+      './agents': './src/agents/index.ts',
       './ui/context/*': './src/ui/context/*.tsx'
     });
     expect(
@@ -353,19 +353,19 @@ describe('routePackageAllowlistFromWebDependencies', () => {
   test('keeps groam packages except UI, plus the router and local aliases', () => {
     expect(
       routePackageAllowlistFromWebDependencies({
-        '@groam/ai-contracts': 'workspace:*',
+        '@groam/ai': 'workspace:*',
         '@groam/auth': 'workspace:*',
         '@groam/ui': 'workspace:*',
         '@tanstack/react-router': '^1.0.0',
         react: '^19.0.0'
       })
     ).toEqual([
-      '@groam/ai-contracts',
+      '@groam/ai',
       '@groam/auth',
       '@tanstack/react-router',
       '@/features/',
       '@/lib/',
-      '@groam/ui/ai'
+      '@groam/ai/ui'
     ]);
   });
 });

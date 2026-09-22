@@ -1,13 +1,10 @@
 import { createThread } from '@convex-dev/agent';
+import { assistantChatDefaultTitle } from '@groam/ai/agents';
+import { type AssistantScreen, assistantConversationContextKey } from '@groam/ai/runtime/screen';
 import {
-  assistantChatDefaultTitle,
   assistantThreadSummary,
   parseAssistantThreadSummary
-} from '@groam/ai-contracts/agents/registry';
-import {
-  type AssistantScreen,
-  assistantConversationContextKey
-} from '@groam/ai-contracts/agents/screen';
+} from '@groam/ai/runtime/thread-summary';
 import { ConvexError } from 'convex/values';
 import type { AssistantChat } from '#convex/modules/assistant/model/index';
 import { requireWorkspace } from '#convex/modules/auth/workspace';
