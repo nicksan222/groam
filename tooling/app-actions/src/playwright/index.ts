@@ -88,6 +88,12 @@ export { openTripSection, type TripSection } from './open-trip-section';
 export { openTrips } from './open-trips';
 export { openWorkspaceIdeas } from './open-workspace-ideas';
 export { pageCanvas, resolvedBackground, twoColumnPageLayout } from './page-canvas';
+export {
+  continueActivityPlan,
+  openActivityPlan,
+  removeActivityPlan,
+  startActivityPlan
+} from './plan-idea-activity';
 export { createPlaywrightActions, PlaywrightAppActions } from './playwright-app-actions';
 export {
   type ProposeTripDatesForReviewInput,

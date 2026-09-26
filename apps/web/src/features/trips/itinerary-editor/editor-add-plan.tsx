@@ -39,7 +39,14 @@ export function EditorAddPlan({
   onChoose: (selection: EditorActivitySelection) => void;
   onClose: () => void;
 }) {
-  const [day, setDay] = useState(1);
+  // A route can start on a later day (or have a gap before the next stop).
+  // Opening the chooser on an empty day made Continue appear permanently disabled.
+  const [day, setDay] = useState(
+    () =>
+      Array.from({ length: dayCount }, (_, index) => index + 1).find(
+        (number) => destinationsForDay(destinations, number).length > 0
+      ) ?? 1
+  );
   const available = destinationsForDay(destinations, day);
   const [destinationId, setDestinationId] = useState(available[0]?.id ?? '');
   const [period, setPeriod] = useState<PlannerPeriod>('morning');
@@ -74,7 +81,11 @@ export function EditorAddPlan({
               </SelectTrigger>
               <SelectContent>
                 {Array.from({ length: dayCount }, (_, index) => index + 1).map((number) => (
-                  <SelectItem key={number} value={String(number)}>
+                  <SelectItem
+                    disabled={destinationsForDay(destinations, number).length === 0}
+                    key={number}
+                    value={String(number)}
+                  >
                     Day {number}
                   </SelectItem>
                 ))}
@@ -114,7 +125,7 @@ export function EditorAddPlan({
         </FormField>
         {!available.length ? (
           <p className="text-sm text-muted-foreground">
-            Open a destination’s details from Your route to assign it to this day.
+            Assign a destination to a day in Your route before adding a plan.
           </p>
         ) : null}
         <div className="flex justify-end gap-2">
