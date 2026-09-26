@@ -4,7 +4,7 @@ import { DayRangePicker } from '@groam/ui/components/day-range-picker';
 import { Input } from '@groam/ui/components/input';
 import { Label } from '@groam/ui/components/label';
 import { cn } from '@groam/ui/lib/utils';
-import { useId } from 'react';
+import { useId, useState } from 'react';
 
 export type DayTimeRangeValue = {
   endDay: number;
@@ -54,6 +54,9 @@ export function DayTimeRangePicker(props: DayTimeRangePickerProps) {
     value
   } = props;
   const errorMessage = timeRangeError(value, labels.start, labels.end);
+  // Keep the first click of a two-day selection local. Consumers require a complete
+  // range, so passing the previous end day back immediately would reset the picker.
+  const [pendingStartDay, setPendingStartDay] = useState<number | null>(null);
 
   return (
     <fieldset
@@ -63,19 +66,20 @@ export function DayTimeRangePicker(props: DayTimeRangePickerProps) {
     >
       <DayRangePicker
         disabled={disabled}
-        endDay={value.endDay}
+        endDay={pendingStartDay === null ? value.endDay : undefined}
         endLabel={labels.end}
         maximumDay={bounds.maximumDay}
         minimumDay={bounds.minimumDay}
-        onChange={(startDay, endDay) =>
-          onChange({
-            ...value,
-            endDay: endDay ?? value.endDay,
-            startDay: startDay ?? value.startDay
-          })
-        }
+        onChange={(startDay, endDay) => {
+          if (endDay === undefined) {
+            setPendingStartDay(startDay ?? pendingStartDay ?? value.startDay);
+            return;
+          }
+          setPendingStartDay(null);
+          onChange({ ...value, endDay, startDay: startDay ?? value.startDay });
+        }}
         startDate={bounds.startDate}
-        startDay={value.startDay}
+        startDay={pendingStartDay ?? value.startDay}
         startLabel={labels.start}
         totalDays={bounds.totalDays}
       />

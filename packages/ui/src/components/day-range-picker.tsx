@@ -186,7 +186,6 @@ function DayStrip({
         }
         originRef.current = day;
         skipClickRef.current = false;
-        event.currentTarget.setPointerCapture(event.pointerId);
       }}
       onLostPointerCapture={endPointer}
       onPointerMove={(event) => {
@@ -194,6 +193,9 @@ function DayStrip({
         const day = dayFromPoint(event.clientX, event.clientY);
         if (day == null || day === originRef.current) return;
         if (isDayBlocked({ day, endDay, maximumDay, minimumDay, startDay, takenDays })) return;
+        // Capture only after a drag starts. Capturing on pointer down retargets
+        // ordinary clicks to the grid, so day buttons cannot be clicked.
+        event.currentTarget.setPointerCapture(event.pointerId);
         skipClickRef.current = true;
         setAnchorDay(null);
         const [nextStart, nextEnd] = orderedRange(originRef.current, day);

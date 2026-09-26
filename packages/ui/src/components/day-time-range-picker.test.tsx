@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import { useState } from 'react';
 import { expect, test, vi } from 'vitest';
 import { DayTimeRangePicker } from './day-time-range-picker';
 
@@ -33,4 +34,28 @@ test('combines a bounded day range with precise local times', () => {
     startDay: 1,
     startTime: '08:35'
   });
+});
+
+test('keeps the initial day pending until a valid end day is chosen', () => {
+  function RangeEditor() {
+    const [value, setValue] = useState({ endDay: 4, endTime: '', startDay: 4, startTime: '' });
+    return (
+      <DayTimeRangePicker
+        bounds={{ maximumDay: 6, minimumDay: 4 }}
+        label="Activity schedule"
+        onChange={setValue}
+        value={value}
+      />
+    );
+  }
+  render(<RangeEditor />);
+  fireEvent.click(screen.getByRole('button', { name: 'Day 4, Start and End' }));
+  expect(screen.getByRole('button', { name: 'Day 4, Start' }).getAttribute('aria-pressed')).toBe(
+    'true'
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Day 6' }));
+  expect(screen.getByText(/3 days · Start Day 4 · End Day 6/u)).toBeDefined();
+  expect(screen.getByRole('button', { name: 'Day 6, End' }).getAttribute('aria-pressed')).toBe(
+    'true'
+  );
 });
