@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@groam/ui/lib/utils';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const dayDateFormatter = new Intl.DateTimeFormat(undefined, {
   day: 'numeric',
@@ -172,6 +172,19 @@ function DayStrip({
 }) {
   const originRef = useRef<number | null>(null);
   const skipClickRef = useRef(false);
+  // A press may leave the grid before a drag starts and before pointer capture
+  // is acquired. Clear its origin even if the pointer is released outside.
+  useEffect(() => {
+    const clearOrigin = () => {
+      originRef.current = null;
+    };
+    window.addEventListener('pointerup', clearOrigin);
+    window.addEventListener('pointercancel', clearOrigin);
+    return () => {
+      window.removeEventListener('pointerup', clearOrigin);
+      window.removeEventListener('pointercancel', clearOrigin);
+    };
+  }, []);
   const endPointer = () => {
     originRef.current = null;
     if (skipClickRef.current) {
