@@ -211,13 +211,9 @@
       "version": "0.0.0",
       "dependencies": {
         "@base-ui/react": "^1.8.0",
-        "@convex-dev/agent": "^0.7.1",
         "@fontsource-variable/google-sans-flex": "^5.3.1",
         "@fontsource/google-sans-code": "^5.3.0",
         "@groam/brand": "workspace:*",
-        "@json-render/core": "0.20.0",
-        "@json-render/react": "0.20.0",
-        "@json-render/shadcn": "0.20.0",
         "@radix-ui/react-alert-dialog": "^1.1.15",
         "@radix-ui/react-avatar": "^1.1.10",
         "@radix-ui/react-dialog": "^1.1.15",
