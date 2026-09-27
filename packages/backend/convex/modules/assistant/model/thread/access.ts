@@ -1,8 +1,6 @@
 import { getThreadMetadata } from '@convex-dev/agent';
-import {
-  type AssistantContextTag,
-  parseAssistantThreadSummary
-} from '@groam/ai-contracts/agents/registry';
+import type { AssistantContextTag } from '@groam/ai/runtime/context-tag';
+import { parseAssistantThreadSummary } from '@groam/ai/runtime/thread-summary';
 import { ConvexError } from 'convex/values';
 import type { ConversationScope } from '#convex/modules/assistant/model/schema';
 import { type AuthContext, requireWorkspace, type Workspace } from '#convex/modules/auth/workspace';

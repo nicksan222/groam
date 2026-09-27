@@ -22,7 +22,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { AgentsListView } from './agents-list-view';
 
-vi.mock('@groam/ui/ai/context/agent-context', () => ({
+vi.mock('@groam/ai/ui/context/agent-context', () => ({
   useSetAgentContext: () => undefined
 }));
 
@@ -45,7 +45,7 @@ test('shows the agents heading', () => {
 ```
 
 Use `testIds` from `@/lib/test-ids` in the component, and the same string
-(or `testIds.foo`) in the assertion. New ids belong in `@groam/e2e/ids`
+(or `testIds.foo`) in the assertion. New ids belong in `@groam/app-actions/ids`
 (`add-test-id`).
 
 ## Rules

@@ -1,4 +1,4 @@
-import { assistantAgents } from '@groam/ai-contracts/agents/registry';
+import { assistantAgents } from '@groam/ai/agents';
 import { Avatar } from '@groam/ui/components/avatar';
 import { AvatarFallback } from '@groam/ui/components/avatar-fallback';
 import { DatePicker } from '@groam/ui/components/date-picker';

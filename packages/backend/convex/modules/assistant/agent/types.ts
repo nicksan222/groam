@@ -1,10 +1,10 @@
-import type { ChatAgentId } from '@groam/ai-contracts/agents/registry';
-import { resolveActiveTripId } from '@groam/ai-contracts/agents/targets';
+import type { ChatAgentId } from '@groam/ai/agents';
+import { resolveActiveTripId } from '@groam/ai/runtime/targets';
 import type { AssistantProviderConfiguration } from '#backend/ai/providers/index';
 import type { AssistantScreen } from '#convex/modules/assistant/validators/index';
 import type { Id } from '#convex-generated/dataModel';
 
-export type { AssistantConversationScope } from '@groam/ai-contracts/agents/instructions';
+export type { AssistantConversationScope } from '@groam/ai/backend/instructions';
 
 export type AssistantLanguageModel = AssistantProviderConfiguration['languageModel'];
 

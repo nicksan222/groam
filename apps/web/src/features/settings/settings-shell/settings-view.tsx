@@ -1,4 +1,4 @@
-import { useSetAgentContext } from '@groam/ui/ai/context/agent-context';
+import { useSetAgentContext } from '@groam/ai/ui/context/agent-context';
 import { Avatar } from '@groam/ui/components/avatar';
 import { AvatarFallback } from '@groam/ui/components/avatar-fallback';
 import { AvatarImage } from '@groam/ui/components/avatar-image';
