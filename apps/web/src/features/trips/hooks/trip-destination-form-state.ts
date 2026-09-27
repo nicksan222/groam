@@ -1,4 +1,4 @@
-import { tripCostInput, tripCostSplit } from '@/features/trips/trip-forms/trip-cost';
+import { tripCostError, tripCostInput, tripCostSplit } from '@/features/trips/trip-forms/trip-cost';
 import type {
   DestinationMoveClearsTravel,
   DestinationScheduleDraft,
@@ -71,13 +71,7 @@ export function stayDraftFor(
   };
 }
 
-export function stayCostError(cost: string): string | null {
-  if (cost === '') return null;
-  const amount = Number(cost);
-  if (!Number.isFinite(amount) || amount < 0) return 'Cost must be zero or more.';
-  if (amount > 1_000_000_000) return 'Cost is too large.';
-  return null;
-}
+export const stayCostError = tripCostError;
 
 export function canSubmitStay(draft: StayDraft): boolean {
   const checkInDay = Number(draft.checkInDay);

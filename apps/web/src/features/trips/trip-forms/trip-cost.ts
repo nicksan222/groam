@@ -19,6 +19,14 @@ export function tripCostAmountLabel(label: string, split: TripCostSplit, currenc
   return currency ? `${withKind} (${currency})` : withKind;
 }
 
+export function tripCostError(cost: string): string | null {
+  if (cost === '') return null;
+  const amount = Number(cost);
+  if (!Number.isFinite(amount) || amount < 0) return 'Cost must be zero or more.';
+  if (amount > 1_000_000_000) return 'Cost is too large.';
+  return null;
+}
+
 export function tripCostInput(amount: string, split: TripCostSplit) {
   if (amount === '') return undefined;
   return { amount: Number(amount), split };
