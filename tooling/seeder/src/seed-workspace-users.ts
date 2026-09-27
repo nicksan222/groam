@@ -49,7 +49,9 @@ export async function seedWorkspaceUsers(
     authenticatedOwner,
     workspace.organizationId
   );
-  const membershipStatuses = await mapWithConcurrency(members, input.concurrency, (member) =>
+  // Invitation creation and redemption both touch the same organization. Running
+  // joins in parallel causes repeated OCC failures even when account creation is safe.
+  const membershipStatuses = await mapWithConcurrency(members, 1, (member) =>
     app.joinWorkspace(authenticatedOwner, member, workspace, existingMemberIds.has(member.userId))
   );
   const users = authenticatedUsers.map(

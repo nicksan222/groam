@@ -9,6 +9,7 @@ import { Textarea } from '@groam/ui/components/textarea';
 import { CalendarDays, FileText, MoonStar, Paperclip, SunMedium, Sunrise, X } from 'lucide-react';
 import { mediaFileAccept } from '@/features/media/media-validation';
 import type { TripActivityEditor } from '@/features/trips/hooks/use-trip-activity-editor';
+import { tripCostError } from '@/features/trips/trip-forms/trip-cost';
 import { TripCostFields } from '@/features/trips/trip-forms/trip-cost-fields';
 import { testIds } from '@/lib/test-ids';
 
@@ -112,6 +113,7 @@ export function TripActivityFields({
         <TripCostFields
           amount={editor.cost}
           currency={editor.currency}
+          error={tripCostError(editor.cost) ?? undefined}
           label="Estimated cost"
           onAmountChange={(cost) => editor.patch({ cost })}
           onSplitChange={(costSplit) => editor.patch({ costSplit })}

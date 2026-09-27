@@ -41,7 +41,7 @@ export function ItineraryEditor(props: ItineraryEditorProps) {
   const addActivity = () => {
     setAdding(true);
   };
-  const selectPlan = (entry: PlannerEntry, day: number) => {
+  const selectPlan = (entry: PlannerEntry) => {
     const owner = trip.destinations.find((stop) =>
       entry.kind === 'activity'
         ? stop.activities.some((activity) => activity.id === entry.activity.id)
@@ -54,7 +54,7 @@ export function ItineraryEditor(props: ItineraryEditorProps) {
       setSelection({
         destinationId: owner.id,
         activityId: entry.activity.id,
-        day,
+        day: entry.activity.dayNumber,
         period: entry.period
       });
     else
@@ -101,7 +101,7 @@ export function ItineraryEditor(props: ItineraryEditorProps) {
                   onOpenDestination={(id) => openDestination(id)}
                 />
                 {trip.destinations.length ? (
-                  <EditorDayCanvas day={day} onEdit={(entry) => selectPlan(entry, day.day)} />
+                  <EditorDayCanvas day={day} onEdit={selectPlan} />
                 ) : day.day === 1 ? (
                   <div className="border-t border-border px-6 py-10 text-center">
                     <MapPin className="mx-auto size-8 text-primary" />
