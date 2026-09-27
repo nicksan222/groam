@@ -85,6 +85,10 @@ describe('trip activity form state', () => {
     expect(canSubmitTripActivity({ ...ready, title: '  ' })).toBe(false);
     expect(canSubmitTripActivity({ ...ready, dayNumber: '' })).toBe(false);
     expect(canSubmitTripActivity({ ...ready, endDayNumber: '' })).toBe(false);
+    expect(canSubmitTripActivity({ ...ready, dayNumber: '0' })).toBe(false);
+    expect(canSubmitTripActivity({ ...ready, dayNumber: '2', endDayNumber: '1' })).toBe(false);
+    expect(canSubmitTripActivity({ ...ready, dayNumber: '1.5' })).toBe(false);
+    expect(canSubmitTripActivity({ ...ready, endDayNumber: '366' })).toBe(false);
     expect(canSubmitTripActivity({ ...ready, isPending: true })).toBe(false);
     expect(canSubmitTripActivity({ ...ready, isUploading: true })).toBe(false);
     expect(canSubmitTripActivity({ ...ready, endTime: '10:00' })).toBe(false);
