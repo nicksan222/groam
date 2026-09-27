@@ -1,7 +1,7 @@
 ---
 name: add-assistant-agent
 description: >-
-  Register a new Groam chat or standalone assistant agent in packages/ai-contracts.
+  Register a new Groam chat or standalone assistant agent in packages/ai.
   Use whenever adding, renaming, or splitting an AI agent, worker, mention
   handle, or assignable issue/proposal agent — even if the user says "bot",
   "persona", or "new @mention".
@@ -9,7 +9,7 @@ description: >-
 
 # Add an assistant agent
 
-Agent identity lives only in `@groam/ai-contracts`. Do not duplicate catalogs, mentions, or
+Agent identity lives only in `@groam/ai`. Do not duplicate catalogs, mentions, or
 capability lists in `packages/backend` or the web app.
 
 ## Chat vs standalone
@@ -23,27 +23,36 @@ Mention is derived as `` `@${id}` ``. Do not set it by hand.
 
 ## Steps
 
-1. Add the kebab id to `chatAgentIds` or `standaloneAgentIds` in
-   `packages/ai-contracts/src/agents/registry/ids.ts`.
-2. Create `packages/ai-contracts/src/agents/registry/kinds/<id>.ts`. Put worker-specific
-   rules in `policies`, not in `instructions/`.
-3. Import it and add it to `assistantAgents` in
-   `packages/ai-contracts/src/agents/registry/kinds/index.ts`. Types fail until the map
-   covers every id.
-4. Allowlist existing capability ids from `assistantCapabilityIds`. A new tool
-   is a different skill (`add-agent-capability`).
-5. Colocate a unit test next to `kind.ts` or `kinds/<id>.ts` that asserts
+1. Extend `AssistantAgentId` in `packages/ai/src/agents/ids.ts` with the new
+   id. This explicitly declared type breaks a circular dependency between
+   the agent catalog and tool specs; it is **not** derived from the catalog.
+   Update `AgentAssignableTarget` there only if adding a new kind of
+   assignable target (not for another agent using `issue` or `proposal`).
+2. Create `packages/ai/src/agents/<id>/` with `definition.ts` (identity via
+   `defineChatAgent` / `defineStandaloneAgent`, capabilities derived from
+   tool specs, exposure block with mention / assignable targets / serving
+   routes) and `ui.ts` (presentation surface).
+3. Add one line for it on `assistantAgents` in
+   `packages/ai/src/agents/catalog.ts`. The catalog must satisfy the declared
+   id roster; put worker-specific rules in `policies`, not in
+   `backend/instructions/`.
+4. Give it tools by naming its id in the `agents` field of the relevant
+   spec entries in `packages/ai/src/tools/specs.ts`; capabilities derive
+   from there via `capabilitiesForAgent`. A brand-new tool is a different
+   skill (`add-agent-capability`).
+5. Colocate a unit test next to `definition.ts` that asserts
    mention/surface/policies without calling a model.
 
 ## Templates
 
-Chat:
+Chat (`agents/scout/definition.ts`):
 
 ```ts
-import { defineChatAgent } from '#ai-contracts/agents/registry/kind';
+import { defineChatAgent } from '#ai/agents/definition';
+import { capabilitiesForAgent } from '#ai/tools/specs';
 
 export const scoutAgent = defineChatAgent({
-  capabilities: ['web.search', 'context.screen.read'],
+  capabilities: capabilitiesForAgent('scout'),
   description: 'Researches places for the current trip.',
   id: 'scout',
   identity: 'You are Scout, a research specialist.',
@@ -55,11 +64,12 @@ export const scoutAgent = defineChatAgent({
 Standalone (`assignable` is `'issue'` and/or `'proposal'`):
 
 ```ts
-import { defineStandaloneAgent } from '#ai-contracts/agents/registry/kind';
+import { defineStandaloneAgent } from '#ai/agents/definition';
+import { capabilitiesForAgent } from '#ai/tools/specs';
 
 export const budgetAgent = defineStandaloneAgent({
   assignable: ['proposal'],
-  capabilities: ['trip.status.read'],
+  capabilities: capabilitiesForAgent('budget'),
   description: 'Checks idea costs without a chat.',
   id: 'budget',
   label: 'Budget agent',
@@ -69,6 +79,6 @@ export const budgetAgent = defineStandaloneAgent({
 
 ## Do not
 
-- Special-case the new id in `packages/ai-contracts/src/agents/instructions/`.
+- Special-case the new id in `packages/ai/src/backend/instructions/`.
 - Add a sibling `agent.ts` next to `agent/`.
 - Call a model to prove registration; `instructionsFor` is enough.

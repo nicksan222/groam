@@ -24,6 +24,7 @@ export { addGroupMemberViaInvite, type BrowserContextFactory } from './add-group
 export { type AddStopInput, addStop } from './add-stop';
 export { appHref } from './app-href';
 export { approveAndApplyIdea } from './approve-and-apply-idea';
+export { discardActivityChanges, keepActivityPlan } from './cancel-activity-edit';
 export { closeGroamAssistant } from './close-groam-assistant';
 export { closeIdea } from './close-idea';
 export {
@@ -134,6 +135,7 @@ export { signOut } from './sign-out';
 export { signUp } from './sign-up';
 export { startIdeaFromIssue } from './start-idea-from-issue';
 export { startItineraryIdea } from './start-itinerary-idea';
+export { startWorkspaceIdea } from './start-workspace-idea';
 export { submitIdeaForReview } from './submit-idea-for-review';
 export { type SwitchGroupInput, switchGroup } from './switch-group';
 export { transferPdf } from './transfer-pdf';

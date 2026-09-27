@@ -39,7 +39,7 @@ const state = vi.hoisted(() => ({
   }
 }));
 
-vi.mock('@groam/ui/ai/context/agent-context', () => ({
+vi.mock('@groam/ai/ui/context/agent-context', () => ({
   useSetAgentContext: () => undefined
 }));
 

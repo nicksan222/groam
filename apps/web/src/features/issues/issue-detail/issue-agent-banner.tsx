@@ -1,7 +1,7 @@
-import { assistantAgents } from '@groam/ai-contracts/agents/registry';
-import { agentRunCopy } from '@groam/ai-contracts/agents/runs/copy';
+import { assistantAgents } from '@groam/ai/agents';
+import { agentRunCopy } from '@groam/ai/backend/runs/copy';
+import { AgentRunBanner } from '@groam/ai/ui/runs/agent-run-banner';
 import type { Id } from '@groam/backend/data-model';
-import { AgentRunBanner } from '@groam/ui/ai/runs/agent-run-banner';
 import { agentRunHref } from '@/features/agents/agent-run/agent-run-href';
 import {
   useAgentRunControls,

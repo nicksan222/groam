@@ -1,9 +1,14 @@
 import { createTool } from '@convex-dev/agent';
+import { assistantToolSpecs } from '@groam/ai/tools/specs';
 import type { ToolSet } from 'ai';
 import { expect, test } from 'vitest';
 import * as z from 'zod/v3';
 import { defineCapability } from '#backend/assistant/tools/factory';
-import { AssistantToolKind } from '#backend/assistant/tools/kind';
+import {
+  allAssistantTools,
+  assistantToolByName,
+  buildAssistantToolRegistry
+} from '#backend/assistant/tools/kinds/index';
 import type { Id } from '#convex-generated/dataModel';
 import { createRegisteredAssistantTools } from './index';
 
@@ -36,22 +41,28 @@ function toolsFor(
 }
 
 test('rejects duplicate capabilities', () => {
-  expect(() =>
-    AssistantToolKind.subscribe(
-      defineCapability({
-        create: () => null,
-        id: 'trip.status.read',
-        toolName: 'getTripStatusDuplicate'
-      })
-    )
-  ).toThrow("Assistant capability 'trip.status.read' is already registered");
+  const duplicate = defineCapability({
+    agents: ['groam'],
+    create: () => null,
+    id: 'trip.status.read',
+    toolName: 'getTripStatusDuplicate',
+    ui: { card: 'activity' }
+  });
+  expect(() => buildAssistantToolRegistry([...allAssistantTools(), duplicate])).toThrow(
+    "Assistant capability 'trip.status.read' is already registered"
+  );
 });
 
 test('records every catalog tool from its registration, not a second map', () => {
-  const names = AssistantToolKind.all().map((registration) => registration.toolName);
+  const names = allAssistantTools().map((registration) => registration.toolName);
   expect(new Set(names).size).toBe(names.length);
-  expect(AssistantToolKind.byToolName('getItinerary')?.id).toBe('trip.itinerary.read');
-  expect(AssistantToolKind.byToolName('getTripStatus')?.id).toBe('trip.status.read');
+  expect(assistantToolByName('getItinerary')?.id).toBe('trip.itinerary.read');
+  expect(assistantToolByName('getTripStatus')?.id).toBe('trip.status.read');
+  expect(
+    allAssistantTools()
+      .map((registration) => registration.id)
+      .sort()
+  ).toEqual(Object.keys(assistantToolSpecs).sort());
 });
 
 test('selects every groam capability when building the runtime tool set', () => {

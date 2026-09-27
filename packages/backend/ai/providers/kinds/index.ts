@@ -1,4 +1,4 @@
-import { assistantProviderIds } from '@groam/ai-contracts/provider';
+import { assistantProviderIds } from '@groam/ai/backend/provider';
 import { AssistantProviderKind } from '#backend/ai/providers/kind';
 import { AnthropicProvider } from '#backend/ai/providers/kinds/anthropic';
 import { GoogleProvider } from '#backend/ai/providers/kinds/google';

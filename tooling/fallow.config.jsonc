@@ -46,7 +46,7 @@
       "apps/web/tsconfig.app.json",
       "apps/web/tsconfig.node.json",
       "apps/desktop/tsconfig.json",
-      "packages/ai-contracts/tsconfig.json",
+      "packages/ai/tsconfig.json",
       "packages/auth/tsconfig.json",
       "packages/backend/tsconfig.json",
       "packages/env/tsconfig.json",

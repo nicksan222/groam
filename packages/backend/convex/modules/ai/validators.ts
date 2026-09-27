@@ -1,4 +1,4 @@
-import { aiKeyProviderIds } from '@groam/ai-contracts/providers/keys';
+import { aiKeyProviderIds } from '@groam/ai/backend/providers/keys';
 import { v } from 'convex/values';
 import { assistantProviderIds } from './providers';
 

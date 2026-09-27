@@ -41,5 +41,5 @@ import { DecisionCard } from '@groam/ui/components/decision-card';
 ## Do not put here
 
 - Trip/issue/chat **views** → `apps/web/src/features/<domain>/`
-- Assistant chat widget, messages, tool-call cards → `packages/ui/src/ai/`
-- JSON-render form catalog entries → `packages/ai-contracts/src/output/`
+- Assistant chat widget, messages, tool-call cards → `packages/ai/src/ui/`
+- JSON-render form catalog entries → `packages/ai/src/runtime/output/`

@@ -2,9 +2,10 @@ import { createTool } from '@convex-dev/agent';
 import { ConvexError } from 'convex/values';
 import * as z from 'zod/v3';
 import {
-  assertDraftProposal,
+  loadDraftTripContext,
   MAX_TITLE_LENGTH,
-  requestedTripId
+  tripDayField,
+  workingTripIdField
 } from '#backend/assistant/tools/trips/shared';
 import type { TripAssistantContext } from '#convex/modules/assistant/model/index';
 import { internal } from '#convex-generated/api';
@@ -25,11 +26,8 @@ const updateTripDetailsSchema = z.object({
     .optional()
     .describe('Flexible date notes. Pass null to clear them.'),
   name: z.string().min(1).max(MAX_TITLE_LENGTH).optional(),
-  totalDays: z.number().int().min(1).max(365).optional(),
-  tripId: z
-    .string()
-    .optional()
-    .describe('The exact workingTripId returned by startTripVersion. Never use the shared trip id.')
+  totalDays: tripDayField().optional(),
+  tripId: workingTripIdField()
 });
 
 type UpdateTripDetailsInput = z.infer<typeof updateTripDetailsSchema>;
@@ -64,12 +62,7 @@ export function createUpdateTripDetailsTool(activeTripId: Id<'trips'> | null) {
     description:
       'Update draft-idea trip details such as name, budget, date notes, or total days. Call startTripVersion first and pass its workingTripId. Omit fields you are not changing. Pass budgetAmount or dateNotes null to clear them.',
     execute: async (toolCtx, input) => {
-      const tripId = requestedTripId(input.tripId, activeTripId);
-      const context: TripAssistantContext = await toolCtx.runQuery(
-        internal.modules.assistant.model.index.tripContext,
-        { tripId }
-      );
-      assertDraftProposal(context);
+      const { context, tripId } = await loadDraftTripContext(toolCtx, input.tripId, activeTripId);
       if (!hasDetailUpdate(input)) throw new ConvexError('Provide at least one field to update');
       await toolCtx.runMutation(
         internal.modules.assistant.model.writes.updateTripDetails,

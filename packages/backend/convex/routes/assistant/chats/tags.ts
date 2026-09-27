@@ -1,4 +1,4 @@
-import type { AssistantContextTag } from '@groam/ai-contracts/agents/registry';
+import type { AssistantContextTag } from '@groam/ai/runtime/context-tag';
 import { v } from 'convex/values';
 import {
   type AssistantContextTagReference,
