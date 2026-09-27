@@ -122,7 +122,9 @@ export function ItineraryEditor(props: ItineraryEditorProps) {
                                   onChooseDestination={(id) =>
                                     setSelection({ ...active, destinationId: id })
                                   }
-                                  onClose={() => setSelection(null)}
+                                  onClose={() =>
+                                    setSelection((current) => (current === active ? null : current))
+                                  }
                                 />
                               )
                             }

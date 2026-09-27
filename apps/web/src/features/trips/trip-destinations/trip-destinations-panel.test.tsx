@@ -1,6 +1,6 @@
 import type { Id } from '@groam/backend/data-model';
 import { stubPopoverEnvironment } from '@groam/ui/lib/stub-popover-environment';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import type { ItineraryChange } from '@/features/trips/hooks/itinerary-proposal-changes';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
@@ -206,6 +206,34 @@ describe('TripDestinationsPanel day editor', () => {
     expect(handlers.updateTrip).not.toHaveBeenCalled();
     expect(handlers.updateDestination).not.toHaveBeenCalled();
   });
+  test('does not close a different day when an earlier activity save finishes', async () => {
+    let finishSave: (saved: boolean) => void = () => undefined;
+    handlers.addActivity.mockImplementation(
+      () => new Promise<boolean>((resolve) => (finishSave = resolve))
+    );
+    render(<TripDestinationsPanel {...handlers} addDestinationOpen={false} trip={tripDetail()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add morning activity to Day 1' }));
+    fireEvent.change(screen.getByTestId(testIds.activityTitle), {
+      target: { value: 'Morning market' }
+    });
+    fireEvent.click(screen.getByTestId(testIds.activitySubmit));
+    await waitFor(() => expect(handlers.addActivity).toHaveBeenCalledOnce());
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add afternoon activity to Day 2' }));
+    fireEvent.change(screen.getByTestId(testIds.activityTitle), {
+      target: { value: 'Afternoon walk' }
+    });
+    await act(async () => {
+      finishSave(true);
+    });
+
+    expect(screen.getByRole('region', { name: 'Add an activity to Day 2' })).toBeTruthy();
+    expect((screen.getByTestId(testIds.activityTitle) as HTMLInputElement).value).toBe(
+      'Afternoon walk'
+    );
+  });
+
   test('preserves occupied-day constraints in the selected route stop', () => {
     render(
       <TripDestinationsPanel
