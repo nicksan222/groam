@@ -112,7 +112,10 @@ export function TripActivityFields({
 
       <DetailsContainer className="border-t border-border">
         {compact ? (
-          <summary className="cursor-pointer py-3 text-sm font-medium text-primary hover:underline">
+          <summary
+            className="cursor-pointer py-3 text-sm font-medium text-primary hover:underline"
+            data-testid={testIds.activityMoreOptions}
+          >
             More options: dates, exact times, cost, notes and files
           </summary>
         ) : null}

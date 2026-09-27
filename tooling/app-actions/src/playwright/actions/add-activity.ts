@@ -20,7 +20,11 @@ export const addActivity: AddActivityAction<UiTarget> = async (target, input) =>
   const panel = inlineActivityEditor(user.page);
   await user.type(panel.getByTestId(ids.activityTitle), input.title);
   if (input.address) await user.type(panel.getByTestId(ids.activityAddress), input.address);
-  if (input.notes) await user.type(panel.getByTestId(ids.activityNotes), input.notes);
+  if (input.notes) {
+    const notes = panel.getByTestId(ids.activityNotes);
+    if (!(await notes.isVisible())) await user.click(panel.getByTestId(ids.activityMoreOptions));
+    await user.type(notes, input.notes);
+  }
   await user.click(panel.getByTestId(ids.activitySubmit));
   await expect(panel).toBeHidden();
   await expect(

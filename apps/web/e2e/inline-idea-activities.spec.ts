@@ -28,7 +28,12 @@ test('plans morning and afternoon activities directly within an idea day', async
   await expect(day.getByRole('button', { name: 'Add morning activity to Day 2' })).toBeVisible();
   await expect(day.getByRole('button', { name: 'Add afternoon activity to Day 2' })).toBeVisible();
   await expect(day.getByRole('button', { name: 'Add evening activity to Day 2' })).toBeVisible();
-  await addInlineActivity(page, { day: 2, period: 'morning', title: 'Market breakfast' });
+  await addInlineActivity(page, {
+    day: 2,
+    notes: 'Meet beside the bakery',
+    period: 'morning',
+    title: 'Market breakfast'
+  });
   await addInlineActivity(page, { day: 2, period: 'afternoon', title: 'Riverside stroll' });
 
   await expect(day.getByRole('region', { name: 'Morning, Day 2' })).toContainText(

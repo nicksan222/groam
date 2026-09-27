@@ -5,6 +5,7 @@ export const ids = {
   activityCard: 'activity-card',
   activityEdit: 'activity-edit',
   activityInlineEditor: 'activity-inline-editor',
+  activityMoreOptions: 'activity-more-options',
   activityNotes: 'activity-notes',
   activitySubmit: 'activity-submit',
   activityTitle: 'activity-title',

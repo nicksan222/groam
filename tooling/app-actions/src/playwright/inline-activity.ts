@@ -8,7 +8,13 @@ export type InlineActivityPeriod = 'morning' | 'afternoon' | 'evening';
 
 export async function addInlineActivity(
   target: UiTarget,
-  input: { day: number; destination?: string; period: InlineActivityPeriod; title: string }
+  input: {
+    day: number;
+    destination?: string;
+    notes?: string;
+    period: InlineActivityPeriod;
+    title: string;
+  }
 ): Promise<void> {
   const user = ui(target);
   const day = user.page.getByRole('region', { name: `Day ${input.day} schedule` });
@@ -22,6 +28,10 @@ export async function addInlineActivity(
     await user.click(form.getByRole('combobox', { name: 'Destination' }));
     await user.click(user.page.getByRole('option', { name: input.destination, exact: true }));
     await expect(form.getByTestId(ids.activityTitle)).toHaveValue(input.title);
+  }
+  if (input.notes) {
+    await user.click(form.getByTestId(ids.activityMoreOptions));
+    await user.type(form.getByTestId(ids.activityNotes), input.notes);
   }
   await user.click(form.getByTestId(ids.activitySubmit));
   await expect(form).toHaveCount(0);
