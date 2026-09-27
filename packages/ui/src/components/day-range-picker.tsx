@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@groam/ui/lib/utils';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const dayDateFormatter = new Intl.DateTimeFormat(undefined, {
   day: 'numeric',
@@ -40,17 +40,26 @@ function dayFromPoint(clientX: number, clientY: number) {
   return Number.isInteger(day) ? day : null;
 }
 
-function selectionSummary(
-  startDay: number | undefined,
-  endDay: number | undefined,
-  startLabel: string,
-  endLabel: string
-) {
+function selectionSummary({
+  startDay,
+  endDay,
+  startLabel,
+  endLabel,
+  pendingEndOptional
+}: {
+  startDay: number | undefined;
+  endDay: number | undefined;
+  startLabel: string;
+  endLabel: string;
+  pendingEndOptional: boolean;
+}) {
   if (startDay === undefined && endDay === undefined) {
     return 'Click a start day, then an end day. Drag across days to paint a stay.';
   }
   if (startDay !== undefined && endDay === undefined) {
-    return `${startLabel} Day ${startDay} — pick ${endLabel.toLowerCase()} day`;
+    return pendingEndOptional
+      ? `${startLabel} Day ${startDay} — pick ${endLabel.toLowerCase()} day or keep one day.`
+      : `${startLabel} Day ${startDay} — pick ${endLabel.toLowerCase()} day`;
   }
   if (startDay !== undefined && endDay !== undefined) {
     const duration = endDay - startDay + 1;
@@ -72,6 +81,7 @@ export type DayRangePickerProps = {
   maximumDay: number;
   minimumDay?: number;
   onChange: (startDay: number | undefined, endDay: number | undefined) => void;
+  pendingEndOptional?: boolean;
   startDate?: null | string;
   startDay: number | undefined;
   startLabel?: string;
@@ -88,6 +98,7 @@ export function DayRangePicker({
   maximumDay,
   minimumDay = 1,
   onChange,
+  pendingEndOptional = false,
   startDate,
   startDay,
   startLabel = 'Start',
@@ -98,7 +109,7 @@ export function DayRangePicker({
   const dayCount = totalDays ?? maximumDay;
   const days = Array.from({ length: dayCount }, (_, index) => index + 1);
   const [anchorDay, setAnchorDay] = useState<number | null>(null);
-  const summary = selectionSummary(startDay, endDay, startLabel, endLabel);
+  const summary = selectionSummary({ startDay, endDay, startLabel, endLabel, pendingEndOptional });
 
   return (
     <fieldset
@@ -161,6 +172,19 @@ function DayStrip({
 }) {
   const originRef = useRef<number | null>(null);
   const skipClickRef = useRef(false);
+  // A press may leave the grid before a drag starts and before pointer capture
+  // is acquired. Clear its origin even if the pointer is released outside.
+  useEffect(() => {
+    const clearOrigin = () => {
+      originRef.current = null;
+    };
+    window.addEventListener('pointerup', clearOrigin);
+    window.addEventListener('pointercancel', clearOrigin);
+    return () => {
+      window.removeEventListener('pointerup', clearOrigin);
+      window.removeEventListener('pointercancel', clearOrigin);
+    };
+  }, []);
   const endPointer = () => {
     originRef.current = null;
     if (skipClickRef.current) {
@@ -186,7 +210,6 @@ function DayStrip({
         }
         originRef.current = day;
         skipClickRef.current = false;
-        event.currentTarget.setPointerCapture(event.pointerId);
       }}
       onLostPointerCapture={endPointer}
       onPointerMove={(event) => {
@@ -194,6 +217,9 @@ function DayStrip({
         const day = dayFromPoint(event.clientX, event.clientY);
         if (day == null || day === originRef.current) return;
         if (isDayBlocked({ day, endDay, maximumDay, minimumDay, startDay, takenDays })) return;
+        // Capture only after a drag starts. Capturing on pointer down retargets
+        // ordinary clicks to the grid, so day buttons cannot be clicked.
+        event.currentTarget.setPointerCapture(event.pointerId);
         skipClickRef.current = true;
         setAnchorDay(null);
         const [nextStart, nextEnd] = orderedRange(originRef.current, day);

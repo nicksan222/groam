@@ -54,6 +54,27 @@ test('clears a single-day selection when the same day is clicked again', () => {
   expect(onChange).toHaveBeenCalledWith(undefined, undefined);
 });
 
+test('releasing a press outside the grid does not paint a later day', () => {
+  const onChange = vi.fn();
+  render(
+    <DayRangePicker endDay={undefined} maximumDay={4} onChange={onChange} startDay={undefined} />
+  );
+  const grid = screen.getByTestId('day-range-days');
+  const first = screen.getByRole('button', { name: 'Day 1' });
+  const other = screen.getByRole('button', { name: 'Day 3' });
+  const original = document.elementFromPoint;
+  try {
+    document.elementFromPoint = () => first;
+    fireEvent.pointerDown(grid, { button: 0, clientX: 10, clientY: 10 });
+    fireEvent.pointerUp(window);
+    document.elementFromPoint = () => other;
+    fireEvent.pointerMove(grid, { clientX: 30, clientY: 10 });
+    expect(onChange).not.toHaveBeenCalled();
+  } finally {
+    document.elementFromPoint = original;
+  }
+});
+
 test('marks other stops as taken and keeps them unselectable', () => {
   render(
     <DayRangePicker

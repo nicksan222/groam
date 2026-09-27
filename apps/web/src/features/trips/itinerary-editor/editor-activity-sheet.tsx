@@ -72,7 +72,10 @@ export function EditorActivitySheet({
         <SheetHeader className="border-b border-border px-6 py-5 text-left">
           <SheetTitle>{activity ? 'Edit plan' : 'Add a plan'}</SheetTitle>
           <SheetDescription>
-            Day {selection.day} · {destination.name}
+            {activity && activity.endDayNumber !== activity.dayNumber
+              ? `Days ${activity.dayNumber}–${activity.endDayNumber}`
+              : `Day ${selection.day}`}{' '}
+            · {destination.name}
           </SheetDescription>
         </SheetHeader>
         <div className="min-h-0 flex-1 overflow-y-auto p-6">
