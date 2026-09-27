@@ -24,7 +24,9 @@ export { addGroupMemberViaInvite, type BrowserContextFactory } from './add-group
 export { type AddStopInput, addStop } from './add-stop';
 export { appHref } from './app-href';
 export { approveAndApplyIdea } from './approve-and-apply-idea';
+export { discardActivityChanges, keepActivityPlan } from './cancel-activity-edit';
 export { closeGroamAssistant } from './close-groam-assistant';
+export { closeIdea } from './close-idea';
 export {
   type CompleteOnboardingInput,
   type CompleteOnboardingResult,
@@ -88,6 +90,12 @@ export { openTripSection, type TripSection } from './open-trip-section';
 export { openTrips } from './open-trips';
 export { openWorkspaceIdeas } from './open-workspace-ideas';
 export { pageCanvas, resolvedBackground, twoColumnPageLayout } from './page-canvas';
+export {
+  continueActivityPlan,
+  openActivityPlan,
+  removeActivityPlan,
+  startActivityPlan
+} from './plan-idea-activity';
 export { createPlaywrightActions, PlaywrightAppActions } from './playwright-app-actions';
 export {
   type ProposeTripDatesForReviewInput,
@@ -127,6 +135,7 @@ export { signOut } from './sign-out';
 export { signUp } from './sign-up';
 export { startIdeaFromIssue } from './start-idea-from-issue';
 export { startItineraryIdea } from './start-itinerary-idea';
+export { startWorkspaceIdea } from './start-workspace-idea';
 export { submitIdeaForReview } from './submit-idea-for-review';
 export { type SwitchGroupInput, switchGroup } from './switch-group';
 export { transferPdf } from './transfer-pdf';

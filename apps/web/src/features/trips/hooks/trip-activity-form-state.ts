@@ -62,10 +62,17 @@ export function activityFormForEdit(activity: TripActivity): ActivityFormState {
 export function canSubmitTripActivity(state: TripActivitySubmitState): boolean {
   const cost = state.cost === '' ? null : Number(state.cost);
   const invalidCost = cost !== null && (!Number.isFinite(cost) || cost < 0 || cost > 1_000_000_000);
+  const startDay = Number(state.dayNumber);
+  const endDay = Number(state.endDayNumber);
+  const invalidDays =
+    !Number.isInteger(startDay) ||
+    !Number.isInteger(endDay) ||
+    startDay < 1 ||
+    endDay < startDay ||
+    endDay > 365;
   const invalidTimeRange =
     state.endTime !== '' &&
-    (state.startTime === '' ||
-      (state.dayNumber === state.endDayNumber && state.endTime <= state.startTime));
+    (state.startTime === '' || (startDay === endDay && state.endTime <= state.startTime));
   return !(
     state.isPending ||
     state.isUploading ||
@@ -73,6 +80,7 @@ export function canSubmitTripActivity(state: TripActivitySubmitState): boolean {
     !state.title.trim() ||
     !state.dayNumber ||
     !state.endDayNumber ||
+    invalidDays ||
     invalidTimeRange
   );
 }

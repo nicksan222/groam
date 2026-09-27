@@ -108,6 +108,9 @@ export async function enableTwoFactorAndSignInWithBackupCode(
   await by(page, ids.settingsTwoFactorConfirm).click();
   await expect(page.getByText(/Status:\s*Enabled/u)).toBeVisible();
   await signOut(page);
+  // Wait for the auth form to remount after sign-out before entering new credentials.
+  await page.reload();
+  await expect(by(page, ids.authEmail)).toBeVisible();
   await by(page, ids.authEmail).fill(user.username);
   await by(page, ids.authPassword).fill(user.password);
   await by(page, ids.authSubmit).click();
