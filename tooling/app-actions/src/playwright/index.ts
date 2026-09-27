@@ -26,6 +26,7 @@ export { appHref } from './app-href';
 export { approveAndApplyIdea } from './approve-and-apply-idea';
 export { discardActivityChanges, keepActivityPlan } from './cancel-activity-edit';
 export { closeGroamAssistant } from './close-groam-assistant';
+export { closeIdea } from './close-idea';
 export {
   type CompleteOnboardingInput,
   type CompleteOnboardingResult,
