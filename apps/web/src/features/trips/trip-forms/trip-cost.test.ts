@@ -2,6 +2,7 @@ import { expect, test } from 'vitest';
 import {
   formatTripLineCost,
   tripCostAmountLabel,
+  tripCostError,
   tripCostInput,
   tripCostSplit
 } from '@/features/trips/trip-forms/trip-cost';
@@ -11,6 +12,13 @@ test('defaults unknown splits to a total group cost', () => {
   expect(tripCostSplit('per_person')).toBe('per_person');
   expect(tripCostInput('', 'per_person')).toBeUndefined();
   expect(tripCostInput('40', 'per_person')).toEqual({ amount: 40, split: 'per_person' });
+});
+
+test('reports the same invalid cost for stays and activities', () => {
+  expect(tripCostError('')).toBeNull();
+  expect(tripCostError('0')).toBeNull();
+  expect(tripCostError('-1')).toBe('Cost must be zero or more.');
+  expect(tripCostError('1000000001')).toBe('Cost is too large.');
 });
 
 test('labels entered costs as total or per person', () => {
