@@ -195,7 +195,10 @@ describe('TripDestinationsPanel day editor', () => {
     render(<TripDestinationsPanel {...handlers} addDestinationOpen={false} trip={tripDetail()} />);
     expect(screen.getByRole('heading', { name: 'Day 1' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Day 2' })).toBeTruthy();
-    expect(screen.getAllByText('A day of possibilities').length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: 'Add morning activity to Day 1' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Add afternoon activity to Day 2' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Add morning activity to Day 1' }));
+    expect(screen.getByRole('region', { name: 'Add an activity to Day 1' })).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Day 1 schedule' })).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Day 2 schedule' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Choose a day' })).toBeNull();

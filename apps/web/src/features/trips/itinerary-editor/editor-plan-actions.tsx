@@ -24,7 +24,7 @@ export function EditorPlanActions({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button size="sm">
+        <Button size="sm" variant="outline">
           <Plus />
           Add a plan
         </Button>

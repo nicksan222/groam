@@ -22,6 +22,8 @@ export type ItineraryEditorProps = {
 };
 export type ItineraryEditorMode = 'day' | 'route' | 'stays' | 'travel';
 export type EditorActivitySelection = {
+  /** Opens a compact form beside the selected day instead of every optional field at once. */
+  inline?: boolean;
   destinationId: Id<'tripDestinations'>;
   activityId?: Id<'tripDestinationActivities'>;
   day: number;

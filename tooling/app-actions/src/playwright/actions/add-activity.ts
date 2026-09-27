@@ -2,6 +2,7 @@ import { expect as playwrightExpect } from '@playwright/test';
 import type { AddActivityAction } from '#src/actions/add-activity';
 import { ids } from '#src/playwright/ids';
 import { type UiTarget, ui } from '#src/playwright/interaction';
+import { inlineActivityEditor } from '#src/playwright/locators';
 
 const expect = playwrightExpect.configure({ timeout: 30_000 });
 
@@ -16,7 +17,7 @@ export const addActivity: AddActivityAction<UiTarget> = async (target, input) =>
     await user.click(user.page.getByRole('option', { name: input.destination, exact: true }));
     await user.click(user.page.getByRole('button', { name: 'Continue', exact: true }));
   }
-  const panel = user.page.getByRole('dialog');
+  const panel = inlineActivityEditor(user.page);
   await user.type(panel.getByTestId(ids.activityTitle), input.title);
   if (input.address) await user.type(panel.getByTestId(ids.activityAddress), input.address);
   if (input.notes) await user.type(panel.getByTestId(ids.activityNotes), input.notes);

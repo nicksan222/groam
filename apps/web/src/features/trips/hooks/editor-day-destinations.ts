@@ -1,6 +1,16 @@
 import type { PlannerDay } from '@/types/trip-planner';
 import type { Destination } from '@/types/trips';
 
+/** An unscheduled stop can be planned on any day; scheduled stops must contain it. */
+export function destinationsForDay(destinations: Destination[], day: number): Destination[] {
+  return destinations.filter(
+    (destination) =>
+      destination.startDay === null ||
+      destination.endDay === null ||
+      (destination.startDay <= day && destination.endDay >= day)
+  );
+}
+
 export function editorDayDestinations(day: PlannerDay, destinations: Destination[]) {
   const visible = destinations.filter(
     (stop) =>

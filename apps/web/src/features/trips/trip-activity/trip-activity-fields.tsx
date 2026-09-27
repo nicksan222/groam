@@ -48,12 +48,15 @@ function ActivityDayRange({ editor }: { editor: TripActivityEditor }) {
 
 export function TripActivityFields({
   editor,
-  idPrefix
+  idPrefix,
+  compact = false
 }: {
   editor: TripActivityEditor;
   idPrefix: string;
+  compact?: boolean;
 }) {
   const fieldId = (field: string) => `${idPrefix}-${field}-${editor.destinationId}`;
+  const DetailsContainer = compact ? 'details' : 'div';
 
   return (
     <div className="space-y-6">
@@ -86,8 +89,7 @@ export function TripActivityFields({
       </section>
 
       <section className="space-y-3 border-t pt-5">
-        <Shell.Eyebrow tone="primary">When</Shell.Eyebrow>
-        <ActivityDayRange editor={editor} />
+        <Shell.Eyebrow tone="primary">Time of day</Shell.Eyebrow>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {timeBlocks.map(({ icon: Icon, label, value }) => (
             <Button
@@ -108,79 +110,89 @@ export function TripActivityFields({
         </div>
       </section>
 
-      <section className="space-y-4 border-t pt-5">
-        <Shell.Eyebrow tone="primary">Helpful details</Shell.Eyebrow>
-        <TripCostFields
-          amount={editor.cost}
-          currency={editor.currency}
-          error={tripCostError(editor.cost) ?? undefined}
-          label="Estimated cost"
-          onAmountChange={(cost) => editor.patch({ cost })}
-          onSplitChange={(costSplit) => editor.patch({ costSplit })}
-          split={editor.costSplit}
-        />
-        <FormField label="Notes">
-          <Textarea
-            data-testid={testIds.activityNotes}
-            maxLength={240}
-            onChange={(event) => editor.patch({ notes: event.target.value })}
-            placeholder="Reservation, entrance, what to bring…"
-            rows={3}
-            value={editor.notes}
-          />
-        </FormField>
-        <label
-          className="flex min-h-20 cursor-pointer items-center gap-3 rounded-xl border border-dashed border-primary/35 bg-card p-4"
-          htmlFor={fieldId('files')}
-        >
-          <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
-            {editor.isUploading ? <Spinner /> : <Paperclip className="size-4" />}
-          </span>
-          <span className="min-w-0">
-            <span className="block text-sm font-semibold">
-              {editor.attachments.length} of 5 files
-            </span>
-            <span className="block text-xs font-normal text-muted-foreground">
-              Tickets, bookings, maps, photos, audio, or video
-            </span>
-          </span>
-          <Input
-            accept={mediaFileAccept}
-            className="sr-only"
-            disabled={editor.isPending || editor.isUploading || editor.attachments.length >= 5}
-            id={fieldId('files')}
-            multiple
-            onChange={(event) => void editor.uploadAttachments(event.target.files)}
-            ref={editor.fileInputRef}
-            type="file"
-          />
-        </label>
-        {editor.attachments.length > 0 && (
-          <div className="space-y-2 sm:flex sm:flex-wrap">
-            {editor.attachments.map((attachment) => (
-              <div
-                className="flex items-center gap-2 rounded-xl border p-3 sm:max-w-64"
-                key={attachment.id}
-              >
-                <FileText className="size-4 shrink-0 text-primary" />
-                <span className="min-w-0 flex-1 truncate text-sm font-medium">
-                  {attachment.name}
+      <DetailsContainer className="border-t border-border">
+        {compact ? (
+          <summary className="cursor-pointer py-3 text-sm font-medium text-primary hover:underline">
+            More options: dates, exact times, cost, notes and files
+          </summary>
+        ) : null}
+        <div className="space-y-5 pt-5">
+          <ActivityDayRange editor={editor} />
+          <section className="space-y-4 border-t pt-5">
+            <Shell.Eyebrow tone="primary">Helpful details</Shell.Eyebrow>
+            <TripCostFields
+              amount={editor.cost}
+              currency={editor.currency}
+              error={tripCostError(editor.cost) ?? undefined}
+              label="Estimated cost"
+              onAmountChange={(cost) => editor.patch({ cost })}
+              onSplitChange={(costSplit) => editor.patch({ costSplit })}
+              split={editor.costSplit}
+            />
+            <FormField label="Notes">
+              <Textarea
+                data-testid={testIds.activityNotes}
+                maxLength={240}
+                onChange={(event) => editor.patch({ notes: event.target.value })}
+                placeholder="Reservation, entrance, what to bring…"
+                rows={3}
+                value={editor.notes}
+              />
+            </FormField>
+            <label
+              className="flex min-h-20 cursor-pointer items-center gap-3 rounded-xl border border-dashed border-primary/35 bg-card p-4"
+              htmlFor={fieldId('files')}
+            >
+              <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                {editor.isUploading ? <Spinner /> : <Paperclip className="size-4" />}
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold">
+                  {editor.attachments.length} of 5 files
                 </span>
-                <Button
-                  aria-label={`Remove ${attachment.name}`}
-                  onClick={() => editor.removeAttachment(attachment.id)}
-                  size="icon-sm"
-                  type="button"
-                  variant="ghost"
-                >
-                  <X />
-                </Button>
+                <span className="block text-xs font-normal text-muted-foreground">
+                  Tickets, bookings, maps, photos, audio, or video
+                </span>
+              </span>
+              <Input
+                accept={mediaFileAccept}
+                className="sr-only"
+                disabled={editor.isPending || editor.isUploading || editor.attachments.length >= 5}
+                id={fieldId('files')}
+                multiple
+                onChange={(event) => void editor.uploadAttachments(event.target.files)}
+                ref={editor.fileInputRef}
+                type="file"
+              />
+            </label>
+            {editor.attachments.length > 0 && (
+              <div className="space-y-2 sm:flex sm:flex-wrap">
+                {editor.attachments.map((attachment) => (
+                  <div
+                    className="flex items-center gap-2 rounded-xl border p-3 sm:max-w-64"
+                    key={attachment.id}
+                  >
+                    <FileText className="size-4 shrink-0 text-primary" />
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                      {attachment.name}
+                    </span>
+                    <Button
+                      aria-label={`Remove ${attachment.name}`}
+                      onClick={() => editor.removeAttachment(attachment.id)}
+                      size="icon-sm"
+                      type="button"
+                      variant="ghost"
+                    >
+                      <X />
+                    </Button>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
-        <FormFeedback message={editor.uploadMessage} />
-      </section>
+            )}
+            <FormFeedback message={editor.uploadMessage} />
+          </section>
+        </div>
+      </DetailsContainer>
     </div>
   );
 }

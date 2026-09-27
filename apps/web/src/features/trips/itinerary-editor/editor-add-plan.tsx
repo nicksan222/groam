@@ -15,18 +15,10 @@ import {
   SelectValue
 } from '@groam/ui/components/select';
 import { useState } from 'react';
+import { destinationsForDay } from '@/features/trips/hooks/editor-day-destinations';
 import type { EditorActivitySelection } from '@/types/itinerary-editor';
 import type { PlannerPeriod } from '@/types/trip-planner';
 import type { Destination } from '@/types/trips';
-
-function destinationsForDay(destinations: Destination[], day: number) {
-  return destinations.filter(
-    (destination) =>
-      destination.startDay === null ||
-      destination.endDay === null ||
-      (destination.startDay <= day && destination.endDay >= day)
-  );
-}
 
 export function EditorAddPlan({
   dayCount,

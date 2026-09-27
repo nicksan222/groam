@@ -4,6 +4,7 @@ export const ids = {
   activityAddress: 'activity-address',
   activityCard: 'activity-card',
   activityEdit: 'activity-edit',
+  activityInlineEditor: 'activity-inline-editor',
   activityNotes: 'activity-notes',
   activitySubmit: 'activity-submit',
   activityTitle: 'activity-title',

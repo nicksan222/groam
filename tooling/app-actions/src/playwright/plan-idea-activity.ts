@@ -1,8 +1,9 @@
 import { ids } from './ids';
 import { type UiTarget, ui } from './interaction';
+import { inlineActivityEditor } from './locators';
 import { setActivityDayRange } from './set-activity-day-range';
 
-/** Exercise the itinerary editor's day chooser and activity sheet. */
+/** Exercise the optional day chooser, then edit directly in the day schedule. */
 export async function startActivityPlan(target: UiTarget, day?: number): Promise<void> {
   const user = ui(target);
   await user.click(user.page.getByRole('button', { name: 'Add a plan', exact: true }));
@@ -23,8 +24,9 @@ export async function continueActivityPlan(
   const user = ui(target);
   await user.click(user.page.getByRole('dialog').getByRole('button', { name: 'Continue' }));
   if (range) await setActivityDayRange(user, range.startDay, range.endDay);
-  await user.type(user.page.getByRole('dialog').getByTestId(ids.activityTitle), title);
-  await user.click(user.page.getByRole('dialog').getByTestId(ids.activitySubmit));
+  const editor = inlineActivityEditor(user.page);
+  await user.type(editor.getByTestId(ids.activityTitle), title);
+  await user.click(editor.getByTestId(ids.activitySubmit));
 }
 
 export async function openActivityPlan(
