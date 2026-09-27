@@ -15,5 +15,6 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     trace: env.isCI ? 'on-first-retry' : 'retain-on-failure'
   },
-  workers: 1
+  // CI runners have two cores; run separate spec files concurrently.
+  workers: env.isCI ? 2 : 1
 });
