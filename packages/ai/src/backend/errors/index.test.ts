@@ -27,6 +27,10 @@ describe('assistantFailureMessage', () => {
     );
   });
 
+  test('does not forward the punctuation-free SDK placeholder', () => {
+    expect(assistantFailureMessage(new Error('An error occurred'))).toBe(DEFAULT_ASSISTANT_FAILURE);
+  });
+
   test('forwards rate-limit provider copy', () => {
     expect(assistantFailureMessage(new Error('Rate limit exceeded: too many requests'))).toBe(
       'The model provider said: Rate limit exceeded: too many requests'

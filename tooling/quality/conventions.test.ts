@@ -339,13 +339,16 @@ describe('packageExportPatternsFromMap', () => {
     const patterns = packageExportPatternsFromMap({
       './registry': './src/registry.ts',
       './components/*': './src/components/*.tsx',
-      './foo.bar': './src/foo.bar.ts'
+      './foo.bar': './src/foo.bar.ts',
+      './literal[a]\\b': './src/literal.ts'
     });
     expect(matchesPackageExport('registry', patterns)).toBe(true);
     expect(matchesPackageExport('components/assistant-chat-message', patterns)).toBe(true);
     expect(matchesPackageExport('components/hooks/use-assistant', patterns)).toBe(false);
     expect(matchesPackageExport('foo.bar', patterns)).toBe(true);
     expect(matchesPackageExport('fooXbar', patterns)).toBe(false);
+    expect(matchesPackageExport('literal[a]\\b', patterns)).toBe(true);
+    expect(matchesPackageExport('literalab', patterns)).toBe(false);
   });
 });
 

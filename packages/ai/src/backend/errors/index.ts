@@ -1,4 +1,4 @@
-const REDACTED_MESSAGES = new Set(['An error occurred.']);
+const REDACTED_MESSAGES = new Set(['An error occurred', 'An error occurred.']);
 
 export const DEFAULT_ASSISTANT_FAILURE =
   'Groam AI could not complete that reply. Try again in a moment.';

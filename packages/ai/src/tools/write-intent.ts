@@ -229,7 +229,7 @@ function matchIntentRange(
   words: readonly string[],
   intent: string
 ): { end: number; start: number } | null {
-  const parts = intent.split(/\s+\.\.\.\s+/u).map((part) => intentWords(part));
+  const parts = intent.split('...').map((part) => intentWords(part));
   const first = parts[0];
   if (!first || first.length === 0) return null;
   for (let start = 0; start <= words.length - first.length; start += 1) {

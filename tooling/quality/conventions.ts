@@ -99,7 +99,11 @@ export function packageExportPatternsFromMap(exportsMap: Record<string, unknown>
   return Object.keys(exportsMap)
     .filter((key) => key !== '.' && key !== './index')
     .map((key) => {
-      const pattern = key.replace(/^\.\//u, '').replace(/\./gu, '\\.').replace(/\*/gu, '[^/]+');
+      const pattern = key
+        .replace(/^\.\//u, '')
+        .split('*')
+        .map((part) => part.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&'))
+        .join('[^/]+');
       return new RegExp(`^${pattern}$`, 'u');
     });
 }
