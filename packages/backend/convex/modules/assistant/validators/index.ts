@@ -4,13 +4,13 @@ import {
   chatAgentIds,
   issueAssignableAgentIds,
   proposalAssignableAgentIds
-} from '@groam/ai-contracts/agents/registry';
+} from '@groam/ai/agents';
 import {
   agentRunEventKindIds,
   agentRunKickoffIds,
   agentRunStatusIds,
   agentSurfaceIds
-} from '@groam/ai-contracts/agents/runs/ids';
+} from '@groam/ai/backend/runs/ids';
 import { type Infer, v } from 'convex/values';
 
 function literals<T extends string>(values: readonly T[]) {

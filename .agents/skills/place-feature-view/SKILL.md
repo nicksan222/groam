@@ -30,7 +30,7 @@ Existing domains: `agents`, `auth`, `dashboard`, `discussions`, `group`,
 - Export at most **one** component per TSX file.
 - Stay under **300 lines**. Split extras into sibling kebab-case files.
 - Import primitives from `@groam/ui/components/*`, assistant chrome from
-  `@groam/ui/ai/*`, Convex from `@groam/backend/api`.
+  published `@groam/ai/ui/*` subpaths, Convex from `@groam/backend/api`.
 - Cross-feature imports use `@/features/<other>/...`, not `../../`.
 - Tiny non-UI helpers used by several features go in `apps/web/src/lib/`.
 
@@ -39,5 +39,5 @@ Existing domains: `agents`, `auth`, `dashboard`, `discussions`, `group`,
 | Need | Put it |
 | --- | --- |
 | Shared button/dialog shell | `packages/ui` |
-| Assistant widget / message bubble | `packages/ui/src/ai` |
+| Assistant widget / message bubble | `packages/ai/src/ui` |
 | TanStack route | `apps/web/src/routes` (compose only) |

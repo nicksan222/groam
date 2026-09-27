@@ -1,14 +1,11 @@
 import { Agent } from '@convex-dev/agent';
-import { ideaReviewSchema } from '@groam/ai-contracts/agents/review/schema';
-import type { AssistantScreen } from '@groam/ai-contracts/agents/screen';
-import {
-  issueStandalonePrompt,
-  issueStandaloneScreen
-} from '@groam/ai-contracts/agents/standalone/issue';
+import { ideaReviewSchema } from '@groam/ai/backend/review/schema';
+import { issueStandalonePrompt, issueStandaloneScreen } from '@groam/ai/backend/standalone/issue';
 import {
   reviewStandalonePrompt,
   reviewStandaloneScreen
-} from '@groam/ai-contracts/agents/standalone/review';
+} from '@groam/ai/backend/standalone/review';
+import type { AssistantScreen } from '@groam/ai/runtime/screen';
 import { Output, stepCountIs } from 'ai';
 import { ConvexError } from 'convex/values';
 import { createRegisteredAssistantTools } from '#backend/assistant/tools/index';

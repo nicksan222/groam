@@ -1,7 +1,7 @@
-import { type AssistantScreen, validateAssistantScreen } from '@groam/ai-contracts/agents/screen';
+import { type AssistantScreen, validateAssistantScreen } from '@groam/ai/runtime/screen';
 import { ConvexError } from 'convex/values';
 
-export type { AssistantScreen } from '@groam/ai-contracts/agents/screen';
+export type { AssistantScreen } from '@groam/ai/runtime/screen';
 export {
   assistantAgentValidator,
   assistantScreenValidator

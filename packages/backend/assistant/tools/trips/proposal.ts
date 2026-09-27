@@ -1,8 +1,12 @@
 import { createTool } from '@convex-dev/agent';
-import type { AssistantContextTag } from '@groam/ai-contracts/agents/registry';
-import { AssistantContextTags } from '@groam/ai-contracts/agents/registry';
+import type { AssistantContextTag } from '@groam/ai/runtime/context-tag';
+import { referenceForMutation } from '@groam/ai/runtime/tags';
 import * as z from 'zod/v3';
-import { CURRENCIES, DEFAULT_TRIP_CURRENCY } from '#backend/assistant/tools/trips/shared';
+import {
+  CURRENCIES,
+  DEFAULT_TRIP_CURRENCY,
+  tripDayField
+} from '#backend/assistant/tools/trips/shared';
 import { internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
 
@@ -18,7 +22,7 @@ const tripProposalSchema = z.object({
   destination: z.string().min(1).max(120).optional(),
   name: z.string().min(1).max(100),
   startDate: z.string().max(10).optional(),
-  totalDays: z.number().int().min(1).max(365).optional()
+  totalDays: tripDayField().optional()
 });
 
 type TripProposalInput = z.infer<typeof tripProposalSchema>;
@@ -58,7 +62,7 @@ export function createTripProposalTool(threadId: string, scope: 'discussion' | '
       if (access.tags.length < 12) {
         await toolCtx.runMutation(internal.modules.assistant.model.index.setContextTags, {
           tags: [
-            ...access.tags.map((tag) => AssistantContextTags.referenceForMutation(tag)),
+            ...access.tags.map((tag) => referenceForMutation(tag)),
             { id: tripId, kind: 'trip' as const }
           ],
           scope,

@@ -1,5 +1,5 @@
 import { mockModel } from '@convex-dev/agent';
-import { chatAgentCallSettings } from '@groam/ai-contracts/provider';
+import { chatAgentCallSettings } from '@groam/ai/backend/provider';
 import { makeFunctionReference } from 'convex/server';
 import { ConvexError, v } from 'convex/values';
 import { expect, test } from 'vitest';

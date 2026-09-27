@@ -1,4 +1,4 @@
-import { useSetAgentContext } from '@groam/ui/ai/context/agent-context';
+import { useSetAgentContext } from '@groam/ai/ui/context/agent-context';
 import { Button } from '@groam/ui/components/button';
 import { PageLoading } from '@groam/ui/components/page-loading';
 import { cn } from '@groam/ui/lib/utils';

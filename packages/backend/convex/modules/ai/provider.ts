@@ -1,7 +1,7 @@
 import {
   hasDeploymentAiCredentials,
   resolveAssistantCredentials
-} from '@groam/ai-contracts/providers/keys';
+} from '@groam/ai/backend/providers/keys';
 import {
   type AssistantAgentId,
   type AssistantProviderConfiguration,

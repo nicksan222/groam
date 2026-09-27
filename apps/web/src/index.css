@@ -1,4 +1,5 @@
 @import '@groam/ui/styles';
+@import '@groam/ai/ui/styles';
 @source '../node_modules/@json-render/shadcn/dist/*.js';
 
 .dashboard-panel {

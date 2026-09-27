@@ -1,5 +1,5 @@
+import { useSetAgentContext } from '@groam/ai/ui/context/agent-context';
 import type { Id } from '@groam/backend/data-model';
-import { useSetAgentContext } from '@groam/ui/ai/context/agent-context';
 import { Button } from '@groam/ui/components/button';
 import {
   ConversationTimeline,
