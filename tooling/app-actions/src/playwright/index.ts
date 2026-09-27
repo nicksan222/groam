@@ -40,6 +40,7 @@ export { expectHomeDashboard } from './expect-home-dashboard';
 export { expectIssueStatus, type IssueStatus } from './expect-issue-status';
 export { expectWorkspaceReady } from './expect-workspace-ready';
 export { filterIssuesByStatus, type IssueStatusFilter } from './filter-issues-by-status';
+export { filterTripsByStatus, type TripStatusFilter } from './filter-trips-by-status';
 export { filterWorkspaceIdeas } from './filter-workspace-ideas';
 export { ids, type TestId } from './ids';
 export { inspectIdeaChanges } from './inspect-idea-changes';
