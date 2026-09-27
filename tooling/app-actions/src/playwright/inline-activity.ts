@@ -1,6 +1,7 @@
 import { expect as playwrightExpect } from '@playwright/test';
 import { ids } from './ids';
 import { type UiTarget, ui } from './interaction';
+import { setActivityDayRange } from './set-activity-day-range';
 
 const expect = playwrightExpect.configure({ timeout: 30_000 });
 
@@ -11,8 +12,10 @@ export async function addInlineActivity(
   input: {
     day: number;
     destination?: string;
+    expectDayReset?: boolean;
     notes?: string;
     period: InlineActivityPeriod;
+    range?: { startDay: number; endDay: number };
     title: string;
   }
 ): Promise<void> {
@@ -24,10 +27,27 @@ export async function addInlineActivity(
   const form = day.getByTestId(ids.activityInlineEditor);
   await expect(form).toHaveAttribute('aria-label', `Add an activity to Day ${input.day}`);
   await user.type(form.getByTestId(ids.activityTitle), input.title);
+  if (input.range) {
+    await user.click(form.getByTestId(ids.activityMoreOptions));
+    await setActivityDayRange(user, input.range.startDay, input.range.endDay);
+  }
   if (input.destination) {
     await user.click(form.getByRole('combobox', { name: 'Destination' }));
     await user.click(user.page.getByRole('option', { name: input.destination, exact: true }));
     await expect(form.getByTestId(ids.activityTitle)).toHaveValue(input.title);
+    if (input.expectDayReset) {
+      const days = form.getByTestId(ids.dayRangeDays);
+      await expect(days.locator(`[data-day="${input.day}"]`)).toHaveAttribute(
+        'aria-pressed',
+        'true'
+      );
+      if (input.range && input.range.startDay !== input.day) {
+        await expect(days.locator(`[data-day="${input.range.startDay}"]`)).toHaveAttribute(
+          'aria-pressed',
+          'false'
+        );
+      }
+    }
   }
   if (input.notes) {
     await user.click(form.getByTestId(ids.activityMoreOptions));

@@ -11,6 +11,26 @@ export function destinationsForDay(destinations: Destination[], day: number): De
   );
 }
 
+export function activityDaysForDestination(
+  dayNumber: string,
+  endDayNumber: string,
+  destination: Destination,
+  selectedDay: number
+): { dayNumber: string; endDayNumber: string } {
+  const start = Number(dayNumber);
+  const end = Number(endDayNumber);
+  if (
+    !Number.isFinite(start) ||
+    !Number.isFinite(end) ||
+    (destination.startDay !== null && start < destination.startDay) ||
+    (destination.endDay !== null && end > destination.endDay)
+  ) {
+    const day = String(selectedDay);
+    return { dayNumber: day, endDayNumber: day };
+  }
+  return { dayNumber, endDayNumber };
+}
+
 export function editorDayDestinations(day: PlannerDay, destinations: Destination[]) {
   const visible = destinations.filter(
     (stop) =>

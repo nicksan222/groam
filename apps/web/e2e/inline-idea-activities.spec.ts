@@ -66,7 +66,9 @@ test('switching a shared day’s destination keeps the inline activity draft', a
   await addInlineActivity(page, {
     day: 2,
     destination: 'Porto, Portugal',
+    expectDayReset: true,
     period: 'afternoon',
+    range: { startDay: 1, endDay: 2 },
     title: 'Riverside picnic'
   });
   await expect(

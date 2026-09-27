@@ -9,6 +9,7 @@ import {
 import { Spinner } from '@groam/ui/components/spinner';
 import { Trash2, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { activityDaysForDestination } from '@/features/trips/hooks/editor-day-destinations';
 import {
   activityFormForEdit,
   canSubmitTripActivity
@@ -112,7 +113,20 @@ export function EditorActivityForm({
           </label>
           <Select
             disabled={pending}
-            onValueChange={(id) => onChooseDestination(id as Destination['id'])}
+            onValueChange={(id) => {
+              const next = destinations.find((stop) => stop.id === id);
+              if (next) {
+                editor.patch(
+                  activityDaysForDestination(
+                    editor.dayNumber,
+                    editor.endDayNumber,
+                    next,
+                    selection.day
+                  )
+                );
+                onChooseDestination(next.id);
+              }
+            }}
             value={destination.id}
           >
             <SelectTrigger aria-label="Destination" id={`activity-destination-${selection.day}`}>
