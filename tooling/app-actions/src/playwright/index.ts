@@ -135,6 +135,7 @@ export { signOut } from './sign-out';
 export { signUp } from './sign-up';
 export { startIdeaFromIssue } from './start-idea-from-issue';
 export { startItineraryIdea } from './start-itinerary-idea';
+export { startWorkspaceIdea } from './start-workspace-idea';
 export { submitIdeaForReview } from './submit-idea-for-review';
 export { type SwitchGroupInput, switchGroup } from './switch-group';
 export { transferPdf } from './transfer-pdf';
