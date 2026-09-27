@@ -25,6 +25,7 @@ export { type AddStopInput, addStop } from './add-stop';
 export { appHref } from './app-href';
 export { approveAndApplyIdea } from './approve-and-apply-idea';
 export { closeGroamAssistant } from './close-groam-assistant';
+export { closeIdea } from './close-idea';
 export {
   type CompleteOnboardingInput,
   type CompleteOnboardingResult,
