@@ -9,7 +9,7 @@ export { addDestinationToIdea } from './actions/add-destination-to-idea';
 export { addIdea } from './actions/add-idea';
 export { addIssueComment } from './actions/add-issue-comment';
 export { applyIdea } from './actions/apply-idea';
-export { approveIdea } from './actions/approve-idea';
+export { approveIdea, revokeIdeaApproval } from './actions/approve-idea';
 export { archiveTrip } from './actions/archive-trip';
 export { assignIssue } from './actions/assign-issue';
 export { createIssue } from './actions/create-issue';
