@@ -1,6 +1,6 @@
 import type { LanguageModelV4 } from '@ai-sdk/provider';
-import type { AssistantProviderEnvironment } from '@groam/ai-contracts/provider';
-import { type AssistantProviderId, assistantProviderIds } from '@groam/ai-contracts/provider';
+import type { AssistantProviderEnvironment } from '@groam/ai/backend/provider';
+import { type AssistantProviderId, assistantProviderIds } from '@groam/ai/backend/provider';
 import type { ToolSet } from 'ai';
 
 export type AssistantProviderConfiguration = {

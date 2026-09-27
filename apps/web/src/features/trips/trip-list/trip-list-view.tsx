@@ -1,4 +1,4 @@
-import { useSetAgentContext } from '@groam/ui/ai/context/agent-context';
+import { useSetAgentContext } from '@groam/ai/ui/context/agent-context';
 import { Button } from '@groam/ui/components/button';
 import { EmptyScreen } from '@groam/ui/components/empty-screen';
 import { ListFilterSection, ListFilterToolbar } from '@groam/ui/components/list-filter-toolbar';

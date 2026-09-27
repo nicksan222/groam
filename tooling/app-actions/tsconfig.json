@@ -2,7 +2,7 @@
   "extends": "@groam/typescript-config/base.json",
   "compilerOptions": {
     "lib": ["ES2023", "DOM"],
-    "paths": { "#src/*": ["./src/*"] },
+    "paths": { "#ai/*": ["../../packages/ai/src/*"], "#src/*": ["./src/*"] },
     "types": ["node"]
   },
   "include": ["src"]

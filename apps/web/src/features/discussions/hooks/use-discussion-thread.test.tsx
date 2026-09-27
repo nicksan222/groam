@@ -32,11 +32,11 @@ vi.mock('convex/react', () => ({
   useQuery: () => deps.attachments
 }));
 
-vi.mock('@groam/ui/ai/context/agent-context', () => ({
+vi.mock('@groam/ai/ui/context/agent-context', () => ({
   useCurrentAgentContext: () => deps.context
 }));
 
-vi.mock('@groam/ui/ai/context/agent-screen-context', () => ({
+vi.mock('@groam/ai/ui/context/agent-screen-context', () => ({
   serializeAgentScreenContext: (context: unknown) => context
 }));
 

@@ -15,7 +15,7 @@ const agent = vi.hoisted(() => ({
 
 vi.mock('@/features/trips/hooks/use-trips', () => trips);
 vi.mock('@/features/workspace/workspace-shell/workspace-state', () => workspace);
-vi.mock('@groam/ui/ai/context/agent-context', () => agent);
+vi.mock('@groam/ai/ui/context/agent-context', () => agent);
 
 beforeEach(() => {
   vi.clearAllMocks();

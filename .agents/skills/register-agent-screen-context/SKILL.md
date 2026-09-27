@@ -9,7 +9,7 @@ description: >-
 # Register agent screen context
 
 Every product page must call `useSetAgentContext` from
-`@groam/ui/ai/context/agent-context`. A route coverage test fails when a new
+`@groam/ai/ui/context/agent-context`. A route coverage test fails when a new
 page omits it.
 
 Call it in the **feature view**, not the route file.
@@ -17,7 +17,7 @@ Call it in the **feature view**, not the route file.
 ## Shape
 
 ```ts
-import { useSetAgentContext } from '@groam/ui/ai/context/agent-context';
+import { useSetAgentContext } from '@groam/ai/ui/context/agent-context';
 
 useSetAgentContext({
   capabilities: [], // informational; not a security filter
@@ -53,7 +53,7 @@ instead of copying.
 In tests, mock the hook:
 
 ```ts
-vi.mock('@groam/ui/ai/context/agent-context', () => ({
+vi.mock('@groam/ai/ui/context/agent-context', () => ({
   useSetAgentContext: () => undefined
 }));
 ```

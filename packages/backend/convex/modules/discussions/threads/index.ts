@@ -7,12 +7,8 @@ import {
   updateThreadMetadata,
   type vStreamArgs
 } from '@convex-dev/agent';
-import {
-  assistantAgents,
-  assistantThreadSummary,
-  type ChatAgentId,
-  mentionedAssistantAgent
-} from '@groam/ai-contracts/agents/registry';
+import { assistantAgents, type ChatAgentId, mentionedAssistantAgent } from '@groam/ai/agents';
+import { assistantThreadSummary } from '@groam/ai/runtime/thread-summary';
 import type { PaginationOptions } from 'convex/server';
 import { ConvexError, type Infer } from 'convex/values';
 import { AgentRuns } from '#convex/modules/assistant/runs/index';
