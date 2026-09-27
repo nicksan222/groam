@@ -1,5 +1,6 @@
-import { AiAssistantWidget } from '@groam/ui/ai/chat/ai-assistant-widget';
-import { AssistantErrorBoundary } from '@groam/ui/ai/shared/assistant-error-boundary';
+import { AiAssistantWidget } from '@groam/ai/ui/chat/ai-assistant-widget';
+import { AssistantErrorBoundary } from '@groam/ai/ui/shared/assistant-error-boundary';
+import { api } from '@groam/backend/api';
 import { useLocation } from '@tanstack/react-router';
 import { isWorkspaceAssistantVisible } from './workspace-assistant-visibility';
 
@@ -9,7 +10,7 @@ export function WorkspaceAssistantWidget({ organizationId }: { organizationId: s
 
   return (
     <AssistantErrorBoundary resetKey={organizationId}>
-      <AiAssistantWidget key={organizationId} />
+      <AiAssistantWidget api={api} key={organizationId} />
     </AssistantErrorBoundary>
   );
 }

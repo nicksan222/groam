@@ -1,5 +1,5 @@
-import { isAssistantAgentId } from '@groam/ai-contracts/agents/registry';
-import { useSetAgentContext } from '@groam/ui/ai/context/agent-context';
+import { isAssistantAgentId } from '@groam/ai/agents';
+import { useSetAgentContext } from '@groam/ai/ui/context/agent-context';
 import { Button } from '@groam/ui/components/button';
 import { EmptyScreen } from '@groam/ui/components/empty-screen';
 import { PageLoading } from '@groam/ui/components/page-loading';
