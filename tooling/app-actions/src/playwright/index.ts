@@ -116,6 +116,7 @@ export { type ReviewIdeaChangeInput, reviewIdeaChange } from './review-idea-chan
 export { saveSevenDayRange } from './save-seven-day-range';
 export { type SaveTravelInput, saveTravel } from './save-travel';
 export { searchIdeas } from './search-ideas';
+export { searchIssues } from './search-issues';
 export { searchTrips } from './search-trips';
 export { selectSystemTheme } from './select-system-theme';
 export { sendChatMessage } from './send-chat-message';
