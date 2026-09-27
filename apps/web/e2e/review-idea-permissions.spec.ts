@@ -3,11 +3,13 @@ import {
   addActivity,
   addIdea,
   addStop,
+  approveIdea,
   createTrip,
   ids,
   inviteGroupMember,
   mockDestinationSearch,
   openAppPath,
+  openIdeaComparison,
   openIdeaFromList,
   openIdeaItinerary,
   openTripSection,
@@ -53,6 +55,9 @@ test('reviewers can inspect and approve an idea but cannot edit its working copy
     await expect(reviewer.getByRole('region', { name: 'Itinerary editor' })).toHaveCount(0);
     await expect(reviewer.getByRole('button', { name: 'Add a plan' })).toHaveCount(0);
     await expect(reviewer.getByRole('button', { name: 'Edit Riverside walk' })).toHaveCount(0);
+    await openIdeaComparison(reviewer);
+    await approveIdea(reviewer);
+    await expect(reviewer.getByTestId(ids.approveIdea).first()).toHaveText(/Remove approval/u);
 
     await openIdeaFromList(page, ideaName);
     await openIdeaItinerary(page);
