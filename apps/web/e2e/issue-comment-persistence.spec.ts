@@ -4,8 +4,8 @@ import {
   createPlaywrightActions,
   createTrip,
   ids,
-  openAppPath,
   openIssueFromInbox,
+  openIssueFromTrip,
   signIn,
   uniqueSuffix
 } from '@groam/app-actions/playwright';
@@ -22,7 +22,7 @@ test('issue comments persist across trip and workspace views', async ({ page }) 
   await createPlaywrightActions().addIssueComment(page, { content: comment, issueId });
   await expect(by(page, ids.issueComment)).toBeEmpty();
 
-  await openAppPath(page, `issues/${issueId}`);
+  await openIssueFromTrip(page, tripId, title);
   await expect(page.getByText(comment, { exact: true })).toBeVisible();
   await openIssueFromInbox(page, title);
   await expect(page.getByText(comment, { exact: true })).toBeVisible();

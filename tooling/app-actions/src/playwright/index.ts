@@ -79,6 +79,7 @@ export { openIdeaComparison } from './open-idea-comparison';
 export { openIdeaFromList } from './open-idea-from-list';
 export { openIdeaItinerary } from './open-idea-itinerary';
 export { openIssueFromInbox } from './open-issue-from-inbox';
+export { openIssueFromTrip } from './open-issue-from-trip';
 export { type OpenIssueWithStatusInput, openIssueWithStatus } from './open-issue-with-status';
 export { openIssuesInbox } from './open-issues-inbox';
 export { openItinerary } from './open-itinerary';
