@@ -23,19 +23,24 @@ Mention is derived as `` `@${id}` ``. Do not set it by hand.
 
 ## Steps
 
-1. Create `packages/ai/src/agents/<id>/` with `definition.ts` (identity via
+1. Extend `AssistantAgentId` in `packages/ai/src/agents/ids.ts` with the new
+   id. This explicitly declared type breaks a circular dependency between
+   the agent catalog and tool specs; it is **not** derived from the catalog.
+   Update `AgentAssignableTarget` there only if adding a new kind of
+   assignable target (not for another agent using `issue` or `proposal`).
+2. Create `packages/ai/src/agents/<id>/` with `definition.ts` (identity via
    `defineChatAgent` / `defineStandaloneAgent`, capabilities derived from
    tool specs, exposure block with mention / assignable targets / serving
    routes) and `ui.ts` (presentation surface).
-2. Add one line for it on `assistantAgents` in
-   `packages/ai/src/agents/catalog.ts`. Id lists, id types, and guards derive
-   from that map — there is no separate id list to update. Put
-   worker-specific rules in `policies`, not in `backend/instructions/`.
-3. Give it tools by naming its id in the `agents` field of the relevant
+3. Add one line for it on `assistantAgents` in
+   `packages/ai/src/agents/catalog.ts`. The catalog must satisfy the declared
+   id roster; put worker-specific rules in `policies`, not in
+   `backend/instructions/`.
+4. Give it tools by naming its id in the `agents` field of the relevant
    spec entries in `packages/ai/src/tools/specs.ts`; capabilities derive
    from there via `capabilitiesForAgent`. A brand-new tool is a different
    skill (`add-agent-capability`).
-4. Colocate a unit test next to `definition.ts` that asserts
+5. Colocate a unit test next to `definition.ts` that asserts
    mention/surface/policies without calling a model.
 
 ## Templates

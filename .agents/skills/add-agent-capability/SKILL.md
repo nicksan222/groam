@@ -23,8 +23,9 @@ do not add a second tool-name map, event kind, or `onStepFinish` branch.
    allowlists, and card lookup all derive from this entry — no other list
    to update.
 2. Append one binding row to `assistantCapabilityBindings` in
-   `packages/backend/assistant/tools/kinds/index.ts`: spread the spec and
-   add only the Convex-bound `create` closure. A compile-time check fails
+   `packages/backend/assistant/tools/kinds/index.ts`: import
+   `assistantToolSpecs` from `@groam/ai/tools/specs`, spread the entry by id,
+   and add only the Convex-bound `create` closure. A compile-time check fails
    the build until every spec has exactly one binding.
 3. Implement the Convex write behind an existing domain helper. Reauthorize on
    every write. Do not add a parallel executor.
@@ -33,7 +34,7 @@ do not add a second tool-name map, event kind, or `onStepFinish` branch.
 
 ```ts
 defineCapability({
-  ...proposeThingSpec,
+  ...assistantToolSpecs['trip.thing.propose'],
   create: (runtime) => createProposeThingTool(runtime)
 }),
 ```
