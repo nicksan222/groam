@@ -18,3 +18,7 @@ export const approveIdeaAction: ApproveIdeaAction<UiTarget> = async (target, inp
 export function approveIdea(target: UiTarget): Promise<void> {
   return approveIdeaAction(target, {} satisfies ApproveIdeaInput);
 }
+
+export function revokeIdeaApproval(target: UiTarget): Promise<void> {
+  return approveIdeaAction(target, { approved: false });
+}
