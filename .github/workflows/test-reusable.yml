@@ -180,9 +180,15 @@ jobs:
           targets: ${{ matrix.target }}
 
       - name: Cache Rust dependencies and build outputs
-        uses: Swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c # v2
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
-          workspaces: apps/desktop/src-tauri -> target
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            apps/desktop/src-tauri/target
+          key: rust-${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('apps/desktop/src-tauri/Cargo.lock') }}-${{ github.sha }}
+          restore-keys: |
+            rust-${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('apps/desktop/src-tauri/Cargo.lock') }}-
 
       - name: Install Linux desktop dependencies
         if: matrix.platform == 'linux'
