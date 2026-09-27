@@ -2,7 +2,7 @@ import { updateThreadMetadata } from '@convex-dev/agent';
 import {
   assistantThreadSummary,
   parseAssistantThreadSummary
-} from '@groam/ai-contracts/agents/registry';
+} from '@groam/ai/runtime/thread-summary';
 import { ConvexError, v } from 'convex/values';
 import { AgentRuns } from '#convex/modules/assistant/runs/index';
 import { internalWorkspaceQuery, requireWorkspace } from '#convex/modules/auth/workspace';

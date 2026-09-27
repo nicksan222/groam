@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "dependencies": {
     "@convex-dev/agent": "^0.7.1",
-    "@groam/ai-contracts": "workspace:*",
+    "@groam/ai": "workspace:*",
     "@groam/auth": "workspace:*",
     "@groam/backend": "workspace:*",
     "@groam/brand": "workspace:*",

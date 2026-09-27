@@ -3,15 +3,9 @@
   "version": "0.0.0",
   "dependencies": {
     "@base-ui/react": "^1.8.0",
-    "@convex-dev/agent": "^0.7.1",
     "@fontsource-variable/google-sans-flex": "^5.3.1",
     "@fontsource/google-sans-code": "^5.3.0",
-    "@groam/ai-contracts": "workspace:*",
-    "@groam/backend": "workspace:*",
     "@groam/brand": "workspace:*",
-    "@json-render/core": "0.20.0",
-    "@json-render/react": "0.20.0",
-    "@json-render/shadcn": "0.20.0",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-dialog": "^1.1.15",
@@ -62,15 +56,6 @@
     "vitest": "^5.0.0"
   },
   "exports": {
-    "./ai/chat/ai-assistant-widget": "./src/ai/chat/ai-assistant-widget.tsx",
-    "./ai/chat/assistant-chat-message": "./src/ai/chat/assistant-chat-message.tsx",
-    "./ai/context/agent-context": "./src/ai/context/agent-context.tsx",
-    "./ai/context/agent-screen-context": "./src/ai/context/agent-screen-context.ts",
-    "./ai/hooks/use-assistant": "./src/ai/hooks/use-assistant.ts",
-    "./ai/hooks/use-assistant-chats": "./src/ai/hooks/use-assistant-chats.ts",
-    "./ai/runs/agent-retry-from-zero": "./src/ai/runs/agent-retry-from-zero.tsx",
-    "./ai/runs/agent-run-banner": "./src/ai/runs/agent-run-banner.tsx",
-    "./ai/shared/assistant-error-boundary": "./src/ai/shared/assistant-error-boundary.tsx",
     "./components/alert-dialog": "./src/components/alert-dialog.tsx",
     "./components/attachment": "./src/components/attachment.tsx",
     "./components/auth-card": "./src/components/auth-card.tsx",
@@ -191,8 +176,6 @@
     "src"
   ],
   "imports": {
-    "#src/ai/form/inputs": "./src/ai/form/inputs/index.ts",
-    "#src/ai/messages": "./src/ai/messages/index.ts",
     "#src/*": "./src/*.ts",
     "#tsx/*": "./src/*.tsx"
   },

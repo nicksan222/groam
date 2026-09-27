@@ -3,7 +3,7 @@ import {
   type AssistantProviderEnvironment,
   configuredValue,
   requireApiKey
-} from '@groam/ai-contracts/provider';
+} from '@groam/ai/backend/provider';
 import { compatibleProviderFetch } from '#backend/ai/providers/compatible-fetch';
 import {
   type AssistantProviderConfiguration,

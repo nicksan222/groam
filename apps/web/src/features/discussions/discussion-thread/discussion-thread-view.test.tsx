@@ -21,11 +21,11 @@ const state = vi.hoisted(() => ({
   }
 }));
 
-vi.mock('@groam/ui/ai/context/agent-context', () => ({
+vi.mock('@groam/ai/ui/context/agent-context', () => ({
   useSetAgentContext: vi.fn()
 }));
 
-vi.mock('@groam/ui/ai/chat/assistant-chat-message', () => ({
+vi.mock('@groam/ai/ui/chat/assistant-chat-message', () => ({
   AssistantChatMessage: ({ message }: { message: { text: string } }) => <div>{message.text}</div>
 }));
 

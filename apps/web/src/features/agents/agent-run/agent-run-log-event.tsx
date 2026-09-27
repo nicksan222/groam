@@ -1,6 +1,6 @@
-import { agentRunEventLabels } from '@groam/ai-contracts/agents/runs/events';
-import type { AgentRunEventKind } from '@groam/ai-contracts/agents/runs/ids';
-import { agentRunTime } from '@groam/ai-contracts/agents/runs/time';
+import { agentRunEventLabels } from '@groam/ai/backend/runs/events';
+import type { AgentRunEventKind } from '@groam/ai/backend/runs/ids';
+import { agentRunTime } from '@groam/ai/backend/runs/time';
 import type { Id } from '@groam/backend/data-model';
 import Timeline from '@groam/ui/components/timeline';
 import { AlertCircle, Brain, FileText, Info, Wrench } from 'lucide-react';

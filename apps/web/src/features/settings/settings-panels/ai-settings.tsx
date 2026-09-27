@@ -1,4 +1,4 @@
-import { aiKeyProviders } from '@groam/ai-contracts/providers/keys';
+import { aiKeyProviders } from '@groam/ai/backend/providers/keys';
 import { Button } from '@groam/ui/components/button';
 import { FormFeedback } from '@groam/ui/components/form-feedback';
 import { FormField } from '@groam/ui/components/form-field';

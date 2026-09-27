@@ -20,7 +20,7 @@ type PackageJson = {
 };
 
 const packageManifestPaths = [
-  'packages/ai-contracts/package.json',
+  'packages/ai/package.json',
   'packages/auth/package.json',
   'packages/backend/package.json',
   'packages/env/package.json',
@@ -53,7 +53,7 @@ function findMissingExportTargets(
 }
 
 const uiPackage = readPackageExports('packages/ui/package.json');
-const aiPackage = readPackageExports('packages/ai-contracts/package.json');
+const aiPackage = readPackageExports('packages/ai/package.json');
 const webPackage = readPackageExports('apps/web/package.json');
 const uiExportSubpaths = uiExportSubpathsFromMap(uiPackage.exports ?? {});
 const aiExportPatterns = packageExportPatternsFromMap(aiPackage.exports ?? {});
@@ -175,7 +175,7 @@ const packageBoundaryFindings = packageManifestPaths.flatMap((path) =>
 );
 if (packageBoundaryFindings.length > 0) {
   console.error(
-    `Package dependencies must follow packages/README.md:\n${packageBoundaryFindings
+    `Package dependencies must follow tooling/quality/package-boundaries.ts:\n${packageBoundaryFindings
       .map((finding) => `  - ${finding}`)
       .join('\n')}`
   );
@@ -185,10 +185,10 @@ if (packageBoundaryFindings.length > 0) {
 for (const missing of findMissingExportTargets(uiPackage.exports ?? {}, 'packages/ui')) {
   findings.push({ category: 'export-targets', location: `packages/ui/package.json ${missing}` });
 }
-for (const missing of findMissingExportTargets(aiPackage.exports ?? {}, 'packages/ai-contracts')) {
+for (const missing of findMissingExportTargets(aiPackage.exports ?? {}, 'packages/ai')) {
   findings.push({
     category: 'export-targets',
-    location: `packages/ai-contracts/package.json ${missing}`
+    location: `packages/ai/package.json ${missing}`
   });
 }
 
@@ -213,7 +213,7 @@ for (const finding of findings) {
 }
 
 const messages: Record<ConventionFinding['category'], string> = {
-  'ai-imports': 'Import AI contracts through an exported @groam/ai-contracts/* entrypoint',
+  'ai-imports': 'Import AI contracts through an exported @groam/ai/* entrypoint',
   'component-files':
     'Feature TSX files must export at most one component — split extra components into their own kebab-case files',
   directories: 'Folder names must use kebab-case',

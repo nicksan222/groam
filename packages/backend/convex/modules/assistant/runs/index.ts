@@ -4,12 +4,12 @@ import {
   isAssistantAgentId,
   isChatAgent,
   isIssueAssignableAgentId
-} from '@groam/ai-contracts/agents/registry';
+} from '@groam/ai/agents';
 import {
   countActiveAgentRuns,
   presentLatestAgentRun,
   rosterStatusFromRuns
-} from '@groam/ai-contracts/agents/runs/roster';
+} from '@groam/ai/backend/runs/roster';
 import type { PaginationOptions } from 'convex/server';
 import { ConvexError } from 'convex/values';
 import type {

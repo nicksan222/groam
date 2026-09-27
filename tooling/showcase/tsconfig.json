@@ -5,6 +5,7 @@
     "lib": ["ES2022", "DOM"],
     "types": ["node"],
     "paths": {
+      "#ai/*": ["../../packages/ai/src/*"],
       "#showcase": ["./video.ts"],
       "#src/*": ["./src/*.ts"],
       "#video/*": ["./src/video/*.tsx"]

@@ -1,4 +1,4 @@
-import { assistantAgents } from '@groam/ai-contracts/agents/registry';
+import { assistantAgents } from '@groam/ai/agents';
 import { api } from '@groam/backend/api';
 import type { Id } from '@groam/backend/data-model';
 import { toast } from '@groam/ui/components/toast';

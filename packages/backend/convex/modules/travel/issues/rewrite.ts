@@ -1,4 +1,4 @@
-import { assistantAgents } from '@groam/ai-contracts/agents/registry';
+import { assistantAgents } from '@groam/ai/agents';
 import { v } from 'convex/values';
 import { internalMutation } from '#convex-generated/server';
 
