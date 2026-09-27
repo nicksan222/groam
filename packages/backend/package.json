@@ -13,7 +13,7 @@
     "@convex-dev/migrations": "^0.3.6",
     "@convex-dev/rate-limiter": "^0.3.2",
     "@convex-dev/static-hosting": "0.2.1",
-    "@groam/ai-contracts": "workspace:*",
+    "@groam/ai": "workspace:*",
     "ai": "^7.0.93",
     "better-auth": "1.6.26",
     "convex": "^1.45.0",
@@ -47,8 +47,7 @@
       "default": "./convex/_generated/api.js"
     },
     "./convex/_generated/dataModel": {
-      "types": "./convex/_generated/dataModel.d.ts",
-      "default": "./convex/_generated/dataModel.js"
+      "types": "./convex/_generated/dataModel.d.ts"
     }
   },
   "imports": {

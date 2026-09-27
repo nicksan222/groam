@@ -3,7 +3,7 @@ import {
   aiKeyProvider,
   hasDeploymentAiCredentials,
   resolveAssistantCredentials
-} from '@groam/ai-contracts/providers/keys';
+} from '@groam/ai/backend/providers/keys';
 import { ConvexError, v } from 'convex/values';
 import { normalizeCompatibleBaseUrl } from '#convex/modules/ai/hosts';
 import { aiKeyCredentialsValidator } from '#convex/modules/ai/validators';

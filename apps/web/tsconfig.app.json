@@ -6,7 +6,7 @@
     "noUncheckedSideEffectImports": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "paths": { "@/*": ["./src/*"] },
+    "paths": { "#ai/*": ["../../packages/ai/src/*"], "@/*": ["./src/*"] },
     "target": "ES2020",
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "types": ["node"]

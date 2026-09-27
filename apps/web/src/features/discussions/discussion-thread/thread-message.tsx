@@ -1,4 +1,4 @@
-import { AssistantChatMessage } from '@groam/ui/ai/chat/assistant-chat-message';
+import { AssistantChatMessage } from '@groam/ai/ui/chat/assistant-chat-message';
 import { Button } from '@groam/ui/components/button';
 import { ChatMessage } from '@groam/ui/components/chat-message';
 import { Textarea } from '@groam/ui/components/textarea';

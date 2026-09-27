@@ -6,7 +6,7 @@ const location = vi.hoisted(() => ({ pathname: '/' }));
 const widget = vi.hoisted(() => vi.fn());
 
 vi.mock('@tanstack/react-router', () => ({ useLocation: () => location }));
-vi.mock('@groam/ui/ai/chat/ai-assistant-widget', () => ({
+vi.mock('@groam/ai/ui/chat/ai-assistant-widget', () => ({
   AiAssistantWidget: () => {
     widget();
     return <aside aria-label="Groam AI" />;
