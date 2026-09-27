@@ -1,4 +1,4 @@
-import { useSetAgentContext } from '@groam/ui/ai/context/agent-context';
+import { useSetAgentContext } from '@groam/ai/ui/context/agent-context';
 import { useTrips, useWorkspaceTripProposals } from '@/features/trips/hooks/use-trips';
 import { useWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
 import { useReadyValue } from '@/lib/use-ready-value';

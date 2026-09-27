@@ -1,6 +1,6 @@
-import { isAssistantAgentId } from '@groam/ai-contracts/agents/registry';
+import { isAssistantAgentId } from '@groam/ai/agents';
+import { useSetAgentContext } from '@groam/ai/ui/context/agent-context';
 import type { Id } from '@groam/backend/data-model';
-import { useSetAgentContext } from '@groam/ui/ai/context/agent-context';
 import { Button } from '@groam/ui/components/button';
 import { EmptyScreen } from '@groam/ui/components/empty-screen';
 import { PageCrumbNav } from '@groam/ui/components/page-crumb-nav';

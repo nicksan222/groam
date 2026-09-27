@@ -1,4 +1,4 @@
-import type { AiKeyProviderId } from '@groam/ai-contracts/providers/keys';
+import type { AiKeyProviderId } from '@groam/ai/backend/providers/keys';
 import type { AiProviderAuthStrategy } from '@/types/ai-provider-auth';
 import { OpenRouterPkceStrategy } from './openrouter-pkce-strategy';
 

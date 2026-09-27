@@ -15,7 +15,7 @@ must be kebab-case.
 
 | You are in | Use |
 | --- | --- |
-| `apps/web` | `@/features/...`, `@/lib/...`, `@groam/ui/...`, `@groam/ai-contracts/...`, `@groam/backend/...`, `@groam/env/...` |
+| `apps/web` | `@/features/...`, `@/lib/...`, `@groam/ui/...`, `@groam/ai/...`, `@groam/backend/...`, `@groam/env/...` |
 | `packages/ui` | `#tsx/*` (TSX), `#src/*` (TS) |
 | `packages/backend/convex` | `#convex/...`, `#convex-generated/...` |
 | `packages/backend` runtime helpers | `#backend/...` |
@@ -28,7 +28,7 @@ Apps never import `#src/*`, `#tsx/*`, `#backend/*`, or `#convex/*` — those are
 
 ```ts
 import { Button } from '@groam/ui/components/button';
-import { useSetAgentContext } from '@groam/ui/ai/context/agent-context';
+import { useSetAgentContext } from '@groam/ai/ui/context/agent-context';
 import { api } from '@groam/backend/api';
 import type { Id } from '@groam/backend/data-model';
 ```

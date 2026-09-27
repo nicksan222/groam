@@ -9,24 +9,24 @@ description: >-
 # Add a JSON-render form component
 
 This catalog is what the assistant targets when it builds interactive forms.
-It is **not** chat UI (`packages/ui/src/ai`) and **not** product views.
+It is **not** chat UI (`packages/ai/src/ui`) and **not** product views.
 
 ## Steps
 
 1. Add the id to `assistantFormComponentIds` in
-   `packages/ai-contracts/src/output/ids.ts` (PascalCase, matching `@json-render/shadcn`
+   `packages/ai/src/runtime/output/ids.ts` (PascalCase, matching `@json-render/shadcn`
    catalog keys when wrapping a stock component).
-2. Create `packages/ai-contracts/src/output/kinds/<kebab>.ts` extending
+2. Create `packages/ai/src/runtime/output/kinds/<kebab>.ts` extending
    `AssistantFormComponentKind`.
 3. `AssistantFormComponentKind.subscribe(new FooFormComponent())` in
-   `packages/ai-contracts/src/output/kinds/index.ts`. The file already asserts every id
+   `packages/ai/src/runtime/output/kinds/index.ts`. The file already asserts every id
    is subscribed.
-4. Import the catalog through `@groam/ai-contracts/output`. Prompt instructions should
+4. Import the catalog through `@groam/ai/runtime/output`. Prompt instructions should
    use the re-exported component ids, not a parallel list.
 
 ```ts
 import { shadcnComponentDefinitions } from '@json-render/shadcn/catalog';
-import { AssistantFormComponentKind } from '#ai-contracts/output/kind';
+import { AssistantFormComponentKind } from '#ai/runtime/output/kind';
 
 export class HeadingFormComponent extends AssistantFormComponentKind {
   constructor() {

@@ -1,5 +1,5 @@
+import { type AgentScreenContext, useSetAgentContext } from '@groam/ai/ui/context/agent-context';
 import type { Id } from '@groam/backend/data-model';
-import { type AgentScreenContext, useSetAgentContext } from '@groam/ui/ai/context/agent-context';
 import type { TripSection } from '@/features/trips/trip-sections';
 import { useTripTravelers } from './use-trip-travelers';
 import { useTripVersions } from './use-trip-versions';

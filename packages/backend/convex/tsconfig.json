@@ -21,6 +21,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "paths": {
+      "#ai/*": ["../../ai/src/*"],
       "#convex/*": ["./*"],
       "#convex-generated/*": ["./_generated/*"]
     }
