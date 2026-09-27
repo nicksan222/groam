@@ -1,4 +1,4 @@
-import { type AgentScreenContext, useSetAgentContext } from '@groam/ui/ai/context/agent-context';
+import { type AgentScreenContext, useSetAgentContext } from '@groam/ai/ui/context/agent-context';
 import type { IssueDetailAgentContextInput } from '@/types/issues';
 import type { WorkspaceIssue } from './use-workspace-issues';
 

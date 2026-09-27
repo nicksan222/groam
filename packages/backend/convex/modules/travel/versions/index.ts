@@ -1,4 +1,4 @@
-import { assistantAgents } from '@groam/ai-contracts/agents/registry';
+import { assistantAgents } from '@groam/ai/agents';
 import type { PaginationOptions } from 'convex/server';
 import { ConvexError } from 'convex/values';
 import { AgentRuns } from '#convex/modules/assistant/runs/index';

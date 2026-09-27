@@ -1,4 +1,4 @@
-import { RUN_STATUS_LABEL } from '@groam/ai-contracts/agents/runs/ids';
+import { RUN_STATUS_LABEL } from '@groam/ai/backend/runs/ids';
 import { Badge, type BadgeVariant } from '@groam/ui/components/badge';
 import { cn } from '@groam/ui/lib/utils';
 

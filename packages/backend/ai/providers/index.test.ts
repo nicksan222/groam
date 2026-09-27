@@ -1,4 +1,4 @@
-import { resolveAssistantEnvironment } from '@groam/ai-contracts/providers/keys';
+import { resolveAssistantEnvironment } from '@groam/ai/backend/providers/keys';
 import { expect, test } from 'vitest';
 import { type AssistantProviderEnvironment, configuredAssistantProvider } from './index';
 

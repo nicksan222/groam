@@ -2,7 +2,7 @@ import {
   canRerunIssueAgent,
   canRetryAgentRunFromZero,
   isActiveAgentRun
-} from '@groam/ai-contracts/agents/runs/roster';
+} from '@groam/ai/backend/runs/roster';
 import { Button } from '@groam/ui/components/button';
 import { Spinner } from '@groam/ui/components/spinner';
 import { toast } from '@groam/ui/components/toast';

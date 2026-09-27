@@ -1,4 +1,4 @@
-import { AgentContextProvider } from '@groam/ui/ai/context/agent-context';
+import { AgentContextProvider } from '@groam/ai/ui/context/agent-context';
 import { createRootRoute, Outlet } from '@tanstack/react-router';
 import { RouteError } from '@/features/errors/route-error/route-error';
 import { RouteNotFound } from '@/features/errors/route-error/route-not-found';

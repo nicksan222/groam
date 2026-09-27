@@ -9,7 +9,7 @@ description: >-
 # Split a feature TSX file
 
 `bun run lint:conventions` owns **file** size (`MAX_COMPONENT_FILE_LINES` =
-300) for `apps/web` and `packages/ui/src/ai` TSX. Biome owns **function** size
+300) for `apps/web` and `packages/ai/src/ui` TSX. Biome owns **function** size
 (250 lines). Do not add a third limit.
 
 ## Rules

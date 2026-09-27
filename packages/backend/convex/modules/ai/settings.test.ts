@@ -1,7 +1,7 @@
 import {
   hasDeploymentAiCredentials,
   resolveAssistantEnvironment
-} from '@groam/ai-contracts/providers/keys';
+} from '@groam/ai/backend/providers/keys';
 import { expect, test } from 'vitest';
 import { readAiSettings } from '#convex/modules/ai/settings';
 import { api, internal } from '#convex-generated/api';

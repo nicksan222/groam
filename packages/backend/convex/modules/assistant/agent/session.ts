@@ -1,15 +1,11 @@
 import { Agent, updateThreadMetadata } from '@convex-dev/agent';
+import { type AssistantAgentId, isDefaultAssistantChatTitle } from '@groam/ai/agents';
+import { chatAgentCallSettings } from '@groam/ai/backend/provider';
+import { type AssistantScreen, assistantConversationContextKey } from '@groam/ai/runtime/screen';
 import {
-  type AssistantAgentId,
   assistantThreadSummary,
-  isDefaultAssistantChatTitle,
   parseAssistantThreadSummary
-} from '@groam/ai-contracts/agents/registry';
-import {
-  type AssistantScreen,
-  assistantConversationContextKey
-} from '@groam/ai-contracts/agents/screen';
-import { chatAgentCallSettings } from '@groam/ai-contracts/provider';
+} from '@groam/ai/runtime/thread-summary';
 import { stepCountIs } from 'ai';
 import { ConvexError } from 'convex/values';
 import { createRegisteredAssistantTools } from '#backend/assistant/tools/index';
