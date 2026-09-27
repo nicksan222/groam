@@ -1,4 +1,4 @@
-import { agentRunCopy } from '@groam/ai-contracts/agents/runs/copy';
+import { agentRunCopy } from '@groam/ai/backend/runs/copy';
 import { Button } from '@groam/ui/components/button';
 import { Spinner } from '@groam/ui/components/spinner';
 import { RotateCcw } from 'lucide-react';

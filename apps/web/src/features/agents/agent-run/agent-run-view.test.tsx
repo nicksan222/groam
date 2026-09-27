@@ -1,5 +1,5 @@
-import { agentRunEventLabels } from '@groam/ai-contracts/agents/runs/events';
-import { agentRunDuration, agentRunTime } from '@groam/ai-contracts/agents/runs/time';
+import { agentRunEventLabels } from '@groam/ai/backend/runs/events';
+import { agentRunDuration, agentRunTime } from '@groam/ai/backend/runs/time';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import type { AgentRun } from '@/features/agents/hooks/use-agent';
@@ -42,7 +42,7 @@ const state = vi.hoisted(() => ({
   runs: [] as AgentRun[]
 }));
 
-vi.mock('@groam/ui/ai/context/agent-context', () => ({
+vi.mock('@groam/ai/ui/context/agent-context', () => ({
   useSetAgentContext: () => undefined
 }));
 

@@ -6,12 +6,17 @@ export type PackageManifest = {
 };
 
 const allowedInternalDependencies = {
-  '@groam/ai-contracts': new Set<string>(),
+  // @groam/ai renders through @groam/ui primitives and receives backend
+  // function references as injected props, so it never depends on the
+  // backend. The backend executes @groam/ai's agent and tool specs: the
+  // dependency direction is one-way, backend -> ai. Nothing may rejoin it
+  // into a cycle.
+  '@groam/ai': new Set(['@groam/ui']),
   '@groam/auth': new Set(['@groam/env']),
-  '@groam/backend': new Set(['@groam/ai-contracts']),
+  '@groam/backend': new Set(['@groam/ai']),
   '@groam/brand': new Set<string>(),
   '@groam/env': new Set<string>(),
-  '@groam/ui': new Set(['@groam/ai-contracts', '@groam/backend', '@groam/brand'])
+  '@groam/ui': new Set(['@groam/brand'])
 } as const;
 
 /** Returns runtime boundary violations. Tooling and dev-only dependencies are intentionally excluded. */

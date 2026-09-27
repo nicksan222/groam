@@ -1,5 +1,5 @@
-import { isActiveAgentRun } from '@groam/ai-contracts/agents/runs/roster';
-import { agentRunDuration, agentRunTime } from '@groam/ai-contracts/agents/runs/time';
+import { isActiveAgentRun } from '@groam/ai/backend/runs/roster';
+import { agentRunDuration, agentRunTime } from '@groam/ai/backend/runs/time';
 import { Skeleton } from '@groam/ui/components/skeleton';
 import { Clock3, UserRound } from 'lucide-react';
 import type { AgentRun } from '@/features/agents/hooks/use-agent';

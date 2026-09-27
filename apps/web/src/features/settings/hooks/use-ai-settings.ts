@@ -1,4 +1,4 @@
-import { aiKeyProvider, isAiKeyProviderId } from '@groam/ai-contracts/providers/keys';
+import { aiKeyProvider, isAiKeyProviderId } from '@groam/ai/backend/providers/keys';
 import { api } from '@groam/backend/api';
 import { useMutation, useQuery } from 'convex/react';
 import type { FunctionReturnType } from 'convex/server';

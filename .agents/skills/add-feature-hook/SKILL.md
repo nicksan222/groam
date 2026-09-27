@@ -22,7 +22,7 @@ when ids are missing:
 ```ts
 import { api } from '@groam/backend/api';
 import { usePaginatedQuery, useQuery } from 'convex/react';
-import type { AssistantAgentId } from '@groam/ai-contracts/agents/registry';
+import type { AssistantAgentId } from '@groam/ai/agents';
 
 export function useAgent(agentId: AssistantAgentId | undefined) {
   const agent = useQuery(api.routes.agents.get.run, agentId ? { agentId } : 'skip');

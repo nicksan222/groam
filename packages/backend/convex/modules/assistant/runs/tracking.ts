@@ -1,4 +1,4 @@
-import { eventsFromStep } from '@groam/ai-contracts/agents/runs';
+import { eventsFromStep } from '@groam/ai/backend/runs';
 import { ConvexError } from 'convex/values';
 import { internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
