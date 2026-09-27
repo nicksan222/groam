@@ -40,17 +40,26 @@ function dayFromPoint(clientX: number, clientY: number) {
   return Number.isInteger(day) ? day : null;
 }
 
-function selectionSummary(
-  startDay: number | undefined,
-  endDay: number | undefined,
-  startLabel: string,
-  endLabel: string
-) {
+function selectionSummary({
+  startDay,
+  endDay,
+  startLabel,
+  endLabel,
+  pendingEndOptional
+}: {
+  startDay: number | undefined;
+  endDay: number | undefined;
+  startLabel: string;
+  endLabel: string;
+  pendingEndOptional: boolean;
+}) {
   if (startDay === undefined && endDay === undefined) {
     return 'Click a start day, then an end day. Drag across days to paint a stay.';
   }
   if (startDay !== undefined && endDay === undefined) {
-    return `${startLabel} Day ${startDay} — pick ${endLabel.toLowerCase()} day`;
+    return pendingEndOptional
+      ? `${startLabel} Day ${startDay} — pick ${endLabel.toLowerCase()} day or keep one day.`
+      : `${startLabel} Day ${startDay} — pick ${endLabel.toLowerCase()} day`;
   }
   if (startDay !== undefined && endDay !== undefined) {
     const duration = endDay - startDay + 1;
@@ -72,6 +81,7 @@ export type DayRangePickerProps = {
   maximumDay: number;
   minimumDay?: number;
   onChange: (startDay: number | undefined, endDay: number | undefined) => void;
+  pendingEndOptional?: boolean;
   startDate?: null | string;
   startDay: number | undefined;
   startLabel?: string;
@@ -88,6 +98,7 @@ export function DayRangePicker({
   maximumDay,
   minimumDay = 1,
   onChange,
+  pendingEndOptional = false,
   startDate,
   startDay,
   startLabel = 'Start',
@@ -98,7 +109,7 @@ export function DayRangePicker({
   const dayCount = totalDays ?? maximumDay;
   const days = Array.from({ length: dayCount }, (_, index) => index + 1);
   const [anchorDay, setAnchorDay] = useState<number | null>(null);
-  const summary = selectionSummary(startDay, endDay, startLabel, endLabel);
+  const summary = selectionSummary({ startDay, endDay, startLabel, endLabel, pendingEndOptional });
 
   return (
     <fieldset

@@ -54,8 +54,8 @@ export function DayTimeRangePicker(props: DayTimeRangePickerProps) {
     value
   } = props;
   const errorMessage = timeRangeError(value, labels.start, labels.end);
-  // Keep the first click of a two-day selection local. Consumers require a complete
-  // range, so passing the previous end day back immediately would reset the picker.
+  // Commit the first click as a complete single-day range. If the traveler saves
+  // without picking a second day, the visible choice is what gets persisted.
   const [pendingStartDay, setPendingStartDay] = useState<number | null>(null);
 
   return (
@@ -72,12 +72,19 @@ export function DayTimeRangePicker(props: DayTimeRangePickerProps) {
         minimumDay={bounds.minimumDay}
         onChange={(startDay, endDay) => {
           if (endDay === undefined) {
-            setPendingStartDay(startDay ?? pendingStartDay ?? value.startDay);
+            if (startDay === undefined && pendingStartDay !== null) {
+              setPendingStartDay(null);
+              return;
+            }
+            const nextStart = startDay ?? value.startDay;
+            setPendingStartDay(nextStart);
+            onChange({ ...value, endDay: nextStart, startDay: nextStart });
             return;
           }
           setPendingStartDay(null);
           onChange({ ...value, endDay, startDay: startDay ?? value.startDay });
         }}
+        pendingEndOptional
         startDate={bounds.startDate}
         startDay={pendingStartDay ?? value.startDay}
         startLabel={labels.start}
