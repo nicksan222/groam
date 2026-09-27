@@ -1,4 +1,4 @@
-import type { AiKeyProviderId } from '@groam/ai-contracts/providers/keys';
+import type { AiKeyProviderId } from '@groam/ai/backend/providers/keys';
 import { api } from '@groam/backend/api';
 import { useMutation } from 'convex/react';
 import { useCallback, useEffect, useRef } from 'react';

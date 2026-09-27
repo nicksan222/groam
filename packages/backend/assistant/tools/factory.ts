@@ -1,11 +1,13 @@
-import type { AssistantAgentId, AssistantCapability } from '@groam/ai-contracts/agents/registry';
+import type { AssistantAgentId } from '@groam/ai/agents';
+import type { AssistantConversationScope } from '@groam/ai/backend/instructions';
+import type { AgentToolSpec } from '@groam/ai/tools/specs';
 import type { ToolSet } from 'ai';
 import type { AssistantScreen } from '#convex/modules/assistant/screen/index';
 import type { Id } from '#convex-generated/dataModel';
 
 export type AssistantTool = NonNullable<ToolSet[string]>;
 
-export type AssistantToolScope = 'discussion' | 'private' | 'standalone';
+export type AssistantToolScope = AssistantConversationScope;
 
 export type AssistantToolRuntime = {
   activeTripId: Id<'trips'> | null;
@@ -19,24 +21,16 @@ export type AssistantToolRuntime = {
   threadId?: string;
 };
 
-export type AssistantToolEventLabel = {
-  complete: string;
-  running: string;
-};
-
-export type AssistantCapabilityRegistration = {
-  /** Run-log copy. Omit to humanize `toolName` (`getItinerary` → "Read itinerary"). */
-  eventLabel?: AssistantToolEventLabel;
-  guidance?: string;
-  id: AssistantCapability;
-  toolName: string;
-  writeIntent?: readonly string[];
-  /** Whole-message confirmations after politeness, e.g. `Maybe` / `Not going`. */
-  writeIntentExact?: readonly string[];
-} & (
-  | { create: (runtime: AssistantToolRuntime) => AssistantTool | null; createToolSet?: never }
-  | { create?: never; createToolSet: (runtime: AssistantToolRuntime) => ToolSet | null }
-);
+/**
+ * A tool spec from `@groam/ai` plus its Convex-bound constructor. Spec fields
+ * (names, guidance, intents, run-log copy) live in the ai package — do not
+ * redeclare them here.
+ */
+export type AssistantCapabilityRegistration = AgentToolSpec &
+  (
+    | { create: (runtime: AssistantToolRuntime) => AssistantTool | null; createToolSet?: never }
+    | { create?: never; createToolSet: (runtime: AssistantToolRuntime) => ToolSet | null }
+  );
 
 export function defineCapability<T extends AssistantCapabilityRegistration>(registration: T): T {
   return registration;

@@ -2,14 +2,16 @@ import { createTool } from '@convex-dev/agent';
 import { ConvexError } from 'convex/values';
 import * as z from 'zod/v3';
 import {
-  assertDraftProposal,
-  requestedTripId,
+  costAmountField,
+  costSplitField,
+  loadDraftTripContext,
   TIME_PATTERN,
   TRANSFER_MODES,
-  TRIP_COST_SPLITS,
-  tripCostSplit
+  type TRIP_COST_SPLITS,
+  tripCostSplit,
+  tripDayField,
+  workingTripIdField
 } from '#backend/assistant/tools/trips/shared';
-import type { TripAssistantContext } from '#convex/modules/assistant/model/index';
 import { internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
 
@@ -86,12 +88,7 @@ export function createSetTransferTool(activeTripId: Id<'trips'> | null) {
     description:
       'Set arrival, departure, between-stop, or between-activity travel on a DRAFT idea. Call startTripVersion first and pass its workingTripId. Use getItinerary ids for destinations and activities.',
     execute: async (toolCtx, input) => {
-      const tripId = requestedTripId(input.tripId, activeTripId);
-      const context: TripAssistantContext = await toolCtx.runQuery(
-        internal.modules.assistant.model.index.tripContext,
-        { tripId }
-      );
-      assertDraftProposal(context);
+      const { tripId } = await loadDraftTripContext(toolCtx, input.tripId, activeTripId);
       const transferId: string = await toolCtx.runMutation(
         internal.modules.assistant.model.writes.setTransfer,
         {
@@ -103,10 +100,10 @@ export function createSetTransferTool(activeTripId: Id<'trips'> | null) {
       return { kind: input.kind, mode: input.mode, transferId };
     },
     inputSchema: z.object({
-      costAmount: z.number().min(0).max(1_000_000_000).optional(),
-      costSplit: z.enum(TRIP_COST_SPLITS).optional(),
+      costAmount: costAmountField(),
+      costSplit: costSplitField(),
       durationMinutes: z.number().int().min(1).max(10_080).optional(),
-      endDay: z.number().int().min(1).max(365).optional(),
+      endDay: tripDayField().optional(),
       endTime: z.string().regex(TIME_PATTERN).optional(),
       fromActivityId: z
         .string()
@@ -123,7 +120,7 @@ export function createSetTransferTool(activeTripId: Id<'trips'> | null) {
         ),
       mode: z.enum(TRANSFER_MODES),
       notes: z.string().max(500).optional(),
-      startDay: z.number().int().min(1).max(365).optional(),
+      startDay: tripDayField().optional(),
       startTime: z.string().regex(TIME_PATTERN).optional(),
       toActivityId: z
         .string()
@@ -133,12 +130,7 @@ export function createSetTransferTool(activeTripId: Id<'trips'> | null) {
         .string()
         .optional()
         .describe('Required when kind is destination. The later stop id.'),
-      tripId: z
-        .string()
-        .optional()
-        .describe(
-          'The exact workingTripId returned by startTripVersion. Never use the shared trip id.'
-        )
+      tripId: workingTripIdField()
     })
   });
 }
@@ -148,12 +140,7 @@ export function createRemoveTransferTool(activeTripId: Id<'trips'> | null) {
     description:
       'Remove travel from a DRAFT idea. Call startTripVersion first. Use getItinerary cost target ids: Arrival travel is kind arrival, Return travel is kind departure, destination_transfer is kind destination, activity_transfer is kind activity.',
     execute: async (toolCtx, input) => {
-      const tripId = requestedTripId(input.tripId, activeTripId);
-      const context: TripAssistantContext = await toolCtx.runQuery(
-        internal.modules.assistant.model.index.tripContext,
-        { tripId }
-      );
-      assertDraftProposal(context);
+      const { tripId } = await loadDraftTripContext(toolCtx, input.tripId, activeTripId);
       const target =
         input.kind === 'arrival' || input.kind === 'departure'
           ? {
@@ -178,12 +165,7 @@ export function createRemoveTransferTool(activeTripId: Id<'trips'> | null) {
     inputSchema: z.object({
       kind: z.enum(['activity', 'arrival', 'departure', 'destination']),
       transferId: z.string().describe('An exact transfer id from getItinerary cost targets.'),
-      tripId: z
-        .string()
-        .optional()
-        .describe(
-          'The exact workingTripId returned by startTripVersion. Never use the shared trip id.'
-        )
+      tripId: workingTripIdField()
     })
   });
 }

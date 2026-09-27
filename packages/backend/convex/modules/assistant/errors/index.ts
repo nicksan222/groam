@@ -1,4 +1,4 @@
-import { assistantFailureMessage } from '@groam/ai-contracts/errors';
+import { assistantFailureMessage } from '@groam/ai/backend/errors';
 import { ConvexError } from 'convex/values';
 
 /** Throw a ConvexError with the provider message (sanitized), not a raw request dump. */

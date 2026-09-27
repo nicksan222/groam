@@ -2,13 +2,13 @@ import { createTool } from '@convex-dev/agent';
 import { ConvexError } from 'convex/values';
 import * as z from 'zod/v3';
 import {
-  assertDraftProposal,
-  requestedTripId,
+  costAmountField,
+  costSplitField,
+  loadDraftTripContext,
   TRIP_COST_KINDS,
-  TRIP_COST_SPLITS,
-  tripCostSplit
+  tripCostSplit,
+  workingTripIdField
 } from '#backend/assistant/tools/trips/shared';
-import type { TripAssistantContext } from '#convex/modules/assistant/model/index';
 import { internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
 
@@ -17,12 +17,7 @@ export function createSetItineraryCostTool(activeTripId: Id<'trips'> | null) {
     description:
       'Set or clear an estimated cost in a DRAFT idea only. Call startTripVersion, read the working itinerary, and use its workingTripId and idea-specific cost target.',
     execute: async (toolCtx, input) => {
-      const tripId = requestedTripId(input.tripId, activeTripId);
-      const context: TripAssistantContext = await toolCtx.runQuery(
-        internal.modules.assistant.model.index.tripContext,
-        { tripId }
-      );
-      assertDraftProposal(context);
+      const { context, tripId } = await loadDraftTripContext(toolCtx, input.tripId, activeTripId);
       const target = context.costTargets.find(
         (candidate) => candidate.id === input.targetId && candidate.kind === input.targetKind
       );
@@ -67,28 +62,15 @@ export function createSetItineraryCostTool(activeTripId: Id<'trips'> | null) {
       };
     },
     inputSchema: z.object({
-      amount: z
-        .number()
-        .min(0)
-        .max(1_000_000_000)
-        .nullable()
-        .describe(
-          'Cost in the trip currency, or null to clear it. Use split to say whether this is the group total or per person.'
-        ),
-      split: z
-        .enum(TRIP_COST_SPLITS)
-        .optional()
-        .describe(
-          'Whether amount is the group total or per person. Defaults to total. Per-person amounts are multiplied by group size toward the trip budget.'
-        ),
+      amount: costAmountField('nullable').describe(
+        'Cost in the trip currency, or null to clear it. Use split to say whether this is the group total or per person.'
+      ),
+      split: costSplitField().describe(
+        'Whether amount is the group total or per person. Defaults to total. Per-person amounts are multiplied by group size toward the trip budget.'
+      ),
       targetId: z.string().describe('An exact id from getItinerary costTargets.'),
       targetKind: z.enum(TRIP_COST_KINDS),
-      tripId: z
-        .string()
-        .optional()
-        .describe(
-          'The exact workingTripId returned by startTripVersion. Never use the shared trip id.'
-        )
+      tripId: workingTripIdField()
     })
   });
 }

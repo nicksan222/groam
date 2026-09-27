@@ -1,4 +1,4 @@
-import type { AssistantAgentId } from '@groam/ai-contracts/agents/registry';
+import type { AssistantAgentId } from '@groam/ai/agents';
 import { renderHook } from '@testing-library/react';
 import { beforeEach, expect, test, vi } from 'vitest';
 import { useAgent, useAgentRecord } from './use-agent';

@@ -1,7 +1,7 @@
 import { useUIMessages } from '@convex-dev/agent/react';
+import { useCurrentAgentContext } from '@groam/ai/ui/context/agent-context';
 import { api } from '@groam/backend/api';
 import type { Id } from '@groam/backend/data-model';
-import { useCurrentAgentContext } from '@groam/ui/ai/context/agent-context';
 import { toast } from '@groam/ui/components/toast';
 import { useAction, useMutation, useQuery } from 'convex/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';

@@ -1,7 +1,7 @@
-import { assistantAgents, isAssistantAgentId } from '@groam/ai-contracts/agents/registry';
-import { canRetryAgentRunFromZero } from '@groam/ai-contracts/agents/runs/roster';
-import { agentRunTime } from '@groam/ai-contracts/agents/runs/time';
-import { AgentRetryFromZeroButton } from '@groam/ui/ai/runs/agent-retry-from-zero';
+import { assistantAgents, isAssistantAgentId } from '@groam/ai/agents';
+import { canRetryAgentRunFromZero } from '@groam/ai/backend/runs/roster';
+import { agentRunTime } from '@groam/ai/backend/runs/time';
+import { AgentRetryFromZeroButton } from '@groam/ai/ui/runs/agent-retry-from-zero';
 import { Button } from '@groam/ui/components/button';
 import { type ColumnDef, DataTable, type FilterFn } from '@groam/ui/components/data-table';
 import { PageLoading } from '@groam/ui/components/page-loading';

@@ -1,18 +1,18 @@
-import { type AssistantProviderEnvironment, configuredValue } from '@groam/ai-contracts/provider';
+import { type AssistantProviderEnvironment, configuredValue } from '@groam/ai/backend/provider';
 import {
   type AgentModelSelection,
   parseAgentModels
-} from '@groam/ai-contracts/providers/agent-models';
+} from '@groam/ai/backend/providers/agent-models';
 import { ConvexError } from 'convex/values';
 import {
   type AssistantProviderConfiguration,
   AssistantProviderKind
 } from '#backend/ai/providers/kind';
 import '#backend/ai/providers/kinds/index';
-import type { AssistantAgentId } from '@groam/ai-contracts/agents/registry';
+import type { AssistantAgentId } from '@groam/ai/agents';
 
-export type { AssistantAgentId } from '@groam/ai-contracts/agents/registry';
-export type { AssistantProviderId } from '@groam/ai-contracts/provider';
+export type { AssistantAgentId } from '@groam/ai/agents';
+export type { AssistantProviderId } from '@groam/ai/backend/provider';
 export type { AssistantProviderConfiguration, AssistantProviderEnvironment };
 
 function modelSelection(

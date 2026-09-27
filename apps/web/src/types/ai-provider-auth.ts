@@ -1,4 +1,4 @@
-import type { AiKeyProviderId } from '@groam/ai-contracts/providers/keys';
+import type { AiKeyProviderId } from '@groam/ai/backend/providers/keys';
 
 export type AiProviderAuthSessionData = Record<string, string>;
 
