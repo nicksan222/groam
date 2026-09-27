@@ -9,6 +9,8 @@ import { stubMatchMedia } from '@/testing/stub-match-media';
 import { plannerActivity } from '@/testing/trip-planner-fixture';
 import { TripDestinationsPanel } from './trip-destinations-panel';
 
+const media = vi.hoisted(() => ({ upload: vi.fn() }));
+
 const versions = vi.hoisted(() => ({
   proposal: undefined as
     | {
@@ -44,7 +46,7 @@ vi.mock('@/features/trips/trip-destinations/add-trip-destination-dialog', () => 
 }));
 
 vi.mock('@/features/media/hooks/use-media-upload', () => ({
-  useMediaUpload: () => vi.fn()
+  useMediaUpload: () => media.upload
 }));
 
 const id = <
@@ -269,6 +271,32 @@ describe('TripDestinationsPanel day editor', () => {
     await act(async () => {
       finishSave(true);
     });
+  });
+
+  test('keeps the inline draft mounted until its attachment upload completes', async () => {
+    let finishUpload: (id: string) => void = () => undefined;
+    media.upload.mockImplementation(
+      () => new Promise<string>((resolve) => (finishUpload = resolve))
+    );
+    render(<TripDestinationsPanel {...handlers} addDestinationOpen={false} trip={tripDetail()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add morning activity to Day 1' }));
+    fireEvent.click(screen.getByTestId(testIds.activityMoreOptions));
+    const fileInput = document.querySelector<HTMLInputElement>('input[type="file"]');
+    expect(fileInput).not.toBeNull();
+    fireEvent.change(fileInput as HTMLInputElement, {
+      target: { files: [new File(['ticket'], 'ticket.pdf', { type: 'application/pdf' })] }
+    });
+    const otherDay = screen.getByRole('button', { name: 'Add afternoon activity to Day 2' });
+    await waitFor(() => expect(otherDay).toHaveProperty('disabled', true));
+    fireEvent.click(otherDay);
+    expect(screen.getByRole('region', { name: 'Add an activity to Day 1' })).toBeTruthy();
+
+    await act(async () => {
+      finishUpload('media-ticket');
+    });
+    expect(screen.getByText('ticket.pdf')).toBeTruthy();
+    expect(otherDay).toHaveProperty('disabled', false);
   });
 
   test('preserves occupied-day constraints in the selected route stop', () => {

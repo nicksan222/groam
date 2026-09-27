@@ -12,11 +12,13 @@ import type { PlannerEntry } from '@/types/trip-planner';
 export function EditorDayRow({
   entry,
   day,
+  disabled = false,
   onEdit,
   overnight = false
 }: {
   entry: PlannerEntry;
   day: number;
+  disabled?: boolean;
   onEdit: (entry: PlannerEntry) => void;
   overnight?: boolean;
 }) {
@@ -38,8 +40,9 @@ export function EditorDayRow({
         type="button"
         aria-label={overnight ? `Edit overnight stay at ${entry.title}` : `Edit ${entry.title}`}
         aria-description={`${overnight ? 'Overnight' : entryTime(entry, day)} · ${entry.location}`}
+        disabled={disabled}
         onClick={() => onEdit(entry)}
-        className="group relative grid w-full grid-cols-[5.5rem_minmax(0,1fr)] items-stretch text-left transition-colors hover:bg-muted/40 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:grid-cols-[7.5rem_minmax(0,1fr)_minmax(0,0.7fr)]"
+        className="group relative grid w-full grid-cols-[5.5rem_minmax(0,1fr)] items-stretch text-left transition-colors hover:bg-muted/40 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring disabled:opacity-50 sm:grid-cols-[7.5rem_minmax(0,1fr)_minmax(0,0.7fr)]"
         unstyled
       >
         <span className="px-3 py-4 text-xs font-medium leading-5 tabular-nums sm:px-4">

@@ -9,12 +9,14 @@ import {
 import { BedDouble, CalendarDays, MapPin, Plus, Route } from 'lucide-react';
 
 export function EditorPlanActions({
+  disabled = false,
   hasDestinations,
   onActivity,
   onStay,
   onTravel,
   onDestination
 }: {
+  disabled?: boolean;
   hasDestinations: boolean;
   onActivity: () => void;
   onStay: () => void;
@@ -24,7 +26,7 @@ export function EditorPlanActions({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button size="sm" variant="outline">
+        <Button disabled={disabled} size="sm" variant="outline">
           <Plus />
           Add a plan
         </Button>

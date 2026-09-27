@@ -12,13 +12,15 @@ export function EditorDayCanvas({
   onEdit,
   onAdd,
   canAdd,
-  activeEditor
+  activeEditor,
+  editorLocked = false
 }: {
   day: PlannerDay;
   onEdit: (entry: PlannerEntry) => void;
   onAdd: (period: PlannerPeriod) => void;
   canAdd: boolean;
   activeEditor?: { period: PlannerPeriod; content: ReactNode };
+  editorLocked?: boolean;
 }) {
   return (
     <div className="border-t border-border">
@@ -53,7 +55,8 @@ export function EditorDayCanvas({
               {canAdd ? (
                 <Button
                   aria-label={`Add ${period.label.toLowerCase()} activity to Day ${day.day}`}
-                  className="ml-auto flex items-center gap-1.5 rounded-lg border border-primary/30 bg-background px-2.5 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:ml-2"
+                  className="ml-auto flex items-center gap-1.5 rounded-lg border border-primary/30 bg-background px-2.5 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 sm:ml-2"
+                  disabled={editorLocked}
                   onClick={() => onAdd(period.key)}
                   type="button"
                   unstyled
@@ -66,7 +69,13 @@ export function EditorDayCanvas({
             {entries.length ? (
               <div className="divide-y divide-border border-t border-border">
                 {entries.map((entry) => (
-                  <EditorDayRow day={day.day} entry={entry} key={entry.key} onEdit={onEdit} />
+                  <EditorDayRow
+                    day={day.day}
+                    disabled={editorLocked}
+                    entry={entry}
+                    key={entry.key}
+                    onEdit={onEdit}
+                  />
                 ))}
               </div>
             ) : null}
@@ -79,6 +88,7 @@ export function EditorDayCanvas({
       activeEditor?.period !== 'full_day' ? (
         <Button
           className="flex w-full items-center gap-2 border-t border-border px-4 py-3 text-left text-xs font-medium text-muted-foreground hover:bg-muted/30 hover:text-foreground sm:px-6"
+          disabled={editorLocked}
           onClick={() => onAdd('full_day')}
           type="button"
           unstyled
@@ -97,6 +107,7 @@ export function EditorDayCanvas({
             {day.stays.map(({ stay, destination }) => (
               <EditorDayRow
                 day={day.day}
+                disabled={editorLocked}
                 key={stay.id}
                 onEdit={onEdit}
                 overnight

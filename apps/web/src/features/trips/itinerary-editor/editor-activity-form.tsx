@@ -36,7 +36,8 @@ export function EditorActivityForm({
   trip,
   actions,
   onChooseDestination,
-  onClose
+  onClose,
+  onUploadingChange
 }: {
   selection: EditorActivitySelection;
   destination: Destination;
@@ -45,6 +46,7 @@ export function EditorActivityForm({
   actions: TripActivityActions;
   onChooseDestination: (id: Destination['id']) => void;
   onClose: () => void;
+  onUploadingChange: (uploading: boolean) => void;
 }) {
   const activity = destination.activities.find((item) => item.id === selection.activityId);
   const editor = useTripActivityEditor({
@@ -53,6 +55,7 @@ export function EditorActivityForm({
     currency: trip.currency,
     tripDayCount: trip.totalDurationDays ?? selection.day,
     tripStartDate: trip.startDate,
+    onUploadingChange,
     initial: activity
       ? activityFormForEdit(activity)
       : {
@@ -62,7 +65,7 @@ export function EditorActivityForm({
           timeBlock: selection.period
         }
   });
-  const formRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLElement>(null);
   useEffect(() => {
     formRef.current?.scrollIntoView?.({ block: 'nearest' });
   }, []);

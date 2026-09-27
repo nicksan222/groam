@@ -67,6 +67,7 @@ test('switching a shared day’s destination keeps the inline activity draft', a
     day: 2,
     destination: 'Porto, Portugal',
     expectDayReset: true,
+    notes: 'Meet by the old bridge',
     period: 'afternoon',
     range: { startDay: 1, endDay: 2 },
     title: 'Riverside picnic'

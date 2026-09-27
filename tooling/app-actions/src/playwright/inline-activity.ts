@@ -50,8 +50,9 @@ export async function addInlineActivity(
     }
   }
   if (input.notes) {
-    await user.click(form.getByTestId(ids.activityMoreOptions));
-    await user.type(form.getByTestId(ids.activityNotes), input.notes);
+    const notes = form.getByTestId(ids.activityNotes);
+    if (!(await notes.isVisible())) await user.click(form.getByTestId(ids.activityMoreOptions));
+    await user.type(notes, input.notes);
   }
   await user.click(form.getByTestId(ids.activitySubmit));
   await expect(form).toHaveCount(0);

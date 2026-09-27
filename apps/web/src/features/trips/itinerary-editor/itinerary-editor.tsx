@@ -33,6 +33,7 @@ export function ItineraryEditor(props: ItineraryEditorProps) {
   const [stopId, setStopId] = useState<string>();
   const [adding, setAdding] = useState(false);
   const [datesOpen, setDatesOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [selection, setSelection] = useState<EditorActivitySelection | null>(null);
   const destination = trip.destinations.find((item) => item.id === stopId);
   const openDestination = (id: string | undefined, section: ItineraryEditorMode = 'route') => {
@@ -40,6 +41,7 @@ export function ItineraryEditor(props: ItineraryEditorProps) {
     setDetailSection(section);
   };
   const selectPlan = (entry: PlannerEntry, day: number) => {
+    if (uploading) return;
     const owner = trip.destinations.find((stop) =>
       entry.kind === 'activity'
         ? stop.activities.some((activity) => activity.id === entry.activity.id)
@@ -82,6 +84,7 @@ export function ItineraryEditor(props: ItineraryEditorProps) {
         <Shell.LeftColumn>
           <div className="flex justify-end py-2">
             <EditorPlanActions
+              disabled={uploading}
               hasDestinations={trip.destinations.length > 0}
               onActivity={() => setAdding(true)}
               onStay={() => openDestination(trip.destinations[0]?.id, 'stays')}
@@ -125,6 +128,7 @@ export function ItineraryEditor(props: ItineraryEditorProps) {
                                   onClose={() =>
                                     setSelection((current) => (current === active ? null : current))
                                   }
+                                  onUploadingChange={setUploading}
                                 />
                               )
                             }
@@ -132,8 +136,9 @@ export function ItineraryEditor(props: ItineraryEditorProps) {
                       }
                       canAdd={available.length > 0}
                       day={day}
+                      editorLocked={uploading}
                       onAdd={(period) => {
-                        if (!available[0]) return;
+                        if (uploading || !available[0]) return;
                         setSelection((current) =>
                           current?.day === day.day &&
                           current.period === period &&
