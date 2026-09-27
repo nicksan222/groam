@@ -4,6 +4,7 @@ import {
   continueActivityPlan,
   createTrip,
   ids,
+  inlineActivityEditor,
   mockDestinationSearch,
   openActivityPlan,
   openItinerary,
@@ -30,8 +31,8 @@ test('editing from a continuation day shows the complete activity range', async 
     'Three-day festival'
   );
   await openActivityPlan(page, 'Three-day festival', 6);
-  const sheet = page.getByRole('dialog');
-  await expect(sheet).toContainText('Days 4–6 · Porto, Portugal');
-  await expect(sheet.getByTestId(ids.activityTitle)).toHaveValue('Three-day festival');
-  await expect(sheet.getByTestId(ids.activitySubmit)).toBeEnabled();
+  const editor = inlineActivityEditor(page);
+  await expect(editor).toContainText('Days 4–6 · Porto, Portugal');
+  await expect(editor.getByTestId(ids.activityTitle)).toHaveValue('Three-day festival');
+  await expect(editor.getByTestId(ids.activitySubmit)).toBeEnabled();
 });

@@ -5,6 +5,7 @@ import {
   createTrip,
   discardActivityChanges,
   ids,
+  inlineActivityEditor,
   keepActivityPlan,
   mockDestinationSearch,
   openActivityPlan,
@@ -39,7 +40,7 @@ test('cancelling edits or removal leaves the saved idea activity intact', async 
   await openIdeaFromList(page, ideaName);
   await openIdeaItinerary(page);
   await openActivityPlan(page, 'Boat trip');
-  await expect(page.getByRole('dialog').getByTestId(ids.activityAddress)).toHaveValue(
+  await expect(inlineActivityEditor(page).getByTestId(ids.activityAddress)).toHaveValue(
     'Original meeting point'
   );
 });

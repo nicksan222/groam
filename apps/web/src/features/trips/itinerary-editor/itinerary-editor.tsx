@@ -2,20 +2,22 @@ import { Button } from '@groam/ui/components/button';
 import Shell from '@groam/ui/components/shell/client';
 import { CalendarDays, MapPin, Plus } from 'lucide-react';
 import { useState } from 'react';
-import { editorDayDestinations } from '@/features/trips/hooks/editor-day-destinations';
-import { buildTripPlanner } from '@/features/trips/hooks/trip-day-planner';
+import {
+  destinationsForDay,
+  editorDayDestinations
+} from '@/features/trips/hooks/editor-day-destinations';
+import { buildTripPlanner, entryPeriod } from '@/features/trips/hooks/trip-day-planner';
 import type {
   EditorActivitySelection,
   ItineraryEditorMode,
   ItineraryEditorProps
 } from '@/types/itinerary-editor';
 import type { PlannerEntry } from '@/types/trip-planner';
-import { EditorActivitySheet } from './editor-activity-sheet';
+import { EditorActivityForm } from './editor-activity-form';
 import { EditorAddPlan } from './editor-add-plan';
 import { EditorDayCanvas } from './editor-day-canvas';
 import { EditorDayHeader } from './editor-day-header';
 import { EditorDestinationSheet } from './editor-destination-sheet';
-import { EditorEmptyDay } from './editor-empty-day';
 import { EditorPlanActions } from './editor-plan-actions';
 import { EditorRouteSummary } from './editor-route-summary';
 import { EditorTripDates } from './editor-trip-dates';
@@ -31,17 +33,15 @@ export function ItineraryEditor(props: ItineraryEditorProps) {
   const [stopId, setStopId] = useState<string>();
   const [adding, setAdding] = useState(false);
   const [datesOpen, setDatesOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [selection, setSelection] = useState<EditorActivitySelection | null>(null);
   const destination = trip.destinations.find((item) => item.id === stopId);
-  const editingDestination = trip.destinations.find((item) => item.id === selection?.destinationId);
   const openDestination = (id: string | undefined, section: ItineraryEditorMode = 'route') => {
     setStopId(id);
     setDetailSection(section);
   };
-  const addActivity = () => {
-    setAdding(true);
-  };
-  const selectPlan = (entry: PlannerEntry) => {
+  const selectPlan = (entry: PlannerEntry, day: number) => {
+    if (uploading) return;
     const owner = trip.destinations.find((stop) =>
       entry.kind === 'activity'
         ? stop.activities.some((activity) => activity.id === entry.activity.id)
@@ -54,8 +54,9 @@ export function ItineraryEditor(props: ItineraryEditorProps) {
       setSelection({
         destinationId: owner.id,
         activityId: entry.activity.id,
-        day: entry.activity.dayNumber,
-        period: entry.period
+        inline: true,
+        day,
+        period: entryPeriod(entry, day)
       });
     else
       openDestination(
@@ -71,7 +72,7 @@ export function ItineraryEditor(props: ItineraryEditorProps) {
       <Shell.SectionHeader
         density="compact"
         title="Itinerary"
-        description="The whole trip, day by day. Select any plan to edit its details."
+        description="Build each day in place. Add an activity under its time of day, or select a plan to edit it here."
         trailing={
           <Button variant="outline" size="sm" onClick={() => setDatesOpen(true)}>
             <CalendarDays />
@@ -83,42 +84,89 @@ export function ItineraryEditor(props: ItineraryEditorProps) {
         <Shell.LeftColumn>
           <div className="flex justify-end py-2">
             <EditorPlanActions
+              disabled={uploading}
               hasDestinations={trip.destinations.length > 0}
-              onActivity={addActivity}
+              onActivity={() => setAdding(true)}
               onStay={() => openDestination(trip.destinations[0]?.id, 'stays')}
               onTravel={() => openDestination(trip.destinations[0]?.id, 'travel')}
               onDestination={onAddDestination}
             />
           </div>
           <Shell.Card className="divide-y divide-border overflow-hidden" aria-label="Trip schedule">
-            {days.map((day) => (
-              <section key={day.day} aria-label={`Day ${day.day} schedule`}>
-                <EditorDayHeader
-                  day={day.day}
-                  startDate={trip.startDate}
-                  destinations={editorDayDestinations(day, trip.destinations)}
-                  hasPlans={day.entries.length > 0 || day.stays.length > 0}
-                  onOpenDestination={(id) => openDestination(id)}
-                />
-                {trip.destinations.length ? (
-                  <EditorDayCanvas day={day} onEdit={selectPlan} />
-                ) : day.day === 1 ? (
-                  <div className="border-t border-border px-6 py-10 text-center">
-                    <MapPin className="mx-auto size-8 text-primary" />
-                    <h3 className="mt-4 text-sm font-semibold">A place to start. A day to fill.</h3>
-                    <p className="mx-auto mt-2 max-w-sm text-xs leading-5 text-muted-foreground">
-                      Choose your first destination, then turn this open day into a plan.
-                    </p>
-                    <Button className="mt-6" onClick={onAddDestination}>
-                      <Plus />
-                      Add first destination
-                    </Button>
-                  </div>
-                ) : (
-                  <EditorEmptyDay />
-                )}
-              </section>
-            ))}
+            {days.map((day) => {
+              const available = destinationsForDay(trip.destinations, day.day);
+              const active = selection?.day === day.day ? selection : null;
+              const selectedDestination = trip.destinations.find(
+                (item) => item.id === active?.destinationId
+              );
+              return (
+                <section aria-label={`Day ${day.day} schedule`} key={day.day}>
+                  <EditorDayHeader
+                    day={day.day}
+                    startDate={trip.startDate}
+                    destinations={editorDayDestinations(day, trip.destinations)}
+                    hasPlans={day.entries.length > 0 || day.stays.length > 0}
+                    onOpenDestination={(id) => openDestination(id)}
+                  />
+                  {trip.destinations.length ? (
+                    <EditorDayCanvas
+                      activeEditor={
+                        active && selectedDestination
+                          ? {
+                              period: active.period,
+                              content: (
+                                <EditorActivityForm
+                                  key={`${active.activityId ?? 'new'}:${active.day}:${active.period}`}
+                                  selection={active}
+                                  destination={selectedDestination}
+                                  destinations={available}
+                                  trip={trip}
+                                  actions={activityActions}
+                                  onChooseDestination={(id) =>
+                                    setSelection({ ...active, destinationId: id })
+                                  }
+                                  onClose={() =>
+                                    setSelection((current) => (current === active ? null : current))
+                                  }
+                                  onUploadingChange={setUploading}
+                                />
+                              )
+                            }
+                          : undefined
+                      }
+                      canAdd={available.length > 0}
+                      day={day}
+                      editorLocked={uploading}
+                      onAdd={(period) => {
+                        if (uploading || !available[0]) return;
+                        setSelection((current) =>
+                          current?.day === day.day &&
+                          current.period === period &&
+                          !current.activityId
+                            ? null
+                            : { destinationId: available[0].id, day: day.day, period, inline: true }
+                        );
+                      }}
+                      onEdit={(entry) => selectPlan(entry, day.day)}
+                    />
+                  ) : day.day === 1 ? (
+                    <div className="border-t border-border px-6 py-10 text-center">
+                      <MapPin className="mx-auto size-8 text-primary" />
+                      <h3 className="mt-4 text-sm font-semibold">
+                        A place to start. A day to fill.
+                      </h3>
+                      <p className="mx-auto mt-2 max-w-sm text-xs leading-5 text-muted-foreground">
+                        Choose your first destination, then turn this open day into a plan.
+                      </p>
+                      <Button className="mt-6" onClick={onAddDestination}>
+                        <Plus />
+                        Add first destination
+                      </Button>
+                    </div>
+                  ) : null}
+                </section>
+              );
+            })}
           </Shell.Card>
         </Shell.LeftColumn>
         <Shell.RightColumn>
@@ -138,16 +186,6 @@ export function ItineraryEditor(props: ItineraryEditorProps) {
             setAdding(false);
             setSelection(next);
           }}
-        />
-      ) : null}
-      {selection && editingDestination ? (
-        <EditorActivitySheet
-          key={`${selection.destinationId}:${selection.activityId ?? 'new'}:${selection.day}`}
-          selection={selection}
-          destination={editingDestination}
-          trip={trip}
-          actions={activityActions}
-          onClose={() => setSelection(null)}
         />
       ) : null}
       {destination ? (

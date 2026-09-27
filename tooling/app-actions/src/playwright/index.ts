@@ -44,6 +44,11 @@ export { filterIssuesByStatus, type IssueStatusFilter } from './filter-issues-by
 export { filterTripsByStatus, type TripStatusFilter } from './filter-trips-by-status';
 export { filterWorkspaceIdeas } from './filter-workspace-ideas';
 export { ids, type TestId } from './ids';
+export {
+  addInlineActivity,
+  editInlineActivity,
+  type InlineActivityPeriod
+} from './inline-activity';
 export { inspectIdeaChanges } from './inspect-idea-changes';
 export { type UiTarget, type UiUser, ui } from './interaction';
 export { inviteGroupMember } from './invite-group-member';
@@ -60,6 +65,7 @@ export {
   groupSwitcherItem,
   ideaRow,
   idFromPath,
+  inlineActivityEditor,
   issueRow,
   issueStatusOption,
   named,

@@ -33,7 +33,7 @@ export function EditorDayHeader({
             {date ? ` · ${date}` : ''}
           </h3>
           <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
-            {hasPlans ? 'Your plans for the day' : 'Open to explore'}
+            {hasPlans ? 'Your plans for the day' : 'Choose a time below to add an activity'}
           </p>
         </div>
       </div>

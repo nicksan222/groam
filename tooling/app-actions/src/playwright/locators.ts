@@ -35,6 +35,10 @@ export function activityCard(page: Page, title: string): Locator {
   return named(page, ids.activityCard, 'data-activity-title', title);
 }
 
+export function inlineActivityEditor(page: Page): Locator {
+  return by(page, ids.activityInlineEditor);
+}
+
 export function stayCard(page: Page, title: string): Locator {
   return named(page, ids.stayCard, 'data-stay-name', title);
 }

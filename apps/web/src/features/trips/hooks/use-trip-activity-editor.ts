@@ -48,7 +48,8 @@ export function useTripActivityEditor({
   destination,
   tripDayCount,
   tripStartDate,
-  updateActivity
+  updateActivity,
+  onUploadingChange
 }: {
   initial?: Partial<ActivityFormState>;
   addActivity: (
@@ -63,6 +64,7 @@ export function useTripActivityEditor({
     activityId: Id<'tripDestinationActivities'>,
     input: TripDestinationActivityInput
   ) => Promise<boolean>;
+  onUploadingChange?: (uploading: boolean) => void;
 }) {
   const [store] = useState(() => createTripActivityEditorStore(destination, initial));
   const form = useStore(store);
@@ -118,33 +120,38 @@ export function useTripActivityEditor({
     }
     const selected = Array.from(files).slice(0, availableSlots);
     form.setUploadMessage(null);
-    await uploadPending.run(async () => {
-      const uploaded = (
-        await Promise.all(
-          selected.map(async (file): Promise<ActivityAttachmentDraft | null> => {
-            try {
-              const mediaId = await uploadMedia(file, null);
-              return mediaId ? { id: mediaId, name: file.name } : null;
-            } catch {
-              return null;
-            }
-          })
-        )
-      ).filter((attachment): attachment is ActivityAttachmentDraft => attachment !== null);
-      if (uploaded.length > 0) {
-        form.patch({ attachments: [...store.getState().attachments, ...uploaded] });
-      }
-      const omitted = files.length - selected.length;
-      const failed = selected.length - uploaded.length;
-      if (omitted > 0 || failed > 0) {
-        form.setUploadMessage(
-          [
-            ...(omitted > 0 ? [`${omitted} exceeded the five-file limit.`] : []),
-            ...(failed > 0 ? [`${failed} could not be uploaded.`] : [])
-          ].join(' ')
-        );
-      }
-    });
+    onUploadingChange?.(true);
+    try {
+      await uploadPending.run(async () => {
+        const uploaded = (
+          await Promise.all(
+            selected.map(async (file): Promise<ActivityAttachmentDraft | null> => {
+              try {
+                const mediaId = await uploadMedia(file, null);
+                return mediaId ? { id: mediaId, name: file.name } : null;
+              } catch {
+                return null;
+              }
+            })
+          )
+        ).filter((attachment): attachment is ActivityAttachmentDraft => attachment !== null);
+        if (uploaded.length > 0) {
+          form.patch({ attachments: [...store.getState().attachments, ...uploaded] });
+        }
+        const omitted = files.length - selected.length;
+        const failed = selected.length - uploaded.length;
+        if (omitted > 0 || failed > 0) {
+          form.setUploadMessage(
+            [
+              ...(omitted > 0 ? [`${omitted} exceeded the five-file limit.`] : []),
+              ...(failed > 0 ? [`${failed} could not be uploaded.`] : [])
+            ].join(' ')
+          );
+        }
+      });
+    } finally {
+      onUploadingChange?.(false);
+    }
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 

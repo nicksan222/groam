@@ -1,6 +1,6 @@
 import type { Id } from '@groam/backend/data-model';
 import { stubPopoverEnvironment } from '@groam/ui/lib/stub-popover-environment';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import type { ItineraryChange } from '@/features/trips/hooks/itinerary-proposal-changes';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
@@ -8,6 +8,8 @@ import { testIds } from '@/lib/test-ids';
 import { stubMatchMedia } from '@/testing/stub-match-media';
 import { plannerActivity } from '@/testing/trip-planner-fixture';
 import { TripDestinationsPanel } from './trip-destinations-panel';
+
+const media = vi.hoisted(() => ({ upload: vi.fn() }));
 
 const versions = vi.hoisted(() => ({
   proposal: undefined as
@@ -44,7 +46,7 @@ vi.mock('@/features/trips/trip-destinations/add-trip-destination-dialog', () => 
 }));
 
 vi.mock('@/features/media/hooks/use-media-upload', () => ({
-  useMediaUpload: () => vi.fn()
+  useMediaUpload: () => media.upload
 }));
 
 const id = <
@@ -195,7 +197,10 @@ describe('TripDestinationsPanel day editor', () => {
     render(<TripDestinationsPanel {...handlers} addDestinationOpen={false} trip={tripDetail()} />);
     expect(screen.getByRole('heading', { name: 'Day 1' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Day 2' })).toBeTruthy();
-    expect(screen.getAllByText('A day of possibilities').length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: 'Add morning activity to Day 1' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Add afternoon activity to Day 2' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Add morning activity to Day 1' }));
+    expect(screen.getByRole('region', { name: 'Add an activity to Day 1' })).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Day 1 schedule' })).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Day 2 schedule' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Choose a day' })).toBeNull();
@@ -203,6 +208,97 @@ describe('TripDestinationsPanel day editor', () => {
     expect(handlers.updateTrip).not.toHaveBeenCalled();
     expect(handlers.updateDestination).not.toHaveBeenCalled();
   });
+  test('does not close a different day when an earlier activity save finishes', async () => {
+    let finishSave: (saved: boolean) => void = () => undefined;
+    handlers.addActivity.mockImplementation(
+      () => new Promise<boolean>((resolve) => (finishSave = resolve))
+    );
+    render(<TripDestinationsPanel {...handlers} addDestinationOpen={false} trip={tripDetail()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add morning activity to Day 1' }));
+    fireEvent.change(screen.getByTestId(testIds.activityTitle), {
+      target: { value: 'Morning market' }
+    });
+    fireEvent.click(screen.getByTestId(testIds.activitySubmit));
+    await waitFor(() => expect(handlers.addActivity).toHaveBeenCalledOnce());
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add afternoon activity to Day 2' }));
+    fireEvent.change(screen.getByTestId(testIds.activityTitle), {
+      target: { value: 'Afternoon walk' }
+    });
+    await act(async () => {
+      finishSave(true);
+    });
+
+    expect(screen.getByRole('region', { name: 'Add an activity to Day 2' })).toBeTruthy();
+    expect((screen.getByTestId(testIds.activityTitle) as HTMLInputElement).value).toBe(
+      'Afternoon walk'
+    );
+  });
+
+  test('locks the destination while an inline activity save is pending', async () => {
+    let finishSave: (saved: boolean) => void = () => undefined;
+    handlers.addActivity.mockImplementation(
+      () => new Promise<boolean>((resolve) => (finishSave = resolve))
+    );
+    render(
+      <TripDestinationsPanel
+        {...handlers}
+        addDestinationOpen={false}
+        trip={tripDetail({
+          destinations: [
+            destination(),
+            destination({
+              id: id<'tripDestinations'>('destination-porto'),
+              name: 'Porto',
+              position: 1
+            })
+          ]
+        })}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add morning activity to Day 1' }));
+    const destinationSelect = screen.getByRole('combobox', { name: 'Destination' });
+    expect(destinationSelect).toHaveProperty('disabled', false);
+    fireEvent.change(screen.getByTestId(testIds.activityTitle), {
+      target: { value: 'Morning market' }
+    });
+    fireEvent.click(screen.getByTestId(testIds.activitySubmit));
+    await waitFor(() => expect(handlers.addActivity).toHaveBeenCalledOnce());
+    expect(destinationSelect).toHaveProperty('disabled', true);
+
+    await act(async () => {
+      finishSave(true);
+    });
+  });
+
+  test('keeps the inline draft mounted until its attachment upload completes', async () => {
+    let finishUpload: (id: string) => void = () => undefined;
+    media.upload.mockImplementation(
+      () => new Promise<string>((resolve) => (finishUpload = resolve))
+    );
+    render(<TripDestinationsPanel {...handlers} addDestinationOpen={false} trip={tripDetail()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add morning activity to Day 1' }));
+    fireEvent.click(screen.getByTestId(testIds.activityMoreOptions));
+    const fileInput = document.querySelector<HTMLInputElement>('input[type="file"]');
+    expect(fileInput).not.toBeNull();
+    fireEvent.change(fileInput as HTMLInputElement, {
+      target: { files: [new File(['ticket'], 'ticket.pdf', { type: 'application/pdf' })] }
+    });
+    const otherDay = screen.getByRole('button', { name: 'Add afternoon activity to Day 2' });
+    await waitFor(() => expect(otherDay).toHaveProperty('disabled', true));
+    fireEvent.click(otherDay);
+    expect(screen.getByRole('region', { name: 'Add an activity to Day 1' })).toBeTruthy();
+
+    await act(async () => {
+      finishUpload('media-ticket');
+    });
+    expect(screen.getByText('ticket.pdf')).toBeTruthy();
+    expect(otherDay).toHaveProperty('disabled', false);
+  });
+
   test('preserves occupied-day constraints in the selected route stop', () => {
     render(
       <TripDestinationsPanel

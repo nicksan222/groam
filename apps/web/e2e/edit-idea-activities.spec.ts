@@ -7,6 +7,7 @@ import {
   createTrip,
   editActivity,
   ids,
+  inlineActivityEditor,
   mockDestinationSearch,
   openActivityPlan,
   openIdeaComparison,
@@ -53,7 +54,7 @@ test('adds, edits and removes activities on a later-day idea from both entry poi
   await openIdeaItinerary(page);
   await editActivity(page, { title: 'Porto river walk', address: 'Ribeira, Porto' });
   await openActivityPlan(page, 'Porto river walk');
-  await expect(page.getByRole('dialog').getByTestId(ids.activityAddress)).toHaveValue(
+  await expect(inlineActivityEditor(page).getByTestId(ids.activityAddress)).toHaveValue(
     'Ribeira, Porto'
   );
   await removeActivityPlan(page, 'Porto river walk');
@@ -101,7 +102,7 @@ test('switches destination and day, returns from comparison, and submits activit
   await openIdeaFromList(page, ideaName);
   await openIdeaItinerary(page);
   await openActivityPlan(page, 'Cruise on the Douro');
-  await expect(page.getByRole('dialog').getByTestId(ids.activityAddress)).toHaveValue(
+  await expect(inlineActivityEditor(page).getByTestId(ids.activityAddress)).toHaveValue(
     'Cais da Ribeira 42'
   );
 });
