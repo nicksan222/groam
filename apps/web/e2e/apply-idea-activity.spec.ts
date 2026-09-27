@@ -56,6 +56,7 @@ test('an approved idea activity appears on the shared itinerary only after apply
   }
 
   await openAppPath(page, `trips/${tripId}/itinerary`);
+  await expect(page.getByRole('region', { name: 'Day planner' })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Day planner' })).not.toContainText(
     'Waterfront walk'
   );
