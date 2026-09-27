@@ -115,6 +115,7 @@ export { returnIdeaToEditing } from './return-idea-to-editing';
 export { type ReviewIdeaChangeInput, reviewIdeaChange } from './review-idea-change';
 export { saveSevenDayRange } from './save-seven-day-range';
 export { type SaveTravelInput, saveTravel } from './save-travel';
+export { searchTrips } from './search-trips';
 export { selectSystemTheme } from './select-system-theme';
 export { sendChatMessage } from './send-chat-message';
 export { setDestinationSchedule } from './set-destination-schedule';
