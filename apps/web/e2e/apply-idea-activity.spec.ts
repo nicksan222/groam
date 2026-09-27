@@ -8,10 +8,10 @@ import {
   createTrip,
   inviteGroupMember,
   mockDestinationSearch,
+  openAppPath,
   openIdeaFromList,
   openItinerary,
   openSharedTrip,
-  openTripSection,
   requestIdeaReview,
   saveSevenDayRange,
   signIn,
@@ -36,8 +36,11 @@ test('an approved idea activity appears on the shared itinerary only after apply
   await addStop(page, { name: 'Porto', notes: 'River', startDay: '4', endDay: '5' });
   await addActivity(page, { destination: 'Porto, Portugal', title: 'Waterfront walk' });
   await openSharedTrip(page);
-  await openTripSection(page, 'overview');
-  await expect(page.getByText('Waterfront walk', { exact: true })).toHaveCount(0);
+  await openAppPath(page, `trips/${tripId}/itinerary`);
+  await expect(page.getByRole('region', { name: 'Day planner' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Day planner' })).not.toContainText(
+    'Waterfront walk'
+  );
   await openIdeaFromList(page, ideaName);
   await requestIdeaReview(page);
 
@@ -52,10 +55,14 @@ test('an approved idea activity appears on the shared itinerary only after apply
     await reviewerContext.close();
   }
 
+  await openAppPath(page, `trips/${tripId}/itinerary`);
+  await expect(page.getByRole('region', { name: 'Day planner' })).not.toContainText(
+    'Waterfront walk'
+  );
   await openIdeaFromList(page, ideaName);
   await applyIdea(page);
   await openSharedTrip(page);
-  await openTripSection(page, 'overview');
-  await expect(page).toHaveURL(new RegExp(`/trips/${tripId}/overview`, 'u'));
-  await expect(page.getByText('Waterfront walk', { exact: true })).toBeVisible();
+  await openAppPath(page, `trips/${tripId}/itinerary`);
+  await expect(page).toHaveURL(new RegExp(`/trips/${tripId}/itinerary`, 'u'));
+  await expect(page.getByRole('region', { name: 'Day planner' })).toContainText('Waterfront walk');
 });
