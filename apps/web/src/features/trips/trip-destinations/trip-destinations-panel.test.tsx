@@ -234,6 +234,43 @@ describe('TripDestinationsPanel day editor', () => {
     );
   });
 
+  test('locks the destination while an inline activity save is pending', async () => {
+    let finishSave: (saved: boolean) => void = () => undefined;
+    handlers.addActivity.mockImplementation(
+      () => new Promise<boolean>((resolve) => (finishSave = resolve))
+    );
+    render(
+      <TripDestinationsPanel
+        {...handlers}
+        addDestinationOpen={false}
+        trip={tripDetail({
+          destinations: [
+            destination(),
+            destination({
+              id: id<'tripDestinations'>('destination-porto'),
+              name: 'Porto',
+              position: 1
+            })
+          ]
+        })}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add morning activity to Day 1' }));
+    const destinationSelect = screen.getByRole('combobox', { name: 'Destination' });
+    expect(destinationSelect).toHaveProperty('disabled', false);
+    fireEvent.change(screen.getByTestId(testIds.activityTitle), {
+      target: { value: 'Morning market' }
+    });
+    fireEvent.click(screen.getByTestId(testIds.activitySubmit));
+    await waitFor(() => expect(handlers.addActivity).toHaveBeenCalledOnce());
+    expect(destinationSelect).toHaveProperty('disabled', true);
+
+    await act(async () => {
+      finishSave(true);
+    });
+  });
+
   test('preserves occupied-day constraints in the selected route stop', () => {
     render(
       <TripDestinationsPanel

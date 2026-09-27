@@ -111,6 +111,7 @@ export function EditorActivityForm({
             Destination for this activity
           </label>
           <Select
+            disabled={pending}
             onValueChange={(id) => onChooseDestination(id as Destination['id'])}
             value={destination.id}
           >
