@@ -24,6 +24,7 @@ export { addGroupMemberViaInvite, type BrowserContextFactory } from './add-group
 export { type AddStopInput, addStop } from './add-stop';
 export { appHref } from './app-href';
 export { approveAndApplyIdea } from './approve-and-apply-idea';
+export { discardActivityChanges, keepActivityPlan } from './cancel-activity-edit';
 export { closeGroamAssistant } from './close-groam-assistant';
 export {
   type CompleteOnboardingInput,
