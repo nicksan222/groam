@@ -51,10 +51,14 @@ jobs:
         run: bun run check
 
   e2e:
-    name: Browser
+    name: Browser (${{ matrix.shard }}/4)
     needs: [quality]
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     env:
       CI: 'true'
       CONVEX_AGENT_MODE: anonymous
@@ -120,13 +124,13 @@ jobs:
         run: bun run seed -- --users 1 --trips 0
 
       - name: Run browser tests
-        run: bun run test:e2e
+        run: bun run test:e2e -- --shard=${{ matrix.shard }}/4
 
       - name: Upload failure artifacts
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: test-failure-${{ github.run_id }}
+          name: test-failure-${{ github.run_id }}-${{ matrix.shard }}
           if-no-files-found: ignore
           retention-days: 7
           path: |
