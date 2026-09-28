@@ -52,6 +52,7 @@ jobs:
 
   e2e:
     name: Browser (${{ matrix.shard }}/4)
+    needs: [quality]
     runs-on: ubuntu-latest
     timeout-minutes: 90
     strategy:
@@ -147,6 +148,7 @@ jobs:
 
   desktop:
     name: Desktop (${{ matrix.platform }})
+    needs: [quality]
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 90
     env:
