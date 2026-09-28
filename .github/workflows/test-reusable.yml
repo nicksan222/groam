@@ -51,13 +51,13 @@ jobs:
         run: bun run check
 
   e2e:
-    name: Browser (${{ matrix.shard }}/2)
+    name: Browser (${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
     timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2]
+        shard: [1, 2, 3, 4]
     env:
       CI: 'true'
       CONVEX_AGENT_MODE: anonymous
@@ -123,7 +123,7 @@ jobs:
         run: bun run seed -- --users 1 --trips 0
 
       - name: Run browser tests
-        run: bun run test:e2e -- --shard=${{ matrix.shard }}/2
+        run: bun run test:e2e -- --shard=${{ matrix.shard }}/4
 
       - name: Upload failure artifacts
         if: failure()
