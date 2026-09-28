@@ -22,7 +22,7 @@ export function SharedTripBanner({
   return (
     <section
       aria-label={archived ? 'Archived trip' : sharedTripBannerTitle}
-      className="mx-4 mb-4 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-muted/40 p-4 sm:mx-6"
+      className="mx-4 mt-4 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-muted/40 p-4 sm:mx-6"
       data-testid={testIds.sharedTripBanner}
     >
       <div className="min-w-0 basis-full sm:flex-1 sm:basis-auto">

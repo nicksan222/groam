@@ -31,8 +31,8 @@ export function TripPageShell({
           <Shell.BannerCrumb>{crumb}</Shell.BannerCrumb>
           {hero}
         </Shell.Banner>
-        {banner}
         <div className="sticky top-0 z-10 shrink-0 bg-background">{nav}</div>
+        {banner}
         {notice}
         <Shell.PageBody>{body}</Shell.PageBody>
       </Shell.BannerLayout>

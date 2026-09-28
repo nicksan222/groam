@@ -8,6 +8,24 @@ import { TripSectionNav } from './trip-section-nav';
 
 afterEach(cleanup);
 
+test('trip notice sits below the header and tab navigation', () => {
+  const { container } = render(
+    <TripPageShell
+      banner={<div data-testid="trip-notice">Notice</div>}
+      body={<div>Trip content</div>}
+      crumb={<div>All trips</div>}
+      hero={<div>Trip title</div>}
+      nav={<div>Trip sections</div>}
+    />
+  );
+
+  const content = container.querySelector('[data-slot="shell-content"]');
+  const header = content?.querySelector('header');
+  const notice = screen.getByTestId('trip-notice');
+  expect(header?.contains(notice)).toBe(false);
+  expect(notice.previousElementSibling?.textContent).toBe('Trip sections');
+});
+
 test('trip page uses one shared loading surface without rendering its unknown content', () => {
   const { container } = render(
     <TripPageShell
