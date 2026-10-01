@@ -3,22 +3,22 @@
   "version": "0.0.0",
   "dependencies": {
     "@groam/env": "workspace:*",
-    "convex": "^1.45.0",
-    "zod": "^4.6.2"
+    "convex": "^1.46.0",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.12",
+    "@biomejs/biome": "2.5.14",
     "@convex-dev/static-hosting": "0.2.1",
-    "@types/node": "^26.4.1",
-    "fallow": "3.22.0",
+    "@types/node": "^26.6.3",
+    "fallow": "3.30.0",
     "husky": "^9.1.7",
     "jiti": "^2.7.0",
-    "lint-staged": "^17.5.0",
-    "react-doctor": "0.9.13",
+    "lint-staged": "^17.6.0",
+    "react-doctor": "0.9.14",
     "syncpack": "^15.3.3",
-    "turbo": "^2.10.12",
+    "turbo": "^2.11.5",
     "typescript": "~7.0.2",
-    "vite": "^8.2.2"
+    "vite": "^8.3.1"
   },
   "license": "MIT",
   "lint-staged": {
