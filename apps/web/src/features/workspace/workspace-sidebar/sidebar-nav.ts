@@ -1,8 +1,4 @@
 import { FileDiff, LayoutDashboard, Map as MapIcon, MessageSquare, Settings } from 'lucide-react';
-import type { SidebarNavItem } from '@/types/workspace';
-
-export type { SidebarNavItem };
-
 export const primaryNavigation = [{ icon: LayoutDashboard, label: 'Home', to: '/' }] as const;
 
 export const manageNavigation = [{ icon: Settings, label: 'Settings', to: '/settings' }] as const;

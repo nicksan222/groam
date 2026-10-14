@@ -11,7 +11,7 @@ import {
   SidebarMenuSubItem
 } from '@groam/ui/components/sidebar';
 import { cn } from '@groam/ui/lib/utils';
-import { Archive, ExternalLink, Link2, MoreHorizontal, Star } from 'lucide-react';
+import { Archive, ExternalLink, ImageIcon, Link2, MoreHorizontal, Star } from 'lucide-react';
 import type { TripListItem } from '@/features/trips/hooks/use-trips';
 import { CanonicalLink } from '@/features/workspace/navigation/router';
 
@@ -58,6 +58,13 @@ export function TripSidebarRow({
           title={trip.favorite ? `Favourite · ${title}` : title}
           to="/trips/$tripId/$section"
         >
+          <span className="flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-md bg-sidebar-accent text-sidebar-foreground">
+            {trip.coverUrl ? (
+              <img alt="" className="size-full object-cover" src={trip.coverUrl} />
+            ) : (
+              <ImageIcon aria-hidden className="size-3.5" />
+            )}
+          </span>
           <span className={cn('truncate', trip.favorite && 'font-medium tracking-tight')}>
             {trip.name}
           </span>

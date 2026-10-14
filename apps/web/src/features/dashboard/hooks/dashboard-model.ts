@@ -1,6 +1,5 @@
 import { ideaStatusLabel } from '@/features/ideas/idea-status';
 import type { TripListItem, WorkspaceTripProposal } from '@/features/trips/hooks/use-trips';
-import { displayInitials } from '@/lib/display-initials';
 import type { DashboardBuckets, DashboardPresentation } from '@/types/dashboard';
 
 const DAY_MS = 86_400_000;
@@ -32,8 +31,6 @@ export function greetingForHour(hour: number) {
   return 'Good evening';
 }
 
-export const initials = displayInitials;
-
 export function relativeDate(timestamp: number, now = Date.now()) {
   const days = Math.round((timestamp - now) / DAY_MS);
   return Math.abs(days) < 30
@@ -59,8 +56,21 @@ export function summarizeDashboard(
   const openIdeas = proposals.filter((proposal) => openIdeaStatuses.has(proposal.status));
   const tripsNeedingAttention = activeTrips.filter((trip) => trip.outstandingActionCount > 0);
 
+  const ideaSnapshot = proposals.reduce(
+    (snapshot, proposal) => {
+      snapshot.total += 1;
+      if (proposal.status === 'draft') snapshot.drafts += 1;
+      if (proposal.status === 'in_review') snapshot.inReview += 1;
+      if (proposal.status === 'conflicted') snapshot.conflicts += 1;
+      if (settledStatuses.has(proposal.status)) snapshot.decided += 1;
+      return snapshot;
+    },
+    { conflicts: 0, decided: 0, drafts: 0, inReview: 0, total: 0 }
+  );
+
   return {
     activeTrips,
+    ideaSnapshot,
     metrics: {
       activeTrips: activeTrips.length,
       openIdeas: openIdeas.length,

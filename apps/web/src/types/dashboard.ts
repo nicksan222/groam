@@ -2,6 +2,13 @@ import type { TripListItem, WorkspaceTripProposal } from '@/types/trips';
 
 export type DashboardBuckets = {
   activeTrips: TripListItem[];
+  ideaSnapshot: {
+    conflicts: number;
+    decided: number;
+    drafts: number;
+    inReview: number;
+    total: number;
+  };
   metrics: {
     activeTrips: number;
     openIdeas: number;

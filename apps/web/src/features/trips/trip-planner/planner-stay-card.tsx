@@ -13,7 +13,7 @@ export function PlannerStayCard({
 }) {
   const timing = 'Staying overnight';
   return (
-    <details className="rounded-xl bg-muted/40 p-3">
+    <details className="rounded-md bg-muted/40 p-3">
       <summary className="flex cursor-pointer list-none items-start gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
         <BedDouble className="mt-0.5 size-4 shrink-0 text-primary" />
         <span className="min-w-0">

@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import type { TripListItem, WorkspaceTripProposal } from '@/features/trips/hooks/use-trips';
 import {
@@ -10,7 +10,18 @@ import {
 import { resetTripWorkspaceView, trips } from '@/features/trips/test-workspace-mocks';
 import { DashboardView } from './dashboard-view';
 
-beforeEach(resetTripWorkspaceView);
+const tripsUi = vi.hoisted(() => ({
+  openCreate: vi.fn()
+}));
+
+vi.mock('@/features/trips/hooks/use-trips-sidebar-ui', () => ({
+  useTripsSidebarUi: () => ({ openCreate: tripsUi.openCreate })
+}));
+
+beforeEach(() => {
+  resetTripWorkspaceView();
+  tripsUi.openCreate.mockClear();
+});
 
 afterEach(cleanup);
 
@@ -30,7 +41,8 @@ describe('DashboardView', () => {
 
     expect(await screen.findByTestId('empty-screen')).toBeTruthy();
     expect(screen.getByText('Where should we go next?')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Create a trip' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Create a trip' }));
+    expect(tripsUi.openCreate).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole('link', { name: 'View trips' })).toBeNull();
     expect(screen.queryByText('Atlantic week')).toBeNull();
   });
@@ -62,15 +74,51 @@ describe('DashboardView', () => {
     });
     render(<DashboardView />);
 
+    expect(screen.getByText('Acme Labs')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Create trip' }));
+    expect(tripsUi.openCreate).toHaveBeenCalledTimes(1);
     expect(await screen.findByRole('heading', { name: 'Atlantic week' })).toBeTruthy();
     expect(screen.getByText('Please review the coast day')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Give your take' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Review idea' })).toBeTruthy();
     expect(screen.getByText('Packing list')).toBeTruthy();
     expect(screen.getByText('Train tickets')).toBeTruthy();
-    expect(screen.getAllByRole('heading', { name: 'Open dates' }).length).toBeGreaterThan(0);
+    expect(screen.getByRole('heading', { name: 'Open dates' })).toBeTruthy();
     expect(screen.getByText('Agree on the travel period')).toBeTruthy();
     expect(screen.queryByText('Decide now')).toBeNull();
-    expect(document.querySelector('[data-slot="timeline"]')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Needs your attention' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Recent ideas' })).toBeTruthy();
+    expect(screen.getByText('Based on the 3 most recent ideas.')).toBeTruthy();
+    expect(screen.getByLabelText('Recent idea status distribution')).toBeTruthy();
+    expect(screen.getByText('1 item needs attention')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Continue planning' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Your ideas' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Recently decided' })).toBeTruthy();
+  });
+
+  test('caps review requests and dashboard lists without implying workspace totals', async () => {
+    mockTripWorkspace(trips, {
+      proposals: Array.from({ length: 6 }, (_, index) =>
+        proposal({
+          id: `tripProposals:review-${index}` as WorkspaceTripProposal['id'],
+          reviewRequested: true,
+          title: `Review request ${index + 1}`
+        })
+      ),
+      tripItems: Array.from({ length: 6 }, (_, index) =>
+        trip({
+          id: `trips:trip-${index}` as TripListItem['id'],
+          name: `Planning trip ${index + 1}`
+        })
+      )
+    });
+    render(<DashboardView />);
+
+    expect(await screen.findByText('Review request 1')).toBeTruthy();
+    expect(screen.getByText('Review request 3')).toBeTruthy();
+    expect(screen.queryByText('Review request 4')).toBeNull();
+    expect(screen.getByRole('heading', { name: 'Planning trip 4' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Planning trip 5' })).toBeNull();
+    expect(screen.queryByText(/6 active trips/i)).toBeNull();
   });
 
   test('shows a recovery screen when workspace queries throw', async () => {

@@ -27,7 +27,7 @@ export function TripHeroMeta({
     <>
       {hasIdeaTitle ? null : (
         <p
-          className={`${compactHide} mt-1 truncate text-xs text-muted-foreground`}
+          className={`${compactHide} mt-1 truncate text-sm text-muted-foreground`}
           data-destination-status={destinationStatus}
           data-testid={testIds.tripDestination}
           title={subtitle}
@@ -36,7 +36,7 @@ export function TripHeroMeta({
         </p>
       )}
       <p
-        className={`${compactHide} mt-1 flex min-w-0 items-baseline gap-1 text-xs text-muted-foreground`}
+        className={`${compactHide} mt-1 flex min-w-0 flex-wrap items-baseline gap-1 text-xs text-muted-foreground`}
         data-role={role}
         data-testid={testIds.tripRole}
       >

@@ -1,5 +1,6 @@
 import { Button } from '@groam/ui/components/button';
-import { BedDouble, MapPin, Pencil, Route } from 'lucide-react';
+import Timeline from '@groam/ui/components/timeline';
+import { BedDouble, Clock3, MapPin, Pencil, Route } from 'lucide-react';
 import {
   activityChangeKey,
   stayChangeKey
@@ -9,66 +10,92 @@ import { useItineraryProposalChangeList } from '@/features/trips/hooks/use-itine
 import { ItineraryProposalHighlight } from '@/features/trips/itinerary-proposal-highlight/itinerary-proposal-highlight';
 import type { PlannerEntry } from '@/types/trip-planner';
 
+function iconFor(entry: PlannerEntry) {
+  if (entry.kind === 'travel') return Route;
+  if (entry.kind === 'stay') return BedDouble;
+  return MapPin;
+}
+
+function changeKeyFor(entry: PlannerEntry) {
+  if (entry.kind === 'activity') return activityChangeKey(entry.activity);
+  if (entry.kind === 'stay') return stayChangeKey(entry.stay);
+  return null;
+}
+
+function labelFor(entry: PlannerEntry, continuing: boolean) {
+  if (continuing) return 'Continuing stay';
+  if (entry.kind === 'stay') return 'Stay';
+  if (entry.kind === 'travel') return 'Travel';
+  return 'Activity';
+}
+
 export function EditorDayRow({
   entry,
   day,
   disabled = false,
   onEdit,
-  overnight = false
+  continuing = false
 }: {
   entry: PlannerEntry;
   day: number;
   disabled?: boolean;
   onEdit: (entry: PlannerEntry) => void;
-  overnight?: boolean;
+  continuing?: boolean;
 }) {
   const changes = useItineraryProposalChangeList();
-  const key =
-    entry.kind === 'activity'
-      ? activityChangeKey(entry.activity)
-      : entry.kind === 'stay'
-        ? stayChangeKey(entry.stay)
-        : null;
-  const change = changes?.find((item) => item.key === key) ?? null;
-  const Icon = entry.kind === 'travel' ? Route : entry.kind === 'stay' ? BedDouble : MapPin;
+  const changeKey = changeKeyFor(entry);
+  const change = changes?.find((item) => item.key === changeKey) ?? null;
+  const Icon = iconFor(entry);
+  const timing = continuing ? 'Overnight' : entryTime(entry, day);
   return (
-    <ItineraryProposalHighlight
-      change={change}
-      className="rounded-none [&>div]:ps-0 [&>p]:mb-0 [&>p]:px-4 [&>p]:pt-2"
-    >
-      <Button
-        type="button"
-        aria-label={overnight ? `Edit overnight stay at ${entry.title}` : `Edit ${entry.title}`}
-        aria-description={`${overnight ? 'Overnight' : entryTime(entry, day)} · ${entry.location}`}
-        disabled={disabled}
-        onClick={() => onEdit(entry)}
-        className="group relative grid w-full grid-cols-[5.5rem_minmax(0,1fr)] items-stretch text-left transition-colors hover:bg-muted/40 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring disabled:opacity-50 sm:grid-cols-[7.5rem_minmax(0,1fr)_minmax(0,0.7fr)]"
-        unstyled
-      >
-        <span className="px-3 py-4 text-xs font-medium leading-5 tabular-nums sm:px-4">
-          {overnight ? 'Overnight' : entryTime(entry, day)}
-        </span>
-        <span className="min-w-0 border-l border-border px-3 py-4 sm:px-4">
-          <span className="block break-words text-sm font-medium leading-5">{entry.title}</span>
-          <span className="mt-1 flex items-start gap-1.5 text-xs leading-5 text-muted-foreground sm:hidden">
-            <Icon aria-hidden="true" className="mt-1 size-3 shrink-0" />
-            {entry.location}
-          </span>
-          {entry.endDay !== entry.startDay ? (
-            <span className="mt-1 block text-xs text-muted-foreground">
-              Day {entry.startDay} → Day {entry.endDay}
-            </span>
-          ) : null}
-        </span>
-        <span className="hidden min-w-0 items-start gap-2 border-l border-border py-4 pl-4 pr-7 text-xs leading-5 text-muted-foreground sm:flex">
-          <Icon aria-hidden="true" className="mt-1 size-3 shrink-0" />
-          <span className="break-words">{entry.location}</span>
-        </span>
-        <Pencil
-          aria-hidden="true"
-          className="absolute right-3 top-5 hidden size-3 text-muted-foreground opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 sm:block"
-        />
-      </Button>
-    </ItineraryProposalHighlight>
+    <Timeline.Item>
+      <Timeline.Badge className={entry.kind === 'stay' ? 'bg-primary/10 text-primary' : undefined}>
+        <Icon aria-hidden="true" />
+      </Timeline.Badge>
+      <Timeline.Body className="block">
+        <ItineraryProposalHighlight change={change}>
+          <Timeline.Card
+            className={
+              entry.kind === 'travel'
+                ? 'border-dashed'
+                : entry.kind === 'stay'
+                  ? 'border-primary/20'
+                  : undefined
+            }
+          >
+            <Timeline.CardHeader>
+              <span className="text-xs font-medium tabular-nums">{timing}</span>
+              <span className="text-border">·</span>
+              <span className="text-xs text-muted-foreground">{labelFor(entry, continuing)}</span>
+            </Timeline.CardHeader>
+            <Timeline.CardBody className="flex items-start gap-3 py-2.5">
+              <div className="min-w-0 flex-1">
+                <p className="break-words text-sm font-semibold text-foreground">{entry.title}</p>
+                <p className="mt-1 flex items-start gap-1.5 text-xs text-muted-foreground">
+                  <Clock3 className="mt-0.5 size-3 shrink-0" />
+                  {entry.location}
+                </p>
+                {entry.endDay !== entry.startDay ? (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Days {entry.startDay}–{entry.endDay}
+                  </p>
+                ) : null}
+              </div>
+              <Button
+                aria-label={
+                  continuing ? `Edit overnight stay at ${entry.title}` : `Edit ${entry.title}`
+                }
+                disabled={disabled}
+                onClick={() => onEdit(entry)}
+                size="icon-xs"
+                variant="ghost"
+              >
+                <Pencil />
+              </Button>
+            </Timeline.CardBody>
+          </Timeline.Card>
+        </ItineraryProposalHighlight>
+      </Timeline.Body>
+    </Timeline.Item>
   );
 }

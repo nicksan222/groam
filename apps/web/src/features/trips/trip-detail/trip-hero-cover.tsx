@@ -2,6 +2,7 @@ import { Button } from '@groam/ui/components/button';
 import { Spinner } from '@groam/ui/components/spinner';
 import { cn } from '@groam/ui/lib/utils';
 import { MapPinned, RotateCcw } from 'lucide-react';
+import { useState } from 'react';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { useAsyncPending } from '@/features/workspace/hooks/use-async-pending';
 
@@ -13,6 +14,8 @@ export function TripHeroCover({
   trip: TripDetail;
 }) {
   const retrying = useAsyncPending();
+  const [failedSource, setFailedSource] = useState<string | null>(null);
+  const showImage = trip.coverUrl && trip.coverUrl !== failedSource;
   const isBusy = retrying.isPending || trip.coverStatus === 'pending';
   const canRefreshCover =
     trip.permissions.canEditCover &&
@@ -25,9 +28,14 @@ export function TripHeroCover({
   };
 
   return (
-    <div className="group/hero-cover relative w-14 min-w-12 shrink self-stretch overflow-hidden rounded-lg border border-border sm:w-20 sm:shrink-0">
-      {trip.coverUrl ? (
-        <img alt="" className="absolute inset-0 size-full object-cover" src={trip.coverUrl} />
+    <div className="group/hero-cover relative h-32 w-full basis-full overflow-hidden rounded-lg bg-muted sm:h-44">
+      {showImage ? (
+        <img
+          alt=""
+          className="absolute inset-0 size-full object-cover"
+          src={trip.coverUrl ?? undefined}
+          onError={() => setFailedSource(trip.coverUrl)}
+        />
       ) : (
         <div className="absolute inset-0 grid size-full place-items-center">
           <MapPinned className="size-4 text-muted-foreground/40" />

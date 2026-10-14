@@ -19,7 +19,7 @@ export function TripReadingOverview({
   return (
     <Shell.Stack stack="page">
       <section aria-label="Trip at a glance" className="space-y-3">
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+        <h2 className="text-sm font-medium text-muted-foreground">
           {trip.proposal ? 'Idea preview' : 'Your trip at a glance'}
         </h2>
         <OverviewProperties compact trip={trip} />

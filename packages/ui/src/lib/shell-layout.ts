@@ -13,13 +13,13 @@ export const SHELL_CONTENT_PADDING = `${SHELL_PAGE_INSET} pb-4 pt-4`;
 export const SHELL_CONTENT_GAP = 'gap-4';
 
 /** Page title typography (`Shell.Title`, banner headings). */
-export const SHELL_TITLE_TEXT = 'text-xl font-semibold text-foreground';
+export const SHELL_TITLE_TEXT = 'text-2xl font-semibold tracking-tight text-foreground';
 
 /** Page title in sticky list headers (`Shell.Title`). */
 export const SHELL_TITLE = `m-0 p-0 ${SHELL_TITLE_TEXT}`;
 
 /** Page description under a list header title (`Shell.Description`). */
-export const SHELL_DESCRIPTION = 'text-xs text-muted-foreground';
+export const SHELL_DESCRIPTION = 'text-sm leading-6 text-muted-foreground';
 
 /** Banner page title (`Shell.BannerHeading`, hero rows). */
 export const SHELL_BANNER_TITLE = `truncate tracking-tight ${SHELL_TITLE_TEXT}`;
@@ -28,7 +28,7 @@ export const SHELL_BANNER_TITLE = `truncate tracking-tight ${SHELL_TITLE_TEXT}`;
 export const SHELL_BANNER_DESCRIPTION = `truncate ${SHELL_DESCRIPTION}`;
 
 /** In-page section heading (`Shell.SectionHeader`, card titles). */
-export const SHELL_SECTION_TITLE = `font-semibold tracking-tight ${SHELL_TITLE_TEXT}`;
+export const SHELL_SECTION_TITLE = 'text-lg font-semibold tracking-tight text-foreground';
 
 /** Compact title inside `Shell.NoticeBanner`. */
 export const SHELL_NOTICE_TITLE = 'text-sm font-medium tracking-tight text-foreground';

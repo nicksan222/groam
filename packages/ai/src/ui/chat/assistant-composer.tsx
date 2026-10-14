@@ -12,6 +12,8 @@ export function AssistantComposer({
   focusOnMount = false,
   isSending,
   isStopping = false,
+  message,
+  onMessageChange,
   onStop,
   onSubmit
 }: {
@@ -21,6 +23,8 @@ export function AssistantComposer({
   focusOnMount?: boolean;
   isSending: boolean;
   isStopping?: boolean;
+  message?: string;
+  onMessageChange?: (message: string) => void;
   onStop?: () => Promise<boolean>;
   onSubmit: (prompt: string) => Promise<boolean>;
 }) {
@@ -33,11 +37,14 @@ export function AssistantComposer({
       isStopping={isStopping}
       label="Assistant prompt"
       maxLength={800}
+      message={message}
       notice="AI can make mistakes."
+      onMessageChange={onMessageChange}
       onStop={onStop}
       onSubmit={onSubmit}
       placeholder={composerPlaceholder(contextAvailable, isSending)}
       submitLabel="Submit prompt"
+      variant="sidechat"
       toolbarStart={
         attachments ? <AssistantAttachmentPicker attachments={attachments} /> : undefined
       }

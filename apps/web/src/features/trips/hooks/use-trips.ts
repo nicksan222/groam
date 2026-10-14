@@ -26,7 +26,6 @@ import { useEnsureTripCover } from './use-ensure-trip-cover';
 export type {
   CreateTripInput,
   TransportMode,
-  TripBoundary,
   TripDestinationActivityInput,
   TripDestinationInput,
   TripDestinationSchedule,

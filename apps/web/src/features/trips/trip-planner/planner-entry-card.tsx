@@ -12,9 +12,9 @@ function EntryKindIcon({ kind }: { kind: PlannerEntry['kind'] }) {
 
 function EntrySummary({ entry }: { entry: PlannerEntry }) {
   return (
-    <summary className="flex cursor-pointer list-none items-start gap-3 p-3 marker:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:p-4 [&::-webkit-details-marker]:hidden">
+    <summary className="flex cursor-pointer list-none items-start gap-3 rounded-md px-2 py-3 marker:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:px-3 [&::-webkit-details-marker]:hidden">
       <span className="min-w-0 flex-1">
-        <span className="block break-words text-sm font-semibold leading-6">{entry.title}</span>
+        <span className="block break-words text-sm font-medium leading-6">{entry.title}</span>
         <span className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
           <EntryKindIcon kind={entry.kind} />
           {entry.location}
@@ -99,7 +99,7 @@ export function PlannerEntryCard({
   currency: string;
 }) {
   return (
-    <div className="grid min-w-0 grid-cols-[5.5rem_minmax(0,1fr)] gap-3 sm:grid-cols-[7rem_minmax(0,1fr)] sm:gap-5">
+    <div className="grid min-w-0 grid-cols-[4.5rem_minmax(0,1fr)] gap-2 sm:grid-cols-[6rem_minmax(0,1fr)] sm:gap-3">
       <div className="pt-3 text-xs font-semibold tabular-nums text-foreground sm:text-sm">
         {entryTime(entry, day)}
         {entry.kind !== 'stay' && entry.startTime && !entry.endTime && entry.startDay === day ? (
@@ -108,7 +108,7 @@ export function PlannerEntryCard({
           </span>
         ) : null}
       </div>
-      <details className="group min-w-0 rounded-xl border border-border bg-card open:shadow-sm">
+      <details className="group min-w-0 rounded-md transition-colors hover:bg-muted/40 open:bg-muted/30 motion-reduce:transition-none">
         <EntrySummary entry={entry} />
         <EntryDetails currency={currency} entry={entry} />
       </details>

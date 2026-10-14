@@ -7,38 +7,40 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@groam/ui/components/dropdown-menu';
-import { Check, History } from 'lucide-react';
+import { Check, ChevronDown } from 'lucide-react';
 
 export function AssistantChatMenu({
   activeChatId,
   chats,
-  contextTitle,
   disabled,
-  onSelect
+  onSelect,
+  title
 }: {
   activeChatId: string | null;
   chats: ReadonlyArray<{ id: string; title: string }>;
-  contextTitle: string;
   disabled: boolean;
   onSelect: (threadId: string) => void;
+  title: string;
 }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
           aria-label="Open AI chat history"
+          className="h-11 min-w-0 flex-1 justify-start gap-1.5 px-2 text-sm font-medium xl:h-8"
           disabled={disabled}
-          size="icon-sm"
+          title={title}
           type="button"
           variant="ghost"
         >
-          <History />
+          <span className="truncate" id="ai-assistant-widget-title">
+            {title}
+          </span>
+          <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-72">
-        <DropdownMenuLabel className="truncate" title={contextTitle}>
-          {contextTitle} chats
-        </DropdownMenuLabel>
+      <DropdownMenuContent align="start" className="w-[min(20rem,calc(100vw-1rem))]">
+        <DropdownMenuLabel>Chat history</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {chats.length === 0 ? (
           <DropdownMenuItem disabled>No previous chats</DropdownMenuItem>
