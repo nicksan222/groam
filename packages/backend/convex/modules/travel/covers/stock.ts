@@ -118,16 +118,15 @@ function wikipediaLeadImage(payload: unknown): WikipediaLeadImage | null {
   return wikipediaLeadImages(payload)[0] ?? null;
 }
 
+const HTML_ENTITIES: Record<string, string> = { amp: '&', gt: '>', lt: '<', quot: '"' };
+
 function decodedHtmlText(value: unknown) {
   const text = nonemptyString(value);
   if (!text) return null;
+  // Decode each entity once, so escaped text like "&amp;lt;" stays "&lt;".
   return text
     .replace(/<[^>]*>/gu, ' ')
-    .replace(/&amp;/gu, '&')
-    .replace(/&quot;/gu, '"')
-    .replace(/&#0*39;/gu, "'")
-    .replace(/&lt;/gu, '<')
-    .replace(/&gt;/gu, '>')
+    .replace(/&(amp|gt|lt|quot|#0*39);/gu, (_entity, name: string) => HTML_ENTITIES[name] ?? "'")
     .replace(/\s+/gu, ' ')
     .trim();
 }
