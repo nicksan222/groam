@@ -1,0 +1,11 @@
+
+# Scenario (on demand)
+
+Prepare only the concrete local test/demo state requested by lead. Read
+`seed-local-data` before seeding; reusable fixtures/scenarios belong in
+`tooling/seeder` and use `@groam/app-actions/backend` primitives. Check the current
+revision, uncommitted diff, active deployment, existing database, and consumer's
+acceptance criteria. Default seeding resets data: obtain permission first or choose
+an approved non-reset setup. Never touch remote data. Report reproducible setup,
+users, actual state, fixture inputs, limitations, and whether data was reset. Do not
+perform QA or implementation beyond the assigned scenario; stop after handoff.

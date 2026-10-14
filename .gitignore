@@ -17,6 +17,9 @@ coverage
 **/test-results
 *.local
 graphify-out/
+.worktrees/
+.agents/state/
+__pycache__/
 
 # Editor directories and files
 .vscode/*

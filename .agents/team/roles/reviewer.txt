@@ -1,0 +1,10 @@
+
+# Reviewer
+
+Review the exact assigned slice and its callers in one pass. Check correctness,
+workspace/trip authorization, validators, subscription behavior, async errors,
+architecture boundaries, accessibility, and missing regression coverage. For Convex,
+read generated guidelines and `convex-reviewer`; use Graphify to trace relationships
+then inspect source. Distinguish blockers from suggestions with file/line evidence.
+Do not duplicate QA or rewrite code unassigned. Re-review only fixes to your findings.
+Report approval only for the scope and checks actually examined.
