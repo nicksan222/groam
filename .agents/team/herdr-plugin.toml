@@ -1,0 +1,25 @@
+# No status-change hooks: status belongs in the sidebar, not another model prompt.
+id = "groam.team"
+name = "Groam team"
+version = "0.2.0"
+min_herdr_version = "0.9.3"
+description = "Start Groam's project-wide seven-role team in the devcontainer"
+platforms = ["linux"]
+
+[[actions]]
+id = "up"
+title = "Start missing Groam agents"
+contexts = ["workspace"]
+command = ["python3", "agents.py", "up", "--plugin", "--no-attach"]
+
+[[actions]]
+id = "reset"
+title = "Reset all agent context"
+contexts = ["workspace"]
+command = ["python3", "agents.py", "reset", "--plugin", "--no-attach"]
+
+[[actions]]
+id = "stop"
+title = "Stop all Groam agents"
+contexts = ["workspace"]
+command = ["python3", "agents.py", "down", "--plugin"]

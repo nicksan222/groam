@@ -34,7 +34,6 @@ jobs:
         shell: bash
         run: |
           mkdir -p \
-            "$HOME/.pi" \
             "$HOME/.convex" \
             "$HOME/.claude" \
             "$HOME/.codex" \

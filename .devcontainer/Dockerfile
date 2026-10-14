@@ -3,7 +3,8 @@ FROM ghcr.io/casey/just:1.58.0 AS just
 
 FROM mcr.microsoft.com/devcontainers/javascript-node:24-bookworm
 
-ARG PI_VERSION=0.83.0
+ARG CLAUDE_VERSION=2.1.287
+ARG HERDR_VERSION=0.9.3
 ARG GRAPHIFY_VERSION=0.9.63
 ARG GRAPHIFY_EXCLUDE_NEWER=2026-09-18
 
@@ -30,11 +31,28 @@ RUN apt-get update \
     xdg-utils \
   && rm -rf /var/lib/apt/lists/*
 
-# Pi runs inside the container boundary while its user-level configuration and
-# credentials are supplied by explicit Dev Container mounts.
-RUN npm install --global --ignore-scripts \
-    "@earendil-works/pi-coding-agent@${PI_VERSION}" \
-  && npm cache clean --force
+# Checksum-pinned Herdr builds for both container architectures.
+RUN set -eu; \
+    case "$(uname -m)" in \
+      x86_64) arch=x86_64; checksum=18a8dc65f1c2fa485884344356dea1cfd911c6f06cf46fa78e193f4087f4dba7 ;; \
+      aarch64) arch=aarch64; checksum=4de7aa3e25678812e92960de64f7c2aaa1bca1f0f80a3c5e559837e231e1f5c0 ;; \
+      *) echo "Unsupported Herdr architecture" >&2; exit 1 ;; \
+    esac; \
+    curl -fsSL -o /tmp/herdr \
+      "https://github.com/herdrdev/herdr/releases/download/v${HERDR_VERSION}/herdr-linux-${arch}"; \
+    printf '%s  /tmp/herdr\n' "$checksum" | sha256sum --check; \
+    install -m 755 /tmp/herdr /usr/local/bin/herdr; \
+    rm /tmp/herdr
+
+# Native Claude; credentials are host-mounted and auto-updates disabled.
+USER node
+ENV PATH="/home/node/.local/bin:${PATH}"
+ENV DISABLE_AUTOUPDATER=1
+RUN curl -fsSL https://claude.ai/install.sh -o /tmp/install-claude.sh \
+  && bash /tmp/install-claude.sh "${CLAUDE_VERSION}" \
+  && rm /tmp/install-claude.sh \
+  && claude --version
+USER root
 
 # Graphify stays isolated from the Bun workspace. Code-only indexing is local
 # and needs neither an API key nor an external graph database. The resolver
