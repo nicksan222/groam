@@ -24,7 +24,9 @@ export function travelChoicesForDay(
   const choices: Array<{ label: string; target: EditorTravelTarget }> = [];
   const first = trip.destinations[0];
   const last = trip.destinations.at(-1);
-  if (day === 1 && first && !trip.arrivalTransfer)
+  // Boundary travel may sit on any day the travel form accepts, so trips with open
+  // days before the first stop or after the last one can still add it.
+  if (first && !trip.arrivalTransfer && day <= (first.startDay ?? 1))
     choices.push({ label: `Getting to ${first.name}`, target: { kind: 'arrival' } });
   trip.destinations.forEach((destination, index) => {
     const next = trip.destinations[index + 1];
@@ -42,7 +44,28 @@ export function travelChoicesForDay(
         });
     });
   });
-  if (last && !trip.departureTransfer && day === (trip.totalDurationDays ?? last.endDay))
+  if (
+    last &&
+    !trip.departureTransfer &&
+    day >= (last.endDay ?? 1) &&
+    day <= (trip.totalDurationDays ?? last.endDay ?? 1)
+  )
     choices.push({ label: `Getting home from ${last.name}`, target: { kind: 'departure' } });
   return choices;
+}
+
+/** The day an untimed transfer is shown on, so it stays editable in the day editor. */
+export function untimedTravelDay(trip: TripDetail, target: EditorTravelTarget): number {
+  if (target.kind === 'arrival') return trip.destinations[0]?.startDay ?? 1;
+  if (target.kind === 'departure') return trip.destinations.at(-1)?.endDay ?? 1;
+  for (const destination of trip.destinations) {
+    if (target.kind === 'destination' && destination.id === target.fromId)
+      return destination.endDay ?? 1;
+    const activity =
+      target.kind === 'activity'
+        ? destination.activities.find((item) => item.id === target.fromId)
+        : undefined;
+    if (activity) return activity.endDayNumber ?? activity.dayNumber ?? 1;
+  }
+  return 1;
 }

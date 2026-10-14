@@ -11,20 +11,34 @@ import type {
   EditorDetailSelection,
   ItineraryEditorProps
 } from '@/types/itinerary-editor';
-import type { PlannerEntry } from '@/types/trip-planner';
+import type { PlannerDay, PlannerEntry } from '@/types/trip-planner';
+import type { TripDetail } from '@/types/trips';
 import { EditorDayCard } from './editor-day-card';
 import { EditorRouteStop } from './editor-route-stop';
 
-import { targetForTravel } from './editor-travel-targets';
+import { targetForTravel, untimedTravelDay } from './editor-travel-targets';
 import { EditorTripDates } from './editor-trip-dates';
+
+/** Untimed travel has no planner day; show it on its natural day so it can still be edited. */
+function withUntimedTravel(trip: TripDetail, days: PlannerDay[], untimed: PlannerEntry[]) {
+  return days.map((day) => {
+    const extra = untimed.filter((entry) => {
+      const target = targetForTravel(trip, entry);
+      return target ? Math.min(untimedTravelDay(trip, target), days.length) === day.day : false;
+    });
+    return extra.length ? { ...day, entries: [...day.entries, ...extra] } : day;
+  });
+}
 
 export function ItineraryEditor(props: ItineraryEditorProps) {
   const { trip, updateTrip, onOpenOverview } = props;
   const onAddDestination = props.onAddDestination ?? onOpenOverview;
   const planner = buildTripPlanner(trip);
-  const days = planner.days.length
-    ? planner.days
-    : [{ day: 1, destinations: [], entries: [], stays: [] }];
+  const days = withUntimedTravel(
+    trip,
+    planner.days.length ? planner.days : [{ day: 1, destinations: [], entries: [], stays: [] }],
+    planner.unscheduledTravel
+  );
   const changes = useItineraryProposalChangeList() ?? [];
   const [selection, setSelection] = useState<EditorActivitySelection | null>(null);
   const [detail, setDetail] = useState<EditorDetailSelection | null>(null);

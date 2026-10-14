@@ -43,8 +43,10 @@ export function EditorInlineDetails({
         key={`${selectedDetail.destinationId}:${selectedDetail.stayId ?? 'new'}`}
         props={props}
         destination={destination}
+        destinations={destinationsForDay(trip.destinations, day.day)}
         day={day.day}
         stayId={selectedDetail.stayId}
+        onChooseDestination={(id) => setDetail({ ...selectedDetail, destinationId: id })}
         onClose={() => setDetail((current) => (current === selectedDetail ? null : current))}
       />
     );
