@@ -11,11 +11,13 @@ const RAIL_WIDTH = '3rem';
 export function AssistantSidechatRail({
   isResponding,
   onOpen,
-  ref
+  ref,
+  showMobileLauncher
 }: {
   isResponding: boolean;
   onOpen: () => void;
   ref: Ref<HTMLButtonElement>;
+  showMobileLauncher: boolean;
 }) {
   const isMobile = useIsMobile();
   const label = isResponding ? 'Open Groam AI, response in progress' : 'Open Groam AI';
@@ -46,6 +48,7 @@ export function AssistantSidechatRail({
   );
 
   if (isMobile) {
+    if (!showMobileLauncher) return null;
     return (
       <div className="ai-assistant-widget-launcher fixed right-3 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-40">
         {trigger}

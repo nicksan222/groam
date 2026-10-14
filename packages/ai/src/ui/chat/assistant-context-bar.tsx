@@ -1,4 +1,3 @@
-import { Badge } from '@groam/ui/components/badge';
 import { PanelsTopLeft, Paperclip } from 'lucide-react';
 
 export function AssistantContextBar({
@@ -9,25 +8,24 @@ export function AssistantContextBar({
   pageTitle: string | null;
 }) {
   return (
-    <div className="flex min-h-10 shrink-0 items-center gap-1.5 overflow-x-auto border-b border-border px-4 py-2">
-      <Badge
-        className="max-w-64 shrink-0"
+    <div className="flex shrink-0 items-center gap-2 overflow-x-auto px-4 pt-2 pb-1 text-[11px] text-muted-foreground scrollbar-none">
+      <span
+        className="inline-flex min-w-0 shrink items-center gap-1.5"
         title={pageTitle ?? 'No page context'}
-        variant="secondary"
       >
-        <PanelsTopLeft />
+        <PanelsTopLeft className="size-3 shrink-0" />
         <span className="truncate">{pageTitle ?? 'No page context'}</span>
-      </Badge>
+      </span>
+      {attachments.length > 0 ? <span aria-hidden="true">·</span> : null}
       {attachments.map((attachment) => (
-        <Badge
-          className="max-w-48 shrink-0"
+        <span
+          className="inline-flex max-w-40 shrink-0 items-center gap-1"
           key={attachment.id}
           title={attachment.label}
-          variant="outline"
         >
-          <Paperclip />
+          <Paperclip className="size-3 shrink-0" />
           <span className="truncate">{attachment.label}</span>
-        </Badge>
+        </span>
       ))}
     </div>
   );

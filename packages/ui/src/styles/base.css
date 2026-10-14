@@ -1,5 +1,6 @@
 body {
   letter-spacing: var(--tracking-normal);
+  caret-color: var(--primary);
 }
 
 :where(#root) {
@@ -20,6 +21,16 @@ body {
     font-family: var(--font-sans);
   }
 
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+    text-wrap: balance;
+  }
+
   code,
   kbd,
   samp,
@@ -35,6 +46,12 @@ body {
   :focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
   }
 }
 
@@ -112,6 +129,8 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root),
   ::view-transition-group(auth-card),
   ::view-transition-old(auth-card),
   ::view-transition-new(auth-card) {

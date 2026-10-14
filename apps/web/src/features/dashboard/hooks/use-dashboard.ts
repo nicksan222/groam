@@ -8,11 +8,6 @@ import {
   greetingForHour
 } from './dashboard-model';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
-type DashboardHomeAction =
-  | { params: { proposalId: string }; text: string; to: '/ideas/$proposalId' }
-  | { text: string; to: '/trips' };
-
 export function useDashboard() {
   const { activeOrganization, session } = useWorkspace();
   const tripState = useTrips();
@@ -29,17 +24,6 @@ export function useDashboard() {
     viewerUserId: session.user.id
   });
   const readyBuckets = presentation.kind === 'ready' ? presentation.buckets : null;
-  const firstDecision = readyBuckets?.waitingOnYou[0];
-  const homeAction: DashboardHomeAction =
-    presentation.kind === 'empty'
-      ? { text: 'Create a trip', to: '/trips' }
-      : firstDecision
-        ? {
-            text: 'Next decision',
-            to: '/ideas/$proposalId',
-            params: { proposalId: firstDecision.id }
-          }
-        : { text: 'View trips', to: '/trips' };
   const greeting = greetingForHour(new Date().getHours());
 
   useSetAgentContext({
@@ -61,12 +45,7 @@ export function useDashboard() {
     title: `${activeOrganization.name} · Home`
   });
 
-  return {
-    activeOrganization,
-    greeting,
-    homeAction,
-    presentation
-  };
+  return { activeOrganization, greeting, presentation };
 }
 
 export type { DashboardPresentation };

@@ -126,8 +126,8 @@ describe('ItineraryDetailsChangeCard', () => {
     });
     const card = title.closest('section');
     expect(card?.className).toContain('border');
-    expect(card?.className).toContain('rounded-xl');
-    expect(card?.className).not.toContain('bg-card');
+    expect(card?.className).toContain('rounded-lg');
+    expect(card?.className).toContain('bg-card');
     expect(card?.className).not.toContain('dashboard-panel');
     expect(card?.className).not.toContain('border-amber-500');
     expect(card?.getAttribute('data-proposal-change')).toBe('modified');

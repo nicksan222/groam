@@ -4,8 +4,8 @@
 
 .dashboard-panel {
   border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  background: transparent;
+  border-radius: var(--radius-lg);
+  background: var(--card);
 }
 
 .dashboard-lift-card {
@@ -65,5 +65,29 @@
 
   .dashboard-lift-card:hover {
     transform: none;
+  }
+}
+
+/* Trip columns follow their available space, including a docked assistant. */
+.trip-page-shell {
+  container-name: trip-workspace;
+  container-type: inline-size;
+}
+
+.trip-page-shell [data-slot='shell-two-columns'] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.trip-page-shell [data-slot='shell-right-column'] {
+  position: static;
+}
+
+@container trip-workspace (min-width: 64rem) {
+  .trip-page-shell [data-slot='shell-two-columns'] {
+    grid-template-columns: minmax(0, 1fr) 18rem;
+  }
+
+  .trip-page-shell [data-slot='shell-right-column'] {
+    position: sticky;
   }
 }

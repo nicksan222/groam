@@ -109,6 +109,13 @@ describe('summarizeDashboard', () => {
       'Skip the ferry'
     ]);
     expect(buckets.tripsNeedingAttention.map((item) => item.name)).toEqual(['Open dates']);
+    expect(buckets.ideaSnapshot).toEqual({
+      conflicts: 0,
+      decided: 2,
+      drafts: 2,
+      inReview: 1,
+      total: 5
+    });
     expect(buckets.metrics).toEqual({
       activeTrips: 2,
       openIdeas: 3,

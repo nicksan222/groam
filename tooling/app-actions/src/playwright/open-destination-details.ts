@@ -7,10 +7,17 @@ const expect = playwrightExpect.configure({ timeout: 30_000 });
 export async function openDestinationDetails(target: UiTarget, placeName: string): Promise<void> {
   const user = ui(target);
   await user.click(
-    user.page.getByRole('button', {
-      name: `Open ${placeName} details for Day 1`,
-      exact: true
-    })
+    user.page
+      .getByRole('button', {
+        name: `Open ${placeName} details for Day 1`,
+        exact: true
+      })
+      .or(
+        user.page.getByRole('button', {
+          name: `Manage ${placeName} for Day 1`,
+          exact: true
+        })
+      )
   );
   await expect(destinationCard(user.page, placeName)).toBeVisible();
 }

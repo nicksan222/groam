@@ -31,11 +31,10 @@ describe('useDashboard', () => {
   test('presents the empty home action when there is no trip data', () => {
     const { result } = renderHook(() => useDashboard());
     expect(result.current.presentation).toEqual({ kind: 'empty' });
-    expect(result.current.homeAction).toEqual({ text: 'Create a trip', to: '/trips' });
     expect(agent.useSetAgentContext).toHaveBeenCalled();
   });
 
-  test('points next decision at the first waiting proposal', () => {
+  test('presents waiting reviews without changing the dashboard data contract', () => {
     trips.useTrips.mockReturnValue({
       isLoading: false,
       trips: [
@@ -62,10 +61,5 @@ describe('useDashboard', () => {
 
     const { result } = renderHook(() => useDashboard());
     expect(result.current.presentation.kind).toBe('ready');
-    expect(result.current.homeAction).toEqual({
-      params: { proposalId: 'proposal-1' },
-      text: 'Next decision',
-      to: '/ideas/$proposalId'
-    });
   });
 });

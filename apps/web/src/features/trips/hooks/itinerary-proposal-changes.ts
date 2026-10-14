@@ -28,10 +28,6 @@ export function destinationTransferChangeKey(transfer: VersionedIdentity) {
   return `transfers/destination-${versionIdentityKey(transfer)}.json`;
 }
 
-export function activityTransferChangeKey(transfer: VersionedIdentity) {
-  return `transfers/activity-${versionIdentityKey(transfer)}.json`;
-}
-
 export function boundaryTransferChangeKey(boundary: 'arrival' | 'departure') {
   return `transfers/boundary-${boundary}.json`;
 }

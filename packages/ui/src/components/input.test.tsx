@@ -12,7 +12,7 @@ test('renders a text input with shared field styling', () => {
   expect(input.getAttribute('placeholder')).toBe('Paris getaway');
   expect(input.className).toContain('rounded-lg');
   expect(input.className).toContain('focus-visible:ring-[3px]');
-  expect(input.className).toContain('shadow-xs/5');
+  expect(input.className).toContain('shadow-xs');
 });
 
 test('supports password and other input types', () => {

@@ -30,7 +30,7 @@ export function OverviewProperties({
       aria-label="Trip facts"
       className={
         compact
-          ? 'grid grid-cols-2 divide-y-0 [&>div]:block [&_dd]:text-left [&_dt]:mb-1'
+          ? 'grid grid-cols-2 divide-y-0 rounded-lg sm:grid-cols-4 [&>div]:block [&_dd]:text-left [&_dt]:mb-1'
           : undefined
       }
       data-slot="overview-properties"

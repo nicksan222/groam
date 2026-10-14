@@ -105,7 +105,7 @@ export const shellCardVariants = cva('min-w-0', {
       muted: 'space-y-5 rounded-xl border border-dashed border-border text-center',
       panel: 'dashboard-panel',
       toolbar: 'flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-2',
-      well: 'rounded-xl border border-border'
+      well: 'rounded-lg border border-border bg-card'
     }
   }
 });

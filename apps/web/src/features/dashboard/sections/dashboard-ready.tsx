@@ -1,33 +1,25 @@
-import Shell from '@groam/ui/components/shell/client';
 import type { DashboardBuckets } from '@/features/dashboard/hooks/dashboard-model';
 import { DraftsSection } from './drafts-section';
 import { FeaturedTrips } from './featured-trips';
+import { RecentIdeasSection } from './recent-ideas-section';
 import { SettledSection } from './settled-section';
 import { WaitingSection } from './waiting-section';
+
 export function DashboardReady({ buckets }: { buckets: DashboardBuckets }) {
-  const drafts = buckets.yourDrafts.slice(0, 6);
-  const settled = buckets.recentlySettled.slice(0, 4);
+  const waiting = buckets.waitingOnYou.slice(0, 3);
+  const trips = buckets.activeTrips.slice(0, 4);
+  const ideas = buckets.yourDrafts.slice(0, 4);
+  const decided = buckets.recentlySettled.slice(0, 4);
+
   return (
     <>
-      {buckets.waitingOnYou.length ? (
-        <WaitingSection items={buckets.waitingOnYou.slice(0, 4)} />
-      ) : null}
-      <FeaturedTrips trips={buckets.activeTrips.slice(0, 4)} />
-      {drafts.length && settled.length ? (
-        <Shell.TwoColumns>
-          <Shell.LeftColumn>
-            <DraftsSection items={drafts} />
-          </Shell.LeftColumn>
-          <Shell.RightColumn>
-            <SettledSection items={settled} />
-          </Shell.RightColumn>
-        </Shell.TwoColumns>
-      ) : (
-        <>
-          {drafts.length ? <DraftsSection items={drafts} /> : null}
-          {settled.length ? <SettledSection items={settled} /> : null}
-        </>
-      )}
+      {waiting.length > 0 ? <WaitingSection items={waiting} /> : null}
+      <RecentIdeasSection snapshot={buckets.ideaSnapshot} />
+      <div className="grid min-w-0 gap-8 lg:grid-cols-[minmax(0,1.55fr)_minmax(17rem,0.8fr)] lg:items-start">
+        <FeaturedTrips trips={trips} />
+        <DraftsSection items={ideas} />
+      </div>
+      {decided.length > 0 ? <SettledSection items={decided} /> : null}
     </>
   );
 }

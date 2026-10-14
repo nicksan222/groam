@@ -1,0 +1,10 @@
+# Generated comparison builds and state
+/build/
+
+# Generated mock and review captures
+/mocks/
+/review/
+
+# Scratch direction and measurement inputs
+/direction.md
+/regions.json

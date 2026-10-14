@@ -1,6 +1,6 @@
 import type { Id } from '@groam/backend/data-model';
 import { stubPopoverEnvironment } from '@groam/ui/lib/stub-popover-environment';
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import type { ItineraryChange } from '@/features/trips/hooks/itinerary-proposal-changes';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
@@ -154,6 +154,21 @@ function change(overrides: Partial<ItineraryChange> = {}): ItineraryChange {
   };
 }
 
+function dayCard(day: number) {
+  return screen.getByRole('region', { name: `Day ${day} schedule` });
+}
+
+function addOnDay(day: number, kind: 'Activity' | 'Stay' | 'Travel' | 'Destination') {
+  fireEvent.keyDown(within(dayCard(day)).getByRole('button', { name: 'Add to day' }), {
+    key: 'Enter'
+  });
+  fireEvent.click(screen.getByRole('menuitem', { name: kind }));
+}
+
+function addActivityOnDay(day: number) {
+  addOnDay(day, 'Activity');
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   stubPopoverEnvironment();
@@ -195,11 +210,11 @@ describe('TripDestinationsPanel day editor', () => {
   });
   test('shows every day without a redundant day picker', () => {
     render(<TripDestinationsPanel {...handlers} addDestinationOpen={false} trip={tripDetail()} />);
-    expect(screen.getByRole('heading', { name: 'Day 1' })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Day 2' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Add morning activity to Day 1' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Add afternoon activity to Day 2' })).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Add morning activity to Day 1' }));
+    expect(dayCard(1)).toBeTruthy();
+    expect(dayCard(2)).toBeTruthy();
+    expect(within(dayCard(1)).getByRole('button', { name: 'Add to day' })).toBeTruthy();
+    expect(within(dayCard(2)).getByRole('button', { name: 'Add to day' })).toBeTruthy();
+    addActivityOnDay(1);
     expect(screen.getByRole('region', { name: 'Add an activity to Day 1' })).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Day 1 schedule' })).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Day 2 schedule' })).toBeTruthy();
@@ -215,14 +230,14 @@ describe('TripDestinationsPanel day editor', () => {
     );
     render(<TripDestinationsPanel {...handlers} addDestinationOpen={false} trip={tripDetail()} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Add morning activity to Day 1' }));
+    addActivityOnDay(1);
     fireEvent.change(screen.getByTestId(testIds.activityTitle), {
       target: { value: 'Morning market' }
     });
     fireEvent.click(screen.getByTestId(testIds.activitySubmit));
     await waitFor(() => expect(handlers.addActivity).toHaveBeenCalledOnce());
 
-    fireEvent.click(screen.getByRole('button', { name: 'Add afternoon activity to Day 2' }));
+    addActivityOnDay(2);
     fireEvent.change(screen.getByTestId(testIds.activityTitle), {
       target: { value: 'Afternoon walk' }
     });
@@ -258,7 +273,7 @@ describe('TripDestinationsPanel day editor', () => {
       />
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Add morning activity to Day 1' }));
+    addActivityOnDay(1);
     const destinationSelect = screen.getByRole('combobox', { name: 'Destination' });
     expect(destinationSelect).toHaveProperty('disabled', false);
     fireEvent.change(screen.getByTestId(testIds.activityTitle), {
@@ -280,14 +295,14 @@ describe('TripDestinationsPanel day editor', () => {
     );
     render(<TripDestinationsPanel {...handlers} addDestinationOpen={false} trip={tripDetail()} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Add morning activity to Day 1' }));
+    addActivityOnDay(1);
     fireEvent.click(screen.getByTestId(testIds.activityMoreOptions));
     const fileInput = document.querySelector<HTMLInputElement>('input[type="file"]');
     expect(fileInput).not.toBeNull();
     fireEvent.change(fileInput as HTMLInputElement, {
       target: { files: [new File(['ticket'], 'ticket.pdf', { type: 'application/pdf' })] }
     });
-    const otherDay = screen.getByRole('button', { name: 'Add afternoon activity to Day 2' });
+    const otherDay = within(dayCard(2)).getByRole('button', { name: 'Add to day' });
     await waitFor(() => expect(otherDay).toHaveProperty('disabled', true));
     fireEvent.click(otherDay);
     expect(screen.getByRole('region', { name: 'Add an activity to Day 1' })).toBeTruthy();
@@ -317,7 +332,7 @@ describe('TripDestinationsPanel day editor', () => {
         })}
       />
     );
-    fireEvent.click(screen.getByRole('button', { name: /Porto.*Days/u }));
+    fireEvent.click(screen.getByRole('button', { name: 'Manage Porto for Day 3' }));
     expect(screen.getByRole('button', { name: 'Day 1, Taken' }).hasAttribute('data-taken')).toBe(
       true
     );
@@ -350,15 +365,10 @@ describe('TripDestinationsPanel day editor', () => {
     expect(document.querySelector('[data-proposal-change="removed"]')).toBeTruthy();
     expect(screen.getByText('Faro')).toBeTruthy();
   });
-  test('adds a plan on the chosen day and period through the existing idea action', async () => {
+  test('adds an activity on its day through the existing action', async () => {
     handlers.addActivity.mockResolvedValue(true);
     render(<TripDestinationsPanel {...handlers} addDestinationOpen={false} trip={tripDetail()} />);
-    fireEvent.keyDown(screen.getByRole('button', { name: 'Add a plan' }), { key: 'Enter' });
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Activity' }));
-    fireEvent.click(screen.getByLabelText('Day'));
-    fireEvent.click(screen.getByRole('option', { name: 'Day 2' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Afternoon' }));
+    addActivityOnDay(2);
     fireEvent.change(screen.getByPlaceholderText('What are we doing?'), {
       target: { value: 'Museum visit' }
     });
@@ -368,11 +378,13 @@ describe('TripDestinationsPanel day editor', () => {
         'destination-lisbon',
         expect.objectContaining({
           title: 'Museum visit',
-          schedule: { day: 2, timeBlock: 'afternoon' }
+          schedule: expect.objectContaining({ day: 2 })
         })
       )
     );
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await waitFor(() =>
+      expect(screen.queryByRole('region', { name: 'Add an activity to Day 2' })).toBeNull()
+    );
   });
   test('allows plans before a trip duration has been chosen', () => {
     render(
@@ -382,10 +394,46 @@ describe('TripDestinationsPanel day editor', () => {
         trip={tripDetail({ totalDurationDays: null })}
       />
     );
-    fireEvent.keyDown(screen.getByRole('button', { name: 'Add a plan' }), { key: 'Enter' });
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Activity' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    addActivityOnDay(1);
     expect(screen.getByTestId(testIds.activitySubmit)).toBeTruthy();
+  });
+  test('starts a stay on the chosen day using the shared stay form', async () => {
+    handlers.addStay.mockResolvedValue(true);
+    render(<TripDestinationsPanel {...handlers} addDestinationOpen={false} trip={tripDetail()} />);
+    addOnDay(2, 'Stay');
+    expect(screen.getByRole('region', { name: 'Add stay' })).toBeTruthy();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Property or stay name' }), {
+      target: { value: 'Riverside rooms' }
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save stay' }));
+    await waitFor(() =>
+      expect(handlers.addStay).toHaveBeenCalledWith(
+        'destination-lisbon',
+        expect.objectContaining({
+          title: 'Riverside rooms',
+          schedule: expect.objectContaining({ checkInDay: 2 })
+        })
+      )
+    );
+  });
+  test('adds travel for a specific connection from the day card', async () => {
+    handlers.setBoundaryTransfer.mockResolvedValue(true);
+    render(<TripDestinationsPanel {...handlers} addDestinationOpen={false} trip={tripDetail()} />);
+    addOnDay(1, 'Travel');
+    fireEvent.click(screen.getByRole('button', { name: 'Getting to Lisbon' }));
+    expect(screen.getByRole('region', { name: 'Add travel' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Save travel' }));
+    await waitFor(() =>
+      expect(handlers.setBoundaryTransfer).toHaveBeenCalledWith(
+        'arrival',
+        expect.objectContaining({ mode: 'train' })
+      )
+    );
+  });
+  test('offers destination creation from each day menu', () => {
+    render(<TripDestinationsPanel {...handlers} addDestinationOpen={false} trip={tripDetail()} />);
+    addOnDay(2, 'Destination');
+    expect(handlers.onAddDestination).toHaveBeenCalledOnce();
   });
   test('opens an existing plan and saves its identity without creating a duplicate', async () => {
     handlers.updateActivity.mockResolvedValue(true);

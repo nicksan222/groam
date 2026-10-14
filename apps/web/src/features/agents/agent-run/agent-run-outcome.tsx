@@ -21,7 +21,7 @@ const presentation = {
     title: 'This run couldn’t finish',
     description: 'Review the error below before starting another run.',
     tone: 'border-destructive/25 bg-destructive/5',
-    iconTone: 'bg-destructive/10 text-destructive-foreground'
+    iconTone: 'bg-destructive/10 text-destructive'
   },
   queued: {
     icon: CircleDashed,
@@ -68,7 +68,7 @@ export function AgentRunOutcome({ run }: { run: AgentRun }) {
               : state.description}
           </p>
           {run.error ? (
-            <p className="mt-4 break-words whitespace-pre-wrap rounded-lg border border-destructive/15 bg-background/70 px-3.5 py-3 text-sm leading-6 text-destructive-foreground [overflow-wrap:anywhere]">
+            <p className="mt-4 break-words whitespace-pre-wrap rounded-lg border border-destructive/15 bg-background/70 px-3.5 py-3 text-sm leading-6 text-destructive [overflow-wrap:anywhere]">
               {run.error}
             </p>
           ) : null}

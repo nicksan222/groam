@@ -91,9 +91,7 @@ export function AgentRunLogEvent({
   const issueTitle = issueStarted ? (event.detail ?? issue.issueTitle ?? 'Open issue') : null;
   return (
     <Timeline.Item data-testid={testIds.agentEvent}>
-      <Timeline.Badge
-        className={failed ? 'border-destructive/40 text-destructive-foreground' : undefined}
-      >
+      <Timeline.Badge className={failed ? 'border-destructive/40 text-destructive' : undefined}>
         <Icon aria-hidden className="size-3" />
       </Timeline.Badge>
       <Timeline.Body>

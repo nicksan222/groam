@@ -34,7 +34,7 @@ test('reviewers can inspect and approve an idea but cannot edit its working copy
   const ideaName = `Review-only idea ${suffix}`;
   const proposalId = await addIdea(page, { name: ideaName });
   await saveSevenDayRange(page);
-  await openTripSection(page, 'itinerary');
+  await openTripSection(page, 'overview');
   await addStop(page, { name: 'Porto', notes: 'River walk', startDay: '1', endDay: '3' });
   await addActivity(page, { destination: 'Porto, Portugal', title: 'Riverside walk' });
   await updateTrip(page, { dateNotes: 'Prefer more time on the coast' });
@@ -54,6 +54,10 @@ test('reviewers can inspect and approve an idea but cannot edit its working copy
     await expect(reviewer.getByText('Riverside walk', { exact: true })).toBeVisible();
     await expect(reviewer.getByRole('region', { name: 'Itinerary editor' })).toHaveCount(0);
     await expect(reviewer.getByRole('button', { name: 'Add a plan' })).toHaveCount(0);
+    await expect(
+      reviewer.getByRole('button', { name: 'Add destination', exact: true })
+    ).toHaveCount(0);
+    await expect(reviewer.getByRole('button', { name: 'Add to day', exact: true })).toHaveCount(0);
     await expect(reviewer.getByRole('button', { name: 'Edit Riverside walk' })).toHaveCount(0);
     await openIdeaComparison(reviewer);
     await approveIdea(reviewer);

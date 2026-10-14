@@ -5,7 +5,7 @@ describe('buttonVariants', () => {
   test('builds the default accessible button styles', () => {
     expect(buttonVariants()).toContain('bg-primary');
     expect(buttonVariants()).toContain('h-8');
-    expect(buttonVariants()).toContain('rounded-sm');
+    expect(buttonVariants()).toContain('rounded-lg');
     expect(buttonVariants()).toContain('font-semibold');
     expect(buttonVariants()).toContain('focus-visible:ring-2');
     expect(buttonVariants()).toContain('shadow-xs');

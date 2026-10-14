@@ -1,5 +1,6 @@
 import { Moon, Sun, Sunrise, Sunset } from 'lucide-react';
 import { entryPeriod, plannerDate, plannerPeriods } from '@/features/trips/hooks/trip-day-planner';
+import { EditorDestinationPhoto } from '@/features/trips/itinerary-editor/editor-destination-photo';
 import type { PlannerDay } from '@/types/trip-planner';
 import { PlannerEntryCard } from './planner-entry-card';
 import { PlannerStayCard } from './planner-stay-card';
@@ -27,17 +28,17 @@ export function PlannerDayCard({
       aria-label={`Day ${plan.day}${date ? ` ${date}` : ''}`}
       id={`trip-day-${plan.day}`}
       tabIndex={-1}
-      className="min-w-0 scroll-mt-6 rounded-2xl border border-border bg-muted/15"
+      className="min-w-0 scroll-mt-6 overflow-hidden rounded-lg border border-border bg-card"
     >
-      <header className="flex items-start gap-4 border-b border-border px-4 py-5 sm:px-6">
+      <header className="flex items-center gap-3 border-b border-border p-4 sm:px-5">
         <span
           aria-hidden
-          className="grid size-12 shrink-0 place-items-center rounded-xl bg-primary/10 text-xl font-semibold tabular-nums text-primary"
+          className="grid size-9 shrink-0 place-items-center rounded-md bg-primary/10 text-sm font-semibold tabular-nums text-primary"
         >
-          {String(plan.day).padStart(2, '0')}
+          {plan.day}
         </span>
-        <div className="min-w-0">
-          <h3 className="text-lg font-semibold tracking-tight">
+        <div className="min-w-0 flex-1">
+          <h3 className="text-base font-semibold tracking-tight">
             Day {plan.day}
             {date ? (
               <span className="mt-0.5 block text-sm font-normal text-muted-foreground sm:ml-3 sm:inline">
@@ -49,6 +50,13 @@ export function PlannerDayCard({
             {locations.length ? locations.join(' → ') : 'Destination still open'}
           </p>
         </div>
+        {plan.destinations[0]?.coverUrl ? (
+          <EditorDestinationPhoto
+            src={plan.destinations[0].coverUrl}
+            name={plan.destinations[0].name}
+            className="hidden h-16 w-28 shrink-0 rounded-md sm:block"
+          />
+        ) : null}
       </header>
       {plan.destinations.map((destination) =>
         destination.startDay === plan.day && destination.dayNotes ? (
@@ -57,7 +65,7 @@ export function PlannerDayCard({
           </p>
         ) : null
       )}
-      <div className="space-y-6 p-4 sm:p-6">
+      <div className="space-y-4 p-4 sm:p-5">
         {plannerPeriods.map((period) => {
           const entries = plan.entries.filter(
             (entry) => entryPeriod(entry, plan.day) === period.key
@@ -70,7 +78,7 @@ export function PlannerDayCard({
               className="space-y-3"
               key={period.key}
             >
-              <h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              <h4 className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
                 <Icon className="size-4" />
                 {period.label}
                 <span className="h-px flex-1 bg-border" />

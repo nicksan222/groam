@@ -18,7 +18,7 @@ export function TripHeroTitle({
   return (
     <div className="flex min-w-0 flex-wrap items-center gap-2">
       <Shell.Title
-        className="min-w-0 truncate"
+        className="min-w-0 break-words text-2xl leading-tight tracking-tight sm:text-[1.75rem]"
         data-testid={testIds.tripHeading}
         data-trip-id={tripId}
         data-trip-name={tripName}

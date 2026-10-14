@@ -38,7 +38,7 @@ export function ResolveDiffContent({
             aria-hidden
             className={cn(
               'w-8 shrink-0 text-center',
-              tone === 'removed' ? 'text-destructive-foreground' : 'text-primary'
+              tone === 'removed' ? 'text-destructive' : 'text-primary'
             )}
           >
             {tone === 'removed' ? '−' : tone === 'added' ? '+' : ' '}
@@ -64,7 +64,7 @@ function ResolveDiffFile({
       <span
         className={cn(
           'mt-1 font-mono text-xs',
-          tone === 'removed' ? 'text-destructive-foreground' : 'text-primary'
+          tone === 'removed' ? 'text-destructive' : 'text-primary'
         )}
       >
         {marker}

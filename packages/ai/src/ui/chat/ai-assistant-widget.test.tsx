@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   AgentContextProvider,
@@ -133,7 +133,8 @@ describe('AiAssistantWidget', () => {
     expect(screen.getByRole('button', { name: 'Open Groam AI' })).toBeDefined();
     fireEvent.click(screen.getByRole('button', { name: 'Open Groam AI' }));
 
-    const panel = screen.getByRole('region', { name: 'Groam AI' });
+    const panel = screen.getByRole('dialog', { name: 'Groam AI' });
+    expect(panel.getAttribute('data-slot')).toBe('sheet-content');
     expect(screen.getAllByText('Portugal · Decisions')).toHaveLength(1);
     expect(screen.getByText('How can I help?')).toBeDefined();
     expect(screen.getByText('Explain the decision state shown here.')).toBeDefined();
@@ -148,7 +149,57 @@ describe('AiAssistantWidget', () => {
     await waitFor(() => expect(assistant.send).toHaveBeenCalledWith('What still needs attention?'));
 
     fireEvent.keyDown(panel, { key: 'Escape' });
-    expect(screen.queryByRole('region', { name: 'Groam AI' })).toBeNull();
+    expect(screen.queryByRole('dialog', { name: 'Groam AI' })).toBeNull();
+  });
+
+  test('keeps the wide-screen assistant dock nonmodal', () => {
+    vi.mocked(window.matchMedia).mockImplementation((query: string) => ({
+      matches: query === '(min-width: 1280px)',
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn()
+    }));
+    renderWidget();
+    fireEvent.click(screen.getByRole('button', { name: 'Open Groam AI' }));
+    expect(screen.getByRole('region', { name: 'Portugal planning' })).toBeDefined();
+    expect(screen.queryByRole('dialog', { name: 'Groam AI' })).toBeNull();
+  });
+
+  test('preserves an unsent draft when the overlay becomes docked', () => {
+    let docked = false;
+    const listeners = new Set<EventListener>();
+    vi.mocked(window.matchMedia).mockImplementation((query: string) => ({
+      get matches() {
+        return query === '(min-width: 1280px)' && docked;
+      },
+      media: query,
+      onchange: null,
+      addEventListener: (_type: string, listener: EventListenerOrEventListenerObject) =>
+        listeners.add(listener as EventListener),
+      removeEventListener: (_type: string, listener: EventListenerOrEventListenerObject) =>
+        listeners.delete(listener as EventListener),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn()
+    }));
+    renderWidget();
+    fireEvent.click(screen.getByRole('button', { name: 'Open Groam AI' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Assistant prompt' }), {
+      target: { value: 'draft resize check' }
+    });
+    docked = true;
+    act(() => {
+      listeners.forEach((listener) => {
+        listener(new Event('change'));
+      });
+    });
+    expect(
+      (screen.getByRole('textbox', { name: 'Assistant prompt' }) as HTMLTextAreaElement).value
+    ).toBe('draft resize check');
   });
 
   test('attempts automatic thread opening only once per panel opening', async () => {
@@ -171,15 +222,15 @@ describe('AiAssistantWidget', () => {
     renderWidget();
 
     fireEvent.keyDown(window, { ctrlKey: true, key: '.' });
-    expect(screen.getByRole('region', { name: 'Groam AI' })).toBeDefined();
+    expect(screen.getByRole('dialog', { name: 'Groam AI' })).toBeDefined();
     fireEvent.keyDown(window, { ctrlKey: true, key: '.' });
-    expect(screen.queryByRole('region', { name: 'Groam AI' })).toBeNull();
+    expect(screen.queryByRole('dialog', { name: 'Groam AI' })).toBeNull();
   });
 
   test('closes when the registered page changes', async () => {
     const view = renderWidget();
     fireEvent.click(screen.getByRole('button', { name: 'Open Groam AI' }));
-    expect(screen.getByRole('region', { name: 'Groam AI' })).toBeDefined();
+    expect(screen.getByRole('dialog', { name: 'Groam AI' })).toBeDefined();
 
     view.rerender(
       <AgentContextProvider>
@@ -196,7 +247,7 @@ describe('AiAssistantWidget', () => {
     );
 
     await waitFor(() => {
-      expect(screen.queryByRole('region', { name: 'Groam AI' })).toBeNull();
+      expect(screen.queryByRole('dialog', { name: 'Groam AI' })).toBeNull();
     });
     expect(screen.getByRole('button', { name: 'Open Groam AI' })).toBeDefined();
   });

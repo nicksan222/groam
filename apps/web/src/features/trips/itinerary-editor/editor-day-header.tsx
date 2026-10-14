@@ -1,6 +1,12 @@
+import { Badge } from '@groam/ui/components/badge';
 import { Button } from '@groam/ui/components/button';
-import { ArrowUpRight } from 'lucide-react';
+import { MapPin, Pencil } from 'lucide-react';
+import {
+  destinationChangeKey,
+  type ItineraryChange
+} from '@/features/trips/hooks/itinerary-proposal-changes';
 import { plannerDate } from '@/features/trips/hooks/trip-day-planner';
+import { ItineraryProposalHighlight } from '@/features/trips/itinerary-proposal-highlight/itinerary-proposal-highlight';
 import type { Destination } from '@/types/trips';
 import { EditorDestinationPhoto } from './editor-destination-photo';
 
@@ -8,68 +14,60 @@ export function EditorDayHeader({
   day,
   startDate,
   destinations,
-  hasPlans,
-  onOpenDestination
+  changes,
+  onManageDestination
 }: {
   day: number;
   startDate: string | null;
   destinations: Destination[];
-  hasPlans: boolean;
-  onOpenDestination: (id: Destination['id']) => void;
+  changes: ItineraryChange[];
+  onManageDestination: (id: Destination['id']) => void;
 }) {
   const date = plannerDate(startDate, day);
+  const primary = destinations[0];
   return (
-    <header className="space-y-3 bg-muted/15 p-4">
-      <div className="flex items-center gap-3">
-        <span
-          aria-hidden="true"
-          className="grid size-9 shrink-0 place-items-center rounded-lg border border-border text-sm font-semibold tabular-nums"
-        >
-          {day}
-        </span>
-        <div className="min-w-0">
-          <h3 className="text-sm font-semibold">
-            Day {day}
-            {date ? ` · ${date}` : ''}
-          </h3>
-          <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
-            {hasPlans ? 'Your plans for the day' : 'Choose a time below to add an activity'}
+    <header className="flex flex-col border-b border-border sm:flex-row">
+      <div className="flex min-w-0 flex-1 flex-col justify-center gap-3 p-5 sm:p-6">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Badge variant="secondary">Day {day}</Badge>
+          {date ? <span className="text-xs text-muted-foreground">{date}</span> : null}
+        </div>
+        <h3 className="text-xl font-semibold tracking-tight">
+          {primary?.name ?? 'A day to explore'}
+        </h3>
+        {destinations.length ? (
+          <div className="flex flex-wrap gap-2">
+            {destinations.map((stop) => (
+              <ItineraryProposalHighlight
+                key={stop.id}
+                change={changes.find((change) => change.key === destinationChangeKey(stop)) ?? null}
+              >
+                <Button
+                  aria-label={`Manage ${stop.name} for Day ${day}`}
+                  onClick={() => onManageDestination(stop.id)}
+                  size="xs"
+                  variant="ghost"
+                  className="max-w-full px-1 text-muted-foreground"
+                >
+                  <MapPin className="size-3 text-primary" />
+                  <span className="truncate">{stop.name}</span>
+                  <Pencil className="size-3" />
+                </Button>
+              </ItineraryProposalHighlight>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Add a destination to start planning this day.
           </p>
-        </div>
+        )}
       </div>
-      {destinations.length ? (
-        <div className="flex flex-wrap gap-2">
-          {destinations.map((stop) => (
-            <Button
-              key={stop.id}
-              type="button"
-              onClick={() => onOpenDestination(stop.id)}
-              aria-label={`Open ${stop.name} details for Day ${day}`}
-              className="group flex min-w-0 max-w-full items-center gap-3 rounded-lg border border-border p-2 text-left transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              unstyled
-            >
-              <EditorDestinationPhoto
-                src={stop.coverUrl}
-                name={stop.name}
-                className="h-10 w-14 shrink-0 rounded-md"
-              />
-              <span className="min-w-0 flex-1">
-                <span className="block break-words text-sm font-semibold">{stop.name}</span>
-                <span className="mt-1 block text-xs text-muted-foreground">
-                  {stop.startDay === null || stop.endDay === null
-                    ? 'Days not assigned yet'
-                    : stop.startDay === stop.endDay
-                      ? `Day ${stop.startDay}`
-                      : `Days ${stop.startDay}–${stop.endDay}`}
-                </span>
-              </span>
-              <ArrowUpRight
-                aria-hidden="true"
-                className="mr-1 size-3.5 shrink-0 text-muted-foreground transition-colors group-hover:text-primary"
-              />
-            </Button>
-          ))}
-        </div>
+      {primary ? (
+        <EditorDestinationPhoto
+          src={primary.coverUrl}
+          name={primary.name}
+          className="h-36 w-full sm:h-36 sm:w-48 sm:shrink-0 sm:self-stretch lg:w-56"
+        />
       ) : null}
     </header>
   );

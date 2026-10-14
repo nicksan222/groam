@@ -3,9 +3,9 @@ import type * as React from 'react';
 
 const cardVariants = {
   default:
-    'relative flex flex-col gap-4 rounded-xl border border-border pb-4 text-card-foreground md:gap-6 md:pb-6',
+    'relative flex flex-col gap-4 rounded-lg border border-border bg-card pb-4 text-card-foreground md:gap-6 md:pb-6',
   inset:
-    'relative flex flex-col gap-3 rounded-lg border border-border/50 p-4 transition-colors hover:border-border'
+    'relative flex flex-col gap-3 rounded-lg border border-border/70 bg-card p-4 transition-colors hover:border-border'
 } as const;
 
 export type CardVariant = keyof typeof cardVariants;

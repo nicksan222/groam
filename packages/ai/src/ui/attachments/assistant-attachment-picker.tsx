@@ -34,7 +34,7 @@ export function AssistantAttachmentPicker({ attachments }: { attachments: Assist
       <DropdownMenuTrigger asChild>
         <Button
           aria-label="Attach trip context"
-          className="rounded-full"
+          className="size-11 rounded-full sm:size-7"
           disabled={attachments.disabled}
           size="icon-sm"
           title="Attach a trip, destination, or activity"

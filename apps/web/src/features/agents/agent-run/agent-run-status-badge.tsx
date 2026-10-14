@@ -31,9 +31,7 @@ export function AgentRunStatusBadge({ status }: { status: keyof typeof RUN_STATU
   return (
     <Badge
       className={
-        status === 'failed'
-          ? 'border-destructive/20 bg-destructive/10 text-destructive-foreground'
-          : undefined
+        status === 'failed' ? 'border-destructive/20 bg-destructive/10 text-destructive' : undefined
       }
       variant={BADGE_VARIANT[status]}
     >

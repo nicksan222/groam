@@ -102,8 +102,7 @@ function TripPageHeroLoaded({
   const metaLine = [factsLine, closedNote].filter(Boolean).join(' · ');
 
   return (
-    <Shell.BannerHero>
-      {!compact && <TripHeroCover retryCover={retryCover} trip={trip} />}
+    <Shell.BannerHero className="items-center gap-y-4 sm:flex-wrap sm:pt-3">
       <div className="min-w-0 flex-1">
         <TripHeroTitle
           conflictCount={idea?.proposal?.conflicts.length}
@@ -129,6 +128,7 @@ function TripPageHeroLoaded({
           {actions}
         </div>
       ) : null}
+      {!compact && <TripHeroCover retryCover={retryCover} trip={trip} />}
       {trip.proposal ? null : (
         <TripTravelersSheet
           onOpenChange={setRosterOpen}
