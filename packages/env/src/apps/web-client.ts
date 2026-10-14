@@ -5,7 +5,7 @@ import { env as authEnv } from './auth-client';
 
 const shell = resolveAppShell(clientEnvString(import.meta.env.VITE_GROAM_SHELL));
 
-const DEFAULT_MAP_TILES_URL = 'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png';
+const DEFAULT_MAP_TILES_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
 const validated = cleanEnv(
   {
@@ -22,7 +22,7 @@ const validated = cleanEnv(
     VITE_GROAM_SHELL: str({ choices: [...APP_SHELLS], default: 'web' }),
     VITE_MAP_TILES_URL: str({
       default: DEFAULT_MAP_TILES_URL,
-      desc: 'Raster tile URL template. Use OSM or a self-hosted tile server when CARTO is unreachable.'
+      desc: 'Raster tile URL template. Defaults to the public OpenStreetMap tiles (no API key). Point at a self-hosted or keyed provider for heavy use.'
     }),
     VITE_PHOTON_URL: url({
       default: 'https://photon.komoot.io',
