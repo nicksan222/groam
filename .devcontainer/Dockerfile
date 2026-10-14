@@ -1,7 +1,8 @@
 FROM ghcr.io/astral-sh/uv:0.11.17 AS uv
 FROM ghcr.io/casey/just:1.58.0 AS just
 
-FROM mcr.microsoft.com/devcontainers/javascript-node:24-bookworm
+# Trixie (glibc 2.41): the Convex local backend binary needs glibc >= 2.39.
+FROM mcr.microsoft.com/devcontainers/javascript-node:24-trixie
 
 ARG CLAUDE_VERSION=2.1.287
 ARG HERDR_VERSION=0.9.3
