@@ -3,6 +3,10 @@ import { ids } from './ids';
 
 const expect = playwrightExpect.configure({ timeout: 30_000 });
 
+/**
+ * Choose a destination's trip days on its card and save. A destination waiting to be scheduled
+ * moves into its days once saved, so its card may leave the page instead of showing "Saved".
+ */
 export async function setDestinationSchedule(
   card: Locator,
   startDay: string,
@@ -19,7 +23,12 @@ export async function setDestinationSchedule(
   else await start.dragTo(end);
   const save = card.getByTestId(ids.destinationSaveSchedule);
   if (await save.isEnabled()) await save.click();
-  await expect(save).toHaveText('Saved', { timeout: 20_000 });
+  await expect
+    .poll(async () => (await card.count()) === 0 || (await save.textContent()) === 'Saved', {
+      timeout: 20_000
+    })
+    .toBe(true);
+  if ((await card.count()) === 0) return;
   await expect(start).toHaveAttribute('aria-pressed', 'true');
   await expect(end).toHaveAttribute('aria-pressed', 'true');
 }

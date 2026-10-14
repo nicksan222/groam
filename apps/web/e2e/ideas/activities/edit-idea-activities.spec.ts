@@ -41,13 +41,12 @@ test('adds, edits and removes activities on a later-day idea from both entry poi
   await openItinerary(page);
   await addStop(page, { name: 'Porto', notes: 'River walk', startDay: '4', endDay: '5' });
 
-  // The chooser must start on Day 4, not on an empty Day 1 with Continue disabled.
+  // Days 1–3 have no destination yet, so planning starts on Day 4.
   await startActivityPlan(page);
-  const chooser = page.getByRole('dialog');
-  await expect(chooser.getByRole('combobox', { name: 'Day', exact: true })).toContainText('Day 4');
-  await expect(chooser.getByRole('button', { name: 'Continue' })).toBeEnabled();
+  const editor = inlineActivityEditor(page);
+  await expect(editor).toHaveAttribute('aria-label', 'Add an activity to Day 4');
   await continueActivityPlan(page, 'Porto river walk');
-  await expect(chooser).toBeHidden();
+  await expect(editor).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Edit Porto river walk' })).toBeVisible();
 
   await openIdeaFromList(page, ideaName);
@@ -80,8 +79,7 @@ test('switches destination and day, returns from comparison, and submits activit
   await addStop(page, { name: 'Porto', notes: 'River', startDay: '4', endDay: '5' });
 
   await startActivityPlan(page, 5);
-  const chooser = page.getByRole('dialog');
-  await expect(chooser.getByRole('combobox', { name: 'Destination' })).toContainText('Porto');
+  await expect(inlineActivityEditor(page)).toContainText('Day 5 · Porto, Portugal');
   await continueActivityPlan(page, 'Cruise on the Douro');
   await expect(page.getByRole('region', { name: 'Day 5 schedule' })).toContainText(
     'Cruise on the Douro'
