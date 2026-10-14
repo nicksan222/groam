@@ -1,10 +1,10 @@
 import type { PaginationOptions } from 'convex/server';
 import { ConvexError } from 'convex/values';
+import type { Doc, Id } from '#convex-generated/dataModel';
+import type { QueryCtx } from '#convex-generated/server';
 import { requireWorkspace } from '#convex/modules/auth/workspace';
 import { TripPreferences } from '#convex/modules/travel/preferences/index';
 import { projectTripListItem } from '#convex/modules/travel/trips/projection';
-import type { Doc, Id } from '#convex-generated/dataModel';
-import type { QueryCtx } from '#convex-generated/server';
 
 const MAX_TRIP_PAGE_SIZE = 25;
 

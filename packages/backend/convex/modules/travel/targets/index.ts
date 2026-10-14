@@ -1,10 +1,10 @@
 import { ConvexError, type Infer } from 'convex/values';
-import { TripTargetKind } from '#convex/modules/travel/targets/kind';
-import type { TripCtx } from '#convex/modules/travel/trips/ctx';
-import '#convex/modules/travel/targets/kinds/index';
-import type { TripTargetValidators } from '#convex/modules/travel/targets/schema';
 import type { Doc, Id, TableNames } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
+import '#convex/modules/travel/targets/kinds/index';
+import { TripTargetKind } from '#convex/modules/travel/targets/kind';
+import type { TripTargetValidators } from '#convex/modules/travel/targets/schema';
+import type { TripCtx } from '#convex/modules/travel/trips/ctx';
 
 type AttachTarget = Infer<typeof TripTargetValidators.attachable>;
 type CollaborativeTarget = Infer<typeof TripTargetValidators.collaborative>;
@@ -111,7 +111,7 @@ async function catalogRows(
  * for attachments and comments. `setCost` patches whichever itinerary table the kind uses.
  * Context tags go through `normalizeContextTag` / `resolveContextTag` / `contextCatalog`.
  */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class TripTargets {
   static async assertBelongsToTrip(
     ctx: MutationCtx | QueryCtx,

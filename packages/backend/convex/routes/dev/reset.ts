@@ -1,7 +1,7 @@
 import { v } from 'convex/values';
+import { mutation } from '#convex-generated/server';
 import { assertLocalDevelopment } from '#convex/modules/dev/local';
 import { clearApplicationTables } from '#convex/modules/dev/reset';
-import { mutation } from '#convex-generated/server';
 
 export const run = mutation({
   args: {},

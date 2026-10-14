@@ -1,5 +1,5 @@
-import { describe, expect, test } from 'bun:test';
 import type { SpawnSyncOptions } from 'node:child_process';
+import { describe, expect, test } from 'vite-plus/test';
 import { repoRoot } from './repo-root';
 import { runConvex } from './run-convex';
 

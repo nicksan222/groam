@@ -5,8 +5,8 @@ import { register as registerGeospatial } from '@convex-dev/geospatial/test';
 import { register as registerRateLimiter } from '@convex-dev/rate-limiter/test';
 import { convexTest } from 'convex-test';
 import { decodeJwt } from 'jose';
-import schema from '#convex/schema';
 import { api } from '#convex-generated/api';
+import schema from '#convex/schema';
 import { createTestAuthClient } from './auth/client';
 import { registerBetterAuth } from './better-auth';
 

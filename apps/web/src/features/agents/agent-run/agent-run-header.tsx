@@ -6,7 +6,7 @@ import { testIds } from '@/lib/test-ids';
 import { AgentRunStatusBadge } from './agent-run-status-badge';
 import { AgentRunToolbar } from './agent-run-toolbar';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type AgentRunHeaderProps = {
   isLoading?: boolean;
   onRetry?: (runId: AgentRun['id']) => Promise<unknown> | unknown;

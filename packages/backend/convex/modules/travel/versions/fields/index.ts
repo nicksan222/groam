@@ -51,7 +51,7 @@ function valueField<const Format extends VersionDiffValueFormat>(format: Format)
  * Choose one strategy for every versioned field. The strategy controls both visibility and visual
  * formatting, while the required label is the only traveler-facing field name.
  */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class VersionDiff {
   static date = valueField('date');
   static destination = valueField('destination');
@@ -74,7 +74,7 @@ export class VersionDiff {
  * Defines a versioned model once. Its validator types snapshots and its presentation map powers
  * proposal diffs. Adding a field without a label, visibility, and format cannot typecheck.
  */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class VersionedModel {
   static define<const Fields extends VersionedFieldMap>(fields: Fields) {
     const validators = Object.fromEntries(

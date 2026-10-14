@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { api } from '#convex-generated/api';
 import {
   openTripDraft,
@@ -26,92 +26,96 @@ async function createPdf(
   });
 }
 
-test('stores arrival and return travel around the destination route', {
-  timeout: 15_000
-}, async () => {
-  const { owner, tripId } = await setupWritableTrip(0);
-  await owner.client.mutation(api.routes.trips.destinations.add.run, {
-    input: tripLocationInput(),
-    tripId
-  });
+test(
+  'stores arrival and return travel around the destination route',
+  {
+    timeout: 15_000
+  },
+  async () => {
+    const { owner, tripId } = await setupWritableTrip(0);
+    await owner.client.mutation(api.routes.trips.destinations.add.run, {
+      input: tripLocationInput(),
+      tripId
+    });
 
-  const arrivalId = await owner.client.mutation(api.routes.trips.transfers.set.run, {
-    boundary: 'arrival',
-    input: {
-      cost: { amount: 220 },
-      duration: { minutes: 120 },
-      mode: 'flight',
-      notes: 'Land at 09:20',
-      timing: {
-        endTime: '09:20',
-        startDay: 1,
-        startTime: '07:20'
-      }
-    },
-    tripId
-  });
-  const departureId = await owner.client.mutation(api.routes.trips.transfers.set.run, {
-    boundary: 'departure',
-    input: { mode: 'train', notes: 'Night train home' },
-    tripId
-  });
+    const arrivalId = await owner.client.mutation(api.routes.trips.transfers.set.run, {
+      boundary: 'arrival',
+      input: {
+        cost: { amount: 220 },
+        duration: { minutes: 120 },
+        mode: 'flight',
+        notes: 'Land at 09:20',
+        timing: {
+          endTime: '09:20',
+          startDay: 1,
+          startTime: '07:20'
+        }
+      },
+      tripId
+    });
+    const departureId = await owner.client.mutation(api.routes.trips.transfers.set.run, {
+      boundary: 'departure',
+      input: { mode: 'train', notes: 'Night train home' },
+      tripId
+    });
 
-  await expect(owner.client.query(api.routes.trips.get.run, { tripId })).resolves.toMatchObject({
-    arrivalTransfer: {
-      costAmount: 220,
-      durationMinutes: 120,
-      id: arrivalId,
-      mode: 'flight',
-      notes: 'Land at 09:20',
-      timing: {
-        endDay: 1,
-        endTime: '09:20',
-        startDay: 1,
-        startTime: '07:20'
-      }
-    },
-    departureTransfer: {
-      durationMinutes: null,
-      id: departureId,
-      mode: 'train',
-      notes: 'Night train home'
-    },
-    totalDurationDays: 1,
-    totalPlannedCost: 220
-  });
+    await expect(owner.client.query(api.routes.trips.get.run, { tripId })).resolves.toMatchObject({
+      arrivalTransfer: {
+        costAmount: 220,
+        durationMinutes: 120,
+        id: arrivalId,
+        mode: 'flight',
+        notes: 'Land at 09:20',
+        timing: {
+          endDay: 1,
+          endTime: '09:20',
+          startDay: 1,
+          startTime: '07:20'
+        }
+      },
+      departureTransfer: {
+        durationMinutes: null,
+        id: departureId,
+        mode: 'train',
+        notes: 'Night train home'
+      },
+      totalDurationDays: 1,
+      totalPlannedCost: 220
+    });
 
-  await owner.client.mutation(api.routes.trips.transfers.remove.run, {
-    transferId: arrivalId,
-    tripId
-  });
-  await expect(owner.client.query(api.routes.trips.get.run, { tripId })).resolves.toMatchObject({
-    arrivalTransfer: null,
-    departureTransfer: { id: departureId }
-  });
+    await owner.client.mutation(api.routes.trips.transfers.remove.run, {
+      transferId: arrivalId,
+      tripId
+    });
+    await expect(owner.client.query(api.routes.trips.get.run, { tripId })).resolves.toMatchObject({
+      arrivalTransfer: null,
+      departureTransfer: { id: departureId }
+    });
 
-  await owner.client.mutation(api.routes.trips.destinations.add.run, {
-    input: tripLocationInput({ name: 'Porto', placeId: 'porto-boundary-change' }),
-    tripId
-  });
-  await expect(owner.client.query(api.routes.trips.get.run, { tripId })).resolves.toMatchObject({
-    departureTransfer: null
-  });
-  await owner.client.mutation(api.routes.trips.transfers.set.run, {
-    boundary: 'departure',
-    input: { mode: 'flight' },
-    tripId
-  });
-  const addedDestination = await owner.client.query(api.routes.trips.get.run, { tripId });
-  const finalDestination = addedDestination.destinations[1];
-  if (!finalDestination) throw new Error('Expected the added destination');
-  await owner.client.mutation(api.routes.trips.destinations.remove.run, {
-    destinationId: finalDestination.id,
-    tripId
-  });
-  await expect(owner.client.query(api.routes.trips.get.run, { tripId })).resolves.toMatchObject({
-    departureTransfer: null
-  });
-});
+    await owner.client.mutation(api.routes.trips.destinations.add.run, {
+      input: tripLocationInput({ name: 'Porto', placeId: 'porto-boundary-change' }),
+      tripId
+    });
+    await expect(owner.client.query(api.routes.trips.get.run, { tripId })).resolves.toMatchObject({
+      departureTransfer: null
+    });
+    await owner.client.mutation(api.routes.trips.transfers.set.run, {
+      boundary: 'departure',
+      input: { mode: 'flight' },
+      tripId
+    });
+    const addedDestination = await owner.client.query(api.routes.trips.get.run, { tripId });
+    const finalDestination = addedDestination.destinations[1];
+    if (!finalDestination) throw new Error('Expected the added destination');
+    await owner.client.mutation(api.routes.trips.destinations.remove.run, {
+      destinationId: finalDestination.id,
+      tripId
+    });
+    await expect(owner.client.query(api.routes.trips.get.run, { tripId })).resolves.toMatchObject({
+      departureTransfer: null
+    });
+  }
+);
 
 test('stores typed destination and activity transfers with files', async () => {
   const { owner, tripId } = await setupWritableTrip(0);

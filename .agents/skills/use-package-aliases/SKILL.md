@@ -8,7 +8,7 @@ description: >-
 
 # Use package aliases
 
-`../` parent imports fail `bun run lint:conventions`. Folders and source files
+`../` parent imports fail `vp run lint:conventions`. Folders and source files
 must be kebab-case.
 
 ## From where

@@ -1,7 +1,7 @@
 import { AgentContextProvider, useCurrentAgentContext } from '@groam/ai/ui/context/agent-context';
 import type { Id } from '@groam/backend/data-model';
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { tripScreenAgentContext, useTripAgentContext } from './use-trip-agent-context';
 import type { TripDetail } from './use-trips';
 

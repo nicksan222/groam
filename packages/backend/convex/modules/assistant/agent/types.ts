@@ -1,8 +1,8 @@
 import type { ChatAgentId } from '@groam/ai/agents';
 import { resolveActiveTripId } from '@groam/ai/runtime/targets';
 import type { AssistantProviderConfiguration } from '#backend/ai/providers/index';
-import type { AssistantScreen } from '#convex/modules/assistant/validators/index';
 import type { Id } from '#convex-generated/dataModel';
+import type { AssistantScreen } from '#convex/modules/assistant/validators/index';
 
 export type { AssistantConversationScope } from '@groam/ai/backend/instructions';
 
@@ -21,7 +21,7 @@ export type AssistantTarget = {
 };
 
 /** Resolves the trip an assistant turn should write against. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class AssistantTargets {
   static activeTripId(
     tags: Array<{ tripId: string }>,

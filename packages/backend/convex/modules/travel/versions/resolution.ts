@@ -86,7 +86,7 @@ function resolveConflictSnapshot({
 }
 
 /** Builds a merged snapshot from per-path current vs proposed choices. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class VersionMerge {
   static conflicts = detectConflictPaths;
   static resolve = resolveConflictSnapshot;

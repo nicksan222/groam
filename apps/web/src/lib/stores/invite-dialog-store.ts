@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { RequestState } from '@/lib/stores/async-request-store';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type InviteDialogStore = {
   copied: boolean;
   invitationCode: string | null;

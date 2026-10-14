@@ -1,6 +1,6 @@
 import { ConvexError } from 'convex/values';
-import { MAX_PACKING_ITEMS, MAX_PACKING_LABEL_LENGTH } from '#convex/modules/travel/packing/schema';
 import type { Id } from '#convex-generated/dataModel';
+import { MAX_PACKING_ITEMS, MAX_PACKING_LABEL_LENGTH } from '#convex/modules/travel/packing/schema';
 import {
   MAX_VERSION_FILES,
   type ParsedVersionSnapshot,
@@ -187,7 +187,7 @@ function parseStoredSnapshot(value: string): VersionSnapshot {
 }
 
 /** Parses stored idea snapshot JSON without touching the database. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class VersionSnapshotFormat {
   static fromStored = parseStoredSnapshot;
   static match = snapshotsMatch;

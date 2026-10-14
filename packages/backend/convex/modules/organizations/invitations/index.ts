@@ -1,11 +1,11 @@
 import { ConvexError } from 'convex/values';
+import type { Id } from '#convex-generated/dataModel';
+import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import {
   assertOrganizationManager,
   getBetterAuth,
   type Workspace
 } from '#convex/modules/auth/workspace';
-import type { Id } from '#convex-generated/dataModel';
-import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 
 const CODE_ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
 const CODE_LENGTH = 12;

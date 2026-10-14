@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { AlertTriangle } from 'lucide-react';
-import { afterEach, expect, test } from 'vitest';
+import { afterEach, expect, test } from 'vite-plus/test';
 import { StatusPage } from './status-page';
 
 afterEach(cleanup);

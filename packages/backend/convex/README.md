@@ -103,7 +103,7 @@ npx convex env set OPENAI_API_KEY "your-openrouter-key"
 npx convex env set AI_MODEL "your-openrouter-model-id"
 ```
 
-Local AI values in `.env.local` are synchronized to Convex by `bun run dev`
+Local AI values in `.env.local` are synchronized to Convex by `vp run dev`
 (the hosted-web development path). Credential selection is centralized and uses
 deployment credentials first, then an account-wide personal key, then the active
 organization's shared key. Personal and organization connections support OpenAI,
@@ -141,7 +141,7 @@ installs or starts a fallback model server. Point Settings → AI at Ollama
 for any OpenAI-compatible host.
 
 Better Auth secrets (`BETTER_AUTH_SECRET`, `SITE_URL`) are written by
-`tooling/devkit/configure-auth.ts` during `bun run dev` / desktop runtime
+`tooling/devkit/configure-auth.ts` during `vp run dev` / desktop runtime
 startup; they are not listed in `@groam/env`.
 
 ## Testing

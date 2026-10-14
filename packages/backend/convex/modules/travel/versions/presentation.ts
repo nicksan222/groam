@@ -1,12 +1,12 @@
 import { ConvexError } from 'convex/values';
+import type { Id } from '#convex-generated/dataModel';
+import type { QueryCtx } from '#convex-generated/server';
 import { TripActivityVersionModel } from '#convex/modules/travel/activities/schema';
 import { TripDestinationVersionModel } from '#convex/modules/travel/destinations/schema';
 import { TripPackingVersionModel } from '#convex/modules/travel/packing/schema';
 import { TripStayVersionModel } from '#convex/modules/travel/stays/schema';
 import { TripTransferVersionModel } from '#convex/modules/travel/transfers/schema';
 import { TripVersionModel } from '#convex/modules/travel/trips/schema';
-import type { Id } from '#convex-generated/dataModel';
-import type { QueryCtx } from '#convex-generated/server';
 import type { TripVersionChange } from './diff';
 import type { VersionDiffFieldTag, VersionDiffValueFormat } from './fields/index';
 
@@ -202,7 +202,7 @@ async function presentVersionChanges(
 }
 
 /** Hydrates snapshot diffs with field labels, formats, and media URLs. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class VersionPresentation {
   static present = presentVersionChanges;
 }

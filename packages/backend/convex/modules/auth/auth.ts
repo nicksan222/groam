@@ -3,11 +3,11 @@ import { type AuthFunctions, createClient, type GenericCtx } from '@convex-dev/b
 import { convex, crossDomain } from '@convex-dev/better-auth/plugins';
 import { type BetterAuthOptions, betterAuth } from 'better-auth/minimal';
 import { organization, twoFactor, username } from 'better-auth/plugins';
-import authConfig from '#convex/auth.config';
-import authSchema from '#convex/components/better-auth/schema';
 import { components, internal } from '#convex-generated/api';
 import type { DataModel } from '#convex-generated/dataModel';
 import { env } from '#convex-generated/server';
+import authConfig from '#convex/auth.config';
+import authSchema from '#convex/components/better-auth/schema';
 import { resolveAuthTrustedOrigins } from './origins';
 import { accountRecovery } from './recovery';
 

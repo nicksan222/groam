@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { useAgentRoster } from './use-agent-roster';
 
 const convex = vi.hoisted(() => ({ useQuery: vi.fn() }));

@@ -1,5 +1,5 @@
 import type { Id } from '@groam/backend/data-model';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vite-plus/test';
 import { DEFAULT_ISSUE_STATUS_FILTER, filterWorkspaceIssues } from './issue-list-filter';
 import type { IssueListItem } from './issue-list-item';
 

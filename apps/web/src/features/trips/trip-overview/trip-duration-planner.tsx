@@ -65,7 +65,7 @@ function durationFooterCopy({
   return isValid ? durationLabel(days) : 'Dates are not set.';
 }
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type TripDurationPlannerLoadedProps = {
   canEdit: boolean;
   canPropose?: boolean;
@@ -77,12 +77,12 @@ export type TripDurationPlannerLoadedProps = {
   totalDays: number | null;
 };
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type TripDurationPlannerLoadingProps = {
   isLoading: true;
 };
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type TripDurationPlannerProps =
   | TripDurationPlannerLoadedProps
   | TripDurationPlannerLoadingProps;

@@ -3,7 +3,7 @@ import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { errors, expect as expectPage } from '@playwright/test';
-import { expect, it, vi } from 'vitest';
+import { expect, it, vi } from 'vite-plus/test';
 import { assertPngSize } from '#src/capture/png';
 import { recordScenario } from '#src/capture/record';
 

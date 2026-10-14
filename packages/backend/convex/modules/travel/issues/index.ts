@@ -1,14 +1,14 @@
 import { assistantAgents, isIssueAssignableAgentId } from '@groam/ai/agents';
 import type { PaginationOptions } from 'convex/server';
 import { ConvexError, type Infer } from 'convex/values';
+import { internal } from '#convex-generated/api';
+import type { Doc, Id } from '#convex-generated/dataModel';
+import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import { AgentRuns } from '#convex/modules/assistant/runs/index';
 import { requireWorkspace } from '#convex/modules/auth/workspace';
 import { insertWithShortId } from '#convex/modules/references/index';
 import type { TripIssueValidators } from '#convex/modules/travel/issues/schema';
 import { isTripAdmin, loadTripContext } from '#convex/modules/travel/trips/ctx';
-import { internal } from '#convex-generated/api';
-import type { Doc, Id } from '#convex-generated/dataModel';
-import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 
 const MAX_ISSUES = 200;
 const MAX_COMMENTS = 200;
@@ -403,7 +403,7 @@ async function setDueAt(
 }
 
 /** Planner issues on a trip: create, list, assign, comment, and status. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class TripIssues {
   static addComment = addComment;
   static create = create;

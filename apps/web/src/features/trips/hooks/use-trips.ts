@@ -114,7 +114,7 @@ export function useWorkspaceTripProposals(options?: { initialNumItems?: number }
   };
 }
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type RunTripAction = (action: () => Promise<unknown>, fallback: string) => Promise<boolean>;
 
 function useTripCoreActions(tripId: Id<'trips'>, run: RunTripAction) {

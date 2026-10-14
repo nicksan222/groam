@@ -1,6 +1,7 @@
 import { type Page, expect as playwrightExpect } from '@playwright/test';
 import { ids } from './ids';
 import { by, destinationCard, destinationResult, dialogSubmit } from './locators';
+import { openTripSection } from './open-trip-section';
 import { setDestinationSchedule } from './set-destination-schedule';
 
 const expect = playwrightExpect.configure({ timeout: 30_000 });
@@ -12,22 +13,25 @@ export type AddStopInput = {
   startDay: string;
 };
 
+/** Add a destination from the itinerary editor, then place it on its trip days. */
 export async function addStop(page: Page, input: AddStopInput): Promise<void> {
-  await page.getByRole('button', { name: 'Add a plan', exact: true }).click();
-  await page.getByRole('menuitem', { name: 'Destination', exact: true }).click();
+  await openTripSection(page, 'itinerary');
+  await page
+    .getByRole('button', { name: 'Add destination', exact: true })
+    .or(page.getByRole('button', { name: 'Add first destination', exact: true }))
+    .first()
+    .click();
   await expect(by(page, ids.addStopDialog)).toBeVisible();
   await by(page, ids.destinationSearchInput).fill(input.name);
   await destinationResult(page, `${input.name}, Portugal`).click();
   await by(page, ids.addStopPlans).fill(input.notes);
   await dialogSubmit(page, ids.addStopDialog).click();
   await expect(by(page, ids.addStopDialog)).toBeHidden();
-  await page
-    .locator('[data-slot="shell-right-column"]')
-    .getByRole('button')
-    .filter({ hasText: `${input.name}, Portugal` })
-    .click();
-  const card = destinationCard(page, `${input.name}, Portugal`);
+  const place = `${input.name}, Portugal`;
+  const card = destinationCard(page, place);
   await expect(card).toBeVisible();
   await setDestinationSchedule(card, input.startDay, input.endDay);
-  await page.getByRole('dialog').getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(
+    page.getByRole('button', { name: `Manage ${place} for Day ${input.startDay}`, exact: true })
+  ).toBeVisible();
 }

@@ -103,6 +103,12 @@ export function ItineraryEditor(props: ItineraryEditorProps) {
     }
   };
 
+  // A destination opened from a day card renders there; list it only once.
+  const openRouteId = detail?.kind === 'route' ? detail.destinationId : null;
+  const toSchedule = planner.unscheduledDestinations.filter(
+    (destination) => destination.id !== openRouteId
+  );
+
   return (
     <Shell.Section aria-label="Itinerary editor">
       <Shell.SectionHeader
@@ -133,10 +139,10 @@ export function ItineraryEditor(props: ItineraryEditorProps) {
             onAddDestination={onAddDestination}
           />
         ))}
-        {planner.unscheduledDestinations.length ? (
+        {toSchedule.length ? (
           <section className="space-y-3" aria-label="Destinations to schedule">
             <h3 className="text-sm font-semibold">Destinations to schedule</h3>
-            {planner.unscheduledDestinations.map((destination) => (
+            {toSchedule.map((destination) => (
               <EditorRouteStop key={destination.id} {...props} destination={destination} />
             ))}
           </section>

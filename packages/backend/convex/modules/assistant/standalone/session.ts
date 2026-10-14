@@ -9,15 +9,15 @@ import type { AssistantScreen } from '@groam/ai/runtime/screen';
 import { Output, stepCountIs } from 'ai';
 import { ConvexError } from 'convex/values';
 import { createRegisteredAssistantTools } from '#backend/assistant/tools/index';
+import { components, internal } from '#convex-generated/api';
+import type { Id } from '#convex-generated/dataModel';
+import type { ActionCtx } from '#convex-generated/server';
 import { AssistantProvider } from '#convex/modules/ai/provider';
 import { AssistantInstructions } from '#convex/modules/assistant/agent/instructions';
 import { AssistantErrors } from '#convex/modules/assistant/errors/index';
 import type { AgentRunView } from '#convex/modules/assistant/runs/schema';
 import { AgentRunTracking } from '#convex/modules/assistant/runs/tracking';
 import { AssistantScreens } from '#convex/modules/assistant/screen/index';
-import { components, internal } from '#convex-generated/api';
-import type { Id } from '#convex-generated/dataModel';
-import type { ActionCtx } from '#convex-generated/server';
 
 const MAX_ISSUE_OUTPUT_TOKENS = 2_048;
 const MAX_REVIEW_OUTPUT_TOKENS = 2_048;
@@ -220,7 +220,7 @@ async function execute(
 }
 
 /** Standalone workers: live event log + report, no chat or issue-comment dumps. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class StandaloneSession {
   static execute = execute;
 }

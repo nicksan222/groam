@@ -54,9 +54,12 @@ export async function seedWorkspaceUsers(
   const membershipStatuses = await mapWithConcurrency(members, 1, (member) =>
     app.joinWorkspace(authenticatedOwner, member, workspace, existingMemberIds.has(member.userId))
   );
-  const users = authenticatedUsers.map(
-    ({ email, name, password, userId }): AppUser => ({ email, name, password, userId })
-  );
+  const users = authenticatedUsers.map(({ email, name, password, userId }): AppUser => ({
+    email,
+    name,
+    password,
+    userId
+  }));
   const createdCount = authenticatedUsers.filter(({ status }) => status === 'created').length;
   const newlyJoined = membershipStatuses.filter((status) => status === 'joined').length;
 

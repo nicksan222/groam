@@ -1,6 +1,6 @@
 import type { Id } from '@groam/backend/data-model';
 import { act, renderHook } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vite-plus/test';
 import type { IssueListItem } from './issue-list-item';
 import { useIssueListFilters } from './use-issue-list-filters';
 

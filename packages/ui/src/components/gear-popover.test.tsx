@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, expect, test } from 'vitest';
+import { afterEach, expect, test } from 'vite-plus/test';
 import { stubPopoverEnvironment } from '#src/lib/stub-popover-environment';
 import { GearPopover } from './gear-popover';
 import { PopoverDescription, PopoverHeader, PopoverTitle } from './popover';

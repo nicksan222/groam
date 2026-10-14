@@ -1,6 +1,4 @@
 import { v } from 'convex/values';
-import { TripCoverValidators } from '#convex/modules/travel/covers/schema';
-import { downloadStockCover, searchWikipediaCover } from '#convex/modules/travel/covers/stock';
 import { internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
 import {
@@ -9,6 +7,8 @@ import {
   internalMutation,
   internalQuery
 } from '#convex-generated/server';
+import { TripCoverValidators } from '#convex/modules/travel/covers/schema';
+import { downloadStockCover, searchWikipediaCover } from '#convex/modules/travel/covers/stock';
 
 const RETRY_DELAYS_MS = [30_000, 2 * 60_000, 10 * 60_000];
 

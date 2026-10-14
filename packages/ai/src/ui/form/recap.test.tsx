@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { AssistantRecap } from './recap';
 
 test('renders a compact recap with verified highlights', () => {

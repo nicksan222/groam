@@ -64,7 +64,7 @@ async function recordStep(
 }
 
 /** Action-side event log for every agent run — chat and standalone. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class AgentRunTracking {
   static isAborted = isAborted;
   static record = record;

@@ -1,4 +1,6 @@
 import { ConvexError } from 'convex/values';
+import type { Doc, Id } from '#convex-generated/dataModel';
+import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import { TripActivityVersionModel } from '#convex/modules/travel/activities/schema';
 import { TripDestinationVersionModel } from '#convex/modules/travel/destinations/schema';
 import { TripPackingVersionModel } from '#convex/modules/travel/packing/schema';
@@ -13,8 +15,6 @@ import {
   MAX_VERSION_SNAPSHOT_BYTES,
   type VersionSnapshot
 } from '#convex/modules/travel/versions/snapshot/types';
-import type { Doc, Id } from '#convex-generated/dataModel';
-import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 
 export type {
   ParsedVersionSnapshot,
@@ -172,7 +172,7 @@ async function createVersionSnapshot(
 }
 
 /** Serializes and parses trip idea snapshots. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class VersionSnapshots {
   static create = createVersionSnapshot;
   static fromStored = VersionSnapshotFormat.fromStored;

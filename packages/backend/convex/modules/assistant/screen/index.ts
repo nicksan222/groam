@@ -8,7 +8,7 @@ export {
 } from '#convex/modules/assistant/validators/index';
 
 /** Validates the UI snapshot attached to an assistant turn. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class AssistantScreens {
   static validate(screen: AssistantScreen): void {
     try {

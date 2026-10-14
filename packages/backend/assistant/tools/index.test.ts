@@ -1,7 +1,7 @@
 import { createTool } from '@convex-dev/agent';
 import { assistantToolSpecs } from '@groam/ai/tools/specs';
 import type { ToolSet } from 'ai';
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import * as z from 'zod/v3';
 import { defineCapability } from '#backend/assistant/tools/factory';
 import {

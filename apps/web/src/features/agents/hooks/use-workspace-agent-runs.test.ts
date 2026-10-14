@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { useWorkspaceAgentRuns } from './use-workspace-agent-runs';
 
 const convex = vi.hoisted(() => ({ usePaginatedQuery: vi.fn() }));

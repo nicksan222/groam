@@ -2,7 +2,7 @@ import type { Id } from '@groam/backend/data-model';
 import { createStore } from 'zustand/vanilla';
 import type { StayDraft } from '@/features/trips/hooks/trip-destination-form-state';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type TripStayEditorStore = {
   draft: StayDraft;
   editingId: Id<'tripDestinationStays'> | 'new' | null;

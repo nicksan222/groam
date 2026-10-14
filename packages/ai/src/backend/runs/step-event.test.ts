@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { agentRunEventLabels } from './events';
 import { eventsFromStep, thoughtFromStep } from './step-event';
 

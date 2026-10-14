@@ -1,6 +1,6 @@
 import type { UIMessage } from '@convex-dev/agent/react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { assistantContextMessage } from '#ai/agents';
 import { AssistantConversation } from './assistant-conversation';
 

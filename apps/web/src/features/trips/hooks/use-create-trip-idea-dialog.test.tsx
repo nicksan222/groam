@@ -1,6 +1,6 @@
 import type { Id } from '@groam/backend/data-model';
 import { act, renderHook } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test, vi } from 'vite-plus/test';
 import { useCreateTripIdeaDialog } from './use-create-trip-idea-dialog';
 
 describe('useCreateTripIdeaDialog', () => {

@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, test } from 'vite-plus/test';
 import { isHttpOk, waitForHttp } from './http-readiness';
 
 describe('isHttpOk', () => {
@@ -13,11 +13,13 @@ describe('isHttpOk', () => {
 
 describe('waitForHttp', () => {
   test('returns once the URL answers successfully', async () => {
-    await waitForHttp('http://127.0.0.1:5173/', {
-      fetchTarget: async () => new Response('ok'),
-      now: () => 0,
-      sleep: async () => {},
-      timeoutMs: 1_000
-    });
+    await expect(
+      waitForHttp('http://127.0.0.1:5173/', {
+        fetchTarget: async () => new Response('ok'),
+        now: () => 0,
+        sleep: async () => {},
+        timeoutMs: 1_000
+      })
+    ).resolves.toBeUndefined();
   });
 });

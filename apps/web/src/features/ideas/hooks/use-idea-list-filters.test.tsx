@@ -1,6 +1,6 @@
 import type { Id } from '@groam/backend/data-model';
 import { act, renderHook } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vite-plus/test';
 import { useIdeaListFilters } from './use-idea-list-filters';
 import type { WorkspaceIdea } from './use-workspace-ideas';
 

@@ -7,9 +7,9 @@ import {
   tripDayField,
   workingTripIdField
 } from '#backend/assistant/tools/trips/shared';
-import type { TripAssistantContext } from '#convex/modules/assistant/model/index';
 import { internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
+import type { TripAssistantContext } from '#convex/modules/assistant/model/index';
 
 const updateTripDetailsSchema = z.object({
   budgetAmount: z

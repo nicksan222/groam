@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { IdeaErrors } from './errors';
 
 test('rethrowAsIdeaError preserves merge conflict messages', () => {

@@ -9,8 +9,8 @@ description: >-
 # Add a web view test
 
 Colocate `<name>.test.tsx` next to the component in
-`apps/web/src/features/<domain>/`. Run with the package `vitest` (via
-`turbo run test`).
+`apps/web/src/features/<domain>/`. Run with the package `vp test` (via
+`vp run test`).
 
 ## Pattern
 
@@ -19,7 +19,7 @@ assert visible copy and `data-testid`s.
 
 ```tsx
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { AgentsListView } from './agents-list-view';
 
 vi.mock('@groam/ai/ui/context/agent-context', () => ({

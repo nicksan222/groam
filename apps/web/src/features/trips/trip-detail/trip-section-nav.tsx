@@ -14,7 +14,7 @@ const sectionTabs = [
   { key: 'activity', testId: testIds.tripSectionActivity, title: tripSectionLabels.activity }
 ] as const;
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type TripSectionNavLoadedProps = {
   isLoading?: false;
   onOpen: (section: TripSection) => void;
@@ -23,13 +23,13 @@ export type TripSectionNavLoadedProps = {
   tripId: Id<'trips'>;
 };
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type TripSectionNavLoadingProps = {
   isLoading: true;
   section?: TripSection;
 };
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type TripSectionNavProps = TripSectionNavLoadedProps | TripSectionNavLoadingProps;
 
 function tabTitle(base: string, count: number | string | undefined) {

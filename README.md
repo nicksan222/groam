@@ -74,7 +74,7 @@ From a host terminal, start it and run commands through the Dev Container CLI:
 
 Git may run on the host; all repository tooling runs in the container. On a
 clean host, run the containerized `just check` gate before committing with
-`git commit --no-verify`, so Husky does not launch project tools on the host.
+`git commit --no-verify`, so Git hooks do not launch project tools on the host.
 The launcher delegates to the official Dev Container CLI and automatically
 handles Git metadata stored outside Codex and other Git worktrees.
 When already attached to the container or using Codespaces, run `just dev`

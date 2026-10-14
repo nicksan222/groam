@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { auth } from '@/features/auth/auth-client-mock';
 import { useAuthFormStore } from '@/lib/stores/auth-form-store';
 import { AuthScreen } from './auth-screen';

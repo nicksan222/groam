@@ -9,7 +9,7 @@ import { RouteStopCard } from './route-stop-card';
 
 const routeLoadingDescription = 'Stops and activities appear here once the route loads.';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type RouteBoardLoadedProps = {
   isLoading?: false;
   onAddDestination: () => void;
@@ -17,12 +17,12 @@ export type RouteBoardLoadedProps = {
   trip: TripDetail;
 };
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type RouteBoardLoadingProps = {
   isLoading: true;
 };
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type RouteBoardProps = RouteBoardLoadedProps | RouteBoardLoadingProps;
 
 export function RouteBoard(props: RouteBoardProps) {

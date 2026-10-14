@@ -313,7 +313,7 @@ async function createTripGitHistory({ base, current, merge, tip }: GitHistoryInp
 }
 
 /** Isolated Git history for idea snapshots. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class TripGit {
   static createHistory = createTripGitHistory;
 }

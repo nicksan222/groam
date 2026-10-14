@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { buildWorkspaceSeedPlans } from './build-workspace-seed-plans';
 
 test('builds one complete workspace plan per trip', () => {

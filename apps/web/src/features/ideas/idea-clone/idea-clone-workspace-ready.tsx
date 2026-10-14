@@ -14,7 +14,7 @@ import { IdeaCloneNav } from './idea-clone-nav';
 import { IdeaCloneUpdateBanner } from './idea-clone-update-banner';
 import type { IdeaCloneView as CloneView } from './idea-sections';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local composition shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local composition shape
 type IdeaClonePage = ReturnType<typeof useIdeaCloneWorkspace>;
 
 function IdeaCloneCrumb({

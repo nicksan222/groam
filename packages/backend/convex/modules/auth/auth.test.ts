@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { createTest } from '#testing/factory';
 
 test('does not expose username availability', async () => {

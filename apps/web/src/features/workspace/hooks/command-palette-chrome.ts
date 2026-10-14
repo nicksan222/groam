@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type CommandPaletteChrome = {
   closeAndClear: () => void;
   onOpenChange: (open: boolean) => void;

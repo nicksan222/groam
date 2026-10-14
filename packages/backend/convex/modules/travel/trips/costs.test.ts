@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { costsMatch, plannedCostAmount, tripCostSplit } from './costs';
 
 test('treats missing splits as a total group cost', () => {

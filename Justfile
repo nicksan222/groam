@@ -6,11 +6,11 @@ default:
 
 # Install the pinned workspace exactly as CI does.
 install:
-    HUSKY=0 bun install --frozen-lockfile
+    VP_GIT_HOOKS=0 vp install --frozen-lockfile
 
 # Start Convex, Vite, and the dashboard locally.
 dev:
-    CONVEX_AGENT_MODE=anonymous bun run dev
+    CONVEX_AGENT_MODE=anonymous vp run dev
 
 # Start or attach the Claude development team.
 [positional-arguments]
@@ -49,23 +49,23 @@ agents-test:
 
 # Start only the web app (the backend must already be running).
 web:
-    bun run dev:web
+    vp run dev:web
 
 # Start the packaged desktop development stack.
 desktop:
-    bun run dev:desktop
+    vp run dev:desktop
 
 # Run the complete CI quality suite.
 check: agents-test
-    bun run check
+    vp run check
 
 # Generate routes, auth schema, and Convex bindings.
 codegen:
-    CONVEX_AGENT_MODE=anonymous bun run codegen
+    CONVEX_AGENT_MODE=anonymous vp run codegen
 
 # Refresh the Convex-managed guidelines and agent skills.
 update-convex-agent-files:
-    CONVEX_AGENT_MODE=anonymous bunx convex ai-files update
+    CONVEX_AGENT_MODE=anonymous vp exec convex ai-files update
 
 # Build or incrementally refresh the local, API-key-free code graph.
 graphify-refresh:
@@ -89,59 +89,59 @@ enable-pr-auto-merge pull-request:
 
 # Regenerate every web, desktop, and document brand asset from @groam/brand.
 brand:
-    bun run brand:generate
+    vp run brand:generate
 
 # Format manifests and source files.
 format:
-    bun run format
+    vp run format
 
 # Verify formatting without writing files.
 format-check:
-    bun run format:check
+    vp run format:check
 
 # Check conventions, package manifests, and source formatting.
 lint:
-    bun run lint
+    vp run lint
 
 # Typecheck every workspace and loose tooling script.
 typecheck:
-    bun run typecheck
+    vp run typecheck
 
 # Run unit and integration tests.
 test:
-    bun run test
+    vp run test
 
 # Run browser tests against the CI-style static site.
 e2e:
-    bun run test:e2e
+    vp run test:e2e
 
 # Run browser tests against Vite on localhost:5173.
 e2e-local:
-    bun run test:e2e:local
+    vp run test:e2e:local
 
 # Seed local demo data; for example `just seed --scale small`.
 seed *args:
-    bun run seed -- {{ args }}
+    vp run seed {{ args }}
 
 # Open the local Convex dashboard.
 dashboard:
-    CONVEX_AGENT_MODE=anonymous bun run convex:dashboard
+    CONVEX_AGENT_MODE=anonymous vp run convex:dashboard
 
 # Capture, edit, and render the complete showcase.
 showcase:
-    bun run showcase
+    vp run showcase
 
 # Capture showcase browser footage from a running app.
 showcase-capture:
-    bun run showcase:capture
+    vp run showcase:capture
 
 # Open the Remotion showcase editor.
 showcase-studio:
-    bun run showcase:studio
+    vp run showcase:studio
 
 # Rebuild the compact README GIF from the committed showcase film.
 showcase-gif:
-    bun run showcase:gif
+    vp run showcase:gif
 
 # Start the installed-app local runtime.
 runtime:

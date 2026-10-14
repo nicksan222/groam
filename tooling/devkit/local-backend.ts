@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { setTimeout as sleep } from 'node:timers/promises';
 import { isConvexBackendResponding } from '@groam/devkit/wait-for-backend';
 
 export const isLocalBackendRunning = isConvexBackendResponding;
@@ -37,7 +38,7 @@ export const stopLocalBackend = async (
   const listProcesses =
     options.listProcesses ??
     (() => execFileSync('ps', ['-A', '-o', 'pid=,command='], { encoding: 'utf8' }));
-  const wait = options.wait ?? ((milliseconds) => Bun.sleep(milliseconds));
+  const wait = options.wait ?? ((milliseconds) => sleep(milliseconds));
   const processIds = localBackendProcessIds(listProcesses(), backendUrl, projectRoot);
   if (processIds.length === 0) return !(await isLocalBackendRunning(backendUrl, fetchBackend));
 

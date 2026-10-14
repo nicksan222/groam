@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
 import { DiscussionDetailsSheet } from '@/features/discussions/discussion-sheets/discussion-details-sheet';
 import { DiscussionParticipantsSheet } from '@/features/discussions/discussion-sheets/discussion-participants-sheet';
 import { DiscussionRenameDialog } from '@/features/discussions/discussion-sheets/discussion-rename-dialog';

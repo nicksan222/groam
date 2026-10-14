@@ -1,5 +1,5 @@
 import { shadcnComponents } from '@json-render/shadcn';
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { sliderInputStrategy } from './slider-input';
 
 test('registers the slider input strategy', () => {

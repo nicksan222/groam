@@ -6,7 +6,7 @@ import type { AgentRun } from '@/features/agents/hooks/use-agent';
 import { Link } from '@/features/workspace/navigation/router';
 import { testIds } from '@/lib/test-ids';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type AgentRunContextProps = { isLoading?: boolean; run?: AgentRun };
 
 function RunTimestamp({

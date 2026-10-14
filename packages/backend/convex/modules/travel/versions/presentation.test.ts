@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { TripActivityVersionModel } from '#convex/modules/travel/activities/schema';
 import { TripDestinationVersionModel } from '#convex/modules/travel/destinations/schema';
 import { TripStayVersionModel } from '#convex/modules/travel/stays/schema';

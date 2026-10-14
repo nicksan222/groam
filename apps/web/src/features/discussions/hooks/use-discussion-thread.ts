@@ -80,6 +80,7 @@ export function useDiscussionThread(
       if (item.url?.startsWith('blob:')) URL.revokeObjectURL(item.url);
     }
     sending.clearPendingUserMessage();
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- depends on the members it reads, not the whole sending object
   }, [mergedMessages, sending.clearPendingUserMessage, sending.pendingUserMessage]);
 
   return {

@@ -14,9 +14,9 @@ import {
   tripDayField,
   workingTripIdField
 } from '#backend/assistant/tools/trips/shared';
-import type { TripActivityValidators } from '#convex/modules/travel/activities/schema';
 import { internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
+import type { TripActivityValidators } from '#convex/modules/travel/activities/schema';
 
 function addActivityInputFromTool(input: {
   address?: string;

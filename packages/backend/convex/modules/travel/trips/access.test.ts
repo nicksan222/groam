@@ -1,7 +1,7 @@
-import { expect, test } from 'vitest';
-import { roleFor } from '#convex/modules/travel/trips/access';
+import { expect, test } from 'vite-plus/test';
 import { api } from '#convex-generated/api';
 import type { Doc, Id } from '#convex-generated/dataModel';
+import { roleFor } from '#convex/modules/travel/trips/access';
 import { setupGroup, setupTrip } from '#testing/trips';
 import { changedTripDetails } from '#testing/versions';
 

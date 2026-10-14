@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { tripDurationInput } from './trip-duration-input';
 
 test('preserves planning preferences while changing the concrete trip length', () => {

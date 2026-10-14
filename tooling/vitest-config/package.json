@@ -4,17 +4,21 @@
   "dependencies": {
     "@groam/env": "workspace:*"
   },
+  "devDependencies": {
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  },
   "exports": {
     "./convex": "./src/convex.ts",
     "./web": "./src/web.ts"
   },
   "license": "MIT",
   "peerDependencies": {
-    "vitest": "^5.0.0"
+    "vite-plus": "^1.2.0"
   },
   "private": true,
   "scripts": {
-    "test": "bun test src",
+    "test": "vp test run",
     "typecheck": "tsc --noEmit"
   },
   "type": "module"

@@ -1,5 +1,5 @@
 import { shadcnComponents } from '@json-render/shadcn';
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { radioInputStrategy } from './radio-input';
 
 test('registers the radio input strategy', () => {

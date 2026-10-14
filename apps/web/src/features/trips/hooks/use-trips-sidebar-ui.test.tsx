@@ -1,6 +1,6 @@
 import type { Id } from '@groam/backend/data-model';
 import { act, renderHook } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vite-plus/test';
 import type { TripListItem } from './use-trips';
 import { useTripsSidebarUi } from './use-trips-sidebar-ui';
 

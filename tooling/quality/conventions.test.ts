@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, test } from 'vite-plus/test';
 import {
   inspectFile,
   inspectFiles,
@@ -102,6 +102,16 @@ describe('inspectFile', () => {
         location: 'apps/web/src/features/trips/hooks/use-trips.ts'
       }
     ]);
+  });
+
+  test('rejects !important in stylesheets', () => {
+    expect(
+      inspectFile('packages/ui/src/styles/globals.css', '  color: var(--primary) !important;')
+    ).toEqual([{ category: 'important-styles', location: 'packages/ui/src/styles/globals.css:1' }]);
+    expect(inspectFile('packages/ui/src/styles/globals.css', '  /* never !important */')).toEqual(
+      []
+    );
+    expect(inspectFile('apps/web/src/app.tsx', 'const className = "!p-0";')).toEqual([]);
   });
 
   test('rejects hardcoded colors and gradients outside design tokens', () => {

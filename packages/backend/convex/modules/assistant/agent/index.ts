@@ -7,8 +7,4 @@ export {
 
 export { AssistantInstructions } from './instructions';
 export { AssistantSession } from './session';
-export type {
-  AssistantConversationScope,
-  AssistantLanguageModel,
-  AssistantTarget
-} from './types';
+export type { AssistantConversationScope, AssistantLanguageModel, AssistantTarget } from './types';

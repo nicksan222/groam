@@ -13,5 +13,5 @@ commands in the package that performs them. Add a devkit export only when multip
 behavior; otherwise keep the implementation beside its sole consumer.
 
 `prepare-convex.ts` is the root development lifecycle entrypoint. The backend
-package owns the Turbo `dev` task; no separate Convex tooling workspace is
+package owns the `dev` script that `vp run` starts; no separate Convex tooling workspace is
 needed.

@@ -6,10 +6,10 @@ import type { SidebarSectionKey } from '@/types/workspace';
 
 export type { SidebarSectionKey };
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type SectionRecord<T> = Record<SidebarSectionKey, T>;
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type SidebarChromeStore = {
   clearTripsArchive: () => void;
   closeTripsCreate: () => void;

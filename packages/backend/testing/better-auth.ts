@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
-import type { GenericSchema, SchemaDefinition } from 'convex/server';
 import type { TestConvex } from 'convex-test';
+import type { GenericSchema, SchemaDefinition } from 'convex/server';
 import schema from '#convex/components/better-auth/schema';
 
 const modules = import.meta.glob('../convex/components/better-auth/**/*.ts');

@@ -1,6 +1,4 @@
 import { v } from 'convex/values';
-import { Files } from '#convex/modules/media/files/index';
-import { TripCoverValidators } from '#convex/modules/travel/covers/schema';
 import { internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
 import {
@@ -9,6 +7,8 @@ import {
   internalMutation,
   internalQuery
 } from '#convex-generated/server';
+import { Files } from '#convex/modules/media/files/index';
+import { TripCoverValidators } from '#convex/modules/travel/covers/schema';
 
 const WIKIPEDIA_API_URL = 'https://en.wikipedia.org/w/api.php';
 const WIKIMEDIA_API_URL = 'https://commons.wikimedia.org/w/api.php';
@@ -118,16 +118,15 @@ function wikipediaLeadImage(payload: unknown): WikipediaLeadImage | null {
   return wikipediaLeadImages(payload)[0] ?? null;
 }
 
+const HTML_ENTITIES: Record<string, string> = { amp: '&', gt: '>', lt: '<', quot: '"' };
+
 function decodedHtmlText(value: unknown) {
   const text = nonemptyString(value);
   if (!text) return null;
+  // Decode each entity once, so escaped text like "&amp;lt;" stays "&lt;".
   return text
     .replace(/<[^>]*>/gu, ' ')
-    .replace(/&amp;/gu, '&')
-    .replace(/&quot;/gu, '"')
-    .replace(/&#0*39;/gu, "'")
-    .replace(/&lt;/gu, '<')
-    .replace(/&gt;/gu, '>')
+    .replace(/&(amp|gt|lt|quot|#0*39);/gu, (_entity, name: string) => HTML_ENTITIES[name] ?? "'")
     .replace(/\s+/gu, ' ')
     .trim();
 }
@@ -201,13 +200,13 @@ type EligibleWikimediaImage = WikimediaImageData & {
 function isEligibleWikimediaImage(data: WikimediaImageData): data is EligibleWikimediaImage {
   return Boolean(
     data.imageUrl &&
-      data.sourceUrl &&
-      data.sourceUrl !== data.excludedSourceUrl &&
-      data.license &&
-      data.mime &&
-      SUPPORTED_CONTENT_TYPES.has(data.mime) &&
-      Number.isFinite(data.imageWidth) &&
-      data.imageWidth >= MIN_STOCK_COVER_WIDTH
+    data.sourceUrl &&
+    data.sourceUrl !== data.excludedSourceUrl &&
+    data.license &&
+    data.mime &&
+    SUPPORTED_CONTENT_TYPES.has(data.mime) &&
+    Number.isFinite(data.imageWidth) &&
+    data.imageWidth >= MIN_STOCK_COVER_WIDTH
   );
 }
 
@@ -421,7 +420,7 @@ function hasStockCoverSignature(bytes: Uint8Array, contentType: string): boolean
 }
 
 /** Wikipedia / Wikimedia stock cover lookup used by tests and the generate action. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class StockCover {
   static candidates = wikimediaCoverCandidates;
   static hasSignature = hasStockCoverSignature;

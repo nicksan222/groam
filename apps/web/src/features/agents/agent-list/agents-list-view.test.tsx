@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import type { WorkspaceAgentRun } from '@/features/agents/hooks/use-workspace-agent-runs';
 import { testIds } from '@/lib/test-ids';
 import { AgentsListView } from './agents-list-view';

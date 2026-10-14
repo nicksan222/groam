@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { Fragment } from 'react';
-import { afterEach, expect, test } from 'vitest';
+import { afterEach, expect, test } from 'vite-plus/test';
 import Shell from '#tsx/components/shell/client';
 import { Skeleton } from '#tsx/components/skeleton';
 

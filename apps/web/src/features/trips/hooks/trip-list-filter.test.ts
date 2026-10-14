@@ -1,5 +1,5 @@
 import type { Id } from '@groam/backend/data-model';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vite-plus/test';
 import type { TripListItem } from '@/types/trips';
 import { DEFAULT_TRIP_STATUS_FILTER, filterWorkspaceTrips } from './trip-list-filter';
 

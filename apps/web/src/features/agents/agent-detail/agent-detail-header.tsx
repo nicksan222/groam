@@ -11,19 +11,19 @@ import { AgentStatusBadge } from './agent-status-badge';
 
 export type { AgentDetailAgent };
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type AgentDetailHeaderLoadedProps = {
   agent: AgentDetailAgent;
   isLoading?: false;
 };
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type AgentDetailHeaderLoadingProps = {
   agent?: undefined;
   isLoading: true;
 };
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type AgentDetailHeaderProps = AgentDetailHeaderLoadedProps | AgentDetailHeaderLoadingProps;
 
 export function AgentDetailHeader(props: AgentDetailHeaderProps) {

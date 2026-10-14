@@ -1,7 +1,7 @@
-import { afterEach, describe, expect, test } from 'bun:test';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { afterEach, describe, expect, test } from 'vite-plus/test';
 import { configureAuth, upsertViteSiteUrl } from './configure-auth';
 
 describe('upsertViteSiteUrl', () => {

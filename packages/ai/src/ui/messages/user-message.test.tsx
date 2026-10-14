@@ -1,6 +1,6 @@
 import type { UIMessage } from '@convex-dev/agent/react';
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { UserMessage } from './user-message';
 
 vi.mock('@convex-dev/agent/react', async (importOriginal) => ({

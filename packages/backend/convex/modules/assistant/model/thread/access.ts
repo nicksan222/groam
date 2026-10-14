@@ -2,13 +2,13 @@ import { getThreadMetadata } from '@convex-dev/agent';
 import type { AssistantContextTag } from '@groam/ai/runtime/context-tag';
 import { parseAssistantThreadSummary } from '@groam/ai/runtime/thread-summary';
 import { ConvexError } from 'convex/values';
+import { components } from '#convex-generated/api';
 import type { ConversationScope } from '#convex/modules/assistant/model/schema';
 import { type AuthContext, requireWorkspace, type Workspace } from '#convex/modules/auth/workspace';
 import { Discussions } from '#convex/modules/discussions/threads/index';
-import { components } from '#convex-generated/api';
 
 /** Membership gate for private chats and discussion-backed assistant threads. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class AssistantThreads {
   static async require(
     ctx: AuthContext,

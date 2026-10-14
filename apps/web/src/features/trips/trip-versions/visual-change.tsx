@@ -9,7 +9,7 @@ import { ChangeCommentComposer } from './change-comment-composer';
 import { DiffFieldValue } from './diff-field-value';
 import type { ProposalFeedbackItem } from './proposal-types';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local presentation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local presentation shape
 export type VersionChange = NonNullable<
   ReturnType<typeof useTripVersion>['proposal']
 >['changes'][number];

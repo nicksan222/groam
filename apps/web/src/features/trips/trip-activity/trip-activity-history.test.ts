@@ -1,5 +1,5 @@
 import type { Id } from '@groam/backend/data-model';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vite-plus/test';
 import { filterTripActivity } from '@/features/trips/hooks/trip-activity-history-filter';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 

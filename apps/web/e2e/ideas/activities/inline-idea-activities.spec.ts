@@ -25,9 +25,7 @@ test('plans morning and afternoon activities directly within an idea day', async
   await addStop(page, { name: 'Lisbon', notes: 'Explore the city', startDay: '1', endDay: '3' });
 
   const day = page.getByRole('region', { name: 'Day 2 schedule' });
-  await expect(day.getByRole('button', { name: 'Add morning activity to Day 2' })).toBeVisible();
-  await expect(day.getByRole('button', { name: 'Add afternoon activity to Day 2' })).toBeVisible();
-  await expect(day.getByRole('button', { name: 'Add evening activity to Day 2' })).toBeVisible();
+  await expect(day.getByRole('button', { name: 'Add to day' })).toBeVisible();
   await addInlineActivity(page, {
     day: 2,
     notes: 'Meet beside the bakery',
@@ -36,15 +34,15 @@ test('plans morning and afternoon activities directly within an idea day', async
   });
   await addInlineActivity(page, { day: 2, period: 'afternoon', title: 'Riverside stroll' });
 
-  await expect(day.getByRole('region', { name: 'Morning, Day 2' })).toContainText(
-    'Market breakfast'
-  );
-  await expect(day.getByRole('region', { name: 'Afternoon, Day 2' })).toContainText(
-    'Riverside stroll'
-  );
+  // The day schedule lists the morning plan before the afternoon plan.
+  const plans = day.getByRole('button', { name: /^Edit (?:Market breakfast|Riverside stroll)$/u });
+  await expect(plans).toHaveCount(2);
+  await expect(plans.first()).toHaveAccessibleName('Edit Market breakfast');
+  await expect(plans.last()).toHaveAccessibleName('Edit Riverside stroll');
   await editInlineActivity(page, {
     address: 'Ribeira das Naus, Lisbon',
     day: 2,
+    period: 'afternoon',
     title: 'Riverside stroll'
   });
   await expect(day.getByRole('button', { name: 'Edit Riverside stroll' })).toBeVisible();
@@ -72,10 +70,12 @@ test('switching a shared day’s destination keeps the inline activity draft', a
     range: { startDay: 1, endDay: 2 },
     title: 'Riverside picnic'
   });
+  const sharedDay = page.getByRole('region', { name: 'Day 2 schedule' });
+  // The saved plan's row names the destination chosen in the inline draft.
   await expect(
-    page.getByRole('region', { name: 'Day 2 schedule' }).getByRole('button', {
-      name: 'Edit Riverside picnic'
-    })
+    sharedDay
+      .locator('[data-slot="timeline-item"]')
+      .filter({ has: page.getByRole('button', { name: 'Edit Riverside picnic' }) })
   ).toContainText('Porto');
 });
 
@@ -92,8 +92,8 @@ test('mobile day planning keeps the inline activity form in the schedule', async
   await page.setViewportSize({ width: 390, height: 844 });
 
   const day = page.getByRole('region', { name: 'Day 2 schedule' });
-  await expect(day.getByRole('button', { name: 'Add morning activity to Day 2' })).toBeVisible();
+  await expect(day.getByRole('button', { name: 'Add to day' })).toBeVisible();
   await addInlineActivity(page, { day: 2, period: 'morning', title: 'Morning market' });
-  await expect(day.getByRole('region', { name: 'Morning, Day 2' })).toContainText('Morning market');
+  await expect(day.getByRole('button', { name: 'Edit Morning market' })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 });

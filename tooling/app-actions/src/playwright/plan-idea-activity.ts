@@ -3,17 +3,22 @@ import { type UiTarget, ui } from './interaction';
 import { inlineActivityEditor } from './locators';
 import { setActivityDayRange } from './set-activity-day-range';
 
-/** Exercise the optional day chooser, then edit directly in the day schedule. */
+/** Open the inline activity editor from a day's "Add to day" menu (first plannable day by default). */
 export async function startActivityPlan(target: UiTarget, day?: number): Promise<void> {
   const user = ui(target);
-  await user.click(user.page.getByRole('button', { name: 'Add a plan', exact: true }));
-  await user.click(user.page.getByRole('menuitem', { name: 'Activity', exact: true }));
-  if (day !== undefined) {
-    await user.click(
-      user.page.getByRole('dialog').getByRole('combobox', { name: 'Day', exact: true })
-    );
-    await user.click(user.page.getByRole('option', { name: `Day ${day}`, exact: true }));
+  const days = day
+    ? [user.page.getByRole('region', { name: `Day ${day} schedule`, exact: true })]
+    : await user.page.getByRole('region', { name: /^Day \d+ schedule$/u }).all();
+  for (const scope of days) {
+    await user.click(scope.getByRole('button', { name: 'Add to day' }));
+    const activity = user.page.getByRole('menuitem', { name: 'Activity', exact: true });
+    if (await activity.isEnabled()) {
+      await user.click(activity);
+      return;
+    }
+    await user.page.keyboard.press('Escape');
   }
+  throw new Error('No itinerary day accepts an activity yet');
 }
 
 export async function continueActivityPlan(
@@ -22,7 +27,6 @@ export async function continueActivityPlan(
   range?: { startDay: number; endDay: number }
 ): Promise<void> {
   const user = ui(target);
-  await user.click(user.page.getByRole('dialog').getByRole('button', { name: 'Continue' }));
   if (range) await setActivityDayRange(user, range.startDay, range.endDay);
   const editor = inlineActivityEditor(user.page);
   await user.type(editor.getByTestId(ids.activityTitle), title);

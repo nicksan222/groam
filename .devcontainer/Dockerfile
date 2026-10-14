@@ -53,7 +53,21 @@ RUN curl -fsSL https://claude.ai/install.sh -o /tmp/install-claude.sh \
   && bash /tmp/install-claude.sh "${CLAUDE_VERSION}" \
   && rm /tmp/install-claude.sh \
   && claude --version
+
+# The Vite+ CLI (`vp`) runs every workspace task. Node comes from the base
+# image, so skip the installer's Node shims and pin the install location.
+ARG VP_VERSION=1.2.0
+ENV VP_BIN_DIR=/home/node/.local/share/vite-plus/bin \
+    VP_DATA_DIR=/home/node/.local/share/vite-plus \
+    VP_CACHE_DIR=/home/node/.cache/vite-plus
+RUN curl -fsSL https://vite.plus -o /tmp/install-vp.sh \
+  && VP_VERSION="${VP_VERSION}" VP_NODE_MANAGER=no bash /tmp/install-vp.sh \
+  && rm /tmp/install-vp.sh \
+  && "${VP_BIN_DIR}/vp" --version
 USER root
+RUN ln -sf "${VP_BIN_DIR}/vp" /usr/local/bin/vp \
+  && ln -sf "${VP_BIN_DIR}/vpr" /usr/local/bin/vpr \
+  && ln -sf "${VP_BIN_DIR}/vpx" /usr/local/bin/vpx
 
 # Graphify stays isolated from the Bun workspace. Code-only indexing is local
 # and needs neither an API key nor an external graph database. The resolver

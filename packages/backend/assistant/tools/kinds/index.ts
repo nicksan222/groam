@@ -48,9 +48,9 @@ import {
   createApproveTripVersionTool,
   createSetTravelerRsvpTool
 } from '#backend/assistant/tools/trips/workflow';
+import { internal } from '#convex-generated/api';
 import type { AssistantContextCatalogItem } from '#convex/modules/assistant/model/index';
 import type { AssistantScreen } from '#convex/modules/assistant/screen/index';
-import { internal } from '#convex-generated/api';
 
 /**
  * Executable bindings, one per tool spec, in catalog order. Each row spreads

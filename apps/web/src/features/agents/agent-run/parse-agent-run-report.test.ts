@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vite-plus/test';
 import { parseAgentRunReport } from './parse-agent-run-report';
 
 const destinationA = 'jh7abcdefghijklmnopqrstuvwxyz012';

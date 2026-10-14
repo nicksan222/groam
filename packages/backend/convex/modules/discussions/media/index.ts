@@ -1,7 +1,7 @@
 import { ConvexError } from 'convex/values';
-import type { DiscussionMessageMedia } from '#convex/modules/discussions/threads/schema';
 import type { Id } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
+import type { DiscussionMessageMedia } from '#convex/modules/discussions/threads/schema';
 
 export type { DiscussionMessageMedia } from '#convex/modules/discussions/threads/schema';
 
@@ -17,7 +17,7 @@ export type DiscussionMessageReceipt = {
  * `require` throws if any id is missing; `load` skips them so a list cannot 404.
  * Newer receipts store `mediaIds` on the message; older ones only have join rows.
  */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class DiscussionMedia {
   static sameIds(left: Id<'media'>[] | undefined, right: Id<'media'>[]): boolean {
     const normalizedLeft = left ?? [];

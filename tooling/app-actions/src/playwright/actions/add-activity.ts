@@ -3,20 +3,28 @@ import type { AddActivityAction } from '#src/actions/add-activity';
 import { ids } from '#src/playwright/ids';
 import { type UiTarget, ui } from '#src/playwright/interaction';
 import { inlineActivityEditor } from '#src/playwright/locators';
+import { openTripSection } from '#src/playwright/open-trip-section';
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
+}
 
 const expect = playwrightExpect.configure({ timeout: 30_000 });
 
 export const addActivity: AddActivityAction<UiTarget> = async (target, input) => {
   const user = ui(target);
-  await user.click(user.page.getByRole('button', { name: 'Add a plan', exact: true }));
+  await openTripSection(target, 'itinerary');
+  // Plan the activity on the first day that hosts the destination.
+  const day = user.page
+    .getByRole('region', { name: /^Day \d+ schedule$/u })
+    .filter({
+      has: user.page.getByRole('button', {
+        name: new RegExp(`^Manage ${escapeRegExp(input.destination)} for Day \\d+$`, 'u')
+      })
+    })
+    .first();
+  await user.click(day.getByRole('button', { name: 'Add to day' }));
   await user.click(user.page.getByRole('menuitem', { name: 'Activity', exact: true }));
-  const chooser = user.page.getByRole('combobox', { name: 'Destination', exact: true });
-  await expect(user.page.getByRole('dialog')).toBeVisible();
-  if (await chooser.isVisible()) {
-    await user.click(chooser);
-    await user.click(user.page.getByRole('option', { name: input.destination, exact: true }));
-    await user.click(user.page.getByRole('button', { name: 'Continue', exact: true }));
-  }
   const panel = inlineActivityEditor(user.page);
   await user.type(panel.getByTestId(ids.activityTitle), input.title);
   if (input.address) await user.type(panel.getByTestId(ids.activityAddress), input.address);

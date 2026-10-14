@@ -1,4 +1,6 @@
 import { ConvexError, v } from 'convex/values';
+import type { Id } from '#convex-generated/dataModel';
+import type { MutationCtx } from '#convex-generated/server';
 import { internalWorkspaceMutation, type Workspace } from '#convex/modules/auth/workspace';
 import {
   ItineraryActivity,
@@ -11,8 +13,6 @@ import {
 } from '#convex/modules/travel/destinations/index';
 import { TripDestinationValidators } from '#convex/modules/travel/destinations/schema';
 import { assertPlanner, loadTripContext, withSeedWrites } from '#convex/modules/travel/trips/ctx';
-import type { Id } from '#convex-generated/dataModel';
-import type { MutationCtx } from '#convex-generated/server';
 import { assertLocalDevelopment } from './local';
 
 export const seedItineraryArgs = {
@@ -85,11 +85,9 @@ export async function writeSeedItinerary(
     const existing = await TripDestination.forTrip(ctx, input.tripId);
     const primary = existing[0];
     if (input.primary && primary) {
-      await (await TripDestination.find(ctx, input.tripId, primary._id)).update(
-        input.primary.dayNotes,
-        input.primary.startDay,
-        input.primary.endDay
-      );
+      await (
+        await TripDestination.find(ctx, input.tripId, primary._id)
+      ).update(input.primary.dayNotes, input.primary.startDay, input.primary.endDay);
     }
     const existingPlaceIds = new Set(existing.map(({ placeId }) => placeId));
     await writeInOrder(input.additionalDestinations, async (destination) => {

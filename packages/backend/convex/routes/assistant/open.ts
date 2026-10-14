@@ -1,7 +1,7 @@
 import { ConvexError, v } from 'convex/values';
+import { action } from '#convex-generated/server';
 import { aiRateLimiter } from '#convex/modules/ai/limits';
 import { AssistantSession, assistantScreenValidator } from '#convex/modules/assistant/agent/index';
-import { action } from '#convex-generated/server';
 
 /** Open a new private assistant thread for the signed-in user. Rate-limited on thread creation. */
 export const run = action({

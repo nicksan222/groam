@@ -1,7 +1,7 @@
 import { ConvexError } from 'convex/values';
+import type { Doc } from '#convex-generated/dataModel';
 import { isOrganizationManager } from '#convex/modules/auth/workspace';
 import type { TripCtx, TripRole } from '#convex/modules/travel/trips/ctx';
-import type { Doc } from '#convex-generated/dataModel';
 
 export function roleFor(trip: Doc<'trips'>, userId: string, organizationRole?: string): TripRole {
   return trip.creator.userId === userId || isOrganizationManager(organizationRole)

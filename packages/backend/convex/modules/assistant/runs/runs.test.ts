@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
 import { setupTrip } from '#testing/trips';
 
@@ -581,22 +581,26 @@ test('attaches the started idea to the assigned issue run', { timeout: 15_000 },
   });
 });
 
-test('reopens the current idea instead of nesting when prepareTripVersion targets a working trip', {
-  timeout: 15_000
-}, async () => {
-  const { owner, tripId } = await setupTrip(0);
-  const version = await owner.client.mutation(api.routes.trips.versions.create.run, { tripId });
+test(
+  'reopens the current idea instead of nesting when prepareTripVersion targets a working trip',
+  {
+    timeout: 15_000
+  },
+  async () => {
+    const { owner, tripId } = await setupTrip(0);
+    const version = await owner.client.mutation(api.routes.trips.versions.create.run, { tripId });
 
-  const reopened = await owner.client.mutation(
-    internal.modules.assistant.model.index.prepareTripVersion,
-    { tripId: version.workingTripId }
-  );
-  expect(reopened).toEqual({
-    ideaName: version.ideaName,
-    proposalId: version.proposalId,
-    workingTripId: version.workingTripId
-  });
+    const reopened = await owner.client.mutation(
+      internal.modules.assistant.model.index.prepareTripVersion,
+      { tripId: version.workingTripId }
+    );
+    expect(reopened).toEqual({
+      ideaName: version.ideaName,
+      proposalId: version.proposalId,
+      workingTripId: version.workingTripId
+    });
 
-  const proposals = await owner.client.query(api.routes.trips.versions.list.run, { tripId });
-  expect(proposals).toHaveLength(1);
-});
+    const proposals = await owner.client.query(api.routes.trips.versions.list.run, { tripId });
+    expect(proposals).toHaveLength(1);
+  }
+);

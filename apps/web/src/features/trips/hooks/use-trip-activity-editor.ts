@@ -21,7 +21,7 @@ export type {
   TripDestinationWithActivities
 } from './trip-activity-form-state';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type ActivityEditorStore = ActivityFormState & {
   patch: (partial: Partial<ActivityFormState>) => void;
   setUploadMessage: (message: string | null) => void;

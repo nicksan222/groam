@@ -14,10 +14,10 @@ import {
   tripDayField,
   workingTripIdField
 } from '#backend/assistant/tools/trips/shared';
-import type { TripAssistantContext } from '#convex/modules/assistant/model/index';
-import type { TripStayValidators } from '#convex/modules/travel/stays/schema';
 import { internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
+import type { TripAssistantContext } from '#convex/modules/assistant/model/index';
+import type { TripStayValidators } from '#convex/modules/travel/stays/schema';
 
 function addStayInputFromTool(input: {
   address?: string;

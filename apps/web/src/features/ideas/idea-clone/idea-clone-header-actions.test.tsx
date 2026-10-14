@@ -1,6 +1,6 @@
 import type { Id } from '@groam/backend/data-model';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vite-plus/test';
 import { IdeaCloneHeaderActions } from './idea-clone-header-actions';
 
 const navigate = vi.fn();

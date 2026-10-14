@@ -1,13 +1,13 @@
 'use node';
 
 import { v } from 'convex/values';
+import { internalAction } from '#convex-generated/server';
 import { TripGit } from '#convex/modules/travel/versions/git/index';
 import {
   versionCommitInputValidator,
   versionMergeInputValidator,
   versionSnapshotValidator
 } from '#convex/modules/travel/versions/validators';
-import { internalAction } from '#convex-generated/server';
 
 export const createHistory = internalAction({
   args: {

@@ -1,6 +1,6 @@
 import type { Id } from '@groam/backend/data-model';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vite-plus/test';
 import { expectRouteStopPhotos } from '@/features/trips/expect-route-stop-photos';
 import { nextStepFor } from '@/features/trips/hooks/trip-overview-next-step';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';

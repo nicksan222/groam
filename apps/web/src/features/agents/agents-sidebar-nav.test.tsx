@@ -1,7 +1,7 @@
 import { SidebarProvider } from '@groam/ui/components/sidebar';
 import { cleanup, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
 import { stubMatchMedia } from '@/testing/stub-match-media';
 import { AgentsSidebarNav } from './agents-sidebar-nav';
 

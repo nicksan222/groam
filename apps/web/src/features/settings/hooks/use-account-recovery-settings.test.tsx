@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { useAccountRecoverySettings } from './use-account-recovery-settings';
 
 const auth = vi.hoisted(() => ({ generate: vi.fn() }));

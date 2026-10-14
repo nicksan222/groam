@@ -1,4 +1,7 @@
 import { ConvexError } from 'convex/values';
+import { internal } from '#convex-generated/api';
+import type { Id } from '#convex-generated/dataModel';
+import type { MutationCtx } from '#convex-generated/server';
 import { requireWorkspace } from '#convex/modules/auth/workspace';
 import {
   assertMutable,
@@ -7,9 +10,6 @@ import {
   patchTrip,
   recordActivity
 } from '#convex/modules/travel/trips/ctx';
-import { internal } from '#convex-generated/api';
-import type { Id } from '#convex-generated/dataModel';
-import type { MutationCtx } from '#convex-generated/server';
 
 const MAX_COVER_SIZE = 25 * 1024 * 1024;
 const SUPPORTED_COVER_CONTENT_TYPES = new Set([

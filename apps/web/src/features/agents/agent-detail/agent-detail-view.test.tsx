@@ -1,5 +1,5 @@
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import type { AgentRun } from '@/features/agents/hooks/use-agent';
 import { testIds } from '@/lib/test-ids';
 import { AgentDetailView } from './agent-detail-view';

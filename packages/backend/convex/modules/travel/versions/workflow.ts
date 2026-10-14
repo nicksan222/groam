@@ -1,4 +1,5 @@
 import { v } from 'convex/values';
+import { internalMutation } from '#convex-generated/server';
 import { detailRebaseValidator } from '#convex/modules/travel/versions/detailrebase';
 import { TripVersions } from '#convex/modules/travel/versions/index';
 import {
@@ -6,7 +7,6 @@ import {
   versionPrepareRebaseResultValidator,
   versionPrepareSubmitResultValidator
 } from '#convex/modules/travel/versions/validators';
-import { internalMutation } from '#convex-generated/server';
 import { versionSnapshotValidator } from './validators';
 
 export const prepareSubmit = internalMutation({

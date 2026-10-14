@@ -28,6 +28,8 @@ test('idea tabs share the page canvas while itinerary uses its full width', asyn
   await expect(by(page, ids.tripHeading)).toContainText(ideaName);
   expect(await sidebarLink.evaluate((element) => element.isConnected)).toBe(true);
 
+  // Trip pages size their supporting column from the trip workspace container (18rem).
+  const tripRightColumn = 288;
   for (const width of [1440, 1024, 390]) {
     await page.setViewportSize({ width, height: 1000 });
     await openTripSection(page, 'overview');
@@ -35,12 +37,13 @@ test('idea tabs share the page canvas while itinerary uses its full width', asyn
     const canvas = await pageCanvas(page);
     expect(overview.overflow).toBe(false);
     expect(overview.stacked).toBe(width < 1280);
-    if (width >= 1280) expect(overview.rightWidth).toBe(320);
+    if (width >= 1280) expect(overview.rightWidth).toBe(tripRightColumn);
     await openTripSection(page, 'itinerary');
-    const itinerary = await twoColumnPageLayout(page);
-    expect(itinerary.overflow).toBe(false);
-    expect(itinerary.stacked).toBe(width < 1280);
-    if (width >= 1280) expect(itinerary.rightWidth).toBe(320);
+    // The itinerary editor is a single full-width section without a supporting column.
+    await expect(page.getByRole('region', { name: 'Itinerary editor' })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      width
+    );
     const itineraryWidth = await page.locator('[data-slot="shell-page-body"]').evaluate((body) => {
       const section = body.querySelector<HTMLElement>('section[aria-label="Itinerary editor"]');
       if (!section) throw new Error('Expected the itinerary content section');

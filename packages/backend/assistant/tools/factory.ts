@@ -2,8 +2,8 @@ import type { AssistantAgentId } from '@groam/ai/agents';
 import type { AssistantConversationScope } from '@groam/ai/backend/instructions';
 import type { AgentToolSpec } from '@groam/ai/tools/specs';
 import type { ToolSet } from 'ai';
-import type { AssistantScreen } from '#convex/modules/assistant/screen/index';
 import type { Id } from '#convex-generated/dataModel';
+import type { AssistantScreen } from '#convex/modules/assistant/screen/index';
 
 export type AssistantTool = NonNullable<ToolSet[string]>;
 

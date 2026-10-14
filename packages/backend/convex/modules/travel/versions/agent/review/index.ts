@@ -1,6 +1,6 @@
 import { v } from 'convex/values';
-import { TripVersions } from '#convex/modules/travel/versions/index';
 import { internalMutation, internalQuery } from '#convex-generated/server';
+import { TripVersions } from '#convex/modules/travel/versions/index';
 
 export const context = internalQuery({
   args: { proposalId: v.id('tripProposals') },

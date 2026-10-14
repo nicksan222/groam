@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { dataTableFilterLabels } from './data-table';
 
 test('derives standard filter labels from a resource name', () => {

@@ -8,8 +8,9 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-.astro
+# Legacy Turbo caches in clones from before Vite+.
 .turbo
+.astro
 dist
 dist-ssr
 playwright-report

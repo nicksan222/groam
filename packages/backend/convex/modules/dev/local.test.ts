@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vite-plus/test';
 import { isLocalConvexSiteUrl, isLocalDevelopmentUrl } from './local';
 
 describe('local development URL guard', () => {

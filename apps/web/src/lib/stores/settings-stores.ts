@@ -8,10 +8,10 @@ import type {
 } from '@/features/workspace/workspace-shell/workspace-state';
 import type { AiProviderAuthSession } from '@/types/ai-provider-auth';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type SettingsPatch<T> = Partial<T> & { patch?: never; reset?: never };
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type ProfileSettingsStore = {
   error: string | null;
   image: string;
@@ -55,7 +55,7 @@ export const useProfileSettingsStore = create<ProfileSettingsStore>((set) => ({
     })
 }));
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type OrganizationSettingsStore = {
   error: string | null;
   isPending: boolean;
@@ -99,7 +99,7 @@ export const useOrganizationSettingsStore = create<OrganizationSettingsStore>((s
     })
 }));
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type PasswordSettingsStore = {
   confirmPassword: string;
   currentPassword: string;
@@ -126,12 +126,12 @@ export const usePasswordSettingsStore = create<PasswordSettingsStore>((set) => (
   reset: () => set(emptyPasswordSettings)
 }));
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type AccountSession = NonNullable<
   Awaited<ReturnType<typeof authClient.listSessions>>['data']
 >[number];
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type SessionSettingsStore = {
   error: string | null;
   isLoading: boolean;
@@ -154,7 +154,7 @@ export const useSessionSettingsStore = create<SessionSettingsStore>((set) => ({
   reset: () => set(emptySessionSettings)
 }));
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type AiSettingsDraft = {
   apiKey: string;
   baseUrl: string | null;
@@ -165,7 +165,7 @@ type AiSettingsDraft = {
   provider: AiKeyProviderId | null;
 };
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type AiSettingsDraftStore = AiSettingsDraft & {
   patch: (update: Partial<AiSettingsDraft>) => void;
   resetDraft: () => void;
@@ -192,7 +192,7 @@ export const useAiSettingsDraftStore = create<AiSettingsDraftStore>((set, get) =
   }
 }));
 
-// biome-ignore lint/plugin/no-local-type-definitions: local store implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local store implementation shape
 type AiProviderAuthStore = {
   session: AiProviderAuthSession | null;
   setSession: (session: AiProviderAuthSession | null) => void;

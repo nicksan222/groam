@@ -5,7 +5,7 @@ export default defineConfig({
   deadCode: false,
   supplyChain: { enabled: false },
   rules: {
-    // Biome owns hooks and accessibility. File-per-component lives in
+    // Oxlint (`vp check`) owns hooks and accessibility. File-per-component lives in
     // tooling/quality/conventions.ts; no-giant-component stays on as the
     // per-function size backstop.
     'react-doctor/exhaustive-deps': 'off',
@@ -20,7 +20,6 @@ export default defineConfig({
   ignore: {
     files: [
       '**/.astro/**',
-      '**/.turbo/**',
       '**/dist/**',
       '**/build/**',
       '**/coverage/**',

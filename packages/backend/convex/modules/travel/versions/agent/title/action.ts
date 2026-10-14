@@ -1,9 +1,9 @@
 import { generateText, Output } from 'ai';
 import { v } from 'convex/values';
 import * as z from 'zod/v3';
-import { AssistantProvider } from '#convex/modules/ai/provider';
 import { internal } from '#convex-generated/api';
 import { internalAction } from '#convex-generated/server';
+import { AssistantProvider } from '#convex/modules/ai/provider';
 
 const MAX_TITLE_OUTPUT_TOKENS = 256;
 

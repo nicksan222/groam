@@ -1,5 +1,5 @@
 import type { AuthenticatedAppUser } from '@groam/app-actions/backend';
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { seedWorkspaceTrips } from './seed-workspace-trips';
 
 const owner: AuthenticatedAppUser = {

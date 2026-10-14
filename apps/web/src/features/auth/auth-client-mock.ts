@@ -1,4 +1,4 @@
-import { beforeEach, vi } from 'vitest';
+import { beforeEach, vi } from 'vite-plus/test';
 
 const doubles = vi.hoisted(() => ({
   generateRecoveryCodes: vi.fn(),

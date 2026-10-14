@@ -15,7 +15,7 @@ function itineraryElementFields<Schedule extends GenericValidator>(schedule: Sch
 }
 
 /** Shared stay/activity table fields. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class ItineraryFields {
   static element = itineraryElementFields;
 }

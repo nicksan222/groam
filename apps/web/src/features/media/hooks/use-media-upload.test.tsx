@@ -1,6 +1,6 @@
 import { env } from '@groam/env/web-client';
 import { act, renderHook } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { useMediaUpload } from './use-media-upload';
 
 const convex = vi.hoisted(() => ({

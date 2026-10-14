@@ -1,5 +1,5 @@
 import { render } from '@testing-library/react';
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import Timeline from './index';
 
 test('renders a dashed break between items', () => {

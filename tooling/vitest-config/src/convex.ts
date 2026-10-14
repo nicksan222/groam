@@ -1,5 +1,5 @@
 import { env } from '@groam/env/vitest';
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from 'vite-plus';
 
 export const convexVitestConfig = defineConfig({
   test: {

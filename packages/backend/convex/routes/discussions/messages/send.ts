@@ -1,7 +1,7 @@
 import { v } from 'convex/values';
+import { mutation } from '#convex-generated/server';
 import { chatAgentValidator } from '#convex/modules/assistant/validators/index';
 import { Discussions } from '#convex/modules/discussions/threads/index';
-import { mutation } from '#convex-generated/server';
 
 /**
  * Post a group message. Returns the saved message id and any @mentioned assistant agent

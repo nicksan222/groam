@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { instructionsFor } from '#ai/backend/instructions';
 import { defineChatAgent, defineStandaloneAgent, isChatAgent } from './definition';
 

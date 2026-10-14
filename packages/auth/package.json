@@ -17,8 +17,9 @@
     "jsdom": "30.1.1",
     "react": "^19.3.0",
     "typescript": "~7.0.2",
-    "vite": "^8.3.1",
-    "vitest": "^5.0.2"
+    "vite": "catalog:",
+    "vite-plus": "catalog:",
+    "vitest": "catalog:"
   },
   "exports": {
     "./browser-client": "./src/browser-client.ts",
@@ -34,8 +35,8 @@
   },
   "private": true,
   "scripts": {
-    "lint": "biome check src",
-    "test": "vitest run",
+    "lint": "vp check src",
+    "test": "vp test run",
     "typecheck": "tsc --noEmit"
   },
   "type": "module"

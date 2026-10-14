@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { formatIdeaDisplayName } from '@/features/trips/trip-ideas/format-idea-display-name';
 import { TripIdeaBadge } from '@/features/trips/trip-ideas/trip-idea-name';
 

@@ -1,6 +1,6 @@
 import type { Id } from '@groam/backend/data-model';
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vite-plus/test';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { TripSectionNav } from './trip-section-nav';
 

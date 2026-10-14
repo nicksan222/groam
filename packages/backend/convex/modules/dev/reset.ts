@@ -1,6 +1,6 @@
-import schema from '#convex/schema';
 import type { TableNames } from '#convex-generated/dataModel';
 import type { MutationCtx } from '#convex-generated/server';
+import schema from '#convex/schema';
 
 const DELETE_BATCH = 64;
 

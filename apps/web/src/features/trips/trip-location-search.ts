@@ -1,7 +1,7 @@
 import { env } from '@groam/env/web-client';
 import type { TripLocation } from './trip-location';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type JsonObject = Record<string, unknown>;
 
 function object(value: unknown): JsonObject | null {

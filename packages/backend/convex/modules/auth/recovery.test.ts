@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { components } from '#convex-generated/api';
 import { createTestAuthClient } from '#testing/auth/client';
 import { createAuthenticatedTest } from '#testing/factory';

@@ -52,19 +52,19 @@ Use `aria-busy` and a single loading label for the region.
 
 ## Guardrails
 
-TypeScript and Biome reject layout props, custom styles/classes and spread props
+TypeScript and the Groam lint rules reject layout props, custom styles/classes and spread props
 on named columns. Runtime checks reject missing, duplicate, reversed, wrapped or
 orphan columns. The deprecated `Shell.Split` API remains only for compatibility
-inside UI; Biome blocks it in application code.
+inside UI; the lint rules block it in application code.
 
-For trip and idea pages, Biome also keeps `TripPageShell` as the sole owner of
-`Shell.PageBody` and rejects layout overrides on that body. Tab views provide
+For trip and idea pages, the lint rules also keep `TripPageShell` as the sole owner of
+`Shell.PageBody` and reject layout overrides on that body. Tab views provide
 content directly, so they cannot accidentally add a second layer of page padding.
-Other page families can still use their existing page-body variants. Biome also
-rejects generic descendant `has-data-[variant=…]` selectors: scope these to a
+Other page families can still use their existing page-body variants. The lint rules
+also reject generic descendant `has-data-[variant=…]` selectors: scope these to a
 component `data-slot` so an inset content card cannot restyle the sidebar or page.
 
-The real Biome fixtures in `tooling/quality/shell-biome.test.ts`, shared component
+The real lint fixtures in `tooling/quality/shell-lint.test.ts`, shared component
 tests and the idea tab browser test cover this contract. These run through the
 existing repository checks. Intentional tooling edits and explicit suppression
 comments remain reviewable escape hatches.

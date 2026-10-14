@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { StockCover, type StockCoverCandidate, type WikipediaLeadImage } from './stock';
 
 test('takes the lead image from Wikipedia’s most relevant place article', () => {
@@ -210,6 +210,35 @@ test('derives safe fallback license links, titles, and creator metadata', () => 
   expect(
     StockCover.candidates(payload, 'Fallback', candidates[0]?.attribution.sourceUrl)
   ).toHaveLength(2);
+});
+
+test('decodes creator entities once so escaped text stays literal', () => {
+  const [candidate] = StockCover.candidates(
+    {
+      query: {
+        pages: [
+          {
+            imageinfo: [
+              {
+                descriptionurl: 'https://commons.wikimedia.org/wiki/File:Escaped.jpg',
+                extmetadata: {
+                  Artist: { value: 'Ben &amp;lt;b&amp;gt; &#39;Studio&#39; &amp; Co' },
+                  LicenseShortName: { value: 'CC0 1.0' }
+                },
+                height: 900,
+                mime: 'image/jpeg',
+                url: 'https://upload.wikimedia.org/wikipedia/commons/escaped.jpg',
+                width: 1200
+              }
+            ],
+            title: 'File:Escaped.jpg'
+          }
+        ]
+      }
+    },
+    'Escaped'
+  );
+  expect(candidate?.attribution.creator).toBe("Ben &lt;b&gt; 'Studio' & Co");
 });
 
 test('bounds metadata bodies by both declared and streamed byte size', async () => {

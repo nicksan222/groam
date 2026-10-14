@@ -1,6 +1,6 @@
 import { act, cleanup, renderHook } from '@testing-library/react';
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { useReferenceParams } from './use-reference-params';
 
 afterEach(() => {

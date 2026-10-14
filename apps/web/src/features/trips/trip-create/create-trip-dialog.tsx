@@ -16,7 +16,7 @@ import { useWorkspaceDialogs } from '@/features/workspace/workspace-shell/worksp
 import { useWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
 import { testIds } from '@/lib/test-ids';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type CreateTripDialogProps = {
   createTrip: (input: CreateTripInput, cover: File | null) => Promise<Id<'trips'> | null>;
   onClose: () => void;

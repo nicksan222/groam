@@ -1,16 +1,16 @@
 import { ConvexError } from 'convex/values';
+import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import {
   assertOrganizationManager,
   isOrganizationManager,
   requireWorkspace
 } from '#convex/modules/auth/workspace';
-import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 
 export const DEFAULT_REQUIRED_PROPOSAL_APPROVALS = 1;
 export const MAX_REQUIRED_PROPOSAL_APPROVALS = 10;
 
 /** Organization-wide idea review thresholds. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class ReviewSettings {
   static async forOrganization(ctx: MutationCtx | QueryCtx, organizationId: string) {
     const settings = await ctx.db

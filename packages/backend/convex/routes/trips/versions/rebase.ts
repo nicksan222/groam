@@ -1,4 +1,5 @@
 import { type Infer, v } from 'convex/values';
+import { internal } from '#convex-generated/api';
 import { workspaceAction } from '#convex/modules/auth/workspace';
 import { detailRebaseValidator } from '#convex/modules/travel/versions/detailrebase';
 import { IdeaErrors } from '#convex/modules/travel/versions/errors';
@@ -6,7 +7,6 @@ import {
   type versionPrepareRebaseResultValidator,
   versionRebaseResultValidator
 } from '#convex/modules/travel/versions/validators';
-import { internal } from '#convex-generated/api';
 
 /**
  * Rebase an idea onto the latest shared trip. Compatible updates combine

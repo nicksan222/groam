@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { parseTripRouteSearch } from './trip-route-search';
 
 test('preserves addressable trip workflow state', () => {

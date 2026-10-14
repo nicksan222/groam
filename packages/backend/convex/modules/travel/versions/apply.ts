@@ -1,11 +1,11 @@
 import { ConvexError } from 'convex/values';
+import type { Doc, Id } from '#convex-generated/dataModel';
+import type { MutationCtx } from '#convex-generated/server';
 import { Attachments } from '#convex/modules/media/attachments/index';
 import { DestinationCover } from '#convex/modules/travel/covers/destination/index';
 import { TripLocations } from '#convex/modules/travel/locations/index';
 import { applyPackingSnapshot } from '#convex/modules/travel/packing/apply';
 import { type MutableTripCtx, patchTrip } from '#convex/modules/travel/trips/ctx';
-import type { Doc, Id } from '#convex-generated/dataModel';
-import type { MutationCtx } from '#convex-generated/server';
 import { VersionContent } from './content';
 import {
   type ParsedVersionSnapshot,
@@ -468,7 +468,7 @@ async function applyVersionSnapshot(
 }
 
 /** Writes a merged snapshot onto the shared trip. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class VersionApply {
   static snapshot = applyVersionSnapshot;
 }

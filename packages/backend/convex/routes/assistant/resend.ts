@@ -1,4 +1,5 @@
 import { ConvexError, v } from 'convex/values';
+import { action } from '#convex-generated/server';
 import { aiRateLimiter } from '#convex/modules/ai/limits';
 import {
   AssistantSession,
@@ -6,7 +7,6 @@ import {
   chatAgentValidator
 } from '#convex/modules/assistant/agent/index';
 import { AssistantErrors } from '#convex/modules/assistant/errors/index';
-import { action } from '#convex-generated/server';
 
 /**
  * Edit and resend from a prior assistant turn (`order` / `stepOrder` from the UI message list).

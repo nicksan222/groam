@@ -35,5 +35,5 @@ introduce a one-off hex in a component. Hex is allowed only in
 - Raw `rgb()`, `hsl()`, `oklch()` in feature or primitive classNames.
 - Copying primary green (`#65a30d`) into a feature file.
 
-`bun run lint:conventions` fails the PR if it finds hardcoded colors or
+`vp run lint:conventions` fails the PR if it finds hardcoded colors or
 gradients outside the token files.

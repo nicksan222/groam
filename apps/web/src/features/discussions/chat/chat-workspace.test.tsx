@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
 import type { DiscussionListItem } from '@/features/discussions/hooks/use-discussions';
 import { ChatWorkspace } from './chat-workspace';
 

@@ -7,7 +7,7 @@ import {
   type TripActivityFilters
 } from '@/features/trips/hooks/trip-activity-history-filter';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type TripActivityFilterStore = {
   activityType: TripActivityFilters['activityType'];
   clearFilters: () => void;

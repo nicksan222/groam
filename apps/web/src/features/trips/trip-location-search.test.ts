@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vite-plus/test';
 import { parseLocationResults, photonSearchUrl, searchLocations } from './trip-location-search';
 
 afterEach(() => vi.unstubAllGlobals());

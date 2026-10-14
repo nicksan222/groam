@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { assistantInstructions } from './index';
 
 test('instructs agents to answer complete recommendation requests without asking a follow-up', () => {

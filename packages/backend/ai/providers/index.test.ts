@@ -1,5 +1,5 @@
 import { resolveAssistantEnvironment } from '@groam/ai/backend/providers/keys';
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { type AssistantProviderEnvironment, configuredAssistantProvider } from './index';
 
 const keys: AssistantProviderEnvironment = {

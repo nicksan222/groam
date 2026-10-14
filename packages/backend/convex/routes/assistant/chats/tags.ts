@@ -1,12 +1,12 @@
 import type { AssistantContextTag } from '@groam/ai/runtime/context-tag';
 import { v } from 'convex/values';
+import { internal } from '#convex-generated/api';
+import { mutation } from '#convex-generated/server';
 import {
   type AssistantContextTagReference,
   assistantContextTagReferenceValidator,
   assistantContextTagValidator
 } from '#convex/modules/assistant/model/index';
-import { internal } from '#convex-generated/api';
-import { mutation } from '#convex-generated/server';
 
 export const run = mutation({
   args: {

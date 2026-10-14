@@ -1,85 +1,101 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
 import { setupGroup, setupTrip, tripInput, tripLocationInput } from '#testing/trips';
 import { changedTripDetails, createTitledVersion, draftChangedVersion } from '#testing/versions';
 
-test('stores user title source when creating ideas with a custom title', {
-  timeout: 10_000
-}, async () => {
-  const { owner, tripId } = await setupTrip();
-  const version = await createTitledVersion(owner, tripId, 'Add a coastal day trip');
+test(
+  'stores user title source when creating ideas with a custom title',
+  {
+    timeout: 10_000
+  },
+  async () => {
+    const { owner, tripId } = await setupTrip();
+    const version = await createTitledVersion(owner, tripId, 'Add a coastal day trip');
 
-  await owner.client.run(async (ctx) => {
-    const proposal = await ctx.db.get('tripProposals', version.proposalId);
-    expect(proposal?.titleSource).toBe('user');
-  });
-});
+    await owner.client.run(async (ctx) => {
+      const proposal = await ctx.db.get('tripProposals', version.proposalId);
+      expect(proposal?.titleSource).toBe('user');
+    });
+  }
+);
 
-test('stores default title source when creating ideas without a custom title', {
-  timeout: 10_000
-}, async () => {
-  const { owner, tripId } = await setupTrip();
-  const version = await owner.client.mutation(api.routes.trips.versions.create.run, { tripId });
+test(
+  'stores default title source when creating ideas without a custom title',
+  {
+    timeout: 10_000
+  },
+  async () => {
+    const { owner, tripId } = await setupTrip();
+    const version = await owner.client.mutation(api.routes.trips.versions.create.run, { tripId });
 
-  await owner.client.run(async (ctx) => {
-    const proposal = await ctx.db.get('tripProposals', version.proposalId);
-    expect(proposal?.titleSource).toBe('default');
-  });
-});
+    await owner.client.run(async (ctx) => {
+      const proposal = await ctx.db.get('tripProposals', version.proposalId);
+      expect(proposal?.titleSource).toBe('default');
+    });
+  }
+);
 
-test('links an unlinked draft when starting an idea from an issue', {
-  timeout: 10_000
-}, async () => {
-  const { owner, tripId } = await setupTrip();
-  const issueId = await owner.client.mutation(api.routes.trips.issues.create.run, {
-    body: 'Add another day to the itinerary.',
-    title: 'Add a day',
-    tripId
-  });
-  const draft = await owner.client.mutation(api.routes.trips.versions.create.run, { tripId });
-
-  const linked = await owner.client.mutation(api.routes.trips.versions.create.run, {
-    issueId,
-    tripId
-  });
-  expect(linked.proposalId).toBe(draft.proposalId);
-  await expect(
-    owner.client.query(api.routes.trips.issues.get.run, { issueId })
-  ).resolves.toMatchObject({
-    idea: {
-      id: draft.proposalId,
-      status: 'draft',
-      title: 'Implement: Add a day'
-    }
-  });
-});
-
-test('refuses to implement an issue while another issue already owns the draft', {
-  timeout: 10_000
-}, async () => {
-  const { owner, tripId } = await setupTrip();
-  const firstIssueId = await owner.client.mutation(api.routes.trips.issues.create.run, {
-    body: 'First assigned question.',
-    title: 'Add a rainy-day option',
-    tripId
-  });
-  const secondIssueId = await owner.client.mutation(api.routes.trips.issues.create.run, {
-    body: 'Second assigned question.',
-    title: 'Add a day',
-    tripId
-  });
-  await owner.client.mutation(api.routes.trips.versions.create.run, {
-    issueId: firstIssueId,
-    tripId
-  });
-
-  await expect(
-    owner.client.mutation(api.routes.trips.versions.create.run, {
-      issueId: secondIssueId,
+test(
+  'links an unlinked draft when starting an idea from an issue',
+  {
+    timeout: 10_000
+  },
+  async () => {
+    const { owner, tripId } = await setupTrip();
+    const issueId = await owner.client.mutation(api.routes.trips.issues.create.run, {
+      body: 'Add another day to the itinerary.',
+      title: 'Add a day',
       tripId
-    })
-  ).rejects.toThrow('Close or send your current draft before implementing another question');
-});
+    });
+    const draft = await owner.client.mutation(api.routes.trips.versions.create.run, { tripId });
+
+    const linked = await owner.client.mutation(api.routes.trips.versions.create.run, {
+      issueId,
+      tripId
+    });
+    expect(linked.proposalId).toBe(draft.proposalId);
+    await expect(
+      owner.client.query(api.routes.trips.issues.get.run, { issueId })
+    ).resolves.toMatchObject({
+      idea: {
+        id: draft.proposalId,
+        status: 'draft',
+        title: 'Implement: Add a day'
+      }
+    });
+  }
+);
+
+test(
+  'refuses to implement an issue while another issue already owns the draft',
+  {
+    timeout: 10_000
+  },
+  async () => {
+    const { owner, tripId } = await setupTrip();
+    const firstIssueId = await owner.client.mutation(api.routes.trips.issues.create.run, {
+      body: 'First assigned question.',
+      title: 'Add a rainy-day option',
+      tripId
+    });
+    const secondIssueId = await owner.client.mutation(api.routes.trips.issues.create.run, {
+      body: 'Second assigned question.',
+      title: 'Add a day',
+      tripId
+    });
+    await owner.client.mutation(api.routes.trips.versions.create.run, {
+      issueId: firstIssueId,
+      tripId
+    });
+
+    await expect(
+      owner.client.mutation(api.routes.trips.versions.create.run, {
+        issueId: secondIssueId,
+        tripId
+      })
+    ).rejects.toThrow('Close or send your current draft before implementing another question');
+  }
+);
 
 test('applies generated titles to draft ideas with changes', { timeout: 10_000 }, async () => {
   const { owner, tripId } = await setupTrip();
@@ -120,62 +136,70 @@ test('does not overwrite user-provided idea titles', { timeout: 10_000 }, async 
   ).resolves.toMatchObject([{ title: 'Add a coastal day trip' }]);
 });
 
-test('starts a second auto-named idea after the first is applied', {
-  timeout: 15_000
-}, async () => {
-  const { owner, tripId, users } = await setupTrip(1);
-  const reviewer = users[0];
-  if (!reviewer) throw new Error('Expected reviewer');
-  const first = await draftChangedVersion(owner, tripId);
-  await owner.client.action(api.routes.trips.versions.submit.run, {
-    proposalId: first.proposalId
-  });
-  await reviewer.client.mutation(api.routes.trips.versions.approval.run, {
-    approved: true,
-    proposalId: first.proposalId
-  });
-  await owner.client.action(api.routes.trips.versions.merge.run, {
-    proposalId: first.proposalId
-  });
+test(
+  'starts a second auto-named idea after the first is applied',
+  {
+    timeout: 15_000
+  },
+  async () => {
+    const { owner, tripId, users } = await setupTrip(1);
+    const reviewer = users[0];
+    if (!reviewer) throw new Error('Expected reviewer');
+    const first = await draftChangedVersion(owner, tripId);
+    await owner.client.action(api.routes.trips.versions.submit.run, {
+      proposalId: first.proposalId
+    });
+    await reviewer.client.mutation(api.routes.trips.versions.approval.run, {
+      approved: true,
+      proposalId: first.proposalId
+    });
+    await owner.client.action(api.routes.trips.versions.merge.run, {
+      proposalId: first.proposalId
+    });
 
-  const second = await owner.client.mutation(api.routes.trips.versions.create.run, { tripId });
-  expect(second.ideaName).toMatch(/^[a-z]+-[a-z]+$/u);
-  expect(second.ideaName).not.toBe(first.ideaName);
-  expect(second.proposalId).not.toBe(first.proposalId);
-});
+    const second = await owner.client.mutation(api.routes.trips.versions.create.run, { tripId });
+    expect(second.ideaName).toMatch(/^[a-z]+-[a-z]+$/u);
+    expect(second.ideaName).not.toBe(first.ideaName);
+    expect(second.proposalId).not.toBe(first.proposalId);
+  }
+);
 
-test('rejects a custom idea name that already exists on the trip', {
-  timeout: 15_000
-}, async () => {
-  const { owner, tripId, users } = await setupTrip(1);
-  const reviewer = users[0];
-  if (!reviewer) throw new Error('Expected reviewer');
-  const first = await owner.client.mutation(api.routes.trips.versions.create.run, {
-    ideaName: 'itinerary/add-coast-day',
-    tripId
-  });
-  await owner.client.mutation(api.routes.trips.update.run, {
-    input: changedTripDetails,
-    tripId: first.workingTripId
-  });
-  await owner.client.action(api.routes.trips.versions.submit.run, {
-    proposalId: first.proposalId
-  });
-  await reviewer.client.mutation(api.routes.trips.versions.approval.run, {
-    approved: true,
-    proposalId: first.proposalId
-  });
-  await owner.client.action(api.routes.trips.versions.merge.run, {
-    proposalId: first.proposalId
-  });
-
-  await expect(
-    owner.client.mutation(api.routes.trips.versions.create.run, {
+test(
+  'rejects a custom idea name that already exists on the trip',
+  {
+    timeout: 15_000
+  },
+  async () => {
+    const { owner, tripId, users } = await setupTrip(1);
+    const reviewer = users[0];
+    if (!reviewer) throw new Error('Expected reviewer');
+    const first = await owner.client.mutation(api.routes.trips.versions.create.run, {
       ideaName: 'itinerary/add-coast-day',
       tripId
-    })
-  ).rejects.toThrow('already exists for this trip');
-});
+    });
+    await owner.client.mutation(api.routes.trips.update.run, {
+      input: changedTripDetails,
+      tripId: first.workingTripId
+    });
+    await owner.client.action(api.routes.trips.versions.submit.run, {
+      proposalId: first.proposalId
+    });
+    await reviewer.client.mutation(api.routes.trips.versions.approval.run, {
+      approved: true,
+      proposalId: first.proposalId
+    });
+    await owner.client.action(api.routes.trips.versions.merge.run, {
+      proposalId: first.proposalId
+    });
+
+    await expect(
+      owner.client.mutation(api.routes.trips.versions.create.run, {
+        ideaName: 'itinerary/add-coast-day',
+        tripId
+      })
+    ).rejects.toThrow('already exists for this trip');
+  }
+);
 
 test('uses a custom idea name instead of the generated name', { timeout: 10_000 }, async () => {
   const { owner, tripId } = await setupTrip();
@@ -237,86 +261,94 @@ test('exposes source ids on idea working-copy itinerary items', { timeout: 10_00
   expect(working?.destinations[0]?.id).not.toBe(sourceDestinationId);
 });
 
-test('lists workspace proposals and marks review requests for other members', {
-  timeout: 10_000
-}, async () => {
-  const { owner, tripId, users } = await setupTrip(1);
-  const author = users[0];
-  if (!author) throw new Error('Expected a proposal author');
-  const version = await author.client.mutation(api.routes.trips.versions.create.run, {
-    title: 'Add a coastal day trip',
-    tripId
-  });
-  expect(version.ideaName).toMatch(/^[a-z]+-[a-z]+$/u);
-  await author.client.mutation(api.routes.trips.update.run, {
-    input: changedTripDetails,
-    tripId: version.workingTripId
-  });
-  await author.client.mutation(api.routes.trips.versions.reviewers.set.run, {
-    proposalId: version.proposalId,
-    reviewers: [{ kind: 'user', name: 'Test Owner', userId: owner.userId }]
-  });
-  await author.client.action(api.routes.trips.versions.submit.run, {
-    proposalId: version.proposalId
-  });
+test(
+  'lists workspace proposals and marks review requests for other members',
+  {
+    timeout: 10_000
+  },
+  async () => {
+    const { owner, tripId, users } = await setupTrip(1);
+    const author = users[0];
+    if (!author) throw new Error('Expected a proposal author');
+    const version = await author.client.mutation(api.routes.trips.versions.create.run, {
+      title: 'Add a coastal day trip',
+      tripId
+    });
+    expect(version.ideaName).toMatch(/^[a-z]+-[a-z]+$/u);
+    await author.client.mutation(api.routes.trips.update.run, {
+      input: changedTripDetails,
+      tripId: version.workingTripId
+    });
+    await author.client.mutation(api.routes.trips.versions.reviewers.set.run, {
+      proposalId: version.proposalId,
+      reviewers: [{ kind: 'user', name: 'Test Owner', userId: owner.userId }]
+    });
+    await author.client.action(api.routes.trips.versions.submit.run, {
+      proposalId: version.proposalId
+    });
 
-  await expect(
-    owner.client.query(api.routes.trips.versions.workspace.list.run, {
-      paginationOpts: { cursor: null, numItems: 25 }
-    })
-  ).resolves.toMatchObject({
-    page: [
-      {
-        id: version.proposalId,
-        reviewRequested: true,
-        sourceTripId: tripId,
-        status: 'in_review',
-        title: 'Add a coastal day trip'
-      }
-    ]
-  });
-  await expect(
-    author.client.query(api.routes.trips.versions.workspace.list.run, {
-      paginationOpts: { cursor: null, numItems: 25 }
-    })
-  ).resolves.toMatchObject({ page: [{ reviewRequested: false }] });
-});
+    await expect(
+      owner.client.query(api.routes.trips.versions.workspace.list.run, {
+        paginationOpts: { cursor: null, numItems: 25 }
+      })
+    ).resolves.toMatchObject({
+      page: [
+        {
+          id: version.proposalId,
+          reviewRequested: true,
+          sourceTripId: tripId,
+          status: 'in_review',
+          title: 'Add a coastal day trip'
+        }
+      ]
+    });
+    await expect(
+      author.client.query(api.routes.trips.versions.workspace.list.run, {
+        paginationOpts: { cursor: null, numItems: 25 }
+      })
+    ).resolves.toMatchObject({ page: [{ reviewRequested: false }] });
+  }
+);
 
-test('lists the viewer’s open draft even before it is shared', {
-  timeout: 10_000
-}, async () => {
-  const { owner, tripId, users } = await setupTrip(1);
-  const author = users[0];
-  if (!author) throw new Error('Expected a proposal author');
-  const version = await author.client.mutation(api.routes.trips.versions.create.run, {
-    title: 'Keep this draft private for now',
-    tripId
-  });
-
-  await expect(
-    author.client.query(api.routes.trips.versions.list.run, { tripId })
-  ).resolves.toEqual([
-    expect.objectContaining({
-      id: version.proposalId,
-      status: 'draft',
-      title: 'Keep this draft private for now'
-    })
-  ]);
-  await expect(
-    author.client.query(api.routes.trips.versions.workspace.pending.run, {})
-  ).resolves.toEqual([
-    expect.objectContaining({
-      id: version.proposalId,
-      sourceTripId: tripId,
-      status: 'draft',
+test(
+  'lists the viewer’s open draft even before it is shared',
+  {
+    timeout: 10_000
+  },
+  async () => {
+    const { owner, tripId, users } = await setupTrip(1);
+    const author = users[0];
+    if (!author) throw new Error('Expected a proposal author');
+    const version = await author.client.mutation(api.routes.trips.versions.create.run, {
       title: 'Keep this draft private for now',
-      workingTripId: version.workingTripId
-    })
-  ]);
-  await expect(
-    owner.client.query(api.routes.trips.versions.workspace.pending.run, {})
-  ).resolves.toEqual([]);
-});
+      tripId
+    });
+
+    await expect(
+      author.client.query(api.routes.trips.versions.list.run, { tripId })
+    ).resolves.toEqual([
+      expect.objectContaining({
+        id: version.proposalId,
+        status: 'draft',
+        title: 'Keep this draft private for now'
+      })
+    ]);
+    await expect(
+      author.client.query(api.routes.trips.versions.workspace.pending.run, {})
+    ).resolves.toEqual([
+      expect.objectContaining({
+        id: version.proposalId,
+        sourceTripId: tripId,
+        status: 'draft',
+        title: 'Keep this draft private for now',
+        workingTripId: version.workingTripId
+      })
+    ]);
+    await expect(
+      owner.client.query(api.routes.trips.versions.workspace.pending.run, {})
+    ).resolves.toEqual([]);
+  }
+);
 
 test('snapshots organization approval settings and requires independent reviewers', async () => {
   const { owner, tripId, users } = await setupTrip(2);
@@ -367,30 +399,34 @@ test('snapshots organization approval settings and requires independent reviewer
   });
 });
 
-test('rejects applying an approved idea after the source trip is archived', {
-  timeout: 15_000
-}, async () => {
-  const { owner, tripId } = await setupTrip();
-  const version = await owner.client.mutation(api.routes.trips.versions.create.run, { tripId });
-  await owner.client.mutation(api.routes.trips.update.run, {
-    input: changedTripDetails,
-    tripId: version.workingTripId
-  });
-  await owner.client.action(api.routes.trips.versions.submit.run, {
-    proposalId: version.proposalId
-  });
-  await owner.client.mutation(api.routes.trips.versions.approval.run, {
-    approved: true,
-    proposalId: version.proposalId
-  });
-  await owner.client.mutation(api.routes.trips.archive.run, { tripId });
-  await expect(
-    owner.client.action(api.routes.trips.versions.merge.run, { proposalId: version.proposalId })
-  ).rejects.toThrow('Archived trips are read-only');
-  await expect(owner.client.query(api.routes.trips.get.run, { tripId })).resolves.toMatchObject({
-    archivedAt: expect.any(Number)
-  });
-});
+test(
+  'rejects applying an approved idea after the source trip is archived',
+  {
+    timeout: 15_000
+  },
+  async () => {
+    const { owner, tripId } = await setupTrip();
+    const version = await owner.client.mutation(api.routes.trips.versions.create.run, { tripId });
+    await owner.client.mutation(api.routes.trips.update.run, {
+      input: changedTripDetails,
+      tripId: version.workingTripId
+    });
+    await owner.client.action(api.routes.trips.versions.submit.run, {
+      proposalId: version.proposalId
+    });
+    await owner.client.mutation(api.routes.trips.versions.approval.run, {
+      approved: true,
+      proposalId: version.proposalId
+    });
+    await owner.client.mutation(api.routes.trips.archive.run, { tripId });
+    await expect(
+      owner.client.action(api.routes.trips.versions.merge.run, { proposalId: version.proposalId })
+    ).rejects.toThrow('Archived trips are read-only');
+    await expect(owner.client.query(api.routes.trips.get.run, { tripId })).resolves.toMatchObject({
+      archivedAt: expect.any(Number)
+    });
+  }
+);
 
 test('lets the proposal author self-approve when no human reviewers were requested', async () => {
   const { owner, tripId } = await setupTrip();

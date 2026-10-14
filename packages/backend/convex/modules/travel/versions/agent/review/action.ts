@@ -1,7 +1,7 @@
 import { v } from 'convex/values';
-import { StandaloneSession } from '#convex/modules/assistant/standalone/index';
 import { internal } from '#convex-generated/api';
 import { internalAction } from '#convex-generated/server';
+import { StandaloneSession } from '#convex/modules/assistant/standalone/index';
 
 /** Run the standalone idea reviewer and persist comments + a workspace-visible agent run. */
 export const run = internalAction({

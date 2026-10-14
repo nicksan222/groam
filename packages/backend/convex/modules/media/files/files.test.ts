@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import type { Id } from '#convex-generated/dataModel';
 import { pngBlob } from '#testing/media';
 import { Files } from './index';

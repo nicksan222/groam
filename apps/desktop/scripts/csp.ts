@@ -1,7 +1,7 @@
 import { env as desktopToolingEnv } from '@groam/env/desktop-tooling';
 
 const DEFAULT_PHOTON_URL = 'https://photon.komoot.io';
-const DEFAULT_MAP_TILES_URL = 'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png';
+const DEFAULT_MAP_TILES_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
 const baseConnectSrc = [
   "'self'",

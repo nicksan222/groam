@@ -7,7 +7,7 @@ import { type TripDetail, useTrip } from '@/features/trips/hooks/use-trips';
 import { useOptionalWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
 import type { ProposalDetail } from '@/types/trips';
 
-// biome-ignore lint/plugin/no-local-type-definitions: context value is bound to these hook return types
+// oxlint-disable-next-line groam/no-local-type-definitions -- context value is bound to these hook return types
 type IdeaContextValue = {
   isViewerAuthor: boolean;
   proposal: ProposalDetail | null | undefined;

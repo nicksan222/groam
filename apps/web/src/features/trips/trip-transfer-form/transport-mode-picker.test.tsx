@@ -1,5 +1,5 @@
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { stubMatchMedia } from '@/testing/stub-match-media';
 import { TransportModePicker } from './transport-mode-picker';
 

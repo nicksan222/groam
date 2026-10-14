@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { DEFAULT_ASSISTANT_FAILURE } from '#ai/backend/errors';
 import { FailedResponse } from './failed-response';
 

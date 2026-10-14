@@ -18,22 +18,22 @@ import type { DiscussionListItem } from '@/features/discussions/hooks/use-discus
 import { Link } from '@/features/workspace/navigation/router';
 import { testIds } from '@/lib/test-ids';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type HeaderPanel = 'details' | 'participants' | 'rename';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type DiscussionThreadHeaderLoadedProps = {
   discussion: DiscussionListItem;
   isLoading?: false;
 };
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type DiscussionThreadHeaderLoadingProps = {
   discussion?: undefined;
   isLoading: true;
 };
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type DiscussionThreadHeaderProps =
   | DiscussionThreadHeaderLoadedProps
   | DiscussionThreadHeaderLoadingProps;

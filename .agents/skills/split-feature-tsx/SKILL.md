@@ -8,8 +8,8 @@ description: >-
 
 # Split a feature TSX file
 
-`bun run lint:conventions` owns **file** size (`MAX_COMPONENT_FILE_LINES` =
-300) for `apps/web` and `packages/ai/src/ui` TSX. Biome owns **function** size
+`vp run lint:conventions` owns **file** size (`MAX_COMPONENT_FILE_LINES` =
+300) for `apps/web` and `packages/ai/src/ui` TSX. Oxlint (`groam/max-lines-per-function`) owns **function** size
 (250 lines). Do not add a third limit.
 
 ## Rules
@@ -28,7 +28,7 @@ description: >-
 2. Keep the page-level `*-view.tsx` as the composer.
 3. Move hooks already extracted into `hooks/`; do not leave `useFoo` in a
    300-line view "for convenience".
-4. Re-run `bun run lint:conventions`.
+4. Re-run `vp run lint:conventions`.
 
 ## Example
 

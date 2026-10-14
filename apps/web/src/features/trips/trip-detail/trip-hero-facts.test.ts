@@ -1,5 +1,5 @@
 import type { Id } from '@groam/backend/data-model';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vite-plus/test';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { tripHeroFactsLine } from './trip-hero-facts';
 

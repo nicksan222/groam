@@ -7,6 +7,12 @@ const expect = playwrightExpect.configure({ timeout: 30_000 });
 
 export type InlineActivityPeriod = 'morning' | 'afternoon' | 'evening';
 
+const periodLabels = {
+  afternoon: 'Afternoon',
+  evening: 'Evening',
+  morning: 'Morning'
+} as const satisfies Record<InlineActivityPeriod, string>;
+
 export async function addInlineActivity(
   target: UiTarget,
   input: {
@@ -21,12 +27,14 @@ export async function addInlineActivity(
 ): Promise<void> {
   const user = ui(target);
   const day = user.page.getByRole('region', { name: `Day ${input.day} schedule` });
-  await user.click(
-    day.getByRole('button', { name: `Add ${input.period} activity to Day ${input.day}` })
-  );
+  await user.click(day.getByRole('button', { name: 'Add to day' }));
+  await user.click(user.page.getByRole('menuitem', { name: 'Activity', exact: true }));
   const form = day.getByTestId(ids.activityInlineEditor);
   await expect(form).toHaveAttribute('aria-label', `Add an activity to Day ${input.day}`);
   await user.type(form.getByTestId(ids.activityTitle), input.title);
+  const period = form.getByRole('button', { name: periodLabels[input.period], exact: true });
+  await user.click(period);
+  await expect(period).toHaveAttribute('aria-pressed', 'true');
   if (input.range) {
     await user.click(form.getByTestId(ids.activityMoreOptions));
     await setActivityDayRange(user, input.range.startDay, input.range.endDay);
@@ -61,13 +69,18 @@ export async function addInlineActivity(
 
 export async function editInlineActivity(
   target: UiTarget,
-  input: { address: string; day: number; title: string }
+  input: { address: string; day: number; period?: InlineActivityPeriod; title: string }
 ): Promise<void> {
   const user = ui(target);
   const day = user.page.getByRole('region', { name: `Day ${input.day} schedule` });
   await user.click(day.getByRole('button', { name: `Edit ${input.title}` }));
   const form = day.getByTestId(ids.activityInlineEditor);
   await expect(form).toHaveAttribute('aria-label', `Edit ${input.title}`);
+  if (input.period) {
+    await expect(
+      form.getByRole('button', { name: periodLabels[input.period], exact: true })
+    ).toHaveAttribute('aria-pressed', 'true');
+  }
   await user.type(form.getByTestId(ids.activityAddress), input.address);
   await user.click(form.getByTestId(ids.activitySubmit));
   await expect(form).toHaveCount(0);

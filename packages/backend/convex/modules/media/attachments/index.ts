@@ -1,9 +1,9 @@
 import { ConvexError, type Infer } from 'convex/values';
-import { TripTargetKind } from '#convex/modules/travel/targets/kind';
-import '#convex/modules/travel/targets/kinds/index';
-import type { TripTargetValidators } from '#convex/modules/travel/targets/schema';
 import type { Doc, Id } from '#convex-generated/dataModel';
+import '#convex/modules/travel/targets/kinds/index';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
+import { TripTargetKind } from '#convex/modules/travel/targets/kind';
+import type { TripTargetValidators } from '#convex/modules/travel/targets/schema';
 
 type AttachmentTarget = Infer<typeof TripTargetValidators.attachable>;
 export type ReadCtx = MutationCtx | QueryCtx;
@@ -82,7 +82,7 @@ function withMedia(
  * Pin library media onto a trip target (trip, destination, activity, stay, transfer).
  * `attachments` rows are shared per (trip, media); `attachmentReferences` are the ordered pins.
  */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class Attachments {
   static limitFor(target: AttachmentTarget): number {
     const kind = TripTargetKind.of(target.type);

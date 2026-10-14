@@ -35,8 +35,6 @@
   },
 
   "remoteEnv": {
-    "TURBO_CACHE_DIR": "${containerWorkspaceFolder}/.turbo/cache",
-    "TURBO_ROOT_TURBO_JSON": "${containerWorkspaceFolder}/turbo.json",
     "CLAUDE_CODE_OAUTH_TOKEN": "${localEnv:CLAUDE_CODE_OAUTH_TOKEN}",
     "GH_TOKEN": "${localEnv:GH_TOKEN}",
     "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}",
@@ -91,17 +89,24 @@
       "extensions": [
         "astro-build.astro-vscode",
         "bradlc.vscode-tailwindcss",
-        "biomejs.biome",
+        "VoidZero.vite-plus-extension-pack",
         "anthropic.claude-code",
         "oven.bun-vscode"
       ],
       "settings": {
         "typescript.tsdk": "node_modules/typescript/lib",
         "typescript.enablePromptUseWorkspaceTsdk": true,
-        "editor.defaultFormatter": "biomejs.biome",
+        "editor.defaultFormatter": "oxc.oxc-vscode",
+        "[javascript]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+        "[javascriptreact]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+        "[typescript]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+        "[typescriptreact]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+        "oxc.disableNestedConfig": true,
+        "oxc.fmt.disableNestedConfig": true,
         "editor.formatOnSave": true,
+        "editor.formatOnSaveMode": "file",
         "editor.codeActionsOnSave": {
-          "source.fixAll.biome": "explicit"
+          "source.fixAll.oxc": "explicit"
         },
         "files.watcherExclude": {
           "**/node_modules/**": true,

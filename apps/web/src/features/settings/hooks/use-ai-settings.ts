@@ -9,9 +9,9 @@ import { errorMessage } from '@/lib/errors';
 import { useAiSettingsDraftStore } from '@/lib/stores/settings-stores';
 import type { AiProviderAuthTarget } from '@/types/ai-provider-auth';
 
-// biome-ignore lint/plugin/no-local-type-definitions: derived Convex return type
+// oxlint-disable-next-line groam/no-local-type-definitions -- derived Convex return type
 type Remote = FunctionReturnType<typeof api.routes.settings.ai.get.run>;
-// biome-ignore lint/plugin/no-local-type-definitions: derived settings-store slice
+// oxlint-disable-next-line groam/no-local-type-definitions -- derived settings-store slice
 type AiDraft = Pick<
   ReturnType<typeof useAiSettingsDraftStore.getState>,
   'apiKey' | 'baseUrl' | 'error' | 'isPending' | 'message' | 'model' | 'provider'
@@ -38,8 +38,8 @@ function deriveAiSettings(
   const configured = selected?.configured ?? false;
   const canSave = Boolean(
     draft.apiKey.trim() ||
-      (configured && provider === selected?.provider) ||
-      (preset.requiresBaseUrl && !configured)
+    (configured && provider === selected?.provider) ||
+    (preset.requiresBaseUrl && !configured)
   );
   return {
     baseUrl,

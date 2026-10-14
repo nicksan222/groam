@@ -1,6 +1,6 @@
 import { stubPopoverEnvironment } from '@groam/ui/lib/stub-popover-environment';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
 import type { DiscussionMessage } from '@/features/discussions/hooks/use-discussion-thread';
 import { ThreadMessage } from './thread-message';
 

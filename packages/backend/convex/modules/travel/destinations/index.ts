@@ -1,4 +1,6 @@
 import { ConvexError, type Infer } from 'convex/values';
+import type { Doc, Id } from '#convex-generated/dataModel';
+import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import { Attachments } from '#convex/modules/media/attachments/index';
 import { ItineraryActivity } from '#convex/modules/travel/activities/index';
 import { DestinationCover } from '#convex/modules/travel/covers/destination/index';
@@ -18,8 +20,6 @@ import {
   totalDays
 } from '#convex/modules/travel/trips/ctx';
 import { normalizeKnownDestination } from '#convex/modules/travel/trips/normalize';
-import type { Doc, Id } from '#convex-generated/dataModel';
-import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 
 const MAX_DAY_NOTES_LENGTH = 240;
 const MAX_EXTRA_DAYS = 14;

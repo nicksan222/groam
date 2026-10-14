@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { buildTripPlans } from './build-trip-plans';
 import { seedActivityTitles } from './seed-activity-titles';
 import { seedTripFingerprint, tripMatchesSeedFingerprint } from './seed-trip-fingerprint';

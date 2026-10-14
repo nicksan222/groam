@@ -1,3 +1,5 @@
+import type { Doc, Id } from '#convex-generated/dataModel';
+import type { QueryCtx } from '#convex-generated/server';
 import { Attachments } from '#convex/modules/media/attachments/index';
 import { ItineraryActivity } from '#convex/modules/travel/activities/index';
 import { TripDestination } from '#convex/modules/travel/destinations/index';
@@ -16,8 +18,6 @@ import {
   tripPermissions,
   totalDays as tripTotalDays
 } from '#convex/modules/travel/trips/ctx';
-import type { Doc, Id } from '#convex-generated/dataModel';
-import type { QueryCtx } from '#convex-generated/server';
 
 export async function projectTripListItem(
   ctx: QueryCtx,
@@ -53,7 +53,7 @@ async function createAttachmentProjection(
   const media = await Promise.all(mediaIds.map((mediaId) => ctx.db.get('media', mediaId)));
   const mediaWithUrls = await Promise.all(
     media.flatMap((item) =>
-      item && item.organizationId === organizationId
+      item?.organizationId === organizationId
         ? [
             (async () => ({
               ...item,

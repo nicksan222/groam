@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { Messages } from '#convex/modules/discussions/messages/index';
 
 test('normalizes message content and rejects empty or oversized text', () => {
