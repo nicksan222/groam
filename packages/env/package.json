@@ -8,8 +8,8 @@
     "@groam/typescript-config": "workspace:*",
     "@types/node": "^26.6.3",
     "typescript": "~7.0.2",
-    "vite": "^8.3.1",
-    "vitest": "^5.0.2"
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
   },
   "exports": {
     "./auth-client": "./src/apps/auth-client.ts",
@@ -32,8 +32,8 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "lint": "biome check src",
-    "test": "vitest run",
+    "lint": "vp check src",
+    "test": "vp test run",
     "typecheck": "tsc --noEmit"
   },
   "type": "module"

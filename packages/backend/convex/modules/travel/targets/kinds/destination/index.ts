@@ -1,6 +1,6 @@
-import { TripTargetKind } from '#convex/modules/travel/targets/kind';
 import type { Doc } from '#convex-generated/dataModel';
 import type { QueryCtx } from '#convex-generated/server';
+import { TripTargetKind } from '#convex/modules/travel/targets/kind';
 
 export class DestinationTarget extends TripTargetKind<'destination', 'tripDestinations'> {
   constructor() {

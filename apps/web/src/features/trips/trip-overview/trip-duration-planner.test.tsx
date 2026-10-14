@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { TripDurationPlanner } from '@/features/trips/trip-overview/trip-duration-planner';
 
 afterEach(cleanup);

@@ -11,7 +11,7 @@ const router = createRouter({
 });
 
 declare module '@tanstack/react-router' {
-  // biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+  // oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
   interface Register {
     router: typeof router;
   }

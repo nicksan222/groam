@@ -1,14 +1,5 @@
-import { ConvexError, type Infer, v } from 'convex/values';
 import { customMutation, customQuery } from 'convex-helpers/server/customFunctions';
-import { type AuthContext, requireWorkspace, type Workspace } from '#convex/modules/auth/workspace';
-import {
-  assertMutable,
-  assertPlanner,
-  isSeedWrite,
-  roleFor
-} from '#convex/modules/travel/trips/access';
-import type { TripValidators } from '#convex/modules/travel/trips/schema';
-import { IdeaNames } from '#convex/modules/travel/versions/names';
+import { ConvexError, type Infer, v } from 'convex/values';
 import { internal } from '#convex-generated/api';
 import type { Doc, Id } from '#convex-generated/dataModel';
 import {
@@ -19,6 +10,15 @@ import {
   type QueryCtx,
   query
 } from '#convex-generated/server';
+import { type AuthContext, requireWorkspace, type Workspace } from '#convex/modules/auth/workspace';
+import {
+  assertMutable,
+  assertPlanner,
+  isSeedWrite,
+  roleFor
+} from '#convex/modules/travel/trips/access';
+import type { TripValidators } from '#convex/modules/travel/trips/schema';
+import { IdeaNames } from '#convex/modules/travel/versions/names';
 
 const TITLE_GENERATION_DELAY_MS = 30_000;
 

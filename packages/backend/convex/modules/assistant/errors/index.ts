@@ -7,7 +7,7 @@ function toAssistantError(error: unknown): Error {
 }
 
 /** Traveler-facing assistant failures. Forwards the provider error message when available. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class AssistantErrors {
   static from = toAssistantError;
   static message = assistantFailureMessage;

@@ -1,5 +1,5 @@
 import type { Id } from '@groam/backend/data-model';
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { ideaCloneHref, ideaDetailHref, ideaListHref, ideaWorkspaceHref } from './idea-href';
 
 const proposalId = 'idea-review' as Id<'tripProposals'>;

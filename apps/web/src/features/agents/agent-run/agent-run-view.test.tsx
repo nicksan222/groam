@@ -1,7 +1,7 @@
 import { agentRunEventLabels } from '@groam/ai/backend/runs/events';
 import { agentRunDuration, agentRunTime } from '@groam/ai/backend/runs/time';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import type { AgentRun } from '@/features/agents/hooks/use-agent';
 import { testIds } from '@/lib/test-ids';
 import { AgentRunView } from './agent-run-view';

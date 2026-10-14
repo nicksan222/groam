@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vite-plus/test';
 import { createBackendActions } from './backend';
 import { createPlaywrightActions } from './playwright';
 

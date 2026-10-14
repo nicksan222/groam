@@ -1,5 +1,5 @@
 import type { Id } from '@groam/backend/data-model';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vite-plus/test';
 import { groupIssueTimeline } from './group-issue-timeline';
 
 function comment(id: string, kind: 'comment' | 'system', content = id) {

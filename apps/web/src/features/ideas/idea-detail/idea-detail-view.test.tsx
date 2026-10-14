@@ -1,7 +1,7 @@
 import type { Id } from '@groam/backend/data-model';
 import { cleanup, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { IdeaDetailView } from './idea-detail-view';
 
 const proposalId = 'proposal-1' as Id<'tripProposals'>;

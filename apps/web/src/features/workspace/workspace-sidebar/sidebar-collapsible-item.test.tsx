@@ -1,7 +1,7 @@
 import { SidebarProvider } from '@groam/ui/components/sidebar';
 import { SidebarCollapsibleItem } from '@groam/ui/components/sidebar-collapsible-item';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
 import { useSidebarSectionOpen } from '@/features/workspace/hooks/use-sidebar-section-open';
 import { resetSidebarChromeStore } from '@/lib/stores/sidebar-chrome-store';
 import { stubMatchMedia } from '@/testing/stub-match-media';

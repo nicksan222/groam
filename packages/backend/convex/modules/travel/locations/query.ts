@@ -1,8 +1,8 @@
 import { ConvexError } from 'convex/values';
+import type { QueryCtx } from '#convex-generated/server';
 import { requireWorkspace } from '#convex/modules/auth/workspace';
 import { TripLocations, type TripLocationType } from '#convex/modules/travel/locations/index';
 import { validateCoordinates } from '#convex/modules/travel/trips/normalize';
-import type { QueryCtx } from '#convex-generated/server';
 
 const MAX_LOCATION_RESULTS = 25;
 const MAX_NEAREST_DISTANCE_METERS = 1_000_000;
@@ -18,7 +18,7 @@ function validatePoint(point: { latitude: number; longitude: number }): void {
 }
 
 /** Workspace-scoped geospatial lookups over trip locations. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class TripLocationQueries {
   static async nearest(
     ctx: QueryCtx,

@@ -1,6 +1,6 @@
 import { v } from 'convex/values';
-import { StandaloneSession } from '#convex/modules/assistant/standalone/session';
 import { internalAction } from '#convex-generated/server';
+import { StandaloneSession } from '#convex/modules/assistant/standalone/session';
 
 /** Scheduled Issue-agent kickoff. Has no user identity — load targets by document id. */
 export const run = internalAction({

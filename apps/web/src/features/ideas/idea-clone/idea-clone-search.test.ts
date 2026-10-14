@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { parseIdeaCloneSearch } from './idea-clone-search';
 
 test('parseIdeaCloneSearch keeps only add-destination search state', () => {

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { exportGroamData, importGroamData, readGroamDataDir } from './use-desktop-data';
 
 const desktop = vi.hoisted(() => ({

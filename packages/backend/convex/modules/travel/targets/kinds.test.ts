@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { TripTargetKind } from '#convex/modules/travel/targets/kind';
 import {
   activity,

@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { Inbox } from 'lucide-react';
-import { afterEach, expect, test } from 'vitest';
+import { afterEach, expect, test } from 'vite-plus/test';
 import { CountHeading } from './count-heading';
 
 afterEach(cleanup);

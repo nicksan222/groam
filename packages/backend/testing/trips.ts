@@ -1,6 +1,6 @@
-import type { TripCurrency } from '#convex/modules/travel/trips/currencies';
 import { api } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
+import type { TripCurrency } from '#convex/modules/travel/trips/currencies';
 import { createAuthenticatedTest, createTestUser } from '#testing/factory';
 
 export const paginationArgs = { paginationOpts: { cursor: null, numItems: 25 } };

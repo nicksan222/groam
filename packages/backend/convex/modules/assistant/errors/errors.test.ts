@@ -1,5 +1,5 @@
 import { ConvexError } from 'convex/values';
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { AssistantErrors } from '#convex/modules/assistant/errors/index';
 
 test('wraps provider failures in a ConvexError', () => {

@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { isChatThreadRoute, navigationItemIsActive } from './sidebar-nav';
 
 test('navigationItemIsActive treats home as an exact match', () => {

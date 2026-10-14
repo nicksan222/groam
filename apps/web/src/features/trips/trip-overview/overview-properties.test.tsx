@@ -1,5 +1,5 @@
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test } from 'vitest';
+import { afterEach, expect, test } from 'vite-plus/test';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { formatTripCost } from '@/features/trips/trip-forms/trip-currencies';
 import { formatTripDay } from '@/features/trips/trip-local-date-time';

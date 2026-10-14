@@ -2,12 +2,12 @@ import Shell from '@groam/ui/components/shell/client';
 import { Map as MapIcon } from 'lucide-react';
 import { Component, type ReactNode } from 'react';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type DashboardErrorBoundaryProps = {
   children: ReactNode;
 };
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type DashboardErrorBoundaryState = {
   failed: boolean;
 };

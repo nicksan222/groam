@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { selectOrderedActions } from './select-ordered-actions';
 import type { ActionEntry } from './state';
 

@@ -5,6 +5,13 @@ import {
   resolveAssistantCredentials
 } from '@groam/ai/backend/providers/keys';
 import { ConvexError, v } from 'convex/values';
+import {
+  env,
+  internalMutation,
+  internalQuery,
+  type MutationCtx,
+  type QueryCtx
+} from '#convex-generated/server';
 import { normalizeCompatibleBaseUrl } from '#convex/modules/ai/hosts';
 import { aiKeyCredentialsValidator } from '#convex/modules/ai/validators';
 import {
@@ -14,13 +21,6 @@ import {
   requireWorkspace
 } from '#convex/modules/auth/workspace';
 import { isLocalBackend } from '#convex/modules/dev/local';
-import {
-  env,
-  internalMutation,
-  internalQuery,
-  type MutationCtx,
-  type QueryCtx
-} from '#convex-generated/server';
 
 export type AiSettingsTarget = 'organization' | 'personal';
 
@@ -88,7 +88,7 @@ export async function publicAiSettings(ctx: QueryCtx) {
   };
 }
 
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: validates and upserts both credential targets
+// oxlint-disable-next-line groam/cognitive-complexity -- validates and upserts both credential targets
 export async function saveAiSettings(
   ctx: MutationCtx,
   input: {

@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import Footer from '#tsx/components/shell/components/footer';
 import Header from '#tsx/components/shell/components/header';
 import { extractChildrenNotOfType, extractChildrenOfType } from './children';

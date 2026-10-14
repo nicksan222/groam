@@ -4,7 +4,7 @@ import type { ItineraryChange } from './itinerary-proposal-changes';
 import { useTripProposalDetail, useTripVersions } from './use-trip-versions';
 import type { TripDetail } from './use-trips';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type ItineraryProposalChangesValue = {
   byKey: Map<string, ItineraryChange> | null;
   changes: ItineraryChange[] | null;

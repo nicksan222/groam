@@ -1,5 +1,5 @@
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test } from 'vite-plus/test';
 import type { ItineraryChange } from '@/features/trips/hooks/itinerary-proposal-changes';
 import { ItineraryDetailsChangeCard } from './itinerary-details-change-card';
 import { ItineraryProposalHighlight } from './itinerary-proposal-highlight';

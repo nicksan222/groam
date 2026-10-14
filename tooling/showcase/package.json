@@ -24,7 +24,8 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "typescript": "~7.0.2",
-    "vitest": "^5.0.2"
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
   },
   "imports": {
     "#showcase": "./video.ts",
@@ -36,15 +37,15 @@
   "scripts": {
     "capture": "bun src/cli.ts capture",
     "edit": "bun src/cli.ts edit",
-    "lint": "biome check .",
+    "lint": "vp check .",
     "preview": "bun src/cli.ts preview",
     "readme:gif": "bun src/readme-gif.ts",
     "render": "bun src/cli.ts render",
     "setup": "playwright install chromium && remotion browser ensure",
     "showcase": "bun src/cli.ts all",
     "studio": "remotion studio src/video/index.tsx --props public/showcase.json",
-    "test": "vitest run src/model.test.ts src/timeline.test.ts src/storyboard.test.ts src/readme-gif.test.ts src/capture/actor.test.ts",
-    "test:browser": "vitest run src/capture/record.test.ts",
+    "test": "vp test run src/model.test.ts src/timeline.test.ts src/storyboard.test.ts src/readme-gif.test.ts src/capture/actor.test.ts",
+    "test:browser": "vp test run src/capture/record.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "type": "module"

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { createEdit } from '#src/edit';
 import { blendRect, layoutRects, stagedRect } from '#src/layout';
 import type { ShotStyle } from '#src/model';

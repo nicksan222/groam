@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { agentRunDuration, agentRunTime } from './time';
 
 const noon = new Date('2026-08-22T12:00:00').getTime();

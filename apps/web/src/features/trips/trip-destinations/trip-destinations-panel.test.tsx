@@ -1,7 +1,7 @@
 import type { Id } from '@groam/backend/data-model';
 import { stubPopoverEnvironment } from '@groam/ui/lib/stub-popover-environment';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import type { ItineraryChange } from '@/features/trips/hooks/itinerary-proposal-changes';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { testIds } from '@/lib/test-ids';

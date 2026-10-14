@@ -1,10 +1,10 @@
 import { v } from 'convex/values';
+import { internal } from '#convex-generated/api';
+import { query } from '#convex-generated/server';
 import {
   type AssistantContextCatalogItem,
   assistantContextCatalogItemValidator
 } from '#convex/modules/assistant/model/index';
-import { internal } from '#convex-generated/api';
-import { query } from '#convex-generated/server';
 
 export const run = query({
   args: {},

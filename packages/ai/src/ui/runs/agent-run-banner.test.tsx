@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { agentRunCopy, agentRunEventLabels } from '#ai/backend/runs/events';
 import { RUN_STATUS_LABEL } from '#ai/backend/runs/ids';
 import { AgentRunBanner } from './agent-run-banner';

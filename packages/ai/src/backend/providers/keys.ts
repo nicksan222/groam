@@ -140,7 +140,7 @@ export function hasDeploymentAiCredentials(deployment: AssistantProviderEnvironm
   if (!providers) return Boolean(configuredValue(providerApiKey(deployment, fallback)));
   return Boolean(
     providers.size > 0 &&
-      [...providers].every((provider) => configuredValue(providerApiKey(deployment, provider)))
+    [...providers].every((provider) => configuredValue(providerApiKey(deployment, provider)))
   );
 }
 

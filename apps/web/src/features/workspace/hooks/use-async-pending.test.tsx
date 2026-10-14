@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vite-plus/test';
 import { useAsyncPending } from './use-async-pending';
 
 describe('useAsyncPending', () => {

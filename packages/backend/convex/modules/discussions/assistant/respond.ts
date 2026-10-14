@@ -1,17 +1,17 @@
 import { ConvexError } from 'convex/values';
+import { internal } from '#convex-generated/api';
+import type { Id } from '#convex-generated/dataModel';
+import type { ActionCtx } from '#convex-generated/server';
 import { aiRateLimiter } from '#convex/modules/ai/limits';
 import { type AssistantScreen, AssistantSession } from '#convex/modules/assistant/agent/index';
 import { AssistantErrors } from '#convex/modules/assistant/errors/index';
 import { AgentRunTracking } from '#convex/modules/assistant/runs/tracking';
-import { internal } from '#convex-generated/api';
-import type { Id } from '#convex-generated/dataModel';
-import type { ActionCtx } from '#convex-generated/server';
 
 /**
  * Action-side assistant reply. Mutations in `assistant/index.ts` claim and finish the
  * request so two clients cannot stream the same prompt twice.
  */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class DiscussionAssistant {
   static async respond(
     ctx: ActionCtx,

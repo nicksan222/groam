@@ -1,7 +1,7 @@
 import type { Id } from '@groam/backend/data-model';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
 import { IssueAgentBanner } from './issue-agent-banner';
 
 const retry = vi.hoisted(() => vi.fn());

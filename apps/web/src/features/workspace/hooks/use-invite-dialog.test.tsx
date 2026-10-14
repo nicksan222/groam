@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import type { FormEvent } from 'react';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { useInviteDialog } from './use-invite-dialog';
 
 const backend = vi.hoisted(() => ({

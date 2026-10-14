@@ -1,6 +1,6 @@
 import { SidebarProvider } from '@groam/ui/components/sidebar';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
 import { SidebarCollapsibleItem } from './sidebar-collapsible-item';
 
 function stubMatchMedia(matches = false) {

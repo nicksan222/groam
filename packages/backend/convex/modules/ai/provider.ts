@@ -40,7 +40,7 @@ export async function configuredAssistantProvider(
 }
 
 /** Deployment-scoped assistant model provider. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class AssistantProvider {
   static configured = configuredAssistantProvider;
 }

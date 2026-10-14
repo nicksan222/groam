@@ -1,4 +1,4 @@
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { MAX_MEDIA_PER_MESSAGE } from './discussion-message-body';
 import {
   appendPendingAttachments,

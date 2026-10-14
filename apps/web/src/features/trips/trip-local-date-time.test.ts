@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { formatDayTimeRange, formatTripDay } from './trip-local-date-time';
 
 test('formats itinerary-relative days without requiring a calendar start date', () => {

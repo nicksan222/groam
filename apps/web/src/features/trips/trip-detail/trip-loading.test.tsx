@@ -1,6 +1,6 @@
 import { PageCrumbNav } from '@groam/ui/components/page-crumb-nav';
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test } from 'vitest';
+import { afterEach, expect, test } from 'vite-plus/test';
 import { TripOverview } from '@/features/trips/trip-overview/trip-overview';
 import { TripPageHero } from './trip-page-hero';
 import { TripPageShell } from './trip-page-shell';

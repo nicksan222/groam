@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { stubMatchMedia } from '@/testing/stub-match-media';
 import { ItineraryDetailsResolveSheet } from './itinerary-details-resolve-sheet';
 

@@ -1,8 +1,8 @@
 import { ConvexError, type Infer, v } from 'convex/values';
+import type { Doc } from '#convex-generated/dataModel';
 import { Attachments } from '#convex/modules/media/attachments/index';
 import { loadTripContext, type MutableTripCtx, patchTrip } from '#convex/modules/travel/trips/ctx';
 import { updateTrip } from '#convex/modules/travel/trips/index';
-import type { Doc } from '#convex-generated/dataModel';
 
 export const detailResolutionArgs = {
   choices: v.array(

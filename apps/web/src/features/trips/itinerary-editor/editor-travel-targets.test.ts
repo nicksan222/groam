@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { plannerFixture } from '@/testing/trip-planner-fixture';
 import type { Destination } from '@/types/trips';
 import { travelChoicesForDay, untimedTravelDay } from './editor-travel-targets';

@@ -1,10 +1,10 @@
 import { v } from 'convex/values';
+import { internal } from '#convex-generated/api';
+import { internalMutation, type MutationCtx } from '#convex-generated/server';
 import { Discussions } from '#convex/modules/discussions/threads/index';
 import { Media } from '#convex/modules/media/library/index';
 import { OrganizationInvitations } from '#convex/modules/organizations/invitations/index';
 import { deleteTripBatch } from '#convex/modules/travel/trips/index';
-import { internal } from '#convex-generated/api';
-import { internalMutation, type MutationCtx } from '#convex-generated/server';
 
 const DELETE_BATCH_SIZE = 50;
 

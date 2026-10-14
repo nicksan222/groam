@@ -1,4 +1,6 @@
 import { ConvexError, type Infer } from 'convex/values';
+import type { Doc, Id } from '#convex-generated/dataModel';
+import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import { Attachments } from '#convex/modules/media/attachments/index';
 import type { TripActivityValidators } from '#convex/modules/travel/activities/schema';
 import { TripLocations } from '#convex/modules/travel/locations/index';
@@ -14,8 +16,6 @@ import {
 } from '#convex/modules/travel/trips/ctx';
 import { LocalDateTime } from '#convex/modules/travel/trips/datetime';
 import { normalizeCostRecord, validateCoordinates } from '#convex/modules/travel/trips/normalize';
-import type { Doc, Id } from '#convex-generated/dataModel';
-import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 
 const MAX_ACTIVITY_ADDRESS_LENGTH = 240;
 const MAX_ACTIVITY_NOTES_LENGTH = 240;

@@ -14,7 +14,7 @@ import { tripHeroFactsLine } from './trip-hero-facts';
 import { TripHeroMeta } from './trip-hero-meta';
 import { TripHeroTitle } from './trip-hero-title';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type TripPageHeroLoadedProps = {
   actions: ReactNode;
   compact?: boolean;
@@ -27,13 +27,13 @@ export type TripPageHeroLoadedProps = {
   tripId: Id<'trips'>;
 };
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type TripPageHeroLoadingProps = {
   actions?: ReactNode;
   isLoading: true;
 };
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type TripPageHeroProps = TripPageHeroLoadedProps | TripPageHeroLoadingProps;
 
 export function TripPageHero(props: TripPageHeroProps) {

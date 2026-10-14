@@ -16,10 +16,10 @@ Convex agent skills for common tasks can be installed by running
 
 Import validated variables from the target-specific `@groam/env/*` module. Do
 not read `process.env` or `import.meta.env` outside `packages/env`; Convex code
-uses the generated typed `env` from `_generated/server`. Biome is the sole
-formatter and linter. Shared Biome, TypeScript, and React Doctor configuration
-belongs under `tooling`; keep only Biome's required discovery shim at the
-repository root.
+uses the generated typed `env` from `_generated/server`. Vite+ (`vp check`:
+Oxfmt and Oxlint) is the sole formatter and linter. Shared lint/format policy
+(`tooling/oxc-config`), TypeScript, and React Doctor configuration belongs under
+`tooling`; the root `vite.config.ts` only composes it.
 
 ### Dev container execution boundary
 
@@ -44,7 +44,7 @@ The checked-in launcher still delegates to the official Dev Container CLI and
 also mounts Git's common directory when Codex or another worktree stores it
 outside the workspace. On a clean host, run
 `.devcontainer/devcontainer exec just check` before
-committing and use `git commit --no-verify` so Husky does not launch repository
+committing and use `git commit --no-verify` so Git hooks do not launch repository
 tooling outside the container. The `devcontainer` command itself also runs on
 the host. If Docker or the Dev
 Container CLI is unavailable, stop and ask the user to enable it; do not install
@@ -69,7 +69,7 @@ If Graphify or its graph is missing inside the container, rebuild it with
 `.devcontainer/devcontainer rebuild` and then run
 the containerized `just graphify-refresh`. Never install Graphify, `uv`, Python,
 or any other project tooling on the host. Do not install Graphify's Git hooks;
-this repository already manages hooks through Husky.
+this repository already manages hooks through Vite+ (`vp config`).
 
 ## Web architecture
 
@@ -114,9 +114,8 @@ graph. This replaces environment-specific host installers: Cursor Cloud and
 other agents must also enter or invoke the dev container rather than installing
 their own toolchains.
 
-Inside the container, start the stack with `just dev`. It uses Turbo's `--ui=tui`
-interface when attached to a TTY and falls back
-to streamed output otherwise. The individual steps are also available:
+Inside the container, start the stack with `just dev`. It runs each package's `dev` script in
+parallel through `vp run`, with package-labeled output. The individual steps are also available:
 `CONVEX_AGENT_MODE=anonymous bunx convex dev --typecheck-components` (backend,
 writes `.env.local`), `CONVEX_AGENT_MODE=anonymous bun
 tooling/devkit/configure-auth.ts --write-vite-site-url` (Better Auth
@@ -162,12 +161,12 @@ group name (placeholder "Acme Labs" is not a value) — this is not a bug.
 
 Use the root `Justfile` as the in-container command map (`just`, `just dev`,
 `just check`, `just codegen`). The package scripts remain the composable
-primitives used by Just, Turbo, lifecycle hooks, and
+primitives used by Just, `vp run`, lifecycle hooks, and
 `.github/workflows/test-reusable.yml`; the AI
 assistant features are optional and only need an LLM provider key (see
-`packages/env`). Git pre-commit hooks (`tooling/husky/pre-commit`) run codegen,
-lint-staged, conventions, React Doctor (staged), and Fallow (changed); CI owns
+`packages/env`). Git pre-commit hooks (`tooling/hooks/pre-commit`, installed by `vp config`) run
+codegen, `vp staged`, conventions, React Doctor (staged), and Fallow (changed); CI owns
 `bun run check`. On hosts without the project toolchain, replace those hooks
 with the full containerized `just check` gate and commit with `--no-verify`.
-Installs use `HUSKY=0` (matching CI) so container setup is independent of where
+Installs use `VP_GIT_HOOKS=0` (matching CI) so container setup is independent of where
 Git metadata is mounted.

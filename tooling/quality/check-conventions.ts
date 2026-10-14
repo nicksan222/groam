@@ -225,6 +225,7 @@ const messages: Record<ConventionFinding['category'], string> = {
   'hardcoded-colors': 'Use semantic color tokens instead of hardcoded colors',
   'hook-tests':
     'Feature capability hooks need a co-located use-*.test.ts(x) file; add coverage beside the hook instead of in a distant test folder',
+  'important-styles': 'Avoid !important in stylesheets; use cascade layers or specificity instead',
   'import-meta-env':
     'Read environment variables from @groam/env/* instead of unvalidated Vite env access',
   'legacy-modules': 'Use TypeScript instead of .mjs for repository-owned modules',
@@ -241,7 +242,7 @@ const messages: Record<ConventionFinding['category'], string> = {
 
 if (byCategory.size === 0) {
   console.log(
-    'Folder names, source filenames, imports, hook tests, environment access, UI entrypoints, route composition, flat color usage, and Convex database access follow repository conventions.'
+    'Folder names, source filenames, imports, hook tests, environment access, UI entrypoints, route composition, flat color usage, stylesheet precedence, and Convex database access follow repository conventions.'
   );
   process.exit(0);
 }

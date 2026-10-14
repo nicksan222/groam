@@ -1,5 +1,5 @@
 import { screen } from '@testing-library/react';
-import { expect } from 'vitest';
+import { expect } from 'vite-plus/test';
 import { testIds } from '@/lib/test-ids';
 
 /** Shared assertions for route-stop photo markers in trip overview / itinerary tests. */

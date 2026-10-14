@@ -1,5 +1,5 @@
 import type { Id } from '@groam/backend/data-model';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vite-plus/test';
 import { DEFAULT_IDEA_STATUS_FILTER, filterWorkspaceIdeas } from './idea-list-filter';
 import type { WorkspaceIdea } from './use-workspace-ideas';
 

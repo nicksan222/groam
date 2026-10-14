@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vite-plus/test';
 
 const routeSources = import.meta.glob('../../routes/*.tsx', {
   eager: true,

@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
 import { setupTrip, tripLocationInput } from '#testing/trips';
 import { changedTripDetails, createTitledVersion, draftChangedVersion } from '#testing/versions';
@@ -31,19 +31,23 @@ test('returns change context for draft ideas with edits', { timeout: 10_000 }, a
   });
 });
 
-test('returns null context when the scheduled generation is stale', {
-  timeout: 10_000
-}, async () => {
-  const { owner, tripId } = await setupTrip();
-  const version = await draftChangedVersion(owner, tripId);
+test(
+  'returns null context when the scheduled generation is stale',
+  {
+    timeout: 10_000
+  },
+  async () => {
+    const { owner, tripId } = await setupTrip();
+    const version = await draftChangedVersion(owner, tripId);
 
-  await expect(
-    owner.client.query(internal.modules.travel.versions.agent.title.index.context, {
-      generation: 0,
-      proposalId: version.proposalId
-    })
-  ).resolves.toBeNull();
-});
+    await expect(
+      owner.client.query(internal.modules.travel.versions.agent.title.index.context, {
+        generation: 0,
+        proposalId: version.proposalId
+      })
+    ).resolves.toBeNull();
+  }
+);
 
 test('returns null context when the draft has no changes yet', { timeout: 10_000 }, async () => {
   const { owner, tripId } = await setupTrip();
@@ -109,33 +113,41 @@ test('stores issue title source when implementing an issue', { timeout: 10_000 }
   });
 });
 
-test('does not schedule title generation for user-titled drafts without edits', {
-  timeout: 10_000
-}, async () => {
-  const { owner, tripId } = await setupTrip();
-  const version = await createTitledVersion(owner, tripId, 'Add a coastal day trip');
+test(
+  'does not schedule title generation for user-titled drafts without edits',
+  {
+    timeout: 10_000
+  },
+  async () => {
+    const { owner, tripId } = await setupTrip();
+    const version = await createTitledVersion(owner, tripId, 'Add a coastal day trip');
 
-  await owner.client.run(async (ctx) => {
-    const proposal = await ctx.db.get('tripProposals', version.proposalId);
-    expect(proposal?.titleGeneration).toBeUndefined();
-  });
-});
+    await owner.client.run(async (ctx) => {
+      const proposal = await ctx.db.get('tripProposals', version.proposalId);
+      expect(proposal?.titleGeneration).toBeUndefined();
+    });
+  }
+);
 
-test('does not schedule title generation for user-titled drafts after edits', {
-  timeout: 10_000
-}, async () => {
-  const { owner, tripId } = await setupTrip();
-  const version = await createTitledVersion(owner, tripId, 'Add a coastal day trip');
-  await owner.client.mutation(api.routes.trips.update.run, {
-    input: changedTripDetails,
-    tripId: version.workingTripId
-  });
+test(
+  'does not schedule title generation for user-titled drafts after edits',
+  {
+    timeout: 10_000
+  },
+  async () => {
+    const { owner, tripId } = await setupTrip();
+    const version = await createTitledVersion(owner, tripId, 'Add a coastal day trip');
+    await owner.client.mutation(api.routes.trips.update.run, {
+      input: changedTripDetails,
+      tripId: version.workingTripId
+    });
 
-  await owner.client.run(async (ctx) => {
-    const proposal = await ctx.db.get('tripProposals', version.proposalId);
-    expect(proposal?.titleGeneration).toBeUndefined();
-  });
-});
+    await owner.client.run(async (ctx) => {
+      const proposal = await ctx.db.get('tripProposals', version.proposalId);
+      expect(proposal?.titleGeneration).toBeUndefined();
+    });
+  }
+);
 
 test('increments title generation on subsequent draft edits', { timeout: 10_000 }, async () => {
   const { owner, tripId } = await setupTrip();
@@ -194,27 +206,31 @@ test('stores a generated title when finish applies', { timeout: 10_000 }, async 
   });
 });
 
-test('scheduling title generation does not bump proposal updatedAt', {
-  timeout: 10_000
-}, async () => {
-  const { owner, tripId } = await setupTrip();
-  const version = await draftChangedVersion(owner, tripId);
-  const updatedAt = await owner.client.run(async (ctx) => {
-    const proposal = await ctx.db.get('tripProposals', version.proposalId);
-    return proposal?.updatedAt ?? 0;
-  });
+test(
+  'scheduling title generation does not bump proposal updatedAt',
+  {
+    timeout: 10_000
+  },
+  async () => {
+    const { owner, tripId } = await setupTrip();
+    const version = await draftChangedVersion(owner, tripId);
+    const updatedAt = await owner.client.run(async (ctx) => {
+      const proposal = await ctx.db.get('tripProposals', version.proposalId);
+      return proposal?.updatedAt ?? 0;
+    });
 
-  await owner.client.mutation(api.routes.trips.update.run, {
-    input: { ...changedTripDetails, dateNotes: 'November break' },
-    tripId: version.workingTripId
-  });
+    await owner.client.mutation(api.routes.trips.update.run, {
+      input: { ...changedTripDetails, dateNotes: 'November break' },
+      tripId: version.workingTripId
+    });
 
-  await owner.client.run(async (ctx) => {
-    const proposal = await ctx.db.get('tripProposals', version.proposalId);
-    expect(proposal?.titleGeneration).toBe(2);
-    expect(proposal?.updatedAt).toBe(updatedAt);
-  });
-});
+    await owner.client.run(async (ctx) => {
+      const proposal = await ctx.db.get('tripProposals', version.proposalId);
+      expect(proposal?.titleGeneration).toBe(2);
+      expect(proposal?.updatedAt).toBe(updatedAt);
+    });
+  }
+);
 
 test('schedules title generation after destination edits', { timeout: 10_000 }, async () => {
   const { owner, tripId } = await setupTrip();

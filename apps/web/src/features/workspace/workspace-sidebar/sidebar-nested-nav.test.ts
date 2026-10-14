@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { orderSidebarItems } from './sidebar-nested-nav';
 
 test('orderSidebarItems pins favourites above recency-sorted items', () => {

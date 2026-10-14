@@ -20,7 +20,7 @@ import { env } from '@groam/env/seeder';
 | `playwright`     | `PLAYWRIGHT_BASE_URL` (defaults to `VITE_CONVEX_SITE_URL` / Convex site `3211` for CI), `SEED_USER_EMAIL`, `SEED_USER_PASSWORD`. Local dev against Vite: `bun run test:e2e:local` (`http://localhost:5173`, must match `VITE_SITE_URL`). |
 | `seeder`         | `SEED_CONVEX_URL`, `SEED_SITE_URL`, `SEED_USER_EMAIL`, `SEED_USER_PASSWORD`, `VITE_CONVEX_URL`, `VITE_CONVEX_SITE_URL` |
 
-`process.env` and `import.meta.env` access is restricted by the root Biome
+`process.env` and `import.meta.env` access is restricted by the root lint
 configuration and permitted only inside this package and environment bootstrap
 scripts. Convex runtime variables remain declared with `defineApp({ env })` and
 read from its generated `env` object, as required by Convex.

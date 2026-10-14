@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { chatAgentCallSettings } from './call-settings';
 
 test('omits maxOutputTokens for OpenRouter so the request does not reserve a full completion budget', () => {

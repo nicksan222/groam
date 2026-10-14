@@ -1,11 +1,11 @@
 import { ConvexError } from 'convex/values';
+import type { Doc, Id } from '#convex-generated/dataModel';
+import type { MutationCtx } from '#convex-generated/server';
 import { Attachments } from '#convex/modules/media/attachments/index';
 import { DestinationCover } from '#convex/modules/travel/covers/destination/index';
 import { TripLocations } from '#convex/modules/travel/locations/index';
 import type { MutableTripCtx } from '#convex/modules/travel/trips/ctx';
 import { type TripVersionContent, VersionContent } from '#convex/modules/travel/versions/content';
-import type { Doc, Id } from '#convex-generated/dataModel';
-import type { MutationCtx } from '#convex-generated/server';
 
 type Target = Exclude<Doc<'attachmentReferences'>['target'], { type: 'comment' }>;
 

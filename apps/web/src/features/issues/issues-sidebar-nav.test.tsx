@@ -1,7 +1,7 @@
 import { SidebarProvider } from '@groam/ui/components/sidebar';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
 import { resetSidebarChromeStore, useSidebarChromeStore } from '@/lib/stores/sidebar-chrome-store';
 import { stubMatchMedia } from '@/testing/stub-match-media';
 import type { WorkspaceIssue } from './hooks/use-workspace-issues';

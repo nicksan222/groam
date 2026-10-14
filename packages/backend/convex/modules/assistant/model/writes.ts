@@ -1,4 +1,5 @@
 import { ConvexError, type Infer, v } from 'convex/values';
+import type { Doc, Id } from '#convex-generated/dataModel';
 import { ItineraryActivity } from '#convex/modules/travel/activities/index';
 import { TripActivityValidators } from '#convex/modules/travel/activities/schema';
 import { ensureTripCoversDay, TripDestination } from '#convex/modules/travel/destinations/index';
@@ -14,7 +15,6 @@ import {
 } from '#convex/modules/travel/trips/ctx';
 import { updateTrip } from '#convex/modules/travel/trips/index';
 import { normalizeCost } from '#convex/modules/travel/trips/normalize';
-import type { Doc, Id } from '#convex-generated/dataModel';
 
 function assertAgentCanWrite(ctx: MutableTripCtx): void {
   if (ctx.trip.proposal?.status !== 'draft') {

@@ -7,6 +7,8 @@ const generatedPath = /(?:^|\/)(?:_generated|\.astro)(?:\/|$)/u;
 const generatedFile = /(?:^|\/)routeTree\.gen\.ts$/u;
 const tanstackRoute = /^apps\/web\/src\/routes\//u;
 const hardcodedColor = /#[\da-f]{3,8}\b|(?:rgb|rgba|hsl|hsla|hwb|lab|lch|oklab|oklch|color)\(/giu;
+const importantStyle = /!\s*important\b/iu;
+const cssFile = /\.css$/u;
 const gradient = /(?:linear|radial|conic)-gradient\s*\(|\bbg-(?:gradient|linear|radial|conic)-/giu;
 const rawConvexAccess = /\b(?:ctx|this\.ctx)\s*\.\s*db\b/gu;
 const convexDbRoot = /^packages\/backend\/convex\/(?:modules|routes)\//u;
@@ -61,6 +63,7 @@ export type ConventionCategory =
   | 'halo-imports'
   | 'hardcoded-colors'
   | 'hook-tests'
+  | 'important-styles'
   | 'import-meta-env'
   | 'legacy-modules'
   | 'names'
@@ -248,6 +251,7 @@ function inspectStyle(filePath: string, source: string): ConventionFinding[] {
     );
 
   const isDesignTokenFile = designTokenFiles.has(filePath);
+  const isCss = cssFile.test(filePath);
 
   for (const [index, line] of withoutComments.split('\n').entries()) {
     hardcodedColor.lastIndex = 0;
@@ -258,6 +262,10 @@ function inspectStyle(filePath: string, source: string): ConventionFinding[] {
     gradient.lastIndex = 0;
     if (!isDesignTokenFile && gradient.test(line)) {
       findings.push({ category: 'gradients', location: `${filePath}:${index + 1}` });
+    }
+    // Stylesheets resolve precedence through layers and specificity, not `!important`.
+    if (isCss && importantStyle.test(line)) {
+      findings.push({ category: 'important-styles', location: `${filePath}:${index + 1}` });
     }
   }
 
@@ -330,8 +338,8 @@ function isInvalidUiInternalImport(
 ): boolean {
   return Boolean(
     filePath.startsWith('packages/ui/') &&
-      specifier.startsWith(uiInternalSrcPrefix) &&
-      options?.uiSrcImportTargetsTsx?.(specifier.slice(uiInternalSrcPrefix.length))
+    specifier.startsWith(uiInternalSrcPrefix) &&
+    options?.uiSrcImportTargetsTsx?.(specifier.slice(uiInternalSrcPrefix.length))
   );
 }
 

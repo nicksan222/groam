@@ -98,7 +98,7 @@ export function CreateIssueDialog({
     });
   };
 
-  if (!tripsLoading && needsTrip && trips !== undefined && trips.length === 0)
+  if (!tripsLoading && needsTrip && trips?.length === 0)
     return <TripRequiredDialog open={open} onClose={close} purpose="issue" />;
 
   return (

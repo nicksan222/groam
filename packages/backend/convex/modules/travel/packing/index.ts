@@ -1,7 +1,7 @@
 import { ConvexError } from 'convex/values';
-import { assertMutable, patchTrip, type TripCtx } from '#convex/modules/travel/trips/ctx';
 import type { Id } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
+import { assertMutable, patchTrip, type TripCtx } from '#convex/modules/travel/trips/ctx';
 import { MAX_PACKING_ITEMS, MAX_PACKING_LABEL_LENGTH } from './schema';
 
 async function packingRows(ctx: MutationCtx | QueryCtx, tripId: Id<'trips'>) {

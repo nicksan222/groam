@@ -1,5 +1,5 @@
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vite-plus/test';
 import { DataSettings } from './data-settings';
 
 vi.mock('@/features/settings/hooks/use-desktop-data', () => ({

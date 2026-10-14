@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { CreateTripDialog } from '@/features/trips/trip-create/create-trip-dialog';
 
 vi.mock('@/features/workspace/workspace-shell/workspace-state', () => ({

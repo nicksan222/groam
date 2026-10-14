@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import type { DiscussionMessage } from './use-discussion-thread';
 import { useDiscussionThread } from './use-discussion-thread';
 

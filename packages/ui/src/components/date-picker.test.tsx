@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { stubPopoverEnvironment } from '#src/lib/stub-popover-environment';
 import { DatePicker } from './date-picker';
 

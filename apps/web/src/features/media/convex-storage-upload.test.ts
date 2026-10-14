@@ -1,5 +1,5 @@
 import { env } from '@groam/env/web-client';
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { storageIdFromUploadResponse, uploadToConvexStorage } from './convex-storage-upload';
 
 vi.mock('@groam/env/web-client', () => ({

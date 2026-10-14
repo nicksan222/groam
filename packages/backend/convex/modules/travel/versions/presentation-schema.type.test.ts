@@ -1,5 +1,5 @@
 import { v } from 'convex/values';
-import { expectTypeOf, test } from 'vitest';
+import { expectTypeOf, test } from 'vite-plus/test';
 import { VersionDiff, VersionedModel } from './fields/index';
 
 test('versioned models infer snapshot validators and presentation metadata together', () => {

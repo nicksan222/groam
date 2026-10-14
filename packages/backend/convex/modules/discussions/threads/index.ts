@@ -11,6 +11,9 @@ import { assistantAgents, type ChatAgentId, mentionedAssistantAgent } from '@gro
 import { assistantThreadSummary } from '@groam/ai/runtime/thread-summary';
 import type { PaginationOptions } from 'convex/server';
 import { ConvexError, type Infer } from 'convex/values';
+import { components } from '#convex-generated/api';
+import type { Id } from '#convex-generated/dataModel';
+import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import { AgentRuns } from '#convex/modules/assistant/runs/index';
 import { requireWorkspace, type Workspace, workspaceRoster } from '#convex/modules/auth/workspace';
 import {
@@ -28,9 +31,6 @@ import {
 } from '#convex/modules/discussions/threads/limits';
 import type { DiscussionMember } from '#convex/modules/discussions/threads/schema';
 import { insertWithShortId } from '#convex/modules/references/index';
-import { components } from '#convex-generated/api';
-import type { Id } from '#convex-generated/dataModel';
-import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 
 export type { DiscussionMessageMedia } from '#convex/modules/discussions/media/index';
 export type { DiscussionAccess } from '#convex/modules/discussions/threads/entity';
@@ -90,7 +90,7 @@ function displayUserMessageText(
  * Shared group chats. Routes and other modules call this class, not entity helpers.
  * `DiscussionAccess` is the membership gate; `Messages` / `DiscussionMedia` own text and files.
  */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class Discussions {
   static async require(
     ctx: MutationCtx | QueryCtx,

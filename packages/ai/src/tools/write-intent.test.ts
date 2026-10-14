@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { type AgentToolSpec, assistantToolSpecs } from './specs';
 import { requestsWriteIntent } from './write-intent';
 

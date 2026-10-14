@@ -1,7 +1,7 @@
 import { v } from 'convex/values';
+import { internalMutation } from '#convex-generated/server';
 import { chatAgentValidator } from '#convex/modules/assistant/validators/index';
 import { Discussions } from '#convex/modules/discussions/threads/index';
-import { internalMutation } from '#convex-generated/server';
 
 export const claimResponse = internalMutation({
   args: {

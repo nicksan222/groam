@@ -6,7 +6,7 @@ default:
 
 # Install the pinned workspace exactly as CI does.
 install:
-    HUSKY=0 bun install --frozen-lockfile
+    VP_GIT_HOOKS=0 bun install --frozen-lockfile
 
 # Start Convex, Vite, and the dashboard locally.
 dev:

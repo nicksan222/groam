@@ -6,8 +6,7 @@ import type { TripDetail } from '@/features/trips/hooks/use-trips';
 
 export function useEnsureTripCover(tripId: Id<'trips'>, trip: TripDetail | undefined) {
   const ensure = useMutation(api.routes.trips.covers.ensure.run);
-  const needsEnsure =
-    trip !== undefined && trip.coverStatus === null && trip.destinations.length > 0;
+  const needsEnsure = trip?.coverStatus === null && trip.destinations.length > 0;
 
   useEffect(() => {
     if (!needsEnsure) return;

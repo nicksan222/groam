@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import type { WorkspaceIdea } from '@/features/ideas/hooks/use-workspace-ideas';
 import { IdeaListView } from './idea-list-view';
 

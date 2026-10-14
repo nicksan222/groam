@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useStore } from 'zustand';
 import { createStore } from 'zustand/vanilla';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type ListFilterStore<TStatus extends string> = {
   clearStatusFilter: () => void;
   query: string;

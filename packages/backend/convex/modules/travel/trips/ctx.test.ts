@@ -1,6 +1,6 @@
-import { describe, expect, test } from 'vitest';
-import { nextActionFor } from '#convex/modules/travel/trips/ctx';
+import { describe, expect, test } from 'vite-plus/test';
 import type { Doc, Id } from '#convex-generated/dataModel';
+import { nextActionFor } from '#convex/modules/travel/trips/ctx';
 import { setupGroup, setupTrip } from '#testing/trips';
 
 function tripDoc(overrides: Partial<Doc<'trips'>> = {}): Doc<'trips'> {

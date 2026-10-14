@@ -9,7 +9,6 @@ lerna-debug.log*
 
 node_modules
 .astro
-.turbo
 dist
 dist-ssr
 playwright-report

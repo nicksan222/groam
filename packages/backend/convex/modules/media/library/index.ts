@@ -1,4 +1,6 @@
 import { ConvexError } from 'convex/values';
+import type { Doc, Id } from '#convex-generated/dataModel';
+import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import {
   assertOrganizationManager,
   requireWorkspace,
@@ -13,8 +15,6 @@ import type {
   ListedMedia,
   SaveMediaResult
 } from '#convex/modules/media/library/validators';
-import type { Doc, Id } from '#convex-generated/dataModel';
-import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 
 const MAX_NAME_LENGTH = 120;
 const MEDIA_LIST_MIN = 1;

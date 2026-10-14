@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { setupGroup, setupTrip } from '#testing/trips';
 
 test('find returns null for foreign trips instead of throwing', { timeout: 15_000 }, async () => {

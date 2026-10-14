@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { groupThreadReactions } from './thread-message-stamps';
 
 test('groups reactions in stamp order and marks the viewer', () => {

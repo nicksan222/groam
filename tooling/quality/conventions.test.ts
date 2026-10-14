@@ -104,6 +104,16 @@ describe('inspectFile', () => {
     ]);
   });
 
+  test('rejects !important in stylesheets', () => {
+    expect(
+      inspectFile('packages/ui/src/styles/globals.css', '  color: var(--primary) !important;')
+    ).toEqual([{ category: 'important-styles', location: 'packages/ui/src/styles/globals.css:1' }]);
+    expect(inspectFile('packages/ui/src/styles/globals.css', '  /* never !important */')).toEqual(
+      []
+    );
+    expect(inspectFile('apps/web/src/app.tsx', 'const className = "!p-0";')).toEqual([]);
+  });
+
   test('rejects hardcoded colors and gradients outside design tokens', () => {
     expect(inspectFile('apps/web/src/app.tsx', `const color = "${hexWhite}";`)).toEqual([
       { category: 'hardcoded-colors', location: 'apps/web/src/app.tsx:1' }

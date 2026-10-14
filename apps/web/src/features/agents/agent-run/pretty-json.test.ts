@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { prettyJson } from './pretty-json';
 
 test('indents compact JSON objects', () => {

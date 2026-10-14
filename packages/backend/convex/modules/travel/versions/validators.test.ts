@@ -1,5 +1,5 @@
 import { ConvexError } from 'convex/values';
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { GitCommits } from './validators';
 
 test('assertGitCommitOid accepts lowercase 40-character object ids', () => {

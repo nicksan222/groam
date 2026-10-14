@@ -132,16 +132,9 @@ export {
   type ShowGroamAssistantCapabilitiesInput,
   showGroamAssistantCapabilities
 } from './show-groam-assistant-capabilities';
-export {
-  type SharedItineraryExpectation,
-  showSharedItinerary
-} from './show-shared-itinerary';
+export { type SharedItineraryExpectation, showSharedItinerary } from './show-shared-itinerary';
 export { signIn } from './sign-in';
-export {
-  type SignInCredentials,
-  type SignInOptions,
-  signInAs
-} from './sign-in-as';
+export { type SignInCredentials, type SignInOptions, signInAs } from './sign-in-as';
 export { signOut } from './sign-out';
 export { signUp } from './sign-up';
 export { startIdeaFromIssue } from './start-idea-from-issue';

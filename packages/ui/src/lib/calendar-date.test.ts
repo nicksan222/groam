@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { dateFromString, stringFromDate } from './calendar-date';
 
 test('parses a YYYY-MM-DD calendar date as local midnight', () => {

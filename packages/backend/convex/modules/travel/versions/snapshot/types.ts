@@ -1,5 +1,5 @@
-import type { VersionSnapshotInput } from '#convex/modules/travel/versions/validators';
 import type { Doc, Id } from '#convex-generated/dataModel';
+import type { VersionSnapshotInput } from '#convex/modules/travel/versions/validators';
 
 export type VersionSnapshot = VersionSnapshotInput;
 export type VersionSnapshotFile = VersionSnapshot['files'][number];

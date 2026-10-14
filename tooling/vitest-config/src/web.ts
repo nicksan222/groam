@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from 'vite-plus';
 import { resolveRepoRoot } from './repo-root.ts';
 
 export function createWebVitestConfig(appRoot: string, options: { projectRoot?: string } = {}) {

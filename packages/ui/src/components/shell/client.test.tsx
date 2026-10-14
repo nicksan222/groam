@@ -1,6 +1,6 @@
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import { Route } from 'lucide-react';
-import { afterEach, expect, test } from 'vitest';
+import { afterEach, expect, test } from 'vite-plus/test';
 import {
   SHELL_CONTENT_PADDING,
   SHELL_HEADER_PADDING,

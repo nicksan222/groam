@@ -1,7 +1,7 @@
-import { TripCover } from '#convex/modules/travel/covers/index';
 import { internal } from '#convex-generated/api';
 import type { Doc, Id } from '#convex-generated/dataModel';
 import type { MutationCtx } from '#convex-generated/server';
+import { TripCover } from '#convex/modules/travel/covers/index';
 
 const MAX_DESTINATIONS_PER_TRIP = 20;
 
@@ -22,7 +22,7 @@ function coverStorageId(cover: Doc<'tripDestinations'>['cover']): Id<'_storage'>
 }
 
 /** Queues Wikipedia/Wikimedia stock photos for itinerary stops using the trip-cover pipeline. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class DestinationCover {
   static initial() {
     return pendingCover(1).cover;

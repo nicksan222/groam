@@ -2,10 +2,10 @@ import {
   hasDeploymentAiCredentials,
   resolveAssistantEnvironment
 } from '@groam/ai/backend/providers/keys';
-import { expect, test } from 'vitest';
-import { readAiSettings } from '#convex/modules/ai/settings';
+import { expect, test } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
 import { env } from '#convex-generated/server';
+import { readAiSettings } from '#convex/modules/ai/settings';
 import { createOutsiderClient } from '#testing/factory';
 import { setupGroup } from '#testing/trips';
 

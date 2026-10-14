@@ -1,19 +1,19 @@
 import { ConvexError, v } from 'convex/values';
+import { internal } from '#convex-generated/api';
+import type { Id } from '#convex-generated/dataModel';
+import { type ActionCtx, internalMutation } from '#convex-generated/server';
 import { Files } from '#convex/modules/media/files/index';
 import { Media } from '#convex/modules/media/library/index';
 import {
   type SaveMediaResult,
   saveMediaResultValidator
 } from '#convex/modules/media/library/validators';
-import { internal } from '#convex-generated/api';
-import type { Id } from '#convex-generated/dataModel';
-import { type ActionCtx, internalMutation } from '#convex-generated/server';
 
 /**
  * Action-side upload finish. Reads magic bytes in the action, then inserts the
  * library row in `save` (mutations cannot stream storage the same way).
  */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class MediaCommit {
   static async saveFromUpload(
     ctx: ActionCtx,

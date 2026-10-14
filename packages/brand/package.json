@@ -9,7 +9,8 @@
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "typescript": "~7.0.2",
-    "vitest": "^5.0.2"
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
   },
   "exports": {
     "./assets": "./src/assets.ts",
@@ -28,8 +29,8 @@
   "private": true,
   "scripts": {
     "generate": "bun src/generate-assets.ts",
-    "lint": "biome check .",
-    "test": "vitest run",
+    "lint": "vp check .",
+    "test": "vp test run",
     "typecheck": "tsc --noEmit"
   },
   "type": "module"

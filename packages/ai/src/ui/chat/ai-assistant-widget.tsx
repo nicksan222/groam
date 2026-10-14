@@ -120,6 +120,7 @@ function ContextualAssistantWidget({
     if (!context || assistant.threadId || openAttempted.current) return;
     openAttempted.current = true;
     void assistant.open();
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- depends on the members it reads, not the whole assistant object
   }, [assistant.open, assistant.threadId, context, isOpen]);
 
   useEffect(() => {

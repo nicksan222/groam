@@ -1,6 +1,9 @@
 import { assistantAgents } from '@groam/ai/agents';
 import type { PaginationOptions } from 'convex/server';
 import { ConvexError } from 'convex/values';
+import { internal } from '#convex-generated/api';
+import type { Doc, Id } from '#convex-generated/dataModel';
+import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import { AgentRuns } from '#convex/modules/assistant/runs/index';
 import { requireWorkspace, workspaceRoster } from '#convex/modules/auth/workspace';
 import { Notifications } from '#convex/modules/notifications/index';
@@ -14,9 +17,6 @@ import {
   recordActivity,
   type TripCtx
 } from '#convex/modules/travel/trips/ctx';
-import { internal } from '#convex-generated/api';
-import type { Doc, Id } from '#convex-generated/dataModel';
-import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import { VersionApply } from './apply';
 import { cloneTripContent } from './clone';
 import { type DetailRebase, withResolvedDetails } from './detailrebase';
@@ -1691,7 +1691,7 @@ async function finishGeneratedTitle(
 }
 
 /** Ideas / proposals: create, review, merge, and conflict resolution. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class TripVersions {
   static addFeedback = addFeedback;
   static cancelOperation = cancelOperation;

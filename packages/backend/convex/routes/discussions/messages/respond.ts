@@ -1,7 +1,7 @@
 import { v } from 'convex/values';
+import { action } from '#convex-generated/server';
 import { assistantScreenValidator } from '#convex/modules/assistant/agent/index';
 import { DiscussionAssistant } from '#convex/modules/discussions/assistant/respond';
-import { action } from '#convex-generated/server';
 
 /**
  * Run the assistant reply for a claimed prompt message. Auth + AI rate limit enforced;

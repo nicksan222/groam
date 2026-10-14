@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vite-plus/test';
 import { parseAssistantContextTag, parseAssistantContextTags } from './context-tag';
 
 const tag = { id: 'trip-1', kind: 'trip', label: 'Portugal', tripId: 'trip-1' };

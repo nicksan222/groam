@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { VersionSnapshotFormat } from './format';
 import { MAX_VERSION_FILES } from './types';
 

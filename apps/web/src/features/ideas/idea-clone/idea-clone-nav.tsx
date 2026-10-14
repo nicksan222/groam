@@ -4,7 +4,7 @@ import { tripSectionLabels } from '@/features/trips/trip-sections';
 import { testIds } from '@/lib/test-ids';
 import type { IdeaCloneView } from './idea-sections';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type IdeaCloneNavLoadedProps = {
   viewOnly?: boolean;
   changeCount: number;
@@ -14,13 +14,13 @@ export type IdeaCloneNavLoadedProps = {
   view: IdeaCloneView;
 };
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type IdeaCloneNavLoadingProps = {
   isLoading: true;
   view?: IdeaCloneView;
 };
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type IdeaCloneNavProps = IdeaCloneNavLoadedProps | IdeaCloneNavLoadingProps;
 
 export function IdeaCloneNav(props: IdeaCloneNavProps) {

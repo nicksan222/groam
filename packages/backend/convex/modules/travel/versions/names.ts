@@ -18,7 +18,7 @@ function seedNumber(seed: string): number {
 }
 
 /** Branch names and titles for trip ideas. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class IdeaNames {
   static custom(value: string): string {
     const name = value

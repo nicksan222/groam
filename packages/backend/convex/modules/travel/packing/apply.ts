@@ -1,7 +1,7 @@
 import { ConvexError } from 'convex/values';
+import type { Doc, Id } from '#convex-generated/dataModel';
 import type { MutableTripCtx } from '#convex/modules/travel/trips/ctx';
 import type { ParsedVersionSnapshot } from '#convex/modules/travel/versions/snapshot/types';
-import type { Doc, Id } from '#convex-generated/dataModel';
 
 /** Reconciles the packing files produced by the standard idea merge or rebase. */
 export async function applyPackingSnapshot(

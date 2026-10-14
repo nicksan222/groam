@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vite-plus/test';
 import { SIDEBAR_NESTED_PAGE_SIZE } from '@/features/workspace/workspace-sidebar/sidebar-nested-nav';
 import { resetSidebarChromeStore } from '@/lib/stores/sidebar-chrome-store';
 import { useSidebarNestedVisible } from './use-sidebar-nested-visible';

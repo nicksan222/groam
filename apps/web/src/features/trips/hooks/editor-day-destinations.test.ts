@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { plannerDestination, plannerFixture } from '@/testing/trip-planner-fixture';
 import {
   activityDaysForDestination,

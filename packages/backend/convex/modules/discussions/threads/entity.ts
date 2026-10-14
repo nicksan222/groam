@@ -1,9 +1,9 @@
 import type { PaginationOptions } from 'convex/server';
 import { ConvexError } from 'convex/values';
-import { requireWorkspace, type Workspace } from '#convex/modules/auth/workspace';
-import { MAX_MESSAGES_PAGE_SIZE } from '#convex/modules/discussions/threads/limits';
 import type { Doc, Id } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
+import { requireWorkspace, type Workspace } from '#convex/modules/auth/workspace';
+import { MAX_MESSAGES_PAGE_SIZE } from '#convex/modules/discussions/threads/limits';
 
 export type DiscussionCtx = MutationCtx | QueryCtx;
 

@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { Route } from 'lucide-react';
-import { afterEach, expect, test } from 'vitest';
+import { afterEach, expect, test } from 'vite-plus/test';
 import { SectionHeader, TripSectionHeader } from './section-header';
 
 afterEach(cleanup);

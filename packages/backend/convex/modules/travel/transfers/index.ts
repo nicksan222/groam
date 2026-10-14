@@ -1,4 +1,6 @@
 import { ConvexError, type Infer } from 'convex/values';
+import type { Doc, Id } from '#convex-generated/dataModel';
+import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import { Attachments } from '#convex/modules/media/attachments/index';
 import type { TripTransferValidators } from '#convex/modules/travel/transfers/schema';
 import { costsMatch, type TripCostSplit } from '#convex/modules/travel/trips/costs';
@@ -13,8 +15,6 @@ import {
 } from '#convex/modules/travel/trips/ctx';
 import { LocalDateTime } from '#convex/modules/travel/trips/datetime';
 import { normalizeCostRecord } from '#convex/modules/travel/trips/normalize';
-import type { Doc, Id } from '#convex-generated/dataModel';
-import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 
 const MAX_ACTIVITY_TRANSFERS = 199;
 const MAX_ATTACHMENTS = 5;
@@ -182,9 +182,7 @@ async function setDestination({
     )
     .unique();
   const detailsMatch =
-    existing !== null &&
-    existing.toDestinationId === toDestinationId &&
-    transferDetailsMatch(existing, normalized);
+    existing?.toDestinationId === toDestinationId && transferDetailsMatch(existing, normalized);
   if (existing && detailsMatch) {
     const attachmentsChanged = await Attachments.setTarget(ctx, {
       label: 'Transfers',
@@ -310,9 +308,7 @@ async function setActivity({
     )
     .unique();
   const detailsMatch =
-    existing !== null &&
-    existing.toActivityId === toActivityId &&
-    transferDetailsMatch(existing, normalized);
+    existing?.toActivityId === toActivityId && transferDetailsMatch(existing, normalized);
   if (existing && detailsMatch) {
     const attachmentsChanged = await Attachments.setTarget(ctx, {
       label: 'Transfers',
@@ -886,7 +882,7 @@ async function deleteActivityRows(ctx: MutationCtx, rows: Doc<'tripActivityTrans
 }
 
 /** Arrival, destination, and activity transfers for a trip. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class TripTransfer {
   static MAX_ACTIVITY_TRANSFERS = MAX_ACTIVITY_TRANSFERS;
   static MAX_ATTACHMENTS = MAX_ATTACHMENTS;

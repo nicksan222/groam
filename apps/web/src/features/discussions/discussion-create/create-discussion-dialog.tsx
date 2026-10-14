@@ -27,7 +27,7 @@ import { displayInitials } from '@/lib/display-initials';
 import { errorMessage } from '@/lib/errors';
 import { testIds } from '@/lib/test-ids';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type CreateDiscussionDialogProps = {
   onClose: () => void;
   onCreated: (discussionId: Id<'discussions'>) => void;

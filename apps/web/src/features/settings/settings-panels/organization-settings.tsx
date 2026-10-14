@@ -33,7 +33,7 @@ import {
 import type { ActiveOrganization } from '@/features/workspace/workspace-shell/workspace-state';
 import { testIds } from '@/lib/test-ids';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type SettingsController = ReturnType<typeof useOrganizationSettings>;
 
 export function OrganizationSettings({

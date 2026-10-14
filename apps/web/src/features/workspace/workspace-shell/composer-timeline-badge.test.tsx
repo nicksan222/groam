@@ -1,7 +1,7 @@
 import Timeline from '@groam/ui/components/timeline';
 import { cleanup, render } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { afterEach, expect, test } from 'vitest';
+import { afterEach, expect, test } from 'vite-plus/test';
 import { ComposerTimelineBadge } from './composer-timeline-badge';
 import { WorkspaceContext, type WorkspaceContextValue } from './workspace-state';
 

@@ -10,7 +10,7 @@ function rethrowAsIdeaError(error: unknown): never {
 }
 
 /** Product-facing errors for idea Git history. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class IdeaErrors {
   static rethrow = rethrowAsIdeaError;
 }

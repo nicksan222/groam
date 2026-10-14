@@ -2,7 +2,7 @@ import type { Id } from '@groam/backend/data-model';
 import { create } from 'zustand';
 import type { CreateTripIdeaIntent } from '@/features/trips/hooks/use-create-trip-idea-dialog';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type StartIdeaDialogStore = {
   dialogOpen: boolean;
   isCreating: boolean;
@@ -23,7 +23,7 @@ export const useStartIdeaDialogStore = create<StartIdeaDialogStore>((set) => ({
   setSelectedTripId: (selectedTripId) => set({ selectedTripId })
 }));
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type CreateTripIdeaDialogStore = {
   dialogOpen: boolean;
   intent: CreateTripIdeaIntent;
@@ -54,7 +54,7 @@ export const useCreateTripIdeaDialogStore = create<CreateTripIdeaDialogStore>((s
   setDialogOpen: (dialogOpen) => set({ dialogOpen })
 }));
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type TripSidebarActionsStore = {
   pendingTripId: Id<'trips'> | null;
   setPendingTripId: (pendingTripId: Id<'trips'> | null) => void;

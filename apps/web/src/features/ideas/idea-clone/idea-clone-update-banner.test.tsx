@@ -1,5 +1,5 @@
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vite-plus/test';
 import { needsSharedTripUpdate } from '@/features/ideas/hooks/idea-needs-update';
 import type { ProposalDetail } from '@/types/trips';
 import { IdeaCloneUpdateBanner } from './idea-clone-update-banner';

@@ -10,12 +10,16 @@
   },
   "license": "MIT",
   "peerDependencies": {
-    "vitest": "^5.0.0"
+    "vite-plus": "^1.2.0"
   },
   "private": true,
   "scripts": {
     "test": "bun test src",
     "typecheck": "tsc --noEmit"
   },
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  }
 }

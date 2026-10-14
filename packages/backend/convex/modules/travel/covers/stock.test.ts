@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { StockCover, type StockCoverCandidate, type WikipediaLeadImage } from './stock';
 
 test('takes the lead image from Wikipedia’s most relevant place article', () => {

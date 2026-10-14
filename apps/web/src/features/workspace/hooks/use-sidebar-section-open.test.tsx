@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vite-plus/test';
 import { resetSidebarChromeStore } from '@/lib/stores/sidebar-chrome-store';
 import { useSidebarSectionOpen } from './use-sidebar-section-open';
 

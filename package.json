@@ -7,23 +7,17 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.14",
     "@convex-dev/static-hosting": "0.2.1",
     "@types/node": "^26.6.3",
     "fallow": "3.30.0",
-    "husky": "^9.1.7",
     "jiti": "^2.7.0",
-    "lint-staged": "^17.6.0",
     "react-doctor": "0.9.14",
     "syncpack": "^15.3.3",
-    "turbo": "^2.11.5",
     "typescript": "~7.0.2",
-    "vite": "^8.3.1"
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
   },
   "license": "MIT",
-  "lint-staged": {
-    "*": "biome check --write --unsafe --no-errors-on-unmatched"
-  },
   "overrides": {
     "brace-expansion": "^5.0.12",
     "fast-uri": "^3.1.8",
@@ -33,7 +27,9 @@
     "postcss-selector-parser": "^7.1.6",
     "source-map-js": "^1.2.2",
     "undici": "^7.29.1",
-    "zod": "^4.6.5"
+    "zod": "^4.6.5",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "packageManager": "bun@1.3.11",
   "private": true,
@@ -41,7 +37,7 @@
     "audit": "bun audit",
     "auth:schema": "bun run --cwd packages/backend auth:schema",
     "brand:generate": "bun run --cwd packages/brand generate",
-    "build": "turbo run build",
+    "build": "vp run --fail-if-no-match --filter \"@groam/*\" build",
     "build:web": "STATIC_HOSTING_BASE_PATH=/ VITE_GROAM_SHELL=web bun run --cwd apps/web build",
     "build:web:desktop": "STATIC_HOSTING_BASE_PATH=/ VITE_GROAM_SHELL=desktop VITE_CONVEX_URL=http://127.0.0.1:3210 VITE_SITE_URL=http://127.0.0.1:3211/ bun run --cwd apps/web build",
     "check": "bun run audit && bun run typecheck && bun run lint && bun run test && bun run react-doctor && bun run fallow",
@@ -53,18 +49,18 @@
     "convex:deploy": "convex deploy --typecheck-components",
     "convex:dev": "convex dev --typecheck-components",
     "deploy": "bun run convex:deploy && bun run migrations:run:prod && bun run hosting:upload:web:prod",
-    "dev": "turbo run dev --ui=tui --filter=!@groam/desktop",
+    "dev": "vp run --fail-if-no-match --filter \"@groam/*\" --filter \"!@groam/desktop\" --parallel --log labeled dev",
     "dev:desktop": "bun run --cwd apps/desktop dev",
     "dev:web": "bun run --cwd apps/web dev",
     "fallow": "bunx fallow -c tooling/fallow.config.jsonc --fail-on-issues && bunx fallow -c tooling/fallow.config.jsonc health --css",
     "fallow:changed": "bunx fallow audit -c tooling/fallow.config.jsonc --changed-since HEAD --gate all && bunx fallow security -c tooling/fallow.config.jsonc --changed-since HEAD --gate new",
     "fallow:strict": "bunx fallow -c tooling/fallow.config.jsonc --fail-on-issues --type-aware-require complete && bunx fallow -c tooling/fallow.config.jsonc health --css --type-aware-require complete",
-    "format": "syncpack format --config tooling/syncpack.config.json && biome check --write --unsafe .",
-    "format:check": "syncpack format --check --config tooling/syncpack.config.json && biome format .",
+    "format": "syncpack format --config tooling/syncpack.config.json && vp check --fix",
+    "format:check": "syncpack format --check --config tooling/syncpack.config.json && vp fmt --check",
     "hosting:upload:web": "static-hosting upload --component web --dist apps/web/dist --build-command 'bun run build:web'",
     "hosting:upload:web:desktop": "static-hosting upload --component web --dist apps/web/dist --build-command 'bun run build:web:desktop'",
     "hosting:upload:web:prod": "static-hosting upload --prod --component web --dist apps/web/dist --build-command 'bun run build:web'",
-    "lint": "bun run lint:conventions && bun run lint:packages && biome check .",
+    "lint": "bun run lint:conventions && bun run lint:packages && vp check",
     "lint:conventions": "bun tooling/quality/check-conventions.ts",
     "lint:packages": "syncpack lint --config tooling/syncpack.config.json",
     "migrations:run": "convex run migrations:runAll '{}'",
@@ -72,8 +68,8 @@
     "migrations:status": "convex run --component migrations lib:getStatus",
     "preconvex:dev": "bun tooling/devkit/prepare-convex.ts",
     "predev": "bun tooling/devkit/prepare-convex.ts",
-    "prepare": "husky tooling/husky",
-    "preview": "turbo run preview --parallel",
+    "prepare": "vp config --hooks-dir tooling/hooks --no-agent",
+    "preview": "vp run --fail-if-no-match --filter \"@groam/*\" --parallel preview",
     "react-doctor": "react-doctor -y --blocking warning --no-dead-code --no-score .",
     "react-doctor:changed": "react-doctor -y --blocking warning --scope changed --base origin/main --no-dead-code --no-score .",
     "react-doctor:staged": "react-doctor --blocking warning --staged --no-dead-code --no-score .",
@@ -86,12 +82,12 @@
     "showcase:render": "bun run --cwd tooling/showcase render",
     "showcase:setup": "bun run --cwd tooling/showcase setup",
     "showcase:studio": "bun run --cwd tooling/showcase studio",
-    "test": "bun test --path-ignore-patterns apps/desktop/src-tauri tooling/quality && turbo run test --concurrency=2",
+    "test": "bun test --path-ignore-patterns apps/desktop/src-tauri tooling/quality && vp run --fail-if-no-match --filter \"@groam/*\" --cache --concurrency-limit 2 test",
     "test:e2e": "bun run --cwd apps/web e2e",
     "test:e2e:install": "bun run --cwd apps/web e2e:install",
     "test:e2e:local": "bun run --cwd apps/web e2e:local",
     "test:e2e:local:headed": "bun run --cwd apps/web e2e:local:headed",
-    "typecheck": "turbo run typecheck && tsc --noEmit -p tooling/tsconfig.json"
+    "typecheck": "vp run --fail-if-no-match --filter \"@groam/*\" --cache typecheck && tsc --noEmit -p tooling/tsconfig.json"
   },
   "trustedDependencies": [
     "fallow"
@@ -106,5 +102,11 @@
     "tooling/showcase",
     "tooling/typescript-config",
     "tooling/vitest-config"
-  ]
+  ],
+  "catalog": {
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.2.0",
+    "vitest": "5.0.4",
+    "vite-plus": "1.2.0",
+    "@vitest/coverage-istanbul": "5.0.4"
+  }
 }

@@ -26,7 +26,7 @@ function durationPlannerStartVersion({
   return onStartVersion ?? (canPropose ? onEditDetails : undefined);
 }
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type TripOverviewLoadedProps = {
   hidePageCover?: boolean;
   isLoading?: false;
@@ -41,12 +41,12 @@ export type TripOverviewLoadedProps = {
   tripState?: TripState;
 };
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type TripOverviewLoadingProps = {
   isLoading: true;
 };
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type TripOverviewProps = TripOverviewLoadedProps | TripOverviewLoadingProps;
 
 export function TripOverview(props: TripOverviewProps) {

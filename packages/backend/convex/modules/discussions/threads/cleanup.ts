@@ -1,7 +1,7 @@
 import { v } from 'convex/values';
-import { Discussions } from '#convex/modules/discussions/threads/index';
 import { internal } from '#convex-generated/api';
 import { internalMutation } from '#convex-generated/server';
+import { Discussions } from '#convex/modules/discussions/threads/index';
 
 const DELETE_BATCH_SIZE = 50;
 

@@ -20,7 +20,7 @@ import {
 } from './trip-transfer-form-state';
 import type { TransportMode, TripTransferInput } from './use-trips';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type TransferFormStore = TransferFormState & {
   apply: (action: TransferFormAction) => void;
 };

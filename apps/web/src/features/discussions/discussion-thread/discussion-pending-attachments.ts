@@ -1,7 +1,7 @@
 import { mediaValidationError } from '@/features/media/media-validation';
 import { MAX_MEDIA_PER_MESSAGE } from './discussion-message-body';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type PendingAttachment = {
   file: File;
   id: string;

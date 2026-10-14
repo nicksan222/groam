@@ -10,7 +10,7 @@ import { AgentRunLog } from './agent-run-log';
 import { AgentRunOutcome } from './agent-run-outcome';
 import { AgentRunReport } from './agent-run-report';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type AgentRunDetailLoadedProps = {
   events: AgentRunEvent[] | undefined;
   eventsStatus: 'CanLoadMore' | 'Done' | 'Exhausted' | 'LoadingFirstPage' | 'LoadingMore';
@@ -19,7 +19,7 @@ export type AgentRunDetailLoadedProps = {
   run: AgentRun;
 };
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type AgentRunDetailLoadingProps = {
   events?: undefined;
   eventsStatus?: undefined;
@@ -28,7 +28,7 @@ export type AgentRunDetailLoadingProps = {
   run?: undefined;
 };
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type AgentRunDetailProps = AgentRunDetailLoadedProps | AgentRunDetailLoadingProps;
 
 function LoadEarlierButton({ props }: { props: AgentRunDetailLoadedProps }) {

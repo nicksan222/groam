@@ -1,8 +1,8 @@
 import { ConvexError } from 'convex/values';
 import * as z from 'zod/v3';
-import type { TripAssistantContext } from '#convex/modules/assistant/model/index';
 import { internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
+import type { TripAssistantContext } from '#convex/modules/assistant/model/index';
 
 export { TRIP_TIME_BLOCKS as TIME_BLOCKS } from '#convex/modules/travel/activities/timeblocks';
 export { TRIP_COST_KINDS } from '#convex/modules/travel/targets/costkinds';

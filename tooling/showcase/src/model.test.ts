@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { assertLocalUrl } from '#src/capture/session';
 import { createEdit } from '#src/edit';
 import { projectSchema } from '#src/model';

@@ -1,6 +1,6 @@
 import type { Id } from '@groam/backend/data-model';
 import { act, renderHook } from '@testing-library/react';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { useIdeaCloneWorkspace } from './use-idea-clone-workspace';
 
 const deps = vi.hoisted(() => ({

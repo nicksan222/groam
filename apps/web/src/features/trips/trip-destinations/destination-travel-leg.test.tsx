@@ -1,6 +1,6 @@
 import type { Id } from '@groam/backend/data-model';
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { testIds } from '@/lib/test-ids';
 import { stubMatchMedia } from '@/testing/stub-match-media';
 import { DestinationTravelLeg } from './destination-travel-leg';

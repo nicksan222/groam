@@ -3,5 +3,5 @@
   "compilerOptions": {
     "types": ["node"]
   },
-  "include": ["bun-globals.d.ts", "convex/**/*.ts", "quality/**/*.ts"]
+  "include": ["bun-globals.d.ts", "convex/**/*.ts", "oxc-config/**/*.ts", "quality/**/*.ts"]
 }

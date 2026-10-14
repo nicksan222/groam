@@ -1,7 +1,7 @@
 import { ConvexError } from 'convex/values';
-import { loadTripContext } from '#convex/modules/travel/trips/ctx';
 import type { Doc, Id } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
+import { loadTripContext } from '#convex/modules/travel/trips/ctx';
 
 const MAX_PREFERENCES_PER_USER = 200;
 
@@ -79,7 +79,7 @@ async function deleteForTrip(ctx: MutationCtx, tripId: Id<'trips'>, limit: numbe
 }
 
 /** Per-user trip favorites. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class TripPreferences {
   static deleteForTrip = deleteForTrip;
   static favoriteTripIds = favoriteTripIds;

@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
 import { pngBlob } from '#testing/media';
 import { openTripDraft, setupGroup, tripInput, tripLocationInput } from '#testing/trips';
@@ -30,35 +30,39 @@ async function commitStockCover(owner: Awaited<ReturnType<typeof setupGroup>>['o
   return { committed, storageId, tripId };
 }
 
-test('queues an automatic commercial-use location cover when a trip has no upload', {
-  timeout: 15_000
-}, async () => {
-  const { owner } = await setupGroup();
-  const tripId = await owner.client.action(api.routes.trips.create.run, {
-    input: tripInput({
-      destination: {
-        coordinates: { latitude: 38.707_751, longitude: -9.136_592 },
-        countryCode: 'PT',
-        name: 'Lisbon, Portugal',
-        placeId: 'R:5400890',
-        status: 'known'
-      }
-    })
-  });
+test(
+  'queues an automatic commercial-use location cover when a trip has no upload',
+  {
+    timeout: 15_000
+  },
+  async () => {
+    const { owner } = await setupGroup();
+    const tripId = await owner.client.action(api.routes.trips.create.run, {
+      input: tripInput({
+        destination: {
+          coordinates: { latitude: 38.707_751, longitude: -9.136_592 },
+          countryCode: 'PT',
+          name: 'Lisbon, Portugal',
+          placeId: 'R:5400890',
+          status: 'known'
+        }
+      })
+    });
 
-  await expect(owner.client.run((ctx) => ctx.db.get('trips', tripId))).resolves.toMatchObject({
-    cover: { generation: 1, status: 'pending' }
-  });
-  await expect(
-    owner.client.query(internal.modules.travel.covers.stock.request, {
-      generation: 1,
-      tripId
-    })
-  ).resolves.toEqual({
-    excludedSourceUrl: null,
-    query: 'Lisbon, Portugal'
-  });
-});
+    await expect(owner.client.run((ctx) => ctx.db.get('trips', tripId))).resolves.toMatchObject({
+      cover: { generation: 1, status: 'pending' }
+    });
+    await expect(
+      owner.client.query(internal.modules.travel.covers.stock.request, {
+        generation: 1,
+        tripId
+      })
+    ).resolves.toEqual({
+      excludedSourceUrl: null,
+      query: 'Lisbon, Portugal'
+    });
+  }
+);
 
 test('refreshes automatic-cover search when the selected place changes', async () => {
   const { owner } = await setupGroup();

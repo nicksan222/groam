@@ -9,14 +9,14 @@ import {
 import { stepCountIs } from 'ai';
 import { ConvexError } from 'convex/values';
 import { createRegisteredAssistantTools } from '#backend/assistant/tools/index';
+import { components, internal } from '#convex-generated/api';
+import type { Id } from '#convex-generated/dataModel';
+import { type ActionCtx, env } from '#convex-generated/server';
 import { AssistantProvider } from '#convex/modules/ai/provider';
 import { AssistantChats } from '#convex/modules/assistant/chat/index';
 import { AssistantErrors } from '#convex/modules/assistant/errors/index';
 import { AgentRunTracking } from '#convex/modules/assistant/runs/tracking';
 import { AssistantScreens } from '#convex/modules/assistant/screen/index';
-import { components, internal } from '#convex-generated/api';
-import type { Id } from '#convex-generated/dataModel';
-import { type ActionCtx, env } from '#convex-generated/server';
 import { AssistantInstructions } from './instructions';
 import {
   type AssistantConfiguration,
@@ -254,7 +254,7 @@ async function purgeLegacySystemMessages(
 }
 
 /** Action-side private and discussion assistant turns. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class AssistantSession {
   static async open(
     ctx: ActionCtx,

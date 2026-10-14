@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { assistantAgents, assistantCapabilityIds } from '#ai/agents/catalog';
 import { issueAgent } from '#ai/agents/issue/definition';
 import { reviewerAgent } from '#ai/agents/reviewer/definition';

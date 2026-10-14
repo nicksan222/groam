@@ -21,7 +21,7 @@ const initialNextStep: NextStep = nextStepFor({
   onOpenItinerary: () => undefined
 });
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type PlanningReadinessLoadedProps = {
   completedSteps: number;
   isLoading?: false;
@@ -37,12 +37,12 @@ export type PlanningReadinessLoadedProps = {
   tripState?: TripState;
 };
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type PlanningReadinessLoadingProps = {
   isLoading: true;
 };
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type PlanningReadinessProps = PlanningReadinessLoadedProps | PlanningReadinessLoadingProps;
 
 export function PlanningReadiness(props: PlanningReadinessProps) {

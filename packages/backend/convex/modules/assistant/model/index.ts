@@ -4,6 +4,8 @@ import {
   parseAssistantThreadSummary
 } from '@groam/ai/runtime/thread-summary';
 import { ConvexError, v } from 'convex/values';
+import { components } from '#convex-generated/api';
+import { internalMutation, internalQuery } from '#convex-generated/server';
 import { AgentRuns } from '#convex/modules/assistant/runs/index';
 import { internalWorkspaceQuery, requireWorkspace } from '#convex/modules/auth/workspace';
 import { ItineraryActivity } from '#convex/modules/travel/activities/index';
@@ -27,8 +29,6 @@ import { updateTravelDates } from '#convex/modules/travel/trips/index';
 import { normalizeCost } from '#convex/modules/travel/trips/normalize';
 import { TripValidators } from '#convex/modules/travel/trips/schema';
 import { TripVersions } from '#convex/modules/travel/versions/index';
-import { components } from '#convex-generated/api';
-import { internalMutation, internalQuery } from '#convex-generated/server';
 import {
   assistantContextCatalogItemValidator,
   assistantContextTagReferenceValidator,

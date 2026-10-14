@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
 import { pngBlob } from '#testing/media';
 import { openTripDraft, setupGroup, tripInput, tripLocationInput } from '#testing/trips';

@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { useInvitationCodes } from './use-invitation-codes';
 
 const convex = vi.hoisted(() => ({ revoke: vi.fn(), useQuery: vi.fn() }));

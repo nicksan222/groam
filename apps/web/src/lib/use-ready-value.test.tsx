@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { useReadyValue } from '@/lib/use-ready-value';
 
 test('stays loading until the first ready value arrives', () => {

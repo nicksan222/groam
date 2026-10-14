@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { useProposalActionRunner } from './use-proposal-action-runner';
 
 test('exposes the action label until the action settles', async () => {

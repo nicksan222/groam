@@ -6,10 +6,10 @@ import {
   parseAssistantThreadSummary
 } from '@groam/ai/runtime/thread-summary';
 import { ConvexError } from 'convex/values';
-import type { AssistantChat } from '#convex/modules/assistant/model/index';
-import { requireWorkspace } from '#convex/modules/auth/workspace';
 import { components, internal } from '#convex-generated/api';
 import type { ActionCtx, QueryCtx } from '#convex-generated/server';
+import type { AssistantChat } from '#convex/modules/assistant/model/index';
+import { requireWorkspace } from '#convex/modules/auth/workspace';
 
 const MAX_CHAT_TITLE_LENGTH = 80;
 
@@ -35,7 +35,7 @@ function chatScreenContext(screenContext: string | undefined) {
 }
 
 /** Private assistant threads owned by the signed-in workspace member. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class AssistantChats {
   static async list(ctx: QueryCtx): Promise<AssistantChat[]> {
     const workspace = await requireWorkspace(ctx);

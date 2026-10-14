@@ -1,6 +1,6 @@
 import type { Id } from '@groam/backend/data-model';
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vite-plus/test';
 import type { ItineraryChange } from '@/features/trips/hooks/itinerary-proposal-changes';
 import type { TripActivity } from '@/features/trips/hooks/use-trip-activity-editor';
 import { ItineraryProposalHighlight } from '@/features/trips/itinerary-proposal-highlight/itinerary-proposal-highlight';

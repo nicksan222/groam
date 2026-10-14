@@ -6,15 +6,15 @@
     ".agents/**",
     ".claude/**",
     "**/.astro/**",
-    "**/.turbo/**",
     "**/coverage/**",
     "**/dist/**",
     "**/_generated/**",
     "**/generated.ts",
     "**/routeTree.gen.ts"
   ],
-  // These packages are runtime-loaded by Vitest or ESLint.
-  "ignoreDependencies": ["@edge-runtime/vm", "jiti"],
+  // These packages are runtime-loaded by Vitest or the toolchain. vite-plus is the dev
+  // toolchain; its only "production" importer is the Oxlint plugin entry below.
+  "ignoreDependencies": ["@edge-runtime/vm", "jiti", "vite-plus"],
   "entry": [
     "tooling/showcase/src/video/index.tsx",
     "apps/web/src/main.tsx",
@@ -28,7 +28,9 @@
     "**/*.test.tsx",
     "**/*.spec.ts",
     "**/*.spec.tsx",
-    "**/doctor.config.ts"
+    "**/doctor.config.ts",
+    // Oxlint loads the Groam lint plugin from tooling/oxc-config/lint.ts by path.
+    "tooling/oxc-config/plugin/index.ts"
   ],
   "health": {
     "maxCyclomatic": 35,

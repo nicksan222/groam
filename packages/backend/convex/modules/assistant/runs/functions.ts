@@ -1,9 +1,9 @@
 import { v } from 'convex/values';
+import { internalMutation, internalQuery } from '#convex-generated/server';
 import { AgentRuns } from '#convex/modules/assistant/runs/index';
 import { AgentRunValidators } from '#convex/modules/assistant/runs/schema';
 import { agentRunEventKindValidator } from '#convex/modules/assistant/validators/index';
 import { requireWorkspace } from '#convex/modules/auth/workspace';
-import { internalMutation, internalQuery } from '#convex-generated/server';
 
 export const getInternal = internalQuery({
   args: {

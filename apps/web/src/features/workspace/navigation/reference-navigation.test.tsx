@@ -7,7 +7,7 @@ import {
   RouterProvider
 } from '@tanstack/react-router';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
 import { ReferenceContext, useResolvedParams } from '@/features/workspace/hooks/reference-context';
 import { CanonicalLink, Link } from '@/features/workspace/navigation/reference-link';
 import { ReferenceContent } from '@/features/workspace/workspace-shell/reference-content';
@@ -53,6 +53,7 @@ function mount(path: string) {
     getParentRoute: () => root,
     path: '/trips/$tripId',
     component: () => {
+      // oxlint-disable-next-line react-hooks/rules-of-hooks -- inline route component in a test router
       const { tripId } = useResolvedParams(trip.useParams());
       return (
         <>

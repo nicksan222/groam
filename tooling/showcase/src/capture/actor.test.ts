@@ -1,5 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
-import { expect, it, vi } from 'vitest';
+import { expect, it, vi } from 'vite-plus/test';
 import { createActor } from '#src/capture/actor';
 
 it('re-resolves a target that detaches while scrolling into view', async () => {

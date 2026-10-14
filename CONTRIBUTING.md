@@ -23,7 +23,7 @@ CLI, then run repository commands through it:
 
 Apart from Git and the `devcontainer` command itself, do not run repository
 tooling on the host. On a clean host, run the containerized `just check` gate
-before `git commit --no-verify`; this avoids launching Husky's repository tools
+before `git commit --no-verify`; this avoids launching the Git hooks' repository tools
 on the host. The launcher delegates to the official CLI and makes external Git
 worktree metadata available inside the container. If your terminal is already inside the dev container or a
 Codespace, use the shorter commands shown below directly.
@@ -66,7 +66,7 @@ Smaller loops:
 
 | Command          | What it does                       |
 | ---------------- | ---------------------------------- |
-| `just lint`      | Conventions, syncpack, Biome       |
+| `just lint`      | Conventions, syncpack, `vp check`  |
 | `just typecheck` | TypeScript                         |
 | `just test`      | Unit tests                         |
 | `just e2e-local` | Playwright against Vite on `:5173` |

@@ -1,6 +1,6 @@
 import type { UIMessage } from '@convex-dev/agent/react';
 import { act, renderHook } from '@testing-library/react';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import type { AgentScreenContext } from '#ai/ui/context/agent-context';
 import type { AssistantBackendApi } from '#ai/ui/hooks/assistant-functions';
 import { useAssistant } from './use-assistant';

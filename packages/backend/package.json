@@ -28,11 +28,13 @@
     "@groam/auth": "workspace:*",
     "@groam/vitest-config": "workspace:*",
     "@types/node": "^26.6.3",
-    "@vitest/coverage-istanbul": "5.0.2",
+    "@vitest/coverage-istanbul": "catalog:",
     "convex-test": "^0.0.60",
     "jose": "^6.2.12",
     "typescript": "~7.0.2",
-    "vitest": "^5.0.2"
+    "vite": "catalog:",
+    "vite-plus": "catalog:",
+    "vitest": "catalog:"
   },
   "exports": {
     "./api": {
@@ -64,10 +66,10 @@
   "scripts": {
     "auth:schema": "bun scripts/generate-auth-schema.ts",
     "dev": "CONVEX_AGENT_MODE=anonymous bun --cwd ../.. node_modules/.bin/convex dev --typecheck-components --start 'convex dashboard'",
-    "lint": "biome check convex testing",
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage",
-    "test:watch": "vitest",
+    "lint": "vp check convex testing",
+    "test": "vp test run",
+    "test:coverage": "vp test run --coverage",
+    "test:watch": "vp test",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "type": "module"

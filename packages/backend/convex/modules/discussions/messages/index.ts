@@ -8,7 +8,7 @@ const MAX_MESSAGE_LENGTH = 5_000;
  * Text and client request ids for discussion (and leftover comment) payloads.
  * `allowEmpty` is for media-only messages; the stored row then uses a preview label.
  */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class Messages {
   static normalizeContent(
     text: string,

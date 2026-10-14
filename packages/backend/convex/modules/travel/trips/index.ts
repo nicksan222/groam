@@ -1,4 +1,6 @@
 import { ConvexError, type Infer } from 'convex/values';
+import type { Doc, Id, TableNames } from '#convex-generated/dataModel';
+import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import { requireWorkspace, workspaceRoster } from '#convex/modules/auth/workspace';
 import { insertWithShortId } from '#convex/modules/references/index';
 import { ItineraryActivity } from '#convex/modules/travel/activities/index';
@@ -29,8 +31,6 @@ import {
   type TripUpdateInput
 } from '#convex/modules/travel/trips/normalize';
 import { projectTrip } from '#convex/modules/travel/trips/projection';
-import type { Doc, Id, TableNames } from '#convex-generated/dataModel';
-import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import type { TripValidators } from './schema';
 
 const DELETE_BATCH_SIZE = 50;

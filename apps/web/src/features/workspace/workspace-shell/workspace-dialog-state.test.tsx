@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
-import { beforeEach, expect, test } from 'vitest';
+import { beforeEach, expect, test } from 'vite-plus/test';
 import { useWorkspaceDialogs } from '@/features/workspace/workspace-shell/workspace-dialog-state';
 
 beforeEach(() => {

@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { StatStrip } from './stat-strip';
 
 test('renders metric items with labels and values', () => {

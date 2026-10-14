@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { Archive } from 'lucide-react';
-import { afterEach, expect, test } from 'vitest';
+import { afterEach, expect, test } from 'vite-plus/test';
 import { InlineNotice } from './inline-notice';
 
 afterEach(cleanup);

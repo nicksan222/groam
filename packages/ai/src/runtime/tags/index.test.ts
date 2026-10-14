@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { assistantContextTagInputSchema, isAssistantContextTagKind } from './index';
 
 test('accepts only the declared tag kinds', () => {

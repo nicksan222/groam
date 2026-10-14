@@ -1,5 +1,5 @@
 import { render } from '@testing-library/react';
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import Timeline from './index';
 
 test('default badge uses the square marker track', () => {

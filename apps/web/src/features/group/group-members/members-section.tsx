@@ -17,7 +17,7 @@ import { useMemo } from 'react';
 import type { ActiveOrganization } from '@/features/workspace/workspace-shell/workspace-state';
 import { userIdentityLabel } from '@/lib/user-identity';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type Member = ActiveOrganization['members'][number];
 
 const memberFilter: FilterFn<Member> = (row, _columnId, value) => {

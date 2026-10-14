@@ -5,3 +5,4 @@ public/captures/
 public/showcase.json
 public/showcase.json.tmp
 .remotion/
+.vitest/

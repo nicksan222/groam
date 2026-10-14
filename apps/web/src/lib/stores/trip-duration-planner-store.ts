@@ -1,6 +1,6 @@
 import { createStore } from 'zustand/vanilla';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type TripDurationPlannerStore = {
   from: string;
   openField: 'end' | 'start' | null;

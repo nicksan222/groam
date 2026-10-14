@@ -18,7 +18,7 @@ function key(type: TripLocationType, id: string): string {
 }
 
 /** Geospatial index for trip, destination, and activity points. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class TripLocations {
   static activityKey(activityId: Id<'tripDestinationActivities'>): string {
     return key('activity', activityId);

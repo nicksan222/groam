@@ -12,6 +12,8 @@ import {
 } from '@groam/ai/backend/runs/roster';
 import type { PaginationOptions } from 'convex/server';
 import { ConvexError } from 'convex/values';
+import type { Doc, Id } from '#convex-generated/dataModel';
+import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import type {
   AgentRosterItem,
   AgentRunEventView,
@@ -19,8 +21,6 @@ import type {
 } from '#convex/modules/assistant/runs/schema';
 import { requireWorkspace, type Workspace } from '#convex/modules/auth/workspace';
 import { insertWithShortId } from '#convex/modules/references/index';
-import type { Doc, Id } from '#convex-generated/dataModel';
-import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 
 const MAX_ASSIGNED_ISSUES = 200;
 const MAX_EVENT_PAGE = 50;
@@ -732,7 +732,7 @@ async function retryIssueRun(ctx: RunWriter, runId: Id<'agentRuns'>): Promise<Id
 }
 
 /** Workspace-visible agent roster, runs, and event logs. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class AgentRuns {
   static abortActiveForDiscussion = abortActiveForDiscussion;
   static abortActiveForIssue = abortActiveForIssue;

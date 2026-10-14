@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { chatTimestamp } from './chat-timestamp';
 
 const noon = new Date('2026-08-17T12:00:00').getTime();

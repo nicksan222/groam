@@ -1,7 +1,7 @@
 import type { Id } from '@groam/backend/data-model';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { TripVersionsPanel } from '@/features/trips/trip-versions/trip-versions-panel';
 import {

@@ -16,7 +16,7 @@ import { testIds } from '@/lib/test-ids';
 import { JoinFirstGroupForm } from './join-first-group-form';
 import { createSlug, WorkspaceContext, type WorkspaceContextValue } from './workspace-state';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local hold for Better Auth refetch flicker
+// oxlint-disable-next-line groam/no-local-type-definitions -- local hold for Better Auth refetch flicker
 type HeldWorkspace = {
   userId: string;
   value: WorkspaceContextValue;

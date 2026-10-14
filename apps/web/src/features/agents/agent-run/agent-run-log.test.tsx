@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test } from 'vite-plus/test';
 import type { AgentRunEvent } from '@/features/agents/hooks/use-agent-run';
 import { testIds } from '@/lib/test-ids';
 import { AgentRunLog } from './agent-run-log';

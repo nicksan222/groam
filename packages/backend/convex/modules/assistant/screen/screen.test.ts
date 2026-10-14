@@ -1,5 +1,5 @@
 import { ConvexError } from 'convex/values';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vite-plus/test';
 import { AssistantScreens } from '#convex/modules/assistant/screen/index';
 import type { AssistantScreen } from '#convex/modules/assistant/validators/index';
 

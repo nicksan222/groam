@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { clearApplicationTables } from '#convex/modules/dev/reset';
 import { setupTrip } from '#testing/trips';
 

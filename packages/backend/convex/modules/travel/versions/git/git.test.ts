@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test } from 'vite-plus/test';
 import { TripGit } from './index';
 
 const identity = { name: 'Casey Traveler', userId: 'casey-user' };

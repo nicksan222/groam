@@ -2,11 +2,11 @@ import { mockModel } from '@convex-dev/agent';
 import { chatAgentCallSettings } from '@groam/ai/backend/provider';
 import { makeFunctionReference } from 'convex/server';
 import { ConvexError, v } from 'convex/values';
-import { expect, test } from 'vitest';
-import { AssistantSession } from '#convex/modules/assistant/agent/index';
+import { expect, test } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
 import { action, env } from '#convex-generated/server';
+import { AssistantSession } from '#convex/modules/assistant/agent/index';
 import { setupTrip, setupWritableTrip, tripActivityInput, tripLocationInput } from '#testing/trips';
 
 const workspaceScreen = {
@@ -18,7 +18,7 @@ const workspaceScreen = {
   title: 'Home'
 };
 
-// biome-ignore lint/suspicious/noExportsInTest: convex-test discovers test-only actions through module exports.
+// oxlint-disable-next-line jest/no-export -- convex-test discovers test-only actions through module exports.
 export const openForTest = action({
   args: {},
   returns: v.string(),
@@ -153,7 +153,7 @@ function agentForReply(_reply: MockReply) {
   return 'groam' as const;
 }
 
-// biome-ignore lint/suspicious/noExportsInTest: convex-test discovers test-only actions through module exports.
+// oxlint-disable-next-line jest/no-export -- convex-test discovers test-only actions through module exports.
 export const sendWithMockModel = action({
   args: {
     destinationId: v.id('tripDestinations'),

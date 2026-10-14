@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vite-plus/test';
 import { buildCommandPaletteMatches } from './command-palette-results';
 
 describe('buildCommandPaletteMatches', () => {

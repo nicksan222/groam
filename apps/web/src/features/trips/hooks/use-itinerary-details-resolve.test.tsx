@@ -1,6 +1,6 @@
 import type { Id } from '@groam/backend/data-model';
 import { act, renderHook } from '@testing-library/react';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import type { ItineraryChange } from './itinerary-proposal-changes';
 import { useItineraryDetailsResolve } from './use-itinerary-details-resolve';
 import type { TripDetail } from './use-trips';

@@ -1,18 +1,18 @@
 import { mockModel } from '@convex-dev/agent';
 import { makeFunctionReference } from 'convex/server';
 import { ConvexError, v } from 'convex/values';
-import { expect, test } from 'vitest';
-import { AssistantSession } from '#convex/modules/assistant/agent/index';
+import { expect, test } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
 import { action } from '#convex-generated/server';
+import { AssistantSession } from '#convex/modules/assistant/agent/index';
 import { createOutsiderClient } from '#testing/factory';
 import { pngBlob } from '#testing/media';
 import { setupGroup } from '#testing/trips';
 
 const paginationOpts = { cursor: null, numItems: 25 };
 
-// biome-ignore lint/suspicious/noExportsInTest: convex-test discovers test-only actions through module exports.
+// oxlint-disable-next-line jest/no-export -- convex-test discovers test-only actions through module exports.
 export const respondWithMockModel = action({
   args: {
     discussionId: v.id('discussions'),

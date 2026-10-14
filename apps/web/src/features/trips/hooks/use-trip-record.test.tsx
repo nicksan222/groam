@@ -1,6 +1,6 @@
 import type { Id } from '@groam/backend/data-model';
 import { renderHook } from '@testing-library/react';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { useTripRecord } from './use-trip-record';
 
 const convex = vi.hoisted(() => ({

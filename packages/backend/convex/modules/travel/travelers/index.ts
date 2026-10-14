@@ -1,9 +1,9 @@
 import { ConvexError, type Infer } from 'convex/values';
+import type { Id } from '#convex-generated/dataModel';
+import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import { workspaceRoster } from '#convex/modules/auth/workspace';
 import type { TripTravelerValidators } from '#convex/modules/travel/travelers/schema';
 import { isTripAdmin, type TripCtx } from '#convex/modules/travel/trips/ctx';
-import type { Id } from '#convex-generated/dataModel';
-import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 
 const MAX_TRAVELERS = 100;
 
@@ -125,7 +125,7 @@ export async function goingCount(ctx: TripCtx): Promise<number> {
 }
 
 /** Per-trip RSVP overlay on the workspace roster. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class TripTravelers {
   static claimInvitation = claimInvitation;
   static goingCount = goingCount;

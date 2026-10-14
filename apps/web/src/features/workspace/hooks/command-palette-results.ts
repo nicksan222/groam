@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
 import { Bot, FileDiff, Map as MapIcon, MessageSquare } from 'lucide-react';
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type CommandPaletteSource = {
   agents: Array<{
     id: string;
@@ -15,7 +15,7 @@ export type CommandPaletteSource = {
   trips: Array<{ id: string; name: string }>;
 };
 
-// biome-ignore lint/plugin/no-local-type-definitions: local implementation shape
+// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type CommandPaletteMatch = {
   href:
     | { params: Record<string, string>; to: string }

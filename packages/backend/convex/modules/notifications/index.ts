@@ -1,8 +1,8 @@
 import { ConvexError, type Infer } from 'convex/values';
-import type { Workspace } from '#convex/modules/auth/workspace';
-import type { NotificationValidators } from '#convex/modules/notifications/schema';
 import type { Id } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
+import type { Workspace } from '#convex/modules/auth/workspace';
+import type { NotificationValidators } from '#convex/modules/notifications/schema';
 
 const MAX_NOTIFICATIONS = 50;
 const MAX_RECIPIENTS = 100;
@@ -93,7 +93,7 @@ export async function markAllNotificationsRead(
 }
 
 /** Workspace inbox for idea and invite events. */
-// biome-ignore lint/complexity/noStaticOnlyClass: callers use this class, not loose functions
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class Notifications {
   static list = listNotifications;
   static markAllRead = markAllNotificationsRead;

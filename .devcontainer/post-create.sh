@@ -13,7 +13,7 @@ sudo chown -R "$(id -u):$(id -g)" "${persistent_dirs[@]}"
 
 # Never chown/chmod the host-mounted Claude or GitHub credentials.
 
-HUSKY=0 bun install --frozen-lockfile
+VP_GIT_HOOKS=0 bun install --frozen-lockfile
 
 # Build a private, local code graph so search works on the first agent turn.
 # Keep this code-only: repository docs and media would require an LLM pass.

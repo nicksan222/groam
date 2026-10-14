@@ -1,7 +1,7 @@
 import type { Id } from '@groam/backend/data-model';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { IssueList, type IssueListItem } from './issue-list';
 
 vi.mock('@tanstack/react-router', () => ({
