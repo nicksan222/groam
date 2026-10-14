@@ -42,9 +42,9 @@ Capture-only `leadIn` and `hold` default to 0.75 and 1.5 seconds.
 From the repository root, with the local app running:
 
 ```bash
-bun run showcase:setup              # install framework browsers once
-bun run showcase                    # reset + full seed + capture + edit + render
-bun run showcase:studio             # inspect the Remotion timeline
+vp run showcase:setup              # install framework browsers once
+vp run showcase                    # reset + full seed + capture + edit + render
+vp run showcase:studio             # inspect the Remotion timeline
 ```
 
 To regenerate every committed output without a local stack, manually run the
@@ -57,9 +57,9 @@ serialized, and failed runs upload the development-stack log for diagnosis.
 For presentation changes, reuse the recording:
 
 ```bash
-bun run showcase:edit
-bun run showcase:render              # final 4K MP4
-bun run showcase:render -- --draft    # optional 1080p preview
+vp run showcase:edit
+vp run showcase:render              # final 4K MP4
+vp run showcase:render --draft    # optional 1080p preview
 ```
 
 Rebuild the compact preview embedded in the repository README from the committed
@@ -75,10 +75,10 @@ than replacing the current asset if generation fails or the result exceeds the
 95 MiB repository budget.
 
 Changed actions, new scene IDs, capture settings, or capture pauses need
-`bun run showcase:capture` first. Keep IDs stable when changing captions or
+`vp run showcase:capture` first. Keep IDs stable when changing captions or
 pacing. Run one capture/edit command at a time; they share the active manifest.
 
-The root `bun run showcase` command first runs the canonical clean `realistic`
+The root `vp run showcase` command first runs the canonical clean `realistic`
 seed (30 users, 40 trips), removing old local app/auth/component data and E2E
 leftovers. It then creates the Lisbon trip and three proposals through the app, including a final four-change idea.
 The local backend must already be running. Seeding failure stops generation.
@@ -120,8 +120,8 @@ repository social preview. Capture manifests, lossless frames, compiled JSON,
 posters, drafts, and temporary renders are ignored. Visitor assets are replaced
 only after successful rendering.
 
-Rebuild the full film and social preview from code with `bun run showcase`, then
-refresh the README GIF with `just showcase-gif`. Use `bun run --cwd tooling/showcase
+Rebuild the full film and social preview from code with `vp run showcase`, then
+refresh the README GIF with `just showcase-gif`. Use `vp run --filter @groam/showcase
 preview` to rerender only the social image from the active capture. Live app timings
 and surrounding data can vary; authored scene durations stay fixed. For an exact
 rerender of a specific recording, retain its manifest and referenced PNG directory
@@ -135,12 +135,12 @@ Defaults use the local demo accounts created by `just seed` through
 `@groam/app-actions/backend`.
 
 ```bash
-bun run --cwd tooling/showcase typecheck
-bun run --cwd tooling/showcase lint
-bun run --cwd tooling/showcase preview
-bun run --cwd tooling/showcase test
-bun run --cwd tooling/showcase test:browser
-bun run lint:conventions
+vp run --filter @groam/showcase typecheck
+vp run --filter @groam/showcase lint
+vp run --filter @groam/showcase preview
+vp run --filter @groam/showcase test
+vp run --filter @groam/showcase test:browser
+vp run lint:conventions
 ```
 
 Keep Remotion package versions identical when updating. References:

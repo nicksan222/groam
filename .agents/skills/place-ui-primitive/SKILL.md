@@ -26,7 +26,7 @@ Inside this package: `#tsx/*` for `.tsx` modules, `#src/*` for `.ts`. The
 
 1. Add the file (kebab-case).
 2. Add an explicit export in `packages/ui/package.json` `exports`. Wildcards
-   are not used for components; a missing export fails `bun run lint:conventions`.
+   are not used for components; a missing export fails `vp run lint:conventions`.
 3. Apps import the published subpath. Never `../` into `packages/ui`, and never
    `@groam/ui/src/...`.
 

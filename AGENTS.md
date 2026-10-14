@@ -17,9 +17,12 @@ Convex agent skills for common tasks can be installed by running
 Import validated variables from the target-specific `@groam/env/*` module. Do
 not read `process.env` or `import.meta.env` outside `packages/env`; Convex code
 uses the generated typed `env` from `_generated/server`. Vite+ (`vp check`:
-Oxfmt and Oxlint) is the sole formatter and linter. Shared lint/format policy
-(`tooling/oxc-config`), TypeScript, and React Doctor configuration belongs under
-`tooling`; the root `vite.config.ts` only composes it.
+Oxfmt and Oxlint) is the sole formatter and linter. Run every workspace command
+through `vp` (`vp install`, `vp run <script>`, `vp test`, `vp check`); Bun is the
+package manager behind `vp install` and the runtime for standalone TS scripts.
+Shared lint/format policy (`tooling/oxc-config`), TypeScript, and React Doctor
+configuration belongs under `tooling`; the root `vite.config.ts` only composes
+it.
 
 ### Dev container execution boundary
 
@@ -99,7 +102,7 @@ may also import `@groam/ui/lib/*` for shared className and avatar helpers.
 
 ## Source conventions
 
-`bun run lint:conventions` (via `tooling/quality`) enforces kebab-case folder
+`vp run lint:conventions` (via `tooling/quality`) enforces kebab-case folder
 and source names, package-alias imports instead of `../`, semantic color
 tokens, Convex `ctx.db` only in `modules/` and `routes/` (never in `'use node'` files), `@groam/env/*`
 instead of raw Vite env access, public `@groam/ui` entrypoints, and thin
@@ -116,14 +119,14 @@ their own toolchains.
 
 Inside the container, start the stack with `just dev`. It runs each package's `dev` script in
 parallel through `vp run`, with package-labeled output. The individual steps are also available:
-`CONVEX_AGENT_MODE=anonymous bunx convex dev --typecheck-components` (backend,
+`CONVEX_AGENT_MODE=anonymous vp exec convex dev --typecheck-components` (backend,
 writes `.env.local`), `CONVEX_AGENT_MODE=anonymous bun
 tooling/devkit/configure-auth.ts --write-vite-site-url` (Better Auth
 `BETTER_AUTH_SECRET`/`SITE_URL` + `VITE_SITE_URL`), and
-`bun run dev:web` (Vite only).
+`vp run dev:web` (Vite only).
 
 Local Convex runs a self-hosted **anonymous** backend — set
-`CONVEX_AGENT_MODE=anonymous` for every `convex` / `bunx convex` command so it
+`CONVEX_AGENT_MODE=anonymous` for every `convex` / `vp exec convex` command so it
 never prompts for a Convex login. No `CONVEX_ACCESS_TOKEN` or cloud account is
 needed for local dev (that token is CI/deploy only, per `README.md`).
 
@@ -132,7 +135,7 @@ dashboard `6790`. Note `http://127.0.0.1:3211/` returns `503` in local dev
 because no static site is uploaded — that is expected; the app is served by Vite
 on `5173`, not the Convex site proxy.
 
-Browser e2e against a running `bun run dev` stack: `bun run test:e2e:local`
+Browser e2e against a running `vp run dev` stack: `vp run test:e2e:local`
 (hits `http://localhost:5173`, which must match `VITE_SITE_URL` for Better
 Auth). CI uses `test:e2e` against the uploaded static site on `3211`.
 
@@ -147,8 +150,8 @@ batching, and composition; it executes reusable primitives from
 `@groam/app-actions/backend`.
 `SEED_USER_EMAIL` / `SEED_USER_PASSWORD` defaults remain in
 `packages/env/src/apps/seeder.ts`.
-Re-seed at any time (local backend must be running) with `bun run seed`
-(defaults to 30 users / 40 trips), `bun run seed -- --scale small` (6 users /
+Re-seed at any time (local backend must be running) with `vp run seed`
+(defaults to 30 users / 40 trips), `vp run seed --scale small` (6 users /
 8 trips, used for the environment baseline), or `--scale large`. Seeding does a
 clean local reset by default; pass `--no-reset` to preserve existing data. The
 seeded database lives in the git-ignored `.convex/` directory, so it persists
@@ -166,7 +169,7 @@ primitives used by Just, `vp run`, lifecycle hooks, and
 assistant features are optional and only need an LLM provider key (see
 `packages/env`). Git pre-commit hooks (`tooling/hooks/pre-commit`, installed by `vp config`) run
 codegen, `vp staged`, conventions, React Doctor (staged), and Fallow (changed); CI owns
-`bun run check`. On hosts without the project toolchain, replace those hooks
+`vp run check`. On hosts without the project toolchain, replace those hooks
 with the full containerized `just check` gate and commit with `--no-verify`.
 Installs use `VP_GIT_HOOKS=0` (matching CI) so container setup is independent of where
 Git metadata is mounted.

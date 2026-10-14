@@ -9,14 +9,14 @@ description: >-
 # Seed local data
 
 The seeder talks to the **local** anonymous Convex backend only. It refuses
-non-localhost URLs. Start Convex first (`bun run dev` or the Convex
+non-localhost URLs. Start Convex first (`vp run dev` or the Convex
 process), then:
 
 ```bash
-bun run seed -- --scale small      # 6 users / 8 trips (cloud baseline)
-bun run seed                       # 30 users / 40 trips
-bun run seed -- --scale large
-bun run seed -- --no-reset         # keep existing rows; match by identity
+vp run seed --scale small      # 6 users / 8 trips (cloud baseline)
+vp run seed                       # 30 users / 40 trips
+vp run seed --scale large
+vp run seed --no-reset         # keep existing rows; match by identity
 ```
 
 ## Login

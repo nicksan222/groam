@@ -36,7 +36,7 @@ just dev
 
 That starts the Convex API on `:3210`, the Vite app on `:5173`, and the Convex
 dashboard on `:6790`. Set `CONVEX_AGENT_MODE=anonymous` for every `convex` /
-`bunx convex` command so the CLI never prompts for a cloud login.
+`vp exec convex` command so the CLI never prompts for a cloud login.
 
 While the backend is running, seed demo data:
 

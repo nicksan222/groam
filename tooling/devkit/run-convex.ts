@@ -31,7 +31,7 @@ export const runConvex = (
     cwd: options.cwd ?? repoRoot,
     encoding: options.encoding ?? 'utf8',
     env: {
-      ...Bun.env,
+      ...process.env,
       ...options.env,
       CONVEX_AGENT_MODE: env.convexAgentMode
     },

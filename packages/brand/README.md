@@ -5,7 +5,7 @@ The React mark and every checked-in SVG, web icon, desktop icon, and repository 
 derived from that manifest.
 
 ```bash
-bun run --cwd packages/brand generate
+vp run --filter @groam/brand generate
 ```
 
 Use `@groam/brand/mark` in React. Use the generated files under `assets/` for documents

@@ -2,7 +2,7 @@
 set -e
 
 # Keep every generated contract synchronized before validating the commit.
-bun codegen
+vp run codegen
 git add apps/web/src/routeTree.gen.ts \
   packages/backend/convex/_generated \
   packages/backend/convex/components/better-auth/_generated \
@@ -11,12 +11,12 @@ git add apps/web/src/routeTree.gen.ts \
 # Fix and re-stage only files in the index.
 vp staged
 
-# Cheap local gates. CI owns `bun run check` (audit / lint / typecheck / test).
-bun run lint:conventions
+# Cheap local gates. CI owns `vp run check` (audit / lint / typecheck / test).
+vp run lint:conventions
 
 # Run React Doctor only against the staged React files.
 set +e
-bun run react-doctor:staged
+vp run react-doctor:staged
 DOCTOR_RESULT=$?
 
 # Keep unstaged and untracked work out of Fallow's staged-code audit.
@@ -28,7 +28,7 @@ if [ -n "$STASH_AFTER" ] && [ "$STASH_BEFORE" != "$STASH_AFTER" ]; then
   STASHED=1
 fi
 
-bun run fallow:changed
+vp run fallow:changed
 FALLOW_RESULT=$?
 
 STASH_POP_RESULT=0

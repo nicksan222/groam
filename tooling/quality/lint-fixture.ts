@@ -1,9 +1,9 @@
-import { expect } from 'bun:test';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { expect } from 'vite-plus/test';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const vp = `${root}node_modules/.bin/vp`;

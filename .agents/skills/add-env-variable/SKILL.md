@@ -41,8 +41,8 @@ Dashboard / deployment secrets go on `defineApp({ env })` in
 AI_MODEL: v.optional(v.string()),
 ```
 
-Local `.env.local` values sync to Convex during `bun run dev`. For one-off
-sets: `CONVEX_AGENT_MODE=anonymous bunx convex env set NAME value`.
+Local `.env.local` values sync to Convex during `vp run dev`. For one-off
+sets: `CONVEX_AGENT_MODE=anonymous vp exec convex env set NAME value`.
 
 ## Do not
 

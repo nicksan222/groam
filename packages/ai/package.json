@@ -70,7 +70,7 @@
   },
   "private": true,
   "scripts": {
-    "check": "bun run typecheck && bun run lint",
+    "check": "vp run typecheck && vp run lint",
     "format": "vp check --fix src",
     "lint": "vp check src",
     "test": "vp test run",

@@ -7,7 +7,9 @@
   "devDependencies": {
     "@groam/typescript-config": "workspace:*",
     "@types/node": "^26.6.3",
-    "typescript": "~7.0.2"
+    "typescript": "~7.0.2",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
   },
   "exports": {
     "./configure-auth": "./configure-auth.ts",
@@ -21,7 +23,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "test": "bun test .",
+    "test": "vp test run",
     "typecheck": "tsc --noEmit"
   },
   "type": "module"

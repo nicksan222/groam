@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, test } from 'vite-plus/test';
 import { syncOptionalAiEnvironment } from './sync-ai-env';
 
 describe('syncOptionalAiEnvironment', () => {

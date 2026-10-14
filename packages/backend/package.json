@@ -65,7 +65,7 @@
   "private": true,
   "scripts": {
     "auth:schema": "bun scripts/generate-auth-schema.ts",
-    "dev": "CONVEX_AGENT_MODE=anonymous bun --cwd ../.. node_modules/.bin/convex dev --typecheck-components --start 'convex dashboard'",
+    "dev": "CONVEX_AGENT_MODE=anonymous vp -C ../.. exec convex dev --typecheck-components --start 'convex dashboard'",
     "lint": "vp check convex testing",
     "test": "vp test run",
     "test:coverage": "vp test run --coverage",

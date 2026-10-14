@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, test } from 'vite-plus/test';
 import { lintFixture } from './lint-fixture.ts';
 
 function lint(source: string, file = 'apps/web/src/features/layout-example.tsx') {
