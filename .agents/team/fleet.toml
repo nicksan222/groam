@@ -1,0 +1,34 @@
+# One shared checkout; seven regular roles and one optional specialist at a time.
+session = "groam"
+workspace = "groam-team"
+max_agents = 8
+default_agents = ["lead", "developer", "pm", "qa", "traveler", "reviewer", "pushback"]
+
+# Stable Claude aliases follow the signed-in account's available models.
+# Use model = "-" / effort = "-" to keep the CLI's configured defaults.
+[kinds.build]
+harness = "claude"
+model = "sonnet"
+effort = "medium"
+
+[kinds.reasoning]
+harness = "claude"
+model = "opus"
+effort = "high"
+
+[kinds.review]
+harness = "claude"
+model = "opus"
+effort = "medium"
+
+[roles]
+lead = "reasoning"
+developer = "build"
+pm = "build"
+qa = "build"
+traveler = "build"
+reviewer = "review"
+pushback = "build"
+scenario = "build"
+pr-maker = "build"
+upgrade-reviewer = "review"
