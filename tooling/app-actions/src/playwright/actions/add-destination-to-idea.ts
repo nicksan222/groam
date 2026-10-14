@@ -14,10 +14,13 @@ export const addDestinationToIdea: AddDestinationToIdeaAction<UiTarget> = async 
   await user.type(by(user.page, ids.addStopPlans), place.notes);
   await user.click(dialogSubmit(user.page, ids.addStopDialog));
   await expect(by(user.page, ids.addStopDialog)).toBeHidden();
+  // The day header names the new destination ("Manage …" since the itinerary refresh).
   await expect(
-    user.page.getByRole('button', {
-      name: `Open ${place.label} details for Day 1`,
-      exact: true
-    })
+    user.page.getByRole('button', { name: `Manage ${place.label} for Day 1`, exact: true }).or(
+      user.page.getByRole('button', {
+        name: `Open ${place.label} details for Day 1`,
+        exact: true
+      })
+    )
   ).toBeVisible();
 };
