@@ -161,6 +161,7 @@ jobs:
         with:
           name: test-failure-${{ github.run_id }}
           if-no-files-found: ignore
+          include-hidden-files: true
           retention-days: 7
           path: |
             /tmp/convex.log

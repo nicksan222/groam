@@ -23,13 +23,14 @@ const testConfig = createWebVitestConfig(import.meta.dirname, {
       },
       {
         // Full-app journeys against one live backend wait longer than mounted views, and run
-        // a few files at a time so that backend keeps up (two on a shared 4-core CI runner).
+        // a few files at a time so that backend keeps up. A shared 4-core CI runner takes two
+        // at a time, each about twice as slow.
         expect: { poll: { timeout: 30_000 } },
         include: ['e2e/**/*.test.tsx'],
         maxWorkers: testEnv.isCI ? 2 : 4,
         name: 'journeys',
         setupFiles: ['./src/browser-setup.ts'],
-        testTimeout: 60_000
+        testTimeout: testEnv.isCI ? 120_000 : 60_000
       }
     ],
     // Local Better Auth trusts this origin (packages/backend/convex/modules/auth/origins.ts).

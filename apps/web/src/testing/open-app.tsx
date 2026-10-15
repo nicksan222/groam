@@ -44,8 +44,10 @@ export async function openApp(
   const account = await arrange.account();
   const credentials = options.as ?? account.credentials;
   const { data: current } = await authClient.getSession();
-  // Someone returning to the app stays signed in; switching people signs the browser out first.
+  // Someone returning to the app stays signed in; switching people leaves the page and signs the
+  // browser out first, so no mounted query outlives the session.
   if (current?.user.email !== credentials.email) {
+    await unmountApp();
     await authClient.signOut();
     await forgetPreviousVisit();
     const { error } = await authClient.signIn.email({
@@ -63,6 +65,7 @@ export async function openApp(
 /** Mounts the whole app with nobody signed in, as a visitor sees it. */
 export async function openSignedOutApp(path = '/'): Promise<void> {
   // A real sign-out also resets the auth client's in-memory session.
+  await unmountApp();
   await authClient.signOut();
   await forgetPreviousVisit();
   await mountApp(path);
