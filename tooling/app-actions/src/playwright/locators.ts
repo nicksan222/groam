@@ -94,3 +94,11 @@ export function idFromPath(page: Page, kind: 'ideas' | 'issues' | 'trips'): stri
   if (!match?.[1]) throw new Error(`Expected a /${kind}/:id URL, got ${page.url()}`);
   return match[1];
 }
+
+/**
+ * The Groam AI panel (docked or sheet). Its accessible name follows the active chat title,
+ * so locate it by its stable id instead.
+ */
+export function assistantPanel(page: Page): Locator {
+  return page.locator('#ai-assistant-widget');
+}

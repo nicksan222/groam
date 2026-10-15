@@ -1,5 +1,6 @@
 import { expect as playwrightExpect } from '@playwright/test';
 import { type UiTarget, ui } from './interaction';
+import { assistantPanel } from './locators';
 import { openGroamAssistant } from './open-groam-assistant';
 
 const expect = playwrightExpect.configure({ timeout: 30_000 });
@@ -14,7 +15,7 @@ export async function showGroamAssistantCapabilities(
   input: ShowGroamAssistantCapabilitiesInput
 ): Promise<void> {
   const user = ui(target);
-  const panel = user.page.getByRole('region', { name: 'Groam AI', exact: true });
+  const panel = assistantPanel(user.page);
   if (!(await panel.isVisible())) await openGroamAssistant(user);
   const suggestion = panel.getByRole('button', { name: input.suggestion, exact: true });
   await expect(suggestion).toBeVisible();
