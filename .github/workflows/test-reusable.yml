@@ -212,10 +212,18 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
+      # Dependencies dominate the release build; keep the bundles themselves out of the cache.
       - name: Cache Rust build
-        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          workspaces: apps/desktop/src-tauri
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            apps/desktop/src-tauri/target/
+            !apps/desktop/src-tauri/target/*/release/bundle/
+          key: rust-${{ matrix.target }}-${{ hashFiles('apps/desktop/src-tauri/Cargo.lock') }}
+          restore-keys: rust-${{ matrix.target }}-
 
       - name: Install Linux desktop dependencies
         if: matrix.platform == 'linux'
