@@ -1,12 +1,15 @@
 import type { Id } from '@groam/backend/data-model';
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { useTripTravelers } from './use-trip-travelers';
 
 const convex = vi.hoisted(() => ({ useMutation: vi.fn(), useQuery: vi.fn() }));
 const notifications = vi.hoisted(() => ({ error: vi.fn() }));
 
-vi.mock('convex/react', () => convex);
+vi.mock('convex/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('convex/react')>()),
+  ...convex
+}));
 vi.mock('@groam/ui/components/toast', () => ({ toast: notifications }));
 
 const tripId = 'trip-1' as Id<'trips'>;
@@ -25,7 +28,7 @@ describe('useTripTravelers', () => {
       { status: 'going' }
     ]);
     convex.useMutation.mockReturnValue(set);
-    const { result } = renderHook(() => useTripTravelers(tripId));
+    const { result } = await renderHook(() => useTripTravelers(tripId));
 
     await act(async () => {
       expect(await result.current.setStatus('maybe', 'user-2')).toBe(true);
@@ -39,7 +42,7 @@ describe('useTripTravelers', () => {
     const set = vi.fn().mockRejectedValue(new Error('Read only'));
     convex.useQuery.mockReturnValue(undefined);
     convex.useMutation.mockReturnValue(set);
-    const { result } = renderHook(() => useTripTravelers(undefined));
+    const { result } = await renderHook(() => useTripTravelers(undefined));
 
     expect(result.current.isLoading).toBe(true);
     expect(convex.useQuery).toHaveBeenCalledWith(expect.anything(), 'skip');
@@ -48,7 +51,7 @@ describe('useTripTravelers', () => {
     });
     expect(set).not.toHaveBeenCalled();
 
-    const withTrip = renderHook(() => useTripTravelers(tripId));
+    const withTrip = await renderHook(() => useTripTravelers(tripId));
     await act(async () => {
       expect(await withTrip.result.current.setStatus('not_going')).toBe(false);
     });

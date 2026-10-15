@@ -1,8 +1,7 @@
-import { api } from '@groam/backend/api';
 import type { BackendSession } from './backend-session';
-import { authenticatedClient } from './convex-client';
 import type { AuthenticatedAppUser } from './ensure-user';
 import type { AppWorkspace } from './ensure-workspace';
+import { createInvitation, redeemInvitation } from './invitations';
 
 export async function joinWorkspace(
   backend: BackendSession,
@@ -19,13 +18,7 @@ export async function joinWorkspace(
 ) {
   if (isMember) return 'existing' as const;
 
-  const ownerClient = await authenticatedClient(backend, owner);
-  const invitation = await ownerClient.mutation(api.routes.organizations.invitations.create.run, {
-    role: 'member'
-  });
-  const memberClient = await authenticatedClient(backend, member);
-  await memberClient.mutation(api.routes.organizations.invitations.redeem.run, {
-    code: invitation.code
-  });
+  const code = await createInvitation({ backend, user: owner });
+  await redeemInvitation({ backend, user: member }, code);
   return 'joined' as const;
 }

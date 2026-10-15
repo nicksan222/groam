@@ -1,12 +1,11 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import { AlertTriangle } from 'lucide-react';
-import { afterEach, expect, test } from 'vite-plus/test';
+import { expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { StatusPage } from './status-page';
 
-afterEach(cleanup);
-
-test('renders a full-page status card with icon, title, copy, and actions', () => {
-  render(
+test('renders a full-page status card with icon, title, copy, and actions', async () => {
+  await render(
     <StatusPage
       actions={<button type="button">Try again</button>}
       icon={AlertTriangle}
@@ -17,8 +16,10 @@ test('renders a full-page status card with icon, title, copy, and actions', () =
     </StatusPage>
   );
 
-  expect(screen.getByRole('heading', { name: 'Something went wrong' })).toBeTruthy();
-  expect(screen.getByText('Network request failed')).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Try again' })).toBeTruthy();
-  expect(screen.getByRole('main').getAttribute('data-slot')).toBe('status-page');
+  await expect
+    .element(page.getByRole('heading', { name: 'Something went wrong' }))
+    .toBeInTheDocument();
+  await expect.element(page.getByText('Network request failed')).toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
+  await expect.element(page.getByRole('main')).toHaveAttribute('data-slot', 'status-page');
 });

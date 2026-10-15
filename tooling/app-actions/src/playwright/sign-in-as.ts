@@ -1,7 +1,8 @@
 import { type Page, expect as playwrightExpect } from '@playwright/test';
+import { ids } from '#src/testing/ids';
+import { photonFeatureCollection, photonUrlPattern } from '#src/testing/photon';
 import { appPath } from './app-href';
 import { expectTripsReady } from './expect-trips-ready';
-import { ids } from './ids';
 import { by } from './locators';
 
 const expect = playwrightExpect.configure({ timeout: 30_000 });
@@ -28,10 +29,8 @@ export async function signInAs(
     );
   }
   if (options.destinationFixtures) {
-    await page.route('https://photon.komoot.io/api/**', (route) =>
-      route.fulfill({
-        json: { type: 'FeatureCollection', features: options.destinationFixtures }
-      })
+    await page.route(photonUrlPattern, (route) =>
+      route.fulfill({ json: photonFeatureCollection(options.destinationFixtures ?? []) })
     );
   }
   await page.goto(appPath);

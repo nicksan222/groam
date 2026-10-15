@@ -1,12 +1,11 @@
 import type { Id } from '@groam/backend/data-model';
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type { ItineraryChange } from '@/features/trips/hooks/itinerary-proposal-changes';
 import type { TripActivity } from '@/features/trips/hooks/use-trip-activity-editor';
 import { ItineraryProposalHighlight } from '@/features/trips/itinerary-proposal-highlight/itinerary-proposal-highlight';
 import { TripActivityCard } from '@/features/trips/trip-activity/trip-activity-card';
-
-afterEach(cleanup);
 
 function activity(overrides: Partial<TripActivity> = {}): TripActivity {
   return {
@@ -34,8 +33,8 @@ function card() {
 }
 
 describe('TripActivityCard', () => {
-  test('sits on the page background without a filled card surface', () => {
-    render(
+  test('sits on the page background without a filled card surface', async () => {
+    await render(
       <TripActivityCard
         activity={activity()}
         canManage={false}
@@ -50,15 +49,17 @@ describe('TripActivityCard', () => {
     expect(card()?.className).toContain('border-border');
     expect(card()?.className).toContain('bg-transparent');
     expect(card()?.className).not.toContain('bg-card');
-    expect(screen.getByRole('heading', { name: 'Explore the neighborhood' })).toBeTruthy();
-    expect(screen.getByText('Day 1 · Morning')).toBeTruthy();
-    expect(
-      screen.queryByRole('button', { name: 'Actions for Explore the neighborhood' })
-    ).toBeNull();
+    await expect
+      .element(page.getByRole('heading', { name: 'Explore the neighborhood' }))
+      .toBeInTheDocument();
+    await expect.element(page.getByText('Day 1 · Morning')).toBeInTheDocument();
+    await expect
+      .element(page.getByRole('button', { name: 'Actions for Explore the neighborhood' }))
+      .not.toBeInTheDocument();
   });
 
-  test('keeps the overflow menu when the traveler can manage', () => {
-    render(
+  test('keeps the overflow menu when the traveler can manage', async () => {
+    await render(
       <TripActivityCard
         activity={activity()}
         canManage
@@ -69,12 +70,12 @@ describe('TripActivityCard', () => {
       />
     );
 
-    expect(
-      screen.getByRole('button', { name: 'Actions for Explore the neighborhood' })
-    ).toBeTruthy();
+    await expect
+      .element(page.getByRole('button', { name: 'Actions for Explore the neighborhood' }))
+      .toBeInTheDocument();
   });
 
-  test('proposal highlight uses a left rail around an unfilled activity, not a full outline', () => {
+  test('proposal highlight uses a left rail around an unfilled activity, not a full outline', async () => {
     const change: ItineraryChange = {
       change: 'added',
       entity: 'activity',
@@ -83,7 +84,7 @@ describe('TripActivityCard', () => {
       label: 'Explore the neighborhood'
     };
 
-    render(
+    await render(
       <ItineraryProposalHighlight change={change}>
         <TripActivityCard
           activity={activity()}

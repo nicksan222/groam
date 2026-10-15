@@ -1,9 +1,10 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import { expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import Timeline from './index';
 
-test('composes a compact timeline card without nested divider borders', () => {
-  render(
+test('composes a compact timeline card without nested divider borders', async () => {
+  await render(
     <Timeline>
       <Timeline.Item>
         <Timeline.Badge>AM</Timeline.Badge>
@@ -18,13 +19,13 @@ test('composes a compact timeline card without nested divider borders', () => {
     </Timeline>
   );
 
-  expect(screen.getByRole('article').textContent).toContain('Looks good');
-  expect(screen.getByText('Alex').className).not.toContain('border-b');
-  expect(screen.getByText('Resolve conversation').className).not.toContain('border-t');
+  expect(page.getByRole('article').element().textContent).toContain('Looks good');
+  expect(page.getByText('Alex').element().className).not.toContain('border-b');
+  expect(page.getByText('Resolve conversation').element().className).not.toContain('border-t');
 });
 
-test('timeline card subparts expose stable data slots', () => {
-  const { container } = render(
+test('timeline card subparts expose stable data slots', async () => {
+  const { container } = await render(
     <Timeline>
       <Timeline.Item>
         <Timeline.Body>
@@ -44,8 +45,8 @@ test('timeline card subparts expose stable data slots', () => {
   expect(container.querySelector('[data-slot="timeline-card-actions"]')).toBeTruthy();
 });
 
-test('applies shell card surfaces for dashboard cards', () => {
-  const { container } = render(
+test('applies shell card surfaces for dashboard cards', async () => {
+  const { container } = await render(
     <Timeline>
       <Timeline.Item>
         <Timeline.Body>

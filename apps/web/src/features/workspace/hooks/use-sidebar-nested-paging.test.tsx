@@ -1,12 +1,12 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { describe, expect, test, vi } from 'vite-plus/test';
 import { useSidebarNestedPaging } from './use-sidebar-nested-paging';
 
 describe('useSidebarNestedPaging', () => {
-  test('expands the visible window before fetching more', () => {
+  test('expands the visible window before fetching more', async () => {
     const loadMore = vi.fn();
     const showMore = vi.fn();
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useSidebarNestedPaging({
         canExpandVisible: () => true,
         loadMore,
@@ -17,17 +17,17 @@ describe('useSidebarNestedPaging', () => {
     );
 
     expect(result.current.canLoadMore).toBe(true);
-    act(() => {
+    await act(() => {
       result.current.onLoadMore();
     });
     expect(showMore).toHaveBeenCalledOnce();
     expect(loadMore).not.toHaveBeenCalled();
   });
 
-  test('fetches the next page once the visible window is exhausted', () => {
+  test('fetches the next page once the visible window is exhausted', async () => {
     const loadMore = vi.fn();
     const showMore = vi.fn();
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useSidebarNestedPaging({
         canExpandVisible: () => false,
         loadMore,
@@ -37,7 +37,7 @@ describe('useSidebarNestedPaging', () => {
       })
     );
 
-    act(() => {
+    await act(() => {
       result.current.onLoadMore();
     });
     expect(loadMore).toHaveBeenCalledWith(5);

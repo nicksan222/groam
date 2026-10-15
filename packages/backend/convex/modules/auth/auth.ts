@@ -15,7 +15,12 @@ const authBaseUrl = env.CONVEX_SITE_URL ?? 'http://127.0.0.1:3211';
 
 export const authSiteUrl = env.SITE_URL ?? authBaseUrl;
 export const authTrustedOrigins = resolveAuthTrustedOrigins(authSiteUrl, authBaseUrl);
-const passkeyOrigin = new URL(authSiteUrl).origin;
+const passkeyRpId = new URL(authSiteUrl).hostname;
+// A passkey belongs to one relying party: accept every trusted origin on its host (locally the
+// app on 5173 and the browser journeys on 5174).
+const passkeyOrigins = authTrustedOrigins.filter(
+  (origin) => new URL(origin).hostname === passkeyRpId
+);
 
 // Better Auth component triggers keep app-owned records synchronized in the
 // same transaction as changes to the local Better Auth component.
@@ -70,8 +75,8 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
       username(),
       accountRecovery(),
       passkey({
-        origin: passkeyOrigin,
-        rpID: new URL(passkeyOrigin).hostname,
+        origin: passkeyOrigins,
+        rpID: passkeyRpId,
         rpName: 'Groam'
       }),
       twoFactor({

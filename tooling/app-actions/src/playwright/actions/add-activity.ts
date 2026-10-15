@@ -1,9 +1,9 @@
 import { expect as playwrightExpect } from '@playwright/test';
 import type { AddActivityAction } from '#src/actions/add-activity';
-import { ids } from '#src/playwright/ids';
 import { type UiTarget, ui } from '#src/playwright/interaction';
 import { inlineActivityEditor } from '#src/playwright/locators';
 import { openTripSection } from '#src/playwright/open-trip-section';
+import { ids } from '#src/testing/ids';
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');

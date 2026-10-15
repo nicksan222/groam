@@ -1,0 +1,17 @@
+name: Setup Chromium
+description: Install the Chromium build that Vite+ browser-mode tests drive, cached by lockfile
+
+runs:
+  using: composite
+  steps:
+    - name: Cache Chromium
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.cache/ms-playwright
+        key: chromium-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+        restore-keys: |
+          chromium-${{ runner.os }}-
+
+    - name: Install Chromium
+      shell: bash
+      run: bun run test:browsers:install --with-deps

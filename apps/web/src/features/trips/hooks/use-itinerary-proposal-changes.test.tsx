@@ -1,5 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import { beforeEach, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type { ItineraryChange } from './itinerary-proposal-changes';
 import {
   ItineraryProposalChangesProvider,
@@ -41,29 +42,29 @@ beforeEach(() => {
   versions.useTripProposalDetail.mockReturnValue(undefined);
 });
 
-test('provides context proposal changes by their stable key', () => {
+test('provides context proposal changes by their stable key', async () => {
   ideaContext.useOptionalIdeaContext.mockReturnValue({
     proposal: { changes: [change], id: 'proposal-1' }
   });
 
-  render(
+  await render(
     <ItineraryProposalChangesProvider trip={ideaTrip}>
       <ReadChanges />
     </ItineraryProposalChangesProvider>
   );
 
-  expect(screen.getByText('1:destinations/lisbon.json')).toBeTruthy();
+  await expect.element(page.getByText('1:destinations/lisbon.json')).toBeInTheDocument();
   expect(versions.useTripProposalDetail).toHaveBeenCalledWith(undefined);
 });
 
-test('provides no changes for a shared trip', () => {
+test('provides no changes for a shared trip', async () => {
   ideaContext.useOptionalIdeaContext.mockReturnValue(undefined);
 
-  render(
+  await render(
     <ItineraryProposalChangesProvider trip={{ id: 'shared-trip', proposal: null } as TripDetail}>
       <ReadChanges />
     </ItineraryProposalChangesProvider>
   );
 
-  expect(screen.getByText('0:none')).toBeTruthy();
+  await expect.element(page.getByText('0:none')).toBeInTheDocument();
 });

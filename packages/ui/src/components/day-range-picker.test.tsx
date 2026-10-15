@@ -1,11 +1,10 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { DayRangePicker } from './day-range-picker';
 
-afterEach(cleanup);
-
-test('renders an accessible day strip with selection summary', () => {
-  render(
+test('renders an accessible day strip with selection summary', async () => {
+  await render(
     <DayRangePicker
       endDay={4}
       endLabel="Leave"
@@ -19,15 +18,15 @@ test('renders an accessible day strip with selection summary', () => {
     />
   );
 
-  expect(screen.getByRole('group', { name: 'Lisbon day range' })).toBeDefined();
-  expect(screen.getByText('3 days · Arrive Day 2 · Leave Day 4')).toBeDefined();
-  expect(screen.queryByRole('spinbutton')).toBeNull();
-  expect(screen.queryByRole('button', { name: /Earlier|Later/ })).toBeNull();
+  await expect.element(page.getByRole('group', { name: 'Lisbon day range' })).toBeInTheDocument();
+  await expect.element(page.getByText('3 days · Arrive Day 2 · Leave Day 4')).toBeInTheDocument();
+  await expect.element(page.getByRole('spinbutton')).not.toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: /Earlier|Later/ })).not.toBeInTheDocument();
 });
 
-test('paints a stay by clicking two days', () => {
+test('paints a stay by clicking two days', async () => {
   const onChange = vi.fn();
-  const view = render(
+  await render(
     <DayRangePicker
       endDay={undefined}
       label="Activity schedule"
@@ -37,46 +36,45 @@ test('paints a stay by clicking two days', () => {
     />
   );
 
-  expect(within(view.container).getByText(/Click a start day/)).toBeDefined();
+  await expect.element(page.getByText(/Click a start day/)).toBeVisible();
 
-  fireEvent.click(screen.getByRole('button', { name: 'Day 2' }));
+  await page.getByRole('button', { name: 'Day 2' }).click();
   expect(onChange).toHaveBeenCalledWith(2, undefined);
 
-  fireEvent.click(screen.getByRole('button', { name: 'Day 4' }));
+  await page.getByRole('button', { name: 'Day 4' }).click();
   expect(onChange).toHaveBeenCalledWith(2, 4);
 });
 
-test('clears a single-day selection when the same day is clicked again', () => {
+test('clears a single-day selection when the same day is clicked again', async () => {
   const onChange = vi.fn();
-  render(<DayRangePicker endDay={2} maximumDay={4} onChange={onChange} startDay={2} />);
+  await render(<DayRangePicker endDay={2} maximumDay={4} onChange={onChange} startDay={2} />);
 
-  fireEvent.click(screen.getByRole('button', { name: 'Day 2, Start and End' }));
+  await page.getByRole('button', { name: 'Day 2, Start and End' }).click();
   expect(onChange).toHaveBeenCalledWith(undefined, undefined);
 });
 
-test('releasing a press outside the grid does not paint a later day', () => {
+test('releasing a press outside the grid does not paint a later day', async () => {
   const onChange = vi.fn();
-  render(
+  await render(
     <DayRangePicker endDay={undefined} maximumDay={4} onChange={onChange} startDay={undefined} />
   );
-  const grid = screen.getByTestId('day-range-days');
-  const first = screen.getByRole('button', { name: 'Day 1' });
-  const other = screen.getByRole('button', { name: 'Day 3' });
-  const original = document.elementFromPoint;
-  try {
-    document.elementFromPoint = () => first;
-    fireEvent.pointerDown(grid, { button: 0, clientX: 10, clientY: 10 });
-    fireEvent.pointerUp(window);
-    document.elementFromPoint = () => other;
-    fireEvent.pointerMove(grid, { clientX: 30, clientY: 10 });
-    expect(onChange).not.toHaveBeenCalled();
-  } finally {
-    document.elementFromPoint = original;
-  }
+  const grid = page.getByTestId('day-range-days').element();
+  const first = page.getByRole('button', { name: 'Day 1' }).element();
+  const other = page.getByRole('button', { name: 'Day 3' }).element();
+  const center = (element: Element) => {
+    const box = element.getBoundingClientRect();
+    return { clientX: box.x + box.width / 2, clientY: box.y + box.height / 2 };
+  };
+  grid.dispatchEvent(
+    new PointerEvent('pointerdown', { bubbles: true, button: 0, ...center(first) })
+  );
+  window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+  grid.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, ...center(other) }));
+  expect(onChange).not.toHaveBeenCalled();
 });
 
-test('marks other stops as taken and keeps them unselectable', () => {
-  render(
+test('marks other stops as taken and keeps them unselectable', async () => {
+  await render(
     <DayRangePicker
       endDay={2}
       maximumDay={5}
@@ -88,7 +86,7 @@ test('marks other stops as taken and keeps them unselectable', () => {
     />
   );
 
-  const taken = screen.getByRole('button', { name: 'Day 4, Taken' });
+  const taken = page.getByRole('button', { name: 'Day 4, Taken' }).element();
   expect(taken.hasAttribute('data-taken')).toBe(true);
   expect(taken.hasAttribute('disabled')).toBe(true);
 });

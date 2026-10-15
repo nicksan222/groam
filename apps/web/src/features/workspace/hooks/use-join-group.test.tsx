@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import type { FormEvent } from 'react';
 import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { useJoinGroup } from './use-join-group';
@@ -9,7 +9,10 @@ const mocks = vi.hoisted(() => ({
   setActive: vi.fn()
 }));
 
-vi.mock('convex/react', () => ({ useMutation: () => mocks.redeem }));
+vi.mock('convex/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('convex/react')>()),
+  useMutation: () => mocks.redeem
+}));
 vi.mock('@groam/backend/api', () => ({
   api: { routes: { organizations: { invitations: { redeem: { run: {} } } } } }
 }));
@@ -26,8 +29,8 @@ beforeEach(() => {
 
 test('redeems a code and activates the joined group', async () => {
   const onJoined = vi.fn();
-  const { result } = renderHook(() => useJoinGroup({ onJoined }));
-  act(() => result.current.setCode('abcd-efgh-jklm'));
+  const { result } = await renderHook(() => useJoinGroup({ onJoined }));
+  await act(() => result.current.setCode('abcd-efgh-jklm'));
 
   await act(async () => {
     await result.current.submit({ preventDefault: vi.fn() } as unknown as FormEvent);
@@ -42,8 +45,8 @@ test('redeems a code and activates the joined group', async () => {
 
 test('keeps the code visible when redemption fails', async () => {
   mocks.redeem.mockRejectedValue(new Error('Invitation code not found or already used'));
-  const { result } = renderHook(() => useJoinGroup());
-  act(() => result.current.setCode('BAD-CODE'));
+  const { result } = await renderHook(() => useJoinGroup());
+  await act(() => result.current.setCode('BAD-CODE'));
 
   await act(async () => {
     await result.current.submit({ preventDefault: vi.fn() } as unknown as FormEvent);
@@ -58,8 +61,8 @@ test('retries activation without redeeming the consumed code again', async () =>
   mocks.setActive
     .mockResolvedValueOnce({ data: null, error: { message: 'Session update failed' } })
     .mockResolvedValueOnce({ data: {}, error: null });
-  const { result } = renderHook(() => useJoinGroup({ onJoined }));
-  act(() => result.current.setCode('abcd-efgh-jklm'));
+  const { result } = await renderHook(() => useJoinGroup({ onJoined }));
+  await act(() => result.current.setCode('abcd-efgh-jklm'));
 
   await act(async () => {
     await result.current.submit({ preventDefault: vi.fn() } as unknown as FormEvent);
@@ -89,8 +92,8 @@ test('opens an existing membership without showing a join failure', async () => 
     membership: 'existing',
     organizationId: 'organization-a'
   });
-  const { result } = renderHook(() => useJoinGroup({ onJoined }));
-  act(() => result.current.setCode('abcd-efgh-jklm'));
+  const { result } = await renderHook(() => useJoinGroup({ onJoined }));
+  await act(() => result.current.setCode('abcd-efgh-jklm'));
 
   await act(async () => {
     await result.current.submit({ preventDefault: vi.fn() } as unknown as FormEvent);
@@ -108,8 +111,8 @@ test('describes an activation retry accurately for an existing member', async ()
     organizationId: 'organization-a'
   });
   mocks.setActive.mockResolvedValue({ data: null, error: { message: 'Session update failed' } });
-  const { result } = renderHook(() => useJoinGroup());
-  act(() => result.current.setCode('abcd-efgh-jklm'));
+  const { result } = await renderHook(() => useJoinGroup());
+  await act(() => result.current.setCode('abcd-efgh-jklm'));
 
   await act(async () => {
     await result.current.submit({ preventDefault: vi.fn() } as unknown as FormEvent);

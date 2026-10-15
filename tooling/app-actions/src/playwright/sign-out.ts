@@ -1,5 +1,5 @@
 import { expect, type Page } from '@playwright/test';
-import { ids } from './ids';
+import { ids } from '#src/testing/ids';
 import { by } from './locators';
 
 export async function signOut(page: Page): Promise<void> {

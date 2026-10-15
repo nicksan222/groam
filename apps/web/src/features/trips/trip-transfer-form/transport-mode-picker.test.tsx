@@ -1,14 +1,13 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
-import { stubMatchMedia } from '@/testing/stub-match-media';
+import { render } from '@groam/vitest-config/react';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { TransportModePicker } from './transport-mode-picker';
 
-afterEach(cleanup);
-
-test('uses one clear transport selector without duplicate mode buttons', () => {
-  stubMatchMedia();
+test('uses one clear transport selector without duplicate mode buttons', async () => {
   const onChange = vi.fn();
-  render(<TransportModePicker disabled={false} mode="train" onChange={onChange} />);
-  expect(screen.getByRole('combobox', { name: 'Transport mode' }).textContent).toContain('Train');
-  expect(screen.queryByRole('button', { name: 'Flight' })).toBeNull();
+  await render(<TransportModePicker disabled={false} mode="train" onChange={onChange} />);
+  expect(page.getByRole('combobox', { name: 'Transport mode' }).element().textContent).toContain(
+    'Train'
+  );
+  await expect.element(page.getByRole('button', { name: 'Flight' })).not.toBeInTheDocument();
 });

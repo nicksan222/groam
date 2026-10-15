@@ -1,4 +1,4 @@
-import { ids } from './ids';
+import { ids } from '#src/testing/ids';
 import { type UiTarget, ui } from './interaction';
 import { inlineActivityEditor } from './locators';
 import { setActivityDayRange } from './set-activity-day-range';

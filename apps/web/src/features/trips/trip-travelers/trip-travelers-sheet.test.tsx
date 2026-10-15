@@ -1,6 +1,7 @@
 import type { Id } from '@groam/backend/data-model';
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { TripTravelersSheet } from '@/features/trips/trip-travelers/trip-travelers-sheet';
 import { testIds } from '@/lib/test-ids';
 
@@ -34,10 +35,8 @@ vi.mock('@/features/trips/hooks/use-trip-travelers', () => ({
   })
 }));
 
-afterEach(cleanup);
-
-test('lists group members without an invite-to-trip action', () => {
-  render(
+test('lists group members without an invite-to-trip action', async () => {
+  await render(
     <TripTravelersSheet
       onOpenChange={vi.fn()}
       open
@@ -46,9 +45,13 @@ test('lists group members without an invite-to-trip action', () => {
     />
   );
 
-  expect(screen.getByTestId(testIds.tripTravelers)).toBeTruthy();
-  expect(screen.getByText('Alex (you)')).toBeTruthy();
-  expect(screen.getByText('Maya')).toBeTruthy();
-  expect(screen.getByText(/everyone in this group is on lisbon escape/iu)).toBeTruthy();
-  expect(screen.queryByRole('button', { name: /invite to this trip/iu })).toBeNull();
+  await expect.element(page.getByTestId(testIds.tripTravelers)).toBeInTheDocument();
+  await expect.element(page.getByText('Alex (you)')).toBeInTheDocument();
+  await expect.element(page.getByText('Maya')).toBeInTheDocument();
+  await expect
+    .element(page.getByText(/everyone in this group is on lisbon escape/iu))
+    .toBeInTheDocument();
+  await expect
+    .element(page.getByRole('button', { name: /invite to this trip/iu }))
+    .not.toBeInTheDocument();
 });

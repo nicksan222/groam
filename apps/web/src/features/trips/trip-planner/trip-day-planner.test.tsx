@@ -1,34 +1,37 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { plannerFixture } from '@/testing/trip-planner-fixture';
 import { TripDayPlanner } from './trip-day-planner';
 
 vi.mock('@/features/trips/trip-destinations/trip-destinations-map', () => ({
   TripDestinationsMap: () => null
 }));
-afterEach(cleanup);
 
-test('makes the day, part of day, exact times and location directly readable', () => {
-  render(<TripDayPlanner trip={plannerFixture()} />);
-  const day = screen.getByRole('region', { name: 'Day 1 Monday, September 14' });
-  const morning = within(day).getByRole('region', { name: 'Morning, Day 1' });
-  expect(within(morning).getByText('10:00–12:00')).toBeTruthy();
-  expect(within(morning).getByText('Explore the tile museum')).toBeTruthy();
-  expect(within(morning).getByText('Lisbon')).toBeTruthy();
-  expect(within(day).getByText('Check in · Casa do Pátio')).toBeTruthy();
-  expect(screen.queryByRole('button', { name: /add|edit|remove/i })).toBeNull();
-  fireEvent.click(within(morning).getByText('Explore the tile museum'));
-  expect(
-    within(morning).getByText('Leave a little time for the courtyard café.').closest('details')
-      ?.open
-  ).toBe(true);
+test('makes the day, part of day, exact times and location directly readable', async () => {
+  await render(<TripDayPlanner trip={plannerFixture()} />);
+  const day = page.getByRole('region', { name: 'Day 1 Monday, September 14' });
+  const morning = day.getByRole('region', { name: 'Morning, Day 1' });
+  await expect.element(morning.getByText('10:00–12:00')).toBeInTheDocument();
+  await expect.element(morning.getByText('Explore the tile museum')).toBeInTheDocument();
+  await expect.element(morning.getByText('Lisbon')).toBeInTheDocument();
+  await expect.element(day.getByText('Check in · Casa do Pátio')).toBeInTheDocument();
+  await expect
+    .element(page.getByRole('button', { name: /add|edit|remove/i }))
+    .not.toBeInTheDocument();
+  await morning.getByText('Explore the tile museum').click();
+  await expect
+    .element(morning.getByText('Leave a little time for the courtyard café.'))
+    .toBeVisible();
 });
 
-test('shows unscheduled and empty states without assigning made-up days', () => {
+test('shows unscheduled and empty states without assigning made-up days', async () => {
   const trip = plannerFixture();
   trip.totalDurationDays = null;
   trip.destinations = [];
-  render(<TripDayPlanner trip={trip} />);
-  expect(screen.getByRole('heading', { name: 'The itinerary is still wide open' })).toBeTruthy();
-  expect(screen.queryByRole('heading', { name: /^Day / })).toBeNull();
+  await render(<TripDayPlanner trip={trip} />);
+  await expect
+    .element(page.getByRole('heading', { name: 'The itinerary is still wide open' }))
+    .toBeInTheDocument();
+  await expect.element(page.getByRole('heading', { name: /^Day / })).not.toBeInTheDocument();
 });

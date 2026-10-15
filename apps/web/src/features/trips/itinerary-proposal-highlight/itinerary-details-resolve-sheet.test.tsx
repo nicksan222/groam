@@ -1,17 +1,15 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
-import { stubMatchMedia } from '@/testing/stub-match-media';
+import { render } from '@groam/vitest-config/react';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { ItineraryDetailsResolveSheet } from './itinerary-details-resolve-sheet';
 
-vi.mock('@tanstack/react-router', () => ({
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
   Link: ({ children }: { children: React.ReactNode }) => <a href="/compare">{children}</a>
 }));
 
-afterEach(cleanup);
-
-test('locks the entire resolution dialog while choices are applying', () => {
-  stubMatchMedia();
-  render(
+test('locks the entire resolution dialog while choices are applying', async () => {
+  await render(
     <ItineraryDetailsResolveSheet
       applyChoices={vi.fn()}
       canResolve
@@ -39,20 +37,17 @@ test('locks the entire resolution dialog while choices are applying', () => {
     />
   );
 
-  expect(screen.getByRole('dialog').getAttribute('aria-busy')).toBe('true');
-  expect(screen.getByText('Applying your choices…')).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Cancel' }).hasAttribute('disabled')).toBe(true);
-  expect(screen.getByRole('button', { name: 'Use all shared' }).hasAttribute('disabled')).toBe(
-    true
-  );
-  expect(
-    screen.getByRole('button', { name: 'Keep shared trip for Trip name' }).hasAttribute('disabled')
-  ).toBe(true);
+  await expect.element(page.getByRole('dialog')).toHaveAttribute('aria-busy', 'true');
+  await expect.element(page.getByText('Applying your choices…')).toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+  await expect.element(page.getByRole('button', { name: 'Use all shared' })).toBeDisabled();
+  await expect
+    .element(page.getByRole('button', { name: 'Keep shared trip for Trip name' }))
+    .toBeDisabled();
 });
 
-test('keeps the shared branch and idea branch distinct through result preview', () => {
-  stubMatchMedia();
-  render(
+test('keeps the shared branch and idea branch distinct through result preview', async () => {
+  await render(
     <ItineraryDetailsResolveSheet
       applyChoices={vi.fn()}
       canResolve
@@ -80,19 +75,19 @@ test('keeps the shared branch and idea branch distinct through result preview', 
     />
   );
 
-  const comparedBranches = screen.getByLabelText('Compared sides');
+  const comparedBranches = page.getByLabelText('Compared sides').element();
   expect(comparedBranches.textContent).toContain('Summer group trip');
   expect(comparedBranches.textContent).toContain('Lisbon alternatives');
-  const sharedBranch = screen.getByRole('region', { name: 'Shared trip branch for Trip name' });
-  const ideaBranch = screen.getByRole('region', { name: 'This idea branch for Trip name' });
-  expect(sharedBranch.textContent).toContain('Shared trip name');
-  expect(sharedBranch.textContent).not.toContain('Idea trip name');
-  expect(ideaBranch.textContent).toContain('Idea trip name');
-  expect(ideaBranch.textContent).not.toContain('Shared trip name');
+  const sharedBranch = page.getByRole('region', { name: 'Shared trip branch for Trip name' });
+  const ideaBranch = page.getByRole('region', { name: 'This idea branch for Trip name' });
+  expect(sharedBranch.element().textContent).toContain('Shared trip name');
+  expect(sharedBranch.element().textContent).not.toContain('Idea trip name');
+  expect(ideaBranch.element().textContent).toContain('Idea trip name');
+  expect(ideaBranch.element().textContent).not.toContain('Shared trip name');
 
-  fireEvent.click(within(ideaBranch).getByRole('button', { name: 'Keep my idea for Trip name' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Review result' }));
-  const preview = screen.getByRole('region', { name: 'Result preview' });
+  await ideaBranch.getByRole('button', { name: 'Keep my idea for Trip name' }).click();
+  await page.getByRole('button', { name: 'Review result' }).click();
+  const preview = page.getByRole('region', { name: 'Result preview' }).element();
   expect(preview.textContent).toContain('From your idea · Lisbon alternatives');
   expect(preview.textContent).toContain('Idea trip name');
 });

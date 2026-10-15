@@ -1,5 +1,6 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test, vi } from 'vite-plus/test';
+import { page, userEvent } from 'vite-plus/test/browser';
 import type { WorkspaceAgentRun } from '@/features/agents/hooks/use-workspace-agent-runs';
 import { testIds } from '@/lib/test-ids';
 import { AgentRunTable } from './agent-run-table';
@@ -11,12 +12,13 @@ vi.mock('@/features/agents/hooks/use-agent-run', () => ({
   useAgentRunControls: () => ({ retry, start: vi.fn(), stop: vi.fn() })
 }));
 
-vi.mock('@tanstack/react-router', async () => {
+vi.mock('@tanstack/react-router', async (importOriginal) => {
   const { createAgentTestRouterMock } = await import('@/features/agents/agent-test-router-mock');
-  return createAgentTestRouterMock(navigate);
+  return {
+    ...(await importOriginal<typeof import('@tanstack/react-router')>()),
+    ...createAgentTestRouterMock(navigate)
+  };
 });
-
-afterEach(cleanup);
 
 const longError =
   'Groam AI is temporarily unavailable. Check your provider settings and try again in a few minutes.';
@@ -51,32 +53,32 @@ function run(overrides: Partial<WorkspaceAgentRun> = {}): WorkspaceAgentRun {
   };
 }
 
-test('renders run, agent, caller, status, and updated columns', () => {
-  render(<AgentRunTable runs={[run()]} />);
-  const row = screen.getByTestId(testIds.agentCard);
+test('renders run, agent, caller, status, and updated columns', async () => {
+  await render(<AgentRunTable runs={[run()]} />);
+  const row = page.getByTestId(testIds.agentCard).element();
   expect(row.tagName).toBe('TR');
-  expect(screen.getByText('Idea reviewer')).toBeTruthy();
-  expect(screen.getByText('Alex')).toBeTruthy();
-  expect(screen.getByText('Failed')).toBeTruthy();
+  await expect.element(page.getByText('Idea reviewer')).toBeInTheDocument();
+  await expect.element(page.getByText('Alex')).toBeInTheDocument();
+  await expect.element(page.getByText('Failed')).toBeInTheDocument();
 
-  const cell = screen.getByTestId(testIds.agentRunFeedRunCell);
+  const cell = page.getByTestId(testIds.agentRunFeedRunCell).element();
   expect(cell.className).toContain('min-w-0');
-  const title = screen.getByRole('link', { name: /Kyoto food crawl/u });
+  const title = page.getByRole('link', { name: /Kyoto food crawl/u }).element();
   expect(title.className).toContain('truncate');
   expect(title.className).toContain('font-semibold');
   expect(title.getAttribute('href')).toBe('/agents/reviewer/run-failed');
 
-  const detail = screen.getByText(/Groam AI is temporarily unavailable/u);
+  const detail = page.getByText(/Groam AI is temporarily unavailable/u).element();
   expect(detail.className).toContain('truncate');
   expect(detail.className).toContain('text-xs');
-  expect(screen.queryByTestId(testIds.agentRetryFromZero)).toBeNull();
+  await expect.element(page.getByTestId(testIds.agentRetryFromZero)).not.toBeInTheDocument();
 });
 
-test('retries from zero without navigating away', () => {
-  render(<AgentRunTable runs={[run({ issueId: 'issue-1' as never })]} />);
-  const retryButton = screen.getByTestId(testIds.agentRetryFromZero);
+test('retries from zero without navigating away', async () => {
+  await render(<AgentRunTable runs={[run({ issueId: 'issue-1' as never })]} />);
+  const retryButton = page.getByTestId(testIds.agentRetryFromZero).element();
   expect(retryButton.textContent).toBe('');
-  fireEvent.click(retryButton);
+  await userEvent.click(retryButton);
   expect(retry).toHaveBeenCalledWith({ runId: 'run-failed' });
   expect(navigate).not.toHaveBeenCalled();
 });

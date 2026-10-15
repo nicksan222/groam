@@ -1,5 +1,5 @@
 import type { Id } from '@groam/backend/data-model';
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import type { ItineraryChange } from './itinerary-proposal-changes';
 import { useItineraryDetailsResolve } from './use-itinerary-details-resolve';
@@ -15,7 +15,10 @@ const ideaContext = vi.hoisted(() => ({ useOptionalIdeaContext: vi.fn() }));
 const pending = vi.hoisted(() => ({ run: vi.fn() }));
 const sheet = vi.hoisted(() => ({ open: false, setOpen: vi.fn() }));
 
-vi.mock('convex/react', () => convex);
+vi.mock('convex/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('convex/react')>()),
+  ...convex
+}));
 vi.mock('@groam/ui/components/toast', () => ({ toast: notifications }));
 vi.mock('@/features/ideas/hooks/use-idea-context', () => ({
   useOptionalIdeaContext: () => ideaContext.useOptionalIdeaContext()
@@ -84,7 +87,7 @@ describe('useItineraryDetailsResolve', () => {
   test('builds choices from loaded data and rebases the selected details', async () => {
     const rebase = vi.fn().mockResolvedValue({ kind: 'applied' });
     convex.useAction.mockReturnValue(rebase);
-    const { result } = renderHook(() => useItineraryDetailsResolve({ change, trip: trip() }));
+    const { result } = await renderHook(() => useItineraryDetailsResolve({ change, trip: trip() }));
 
     expect(result.current).toMatchObject({
       canResolve: true,
@@ -111,7 +114,7 @@ describe('useItineraryDetailsResolve', () => {
   test('does not submit incomplete choices and reports remaining rebase conflicts', async () => {
     const rebase = vi.fn().mockResolvedValue({ kind: 'conflicts' });
     convex.useAction.mockReturnValue(rebase);
-    const { result } = renderHook(() => useItineraryDetailsResolve({ change, trip: trip() }));
+    const { result } = await renderHook(() => useItineraryDetailsResolve({ change, trip: trip() }));
 
     await act(async () => {
       expect(await result.current.applyChoices({})).toBe(false);
@@ -142,7 +145,7 @@ describe('useItineraryDetailsResolve', () => {
       .mockReturnValueOnce([{ mediaId: 'mine-file', name: 'My file' }]);
     convex.useAction.mockReturnValue(rebase);
 
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useItineraryDetailsResolve({ change: attachmentChange, trip: trip() })
     );
 
@@ -173,7 +176,7 @@ describe('useItineraryDetailsResolve', () => {
       arguments_ === 'skip' ? undefined : undefined
     );
     convex.useAction.mockReturnValue(vi.fn());
-    const { result } = renderHook(() => useItineraryDetailsResolve({ change, trip: trip() }));
+    const { result } = await renderHook(() => useItineraryDetailsResolve({ change, trip: trip() }));
 
     expect(result.current).toMatchObject({
       canResolve: false,
@@ -192,7 +195,7 @@ describe('useItineraryDetailsResolve', () => {
   test('reports rebase errors and treats a cancelled pending action as unresolved', async () => {
     const rebase = vi.fn().mockRejectedValue(new Error('Server Error'));
     convex.useAction.mockReturnValue(rebase);
-    const { result, rerender } = renderHook(() =>
+    const { result, rerender } = await renderHook(() =>
       useItineraryDetailsResolve({ change, trip: trip() })
     );
 
@@ -202,7 +205,7 @@ describe('useItineraryDetailsResolve', () => {
     expect(notifications.error).toHaveBeenCalledWith('Unable to apply the selected details');
 
     pending.run.mockResolvedValueOnce(null);
-    rerender();
+    await rerender();
     await act(async () => {
       expect(await result.current.applyChoices({ name: 'mine' })).toBe(false);
     });

@@ -1,12 +1,15 @@
 import type { Id } from '@groam/backend/data-model';
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { useTripPacking } from './use-trip-packing';
 
 const convex = vi.hoisted(() => ({ useMutation: vi.fn(), useQuery: vi.fn() }));
 const notifications = vi.hoisted(() => ({ error: vi.fn() }));
 
-vi.mock('convex/react', () => convex);
+vi.mock('convex/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('convex/react')>()),
+  ...convex
+}));
 vi.mock('@groam/ui/components/toast', () => ({ toast: notifications }));
 
 const tripId = 'trip-1' as Id<'trips'>;
@@ -22,9 +25,9 @@ describe('useTripPacking', () => {
   test('adds the draft, clears it after success, and sends trip context', async () => {
     const add = vi.fn().mockResolvedValue(null);
     convex.useMutation.mockReturnValue(add);
-    const { result } = renderHook(() => useTripPacking(tripId));
+    const { result } = await renderHook(() => useTripPacking(tripId));
 
-    act(() => result.current.setDraft('  Passport  '));
+    await act(() => result.current.setDraft('  Passport  '));
     await act(async () => {
       await result.current.add();
     });
@@ -37,12 +40,12 @@ describe('useTripPacking', () => {
   test('skips loading and reports failed updates when no trip is selected', async () => {
     const update = vi.fn().mockRejectedValue(new Error('Read only'));
     convex.useMutation.mockReturnValueOnce(vi.fn()).mockReturnValueOnce(update);
-    const loaded = renderHook(() => useTripPacking(tripId));
+    const loaded = await renderHook(() => useTripPacking(tripId));
     await act(() => loaded.result.current.toggle(itemId, true));
     expect(update).toHaveBeenCalledWith({ itemId, packed: true, tripId });
     expect(notifications.error).toHaveBeenCalledWith('Read only');
 
-    renderHook(() => useTripPacking(undefined));
+    await renderHook(() => useTripPacking(undefined));
     expect(convex.useQuery).toHaveBeenLastCalledWith(expect.anything(), 'skip');
   });
 
@@ -53,12 +56,12 @@ describe('useTripPacking', () => {
     let mutationIndex = 0;
     convex.useMutation.mockImplementation(() => [add, update, remove][mutationIndex++ % 3]);
     convex.useQuery.mockReturnValue(undefined);
-    const { result } = renderHook(() => useTripPacking(tripId));
+    const { result } = await renderHook(() => useTripPacking(tripId));
 
     await act(() => result.current.add());
     expect(add).not.toHaveBeenCalled();
     expect(result.current.isLoading).toBe(true);
-    act(() => result.current.setDraft('Passport'));
+    await act(() => result.current.setDraft('Passport'));
     await act(() => result.current.add());
     expect(notifications.error).toHaveBeenCalledWith('Cannot add');
     await act(() => result.current.remove(itemId));
@@ -71,11 +74,11 @@ describe('useTripPacking', () => {
     const remove = vi.fn().mockRejectedValue(new Error('Cannot remove'));
     let mutationIndex = 0;
     convex.useMutation.mockImplementation(() => [add, update, remove][mutationIndex++ % 3]);
-    const selected = renderHook(() => useTripPacking(tripId));
+    const selected = await renderHook(() => useTripPacking(tripId));
     await act(() => selected.result.current.remove(itemId));
     expect(notifications.error).toHaveBeenCalledWith('Cannot remove');
 
-    const noTrip = renderHook(() => useTripPacking(undefined));
+    const noTrip = await renderHook(() => useTripPacking(undefined));
     await act(() => noTrip.result.current.remove(itemId));
     expect(remove).toHaveBeenCalledTimes(1);
   });

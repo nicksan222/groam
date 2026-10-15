@@ -1,5 +1,6 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { beforeEach, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { IdeaContextProvider, useIdeaContext, useOptionalIdeaContext } from './use-idea-context';
 
 const deps = vi.hoisted(() => ({
@@ -49,10 +50,8 @@ beforeEach(() => {
   deps.useTrip.mockReturnValue({ trip: { id: 'working-trip', name: 'My Portugal' } });
 });
 
-afterEach(cleanup);
-
-test('provides shared, working, and viewer-author idea state', () => {
-  render(
+test('provides shared, working, and viewer-author idea state', async () => {
+  await render(
     <IdeaContextProvider
       proposalId={'proposal-1' as never}
       sharedTripId={'shared-trip' as never}
@@ -62,16 +61,16 @@ test('provides shared, working, and viewer-author idea state', () => {
     </IdeaContextProvider>
   );
 
-  const context = screen.getByRole('status', { name: 'Idea context' }).textContent;
+  const context = page.getByRole('status', { name: 'Idea context' }).element().textContent;
   expect(context).toContain('"isViewerAuthor":true');
   expect(context).toContain('"view":"compare"');
   expect(context).toContain('"working-trip"');
   expect(deps.useTrip).toHaveBeenCalledWith('working-trip');
 });
 
-test('keeps the context usable while the proposal has no working trip', () => {
+test('keeps the context usable while the proposal has no working trip', async () => {
   deps.useTripVersion.mockReturnValue({ proposal: undefined });
-  render(
+  await render(
     <IdeaContextProvider
       proposalId={'proposal-1' as never}
       sharedTripId={'shared-trip' as never}
@@ -81,14 +80,16 @@ test('keeps the context usable while the proposal has no working trip', () => {
     </IdeaContextProvider>
   );
 
-  const context = screen.getByRole('status', { name: 'Idea context' }).textContent;
+  const context = page.getByRole('status', { name: 'Idea context' }).element().textContent;
   expect(context).toContain('"isViewerAuthor":false');
   expect(context).not.toContain('"workingTrip"');
   expect(deps.useTrip).not.toHaveBeenCalled();
 });
 
-test('returns null from the optional hook when no provider is present', () => {
-  render(<OptionalContextProbe />);
+test('returns null from the optional hook when no provider is present', async () => {
+  await render(<OptionalContextProbe />);
 
-  expect(screen.getByRole('status', { name: 'Optional idea context' }).textContent).toBe('null');
+  await expect
+    .element(page.getByRole('status', { name: 'Optional idea context' }))
+    .toHaveTextContent('null');
 });

@@ -1,12 +1,11 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test, vi } from 'vite-plus/test';
+import { page, userEvent } from 'vite-plus/test/browser';
 import {
   AssistantAttachmentChips,
   AssistantAttachmentPicker,
   type AssistantAttachments
 } from './assistant-attachments';
-
-afterEach(cleanup);
 
 const attachmentOption = {
   description: 'Portugal · Lisbon',
@@ -29,37 +28,40 @@ test('attaches and removes trip context from the composer', async () => {
   const onChange = vi.fn();
   const attachments = attachmentFixture(onChange);
 
-  render(
+  await render(
     <>
       <AssistantAttachmentChips attachments={attachments} />
       <AssistantAttachmentPicker attachments={attachments} />
     </>
   );
 
-  fireEvent.click(screen.getByRole('button', { name: 'Remove Portugal attachment' }));
+  await page.getByRole('button', { name: 'Remove Portugal attachment' }).click();
   expect(onChange).toHaveBeenCalledWith(attachments.tags[0], false);
 
-  const trigger = screen.getByRole('button', { name: 'Attach trip context' });
+  const trigger = page.getByRole('button', { name: 'Attach trip context' }).element();
   trigger.focus();
-  fireEvent.keyDown(trigger, { key: 'ArrowDown' });
-  fireEvent.click(
-    await waitFor(() => screen.getByRole('menuitemcheckbox', { name: /Alfama walk/u }))
+  trigger.focus();
+  await userEvent.keyboard('{ArrowDown}');
+  await userEvent.click(
+    await vi.waitFor(() => page.getByRole('menuitemcheckbox', { name: /Alfama walk/u }).element())
   );
   expect(onChange).toHaveBeenCalledWith({ id: 'activity-1', kind: 'activity' }, true);
 });
 
 test('searches attachments and closes with Escape', async () => {
-  render(<AssistantAttachmentPicker attachments={attachmentFixture()} />);
+  await render(<AssistantAttachmentPicker attachments={attachmentFixture()} />);
 
-  const trigger = screen.getByRole('button', { name: 'Attach trip context' });
+  const trigger = page.getByRole('button', { name: 'Attach trip context' }).element();
   trigger.focus();
-  fireEvent.keyDown(trigger, { key: 'ArrowDown' });
-  const searchInput = await waitFor(() =>
-    screen.getByRole('searchbox', { name: 'Search trip context' })
+  trigger.focus();
+  await userEvent.keyboard('{ArrowDown}');
+  const searchInput = await vi.waitFor(() =>
+    page.getByRole('searchbox', { name: 'Search trip context' }).element()
   );
-  fireEvent.change(searchInput, { target: { value: 'missing' } });
-  expect(screen.getByText('No matching trip context.')).toBeDefined();
-  fireEvent.keyDown(searchInput, { key: 'Escape' });
-  await waitFor(() => expect(screen.queryByText('No matching trip context.')).toBeNull());
+  await userEvent.fill(searchInput, 'missing');
+  await expect.element(page.getByText('No matching trip context.')).toBeInTheDocument();
+  searchInput.focus();
+  await userEvent.keyboard('{Escape}');
+  await expect.element(page.getByText('No matching trip context.')).not.toBeInTheDocument();
   expect(trigger.getAttribute('aria-expanded')).toBe('false');
 });

@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
+import { type TestUserCredentials, uniqueTestUser } from '#src/testing/unique-test-user';
 import { createFirstGroup } from './create-first-group';
 import { signUp } from './sign-up';
-import { type TestUserCredentials, uniqueTestUser } from './unique-test-user';
 
 export type CompleteOnboardingInput = {
   groupName?: string;

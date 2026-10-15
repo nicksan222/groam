@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import type { Session } from '@/features/workspace/workspace-shell/workspace-state';
 import { useProfileSettings } from './use-profile-settings';
@@ -23,8 +23,8 @@ beforeEach(() => {
 
 describe('useProfileSettings', () => {
   test('trims and persists the profile name and image', async () => {
-    const { result } = renderHook(() => useProfileSettings(user));
-    act(() =>
+    const { result } = await renderHook(() => useProfileSettings(user));
+    await act(() =>
       result.current.updateState({
         image: '  https://example.com/photo.jpg  ',
         name: '  Updated name  ',
@@ -48,7 +48,7 @@ describe('useProfileSettings', () => {
 
   test('stores a blank image as null and surfaces auth errors', async () => {
     auth.updateUser.mockResolvedValue({ data: null, error: { message: 'Profile update failed' } });
-    const { result } = renderHook(() => useProfileSettings(user));
+    const { result } = await renderHook(() => useProfileSettings(user));
 
     await act(() => result.current.save());
 

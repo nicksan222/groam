@@ -1,10 +1,10 @@
 import { createHmac } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { expect, type Page } from '@playwright/test';
-import { ids } from './ids';
+import { ids } from '#src/testing/ids';
+import type { TestUserCredentials } from '#src/testing/unique-test-user';
 import { by } from './locators';
 import { signOut } from './sign-out';
-import type { TestUserCredentials } from './unique-test-user';
 
 async function downloadedText(page: Page, testId: (typeof ids)[keyof typeof ids]) {
   const downloadPromise = page.waitForEvent('download');

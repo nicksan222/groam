@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import {
   useCreateDiscussion,
@@ -10,7 +10,8 @@ import {
 const convex = vi.hoisted(() => ({ mutation: vi.fn(), query: vi.fn() }));
 const notifications = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
 
-vi.mock('convex/react', () => ({
+vi.mock('convex/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('convex/react')>()),
   useMutation: () => convex.mutation,
   useQuery: (...args: unknown[]) => convex.query(...args)
 }));
@@ -23,8 +24,8 @@ beforeEach(() => {
 });
 
 describe('discussion hooks', () => {
-  test('uses empty collections while discussion data is loading or skipped', () => {
-    const { result, rerender } = renderHook(
+  test('uses empty collections while discussion data is loading or skipped', async () => {
+    const { result, rerender } = await renderHook(
       ({ skip }) => useDiscussions(skip ? 'skip' : undefined),
       {
         initialProps: { skip: false }
@@ -32,15 +33,15 @@ describe('discussion hooks', () => {
     );
 
     expect(result.current).toEqual({ discussions: [], isLoading: true });
-    rerender({ skip: true });
+    await rerender({ skip: true });
     expect(convex.query.mock.calls.at(-1)?.[1]).toBe('skip');
 
-    const roster = renderHook(() => useDiscussionRoster());
+    const roster = await renderHook(() => useDiscussionRoster());
     expect(roster.result.current).toEqual({ isLoading: true, members: [] });
   });
 
   test('creates a discussion and reports creation failures', async () => {
-    const { result } = renderHook(() => useCreateDiscussion());
+    const { result } = await renderHook(() => useCreateDiscussion());
     const input = { clientRequestId: 'request-1', memberUserIds: ['user-1'], title: 'Plans' };
 
     await expect(act(() => result.current.createDiscussion(input))).resolves.toBe('discussion-new');
@@ -52,7 +53,7 @@ describe('discussion hooks', () => {
   });
 
   test('renames a discussion and returns false when the mutation fails', async () => {
-    const { result } = renderHook(() => useRenameDiscussion());
+    const { result } = await renderHook(() => useRenameDiscussion());
 
     await expect(
       act(() => result.current.renameDiscussion('discussion-1' as never, 'New title'))

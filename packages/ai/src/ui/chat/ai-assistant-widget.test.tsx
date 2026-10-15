@@ -1,5 +1,6 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { page, userEvent } from 'vite-plus/test/browser';
 import {
   AgentContextProvider,
   type AgentScreenContext,
@@ -79,7 +80,6 @@ vi.mock('#ai/ui/hooks/use-assistant-chats', () => ({
 }));
 
 afterEach(() => {
-  cleanup();
   vi.clearAllMocks();
   assistant.canStop = false;
   assistant.isResponding = false;
@@ -88,21 +88,8 @@ afterEach(() => {
   assistant.unstableOpen = false;
 });
 
-beforeEach(() => {
-  Object.defineProperty(window, 'matchMedia', {
-    writable: true,
-    value: vi.fn().mockImplementation((query: string) => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      dispatchEvent: vi.fn()
-    }))
-  });
-});
+// Between the mobile (768px) and docked (1280px) breakpoints the assistant opens as an overlay.
+beforeEach(() => page.viewport(1024, 800));
 
 const context: AgentScreenContext = {
   capabilities: ['trip.status.read'],
@@ -118,7 +105,7 @@ function ContextRegistration({ value = context }: { value?: AgentScreenContext }
   return null;
 }
 
-function renderWidget(withContext = true) {
+async function renderWidget(withContext = true) {
   return render(
     <AgentContextProvider>
       {withContext && <ContextRegistration />}
@@ -129,87 +116,64 @@ function renderWidget(withContext = true) {
 
 describe('AiAssistantWidget', () => {
   test('uses registered screen context in one conversation', async () => {
-    renderWidget();
-    expect(screen.getByRole('button', { name: 'Open Groam AI' })).toBeDefined();
-    fireEvent.click(screen.getByRole('button', { name: 'Open Groam AI' }));
+    await renderWidget();
+    await expect.element(page.getByRole('button', { name: 'Open Groam AI' })).toBeInTheDocument();
+    await page.getByRole('button', { name: 'Open Groam AI' }).click();
 
-    const panel = screen.getByRole('dialog', { name: 'Groam AI' });
+    const panel = page.getByRole('dialog', { name: 'Groam AI' }).element();
     expect(panel.getAttribute('data-slot')).toBe('sheet-content');
-    expect(screen.getAllByText('Portugal · Decisions')).toHaveLength(1);
-    expect(screen.getByText('How can I help?')).toBeDefined();
-    expect(screen.getByText('Explain the decision state shown here.')).toBeDefined();
-    expect(screen.getByRole('button', { name: 'Attach trip context' })).toBeDefined();
-    fireEvent.click(screen.getByRole('button', { name: 'Start new AI chat' }));
-    await waitFor(() => expect(assistant.selectThread).toHaveBeenCalledWith('thread-2'));
-    const composer = screen.getByRole('textbox', { name: 'Assistant prompt' });
-    fireEvent.change(composer, {
-      target: { value: 'What still needs attention?' }
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Submit prompt' }));
-    await waitFor(() => expect(assistant.send).toHaveBeenCalledWith('What still needs attention?'));
+    expect(page.getByText('Portugal · Decisions').elements()).toHaveLength(1);
+    await expect.element(page.getByText('How can I help?')).toBeInTheDocument();
+    await expect
+      .element(page.getByText('Explain the decision state shown here.'))
+      .toBeInTheDocument();
+    await expect
+      .element(page.getByRole('button', { name: 'Attach trip context' }))
+      .toBeInTheDocument();
+    await page.getByRole('button', { name: 'Start new AI chat' }).click();
+    await vi.waitFor(() => expect(assistant.selectThread).toHaveBeenCalledWith('thread-2'));
+    const composer = page.getByRole('textbox', { name: 'Assistant prompt' }).element();
+    await userEvent.fill(composer, 'What still needs attention?');
+    await page.getByRole('button', { name: 'Submit prompt' }).click();
+    await vi.waitFor(() =>
+      expect(assistant.send).toHaveBeenCalledWith('What still needs attention?')
+    );
 
-    fireEvent.keyDown(panel, { key: 'Escape' });
-    expect(screen.queryByRole('dialog', { name: 'Groam AI' })).toBeNull();
+    panel.focus();
+
+    await userEvent.keyboard('{Escape}');
+    await expect.element(page.getByRole('dialog', { name: 'Groam AI' })).not.toBeInTheDocument();
   });
 
-  test('keeps the wide-screen assistant dock nonmodal', () => {
-    vi.mocked(window.matchMedia).mockImplementation((query: string) => ({
-      matches: query === '(min-width: 1280px)',
-      media: query,
-      onchange: null,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      dispatchEvent: vi.fn()
-    }));
-    renderWidget();
-    fireEvent.click(screen.getByRole('button', { name: 'Open Groam AI' }));
-    expect(screen.getByRole('region', { name: 'Portugal planning' })).toBeDefined();
-    expect(screen.queryByRole('dialog', { name: 'Groam AI' })).toBeNull();
+  test('keeps the wide-screen assistant dock nonmodal', async () => {
+    await page.viewport(1440, 900);
+    await renderWidget();
+    await page.getByRole('button', { name: 'Open Groam AI' }).click();
+    await expect
+      .element(page.getByRole('region', { name: 'Portugal planning' }))
+      .toBeInTheDocument();
+    await expect.element(page.getByRole('dialog', { name: 'Groam AI' })).not.toBeInTheDocument();
   });
 
-  test('preserves an unsent draft when the overlay becomes docked', () => {
-    let docked = false;
-    const listeners = new Set<EventListener>();
-    vi.mocked(window.matchMedia).mockImplementation((query: string) => ({
-      get matches() {
-        return query === '(min-width: 1280px)' && docked;
-      },
-      media: query,
-      onchange: null,
-      addEventListener: (_type: string, listener: EventListenerOrEventListenerObject) =>
-        listeners.add(listener as EventListener),
-      removeEventListener: (_type: string, listener: EventListenerOrEventListenerObject) =>
-        listeners.delete(listener as EventListener),
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      dispatchEvent: vi.fn()
-    }));
-    renderWidget();
-    fireEvent.click(screen.getByRole('button', { name: 'Open Groam AI' }));
-    fireEvent.change(screen.getByRole('textbox', { name: 'Assistant prompt' }), {
-      target: { value: 'draft resize check' }
-    });
-    docked = true;
-    act(() => {
-      listeners.forEach((listener) => {
-        listener(new Event('change'));
-      });
-    });
-    expect(
-      (screen.getByRole('textbox', { name: 'Assistant prompt' }) as HTMLTextAreaElement).value
-    ).toBe('draft resize check');
+  test('preserves an unsent draft when the overlay becomes docked', async () => {
+    await renderWidget();
+    await page.getByRole('button', { name: 'Open Groam AI' }).click();
+    await page.getByRole('textbox', { name: 'Assistant prompt' }).fill('draft resize check');
+    await page.viewport(1440, 900);
+    await expect.element(page.getByRole('dialog', { name: 'Groam AI' })).not.toBeInTheDocument();
+    await expect
+      .element(page.getByRole('textbox', { name: 'Assistant prompt' }))
+      .toHaveValue('draft resize check');
   });
 
   test('attempts automatic thread opening only once per panel opening', async () => {
     assistant.threadId = null;
     assistant.unstableOpen = true;
-    const view = renderWidget();
-    fireEvent.click(screen.getByRole('button', { name: 'Open Groam AI' }));
-    await waitFor(() => expect(assistant.open).toHaveBeenCalledTimes(1));
+    const view = await renderWidget();
+    await page.getByRole('button', { name: 'Open Groam AI' }).click();
+    await vi.waitFor(() => expect(assistant.open).toHaveBeenCalledTimes(1));
 
-    view.rerender(
+    await view.rerender(
       <AgentContextProvider>
         <ContextRegistration />
         <AiAssistantWidget api={api} />
@@ -218,21 +182,21 @@ describe('AiAssistantWidget', () => {
     expect(assistant.open).toHaveBeenCalledTimes(1);
   });
 
-  test('toggles from the visible keyboard shortcut', () => {
-    renderWidget();
+  test('toggles from the visible keyboard shortcut', async () => {
+    await renderWidget();
 
-    fireEvent.keyDown(window, { ctrlKey: true, key: '.' });
-    expect(screen.getByRole('dialog', { name: 'Groam AI' })).toBeDefined();
-    fireEvent.keyDown(window, { ctrlKey: true, key: '.' });
-    expect(screen.queryByRole('dialog', { name: 'Groam AI' })).toBeNull();
+    await userEvent.keyboard('{Control>}.{/Control}');
+    await expect.element(page.getByRole('dialog', { name: 'Groam AI' })).toBeInTheDocument();
+    await userEvent.keyboard('{Control>}.{/Control}');
+    await expect.element(page.getByRole('dialog', { name: 'Groam AI' })).not.toBeInTheDocument();
   });
 
   test('closes when the registered page changes', async () => {
-    const view = renderWidget();
-    fireEvent.click(screen.getByRole('button', { name: 'Open Groam AI' }));
-    expect(screen.getByRole('dialog', { name: 'Groam AI' })).toBeDefined();
+    const view = await renderWidget();
+    await page.getByRole('button', { name: 'Open Groam AI' }).click();
+    await expect.element(page.getByRole('dialog', { name: 'Groam AI' })).toBeInTheDocument();
 
-    view.rerender(
+    await view.rerender(
       <AgentContextProvider>
         <ContextRegistration
           value={{
@@ -246,32 +210,33 @@ describe('AiAssistantWidget', () => {
       </AgentContextProvider>
     );
 
-    await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: 'Groam AI' })).toBeNull();
-    });
-    expect(screen.getByRole('button', { name: 'Open Groam AI' })).toBeDefined();
+    await expect.element(page.getByRole('dialog', { name: 'Groam AI' })).not.toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'Open Groam AI' })).toBeInTheDocument();
   });
 
-  test('can stop a streaming response from the composer', () => {
+  test('can stop a streaming response from the composer', async () => {
     assistant.canStop = true;
     assistant.isResponding = true;
-    renderWidget();
+    await renderWidget();
     expect(
-      screen.getByRole('button', { name: 'Open Groam AI, response in progress' })
+      page.getByRole('button', { name: 'Open Groam AI, response in progress' }).element()
     ).toBeDefined();
-    fireEvent.click(screen.getByRole('button', { name: 'Open Groam AI, response in progress' }));
+    await userEvent.click(
+      page.getByRole('button', { name: 'Open Groam AI, response in progress' }).element()
+    );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Stop response' }));
+    await page.getByRole('button', { name: 'Stop response' }).click();
     expect(assistant.stop).toHaveBeenCalledTimes(1);
   });
 
-  test('waits for a page to register context', () => {
-    renderWidget(false);
-    fireEvent.click(screen.getByRole('button', { name: 'Open Groam AI' }));
+  test('waits for a page to register context', async () => {
+    await renderWidget(false);
+    await page.getByRole('button', { name: 'Open Groam AI' }).click();
 
-    expect(screen.getByText('No screen context registered')).toBeDefined();
+    await expect.element(page.getByText('No screen context registered')).toBeInTheDocument();
     expect(
-      (screen.getByRole('textbox', { name: 'Assistant prompt' }) as HTMLInputElement).disabled
+      (page.getByRole('textbox', { name: 'Assistant prompt' }).element() as HTMLInputElement)
+        .disabled
     ).toBe(true);
   });
 });

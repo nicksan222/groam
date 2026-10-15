@@ -1,5 +1,6 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type { Session } from '@/features/workspace/workspace-shell/workspace-state';
 import { ProfileSettings } from './profile-settings';
 
@@ -40,34 +41,32 @@ beforeEach(() => {
   };
 });
 
-afterEach(cleanup);
-
 describe('ProfileSettings', () => {
-  test('renders editable profile and username fields', () => {
-    render(<ProfileSettings user={user} />);
+  test('renders editable profile and username fields', async () => {
+    await render(<ProfileSettings user={user} />);
 
-    expect(screen.getByLabelText('Display name')).toBeTruthy();
-    expect(screen.getByLabelText('Username')).toBeTruthy();
-    expect(screen.getByLabelText('Profile photo URL')).toBeTruthy();
-    expect(screen.getByDisplayValue('traveler')).toBeTruthy();
+    await expect.element(page.getByLabelText('Display name')).toBeInTheDocument();
+    await expect.element(page.getByLabelText('Username')).toBeInTheDocument();
+    await expect.element(page.getByLabelText('Profile photo URL')).toBeInTheDocument();
+    await expect.element(page.getByLabelText('Username')).toHaveValue('traveler');
   });
 
   test('submits the profile form through the settings hook', async () => {
-    render(<ProfileSettings user={user} />);
+    await render(<ProfileSettings user={user} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Save profile' }));
+    await page.getByRole('button', { name: 'Save profile' }).click();
 
-    await waitFor(() => expect(profile.save).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(profile.save).toHaveBeenCalledOnce());
   });
 
-  test('shows validation feedback from the settings hook', () => {
+  test('shows validation feedback from the settings hook', async () => {
     profile.state = {
       ...profile.state,
       error: 'Unable to update profile'
     };
 
-    render(<ProfileSettings user={user} />);
+    await render(<ProfileSettings user={user} />);
 
-    expect(screen.getByRole('alert').textContent).toBe('Unable to update profile');
+    await expect.element(page.getByRole('alert')).toHaveTextContent('Unable to update profile');
   });
 });

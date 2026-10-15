@@ -1,5 +1,5 @@
 import type { Id } from '@groam/backend/data-model';
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { useStartIdeaFlow } from './use-start-idea-flow';
 import type { TripDetail } from './use-trips';
@@ -16,7 +16,8 @@ const dialog = vi.hoisted(() => ({
     | undefined
 }));
 
-vi.mock('@tanstack/react-router', () => ({
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
   useNavigate: () => navigate
 }));
 
@@ -63,8 +64,8 @@ beforeEach(() => {
   dialog.config = undefined;
 });
 
-test('opens a choice when the viewer already has a draft', () => {
-  const { result } = renderHook(() =>
+test('opens a choice when the viewer already has a draft', async () => {
+  const { result } = await renderHook(() =>
     useStartIdeaFlow({
       createVersion: vi.fn(),
       proposals: [
@@ -79,7 +80,7 @@ test('opens a choice when the viewer already has a draft', () => {
     })
   );
 
-  act(() => {
+  await act(() => {
     result.current.start();
   });
 
@@ -87,8 +88,8 @@ test('opens a choice when the viewer already has a draft', () => {
   expect(openDialog).not.toHaveBeenCalled();
 });
 
-test('skips the dialog for the empty-route first destination', () => {
-  const { result } = renderHook(() =>
+test('skips the dialog for the empty-route first destination', async () => {
+  const { result } = await renderHook(() =>
     useStartIdeaFlow({
       createVersion: vi.fn(),
       proposals: [],
@@ -96,7 +97,7 @@ test('skips the dialog for the empty-route first destination', () => {
     })
   );
 
-  act(() => {
+  await act(() => {
     result.current.start({ addDestination: true });
   });
 
@@ -104,8 +105,8 @@ test('skips the dialog for the empty-route first destination', () => {
   expect(openDialog).not.toHaveBeenCalled();
 });
 
-test('opens the standard idea dialog with the resolved overview intent', () => {
-  const { result } = renderHook(() =>
+test('opens the standard idea dialog with the resolved overview intent', async () => {
+  const { result } = await renderHook(() =>
     useStartIdeaFlow({
       createVersion: vi.fn(),
       proposals: [],
@@ -113,7 +114,7 @@ test('opens the standard idea dialog with the resolved overview intent', () => {
     })
   );
 
-  act(() => result.current.start());
+  await act(() => result.current.start());
 
   expect(openDialog).toHaveBeenCalledWith({
     addDestination: false,
@@ -123,8 +124,8 @@ test('opens the standard idea dialog with the resolved overview intent', () => {
   });
 });
 
-test('navigates directly to an existing draft for the first destination', () => {
-  const { result } = renderHook(() =>
+test('navigates directly to an existing draft for the first destination', async () => {
+  const { result } = await renderHook(() =>
     useStartIdeaFlow({
       createVersion: vi.fn(),
       proposals: [
@@ -139,14 +140,14 @@ test('navigates directly to an existing draft for the first destination', () => 
     })
   );
 
-  act(() => result.current.start({ addDestination: true }));
+  await act(() => result.current.start({ addDestination: true }));
 
   expect(navigate).toHaveBeenCalled();
   expect(createForIntent).not.toHaveBeenCalled();
 });
 
-test('does nothing when the trip cannot accept proposals', () => {
-  const { result } = renderHook(() =>
+test('does nothing when the trip cannot accept proposals', async () => {
+  const { result } = await renderHook(() =>
     useStartIdeaFlow({
       createVersion: vi.fn(),
       proposals: [],
@@ -154,7 +155,7 @@ test('does nothing when the trip cannot accept proposals', () => {
     })
   );
 
-  act(() => result.current.start({ addDestination: true }));
+  await act(() => result.current.start({ addDestination: true }));
 
   expect(openDialog).not.toHaveBeenCalled();
   expect(createForIntent).not.toHaveBeenCalled();
@@ -163,17 +164,17 @@ test('does nothing when the trip cannot accept proposals', () => {
 test('creates through the guarded dialog capability and opens the result', async () => {
   const proposalId = 'proposal-new' as Id<'tripProposals'>;
   const createVersion = vi.fn().mockResolvedValue({ proposalId });
-  renderHook(() => useStartIdeaFlow({ createVersion, proposals: [], trip: trip() }));
+  await renderHook(() => useStartIdeaFlow({ createVersion, proposals: [], trip: trip() }));
 
   await expect(dialog.config?.createVersion('Coastal route')).resolves.toEqual({ proposalId });
-  act(() => dialog.config?.onCreated(proposalId, { section: 'overview' }));
+  await act(() => dialog.config?.onCreated(proposalId, { section: 'overview' }));
 
   expect(createVersion).toHaveBeenCalledWith('Coastal route');
   expect(navigate).toHaveBeenCalled();
 });
 
-test('continues or starts another idea from the existing-draft choice', () => {
-  const { result } = renderHook(() =>
+test('continues or starts another idea from the existing-draft choice', async () => {
+  const { result } = await renderHook(() =>
     useStartIdeaFlow({
       createVersion: vi.fn(),
       proposals: [
@@ -188,11 +189,11 @@ test('continues or starts another idea from the existing-draft choice', () => {
     })
   );
 
-  act(() => result.current.start({ titleHint: 'A new path' }));
-  act(() => result.current.continueDraft());
+  await act(() => result.current.start({ titleHint: 'A new path' }));
+  await act(() => result.current.continueDraft());
   expect(navigate).toHaveBeenCalled();
 
-  act(() => result.current.start({ titleHint: 'Another' }));
-  act(() => result.current.startAnotherIdea());
+  await act(() => result.current.start({ titleHint: 'Another' }));
+  await act(() => result.current.startAnotherIdea());
   expect(openDialog).toHaveBeenCalledWith(expect.objectContaining({ titleHint: 'Another' }));
 });

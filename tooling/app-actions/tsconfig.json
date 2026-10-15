@@ -2,7 +2,13 @@
   "extends": "@groam/typescript-config/base.json",
   "compilerOptions": {
     "lib": ["ES2023", "DOM"],
-    "paths": { "#ai/*": ["../../packages/ai/src/*"], "#src/*": ["./src/*"] },
+    // One vitest copy for every import, so the browser matchers' `expect.element` types apply.
+    "paths": {
+      "#ai/*": ["../../packages/ai/src/*"],
+      "#src/*": ["./src/*"],
+      "vitest": ["./node_modules/vitest"],
+      "vitest/internal/browser": ["./node_modules/vitest/dist/browser.d.ts"]
+    },
     "types": ["node"]
   },
   "include": ["src", "vite.config.ts"]

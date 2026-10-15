@@ -1,12 +1,10 @@
 import Timeline from '@groam/ui/components/timeline';
-import { cleanup, render } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
-import { afterEach, expect, test } from 'vite-plus/test';
+import { expect, test } from 'vite-plus/test';
 import { ComposerTimelineBadge } from './composer-timeline-badge';
 
-afterEach(cleanup);
-
-function renderBadge(badge: ReactNode) {
+async function renderBadge(badge: ReactNode) {
   return render(
     <Timeline>
       <Timeline.Item>{badge}</Timeline.Item>
@@ -18,8 +16,8 @@ function badgeEl(container: HTMLElement) {
   return container.querySelector('[data-slot="timeline-badge"]');
 }
 
-test('shows the viewer initials when a name is provided', () => {
-  const { container } = renderBadge(<ComposerTimelineBadge name="Lea Demo" />);
+test('shows the viewer initials when a name is provided', async () => {
+  const { container } = await renderBadge(<ComposerTimelineBadge name="Lea Demo" />);
   const badge = badgeEl(container);
 
   expect(badge?.textContent).toBe('LD');
@@ -30,8 +28,8 @@ test('shows the viewer initials when a name is provided', () => {
   expect(badge?.className).toContain('w-6');
 });
 
-test('falls back to a message icon when the viewer is unknown', () => {
-  const { container } = renderBadge(<ComposerTimelineBadge />);
+test('falls back to a message icon when the viewer is unknown', async () => {
+  const { container } = await renderBadge(<ComposerTimelineBadge />);
   const badge = badgeEl(container);
 
   expect(badge?.textContent).toBe('');

@@ -1,8 +1,8 @@
 import { expect, type Page } from '@playwright/test';
+import { ids } from '#src/testing/ids';
+import type { TestUserCredentials } from '#src/testing/unique-test-user';
 import { appPath } from './app-href';
-import { ids } from './ids';
 import { by } from './locators';
-import type { TestUserCredentials } from './unique-test-user';
 
 export async function signUp(page: Page, user: TestUserCredentials): Promise<void> {
   await page.goto(appPath);

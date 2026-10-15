@@ -5,6 +5,7 @@
     "vite": "npm:@voidzero-dev/vite-plus-core@1.2.0",
     "vitest": "5.0.4",
     "vite-plus": "1.2.0",
+    "@vitest/browser-playwright": "5.0.4",
     "@vitest/coverage-istanbul": "5.0.4"
   },
   "dependencies": {
@@ -90,10 +91,8 @@
     "showcase:setup": "vp run --fail-if-no-match --filter @groam/showcase setup",
     "showcase:studio": "vp run --fail-if-no-match --filter @groam/showcase studio",
     "test": "vp run test:quality && vp run --fail-if-no-match --filter \"@groam/*\" --cache --concurrency-limit 2 test",
-    "test:e2e": "vp run --fail-if-no-match --filter @groam/web e2e",
-    "test:e2e:install": "vp run --fail-if-no-match --filter @groam/web e2e:install",
-    "test:e2e:local": "vp run --fail-if-no-match --filter @groam/web e2e:local",
-    "test:e2e:local:headed": "vp run --fail-if-no-match --filter @groam/web e2e:local:headed",
+    "test:browsers:install": "vp run --fail-if-no-match --filter @groam/vitest-config browsers:install",
+    "test:journeys": "vp run --fail-if-no-match --filter @groam/web journeys",
     "test:quality": "vp test run --dir tooling/quality",
     "typecheck": "vp run --fail-if-no-match --filter \"@groam/*\" --cache typecheck && tsc --noEmit -p tooling/tsconfig.json"
   },

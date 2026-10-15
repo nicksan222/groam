@@ -1,14 +1,13 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { agentRunCopy, agentRunEventLabels } from '#ai/backend/runs/events';
 import { RUN_STATUS_LABEL } from '#ai/backend/runs/ids';
 import { AgentRunBanner } from './agent-run-banner';
 
-afterEach(cleanup);
-
-test('shows live status, latest activity once, and a link to the agent', () => {
+test('shows live status, latest activity once, and a link to the agent', async () => {
   const onStop = vi.fn();
-  render(
+  await render(
     <AgentRunBanner
       agentLabel="Issue agent"
       eventTestId="agent-event"
@@ -20,25 +19,28 @@ test('shows live status, latest activity once, and a link to the agent', () => {
       viewAgent={<a href="/agents/issue">{agentRunCopy.viewAgent}</a>}
     />
   );
-  const banner = screen.getByTestId('issue-agent-banner');
-  expect(banner).toBeTruthy();
-  expect(banner.className).toContain('border-primary/25');
-  expect(banner.className).not.toContain('mb-6');
-  expect(screen.getByText('Issue agent')).toBeTruthy();
-  expect(screen.getByText(RUN_STATUS_LABEL.running)).toBeTruthy();
-  expect(screen.queryByText(RUN_STATUS_LABEL.running)?.closest('[data-slot="badge"]')).toBeNull();
-  expect(screen.getAllByText('Started working')).toHaveLength(1);
-  expect(screen.getByTestId('agent-event').textContent).toBe('Started working');
-  expect(screen.getByRole('link', { name: agentRunCopy.viewAgent }).getAttribute('href')).toBe(
-    '/agents/issue'
-  );
-  fireEvent.click(screen.getByRole('button', { name: agentRunCopy.stop }));
+  const banner = page.getByTestId('issue-agent-banner');
+  await expect.element(banner).toHaveClass('border-primary/25');
+  await expect.element(banner).not.toHaveClass('mb-6');
+  await expect.element(page.getByText('Issue agent')).toBeInTheDocument();
+  await expect.element(page.getByText(RUN_STATUS_LABEL.running)).toBeInTheDocument();
+  expect(
+    page.getByText(RUN_STATUS_LABEL.running).element().closest('[data-slot="badge"]')
+  ).toBeNull();
+  expect(page.getByText('Started working').elements()).toHaveLength(1);
+  expect(page.getByTestId('agent-event').element().textContent).toBe('Started working');
+  await expect
+    .element(page.getByRole('link', { name: agentRunCopy.viewAgent }))
+    .toHaveAttribute('href', '/agents/issue');
+  await page.getByRole('button', { name: agentRunCopy.stop }).click();
   expect(onStop).toHaveBeenCalledOnce();
-  expect(screen.queryByRole('button', { name: agentRunCopy.retryFromZero })).toBeNull();
+  await expect
+    .element(page.getByRole('button', { name: agentRunCopy.retryFromZero }))
+    .not.toBeInTheDocument();
 });
 
-test('shows only the latest run event as activity', () => {
-  render(
+test('shows only the latest run event as activity', async () => {
+  await render(
     <AgentRunBanner
       agentLabel="Issue agent"
       eventTestId="agent-event"
@@ -51,14 +53,14 @@ test('shows only the latest run event as activity', () => {
       viewAgent={<a href="/agents/issue">{agentRunCopy.viewAgent}</a>}
     />
   );
-  expect(screen.getAllByTestId('agent-event')).toHaveLength(1);
-  expect(screen.queryByText('Started working')).toBeNull();
-  expect(screen.queryByText('Step 0')).toBeNull();
-  expect(screen.getByText('Step 5')).toBeTruthy();
+  expect(page.getByTestId('agent-event').elements()).toHaveLength(1);
+  await expect.element(page.getByText('Started working')).not.toBeInTheDocument();
+  await expect.element(page.getByText('Step 0')).not.toBeInTheDocument();
+  await expect.element(page.getByText('Step 5')).toBeInTheDocument();
 });
 
-test('presents failed provider credit errors once without repeating the event label', () => {
-  render(
+test('presents failed provider credit errors once without repeating the event label', async () => {
+  await render(
     <AgentRunBanner
       agentLabel="Issue agent"
       events={[{ id: 'event-fail', label: agentRunEventLabels.runFailed }]}
@@ -73,19 +75,23 @@ test('presents failed provider credit errors once without repeating the event la
       viewAgent={<a href="/agents/issue">{agentRunCopy.viewAgent}</a>}
     />
   );
-  expect(screen.getByText(RUN_STATUS_LABEL.failed)).toBeTruthy();
+  await expect.element(page.getByText(RUN_STATUS_LABEL.failed)).toBeInTheDocument();
   expect(
-    screen.getByText(
-      'The model provider said: This request requires more credits, or fewer max_tokens.'
-    )
+    page
+      .getByText(
+        'The model provider said: This request requires more credits, or fewer max_tokens.'
+      )
+      .element()
   ).toBeTruthy();
-  expect(screen.queryByText(agentRunEventLabels.runFailed)).toBeNull();
-  expect(screen.queryByRole('button', { name: agentRunCopy.retryFromZero })).toBeNull();
+  await expect.element(page.getByText(agentRunEventLabels.runFailed)).not.toBeInTheDocument();
+  await expect
+    .element(page.getByRole('button', { name: agentRunCopy.retryFromZero }))
+    .not.toBeInTheDocument();
 });
 
-test('retries from zero only when the issue run failed', () => {
+test('retries from zero only when the issue run failed', async () => {
   const onRetry = vi.fn();
-  render(
+  await render(
     <AgentRunBanner
       agentLabel="Issue agent"
       events={[]}
@@ -102,6 +108,6 @@ test('retries from zero only when the issue run failed', () => {
       viewAgent={<a href="/agents/issue">{agentRunCopy.viewAgent}</a>}
     />
   );
-  fireEvent.click(screen.getByRole('button', { name: agentRunCopy.retryFromZero }));
+  await page.getByRole('button', { name: agentRunCopy.retryFromZero }).click();
   expect(onRetry).toHaveBeenCalledOnce();
 });

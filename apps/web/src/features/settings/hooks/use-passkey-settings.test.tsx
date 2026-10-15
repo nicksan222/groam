@@ -1,4 +1,4 @@
-import { act, renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { usePasskeySettings } from './use-passkey-settings';
 
@@ -26,9 +26,9 @@ beforeEach(() => {
 
 describe('usePasskeySettings', () => {
   test('loads registered passkeys', async () => {
-    const { result } = renderHook(() => usePasskeySettings());
+    const { result } = await renderHook(() => usePasskeySettings());
 
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await vi.waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(result.current.passkeys).toEqual([laptop]);
     expect(result.current.error).toBeNull();
@@ -36,25 +36,25 @@ describe('usePasskeySettings', () => {
 
   test('loads an empty list when the provider returns no data', async () => {
     auth.listUserPasskeys.mockResolvedValue({ data: null, error: null });
-    const { result } = renderHook(() => usePasskeySettings());
+    const { result } = await renderHook(() => usePasskeySettings());
 
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await vi.waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(result.current.passkeys).toEqual([]);
   });
 
   test('surfaces passkey loading errors', async () => {
     auth.listUserPasskeys.mockResolvedValue({ data: null, error: { message: 'Loading failed' } });
-    const { result } = renderHook(() => usePasskeySettings());
+    const { result } = await renderHook(() => usePasskeySettings());
 
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await vi.waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(result.current.error).toBe('Loading failed');
   });
 
   test('adds a named passkey and refreshes the list', async () => {
-    const { result } = renderHook(() => usePasskeySettings());
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    const { result } = await renderHook(() => usePasskeySettings());
+    await vi.waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(() => result.current.add('  Phone  '));
 
@@ -65,8 +65,8 @@ describe('usePasskeySettings', () => {
 
   test('uses the default passkey name and reports registration failures', async () => {
     auth.addPasskey.mockResolvedValue({ data: null, error: { message: 'Registration failed' } });
-    const { result } = renderHook(() => usePasskeySettings());
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    const { result } = await renderHook(() => usePasskeySettings());
+    await vi.waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(() => result.current.add('   '));
 
@@ -75,8 +75,8 @@ describe('usePasskeySettings', () => {
   });
 
   test('removes a passkey from local state', async () => {
-    const { result } = renderHook(() => usePasskeySettings());
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    const { result } = await renderHook(() => usePasskeySettings());
+    await vi.waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(() => result.current.remove(laptop.id));
 
@@ -87,8 +87,8 @@ describe('usePasskeySettings', () => {
 
   test('keeps the passkey list when removal fails', async () => {
     auth.deletePasskey.mockResolvedValue({ data: null, error: { message: 'Removal failed' } });
-    const { result } = renderHook(() => usePasskeySettings());
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    const { result } = await renderHook(() => usePasskeySettings());
+    await vi.waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(() => result.current.remove(laptop.id));
 

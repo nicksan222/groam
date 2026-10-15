@@ -9,5 +9,5 @@
     "paths": { "#ai/*": ["../../packages/ai/src/*"] },
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo"
   },
-  "include": ["vite.config.ts", "playwright.config.ts", "e2e"]
+  "include": ["vite.config.ts"]
 }

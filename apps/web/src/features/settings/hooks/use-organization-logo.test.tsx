@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { useOrganizationLogo } from './use-organization-logo';
 
@@ -7,7 +7,10 @@ const convex = vi.hoisted(() => ({ mutations: [] as Array<ReturnType<typeof vi.f
 const media = vi.hoisted(() => ({ upload: vi.fn() }));
 
 vi.mock('@groam/auth/client', () => ({ authClient: { organization: { update: auth.update } } }));
-vi.mock('convex/react', () => ({ useMutation: () => convex.mutations.shift() }));
+vi.mock('convex/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('convex/react')>()),
+  useMutation: () => convex.mutations.shift()
+}));
 vi.mock('@/features/media/hooks/use-media-upload', () => ({ useMediaUpload: () => media.upload }));
 
 beforeEach(() => {
@@ -19,7 +22,7 @@ beforeEach(() => {
 
 describe('useOrganizationLogo', () => {
   test('rejects non-image files before uploading', async () => {
-    const { result } = renderHook(() => useOrganizationLogo('organization-1'));
+    const { result } = await renderHook(() => useOrganizationLogo('organization-1'));
 
     await expect(
       act(() => result.current.upload(new File(['x'], 'notes.txt', { type: 'text/plain' })))
@@ -30,7 +33,7 @@ describe('useOrganizationLogo', () => {
   test('uploads media, stores the logo, and refreshes the active organization', async () => {
     const [setLogo] = convex.mutations;
     setLogo?.mockResolvedValue({ url: 'https://cdn.example/logo.png' });
-    const { result } = renderHook(() => useOrganizationLogo('organization-1'));
+    const { result } = await renderHook(() => useOrganizationLogo('organization-1'));
     const file = new File(['logo'], 'logo.png', { type: 'image/png' });
 
     await expect(act(() => result.current.upload(file))).resolves.toBe(
@@ -47,7 +50,7 @@ describe('useOrganizationLogo', () => {
   test('does not set a logo when media upload returns no id and clears via both stores', async () => {
     media.upload.mockResolvedValueOnce(null);
     const [, clearLogo] = convex.mutations;
-    const { result } = renderHook(() => useOrganizationLogo('organization-1'));
+    const { result } = await renderHook(() => useOrganizationLogo('organization-1'));
 
     await expect(
       act(() => result.current.upload(new File(['logo'], 'logo.png', { type: 'image/png' })))

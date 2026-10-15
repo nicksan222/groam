@@ -1,11 +1,10 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { DecisionCard } from './decision-card';
 
-afterEach(cleanup);
-
-test('renders title, description, actions, and optional error', () => {
-  render(
+test('renders title, description, actions, and optional error', async () => {
+  await render(
     <DecisionCard
       actions={<button type="button">Accept</button>}
       description="Ada invited you to join as a member."
@@ -15,8 +14,8 @@ test('renders title, description, actions, and optional error', () => {
     />
   );
 
-  expect(screen.getByRole('heading', { name: 'Join Groam Demo' })).toBeTruthy();
-  expect(screen.getByText('Ada invited you to join as a member.')).toBeTruthy();
-  expect(screen.getByText('That invite expired.')).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Accept' })).toBeTruthy();
+  await expect.element(page.getByRole('heading', { name: 'Join Groam Demo' })).toBeInTheDocument();
+  await expect.element(page.getByText('Ada invited you to join as a member.')).toBeInTheDocument();
+  await expect.element(page.getByText('That invite expired.')).toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Accept' })).toBeInTheDocument();
 });

@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react';
+import { renderHook } from '@groam/vitest-config/react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { useDashboard } from './use-dashboard';
 
@@ -28,13 +28,13 @@ beforeEach(() => {
 });
 
 describe('useDashboard', () => {
-  test('presents the empty home action when there is no trip data', () => {
-    const { result } = renderHook(() => useDashboard());
+  test('presents the empty home action when there is no trip data', async () => {
+    const { result } = await renderHook(() => useDashboard());
     expect(result.current.presentation).toEqual({ kind: 'empty' });
     expect(agent.useSetAgentContext).toHaveBeenCalled();
   });
 
-  test('presents waiting reviews without changing the dashboard data contract', () => {
+  test('presents waiting reviews without changing the dashboard data contract', async () => {
     trips.useTrips.mockReturnValue({
       isLoading: false,
       trips: [
@@ -59,7 +59,7 @@ describe('useDashboard', () => {
       ]
     });
 
-    const { result } = renderHook(() => useDashboard());
+    const { result } = await renderHook(() => useDashboard());
     expect(result.current.presentation.kind).toBe('ready');
   });
 });

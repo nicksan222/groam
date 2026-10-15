@@ -1,18 +1,17 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { SettingsFooter } from './settings-footer';
 
-afterEach(cleanup);
-
-test('renders footer action content', () => {
-  const { container } = render(
+test('renders footer action content', async () => {
+  const { container } = await render(
     <SettingsFooter>
       <p>Footer note</p>
       <button type="button">Save</button>
     </SettingsFooter>
   );
 
-  expect(screen.getByText('Footer note')).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Save' })).toBeTruthy();
+  await expect.element(page.getByText('Footer note')).toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Save' })).toBeInTheDocument();
   expect(container.firstElementChild?.getAttribute('data-slot')).toBe('settings-footer');
 });

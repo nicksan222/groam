@@ -1,6 +1,6 @@
 import { expect, type Page } from '@playwright/test';
+import { ids } from '#src/testing/ids';
 import { expectWorkspaceReady } from './expect-workspace-ready';
-import { ids } from './ids';
 import { by } from './locators';
 
 export async function createFirstGroup(page: Page, groupName: string): Promise<void> {

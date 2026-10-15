@@ -1,6 +1,7 @@
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import { Route } from 'lucide-react';
-import { afterEach, expect, test } from 'vite-plus/test';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import {
   SHELL_CONTENT_PADDING,
   SHELL_HEADER_PADDING,
@@ -9,10 +10,8 @@ import {
 } from '#src/lib/shell-layout';
 import Shell from './client';
 
-afterEach(cleanup);
-
 test('applies shared shell padding tokens to header and content', async () => {
-  render(
+  await render(
     <Shell>
       <Shell.Header data-testid="shell-header">
         <Shell.Title>Trips</Shell.Title>
@@ -21,9 +20,9 @@ test('applies shared shell padding tokens to header and content', async () => {
     </Shell>
   );
 
-  await waitFor(() => expect(screen.getByText('Trip content')).not.toBeNull());
-  const header = screen.getByTestId('shell-header');
-  const content = screen.getByText('Trip content');
+  await expect.element(page.getByText('Trip content')).toBeInTheDocument();
+  const header = page.getByTestId('shell-header').element();
+  const content = page.getByText('Trip content').element();
 
   for (const token of SHELL_PAGE_INSET.split(' ')) {
     expect(header.className).toContain(token);
@@ -36,12 +35,12 @@ test('applies shared shell padding tokens to header and content', async () => {
     expect(content.className).toContain(token);
   }
   for (const token of SHELL_TITLE.split(' ')) {
-    expect(screen.getByRole('heading', { level: 1, name: 'Trips' }).className).toContain(token);
+    await expect.element(page.getByRole('heading', { level: 1, name: 'Trips' })).toHaveClass(token);
   }
 });
 
-test('forwards arbitrary data attributes on Title', () => {
-  render(
+test('forwards arbitrary data attributes on Title', async () => {
+  await render(
     <Shell>
       <Shell.Header>
         <Shell.Title data-testid="trip-heading" data-trip-name="Alpine Escape">
@@ -51,20 +50,20 @@ test('forwards arbitrary data attributes on Title', () => {
     </Shell>
   );
 
-  const heading = screen.getByTestId('trip-heading');
+  const heading = page.getByTestId('trip-heading').element();
   expect(heading.getAttribute('data-trip-name')).toBe('Alpine Escape');
   expect(heading.tagName).toBe('H1');
 });
 
 test('content scrolls vertically without overflow-x-clip locking the y axis', async () => {
-  render(
+  await render(
     <Shell>
       <Shell.Content>Trip content</Shell.Content>
     </Shell>
   );
 
-  await waitFor(() => expect(screen.getByText('Trip content')).not.toBeNull());
-  const content = screen.getByText('Trip content');
+  await expect.element(page.getByText('Trip content')).toBeInTheDocument();
+  const content = page.getByText('Trip content').element();
   expect(content.getAttribute('data-slot')).toBe('shell-content');
   expect(content.className).toContain('overflow-y-auto');
   expect(content.className).toContain('overflow-x-hidden');
@@ -78,8 +77,8 @@ test('content scrolls vertically without overflow-x-clip locking the y axis', as
   expect(shell?.className).not.toContain('overflow-x-clip');
 });
 
-test('renders banner page layout with standardized padding tokens', () => {
-  render(
+test('renders banner page layout with standardized padding tokens', async () => {
+  await render(
     <Shell>
       <Shell.BannerLayout>
         <Shell.Banner>
@@ -95,7 +94,7 @@ test('renders banner page layout with standardized padding tokens', () => {
     </Shell>
   );
 
-  const body = screen.getByTestId('trip-body');
+  const body = page.getByTestId('trip-body').element();
   expect(body.getAttribute('data-slot')).toBe('shell-page-body');
   expect(body.className).toContain('px-4');
   expect(body.className).toContain('pt-5');
@@ -103,8 +102,8 @@ test('renders banner page layout with standardized padding tokens', () => {
   expect(body.className).toContain('space-y-8');
 });
 
-test('renders notice banner with title, description, and action', () => {
-  render(
+test('renders notice banner with title, description, and action', async () => {
+  await render(
     <Shell.NoticeBanner
       action={<button type="button">Start an idea</button>}
       aria-label="How ideas work"
@@ -114,7 +113,7 @@ test('renders notice banner with title, description, and action', () => {
     />
   );
 
-  const note = screen.getByLabelText('How ideas work');
+  const note = page.getByLabelText('How ideas work').element();
   expect(note.getAttribute('role')).toBe('note');
   expect(note.className).toContain('shadow-sm');
   expect(note.className).toContain('bg-muted/40');
@@ -122,12 +121,12 @@ test('renders notice banner with title, description, and action', () => {
   expect(note.className).not.toContain('border-border');
   expect(note.className).not.toContain('rounded-xl');
   expect(note.className).not.toContain('hover:border-primary/40');
-  expect(screen.getByText('This is the shared plan')).toBeDefined();
-  expect(screen.getByRole('button', { name: 'Start an idea' })).toBeDefined();
+  await expect.element(page.getByText('This is the shared plan')).toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Start an idea' })).toBeInTheDocument();
 });
 
-test('renders section header with badge and trailing content', () => {
-  render(
+test('renders section header with badge and trailing content', async () => {
+  await render(
     <Shell.SectionHeader
       badge="1 stop"
       density="compact"
@@ -138,43 +137,45 @@ test('renders section header with badge and trailing content', () => {
     />
   );
 
-  expect(screen.getByRole('heading', { name: 'Route' })).toBeDefined();
-  expect(screen.getByText('1 stop')).toBeDefined();
-  expect(screen.getByText('2 activities currently planned across the route.')).toBeDefined();
+  await expect.element(page.getByRole('heading', { name: 'Route' })).toBeInTheDocument();
+  await expect.element(page.getByText('1 stop')).toBeInTheDocument();
+  await expect
+    .element(page.getByText('2 activities currently planned across the route.'))
+    .toBeInTheDocument();
 });
 
-test('renders section header skeletons while loading', () => {
-  const { container } = render(<Shell.SectionHeader density="compact" isLoading />);
+test('renders section header skeletons while loading', async () => {
+  const { container } = await render(<Shell.SectionHeader density="compact" isLoading />);
 
-  expect(screen.queryByRole('heading')).toBeNull();
+  await expect.element(page.getByRole('heading')).not.toBeInTheDocument();
   expect(container.querySelectorAll('[data-slot="skeleton"]').length).toBeGreaterThan(1);
 });
 
-test('renders section stacks with reveal rhythm', () => {
-  render(
+test('renders section stacks with reveal rhythm', async () => {
+  await render(
     <Shell.Section data-testid="compact-section" stack="sm">
       Section content
     </Shell.Section>
   );
 
-  const section = screen.getByTestId('compact-section');
+  const section = page.getByTestId('compact-section').element();
   expect(section.className).toContain('dashboard-reveal');
   expect(section.className).toContain('space-y-3');
 });
 
-test('renders reveal wrapper for flush content blocks', () => {
-  render(
+test('renders reveal wrapper for flush content blocks', async () => {
+  await render(
     <Shell.Reveal data-testid="results">
       <span>Table body</span>
     </Shell.Reveal>
   );
 
-  const reveal = screen.getByTestId('results');
+  const reveal = page.getByTestId('results').element();
   expect(reveal.getAttribute('data-slot')).toBe('shell-reveal');
   expect(reveal.className).toContain('dashboard-reveal');
 });
 
-test('registers layout primitives on the shell root', () => {
+test('registers layout primitives on the shell root', async () => {
   expect(typeof Shell.Card).toBe('function');
   expect(typeof Shell.CardBody).toBe('function');
   expect(typeof Shell.CardFooter).toBe('function');
@@ -188,8 +189,8 @@ test('registers layout primitives on the shell root', () => {
   expect(typeof Shell.UnderlineNav).toBe('function');
 });
 
-test('renders stack densitites and split layout', () => {
-  render(
+test('renders stack densitites and split layout', async () => {
+  await render(
     <Shell.Stack data-testid="page-stack" stack="page">
       <Shell.Split data-testid="page-split">
         <Shell.Split.Main>Main</Shell.Split.Main>
@@ -198,15 +199,15 @@ test('renders stack densitites and split layout', () => {
     </Shell.Stack>
   );
 
-  expect(screen.getByTestId('page-stack').className).toContain('space-y-6');
-  expect(screen.getByTestId('page-split').className).toContain(
+  await expect.element(page.getByTestId('page-stack')).toHaveClass('space-y-6');
+  expect(page.getByTestId('page-split').element().className).toContain(
     'xl:grid-cols-[minmax(0,1fr)_22rem]'
   );
-  expect(screen.getByText('Aside').className).toContain('xl:sticky');
+  await expect.element(page.getByText('Aside')).toHaveClass('xl:sticky');
 });
 
-test('split aside inherits a lower breakpoint from the parent grid', () => {
-  render(
+test('split aside inherits a lower breakpoint from the parent grid', async () => {
+  await render(
     <Shell.Split breakpoint="md" data-testid="md-split">
       <Shell.Split.Aside mobileDivider sticky="far">
         Aside
@@ -214,26 +215,28 @@ test('split aside inherits a lower breakpoint from the parent grid', () => {
     </Shell.Split>
   );
 
-  expect(screen.getByTestId('md-split').className).toContain('md:grid-cols-[minmax(0,1fr)_22rem]');
-  expect(screen.getByText('Aside').className).toContain('md:sticky');
-  expect(screen.getByText('Aside').className).toContain('md:border-t-0');
+  expect(page.getByTestId('md-split').element().className).toContain(
+    'md:grid-cols-[minmax(0,1fr)_22rem]'
+  );
+  await expect.element(page.getByText('Aside')).toHaveClass('md:sticky');
+  await expect.element(page.getByText('Aside')).toHaveClass('md:border-t-0');
 });
 
-test('renders underline nav chrome around tabs', () => {
-  render(
+test('renders underline nav chrome around tabs', async () => {
+  await render(
     <Shell.UnderlineNav aria-label="Trip sections" data-testid="section-nav">
       <Shell.Tab isActive onClick={() => undefined} position="top" title="Overview" />
     </Shell.UnderlineNav>
   );
 
-  const nav = screen.getByTestId('section-nav');
+  const nav = page.getByTestId('section-nav').element();
   expect(nav.tagName).toBe('NAV');
   expect(nav.className).toContain('border-b');
-  expect(screen.getByRole('button', { name: 'Overview' })).toBeDefined();
+  await expect.element(page.getByRole('button', { name: 'Overview' })).toBeInTheDocument();
 });
 
-test('renders card variants with standardized tokens', () => {
-  render(
+test('renders card variants with standardized tokens', async () => {
+  await render(
     <>
       <Shell.Card data-testid="panel-card" variant="panel">
         Panel
@@ -258,27 +261,27 @@ test('renders card variants with standardized tokens', () => {
     </>
   );
 
-  expect(screen.getByTestId('panel-card').getAttribute('data-variant')).toBe('panel');
-  expect(screen.getByTestId('panel-card').className).toContain('dashboard-panel');
-  expect(screen.getByTestId('panel-card').className).toContain('dashboard-reveal');
-  expect(screen.getByTestId('filled-card').className).toContain('dashboard-panel');
-  expect(screen.getByTestId('dashed-card').className).toContain('border-dashed');
-  expect(screen.getByTestId('callout-card').className).toContain('rounded-lg');
-  expect(screen.getByTestId('callout-card').className).toContain('border-border');
+  await expect.element(page.getByTestId('panel-card')).toHaveAttribute('data-variant', 'panel');
+  await expect.element(page.getByTestId('panel-card')).toHaveClass('dashboard-panel');
+  await expect.element(page.getByTestId('panel-card')).toHaveClass('dashboard-reveal');
+  await expect.element(page.getByTestId('filled-card')).toHaveClass('dashboard-panel');
+  await expect.element(page.getByTestId('dashed-card')).toHaveClass('border-dashed');
+  await expect.element(page.getByTestId('callout-card')).toHaveClass('rounded-lg');
+  await expect.element(page.getByTestId('callout-card')).toHaveClass('border-border');
   expect(
-    screen.getByTestId('chrome-card').querySelector('[data-slot="shell-card-header"]')
+    page.getByTestId('chrome-card').element().querySelector('[data-slot="shell-card-header"]')
   ).toBeTruthy();
   expect(
-    screen.getByTestId('chrome-card').querySelector('[data-slot="shell-card-body"]')
+    page.getByTestId('chrome-card').element().querySelector('[data-slot="shell-card-body"]')
   ).toBeTruthy();
   expect(
-    screen.getByTestId('chrome-card').querySelector('[data-slot="shell-card-footer"]')
+    page.getByTestId('chrome-card').element().querySelector('[data-slot="shell-card-footer"]')
   ).toBeTruthy();
-  expect(screen.getByTestId('eyebrow').getAttribute('data-tone')).toBe('primary');
+  await expect.element(page.getByTestId('eyebrow')).toHaveAttribute('data-tone', 'primary');
 });
 
-test('renders property grid rows', () => {
-  render(
+test('renders property grid rows', async () => {
+  await render(
     <Shell.PropertyGrid
       aria-label="Trip facts"
       items={[
@@ -288,37 +291,37 @@ test('renders property grid rows', () => {
     />
   );
 
-  expect(screen.getByLabelText('Trip facts').tagName).toBe('DL');
-  expect(screen.getByText('Window')).toBeDefined();
-  expect(screen.getByText('Stops')).toBeDefined();
+  expect(page.getByLabelText('Trip facts').element().tagName).toBe('DL');
+  await expect.element(page.getByText('Window')).toBeInTheDocument();
+  await expect.element(page.getByText('Stops')).toBeInTheDocument();
 });
 
-test('applies page inset to top underline tabs by default', () => {
-  render(
+test('applies page inset to top underline tabs by default', async () => {
+  await render(
     <Shell.TabContainer data-testid="banner-tabs" position="top" variant="underline">
       <Shell.Tab isActive onClick={() => undefined} position="top" title="Overview" />
     </Shell.TabContainer>
   );
 
-  expect(screen.getByTestId('banner-tabs').className).toContain('px-4');
+  await expect.element(page.getByTestId('banner-tabs')).toHaveClass('px-4');
 });
 
-test('renders underline tabs with GitHub-style active marker', () => {
-  render(
+test('renders underline tabs with GitHub-style active marker', async () => {
+  await render(
     <Shell.TabContainer position="top" variant="underline">
       <Shell.Tab isActive onClick={() => undefined} position="top" title="Overview" />
       <Shell.Tab onClick={() => undefined} position="top" title="People (3)" />
     </Shell.TabContainer>
   );
 
-  const overview = screen.getByRole('button', { name: 'Overview' });
-  const people = screen.getByRole('button', { name: 'People (3)' });
+  const overview = page.getByRole('button', { name: 'Overview' }).element();
+  const people = page.getByRole('button', { name: 'People (3)' }).element();
   expect(overview.className).toContain('border-primary');
   expect(people.className).toContain('border-transparent');
 });
 
 test('renders actions once inside the shell header instead of as detached floating controls', async () => {
-  render(
+  await render(
     <Shell>
       <Shell.Header data-testid="action-header">
         <Shell.Title>Trip overview</Shell.Title>
@@ -329,17 +332,17 @@ test('renders actions once inside the shell header instead of as detached floati
     </Shell>
   );
 
-  const header = within(screen.getByTestId('action-header'));
-  await waitFor(() => {
-    expect(header.getByRole('button', { name: 'Edit trip' })).not.toBeNull();
-    expect(header.getByRole('button', { name: 'Archive' })).not.toBeNull();
+  const header = page.getByTestId('action-header');
+  await vi.waitFor(() => {
+    expect(header.getByRole('button', { name: 'Edit trip' }).element()).not.toBeNull();
+    expect(header.getByRole('button', { name: 'Archive' }).element()).not.toBeNull();
   });
-  expect(screen.getAllByRole('button', { name: 'Edit trip' })).toHaveLength(1);
-  expect(screen.getAllByRole('button', { name: 'Archive' })).toHaveLength(1);
+  expect(page.getByRole('button', { name: 'Edit trip' }).elements()).toHaveLength(1);
+  expect(page.getByRole('button', { name: 'Archive' }).elements()).toHaveLength(1);
 });
 
 test('constrains long sidebar headers instead of widening the workspace', async () => {
-  render(
+  await render(
     <Shell>
       <Shell.Header>
         <Shell.Title>Trip overview</Shell.Title>
@@ -360,12 +363,12 @@ test('constrains long sidebar headers instead of widening the workspace', async 
     </Shell>
   );
 
-  await waitFor(() => expect(screen.getByTestId('trip-sidebar')).not.toBeNull());
-  expect(screen.getByTestId('trip-sidebar').className).toContain('overflow-hidden');
-  expect(screen.getByTestId('long-sidebar-header').parentElement?.className).toContain(
+  await expect.element(page.getByTestId('trip-sidebar')).toBeInTheDocument();
+  await expect.element(page.getByTestId('trip-sidebar')).toHaveClass('overflow-hidden');
+  expect(page.getByTestId('long-sidebar-header').element().parentElement?.className).toContain(
     'overflow-hidden'
   );
-  const sidebar = screen.getByTestId('trip-sidebar');
+  const sidebar = page.getByTestId('trip-sidebar').element();
   const pane = sidebar.parentElement?.parentElement?.querySelector('[data-slot="shell-content"]');
   expect(pane).not.toBeNull();
   expect(pane?.parentElement?.className).toContain('overflow-hidden');
@@ -373,7 +376,7 @@ test('constrains long sidebar headers instead of widening the workspace', async 
 });
 
 test('keeps actions scoped to their own shell', async () => {
-  render(
+  await render(
     <>
       <Shell>
         <Shell.Header data-testid="first-header">
@@ -392,12 +395,12 @@ test('keeps actions scoped to their own shell', async () => {
     </>
   );
 
-  const firstHeader = within(screen.getByTestId('first-header'));
-  const secondHeader = within(screen.getByTestId('second-header'));
-  await waitFor(() => {
-    expect(firstHeader.getByRole('button', { name: 'First action' })).not.toBeNull();
-    expect(secondHeader.getByRole('button', { name: 'Second action' })).not.toBeNull();
+  const firstHeader = page.getByTestId('first-header');
+  const secondHeader = page.getByTestId('second-header');
+  await vi.waitFor(() => {
+    expect(firstHeader.getByRole('button', { name: 'First action' }).element()).not.toBeNull();
+    expect(secondHeader.getByRole('button', { name: 'Second action' }).element()).not.toBeNull();
   });
-  expect(firstHeader.queryByRole('button', { name: 'Second action' })).toBeNull();
-  expect(secondHeader.queryByRole('button', { name: 'First action' })).toBeNull();
+  expect(firstHeader.getByRole('button', { name: 'Second action' }).query()).toBeNull();
+  expect(secondHeader.getByRole('button', { name: 'First action' }).query()).toBeNull();
 });

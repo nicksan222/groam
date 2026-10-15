@@ -1,10 +1,11 @@
 import { SidebarProvider } from '@groam/ui/components/sidebar';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
-import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
+import { beforeEach, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type { WorkspaceIdea } from '@/features/ideas/hooks/use-workspace-ideas';
 import { resetSidebarChromeStore, useSidebarChromeStore } from '@/lib/stores/sidebar-chrome-store';
-import { stubMatchMedia } from '@/testing/stub-match-media';
+import { testIds } from '@/lib/test-ids';
 import { IdeasSidebarNav } from './ideas-sidebar-nav';
 
 const state = vi.hoisted(() => ({
@@ -16,7 +17,8 @@ const state = vi.hoisted(() => ({
   status: 'CanLoadMore' as 'CanLoadMore' | 'Done' | 'LoadingFirstPage' | 'LoadingMore'
 }));
 
-vi.mock('@tanstack/react-router', () => ({
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
   Link: ({ children, to, ...props }: { children?: ReactNode; to: string }) => (
     <a href={to} {...props}>
       {children}
@@ -60,7 +62,7 @@ function proposal(
   };
 }
 
-function renderNav() {
+async function renderNav() {
   return render(
     <SidebarProvider>
       <ul>
@@ -80,15 +82,9 @@ beforeEach(() => {
   state.pathname = '/ideas';
   state.proposals = [];
   state.status = 'CanLoadMore';
-  stubMatchMedia();
 });
 
-afterEach(() => {
-  cleanup();
-  vi.unstubAllGlobals();
-});
-
-test('shows browse trips when there are no open ideas and nothing left to fetch', () => {
+test('shows browse trips when there are no open ideas and nothing left to fetch', async () => {
   state.proposals = [
     proposal({
       id: 'closed' as WorkspaceIdea['id'],
@@ -98,12 +94,12 @@ test('shows browse trips when there are no open ideas and nothing left to fetch'
   ];
   state.status = 'Done';
 
-  renderNav();
-  expect(screen.getByText('Browse trips')).toBeTruthy();
-  expect(screen.queryByText('Load more')).toBeNull();
+  await renderNav();
+  await expect.element(page.getByText('Browse trips')).toBeInTheDocument();
+  await expect.element(page.getByText('Load more')).not.toBeInTheDocument();
 });
 
-test('offers load more when the first fetched page only contains closed ideas', () => {
+test('offers load more when the first fetched page only contains closed ideas', async () => {
   state.proposals = [
     proposal({
       id: 'closed' as WorkspaceIdea['id'],
@@ -113,15 +109,15 @@ test('offers load more when the first fetched page only contains closed ideas', 
   ];
   state.status = 'CanLoadMore';
 
-  renderNav();
-  expect(screen.queryByText('Browse trips')).toBeNull();
-  expect(screen.getByText('Load more')).toBeTruthy();
+  await renderNav();
+  await expect.element(page.getByText('Browse trips')).not.toBeInTheDocument();
+  await expect.element(page.getByText('Load more')).toBeInTheDocument();
 
-  fireEvent.click(screen.getByText('Load more'));
+  await page.getByText('Load more').click();
   expect(state.loadMore).toHaveBeenCalledWith(5);
 });
 
-test('lists open ideas and highlights the active working draft route', () => {
+test('lists open ideas and highlights the active working draft route', async () => {
   useSidebarChromeStore.getState().setSectionOpen('ideas', false);
   state.proposals = [
     proposal({
@@ -139,33 +135,30 @@ test('lists open ideas and highlights the active working draft route', () => {
   state.pathname = '/trips/trip-working/overview';
   state.status = 'Done';
 
-  renderNav();
-  fireEvent.click(screen.getByRole('button', { name: 'Expand ideas' }));
-  expect(screen.getByText('Your draft: Extend Lisbon stay')).toBeTruthy();
-  expect(screen.getByText('Share the coast day')).toBeTruthy();
-  const labels = screen
-    .getAllByRole('link')
+  await renderNav();
+  await page.getByRole('button', { name: 'Expand ideas' }).click();
+  await expect.element(page.getByText('Your draft: Extend Lisbon stay')).toBeInTheDocument();
+  await expect.element(page.getByText('Share the coast day')).toBeInTheDocument();
+  const labels = page
+    .getByRole('link')
+    .elements()
     .map((link) => link.textContent)
     .filter((text) => text === 'Your draft: Extend Lisbon stay' || text === 'Share the coast day');
   expect(labels[0]).toBe('Your draft: Extend Lisbon stay');
-  expect(
-    screen.getByText('Your draft: Extend Lisbon stay').closest('a')?.getAttribute('data-active')
-  ).toBe('true');
-  expect(
-    screen.getByText('Your draft: Extend Lisbon stay').closest('[data-viewer-draft="true"]')
-      ?.className
-  ).toContain('bg-primary/5');
-  expect(screen.getByText('Ideas').closest('a')?.getAttribute('href')).toBe('/ideas');
-  expect(screen.getByText('Ideas').closest('a')?.getAttribute('data-active')).toBe('false');
+  const draftLink = page.getByRole('link', { name: 'Your draft: Extend Lisbon stay' });
+  await expect.element(draftLink).toHaveAttribute('data-active', 'true');
+  await expect.element(draftLink).toHaveClass('bg-primary/5');
+  await expect.element(page.getByTestId(testIds.navIdeas)).toHaveAttribute('href', '/ideas');
+  await expect.element(page.getByTestId(testIds.navIdeas)).toHaveAttribute('data-active', 'false');
 });
 
-test('highlights the ideas index on /ideas', () => {
+test('highlights the ideas index on /ideas', async () => {
   state.status = 'Done';
-  renderNav();
-  expect(screen.getByText('Ideas').closest('a')?.getAttribute('data-active')).toBe('true');
+  await renderNav();
+  await expect.element(page.getByTestId(testIds.navIdeas)).toHaveAttribute('data-active', 'true');
 });
 
-test('collapses listed ideas from the parent action without leaving the index link', () => {
+test('collapses listed ideas from the parent action without leaving the index link', async () => {
   state.proposals = [
     proposal({
       id: 'draft' as WorkspaceIdea['id'],
@@ -175,14 +168,14 @@ test('collapses listed ideas from the parent action without leaving the index li
   ];
   state.status = 'Done';
 
-  renderNav();
-  expect(screen.getByText('Your draft: Extend Lisbon stay')).toBeTruthy();
-  expect(screen.getByText('Ideas').closest('a')?.getAttribute('href')).toBe('/ideas');
+  await renderNav();
+  await expect.element(page.getByText('Your draft: Extend Lisbon stay')).toBeInTheDocument();
+  await expect.element(page.getByTestId(testIds.navIdeas)).toHaveAttribute('href', '/ideas');
 
-  fireEvent.click(screen.getByText('Ideas'));
-  expect(screen.getByText('Your draft: Extend Lisbon stay')).toBeTruthy();
+  await page.getByTestId(testIds.navIdeas).click();
+  await expect.element(page.getByText('Your draft: Extend Lisbon stay')).toBeInTheDocument();
 
-  fireEvent.click(screen.getByRole('button', { name: 'Collapse ideas' }));
-  expect(screen.queryByText('Your draft: Extend Lisbon stay')).toBeNull();
-  expect(screen.getByRole('button', { name: 'Expand ideas' })).toBeTruthy();
+  await page.getByRole('button', { name: 'Collapse ideas' }).click();
+  await expect.element(page.getByText('Your draft: Extend Lisbon stay')).not.toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Expand ideas' })).toBeInTheDocument();
 });

@@ -1,15 +1,14 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import type { ComponentProps } from 'react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { FormDialog } from './form-dialog';
 
-afterEach(cleanup);
-
-function renderFormDialog(props: Partial<ComponentProps<typeof FormDialog>> = {}) {
+async function renderFormDialog(props: Partial<ComponentProps<typeof FormDialog>> = {}) {
   const onClose = vi.fn();
   const onSubmit = vi.fn((event) => event.preventDefault());
 
-  render(
+  await render(
     <FormDialog
       description="Add a new trip to your workspace."
       onClose={onClose}
@@ -26,61 +25,57 @@ function renderFormDialog(props: Partial<ComponentProps<typeof FormDialog>> = {}
   return { onClose, onSubmit };
 }
 
-test('renders dialog metadata, children, and action buttons when open', () => {
-  renderFormDialog();
+test('renders dialog metadata, children, and action buttons when open', async () => {
+  await renderFormDialog();
 
-  expect(screen.getByRole('dialog')).toBeTruthy();
-  expect(screen.getByRole('heading', { name: 'Create trip' })).toBeTruthy();
-  expect(screen.getByText('Add a new trip to your workspace.')).toBeTruthy();
-  expect(screen.getByRole('textbox', { name: 'Trip name' })).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Cancel' })).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Create trip' })).toBeTruthy();
+  await expect.element(page.getByRole('dialog')).toBeInTheDocument();
+  await expect.element(page.getByRole('heading', { name: 'Create trip' })).toBeInTheDocument();
+  await expect.element(page.getByText('Add a new trip to your workspace.')).toBeInTheDocument();
+  await expect.element(page.getByRole('textbox', { name: 'Trip name' })).toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Create trip' })).toBeInTheDocument();
 });
 
-test('does not render dialog content when closed', () => {
-  renderFormDialog({ open: false });
-  expect(screen.queryByRole('dialog')).toBeNull();
+test('does not render dialog content when closed', async () => {
+  await renderFormDialog({ open: false });
+  await expect.element(page.getByRole('dialog')).not.toBeInTheDocument();
 });
 
-test('shows form errors and submits through the wrapped form', () => {
-  const { onSubmit } = renderFormDialog({ error: 'Trip name is required' });
+test('shows form errors and submits through the wrapped form', async () => {
+  const { onSubmit } = await renderFormDialog({ error: 'Trip name is required' });
 
-  expect(screen.getByRole('alert').textContent).toBe('Trip name is required');
+  expect(page.getByRole('alert').element().textContent).toBe('Trip name is required');
 
-  fireEvent.click(screen.getByRole('button', { name: 'Create trip' }));
+  await page.getByRole('button', { name: 'Create trip' }).click();
   expect(onSubmit).toHaveBeenCalledTimes(1);
 });
 
-test('calls onClose from cancel and when the dialog closes', () => {
-  const { onClose } = renderFormDialog();
+test('calls onClose from cancel and when the dialog closes', async () => {
+  const { onClose } = await renderFormDialog();
 
-  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  await page.getByRole('button', { name: 'Cancel' }).click();
   expect(onClose).toHaveBeenCalledTimes(1);
 
-  fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+  await page.getByRole('button', { name: 'Close' }).click();
   expect(onClose).toHaveBeenCalledTimes(2);
 });
 
-test('disables actions while pending and shows a spinner on submit', () => {
-  renderFormDialog({ isPending: true });
+test('disables actions while pending and shows a spinner on submit', async () => {
+  await renderFormDialog({ isPending: true });
 
-  expect((screen.getByRole('button', { name: 'Cancel' }) as HTMLButtonElement).disabled).toBe(true);
-  expect((screen.getByRole('button', { name: /Create trip/ }) as HTMLButtonElement).disabled).toBe(
-    true
-  );
-  expect(screen.getByRole('status', { name: 'Loading' })).toBeTruthy();
+  await expect.element(page.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+  await expect.element(page.getByRole('button', { name: /Create trip/ })).toBeDisabled();
+  await expect.element(page.getByRole('status', { name: 'Loading' })).toBeInTheDocument();
 });
 
-test('respects submitDisabled and custom layout class names', () => {
-  renderFormDialog({
+test('respects submitDisabled and custom layout class names', async () => {
+  await renderFormDialog({
     contentClassName: 'max-w-xl',
     formClassName: 'space-y-8',
     submitDisabled: true
   });
 
-  expect((screen.getByRole('button', { name: /Create trip/ }) as HTMLButtonElement).disabled).toBe(
-    true
-  );
-  expect(screen.getByRole('dialog').className).toContain('max-w-xl');
+  await expect.element(page.getByRole('button', { name: /Create trip/ })).toBeDisabled();
+  await expect.element(page.getByRole('dialog')).toHaveClass('max-w-xl');
   expect(document.querySelector('form')?.className).toContain('space-y-8');
 });

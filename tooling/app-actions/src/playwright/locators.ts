@@ -1,5 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
-import { ids } from './ids';
+import { ids } from '#src/testing/ids';
 
 const idPathPatterns = {
   ideas: /\/ideas\/([^/]+)/u,

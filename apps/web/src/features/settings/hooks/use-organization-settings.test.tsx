@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import type { ActiveOrganization } from '@/features/workspace/workspace-shell/workspace-state';
 import { useOrganizationSettings } from './use-organization-settings';
@@ -47,8 +47,8 @@ beforeEach(() => {
 
 describe('useOrganizationSettings', () => {
   test('trims and persists edited organization settings', async () => {
-    const { result } = renderHook(() => useOrganizationSettings(organization));
-    act(() =>
+    const { result } = await renderHook(() => useOrganizationSettings(organization));
+    await act(() =>
       result.current.updateState({
         name: '  Updated name  ',
         slug: '  updated-slug  '
@@ -73,7 +73,7 @@ describe('useOrganizationSettings', () => {
 
   test('surfaces Better Auth errors without leaving the form pending', async () => {
     auth.update.mockResolvedValue({ data: null, error: { message: 'Slug already exists' } });
-    const { result } = renderHook(() => useOrganizationSettings(organization));
+    const { result } = await renderHook(() => useOrganizationSettings(organization));
 
     await act(() => result.current.save());
 
@@ -85,7 +85,7 @@ describe('useOrganizationSettings', () => {
   });
 
   test('uploads and references a Convex media logo', async () => {
-    const { result } = renderHook(() => useOrganizationSettings(organization));
+    const { result } = await renderHook(() => useOrganizationSettings(organization));
     const file = new File(['logo'], 'logo.png', { type: 'image/png' });
 
     await act(() => result.current.uploadLogo(file));
@@ -98,8 +98,8 @@ describe('useOrganizationSettings', () => {
   });
 
   test('clears the organization logo through the media hook', async () => {
-    const { result } = renderHook(() => useOrganizationSettings(organization));
-    act(() => result.current.updateState({ logo: 'https://example.com/group.png' }));
+    const { result } = await renderHook(() => useOrganizationSettings(organization));
+    await act(() => result.current.updateState({ logo: 'https://example.com/group.png' }));
 
     await act(() => result.current.clearLogo());
 
@@ -113,7 +113,7 @@ describe('useOrganizationSettings', () => {
   test('keeps the form usable when uploading or clearing a logo fails', async () => {
     logo.upload.mockRejectedValueOnce(new Error('Server Error'));
     logo.clear.mockRejectedValueOnce(new Error('Storage unavailable'));
-    const { result } = renderHook(() => useOrganizationSettings(organization));
+    const { result } = await renderHook(() => useOrganizationSettings(organization));
     const file = new File(['logo'], 'logo.png', { type: 'image/png' });
 
     await act(() => result.current.uploadLogo(file));
@@ -132,7 +132,7 @@ describe('useOrganizationSettings', () => {
   });
 
   test('switches to a fallback before deleting the selected organization', async () => {
-    const { result } = renderHook(() => useOrganizationSettings(organization));
+    const { result } = await renderHook(() => useOrganizationSettings(organization));
 
     await act(() => result.current.remove());
 
@@ -145,7 +145,7 @@ describe('useOrganizationSettings', () => {
 
   test('deletes the final organization without switching first', async () => {
     auth.list.mockResolvedValue({ data: [organization], error: null });
-    const { result } = renderHook(() => useOrganizationSettings(organization));
+    const { result } = await renderHook(() => useOrganizationSettings(organization));
 
     await act(() => result.current.remove());
 
@@ -155,7 +155,7 @@ describe('useOrganizationSettings', () => {
   });
 
   test('surfaces list, activation, and deletion failures when removing a group', async () => {
-    const { result } = renderHook(() => useOrganizationSettings(organization));
+    const { result } = await renderHook(() => useOrganizationSettings(organization));
     auth.list.mockResolvedValueOnce({ data: null, error: { message: 'Cannot list groups' } });
 
     await act(() => result.current.remove());

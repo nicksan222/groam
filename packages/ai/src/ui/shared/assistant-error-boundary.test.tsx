@@ -1,18 +1,17 @@
 import { expectConsole } from '@groam/vitest-config/console';
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { AssistantErrorBoundary } from './assistant-error-boundary';
 
 function BrokenAssistant(): never {
   throw new Error('Assistant subscription failed');
 }
 
-afterEach(cleanup);
-
-test('contains assistant failures instead of taking down the workspace', () => {
+test('contains assistant failures instead of taking down the workspace', async () => {
   // React reports the error the boundary catches.
   expectConsole('error', 'Assistant subscription failed');
-  const view = render(
+  const view = await render(
     <div>
       <main>Trips remain available</main>
       <AssistantErrorBoundary resetKey="organization-1">
@@ -21,10 +20,12 @@ test('contains assistant failures instead of taking down the workspace', () => {
     </div>
   );
 
-  expect(screen.getByText('Trips remain available')).toBeDefined();
-  expect(screen.getByRole('alert').textContent).toContain('Groam AI is temporarily unavailable');
+  await expect.element(page.getByText('Trips remain available')).toBeInTheDocument();
+  expect(page.getByRole('alert').element().textContent).toContain(
+    'Groam AI is temporarily unavailable'
+  );
 
-  view.rerender(
+  await view.rerender(
     <div>
       <main>Trips remain available</main>
       <AssistantErrorBoundary resetKey="organization-2">
@@ -32,5 +33,5 @@ test('contains assistant failures instead of taking down the workspace', () => {
       </AssistantErrorBoundary>
     </div>
   );
-  expect(screen.getByText('Assistant recovered')).toBeDefined();
+  await expect.element(page.getByText('Assistant recovered')).toBeInTheDocument();
 });

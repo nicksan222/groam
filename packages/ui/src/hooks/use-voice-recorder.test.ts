@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { useVoiceRecorder } from './use-voice-recorder';
 
@@ -6,9 +6,9 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-test('reports unsupported when MediaRecorder is missing', () => {
+test('reports unsupported when MediaRecorder is missing', async () => {
   vi.stubGlobal('MediaRecorder', undefined);
-  const { result } = renderHook(() => useVoiceRecorder());
+  const { result } = await renderHook(() => useVoiceRecorder());
   expect(result.current.isUnsupported).toBe(true);
 });
 
@@ -32,7 +32,7 @@ test('records a voice file when MediaRecorder is available', async () => {
     }
   });
 
-  const { result } = renderHook(() => useVoiceRecorder());
+  const { result } = await renderHook(() => useVoiceRecorder());
   await act(async () => {
     await expect(result.current.start()).resolves.toBe(true);
   });

@@ -28,7 +28,9 @@ import { createTrip } from './create-trip';
 import { type CreateTripPlan, createTrips } from './create-trips';
 import { type AppUserProfile, type AuthenticatedAppUser, ensureUser } from './ensure-user';
 import { type AppWorkspace, type EnsureWorkspaceInput, ensureWorkspace } from './ensure-workspace';
+import { findIdea } from './find-idea';
 import { getConvexToken } from './get-convex-token';
+import { createInvitation, redeemInvitation } from './invitations';
 import { joinWorkspace } from './join-workspace';
 import { listWorkspaceMemberIds } from './list-workspace-member-ids';
 import { requestIdeaReview } from './request-idea-review';
@@ -89,6 +91,15 @@ export class BackendAppActions extends AppActions<AuthenticatedAppUser> {
   }
   ensureWorkspace(owner: AuthenticatedAppUser, input: EnsureWorkspaceInput) {
     return ensureWorkspace(this.backend, owner, input);
+  }
+  createInvitation(user: AuthenticatedAppUser, role?: 'admin' | 'member') {
+    return createInvitation({ backend: this.backend, user }, role);
+  }
+  findIdea(user: AuthenticatedAppUser, input: { name: string; tripId: string }) {
+    return findIdea({ backend: this.backend, user }, input);
+  }
+  redeemInvitation(user: AuthenticatedAppUser, code: string) {
+    return redeemInvitation({ backend: this.backend, user }, code);
   }
   getConvexToken(user: AuthenticatedAppUser) {
     return getConvexToken(this.backend, user);

@@ -1,5 +1,5 @@
 import type { Id } from '@groam/backend/data-model';
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import type { TripDestinationWithActivities } from './use-trip-activity-editor';
 import { useTripActivityEditor } from './use-trip-activity-editor';
@@ -61,9 +61,9 @@ beforeEach(() => {
 describe('useTripActivityEditor', () => {
   test('creates an activity with a trimmed exact address', async () => {
     const { addActivity, props } = setup();
-    const { result } = renderHook(() => useTripActivityEditor(props));
+    const { result } = await renderHook(() => useTripActivityEditor(props));
 
-    act(() => {
+    await act(() => {
       result.current.openNew();
       result.current.patch({
         address: '  Rua da Bica 18, Lisbon, Portugal  ',
@@ -123,9 +123,9 @@ describe('useTripActivityEditor', () => {
     const { props, updateActivity } = setup({
       destination: destination({ activities: [activity] })
     });
-    const { result } = renderHook(() => useTripActivityEditor(props));
+    const { result } = await renderHook(() => useTripActivityEditor(props));
 
-    act(() => result.current.edit(activity));
+    await act(() => result.current.edit(activity));
     expect(result.current).toMatchObject({
       address: 'Praça do Comércio, Lisbon',
       dayNumber: '2',
@@ -135,7 +135,7 @@ describe('useTripActivityEditor', () => {
       notes: 'North entrance',
       title: 'Walking tour'
     });
-    act(() => result.current.patch({ address: 'Updated exact entrance' }));
+    await act(() => result.current.patch({ address: 'Updated exact entrance' }));
     await act(() => result.current.submit());
 
     expect(updateActivity).toHaveBeenCalledWith(
@@ -144,16 +144,16 @@ describe('useTripActivityEditor', () => {
     );
   });
 
-  test('derives bounded day choices from the destination schedule', () => {
+  test('derives bounded day choices from the destination schedule', async () => {
     const { props } = setup();
-    const { result } = renderHook(() => useTripActivityEditor(props));
+    const { result } = await renderHook(() => useTripActivityEditor(props));
     expect(result.current.dayOptions).toEqual([2, 3, 4]);
 
     const unscheduled = setup({
       destination: destination({ endDay: null, startDay: null }),
       tripDayCount: 3
     });
-    const fallback = renderHook(() => useTripActivityEditor(unscheduled.props));
+    const fallback = await renderHook(() => useTripActivityEditor(unscheduled.props));
     expect(fallback.result.current.dayOptions).toEqual([1, 2, 3]);
   });
 
@@ -163,7 +163,7 @@ describe('useTripActivityEditor', () => {
       .mockResolvedValueOnce(null)
       .mockRejectedValueOnce(new Error('offline'));
     const { props } = setup();
-    const { result } = renderHook(() => useTripActivityEditor(props));
+    const { result } = await renderHook(() => useTripActivityEditor(props));
     const files = [
       new File(['a'], 'a.pdf', { type: 'application/pdf' }),
       new File(['b'], 'b.pdf', { type: 'application/pdf' }),
@@ -175,7 +175,7 @@ describe('useTripActivityEditor', () => {
     expect(result.current.attachments).toEqual([{ id: id<'media'>('media-a'), name: 'a.pdf' }]);
     expect(result.current.uploadMessage).toBe('2 could not be uploaded.');
 
-    act(() =>
+    await act(() =>
       result.current.patch({
         attachments: [1, 2, 3, 4, 5].map((value) => ({
           id: id<'media'>(`media-${value}`),

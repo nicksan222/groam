@@ -1,7 +1,8 @@
 import { agentRunEventLabels } from '@groam/ai/backend/runs/events';
 import { agentRunDuration, agentRunTime } from '@groam/ai/backend/runs/time';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type { AgentRun } from '@/features/agents/hooks/use-agent';
 import { testIds } from '@/lib/test-ids';
 import { AgentRunView } from './agent-run-view';
@@ -67,9 +68,12 @@ vi.mock('@/features/agents/hooks/use-agent-run', () => ({
   useStartQueuedAssignRuns: () => undefined
 }));
 
-vi.mock('@tanstack/react-router', async () => {
+vi.mock('@tanstack/react-router', async (importOriginal) => {
   const { createAgentTestRouterMock } = await import('@/features/agents/agent-test-router-mock');
-  return createAgentTestRouterMock(navigate, { preventDefault: true });
+  return {
+    ...(await importOriginal<typeof import('@tanstack/react-router')>()),
+    ...createAgentTestRouterMock(navigate, { preventDefault: true })
+  };
 });
 
 function issueAgent() {
@@ -122,10 +126,8 @@ beforeEach(() => {
   state.runs = [];
 });
 
-afterEach(cleanup);
-
 describe('AgentRunView', () => {
-  test('shows the run log for chat Groam instead of sending people to the thread', () => {
+  test('shows the run log for chat Groam instead of sending people to the thread', async () => {
     state.agent = {
       activeRunCount: 1,
       assignedIssueCount: 0,
@@ -164,41 +166,44 @@ describe('AgentRunView', () => {
       tripId: null
     });
     state.runs = [state.run];
-    render(<AgentRunView agentId="groam" runId="run-chat" />);
-    expect(screen.getByTestId(testIds.agentRunTitle).textContent).toContain('Packing help');
-    expect(screen.getByText('Open chat')).toBeTruthy();
-    expect(screen.getByTestId(testIds.agentRunContext).textContent).toContain('Lea');
-    expect(screen.getByRole('link', { name: 'Packing help' }).getAttribute('href')).toBe(
-      '/chat/discussion-1'
-    );
-    expect(screen.getByText('Timeline')).toBeTruthy();
-    expect(screen.queryByText('Worker')).toBeNull();
-    expect(screen.queryByText(/transcript in the discussion/u)).toBeNull();
-    expect(screen.getByText('Report')).toBeTruthy();
-    expect(screen.getByText('Bring one universal adapter.')).toBeTruthy();
-    expect(screen.getByTestId('agent-event').textContent).toContain('Responding');
-    expect(screen.getAllByText('Running').length).toBe(1);
-    expect(screen.queryByText('Assigned issues')).toBeNull();
+    await render(<AgentRunView agentId="groam" runId="run-chat" />);
+    expect(page.getByTestId(testIds.agentRunTitle).element().textContent).toContain('Packing help');
+    await expect.element(page.getByText('Open chat')).toBeInTheDocument();
+    expect(page.getByTestId(testIds.agentRunContext).element().textContent).toContain('Lea');
+    await expect
+      .element(page.getByRole('link', { name: 'Packing help' }))
+      .toHaveAttribute('href', '/chat/discussion-1');
+    await expect.element(page.getByText('Timeline')).toBeInTheDocument();
+    await expect.element(page.getByText('Worker')).not.toBeInTheDocument();
+    await expect.element(page.getByText(/transcript in the discussion/u)).not.toBeInTheDocument();
+    await expect.element(page.getByText('Report')).toBeInTheDocument();
+    await expect.element(page.getByText('Bring one universal adapter.')).toBeInTheDocument();
+    expect(page.getByTestId('agent-event').element().textContent).toContain('Responding');
+    expect(page.getByText('Running').elements().length).toBe(1);
+    await expect.element(page.getByText('Assigned issues')).not.toBeInTheDocument();
   });
 
-  test('keeps All agents above the run title and links the agent as a crumb', () => {
+  test('keeps All agents above the run title and links the agent as a crumb', async () => {
     state.agent = issueAgent();
     state.run = run({ id: 'run-issue' as AgentRun['id'], title: 'Rainy-day option' });
     state.runs = [state.run];
-    render(<AgentRunView agentId="issue" runId="run-issue" />);
+    await render(<AgentRunView agentId="issue" runId="run-issue" />);
 
-    const back = screen.getByRole('link', { name: 'All agents' });
-    const crumb = screen.getByRole('link', { name: 'Issue agent' });
-    const title = screen.getByTestId(testIds.agentRunTitle);
-    expect(back.getAttribute('href')).toBe('/agents');
-    expect(crumb.getAttribute('href')).toBe('/agents/issue');
-    expect(back.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(title.textContent).toContain('Rainy-day option');
-    expect(screen.queryByText('Worker')).toBeNull();
-    expect(screen.queryByText('Needs attention')).toBeNull();
+    const back = page.getByRole('link', { name: 'All agents' });
+    const title = page.getByTestId(testIds.agentRunTitle);
+    await expect.element(back).toHaveAttribute('href', '/agents');
+    await expect
+      .element(page.getByRole('link', { name: 'Issue agent' }))
+      .toHaveAttribute('href', '/agents/issue');
+    expect(
+      back.element().compareDocumentPosition(title.element()) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    expect(title.element().textContent).toContain('Rainy-day option');
+    await expect.element(page.getByText('Worker')).not.toBeInTheDocument();
+    await expect.element(page.getByText('Needs attention')).not.toBeInTheDocument();
   });
 
-  test('shows this run’s log without issue or trip metadata clutter', () => {
+  test('shows this run’s log without issue or trip metadata clutter', async () => {
     state.agent = issueAgent();
     state.run = run({ id: 'run-issue' as AgentRun['id'], title: 'Rainy-day option' });
     state.runs = [state.run];
@@ -215,28 +220,28 @@ describe('AgentRunView', () => {
         toolName: null
       }
     ];
-    render(<AgentRunView agentId="issue" runId="run-issue" />);
-    expect(screen.queryByText('Worker')).toBeNull();
-    expect(screen.getAllByText('Rainy-day option').length).toBeGreaterThan(0);
-    expect(screen.getByText('Report')).toBeTruthy();
-    expect(screen.getByText('Opened a draft idea.')).toBeTruthy();
-    const started = screen.getByTestId(testIds.agentEvent);
-    expect(started.textContent).toContain('Started working on');
-    expect(started.textContent).toContain('Rainy-day option');
-    expect(screen.queryByText('Started working on this issue')).toBeNull();
-    expect(
-      within(started).getByRole('link', { name: 'Rainy-day option' }).getAttribute('href')
-    ).toBe('/issues/issue-1');
-    expect(screen.getByText('Called by')).toBeTruthy();
-    const context = screen.getByTestId(testIds.agentRunContext);
+    await render(<AgentRunView agentId="issue" runId="run-issue" />);
+    await expect.element(page.getByText('Worker')).not.toBeInTheDocument();
+    expect(page.getByText('Rainy-day option').elements().length).toBeGreaterThan(0);
+    await expect.element(page.getByText('Report')).toBeInTheDocument();
+    await expect.element(page.getByText('Opened a draft idea.')).toBeInTheDocument();
+    const started = page.getByTestId(testIds.agentEvent);
+    expect(started.element().textContent).toContain('Started working on');
+    expect(started.element().textContent).toContain('Rainy-day option');
+    await expect.element(page.getByText('Started working on this issue')).not.toBeInTheDocument();
+    await expect
+      .element(started.getByRole('link', { name: 'Rainy-day option' }))
+      .toHaveAttribute('href', '/issues/issue-1');
+    await expect.element(page.getByText('Called by')).toBeInTheDocument();
+    const context = page.getByTestId(testIds.agentRunContext).element();
     expect(context.textContent).not.toContain('Issue');
     expect(context.textContent).not.toContain('Trip');
     expect(context.textContent).not.toMatch(/\bIdea\b/u);
-    expect(screen.queryByRole('link', { name: 'Lisbon' })).toBeNull();
-    expect(screen.getByText('Timeline')).toBeTruthy();
+    await expect.element(page.getByRole('link', { name: 'Lisbon' })).not.toBeInTheDocument();
+    await expect.element(page.getByText('Timeline')).toBeInTheDocument();
   });
 
-  test('links the issue title on the started event from related data when detail is missing', () => {
+  test('links the issue title on the started event from related data when detail is missing', async () => {
     state.agent = issueAgent();
     state.run = run({ id: 'run-issue' as AgentRun['id'], title: 'Rainy-day option' });
     state.runs = [state.run];
@@ -253,15 +258,15 @@ describe('AgentRunView', () => {
         toolName: null
       }
     ];
-    render(<AgentRunView agentId="issue" runId="run-issue" />);
-    const started = screen.getByTestId(testIds.agentEvent);
-    expect(started.textContent).toContain('Started working on');
-    expect(
-      within(started).getByRole('link', { name: 'Rainy-day option' }).getAttribute('href')
-    ).toBe('/issues/issue-1');
+    await render(<AgentRunView agentId="issue" runId="run-issue" />);
+    const started = page.getByTestId(testIds.agentEvent);
+    expect(started.element().textContent).toContain('Started working on');
+    await expect
+      .element(started.getByRole('link', { name: 'Rainy-day option' }))
+      .toHaveAttribute('href', '/issues/issue-1');
   });
 
-  test('shows only this run’s title, not other activities', () => {
+  test('shows only this run’s title, not other activities', async () => {
     state.agent = { ...issueAgent(), activeRunCount: 0, status: 'idle' };
     const rain = run({
       completedAt: 2,
@@ -287,14 +292,16 @@ describe('AgentRunView', () => {
     });
     state.run = rain;
     state.runs = [rain, coast];
-    render(<AgentRunView agentId="issue" runId="run-rain" />);
-    expect(screen.getByTestId(testIds.agentRunTitle).textContent).toContain('Rainy-day option');
-    expect(screen.queryByTestId(testIds.agentOtherRuns)).toBeNull();
-    expect(screen.queryByRole('link', { name: /Coast day/u })).toBeNull();
-    expect(screen.queryByText('Coast day')).toBeNull();
+    await render(<AgentRunView agentId="issue" runId="run-rain" />);
+    expect(page.getByTestId(testIds.agentRunTitle).element().textContent).toContain(
+      'Rainy-day option'
+    );
+    await expect.element(page.getByTestId(testIds.agentOtherRuns)).not.toBeInTheDocument();
+    await expect.element(page.getByRole('link', { name: /Coast day/u })).not.toBeInTheDocument();
+    await expect.element(page.getByText('Coast day')).not.toBeInTheDocument();
   });
 
-  test('links the related idea without inventing a generated-idea event', () => {
+  test('links the related idea without inventing a generated-idea event', async () => {
     state.agent = {
       activeRunCount: 0,
       assignedIssueCount: 0,
@@ -352,34 +359,36 @@ describe('AgentRunView', () => {
         toolName: null
       }
     ];
-    render(<AgentRunView agentId="reviewer" runId="run-review" />);
-    expect(screen.getByText('Idea reviewer')).toBeTruthy();
-    expect(screen.queryByTestId(testIds.agentAssignedIssues)).toBeNull();
-    expect(screen.getByText('Called by')).toBeTruthy();
-    const idea = screen.getByTestId(testIds.agentRunIdea);
+    await render(<AgentRunView agentId="reviewer" runId="run-review" />);
+    await expect.element(page.getByText('Idea reviewer')).toBeInTheDocument();
+    await expect.element(page.getByTestId(testIds.agentAssignedIssues)).not.toBeInTheDocument();
+    await expect.element(page.getByText('Called by')).toBeInTheDocument();
+    const idea = page.getByTestId(testIds.agentRunIdea).element();
     expect(idea.textContent).toContain('Kyoto food crawl');
-    expect(screen.getByRole('link', { name: 'Open idea' }).getAttribute('href')).toContain(
+    expect(page.getByRole('link', { name: 'Open idea' }).element().getAttribute('href')).toContain(
       '/trips/trip-1/ideas/proposal-1/'
     );
-    const events = screen.getAllByTestId(testIds.agentEvent);
+    const events = page.getByTestId(testIds.agentEvent).elements();
     expect(events).toHaveLength(3);
     expect(events.some((event) => event.textContent?.includes('Thought'))).toBe(true);
     expect(events.some((event) => event.textContent?.includes('Check whether day 3'))).toBe(true);
     expect(events.some((event) => event.textContent?.includes('Read itinerary'))).toBe(true);
     expect(events.some((event) => event.textContent?.includes('Started review'))).toBe(true);
-    expect(screen.getByRole('button', { name: 'Thoughts' })).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Thoughts' }));
-    const thoughts = screen.getAllByTestId(testIds.agentEvent);
+    await expect.element(page.getByRole('button', { name: 'Thoughts' })).toBeInTheDocument();
+    await page.getByRole('button', { name: 'Thoughts' }).click();
+    const thoughts = page.getByTestId(testIds.agentEvent).elements();
     expect(thoughts).toHaveLength(1);
     expect(thoughts[0]?.textContent).toContain('Check whether day 3');
     expect(idea.textContent).not.toContain('generated');
-    expect(screen.getByTestId(testIds.agentRunTitle).textContent).toContain('Kyoto food crawl');
-    const context = screen.getByTestId(testIds.agentRunContext);
+    expect(page.getByTestId(testIds.agentRunTitle).element().textContent).toContain(
+      'Kyoto food crawl'
+    );
+    const context = page.getByTestId(testIds.agentRunContext).element();
     expect(context.textContent).not.toMatch(/\bIdea\b/u);
     expect(context.textContent).not.toContain('Trip');
   });
 
-  test('omits the idea callout when the run has no proposal', () => {
+  test('omits the idea callout when the run has no proposal', async () => {
     state.agent = { ...issueAgent(), activeRunCount: 0, status: 'idle' };
     state.run = run({
       completedAt: 1,
@@ -393,12 +402,14 @@ describe('AgentRunView', () => {
       updatedAt: 1
     });
     state.runs = [state.run];
-    render(<AgentRunView agentId="issue" runId="run-other" />);
-    expect(screen.queryByTestId(testIds.agentRunIdea)).toBeNull();
-    expect(screen.getByTestId(testIds.agentRunTitle).textContent).toContain('Other activity');
+    await render(<AgentRunView agentId="issue" runId="run-other" />);
+    await expect.element(page.getByTestId(testIds.agentRunIdea)).not.toBeInTheDocument();
+    expect(page.getByTestId(testIds.agentRunTitle).element().textContent).toContain(
+      'Other activity'
+    );
   });
 
-  test('shows run duration, timestamps, tool payload, and load earlier', () => {
+  test('shows run duration, timestamps, tool payload, and load earlier', async () => {
     const startedAt = 1_000;
     const completedAt = 9_000;
     state.agent = {
@@ -431,21 +442,25 @@ describe('AgentRunView', () => {
         toolName: 'getItinerary'
       }
     ];
-    render(<AgentRunView agentId="issue" runId="run-done" />);
-    expect(screen.getAllByText('Done').length).toBe(1);
-    expect(screen.getByText('Called by')).toBeTruthy();
-    expect(screen.getByText('Lea')).toBeTruthy();
-    expect(screen.getByText('Timeline')).toBeTruthy();
-    expect(
-      screen.getByText(new RegExp(`${agentRunDuration(startedAt, completedAt)}`, 'u'))
-    ).toBeTruthy();
-    expect(screen.getByTestId('agent-event').textContent).toContain(agentRunTime(startedAt));
-    expect(screen.getByTestId('agent-event').textContent).toContain('getItinerary');
-    expect(screen.getByTestId('agent-event').textContent).toContain('"tripId": "trip-1"');
-    expect(screen.getByTestId('agent-event').textContent).toContain('"tripName": "Lisbon"');
-    expect(screen.getByRole('button', { name: 'Load earlier' })).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Retry from zero' })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Re-run' })).toBeTruthy();
+    await render(<AgentRunView agentId="issue" runId="run-done" />);
+    expect(page.getByText('Done').elements().length).toBe(1);
+    await expect.element(page.getByText('Called by')).toBeInTheDocument();
+    await expect.element(page.getByText('Lea')).toBeInTheDocument();
+    await expect.element(page.getByText('Timeline')).toBeInTheDocument();
+    await expect
+      .element(page.getByText(new RegExp(`${agentRunDuration(startedAt, completedAt)}`, 'u')))
+      .toBeInTheDocument();
+    expect(page.getByTestId('agent-event').element().textContent).toContain(
+      agentRunTime(startedAt)
+    );
+    expect(page.getByTestId('agent-event').element().textContent).toContain('getItinerary');
+    expect(page.getByTestId('agent-event').element().textContent).toContain('"tripId": "trip-1"');
+    expect(page.getByTestId('agent-event').element().textContent).toContain('"tripName": "Lisbon"');
+    await expect.element(page.getByRole('button', { name: 'Load earlier' })).toBeInTheDocument();
+    await expect
+      .element(page.getByRole('button', { name: 'Retry from zero' }))
+      .not.toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'Re-run' })).toBeInTheDocument();
   });
 
   test('re-runs a finished issue agent and opens the new run', async () => {
@@ -460,8 +475,8 @@ describe('AgentRunView', () => {
       updatedAt: 2
     });
     state.runs = [state.run];
-    render(<AgentRunView agentId="issue" runId="run-done" />);
-    fireEvent.click(screen.getByTestId(testIds.agentRerun));
+    await render(<AgentRunView agentId="issue" runId="run-done" />);
+    await page.getByTestId(testIds.agentRerun).click();
     expect(retry).toHaveBeenCalledWith({ runId: 'run-done' });
     await vi.waitFor(() => {
       expect(navigate).toHaveBeenCalledWith({
@@ -471,7 +486,7 @@ describe('AgentRunView', () => {
     });
   });
 
-  test('hides Finished while queued and disables load earlier while fetching', () => {
+  test('hides Finished while queued and disables load earlier while fetching', async () => {
     state.agent = issueAgent();
     state.eventsStatus = 'LoadingMore';
     state.run = run({
@@ -482,12 +497,10 @@ describe('AgentRunView', () => {
       title: 'Rainy-day option'
     });
     state.runs = [state.run];
-    render(<AgentRunView agentId="issue" runId="run-queued" />);
-    expect(screen.getByText('Waiting to start')).toBeTruthy();
-    expect(screen.queryByText('Finished')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Load earlier' }).hasAttribute('disabled')).toBe(
-      true
-    );
+    await render(<AgentRunView agentId="issue" runId="run-queued" />);
+    await expect.element(page.getByText('Waiting to start')).toBeInTheDocument();
+    await expect.element(page.getByText('Finished')).not.toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'Load earlier' })).toBeDisabled();
   });
 
   test('retries from zero and opens the new run', async () => {
@@ -504,8 +517,8 @@ describe('AgentRunView', () => {
       updatedAt: 2
     });
     state.runs = [state.run];
-    render(<AgentRunView agentId="issue" runId="run-failed" />);
-    fireEvent.click(screen.getByTestId(testIds.agentRetryFromZero));
+    await render(<AgentRunView agentId="issue" runId="run-failed" />);
+    await page.getByTestId(testIds.agentRetryFromZero).click();
     expect(retry).toHaveBeenCalledWith({ runId: 'run-failed' });
     await vi.waitFor(() => {
       expect(navigate).toHaveBeenCalledWith({
@@ -515,7 +528,7 @@ describe('AgentRunView', () => {
     });
   });
 
-  test('does not lock a competing activity pane on the run destination', () => {
+  test('does not lock a competing activity pane on the run destination', async () => {
     state.agent = { ...issueAgent(), activeRunCount: 0, status: 'idle' };
     state.run = run({
       completedAt: 1,
@@ -538,16 +551,18 @@ describe('AgentRunView', () => {
         updatedAt: index + 1
       })
     );
-    render(<AgentRunView agentId="issue" runId="run-0" />);
-    expect(screen.getByTestId(testIds.agentDetailWorkspace).className).not.toMatch(
-      /overflow-hidden/u
-    );
-    expect(screen.getByTestId(testIds.agentRunDetail).className).not.toMatch(/overflow-hidden/u);
-    expect(screen.queryByTestId(testIds.agentOtherRuns)).toBeNull();
-    expect(screen.queryByText('Activity 1')).toBeNull();
+    await render(<AgentRunView agentId="issue" runId="run-0" />);
+    await expect
+      .element(page.getByTestId(testIds.agentDetailWorkspace))
+      .not.toHaveClass('overflow-hidden');
+    await expect
+      .element(page.getByTestId(testIds.agentRunDetail))
+      .not.toHaveClass('overflow-hidden');
+    await expect.element(page.getByTestId(testIds.agentOtherRuns)).not.toBeInTheDocument();
+    await expect.element(page.getByText('Activity 1')).not.toBeInTheDocument();
   });
 
-  test('shows the run title and full error without truncating in the destination', () => {
+  test('shows the run title and full error without truncating in the destination', async () => {
     const firstError = 'The model timed out while writing the rainy-day option.';
     state.agent = { ...issueAgent(), activeRunCount: 0, lastActivityAt: 2, status: 'failed' };
     state.run = run({
@@ -575,18 +590,22 @@ describe('AgentRunView', () => {
       }
     ];
     state.runs = [state.run];
-    render(<AgentRunView agentId="issue" runId="run-rain" />);
-    const detail = screen.getByTestId(testIds.agentRunDetail);
-    expect(screen.getByTestId(testIds.agentRunTitle).textContent).toContain('Rainy-day option');
-    expect(within(detail).getByText(firstError).className).toMatch(/whitespace-pre-wrap/u);
-    expect(within(detail).getAllByText(firstError)).toHaveLength(1);
-    expect(within(screen.getByTestId(testIds.agentEvent)).getByText('Run failed')).toBeTruthy();
-    expect(screen.queryByText('Needs attention')).toBeNull();
-    expect(screen.queryByText('Worker')).toBeNull();
+    await render(<AgentRunView agentId="issue" runId="run-rain" />);
+    const detail = page.getByTestId(testIds.agentRunDetail);
+    expect(page.getByTestId(testIds.agentRunTitle).element().textContent).toContain(
+      'Rainy-day option'
+    );
+    await expect.element(detail.getByText(firstError)).toHaveClass('whitespace-pre-wrap');
+    expect(detail.getByText(firstError).elements()).toHaveLength(1);
+    await expect
+      .element(page.getByTestId(testIds.agentEvent).getByText('Run failed'))
+      .toBeInTheDocument();
+    await expect.element(page.getByText('Needs attention')).not.toBeInTheDocument();
+    await expect.element(page.getByText('Worker')).not.toBeInTheDocument();
   });
 });
 
-test('explains provider authentication failures without offering an unsupported reviewer retry', () => {
+test('explains provider authentication failures without offering an unsupported reviewer retry', async () => {
   state.agent = { ...issueAgent(), id: 'reviewer', label: 'Idea reviewer' };
   state.run = run({
     agentId: 'reviewer',
@@ -597,13 +616,15 @@ test('explains provider authentication failures without offering an unsupported 
     report: null,
     title: 'Review the draft'
   });
-  render(<AgentRunView agentId="reviewer" runId="review-failed" />);
-  expect(screen.getByText(/organization or deployment admin/u)).toBeTruthy();
-  expect(screen.queryByRole('button', { name: 'Retry from zero' })).toBeNull();
-  expect(screen.getByText('No activity recorded')).toBeTruthy();
+  await render(<AgentRunView agentId="reviewer" runId="review-failed" />);
+  await expect.element(page.getByText(/organization or deployment admin/u)).toBeInTheDocument();
+  await expect
+    .element(page.getByRole('button', { name: 'Retry from zero' }))
+    .not.toBeInTheDocument();
+  await expect.element(page.getByText('No activity recorded')).toBeInTheDocument();
 });
 
-test('does not present a last update as an unrecorded start or finish', () => {
+test('does not present a last update as an unrecorded start or finish', async () => {
   state.agent = issueAgent();
   state.run = run({
     id: 'missing-times' as AgentRun['id'],
@@ -612,19 +633,18 @@ test('does not present a last update as an unrecorded start or finish', () => {
     status: 'failed',
     title: 'Review the draft'
   });
-  render(<AgentRunView agentId="issue" runId="missing-times" />);
-  const context = screen.getByTestId(testIds.agentRunContext);
-  expect(within(context).getAllByText('Not recorded')).toHaveLength(2);
-  expect(within(context).queryByText('Duration')).toBeNull();
+  await render(<AgentRunView agentId="issue" runId="missing-times" />);
+  const context = page.getByTestId(testIds.agentRunContext);
+  await expect.poll(() => context.getByText('Not recorded').elements()).toHaveLength(2);
+  await expect.element(context.getByText('Duration')).not.toBeInTheDocument();
 });
 
 test('copies the run identifier for support and investigation', async () => {
-  const writeText = vi.fn().mockResolvedValue(undefined);
-  Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+  const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined);
   state.agent = issueAgent();
   state.run = run({ id: 'copy-this-run' as AgentRun['id'], title: 'Review the draft' });
-  render(<AgentRunView agentId="issue" runId="copy-this-run" />);
-  fireEvent.click(screen.getByRole('button', { name: 'Copy run ID' }));
+  await render(<AgentRunView agentId="issue" runId="copy-this-run" />);
+  await page.getByRole('button', { name: 'Copy run ID' }).click();
   await vi.waitFor(() => expect(writeText).toHaveBeenCalledWith('copy-this-run'));
 });
 
@@ -636,15 +656,14 @@ test('prevents duplicate stop requests and shows pending feedback', async () => 
   stop.mockReturnValue(pending);
   state.agent = issueAgent();
   state.run = run({ id: 'stop-this-run' as AgentRun['id'], title: 'Review the draft' });
-  render(<AgentRunView agentId="issue" runId="stop-this-run" />);
-  fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
-  const stopping = screen.getByRole('button', { name: 'Stopping…' });
-  expect(stopping.hasAttribute('disabled')).toBe(true);
-  fireEvent.click(stopping);
+  await render(<AgentRunView agentId="issue" runId="stop-this-run" />);
+  await page.getByRole('button', { name: 'Stop' }).click();
+  const stopping = page.getByRole('button', { name: 'Stopping…' });
+  await expect.element(stopping).toBeDisabled();
+  // Forced: a disabled control must ignore clicks, which is the behavior under test.
+  await stopping.click({ force: true });
   expect(stop).toHaveBeenCalledTimes(1);
   expect(stop).toHaveBeenCalledWith({ runId: 'stop-this-run' });
   finishStop();
-  await vi.waitFor(() =>
-    expect(screen.getByRole('button', { name: 'Stop' }).hasAttribute('disabled')).toBe(false)
-  );
+  await expect.element(page.getByRole('button', { name: 'Stop' })).toBeEnabled();
 });

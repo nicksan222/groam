@@ -1,5 +1,5 @@
 import type { Id } from '@groam/backend/data-model';
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { useTripSidebarActions } from './use-trip-sidebar-actions';
 
@@ -8,7 +8,10 @@ const convex = vi.hoisted(() => ({
 }));
 const notifications = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
 
-vi.mock('convex/react', () => convex);
+vi.mock('convex/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('convex/react')>()),
+  ...convex
+}));
 vi.mock('@groam/ui/components/toast', () => ({ toast: notifications }));
 
 const tripId = 'trip-1' as Id<'trips'>;
@@ -23,7 +26,7 @@ describe('useTripSidebarActions', () => {
     const favorite = vi.fn().mockResolvedValue(null);
     convex.useMutation.mockReturnValueOnce(archive).mockReturnValueOnce(favorite);
 
-    const { result } = renderHook(() => useTripSidebarActions());
+    const { result } = await renderHook(() => useTripSidebarActions());
     await act(async () => {
       await result.current.archiveTrip(tripId);
     });
@@ -37,7 +40,7 @@ describe('useTripSidebarActions', () => {
     const favorite = vi.fn().mockRejectedValue(new Error('Offline'));
     convex.useMutation.mockReturnValueOnce(archive).mockReturnValueOnce(favorite);
 
-    const { result } = renderHook(() => useTripSidebarActions());
+    const { result } = await renderHook(() => useTripSidebarActions());
     await act(async () => {
       await result.current.toggleFavorite(tripId, false);
     });
@@ -52,7 +55,7 @@ describe('useTripSidebarActions', () => {
     const favorite = vi.fn().mockResolvedValue(null);
     convex.useMutation.mockReturnValueOnce(archive).mockReturnValueOnce(favorite);
 
-    const { result } = renderHook(() => useTripSidebarActions());
+    const { result } = await renderHook(() => useTripSidebarActions());
     await act(async () => {
       await result.current.archiveTrip(tripId);
     });
@@ -66,7 +69,7 @@ describe('useTripSidebarActions', () => {
     const favorite = vi.fn().mockRejectedValue(new Error('Server Error'));
     convex.useMutation.mockReturnValueOnce(archive).mockReturnValueOnce(favorite);
 
-    const { result } = renderHook(() => useTripSidebarActions());
+    const { result } = await renderHook(() => useTripSidebarActions());
     await act(async () => {
       await result.current.toggleFavorite(tripId, true);
     });

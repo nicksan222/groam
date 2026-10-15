@@ -1,5 +1,6 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { beforeEach, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { AccountRecoverySettings } from './account-recovery-settings';
 
 const recovery = vi.hoisted(() => ({
@@ -20,26 +21,22 @@ beforeEach(() => {
   recovery.message = null;
 });
 
-afterEach(cleanup);
+test('requires the current password before generating recovery codes', async () => {
+  await render(<AccountRecoverySettings />);
+  const generate = page.getByRole('button', { name: 'Generate and download' });
 
-test('requires the current password before generating recovery codes', () => {
-  render(<AccountRecoverySettings />);
-  const generate = screen.getByRole('button', { name: 'Generate and download' });
+  await expect.element(generate).toBeDisabled();
+  await page.getByLabelText('Current password').fill('current-password');
+  await expect.element(generate).toBeEnabled();
 
-  expect(generate.hasAttribute('disabled')).toBe(true);
-  fireEvent.change(screen.getByLabelText('Current password'), {
-    target: { value: 'current-password' }
-  });
-  expect(generate.hasAttribute('disabled')).toBe(false);
-
-  fireEvent.click(generate);
+  await generate.click();
   expect(recovery.generate).toHaveBeenCalledWith('current-password');
 });
 
-test('renders recovery errors as an accessible alert', () => {
+test('renders recovery errors as an accessible alert', async () => {
   recovery.error = 'Invalid password';
 
-  render(<AccountRecoverySettings />);
+  await render(<AccountRecoverySettings />);
 
-  expect(screen.getByRole('alert').textContent).toBe('Invalid password');
+  await expect.element(page.getByRole('alert')).toHaveTextContent('Invalid password');
 });

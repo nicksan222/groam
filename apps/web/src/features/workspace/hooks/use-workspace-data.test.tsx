@@ -1,4 +1,4 @@
-import { act, renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { useWorkspaceData } from './use-workspace-data';
 
@@ -45,8 +45,8 @@ beforeEach(() => {
   auth.getSession.mockResolvedValue({ data: null, error: null });
 });
 
-test('combines stable workspace identity from the active organization', () => {
-  const { result } = renderHook(() => useWorkspaceData());
+test('combines stable workspace identity from the active organization', async () => {
+  const { result } = await renderHook(() => useWorkspaceData());
 
   expect(result.current.value).toMatchObject({
     activeOrganization: organization,
@@ -60,9 +60,9 @@ test('activates the first organization when the session has no active workspace'
     isPending: false
   });
   auth.useActiveOrganization.mockReturnValue({ data: null, isPending: false });
-  renderHook(() => useWorkspaceData());
+  await renderHook(() => useWorkspaceData());
 
-  await waitFor(() =>
+  await vi.waitFor(() =>
     expect(auth.setActive).toHaveBeenCalledWith({ organizationId: 'organization-a' })
   );
   expect(auth.getSession).toHaveBeenCalledWith({ query: { disableCookieCache: true } });
@@ -73,10 +73,10 @@ test('does not expose an active organization cached from an older session', asyn
     data: { session: {}, user: { id: 'user-a', name: 'Ada' } },
     isPending: false
   });
-  const { result } = renderHook(() => useWorkspaceData());
+  const { result } = await renderHook(() => useWorkspaceData());
 
   expect(result.current.value).toBeNull();
-  await waitFor(() =>
+  await vi.waitFor(() =>
     expect(auth.setActive).toHaveBeenCalledWith({ organizationId: 'organization-a' })
   );
 });
@@ -88,9 +88,9 @@ test('surfaces active workspace failures instead of loading forever', async () =
   });
   auth.useActiveOrganization.mockReturnValue({ data: null, isPending: false });
   auth.setActive.mockResolvedValue({ data: null, error: { message: 'Access denied' } });
-  const { result } = renderHook(() => useWorkspaceData());
+  const { result } = await renderHook(() => useWorkspaceData());
 
-  await waitFor(() => expect(result.current.activationError).toBe('Access denied'));
+  await vi.waitFor(() => expect(result.current.activationError).toBe('Access denied'));
   expect(result.current.isPending).toBe(false);
 });
 
@@ -106,9 +106,9 @@ test('ignores a stale activation failure after the workspace becomes active', as
       finishActivation = resolve;
     })
   );
-  const { rerender, result } = renderHook(() => useWorkspaceData());
+  const { rerender, result } = await renderHook(() => useWorkspaceData());
 
-  await waitFor(() => expect(auth.setActive).toHaveBeenCalledOnce());
+  await vi.waitFor(() => expect(auth.setActive).toHaveBeenCalledOnce());
   auth.useActiveOrganization.mockReturnValue({ data: organization, isPending: false });
   auth.useSession.mockReturnValue({
     data: {
@@ -117,8 +117,8 @@ test('ignores a stale activation failure after the workspace becomes active', as
     },
     isPending: false
   });
-  rerender();
-  await act(async () => {
+  await rerender();
+  await act(() => {
     finishActivation({ data: null, error: { message: 'Stale failure' } });
   });
 

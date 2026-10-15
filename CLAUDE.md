@@ -118,9 +118,10 @@ route, module, hook, env variable, test, or UI piece.
 - Ports: web `5173`, Convex API `3210`, Convex site/HTTP `3211`, dashboard
   `6790`. `http://127.0.0.1:3211/` returns `503` locally because no static site
   is uploaded; that is expected. The app is served by Vite on `5173`.
-- Browser e2e: `just e2e-local` against the running dev stack on
-  `http://localhost:5173` (must match `VITE_SITE_URL` for Better Auth).
-  `just e2e` targets the uploaded static site on `3211`, as CI does.
+- Browser tests run in Chromium through Vite+ browser mode (`vp test`). View
+  tests are the `views` setup; `just journeys` runs the `journeys` setup
+  (`apps/web/e2e`): the real app against the running local backend, served on
+  `5174`, which local Better Auth trusts.
 - AI assistant features are optional and need an LLM provider key (see
   `packages/env`).
 

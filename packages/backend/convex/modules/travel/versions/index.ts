@@ -1629,10 +1629,27 @@ function tryNormalizeProposalTitle(value: string): string | null {
   }
 }
 
+/** The idea's changes against its base, as reviewers and agents read them. */
+async function presentProposalChanges(
+  ctx: QueryCtx,
+  proposal: Doc<'tripProposals'>,
+  working: Doc<'trips'>
+) {
+  const [base, proposed] = await Promise.all([
+    baseSnapshotFor(ctx, proposal),
+    VersionSnapshots.create(ctx, working)
+  ]);
+  return VersionPresentation.present(
+    ctx,
+    VersionChanges.diff(base, proposed),
+    proposal.organizationId
+  );
+}
+
 /** What the Idea reviewer reads. Review runs are scheduled, so this needs no user session. */
 async function reviewContext(ctx: QueryCtx, proposalId: Id<'tripProposals'>) {
   const proposal = await ctx.db.get('tripProposals', proposalId);
-  if (!proposal) throw new ConvexError('Idea trip not found');
+  if (!proposal) throw new Error('Proposal not found');
   if (!(proposal.reviewers ?? []).some((reviewer) => reviewer.kind === 'agent')) {
     throw new Error('Idea reviewer is not assigned to review this proposal');
   }
@@ -1640,17 +1657,9 @@ async function reviewContext(ctx: QueryCtx, proposalId: Id<'tripProposals'>) {
     throw new Error('Submit the proposal before requesting idea review');
   }
   const working = await ctx.db.get('trips', proposal.workingTripId);
-  if (!working) throw new ConvexError('Idea trip not found');
-  const [base, proposed] = await Promise.all([
-    baseSnapshotFor(ctx, proposal),
-    VersionSnapshots.create(ctx, working)
-  ]);
+  if (!working) throw new Error('Idea trip not found');
   return {
-    changes: await VersionPresentation.present(
-      ctx,
-      VersionChanges.diff(base, proposed),
-      proposal.organizationId
-    ),
+    changes: await presentProposalChanges(ctx, proposal, working),
     organizationId: proposal.organizationId,
     sourceTripId: proposal.sourceTripId,
     title: proposal.title,
@@ -1668,19 +1677,14 @@ async function titleContext(ctx: QueryCtx, proposalId: Id<'tripProposals'>, gene
     return null;
   }
 
-  const [working, sourceTrip, issue, base] = await Promise.all([
+  const [working, sourceTrip, issue] = await Promise.all([
     ctx.db.get('trips', proposal.workingTripId),
     ctx.db.get('trips', proposal.sourceTripId),
-    proposal.issueId ? ctx.db.get('tripIssues', proposal.issueId) : null,
-    baseSnapshotFor(ctx, proposal)
+    proposal.issueId ? ctx.db.get('tripIssues', proposal.issueId) : null
   ]);
   if (!working || !sourceTrip) return null;
 
-  const changes = await VersionPresentation.present(
-    ctx,
-    VersionChanges.diff(base, await VersionSnapshots.create(ctx, working)),
-    proposal.organizationId
-  );
+  const changes = await presentProposalChanges(ctx, proposal, working);
   if (changes.length === 0) return null;
 
   return {

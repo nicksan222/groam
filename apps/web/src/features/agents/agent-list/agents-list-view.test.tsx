@@ -1,5 +1,6 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type { WorkspaceAgentRun } from '@/features/agents/hooks/use-workspace-agent-runs';
 import { testIds } from '@/lib/test-ids';
 import { AgentsListView } from './agents-list-view';
@@ -36,9 +37,12 @@ vi.mock('@/features/agents/hooks/use-agent-run', () => ({
 
 const navigate = vi.hoisted(() => vi.fn());
 
-vi.mock('@tanstack/react-router', async () => {
+vi.mock('@tanstack/react-router', async (importOriginal) => {
   const { createAgentTestRouterMock } = await import('@/features/agents/agent-test-router-mock');
-  return createAgentTestRouterMock(navigate);
+  return {
+    ...(await importOriginal<typeof import('@tanstack/react-router')>()),
+    ...createAgentTestRouterMock(navigate)
+  };
 });
 
 function run(
@@ -71,6 +75,8 @@ function run(
   };
 }
 
+afterEach(() => page.viewport(1280, 800));
+
 beforeEach(() => {
   vi.clearAllMocks();
   state.isLoading = false;
@@ -79,24 +85,26 @@ beforeEach(() => {
   state.status = 'Exhausted';
 });
 
-afterEach(cleanup);
-
 describe('AgentsListView', () => {
-  test('shows a labeled loading state while runs load', () => {
+  test('shows a labeled loading state while runs load', async () => {
     state.isLoading = true;
-    render(<AgentsListView />);
-    expect(screen.getByRole('status', { name: 'Loading agent runs…' })).toBeTruthy();
+    await render(<AgentsListView />);
+    await expect
+      .element(page.getByRole('status', { name: 'Loading agent runs…' }))
+      .toBeInTheDocument();
   });
 
-  test('shows an empty state when the group has no runs', () => {
-    render(<AgentsListView />);
-    expect(screen.getByText('Nothing running yet')).toBeTruthy();
-    expect(screen.queryByText('Latest run from each agent.')).toBeNull();
-    expect(screen.queryByTestId(testIds.agentsRoster)).toBeNull();
-    expect(screen.getByRole('heading', { name: 'Background activity' })).toBeTruthy();
+  test('shows an empty state when the group has no runs', async () => {
+    await render(<AgentsListView />);
+    await expect.element(page.getByText('Nothing running yet')).toBeInTheDocument();
+    await expect.element(page.getByText('Latest run from each agent.')).not.toBeInTheDocument();
+    await expect.element(page.getByTestId(testIds.agentsRoster)).not.toBeInTheDocument();
+    await expect
+      .element(page.getByRole('heading', { name: 'Background activity' }))
+      .toBeInTheDocument();
   });
 
-  test('lists every run sequentially instead of one latest row per agent', () => {
+  test('lists every run sequentially instead of one latest row per agent', async () => {
     state.runs = [
       run({
         agentId: 'issue',
@@ -135,45 +143,49 @@ describe('AgentsListView', () => {
         updatedAt: Date.now() - 10 * 60_000
       })
     ];
-    render(<AgentsListView />);
-    expect(screen.getByRole('heading', { name: 'Background activity' })).toBeTruthy();
-    expect(
-      screen.getByText(
-        'Work Groam is doing for your group. Continue planning in chat while it runs.'
+    await render(<AgentsListView />);
+    await expect
+      .element(page.getByRole('heading', { name: 'Background activity' }))
+      .toBeInTheDocument();
+    await expect
+      .element(
+        page.getByText(
+          'Work Groam is doing for your group. Continue planning in chat while it runs.'
+        )
       )
-    ).toBeTruthy();
-    const roster = screen.getByTestId(testIds.agentsRoster);
-    expect(roster).toBeTruthy();
-    expect(roster.className).not.toContain('dashboard-lift-card');
-    expect(roster.className).not.toContain('rounded-2xl');
-    expect(roster.className).toContain('bg-card');
-    const tableContainer = roster.querySelector('[data-slot="table-container"]');
-    expect(tableContainer?.getAttribute('data-variant')).toBe('list');
-    expect(roster.querySelector('table')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Run' })).toBeTruthy();
-    expect(screen.getByText('Agent')).toBeTruthy();
-    expect(screen.getByText('Called by')).toBeTruthy();
-    expect(screen.getByText('Status')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Updated' })).toBeTruthy();
-    expect(screen.getAllByTestId(testIds.agentCard)).toHaveLength(4);
-    expect(screen.getByRole('link', { name: /Rainy-day option/u }).getAttribute('href')).toBe(
-      '/agents/issue/run-issue-new'
-    );
-    expect(screen.getByRole('link', { name: /Packing help/u }).getAttribute('href')).toBe(
-      '/agents/groam/run-chat'
-    );
-    expect(screen.getAllByText(/Issue agent/u)).toHaveLength(2);
-    expect(screen.getByText('Groam', { exact: true })).toBeTruthy();
-    expect(screen.getByText(/Idea reviewer/u)).toBeTruthy();
-    expect(screen.getByText('Packing help')).toBeTruthy();
-    expect(screen.getByText('Rainy-day option')).toBeTruthy();
-    expect(screen.getByText('Coast day')).toBeTruthy();
-    expect(screen.getByText('Kyoto food crawl')).toBeTruthy();
-    expect(screen.getAllByText('Running')).toHaveLength(2);
-    expect(screen.getByText('Failed')).toBeTruthy();
-    expect(screen.getByText('Done')).toBeTruthy();
-    expect(screen.getByText(/The model timed out/u)).toBeTruthy();
-    const runCells = screen.getAllByTestId(testIds.agentRunFeedRunCell);
+      .toBeInTheDocument();
+    const roster = page.getByTestId(testIds.agentsRoster);
+    await expect.element(roster).not.toHaveClass('dashboard-lift-card');
+    await expect.element(roster).not.toHaveClass('rounded-2xl');
+    await expect.element(roster).toHaveClass('bg-card');
+    expect(
+      roster.element().querySelector('[data-slot="table-container"]')?.getAttribute('data-variant')
+    ).toBe('list');
+    await expect.element(roster.getByRole('table')).toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'Run' })).toBeInTheDocument();
+    await expect.element(page.getByText('Agent')).toBeInTheDocument();
+    await expect.element(page.getByText('Called by')).toBeInTheDocument();
+    await expect.element(page.getByText('Status')).toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'Updated' })).toBeInTheDocument();
+    expect(page.getByTestId(testIds.agentCard).elements()).toHaveLength(4);
+    await expect
+      .element(page.getByRole('link', { name: /Rainy-day option/u }))
+      .toHaveAttribute('href', '/agents/issue/run-issue-new');
+    await expect
+      .element(page.getByRole('link', { name: /Packing help/u }))
+      .toHaveAttribute('href', '/agents/groam/run-chat');
+    expect(page.getByText(/Issue agent/u).elements()).toHaveLength(2);
+    await expect.element(page.getByText('Groam')).toBeInTheDocument();
+    await expect.element(page.getByText(/Idea reviewer/u)).toBeInTheDocument();
+    await expect.element(page.getByText('Packing help')).toBeInTheDocument();
+    await expect.element(page.getByText('Rainy-day option')).toBeInTheDocument();
+    await expect.element(page.getByText('Coast day')).toBeInTheDocument();
+    await expect.element(page.getByText('Kyoto food crawl')).toBeInTheDocument();
+    expect(page.getByText('Running').elements()).toHaveLength(2);
+    await expect.element(page.getByText('Failed')).toBeInTheDocument();
+    await expect.element(page.getByText('Done')).toBeInTheDocument();
+    await expect.element(page.getByText(/The model timed out/u)).toBeInTheDocument();
+    const runCells = page.getByTestId(testIds.agentRunFeedRunCell).elements();
     expect(runCells).toHaveLength(4);
     for (const cell of runCells) {
       expect(cell.className).toContain('min-w-0');
@@ -181,19 +193,19 @@ describe('AgentsListView', () => {
       expect(title?.className).toContain('truncate');
       expect(title?.className).toContain('font-semibold');
     }
-    const rosterRow = screen.getAllByTestId(testIds.agentCard)[0];
+    const rosterRow = page.getByTestId(testIds.agentCard).elements()[0];
     expect(rosterRow?.tagName).toBe('TR');
     expect(rosterRow?.className).toContain('cursor-pointer');
-    expect(screen.queryByText('Nothing running yet')).toBeNull();
-    expect(screen.queryByText('Idle')).toBeNull();
-    expect(screen.queryByText('Latest run from each agent.')).toBeNull();
-    expect(screen.queryByText('Latest run')).toBeNull();
-    const retry = screen.getByRole('button', { name: 'Retry from zero' });
+    await expect.element(page.getByText('Nothing running yet')).not.toBeInTheDocument();
+    await expect.element(page.getByText('Idle')).not.toBeInTheDocument();
+    await expect.element(page.getByText('Latest run from each agent.')).not.toBeInTheDocument();
+    await expect.element(page.getByText('Latest run')).not.toBeInTheDocument();
+    const retry = page.getByRole('button', { name: 'Retry from zero' }).element();
     expect(retry.textContent).toBe('');
-    expect(screen.queryByText('Retry from zero')).toBeNull();
+    await expect.element(page.getByText('Retry from zero')).not.toBeInTheDocument();
   });
 
-  test('loads the next page of runs', () => {
+  test('loads the next page of runs', async () => {
     state.status = 'CanLoadMore';
     state.runs = [
       run({
@@ -201,12 +213,12 @@ describe('AgentsListView', () => {
         title: 'First page run'
       })
     ];
-    render(<AgentsListView />);
-    fireEvent.click(screen.getByTestId(testIds.agentsLoadMore));
+    await render(<AgentsListView />);
+    await page.getByTestId(testIds.agentsLoadMore).click();
     expect(state.loadMore).toHaveBeenCalledWith(25);
   });
 
-  test('filters the loaded runs without hiding the table chrome', () => {
+  test('filters the loaded runs without hiding the table chrome', async () => {
     state.runs = [
       run({
         id: 'run-rain' as WorkspaceAgentRun['id'],
@@ -219,11 +231,56 @@ describe('AgentsListView', () => {
         title: 'Packing help'
       })
     ];
-    render(<AgentsListView />);
-    fireEvent.change(screen.getByTestId(testIds.agentsRunsFilter), {
-      target: { value: 'packing' }
+    await render(<AgentsListView />);
+    await page.getByTestId(testIds.agentsRunsFilter).fill('packing');
+    await expect.element(page.getByText('Packing help')).toBeInTheDocument();
+    await expect.element(page.getByText('Rainy-day option')).not.toBeInTheDocument();
+  });
+
+  describe.each([
+    ['desktop', 1280],
+    ['phone', 390]
+  ])('layout on a %s', (_device, width) => {
+    const fits = (element: Element) => {
+      const box = element.getBoundingClientRect();
+      return box.left >= 0 && box.right <= document.documentElement.clientWidth;
+    };
+
+    test('puts the title above its description and the empty state below, inside the page', async () => {
+      await page.viewport(width, 844);
+      await render(<AgentsListView />);
+      const title = page.getByTestId(testIds.agentsTitle);
+      const description = page.getByText(/^Work Groam is doing for your group/u);
+      const empty = page.getByText('Nothing running yet');
+      await expect.element(empty).toBeVisible();
+      const titleBox = title.element().getBoundingClientRect();
+      const descriptionBox = description.element().getBoundingClientRect();
+      const emptyBox = empty.element().getBoundingClientRect();
+      expect(titleBox.bottom).toBeLessThanOrEqual(descriptionBox.top);
+      expect(descriptionBox.bottom).toBeLessThanOrEqual(emptyBox.top);
+      for (const element of [title, description, empty]) expect(fits(element.element())).toBe(true);
+      expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
+        document.documentElement.clientWidth
+      );
     });
-    expect(screen.getByText('Packing help')).toBeTruthy();
-    expect(screen.queryByText('Rainy-day option')).toBeNull();
+
+    test('keeps a populated run table inside the page', async () => {
+      await page.viewport(width, 844);
+      state.runs = [
+        run({
+          id: 'run-long' as WorkspaceAgentRun['id'],
+          title: 'A very long run title that has to truncate instead of pushing the page sideways'
+        })
+      ];
+      await render(<AgentsListView />);
+      // On a phone the wide table scrolls inside its own frame instead of the page.
+      await expect
+        .element(page.getByRole('link', { name: /A very long run title/u }))
+        .toBeInTheDocument();
+      expect(fits(page.getByTestId(testIds.agentsRoster).element())).toBe(true);
+      expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
+        document.documentElement.clientWidth
+      );
+    });
   });
 });

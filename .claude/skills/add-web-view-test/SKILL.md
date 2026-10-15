@@ -1,7 +1,7 @@
 ---
 name: add-web-view-test
 description: >-
-  Add a Vitest + Testing Library test for a Groam web feature view. Use when
+  Add a Vite+ browser-mode test for a Groam web feature view. Use when
   covering a React screen, loading/empty/error state, dialog, or sidebar row
   in apps/web — mock feature hooks and agent context, never spin up Convex
   (use add-convex-test for backend behavior).
@@ -10,15 +10,18 @@ description: >-
 # Add a web view test
 
 Colocate `<name>.test.tsx` next to the component in
-`apps/web/src/features/<domain>/`. Mock the feature hooks, workspace state,
-router, and agent context; render the view; assert roles, copy, and test
-ids.
+`apps/web/src/features/<domain>/`. View tests run in real Chromium (the
+`views` browser setup of `vp test`) with the app's styles. Mock the feature
+hooks, workspace state, router, and agent context; render the view; drive it
+with `page` locators; assert with `expect.element`, which retries. Testing
+Library and jsdom are not used.
 
 ## Pattern (from `agents/agent-list/agents-list-view.test.tsx`)
 
 ```tsx
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { testIds } from '@/lib/test-ids';
 import { AgentsListView } from './agents-list-view';
 
@@ -51,20 +54,36 @@ beforeEach(() => {
   state.isLoading = false;
   state.runs = [];
 });
-afterEach(cleanup);
 
 describe('AgentsListView', () => {
-  test('shows a labeled loading state', () => {
+  test('shows a labeled loading state', async () => {
     state.isLoading = true;
-    render(<AgentsListView />);
-    expect(screen.getByRole('status', { name: 'Loading agent runs…' })).toBeTruthy();
+    await render(<AgentsListView />);
+    await expect.element(page.getByRole('status', { name: 'Loading agent runs…' })).toBeVisible();
   });
 
-  test('shows the empty state', () => {
-    render(<AgentsListView />);
-    expect(screen.getByText('Nothing running yet')).toBeTruthy();
-    expect(screen.queryByTestId(testIds.agentsRoster)).toBeNull();
+  test('shows the empty state', async () => {
+    await render(<AgentsListView />);
+    await expect.element(page.getByText('Nothing running yet')).toBeVisible();
+    await expect.element(page.getByTestId(testIds.agentsRoster)).not.toBeInTheDocument();
   });
+});
+```
+
+`render` and `renderHook` come from `@groam/vitest-config/react` and unmount
+after each test. Interact like a user: `await page.getByLabelText(...).fill()`,
+`.click()`. For many input combinations, drive the view through the shared
+steps in `@groam/app-actions/vitest` (for example `createTrip(input)`) with
+`test.each`, as `trip-create/create-trip-dialog.test.tsx` does.
+
+```tsx
+test.each<[string, CreateTripFormInput]>([
+  ['only a name', { name }],
+  ['a budget', { budget: 2500, name }]
+])('creates a trip with %s', async (_, input) => {
+  await render(<CreateTripDialog createTrip={createTrip} onClose={vi.fn()} onCreated={vi.fn()} />);
+  await fillCreateTrip(input);
+  await expect.poll(() => createTrip.mock.calls.length).toBe(1);
 });
 ```
 
@@ -86,5 +105,6 @@ Reuse existing mocks before writing new ones: `@/testing/stub-match-media`,
 
 ## Run
 
-From `apps/web`: `vp test run src/features/<domain>/<name>.test.tsx`.
-Whole repo: `just test`.
+From `apps/web`: `vp test run --project views src/features/<domain>/<name>.test.tsx`.
+Whole repo: `just test`. Full flows against the backend are journeys
+(`apps/web/e2e`, `just journeys`); keep those few and cover combinations here.

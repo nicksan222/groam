@@ -1,7 +1,8 @@
 import { AgentContextProvider, useCurrentAgentContext } from '@groam/ai/ui/context/agent-context';
 import type { Id } from '@groam/backend/data-model';
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import {
   issueDetailScreenAgentContext,
   issueListScreenAgentContext,
@@ -36,9 +37,7 @@ function Probe() {
   return <output aria-label="Issue agent context">{JSON.stringify(context)}</output>;
 }
 
-afterEach(cleanup);
-
-test('builds explicit list and detail screen context', () => {
+test('builds explicit list and detail screen context', async () => {
   expect(issueListScreenAgentContext('Acme Labs', [workspaceIssue])).toMatchObject({
     capabilities: [],
     data: {
@@ -70,24 +69,24 @@ test('builds explicit list and detail screen context', () => {
   });
 });
 
-test('forwards issue screen changes through the shared context', () => {
-  const view = render(
+test('forwards issue screen changes through the shared context', async () => {
+  const view = await render(
     <AgentContextProvider>
       <ListRegistration />
       <Probe />
     </AgentContextProvider>
   );
-  expect(screen.getByRole('status', { name: 'Issue agent context' }).textContent).toContain(
+  expect(page.getByRole('status', { name: 'Issue agent context' }).element().textContent).toContain(
     'Acme Labs'
   );
 
-  view.rerender(
+  await view.rerender(
     <AgentContextProvider>
       <DetailRegistration />
       <Probe />
     </AgentContextProvider>
   );
-  expect(screen.getByRole('status', { name: 'Issue agent context' }).textContent).toContain(
+  expect(page.getByRole('status', { name: 'Issue agent context' }).element().textContent).toContain(
     'Choose a coast day'
   );
 });

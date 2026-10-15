@@ -1,5 +1,5 @@
 import { expect, type Page } from '@playwright/test';
-import { ids } from './ids';
+import { ids } from '#src/testing/ids';
 import { by, dialogSubmit } from './locators';
 
 export async function inviteGroupMember(page: Page): Promise<string> {

@@ -1,5 +1,6 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, test } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { describe, expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type { AgentRunEvent } from '@/features/agents/hooks/use-agent-run';
 import { testIds } from '@/lib/test-ids';
 import { AgentRunLog } from './agent-run-log';
@@ -43,52 +44,54 @@ const events: AgentRunEvent[] = [
   }
 ];
 
-afterEach(cleanup);
-
 describe('AgentRunLog', () => {
-  test('filters tool calls and failures without changing event order', () => {
-    render(<AgentRunLog events={events} />);
-    expect(screen.getAllByTestId(testIds.agentEvent)).toHaveLength(3);
-    fireEvent.click(screen.getByRole('button', { name: 'Tool calls' }));
-    expect(screen.queryByText('Started review')).toBeNull();
-    expect(screen.getAllByTestId(testIds.agentEvent)).toHaveLength(2);
-    fireEvent.click(screen.getByRole('button', { name: 'Errors' }));
-    expect(screen.getByRole('button', { name: 'Errors' }).getAttribute('aria-pressed')).toBe(
-      'true'
+  test('filters tool calls and failures without changing event order', async () => {
+    await render(<AgentRunLog events={events} />);
+    expect(page.getByTestId(testIds.agentEvent).elements()).toHaveLength(3);
+    await page.getByRole('button', { name: 'Tool calls' }).click();
+    await expect.element(page.getByText('Started review')).not.toBeInTheDocument();
+    expect(page.getByTestId(testIds.agentEvent).elements()).toHaveLength(2);
+    await page.getByRole('button', { name: 'Errors' }).click();
+    await expect
+      .element(page.getByRole('button', { name: 'Errors' }))
+      .toHaveAttribute('aria-pressed', 'true');
+    expect(page.getByTestId(testIds.agentEvent).elements()).toHaveLength(1);
+    await expect.element(page.getByText('Connection unavailable')).toBeInTheDocument();
+    await page.getByRole('button', { name: 'All activity' }).click();
+    expect(page.getByTestId(testIds.agentEvent).elements()[0].textContent).toContain(
+      'Started review'
     );
-    expect(screen.getAllByTestId(testIds.agentEvent)).toHaveLength(1);
-    expect(screen.getByText('Connection unavailable')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'All activity' }));
-    expect(screen.getAllByTestId(testIds.agentEvent)[0].textContent).toContain('Started review');
   });
 
-  test('distinguishes loading activity from an empty completed run', () => {
-    const { rerender } = render(<AgentRunLog events={[]} isLoading />);
-    expect(screen.getByRole('status', { name: 'Loading activity' })).toBeTruthy();
-    expect(screen.queryByText('No activity recorded')).toBeNull();
-    rerender(<AgentRunLog events={[]} />);
-    expect(screen.getByText('No activity recorded')).toBeTruthy();
-    expect(screen.queryByRole('status')).toBeNull();
+  test('distinguishes loading activity from an empty completed run', async () => {
+    const { rerender } = await render(<AgentRunLog events={[]} isLoading />);
+    await expect
+      .element(page.getByRole('status', { name: 'Loading activity' }))
+      .toBeInTheDocument();
+    await expect.element(page.getByText('No activity recorded')).not.toBeInTheDocument();
+    await rerender(<AgentRunLog events={[]} />);
+    await expect.element(page.getByText('No activity recorded')).toBeInTheDocument();
+    await expect.element(page.getByRole('status')).not.toBeInTheDocument();
   });
 
-  test('explains the live waiting state', () => {
-    render(<AgentRunLog events={[]} isActive />);
-    expect(screen.getByText('Waiting for activity')).toBeTruthy();
-    expect(screen.getByText('Updates automatically')).toBeTruthy();
+  test('explains the live waiting state', async () => {
+    await render(<AgentRunLog events={[]} isActive />);
+    await expect.element(page.getByText('Waiting for activity')).toBeInTheDocument();
+    await expect.element(page.getByText('Updates automatically')).toBeInTheDocument();
   });
 
-  test('keeps pagination available when a filter has no matches', () => {
-    render(
+  test('keeps pagination available when a filter has no matches', async () => {
+    await render(
       <AgentRunLog events={[events[0]]} loadEarlier={<button type="button">Load earlier</button>} />
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Errors' }));
-    expect(screen.getByText('No matching activity')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Load earlier' })).toBeTruthy();
+    await page.getByRole('button', { name: 'Errors' }).click();
+    await expect.element(page.getByText('No matching activity')).toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'Load earlier' })).toBeInTheDocument();
   });
 
-  test('labels tool inputs and outputs inside a collapsed disclosure', () => {
-    render(<AgentRunLog events={[events[1]]} />);
-    const disclosure = screen.getByText('Tool payload').closest('details');
+  test('labels tool inputs and outputs inside a collapsed disclosure', async () => {
+    await render(<AgentRunLog events={[events[1]]} />);
+    const disclosure = page.getByText('Tool payload').element().closest('details');
     expect(disclosure?.open).toBe(false);
     expect(disclosure?.textContent).toContain('Input');
     expect(disclosure?.textContent).toContain('Output');

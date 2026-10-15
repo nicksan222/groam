@@ -1,5 +1,6 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import { afterEach, describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { testIds } from '@/lib/test-ids';
 import { TripPackingList } from './trip-packing-list';
 
@@ -19,7 +20,6 @@ vi.mock('@/features/trips/hooks/use-trip-packing', () => ({
 }));
 
 afterEach(() => {
-  cleanup();
   packing.draft = '';
   packing.items = [];
   packing.isLoading = false;
@@ -27,37 +27,47 @@ afterEach(() => {
 });
 
 describe('TripPackingList', () => {
-  test('shows an empty packing checklist', () => {
-    render(<TripPackingList trip={{ id: 'idea-1', permissions: { canEdit: true } } as never} />);
-    expect(screen.getByText('Build the packing list for this idea.')).toBeTruthy();
-    expect(screen.getByTestId(testIds.tripPackingInput)).toBeTruthy();
+  test('shows an empty packing checklist', async () => {
+    await render(
+      <TripPackingList trip={{ id: 'idea-1', permissions: { canEdit: true } } as never} />
+    );
+    await expect
+      .element(page.getByText('Build the packing list for this idea.'))
+      .toBeInTheDocument();
+    await expect.element(page.getByTestId(testIds.tripPackingInput)).toBeInTheDocument();
   });
 
-  test('toggles an existing item', () => {
+  test('toggles an existing item', async () => {
     packing.items = [{ id: 'item-1', label: 'Passport', packed: false }];
-    render(<TripPackingList trip={{ id: 'idea-1', permissions: { canEdit: true } } as never} />);
-    fireEvent.click(screen.getByTestId(testIds.tripPackingToggle));
+    await render(
+      <TripPackingList trip={{ id: 'idea-1', permissions: { canEdit: true } } as never} />
+    );
+    await page.getByTestId(testIds.tripPackingToggle).click();
     expect(packing.toggle).toHaveBeenCalledWith('item-1', true);
   });
 });
 
-test('shared and non-editable idea checklists have no write controls', () => {
+test('shared and non-editable idea checklists have no write controls', async () => {
   packing.items = [
     { id: 'item-1', label: 'Passport', packed: true },
     { id: 'item-2', label: 'Hat', packed: false }
   ];
-  render(<TripPackingList trip={{ id: 'shared-1', permissions: { canEdit: false } } as never} />);
-  expect(screen.getByText('Passport')).toBeTruthy();
-  expect(screen.getByText('1 of 2 packed')).toBeTruthy();
-  expect(screen.getByLabelText('Packed')).toBeTruthy();
-  expect(screen.getByLabelText('Not packed')).toBeTruthy();
-  expect(screen.queryByRole('button')).toBeNull();
-  expect(screen.queryByRole('textbox')).toBeNull();
+  await render(
+    <TripPackingList trip={{ id: 'shared-1', permissions: { canEdit: false } } as never} />
+  );
+  await expect.element(page.getByText('Passport')).toBeInTheDocument();
+  await expect.element(page.getByText('1 of 2 packed')).toBeInTheDocument();
+  await expect.element(page.getByLabelText('Packed')).toBeInTheDocument();
+  await expect.element(page.getByLabelText('Not packed')).toBeInTheDocument();
+  await expect.element(page.getByRole('button')).not.toBeInTheDocument();
+  await expect.element(page.getByRole('textbox')).not.toBeInTheDocument();
 });
 
-test('shows a calm read-only packing empty state', () => {
-  render(<TripPackingList trip={{ id: 'shared-1', permissions: { canEdit: false } } as never} />);
-  expect(screen.getByText('No packing items in this plan yet.')).toBeTruthy();
-  expect(screen.queryByRole('button')).toBeNull();
-  expect(screen.queryByRole('textbox')).toBeNull();
+test('shows a calm read-only packing empty state', async () => {
+  await render(
+    <TripPackingList trip={{ id: 'shared-1', permissions: { canEdit: false } } as never} />
+  );
+  await expect.element(page.getByText('No packing items in this plan yet.')).toBeInTheDocument();
+  await expect.element(page.getByRole('button')).not.toBeInTheDocument();
+  await expect.element(page.getByRole('textbox')).not.toBeInTheDocument();
 });

@@ -1,5 +1,6 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { GroupPeopleSettings } from './group-people-settings';
 
 const workspace = vi.hoisted(() => ({
@@ -61,19 +62,17 @@ vi.mock('@/features/group/hooks/use-invitation-codes', () => ({
   })
 }));
 
-afterEach(cleanup);
-
 describe('GroupPeopleSettings', () => {
-  test('lists members and active invitation codes for the active group', () => {
-    render(<GroupPeopleSettings />);
+  test('lists members and active invitation codes for the active group', async () => {
+    await render(<GroupPeopleSettings />);
 
-    expect(screen.getByText('Members')).toBeTruthy();
-    expect(
-      screen.getByText('Everyone here shares this group’s trips and planning workspace.')
-    ).toBeTruthy();
-    expect(screen.getByText('Invitation codes')).toBeTruthy();
-    expect(screen.getByText('ABCD-EFGH-JKLM')).toBeTruthy();
-    expect(screen.getByText('A (you)')).toBeTruthy();
-    expect(screen.getByText('@alice')).toBeTruthy();
+    await expect.element(page.getByText('Members')).toBeInTheDocument();
+    await expect
+      .element(page.getByText('Everyone here shares this group’s trips and planning workspace.'))
+      .toBeInTheDocument();
+    await expect.element(page.getByText('Invitation codes')).toBeInTheDocument();
+    await expect.element(page.getByText('ABCD-EFGH-JKLM')).toBeInTheDocument();
+    await expect.element(page.getByText('A (you)')).toBeInTheDocument();
+    await expect.element(page.getByText('@alice')).toBeInTheDocument();
   });
 });

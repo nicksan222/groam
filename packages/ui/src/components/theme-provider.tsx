@@ -12,6 +12,8 @@ export function UiThemeProvider({ children }: { children: ReactNode }) {
       disableTransitionOnChange
       enableColorScheme
       enableSystem
+      // Client-rendered apps never run this anti-flash script; as a data block React stops warning.
+      scriptProps={{ type: 'application/json' }}
       storageKey="groam-theme"
     >
       {children}

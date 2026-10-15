@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { useTwoFactorSettings } from './use-two-factor-settings';
 
@@ -32,7 +32,7 @@ afterEach(() => {
 
 describe('useTwoFactorSettings', () => {
   test('enrolls and confirms an authenticator', async () => {
-    const { result } = renderHook(() => useTwoFactorSettings(false));
+    const { result } = await renderHook(() => useTwoFactorSettings(false));
 
     await act(() => result.current.startEnrollment('current-password'));
     expect(auth.enable).toHaveBeenCalledWith({ password: 'current-password' });
@@ -47,7 +47,7 @@ describe('useTwoFactorSettings', () => {
     const createObjectURL = vi.fn(() => 'blob:backup-codes');
     vi.stubGlobal('URL', { createObjectURL, revokeObjectURL: vi.fn() });
     vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
-    const { result } = renderHook(() => useTwoFactorSettings(true));
+    const { result } = await renderHook(() => useTwoFactorSettings(true));
 
     await act(() => result.current.regenerate('current-password'));
 
@@ -59,7 +59,7 @@ describe('useTwoFactorSettings', () => {
   });
 
   test('disables two-factor authentication', async () => {
-    const { result } = renderHook(() => useTwoFactorSettings(true));
+    const { result } = await renderHook(() => useTwoFactorSettings(true));
 
     await act(() => result.current.disable('current-password'));
 
@@ -74,7 +74,7 @@ describe('useTwoFactorSettings', () => {
 
   test('surfaces provider errors', async () => {
     auth.enable.mockResolvedValue({ data: null, error: { message: 'Invalid password' } });
-    const { result } = renderHook(() => useTwoFactorSettings(false));
+    const { result } = await renderHook(() => useTwoFactorSettings(false));
 
     await act(() => result.current.startEnrollment('wrong-password'));
 
@@ -83,7 +83,7 @@ describe('useTwoFactorSettings', () => {
 
   test('keeps two-factor disabled when authenticator confirmation fails', async () => {
     auth.verifyTotp.mockResolvedValue({ data: null, error: { message: 'Invalid code' } });
-    const { result } = renderHook(() => useTwoFactorSettings(false));
+    const { result } = await renderHook(() => useTwoFactorSettings(false));
 
     await act(() => result.current.startEnrollment('current-password'));
     await act(() => result.current.confirmEnrollment('invalid-code'));

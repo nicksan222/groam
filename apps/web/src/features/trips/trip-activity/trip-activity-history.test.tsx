@@ -1,10 +1,9 @@
 import type { Id } from '@groam/backend/data-model';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, expect, test } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { TripActivityHistory } from './trip-activity-history';
-
-afterEach(cleanup);
 
 const activity = [
   {
@@ -25,35 +24,48 @@ const activity = [
   }
 ] satisfies TripDetail['activity'];
 
-test('renders activity events in a data table with compact filters', () => {
-  render(<TripActivityHistory activity={activity} />);
+test('renders activity events in a data table with compact filters', async () => {
+  await render(<TripActivityHistory activity={activity} />);
 
-  expect(screen.getByRole('heading', { level: 2, name: 'Activity' })).toBeTruthy();
-  expect(screen.getByText('Every planning move the group has made on this trip.')).toBeTruthy();
-  expect(screen.getByText('2 events')).toBeTruthy();
-  const toolbar = document.querySelector('[aria-label="Filter activity"]');
-  expect(toolbar?.className).toContain('flex');
-  expect(toolbar?.className).toContain('items-center');
-  expect(toolbar?.className).not.toContain('dashboard-panel');
-  expect(document.querySelector('table')).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Event' })).toBeTruthy();
-  expect(screen.getByLabelText('Search activity')).toBeTruthy();
-  expect(screen.getByLabelText('Filter activity by person').textContent).toContain('People');
-  expect(screen.getByLabelText('Filter activity by action').textContent).toContain('Actions');
-  expect(screen.getByText('Alex Traveler created the trip in Idea & Group')).toBeTruthy();
-  expect(screen.getByText('Trip created')).toBeTruthy();
-  expect(screen.getByText('Idea applied')).toBeTruthy();
+  await expect
+    .element(page.getByRole('heading', { level: 2, name: 'Activity' }))
+    .toBeInTheDocument();
+  await expect
+    .element(page.getByText('Every planning move the group has made on this trip.'))
+    .toBeInTheDocument();
+  await expect.element(page.getByText('2 events')).toBeInTheDocument();
+  const toolbar = page.getByLabelText('Filter activity');
+  await expect.element(toolbar).toHaveClass('flex', 'items-center');
+  await expect.element(toolbar).not.toHaveClass('dashboard-panel');
+  await expect.element(page.getByRole('table')).toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Event' })).toBeInTheDocument();
+  await expect.element(page.getByLabelText('Search activity')).toBeInTheDocument();
+  expect(page.getByLabelText('Filter activity by person').element().textContent).toContain(
+    'People'
+  );
+  expect(page.getByLabelText('Filter activity by action').element().textContent).toContain(
+    'Actions'
+  );
+  await expect
+    .element(page.getByText('Alex Traveler created the trip in Idea & Group'))
+    .toBeInTheDocument();
+  await expect.element(page.getByText('Trip created')).toBeInTheDocument();
+  await expect.element(page.getByText('Idea applied')).toBeInTheDocument();
   expect(document.querySelector('[data-slot="timeline"]')).toBeNull();
 });
 
-test('searches visible activity fields and can clear the filter', () => {
-  render(<TripActivityHistory activity={activity} />);
+test('searches visible activity fields and can clear the filter', async () => {
+  await render(<TripActivityHistory activity={activity} />);
 
-  fireEvent.change(screen.getByLabelText('Search activity'), { target: { value: 'route' } });
-  expect(screen.queryByText('Alex Traveler created the trip in Idea & Group')).toBeNull();
-  expect(screen.getByText('Sam Planner applied the route update')).toBeTruthy();
+  await page.getByLabelText('Search activity').fill('route');
+  await expect
+    .element(page.getByText('Alex Traveler created the trip in Idea & Group'))
+    .not.toBeInTheDocument();
+  await expect.element(page.getByText('Sam Planner applied the route update')).toBeInTheDocument();
 
-  fireEvent.click(screen.getByRole('button', { name: 'Clear activity filters' }));
-  expect(screen.getByText('Alex Traveler created the trip in Idea & Group')).toBeTruthy();
-  expect(screen.getByText('Sam Planner applied the route update')).toBeTruthy();
+  await page.getByRole('button', { name: 'Clear activity filters' }).click();
+  await expect
+    .element(page.getByText('Alex Traveler created the trip in Idea & Group'))
+    .toBeInTheDocument();
+  await expect.element(page.getByText('Sam Planner applied the route update')).toBeInTheDocument();
 });

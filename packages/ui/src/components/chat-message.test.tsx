@@ -1,23 +1,24 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { ChatMessage } from './chat-message';
 
-afterEach(cleanup);
-
-test('renders the discussion variant with participant metadata', () => {
-  render(<ChatMessage authorName="Taylor" createdAt={1} mine={false} text="Airport rides?" />);
-  expect(screen.getByText('Taylor')).toBeDefined();
-  expect(screen.getByText('Airport rides?')).toBeDefined();
+test('renders the discussion variant with participant metadata', async () => {
+  await render(
+    <ChatMessage authorName="Taylor" createdAt={1} mine={false} text="Airport rides?" />
+  );
+  await expect.element(page.getByText('Taylor')).toBeInTheDocument();
+  await expect.element(page.getByText('Airport rides?')).toBeInTheDocument();
 });
 
-test('renders the private variant with delivery state', () => {
-  render(<ChatMessage mine status="pending" text="Plan Portugal" variant="private" />);
-  expect(screen.getByText('Plan Portugal')).toBeDefined();
-  expect(screen.getByRole('status').textContent).toContain('Sending');
+test('renders the private variant with delivery state', async () => {
+  await render(<ChatMessage mine status="pending" text="Plan Portugal" variant="private" />);
+  await expect.element(page.getByText('Plan Portugal')).toBeInTheDocument();
+  expect(page.getByRole('status').element().textContent).toContain('Sending');
 });
 
-test('renders audio attachments with controls', () => {
-  render(
+test('renders audio attachments with controls', async () => {
+  await render(
     <ChatMessage
       attachments={[
         { contentType: 'audio/webm', name: 'voice-note.webm', url: 'https://example.com/a.webm' }
@@ -26,11 +27,11 @@ test('renders audio attachments with controls', () => {
       text=""
     />
   );
-  expect(screen.getByLabelText('voice-note.webm').tagName).toBe('AUDIO');
+  expect(page.getByLabelText('voice-note.webm').element().tagName).toBe('AUDIO');
 });
 
-test('places actions and reactions beside the bubble column', () => {
-  render(
+test('places actions and reactions beside the bubble column', async () => {
+  await render(
     <ChatMessage
       actions={<button type="button">Add reaction</button>}
       mine
@@ -38,12 +39,12 @@ test('places actions and reactions beside the bubble column', () => {
       text="Hi!"
     />
   );
-  expect(screen.getByRole('button', { name: 'Add reaction' })).toBeDefined();
-  expect(screen.getByText('Love this')).toBeDefined();
+  await expect.element(page.getByRole('button', { name: 'Add reaction' })).toBeInTheDocument();
+  await expect.element(page.getByText('Love this')).toBeInTheDocument();
 });
 
-test('renders video attachments with a player', () => {
-  render(
+test('renders video attachments with a player', async () => {
+  await render(
     <ChatMessage
       attachments={[
         { contentType: 'video/mp4', name: 'clip.mp4', url: 'https://example.com/clip.mp4' }
@@ -52,5 +53,5 @@ test('renders video attachments with a player', () => {
       text=""
     />
   );
-  expect(screen.getByLabelText('clip.mp4').tagName).toBe('VIDEO');
+  expect(page.getByLabelText('clip.mp4').element().tagName).toBe('VIDEO');
 });

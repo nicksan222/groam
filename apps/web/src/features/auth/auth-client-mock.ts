@@ -11,24 +11,22 @@ const doubles = vi.hoisted(() => ({
   verifyTotp: vi.fn()
 }));
 
-vi.mock('@groam/auth/client', () => ({
-  authClient: {
-    accountRecovery: {
-      generate: doubles.generateRecoveryCodes,
-      resetPassword: doubles.resetPasswordWithRecoveryCode
-    },
-    signIn: {
-      email: doubles.signInEmail,
-      passkey: doubles.passkey,
-      username: doubles.signInUsername
-    },
-    signUp: { email: doubles.signUp },
-    twoFactor: {
-      verifyBackupCode: doubles.verifyBackupCode,
-      verifyTotp: doubles.verifyTotp
-    }
+export const authClientMock = {
+  accountRecovery: {
+    generate: doubles.generateRecoveryCodes,
+    resetPassword: doubles.resetPasswordWithRecoveryCode
+  },
+  signIn: {
+    email: doubles.signInEmail,
+    passkey: doubles.passkey,
+    username: doubles.signInUsername
+  },
+  signUp: { email: doubles.signUp },
+  twoFactor: {
+    verifyBackupCode: doubles.verifyBackupCode,
+    verifyTotp: doubles.verifyTotp
   }
-}));
+};
 
 export const auth = {
   get recoverAccount() {

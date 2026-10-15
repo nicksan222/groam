@@ -1,6 +1,9 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { type CreateTripFormInput, createTrip as fillCreateTrip } from '@groam/app-actions/vitest';
+import { render } from '@groam/vitest-config/react';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { CreateTripDialog } from '@/features/trips/trip-create/create-trip-dialog';
+import { testIds } from '@/lib/test-ids';
 
 vi.mock('@/features/workspace/workspace-shell/workspace-state', () => ({
   useWorkspace: () => ({
@@ -26,86 +29,115 @@ vi.mock('@groam/ui/components/toast', () => ({
   toast: { success: vi.fn(), error: vi.fn() }
 }));
 
-afterEach(cleanup);
-
-test('omits the cover image field from create trip', () => {
-  render(<CreateTripDialog createTrip={vi.fn()} onClose={vi.fn()} onCreated={vi.fn()} />);
-
-  expect(screen.queryByLabelText(/cover image/iu)).toBeNull();
-  expect(screen.queryByText(/find a location photo/iu)).toBeNull();
-  expect(screen.queryByTestId('create-trip-cover')).toBeNull();
-});
-
-test('groups related fields under where, when, money, and people sections', () => {
-  render(<CreateTripDialog createTrip={vi.fn()} onClose={vi.fn()} onCreated={vi.fn()} />);
-
-  expect(screen.getByRole('heading', { name: 'Where' })).toBeTruthy();
-  expect(screen.getByRole('heading', { name: 'When' })).toBeTruthy();
-  expect(screen.getByRole('heading', { name: 'Money' })).toBeTruthy();
-  expect(screen.getByRole('heading', { name: 'Who’s coming' })).toBeTruthy();
-  expect(screen.getByText('Alex (you)')).toBeTruthy();
-  expect(screen.getByText('Maya')).toBeTruthy();
-  expect(screen.queryByRole('checkbox')).toBeNull();
-  expect(screen.getByRole('button', { name: 'Invite to this group' })).toBeTruthy();
-  expect(screen.getByLabelText(/trip name/iu)).toBeTruthy();
-  expect(screen.getByLabelText(/start date/iu)).toBeTruthy();
-  expect(screen.getByLabelText(/length \(days\)/iu)).toBeTruthy();
-  expect(screen.getByLabelText(/if dates are still open/iu)).toBeTruthy();
-  expect(screen.getByLabelText(/default currency/iu)).toBeTruthy();
-  expect(screen.getByLabelText(/total group budget/iu)).toBeTruthy();
-});
-
-test('keeps create disabled until a trip name is entered', () => {
-  render(<CreateTripDialog createTrip={vi.fn()} onClose={vi.fn()} onCreated={vi.fn()} />);
-
-  expect(screen.getByRole('button', { name: 'Create trip' })).toHaveProperty('disabled', true);
-
-  fireEvent.change(screen.getByLabelText(/trip name/iu), {
-    target: { value: 'Summer beach trip' }
-  });
-
-  expect(screen.getByRole('button', { name: 'Create trip' })).toHaveProperty('disabled', false);
-});
-
-test('creates a trip without a cover file', async () => {
+async function renderDialog() {
   const createTrip = vi.fn().mockResolvedValue('trip_123');
   const onCreated = vi.fn();
-  render(<CreateTripDialog createTrip={createTrip} onClose={vi.fn()} onCreated={onCreated} />);
+  await render(
+    <CreateTripDialog createTrip={createTrip} onClose={vi.fn()} onCreated={onCreated} />
+  );
+  return { createTrip, onCreated };
+}
 
-  fireEvent.change(screen.getByLabelText(/trip name/iu), {
-    target: { value: 'Coast weekend' }
-  });
-  fireEvent.change(screen.getByLabelText(/if dates are still open/iu), {
-    target: { value: 'Late July' }
-  });
-  fireEvent.change(screen.getByLabelText(/length \(days\)/iu), {
-    target: { value: '8' }
-  });
-  fireEvent.click(screen.getByRole('button', { name: 'Create trip' }));
+const name = 'Coast weekend';
 
-  await waitFor(() => expect(createTrip).toHaveBeenCalledTimes(1));
-  const [input, cover] = createTrip.mock.calls[0] as [
-    {
-      dateNotes?: string;
-      duration?: { totalDays: number };
-      name: string;
-    },
-    File | null
-  ];
-  expect(cover).toBeNull();
-  expect(input.name).toBe('Coast weekend');
-  expect(input.dateNotes).toBe('Late July');
-  expect(input.duration).toEqual({ totalDays: 8 });
-  expect(onCreated).toHaveBeenCalledWith('trip_123');
+test('omits the cover image field from create trip', async () => {
+  await renderDialog();
+
+  await expect.element(page.getByLabelText(/cover image/iu)).not.toBeInTheDocument();
+  await expect.element(page.getByText(/find a location photo/iu)).not.toBeInTheDocument();
+  await expect.element(page.getByTestId('create-trip-cover')).not.toBeInTheDocument();
 });
 
-test('shows every group member in a compact traveler list', () => {
-  render(<CreateTripDialog createTrip={vi.fn()} onClose={vi.fn()} onCreated={vi.fn()} />);
+test('groups related fields under where, when, money, and people sections', async () => {
+  await renderDialog();
+  await page.getByText(/add dates and budget/iu).click();
 
-  expect(screen.getByText('Traveler 1')).toBeTruthy();
-  expect(screen.getByText('Traveler 28')).toBeTruthy();
-  expect(screen.getAllByTestId('create-trip-traveler')).toHaveLength(30);
-  expect(screen.queryByText(/more$/u)).toBeNull();
-  expect(screen.getByText('Shared with your group. Confirm travelers later.')).toBeTruthy();
-  expect(screen.queryByRole('button', { name: 'No length preset' })).toBeNull();
+  for (const heading of ['Where', 'When', 'Money', 'Who’s coming']) {
+    await expect.element(page.getByRole('heading', { name: heading })).toBeVisible();
+  }
+  await expect.element(page.getByText('Alex (you)')).toBeVisible();
+  await expect.element(page.getByText('Maya')).toBeVisible();
+  await expect.element(page.getByRole('checkbox')).not.toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Invite to this group' })).toBeVisible();
+  for (const label of [
+    /trip name/iu,
+    /start date/iu,
+    /length \(days\)/iu,
+    /if dates are still open/iu,
+    /default currency/iu,
+    /total group budget/iu
+  ]) {
+    await expect.element(page.getByLabelText(label)).toBeInTheDocument();
+  }
+});
+
+test('keeps create disabled until a trip name is entered', async () => {
+  await renderDialog();
+  const submit = page.getByRole('button', { name: 'Create trip' });
+
+  await expect.element(submit).toBeDisabled();
+  await page.getByLabelText(/trip name/iu).fill('Summer beach trip');
+  await expect.element(submit).toBeEnabled();
+});
+
+test.each<[string, CreateTripFormInput, Record<string, unknown>]>([
+  ['only a name', { name }, {}],
+  ['open dates', { dateNotes: 'Late July', name }, { dateNotes: 'Late July' }],
+  [
+    'a start date and length',
+    { durationDays: 8, name, startDate: '2027-07-01' },
+    { duration: { totalDays: 8 }, startDate: '2027-07-01' }
+  ],
+  ['a budget', { budget: 2500, name }, { budget: { amount: 2500 } }],
+  [
+    'every detail',
+    { budget: 900, dateNotes: 'Flexible', durationDays: 3, name, startDate: '2027-05-10' },
+    {
+      budget: { amount: 900 },
+      dateNotes: 'Flexible',
+      duration: { totalDays: 3 },
+      startDate: '2027-05-10'
+    }
+  ]
+])('creates a trip with %s and no cover file', async (_, input, expected) => {
+  const { createTrip, onCreated } = await renderDialog();
+  await fillCreateTrip(input);
+
+  await expect.poll(() => onCreated.mock.calls).toEqual([['trip_123']]);
+  expect(createTrip).toHaveBeenCalledExactlyOnceWith(
+    {
+      clientRequestId: expect.any(String),
+      currency: expect.any(String),
+      destination: { status: 'undecided' },
+      name,
+      ...expected
+    },
+    null
+  );
+});
+
+test.each<[string, CreateTripFormInput, string]>([
+  ['a zero-day length', { durationDays: 0, name }, testIds.createTripDuration],
+  ['a negative budget', { budget: -5, name }, testIds.createTripBudget]
+])('rejects %s without creating a trip', async (_, input, field) => {
+  const { createTrip } = await renderDialog();
+  await fillCreateTrip(input);
+
+  await expect.element(page.getByTestId(field)).toBeInvalid();
+  expect(createTrip).not.toHaveBeenCalled();
+});
+
+test('shows every group member in a compact traveler list', async () => {
+  await renderDialog();
+
+  await expect.element(page.getByText('Traveler 1')).toBeVisible();
+  await expect.element(page.getByText('Traveler 28')).toBeVisible();
+  expect(page.getByTestId('create-trip-traveler').elements()).toHaveLength(30);
+  await expect.element(page.getByText(/more$/u)).not.toBeInTheDocument();
+  await expect
+    .element(page.getByText('Shared with your group. Confirm travelers later.'))
+    .toBeVisible();
+  await expect
+    .element(page.getByRole('button', { name: 'No length preset' }))
+    .not.toBeInTheDocument();
 });

@@ -37,3 +37,19 @@ import { createPlaywrightActions } from '@groam/app-actions/playwright';
 const app = createPlaywrightActions();
 await app.createTrip(page, { name: 'Lisbon weekend' });
 ```
+
+## Browser journeys (Vite+ browser mode)
+
+`@groam/app-actions/vitest` is the driver for `apps/web/e2e/**/*.test.tsx`
+journeys, which run under `vp test` against the local Convex backend.
+
+```text
+src/vitest/<verb>.ts        steps a user takes, written with Vitest locators
+src/vitest/journey-backend  Node-side arrangements (`arrange.*`), one account per test file
+src/vitest/commands.ts      browser commands: those arrangements plus browser changes
+                            (`environment.*`: clipboard, color scheme, mocked geocoder)
+src/testing/                shared by every driver: test ids, accounts, unique names, fixtures
+```
+
+A journey has one UI user. Other people act through `arrange.*` and the journey
+asserts the screen reacts; their own screens belong to view tests.

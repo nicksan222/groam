@@ -3,9 +3,9 @@ import type {
   RequestIdeaReviewAction,
   RequestIdeaReviewInput
 } from '#src/actions/request-idea-review';
-import { ids } from '#src/playwright/ids';
 import { type UiTarget, ui } from '#src/playwright/interaction';
 import { by } from '#src/playwright/locators';
+import { ids } from '#src/testing/ids';
 
 const expect = playwrightExpect.configure({ timeout: 30_000 });
 

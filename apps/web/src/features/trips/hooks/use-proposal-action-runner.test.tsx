@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { expect, test } from 'vite-plus/test';
 import { useProposalActionRunner } from './use-proposal-action-runner';
 
@@ -8,10 +8,10 @@ test('exposes the action label until the action settles', async () => {
     new Promise<boolean>((resolve) => {
       finish = resolve;
     });
-  const { result } = renderHook(() => useProposalActionRunner());
+  const { result } = await renderHook(() => useProposalActionRunner());
 
   let outcome: Promise<boolean> | undefined;
-  act(() => {
+  await act(() => {
     outcome = result.current.run('Applying idea', action);
   });
   expect(result.current.pendingAction).toBe('Applying idea');
@@ -25,7 +25,7 @@ test('exposes the action label until the action settles', async () => {
 });
 
 test('clears the pending label after a rejected action', async () => {
-  const { result } = renderHook(() => useProposalActionRunner());
+  const { result } = await renderHook(() => useProposalActionRunner());
 
   await act(async () => {
     await expect(

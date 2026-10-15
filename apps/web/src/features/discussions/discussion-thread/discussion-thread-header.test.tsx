@@ -1,6 +1,7 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { DiscussionDetailsSheet } from '@/features/discussions/discussion-sheets/discussion-details-sheet';
 import { DiscussionParticipantsSheet } from '@/features/discussions/discussion-sheets/discussion-participants-sheet';
 import { DiscussionRenameDialog } from '@/features/discussions/discussion-sheets/discussion-rename-dialog';
@@ -17,7 +18,8 @@ const toast = vi.hoisted(() => ({
   success: vi.fn()
 }));
 
-vi.mock('@tanstack/react-router', () => ({
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
   Link: ({ children, to, ...props }: { children?: ReactNode; to: string }) => (
     <a href={to} {...props}>
       {children}
@@ -44,25 +46,6 @@ vi.mock('@/features/discussions/hooks/use-discussions', async () => {
   };
 });
 
-vi.mock('@groam/ui/components/dropdown-menu', () => ({
-  DropdownMenu: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  DropdownMenuContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  DropdownMenuItem: ({
-    children,
-    onSelect,
-    ...props
-  }: {
-    children: ReactNode;
-    onSelect?: () => void;
-  }) => (
-    <button onClick={onSelect} type="button" {...props}>
-      {children}
-    </button>
-  ),
-  DropdownMenuSeparator: () => <hr />,
-  DropdownMenuTrigger: ({ children }: { children: ReactNode }) => <>{children}</>
-}));
-
 const discussion = {
   createdBy: { name: 'Ada', userId: 'user-a' },
   id: 'discussion-1',
@@ -83,82 +66,86 @@ beforeEach(() => {
   vi.clearAllMocks();
   hooks.renameDiscussion.mockResolvedValue(true);
   hooks.viewerUserId = 'user-a';
-  Object.defineProperty(navigator, 'clipboard', {
-    configurable: true,
-    value: { writeText: vi.fn().mockResolvedValue(undefined) }
-  });
+  vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined);
 });
 
-afterEach(cleanup);
+afterEach(() => page.viewport(1280, 800));
 
-test('puts thread actions on the far right of the header', () => {
-  render(<DiscussionThreadHeader discussion={discussion} />);
+test('puts thread actions on the far right of the header', async () => {
+  await page.viewport(390, 844);
+  await render(<DiscussionThreadHeader discussion={discussion} />);
 
-  expect(screen.getByTestId('chat-heading').textContent).toBe('Italy dates');
-  expect(screen.getByText('Ada, Grace')).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Thread actions' })).toBeTruthy();
-  expect(screen.getByRole('link', { name: 'Back to chats' })).toBeTruthy();
+  await expect.element(page.getByTestId('chat-heading')).toHaveTextContent('Italy dates');
+  await expect.element(page.getByText('Ada, Grace')).toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Thread actions' })).toBeInTheDocument();
+  await expect.element(page.getByRole('link', { name: 'Back to chats' })).toBeInTheDocument();
 });
 
 test('opens rename, details, participants, and copy link from the overflow menu', async () => {
-  render(<DiscussionThreadHeader discussion={discussion} />);
+  await render(<DiscussionThreadHeader discussion={discussion} />);
 
-  expect(screen.getByTestId('chat-action-rename').textContent).toContain('Rename');
-  expect(screen.getByTestId('chat-action-details').textContent).toContain('View details');
-  expect(screen.getByTestId('chat-action-participants').textContent).toContain('Participants');
-  expect(screen.getByTestId('chat-action-copy-link').textContent).toContain('Copy link');
+  await page.getByRole('button', { name: 'Thread actions' }).click();
+  await expect.element(page.getByTestId('chat-action-rename')).toHaveTextContent('Rename');
+  await expect.element(page.getByTestId('chat-action-details')).toHaveTextContent('View details');
+  await expect
+    .element(page.getByTestId('chat-action-participants'))
+    .toHaveTextContent('Participants');
+  await expect.element(page.getByTestId('chat-action-copy-link')).toHaveTextContent('Copy link');
 
-  fireEvent.click(screen.getByTestId('chat-action-copy-link'));
-  await waitFor(() => expect(navigator.clipboard.writeText).toHaveBeenCalled());
-  expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-    `${window.location.origin}/chat/discussion-1`
+  await page.getByTestId('chat-action-copy-link').click();
+  await vi.waitFor(() =>
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+      `${window.location.origin}/chat/discussion-1`
+    )
   );
-  expect(toast.success).toHaveBeenCalledWith('Chat link copied');
+  await vi.waitFor(() => expect(toast.success).toHaveBeenCalledWith('Chat link copied'));
 
-  fireEvent.click(screen.getByTestId('chat-action-rename'));
-  expect(screen.getByRole('heading', { name: 'Rename chat' })).toBeTruthy();
+  await page.getByRole('button', { name: 'Thread actions' }).click();
+  await page.getByTestId('chat-action-rename').click();
+  await expect.element(page.getByRole('heading', { name: 'Rename chat' })).toBeInTheDocument();
 });
 
-test('opens details and participants from the menu', () => {
-  render(<DiscussionThreadHeader discussion={discussion} />);
+test('opens details and participants from the menu', async () => {
+  await render(<DiscussionThreadHeader discussion={discussion} />);
 
-  fireEvent.click(screen.getByTestId('chat-action-details'));
-  expect(screen.getByRole('heading', { name: 'Chat details' })).toBeTruthy();
+  await page.getByRole('button', { name: 'Thread actions' }).click();
+  await page.getByTestId('chat-action-details').click();
+  await expect.element(page.getByRole('heading', { name: 'Chat details' })).toBeInTheDocument();
 });
 
 test('renames the chat from the dialog', async () => {
-  render(<DiscussionRenameDialog discussion={discussion} onClose={vi.fn()} open />);
+  await render(<DiscussionRenameDialog discussion={discussion} onClose={vi.fn()} open />);
 
-  fireEvent.change(screen.getByLabelText(/Name/u), { target: { value: '  Flights  ' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Save name' }));
+  await page.getByLabelText(/Name/u).fill('  Flights  ');
+  await page.getByRole('button', { name: 'Save name' }).click();
 
-  await waitFor(() =>
+  await vi.waitFor(() =>
     expect(hooks.renameDiscussion).toHaveBeenCalledWith('discussion-1', 'Flights')
   );
 });
 
 test('requires a name before renaming', async () => {
-  render(<DiscussionRenameDialog discussion={discussion} onClose={vi.fn()} open />);
-  fireEvent.change(screen.getByLabelText(/Name/u), { target: { value: '   ' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Save name' }));
+  await render(<DiscussionRenameDialog discussion={discussion} onClose={vi.fn()} open />);
+  await page.getByLabelText(/Name/u).fill('   ');
+  await page.getByRole('button', { name: 'Save name' }).click();
 
-  expect((await screen.findByRole('alert')).textContent).toBe('Give this chat a name.');
+  await expect.element(page.getByRole('alert')).toHaveTextContent('Give this chat a name.');
   expect(hooks.renameDiscussion).not.toHaveBeenCalled();
 });
 
-test('shows chat metadata in the details sheet', () => {
-  render(<DiscussionDetailsSheet discussion={discussion} onOpenChange={vi.fn()} open />);
+test('shows chat metadata in the details sheet', async () => {
+  await render(<DiscussionDetailsSheet discussion={discussion} onOpenChange={vi.fn()} open />);
 
-  expect(screen.getByText('Chat details')).toBeTruthy();
-  expect(screen.getByText('Ada')).toBeTruthy();
-  expect(screen.getByText('2 people')).toBeTruthy();
-  expect(screen.getByRole('link', { name: 'Rome weekend' })).toBeTruthy();
+  await expect.element(page.getByText('Chat details')).toBeInTheDocument();
+  await expect.element(page.getByText('Ada')).toBeInTheDocument();
+  await expect.element(page.getByText('2 people')).toBeInTheDocument();
+  await expect.element(page.getByRole('link', { name: 'Rome weekend' })).toBeInTheDocument();
 });
 
-test('lists participants and marks the current viewer', () => {
-  render(<DiscussionParticipantsSheet discussion={discussion} onOpenChange={vi.fn()} open />);
+test('lists participants and marks the current viewer', async () => {
+  await render(<DiscussionParticipantsSheet discussion={discussion} onOpenChange={vi.fn()} open />);
 
-  expect(screen.getByText('Ada (you)')).toBeTruthy();
-  expect(screen.getByText('Grace')).toBeTruthy();
-  expect(screen.getByText('2 people in Italy dates.')).toBeTruthy();
+  await expect.element(page.getByText('Ada (you)')).toBeInTheDocument();
+  await expect.element(page.getByText('Grace')).toBeInTheDocument();
+  await expect.element(page.getByText('2 people in Italy dates.')).toBeInTheDocument();
 });

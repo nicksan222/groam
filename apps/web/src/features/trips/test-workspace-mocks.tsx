@@ -8,34 +8,38 @@ export const trips = {
   useWorkspaceTripProposals: vi.fn()
 };
 
-vi.mock('@groam/ai/ui/context/agent-context', () => ({
-  useSetAgentContext: () => undefined
-}));
+// Module doubles for views that render the trips workspace. `vi.mock` only registers when it is
+// called from the test file itself, so each test file wires these in:
+//   vi.mock('<module>', async () => (await import('@/features/trips/test-workspace-mocks')).<double>);
+export const agentContextModule = { useSetAgentContext: () => undefined };
 
-vi.mock('@/features/workspace/workspace-shell/workspace-state', () => ({
+export const workspaceStateModule = {
   useWorkspace: () => ({
     activeOrganization: { id: 'org-acme', name: 'Acme Labs' },
     session: { user: { id: 'user-alex' } }
   })
-}));
+};
 
-vi.mock('@/features/trips/hooks/use-trips', () => ({
+export const useTripsModule = {
   useTrips: (...args: unknown[]) => trips.useTrips(...args),
   useWorkspaceTripProposals: (...args: unknown[]) => trips.useWorkspaceTripProposals(...args)
-}));
+};
 
-vi.mock('@tanstack/react-router', () => ({
-  Link: ({
-    children,
-    to
-  }: {
-    children: ReactNode;
-    params?: unknown;
-    search?: unknown;
-    to: string;
-  }) => <a href={to}>{children}</a>,
-  useNavigate: () => navigate
-}));
+export async function tripRouterModule() {
+  return {
+    ...(await vi.importActual<typeof import('@tanstack/react-router')>('@tanstack/react-router')),
+    Link: ({
+      children,
+      to
+    }: {
+      children: ReactNode;
+      params?: unknown;
+      search?: unknown;
+      to: string;
+    }) => <a href={to}>{children}</a>,
+    useNavigate: () => navigate
+  };
+}
 
 export function resetTripWorkspaceView() {
   vi.clearAllMocks();

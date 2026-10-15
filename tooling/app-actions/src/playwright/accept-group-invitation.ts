@@ -1,8 +1,8 @@
 import { expect, type Page } from '@playwright/test';
-import { ids } from './ids';
+import { ids } from '#src/testing/ids';
+import type { TestUserCredentials } from '#src/testing/unique-test-user';
 import { by } from './locators';
 import { signUp } from './sign-up';
-import type { TestUserCredentials } from './unique-test-user';
 
 export async function acceptGroupInvitation(
   page: Page,

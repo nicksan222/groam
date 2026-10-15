@@ -1,5 +1,6 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import type { IdeaStatus } from '@/types/ideas';
 import { IdeaWorkspaceHeading } from './idea-workspace-heading';
@@ -11,8 +12,6 @@ vi.mock('@/features/ideas/hooks/use-idea-context', () => ({
   })
 }));
 
-afterEach(cleanup);
-
 test.each([
   [true, false, 'draft', 'Editing idea'],
   [false, false, 'draft', 'Viewing idea · Read-only'],
@@ -22,13 +21,13 @@ test.each([
   [true, true, 'draft', 'Reviewing changes']
 ] as const)(
   'labels permissions and review mode: %s %s %s',
-  (canEdit, reviewing, status: IdeaStatus, label) => {
+  async (canEdit, reviewing, status: IdeaStatus, label) => {
     const trip = {
       id: 'working-trip',
       name: 'Portugal week',
       permissions: { canEdit }
     } as TripDetail;
-    render(
+    await render(
       <IdeaWorkspaceHeading
         actions={null}
         reviewing={reviewing}
@@ -37,8 +36,8 @@ test.each([
         tripId={trip.id}
       />
     );
-    expect(screen.getByText(label)).toBeTruthy();
-    expect(screen.getByText('A coastal detour')).toBeTruthy();
-    expect(screen.getByText('An idea for Portugal week')).toBeTruthy();
+    await expect.element(page.getByText(label)).toBeInTheDocument();
+    await expect.element(page.getByText('A coastal detour')).toBeInTheDocument();
+    await expect.element(page.getByText('An idea for Portugal week')).toBeInTheDocument();
   }
 );

@@ -1,12 +1,11 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { SettingsPanel } from './settings-panel';
 import { SettingsSplitLayout } from './settings-split-layout';
 
-afterEach(cleanup);
-
-test('renders main content beside an aside column', () => {
-  const { container } = render(
+test('renders main content beside an aside column', async () => {
+  const { container } = await render(
     <SettingsSplitLayout aside={<p>Aside content</p>}>
       <SettingsPanel>
         <p>Main content</p>
@@ -14,7 +13,7 @@ test('renders main content beside an aside column', () => {
     </SettingsSplitLayout>
   );
 
-  expect(screen.getByText('Main content')).toBeTruthy();
-  expect(screen.getByText('Aside content')).toBeTruthy();
+  await expect.element(page.getByText('Main content')).toBeInTheDocument();
+  await expect.element(page.getByText('Aside content')).toBeInTheDocument();
   expect(container.firstElementChild?.getAttribute('data-slot')).toBe('settings-split-layout');
 });

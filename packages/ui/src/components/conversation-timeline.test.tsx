@@ -1,12 +1,11 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { ConversationTimeline } from './conversation-timeline';
 
-afterEach(cleanup);
-
-test('renders items and loads earlier messages', () => {
+test('renders items and loads earlier messages', async () => {
   const loadMore = vi.fn();
-  render(
+  await render(
     <ConversationTimeline
       empty={<span>Empty</span>}
       isLoading={false}
@@ -15,13 +14,13 @@ test('renders items and loads earlier messages', () => {
       status="CanLoadMore"
     />
   );
-  expect(screen.getByText('Hello')).toBeDefined();
-  fireEvent.click(screen.getByRole('button', { name: 'Load earlier messages' }));
+  await expect.element(page.getByText('Hello')).toBeInTheDocument();
+  await page.getByRole('button', { name: 'Load earlier messages' }).click();
   expect(loadMore).toHaveBeenCalledWith(30);
 });
 
-test('renders loading instead of the empty state', () => {
-  render(
+test('renders loading instead of the empty state', async () => {
+  await render(
     <ConversationTimeline
       empty={<span>Empty</span>}
       isLoading
@@ -30,6 +29,6 @@ test('renders loading instead of the empty state', () => {
       status="LoadingFirstPage"
     />
   );
-  expect(screen.getByRole('status', { name: 'Loading messages' })).toBeDefined();
-  expect(screen.queryByText('Empty')).toBeNull();
+  await expect.element(page.getByRole('status', { name: 'Loading messages' })).toBeInTheDocument();
+  await expect.element(page.getByText('Empty')).not.toBeInTheDocument();
 });

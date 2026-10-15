@@ -1,13 +1,12 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, expect, test } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test } from 'vite-plus/test';
+import { page, userEvent } from 'vite-plus/test/browser';
 import { Input } from './input';
 
-afterEach(cleanup);
+test('renders a text input with shared field styling', async () => {
+  await render(<Input aria-label="Trip name" placeholder="Paris getaway" />);
 
-test('renders a text input with shared field styling', () => {
-  render(<Input aria-label="Trip name" placeholder="Paris getaway" />);
-
-  const input = screen.getByRole('textbox', { name: 'Trip name' });
+  const input = page.getByRole('textbox', { name: 'Trip name' }).element();
   expect(input.getAttribute('data-slot')).toBe('input');
   expect(input.getAttribute('placeholder')).toBe('Paris getaway');
   expect(input.className).toContain('rounded-lg');
@@ -15,28 +14,28 @@ test('renders a text input with shared field styling', () => {
   expect(input.className).toContain('shadow-xs');
 });
 
-test('supports password and other input types', () => {
-  render(<Input aria-label="Password" type="password" />);
-  expect(screen.getByLabelText('Password').getAttribute('type')).toBe('password');
+test('supports password and other input types', async () => {
+  await render(<Input aria-label="Password" type="password" />);
+  await expect.element(page.getByLabelText('Password')).toHaveAttribute('type', 'password');
 });
 
-test('reflects disabled and invalid accessibility states in classes', () => {
-  render(<Input aria-invalid aria-label="Email" disabled />);
+test('reflects disabled and invalid accessibility states in classes', async () => {
+  await render(<Input aria-invalid aria-label="Email" disabled />);
 
-  const input = screen.getByRole('textbox', { name: 'Email' });
+  const input = page.getByRole('textbox', { name: 'Email' }).element();
   expect((input as HTMLInputElement).disabled).toBe(true);
   expect(input.getAttribute('aria-invalid')).toBe('true');
   expect(input.className).toContain('aria-invalid:border-destructive');
   expect(input.className).toContain('disabled:opacity-64');
 });
 
-test('merges custom class names and forwards controlled values', () => {
-  render(<Input aria-label="Notes" className="max-w-sm" defaultValue="Draft" />);
+test('merges custom class names and forwards controlled values', async () => {
+  await render(<Input aria-label="Notes" className="max-w-sm" defaultValue="Draft" />);
 
-  const input = screen.getByRole('textbox', { name: 'Notes' });
+  const input = page.getByRole('textbox', { name: 'Notes' }).element();
   expect(input.className).toContain('max-w-sm');
   expect((input as HTMLInputElement).value).toBe('Draft');
 
-  fireEvent.change(input, { target: { value: 'Updated' } });
+  await userEvent.fill(input, 'Updated');
   expect((input as HTMLInputElement).value).toBe('Updated');
 });

@@ -1,11 +1,10 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { formatTripCost } from '@/features/trips/trip-forms/trip-currencies';
 import { formatTripDay } from '@/features/trips/trip-local-date-time';
 import { OverviewProperties } from './overview-properties';
-
-afterEach(cleanup);
 
 function trip(overrides: Partial<TripDetail> = {}): TripDetail {
   return {
@@ -20,8 +19,8 @@ function trip(overrides: Partial<TripDetail> = {}): TripDetail {
   } as TripDetail;
 }
 
-test('renders a properties row instead of metric tiles', () => {
-  render(
+test('renders a properties row instead of metric tiles', async () => {
+  await render(
     <OverviewProperties
       trip={trip({
         dateNotes: 'A long weekend in early June with friends',
@@ -34,28 +33,27 @@ test('renders a properties row instead of metric tiles', () => {
   );
 
   expect(document.querySelector('[data-slot="metric-tiles"]')).toBeNull();
-  const row = document.querySelector('[data-slot="overview-properties"]');
-  expect(row).toBeTruthy();
-  expect(row?.className).toContain('min-w-0');
-  expect(row?.className).toContain('rounded-xl');
-  expect(row?.className).toContain('border-border');
-  expect(row?.className).not.toContain('bg-muted');
-  expect(row?.className).not.toContain('bg-card');
-  expect(screen.getByLabelText('Trip facts')).toBeTruthy();
-  expect(screen.getByText('Window')).toBeTruthy();
-  expect(screen.getByText('A long weekend in early June with friends')).toBeTruthy();
-  expect(screen.getByText('Length')).toBeTruthy();
-  expect(screen.getByText('4 days')).toBeTruthy();
-  expect(screen.getByText('Stops')).toBeTruthy();
-  expect(screen.getByText('2')).toBeTruthy();
-  expect(screen.getByText('Total')).toBeTruthy();
-  expect(
-    screen.getByText(`${formatTripCost(1280, 'EUR')} / ${formatTripCost(2400, 'EUR')}`)
-  ).toBeTruthy();
+  const row = page.getByLabelText('Trip facts');
+  await expect.element(row).toHaveClass('min-w-0', 'rounded-xl', 'border-border');
+  await expect.element(row).not.toHaveClass('bg-muted');
+  await expect.element(row).not.toHaveClass('bg-card');
+  expect(row.element().getAttribute('data-slot')).toBe('overview-properties');
+  await expect.element(page.getByText('Window')).toBeInTheDocument();
+  await expect
+    .element(page.getByText('A long weekend in early June with friends'))
+    .toBeInTheDocument();
+  await expect.element(page.getByText('Length')).toBeInTheDocument();
+  await expect.element(page.getByText('4 days')).toBeInTheDocument();
+  await expect.element(page.getByText('Stops')).toBeInTheDocument();
+  await expect.element(page.getByText('2')).toBeInTheDocument();
+  await expect.element(page.getByText('Total')).toBeInTheDocument();
+  await expect
+    .element(page.getByText(`${formatTripCost(1280, 'EUR')} / ${formatTripCost(2400, 'EUR')}`))
+    .toBeInTheDocument();
 });
 
-test('shows a calendar range when a start date and length are set', () => {
-  render(
+test('shows a calendar range when a start date and length are set', async () => {
+  await render(
     <OverviewProperties
       trip={trip({
         startDate: '2026-08-01',
@@ -64,7 +62,9 @@ test('shows a calendar range when a start date and length are set', () => {
     />
   );
 
-  expect(
-    screen.getByText(`${formatTripDay('2026-08-01', 1)} – ${formatTripDay('2026-08-01', 7)}`)
-  ).toBeTruthy();
+  await expect
+    .element(
+      page.getByText(`${formatTripDay('2026-08-01', 1)} – ${formatTripDay('2026-08-01', 7)}`)
+    )
+    .toBeInTheDocument();
 });

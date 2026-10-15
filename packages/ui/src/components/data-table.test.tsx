@@ -1,11 +1,10 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, expect, test } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { DataTable } from './data-table';
 
-afterEach(cleanup);
-
-test('keeps a min-width repository list inside a bordered horizontal scroll panel', () => {
-  const { container } = render(
+test('keeps a min-width repository list inside a bordered horizontal scroll panel', async () => {
+  const { container } = await render(
     <DataTable
       columns={[
         { accessorKey: 'name', header: 'Name' },
@@ -48,8 +47,8 @@ test('keeps a min-width repository list inside a bordered horizontal scroll pane
   expect(toolbar?.className).not.toContain('rounded-lg');
 });
 
-test('derives filter labels from resourceLabel', () => {
-  render(
+test('derives filter labels from resourceLabel', async () => {
+  await render(
     <DataTable
       columns={[{ accessorKey: 'name', header: 'Name' }]}
       data={[{ name: 'Alex' }]}
@@ -57,12 +56,12 @@ test('derives filter labels from resourceLabel', () => {
     />
   );
 
-  expect(screen.getByRole('searchbox', { name: 'Search issues' })).toBeTruthy();
-  expect(screen.getByPlaceholderText('Search issues…')).toBeTruthy();
+  await expect.element(page.getByRole('searchbox', { name: 'Search issues' })).toBeInTheDocument();
+  await expect.element(page.getByPlaceholder('Search issues…')).toBeInTheDocument();
 });
 
-test('filters rows and shows an empty state when nothing matches', () => {
-  render(
+test('filters rows and shows an empty state when nothing matches', async () => {
+  await render(
     <DataTable
       columns={[
         { accessorKey: 'name', header: 'Name' },
@@ -77,21 +76,17 @@ test('filters rows and shows an empty state when nothing matches', () => {
     />
   );
 
-  expect(screen.getByText('Alex')).toBeTruthy();
-  expect(screen.getByText('Lea')).toBeTruthy();
-  fireEvent.change(screen.getByRole('searchbox', { name: 'Filter people…' }), {
-    target: { value: 'kyo' }
-  });
-  expect(screen.queryByText('Alex')).toBeNull();
-  expect(screen.getByText('Lea')).toBeTruthy();
-  fireEvent.change(screen.getByRole('searchbox', { name: 'Filter people…' }), {
-    target: { value: 'zzz' }
-  });
-  expect(screen.getByText('No matching people.')).toBeTruthy();
+  await expect.element(page.getByText('Alex')).toBeInTheDocument();
+  await expect.element(page.getByText('Lea')).toBeInTheDocument();
+  await page.getByRole('searchbox', { name: 'Filter people…' }).fill('kyo');
+  await expect.element(page.getByText('Alex')).not.toBeInTheDocument();
+  await expect.element(page.getByText('Lea')).toBeInTheDocument();
+  await page.getByRole('searchbox', { name: 'Filter people…' }).fill('zzz');
+  await expect.element(page.getByText('No matching people.')).toBeInTheDocument();
 });
 
-test('externalFilter keeps rows visible while query changes', () => {
-  render(
+test('externalFilter keeps rows visible while query changes', async () => {
+  await render(
     <DataTable
       columns={[{ accessorKey: 'name', header: 'Name' }]}
       data={[{ name: 'Alex' }]}
@@ -101,11 +96,11 @@ test('externalFilter keeps rows visible while query changes', () => {
     />
   );
 
-  expect(screen.getByText('Alex')).toBeTruthy();
+  await expect.element(page.getByText('Alex')).toBeInTheDocument();
 });
 
-test('applies full-bleed cellClassName to body cells without stripping header padding', () => {
-  const { container } = render(
+test('applies full-bleed cellClassName to body cells without stripping header padding', async () => {
+  const { container } = await render(
     <DataTable
       columns={[
         {

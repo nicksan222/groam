@@ -1,4 +1,4 @@
-import { act, renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { activateOrganization, useOrganizationActivation } from './use-organization-activation';
 
@@ -31,13 +31,13 @@ describe('organization activation', () => {
     auth.setActive
       .mockResolvedValueOnce({ data: null, error: { message: 'Denied' } })
       .mockResolvedValueOnce({ data: {}, error: null });
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useOrganizationActivation({ firstOrganizationId: 'organization-1', isPending: false })
     );
 
-    await waitFor(() => expect(result.current.error).toBe('Denied'));
+    await vi.waitFor(() => expect(result.current.error).toBe('Denied'));
     await act(async () => result.current.retry());
-    await waitFor(() => expect(auth.setActive).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() => expect(auth.setActive).toHaveBeenCalledTimes(2));
     expect(result.current.error).toBeNull();
   });
 });

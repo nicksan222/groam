@@ -1,17 +1,17 @@
 import type { UIMessage } from '@convex-dev/agent/react';
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { UserMessage } from './user-message';
 
 vi.mock('@convex-dev/agent/react', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@convex-dev/agent/react')>()),
   useSmoothText: (text: string) => [text]
 }));
-afterEach(cleanup);
 
 test('keeps resend available for an earlier message while a newer one is active', async () => {
   const onResend = vi.fn().mockResolvedValue(true);
-  render(
+  await render(
     <UserMessage
       disabled
       message={message('user', 'Book Portugal', 'success')}
@@ -20,16 +20,18 @@ test('keeps resend available for an earlier message while a newer one is active'
     />
   );
 
-  const resend = screen.getByRole('button', { name: 'Resend message' });
+  const resend = page.getByRole('button', { name: 'Resend message' }).element();
   expect(resend.hasAttribute('disabled')).toBe(false);
   resend.click();
   expect(onResend).toHaveBeenCalledOnce();
 });
 
-test('renders traveler messages with pending delivery state', () => {
-  render(<UserMessage disabled={false} message={message('user', 'Book Portugal', 'pending')} />);
-  expect(screen.getByText('Book Portugal')).toBeDefined();
-  expect(screen.getByRole('status').textContent).toContain('Sending');
+test('renders traveler messages with pending delivery state', async () => {
+  await render(
+    <UserMessage disabled={false} message={message('user', 'Book Portugal', 'pending')} />
+  );
+  await expect.element(page.getByText('Book Portugal')).toBeInTheDocument();
+  expect(page.getByRole('status').element().textContent).toContain('Sending');
 });
 
 function message(role: 'user', text: string, status: 'pending' | 'success'): UIMessage {

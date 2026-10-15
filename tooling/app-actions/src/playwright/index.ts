@@ -42,7 +42,7 @@ export { expectWorkspaceReady } from './expect-workspace-ready';
 export { filterIssuesByStatus, type IssueStatusFilter } from './filter-issues-by-status';
 export { filterTripsByStatus, type TripStatusFilter } from './filter-trips-by-status';
 export { filterWorkspaceIdeas } from './filter-workspace-ideas';
-export { ids, type TestId } from './ids';
+export { ids, type TestId } from '#src/testing/ids';
 export {
   addInlineActivity,
   editInlineActivity,
@@ -145,7 +145,7 @@ export { startWorkspaceIdea } from './start-workspace-idea';
 export { submitIdeaForReview } from './submit-idea-for-review';
 export { type SwitchGroupInput, switchGroup } from './switch-group';
 export { transferPdf } from './transfer-pdf';
-export { uniqueSuffix } from './unique-suffix';
-export { type TestUserCredentials, uniqueTestUser } from './unique-test-user';
+export { uniqueSuffix } from '#src/testing/unique-suffix';
+export { type TestUserCredentials, uniqueTestUser } from '#src/testing/unique-test-user';
 export { waitForReview } from './wait-for-review';
 export { watchSharedTrip } from './watch-shared-trip';

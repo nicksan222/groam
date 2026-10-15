@@ -1,5 +1,5 @@
 import { type Page, expect as playwrightExpect } from '@playwright/test';
-import { ids } from './ids';
+import { ids } from '#src/testing/ids';
 import { by, destinationCard, destinationResult, dialogSubmit } from './locators';
 import { openTripSection } from './open-trip-section';
 import { setDestinationSchedule } from './set-destination-schedule';

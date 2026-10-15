@@ -1,9 +1,9 @@
 import { SidebarProvider } from '@groam/ui/components/sidebar';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
-import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
+import { beforeEach, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { resetSidebarChromeStore, useSidebarChromeStore } from '@/lib/stores/sidebar-chrome-store';
-import { stubMatchMedia } from '@/testing/stub-match-media';
 import type { WorkspaceIssue } from './hooks/use-workspace-issues';
 import { IssuesSidebarNav } from './issues-sidebar-nav';
 
@@ -17,7 +17,8 @@ const state = vi.hoisted(() => ({
   trips: [] as Array<{ archivedAt: null; id: string; name: string }>
 }));
 
-vi.mock('@tanstack/react-router', () => ({
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
   Link: ({ children, to }: { children?: ReactNode; to: string }) => <a href={to}>{children}</a>,
   useLocation: () => ({ pathname: state.pathname }),
   useNavigate: () => vi.fn(),
@@ -59,7 +60,7 @@ function issue(
   };
 }
 
-function renderNav() {
+async function renderNav() {
   return render(
     <SidebarProvider>
       <ul>
@@ -80,22 +81,16 @@ beforeEach(() => {
   state.pathname = '/issues';
   state.status = 'Exhausted';
   state.trips = [];
-  stubMatchMedia();
 });
 
-afterEach(() => {
-  cleanup();
-  vi.unstubAllGlobals();
+test('offers a new issue item when the inbox is empty', async () => {
+  await renderNav();
+  await expect.element(page.getByRole('button', { name: 'New issue' })).not.toBeInTheDocument();
+  await page.getByText('New issue').click();
+  await expect.element(page.getByText('Start with a trip')).toBeInTheDocument();
 });
 
-test('offers a new issue item when the inbox is empty', () => {
-  renderNav();
-  expect(screen.queryByRole('button', { name: 'New issue' })).toBeNull();
-  fireEvent.click(screen.getByText('New issue'));
-  expect(screen.getByText('Start with a trip')).toBeTruthy();
-});
-
-test('collapses listed issues from the parent action without leaving the index link', () => {
+test('collapses listed issues from the parent action without leaving the index link', async () => {
   state.issues = [
     issue({
       id: 'issue-1' as WorkspaceIssue['id'],
@@ -103,19 +98,21 @@ test('collapses listed issues from the parent action without leaving the index l
     })
   ];
 
-  renderNav();
-  expect(screen.getByText('Issue 1')).toBeTruthy();
-  expect(screen.getByRole('link', { name: 'Issues' }).getAttribute('href')).toBe('/issues');
+  await renderNav();
+  await expect.element(page.getByText('Issue 1')).toBeInTheDocument();
+  await expect
+    .element(page.getByRole('link', { name: 'Issues' }))
+    .toHaveAttribute('href', '/issues');
 
-  fireEvent.click(screen.getByRole('link', { name: 'Issues' }));
-  expect(screen.getByText('Issue 1')).toBeTruthy();
+  await page.getByRole('link', { name: 'Issues' }).click();
+  await expect.element(page.getByText('Issue 1')).toBeInTheDocument();
 
-  fireEvent.click(screen.getByRole('button', { name: 'Collapse issues' }));
-  expect(screen.queryByText('Issue 1')).toBeNull();
-  expect(screen.getByRole('button', { name: 'Expand issues' })).toBeTruthy();
+  await page.getByRole('button', { name: 'Collapse issues' }).click();
+  await expect.element(page.getByText('Issue 1')).not.toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Expand issues' })).toBeInTheDocument();
 });
 
-test('lists open issues and can reveal more than the first page', () => {
+test('lists open issues and can reveal more than the first page', async () => {
   state.issues = Array.from({ length: 6 }, (_, index) =>
     issue({
       id: `issue-${index}` as WorkspaceIssue['id'],
@@ -123,9 +120,9 @@ test('lists open issues and can reveal more than the first page', () => {
     })
   );
 
-  renderNav();
-  expect(screen.getByText('Issue 1')).toBeTruthy();
-  expect(screen.queryByText('Issue 6')).toBeNull();
-  fireEvent.click(screen.getByText('Load more'));
-  expect(screen.getByText('Issue 6')).toBeTruthy();
+  await renderNav();
+  await expect.element(page.getByText('Issue 1')).toBeInTheDocument();
+  await expect.element(page.getByText('Issue 6')).not.toBeInTheDocument();
+  await page.getByText('Load more').click();
+  await expect.element(page.getByText('Issue 6')).toBeInTheDocument();
 });

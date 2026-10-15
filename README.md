@@ -100,7 +100,7 @@ Open [localhost:5173](http://localhost:5173) and sign in with
 | `just check` | Run the complete CI quality suite |
 | `just test` | Run unit and integration tests |
 | `claude` | Start Claude Code with the repository harness (in the dev container) |
-| `just e2e-local` | Run Playwright against the local app |
+| `just journeys` | Run browser journeys against the local backend |
 | `just desktop` | Start desktop development |
 | `just graphify-explain <symbol>` | Show a symbol, its callers, and its dependencies |
 | `just graphify-affected <symbol>` | List what a change to a symbol would affect |

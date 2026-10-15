@@ -1,6 +1,7 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type { WorkspaceIssue } from '@/features/issues/hooks/use-workspace-issues';
 import { IssueListView } from './issue-list-view';
 
@@ -38,7 +39,8 @@ vi.mock('@/features/issues/hooks/use-workspace-issues', () => ({
   })
 }));
 
-vi.mock('@tanstack/react-router', () => ({
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
   Link: ({ children, to }: { children?: ReactNode; to: string }) => <a href={to}>{children}</a>,
   useNavigate: () => vi.fn()
 }));
@@ -51,33 +53,37 @@ beforeEach(() => {
   state.status = 'Exhausted';
 });
 
-afterEach(cleanup);
-
 describe('IssueListView', () => {
-  test('shows a labeled loading state while issues load', () => {
+  test('shows a labeled loading state while issues load', async () => {
     state.isLoading = true;
-    render(<IssueListView />);
-    expect(screen.getByRole('status', { name: 'Loading issues…' })).toBeTruthy();
+    await render(<IssueListView />);
+    await expect.element(page.getByRole('status', { name: 'Loading issues…' })).toBeInTheDocument();
   });
 
-  test('invites the group to create an issue when none exist', () => {
-    render(<IssueListView />);
-    expect(screen.getByTestId('empty-screen')).toBeTruthy();
-    expect(screen.getByText('Nothing is blocking the group yet')).toBeTruthy();
-    expect(screen.getAllByRole('button', { name: 'New issue' })).toHaveLength(1);
-    expect(screen.queryByText('Acme Labs')).toBeNull();
-    expect(screen.getByRole('heading', { name: 'Issues' })).toBeTruthy();
+  test('invites the group to create an issue when none exist', async () => {
+    await render(<IssueListView />);
+    await expect.element(page.getByTestId('empty-screen')).toBeInTheDocument();
+    await expect.element(page.getByText('Nothing is blocking the group yet')).toBeInTheDocument();
+    expect(page.getByRole('button', { name: 'New issue' }).elements()).toHaveLength(1);
+    await expect.element(page.getByText('Acme Labs')).not.toBeInTheDocument();
+    await expect.element(page.getByRole('heading', { name: 'Issues' })).toBeInTheDocument();
   });
 
-  test('gives a way to reach trips when an issue cannot be created yet', () => {
-    render(<IssueListView />);
-    fireEvent.click(screen.getByRole('button', { name: 'New issue' }));
-    expect(screen.getByRole('heading', { name: 'Start with a trip' })).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Go to trips' }).getAttribute('href')).toBe('/trips');
-    expect(screen.queryByRole('button', { name: 'Create issue' })).toBeNull();
+  test('gives a way to reach trips when an issue cannot be created yet', async () => {
+    await render(<IssueListView />);
+    await page.getByRole('button', { name: 'New issue' }).click();
+    await expect
+      .element(page.getByRole('heading', { name: 'Start with a trip' }))
+      .toBeInTheDocument();
+    await expect
+      .element(page.getByRole('link', { name: 'Go to trips' }))
+      .toHaveAttribute('href', '/trips');
+    await expect
+      .element(page.getByRole('button', { name: 'Create issue' }))
+      .not.toBeInTheDocument();
   });
 
-  test('renders workspace issues with their trip names', () => {
+  test('renders workspace issues with their trip names', async () => {
     state.issues = [
       {
         assignee: null,
@@ -94,12 +100,12 @@ describe('IssueListView', () => {
         updatedAt: Date.UTC(2026, 7, 17)
       }
     ];
-    render(<IssueListView />);
-    expect(screen.getByText('Coast day')).toBeTruthy();
-    expect(screen.getAllByText(/Atlantic week/u)).toHaveLength(2);
-    expect(screen.queryByText('Acme Labs')).toBeNull();
-    expect(screen.getByRole('heading', { name: 'Issues' })).toBeTruthy();
-    expect(screen.getByLabelText('Search issues')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'New issue' })).toBeTruthy();
+    await render(<IssueListView />);
+    await expect.element(page.getByText('Coast day')).toBeInTheDocument();
+    expect(page.getByText(/Atlantic week/u).elements()).toHaveLength(2);
+    await expect.element(page.getByText('Acme Labs')).not.toBeInTheDocument();
+    await expect.element(page.getByRole('heading', { name: 'Issues' })).toBeInTheDocument();
+    await expect.element(page.getByLabelText('Search issues')).toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'New issue' })).toBeInTheDocument();
   });
 });

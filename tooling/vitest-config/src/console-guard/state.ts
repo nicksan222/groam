@@ -1,5 +1,3 @@
-import { format } from 'node:util';
-
 export type ConsoleLevel = 'debug' | 'error' | 'info' | 'log' | 'trace' | 'warn';
 export type ConsolePattern = RegExp | string;
 
@@ -37,8 +35,28 @@ export function expectConsole(level: ConsoleLevel, pattern: ConsolePattern): voi
   state.expectations.push({ level, pattern, seen: false });
 }
 
+function show(value: unknown): string {
+  if (typeof value === 'string') return value;
+  if (value instanceof Error) return value.stack ?? `${value.name}: ${value.message}`;
+  try {
+    return JSON.stringify(value) ?? String(value);
+  } catch {
+    return String(value);
+  }
+}
+
+// A runtime-neutral `util.format`: the guard also runs in browser-mode tests.
+function format([first, ...rest]: unknown[]): string {
+  if (typeof first !== 'string') return [first, ...rest].map(show).join(' ');
+  const head = first.replace(/%[sdifjoO%]/gu, (token) => {
+    if (token === '%%') return '%';
+    return rest.length > 0 ? show(rest.shift()) : token;
+  });
+  return [head, ...rest.map(show)].join(' ');
+}
+
 function capture(level: ConsoleLevel, args: unknown[]): void {
-  const message = format(...args);
+  const message = format(args);
   const declared = state.expectations.filter(
     ({ level: expected, pattern }) =>
       expected === level &&

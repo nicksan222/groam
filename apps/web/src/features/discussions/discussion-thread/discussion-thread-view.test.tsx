@@ -1,6 +1,7 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
-import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
+import { beforeEach, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type { DiscussionMessage } from '@/features/discussions/hooks/use-discussion-thread';
 import type { DiscussionListItem } from '@/features/discussions/hooks/use-discussions';
 import { DiscussionThreadView } from './discussion-thread-view';
@@ -29,7 +30,8 @@ vi.mock('@groam/ai/ui/chat/assistant-chat-message', () => ({
   AssistantChatMessage: ({ message }: { message: { text: string } }) => <div>{message.text}</div>
 }));
 
-vi.mock('@tanstack/react-router', () => ({
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
   Link: ({ children, to, ...props }: { children?: ReactNode; to: string }) => (
     <a href={to} {...props}>
       {children}
@@ -130,29 +132,27 @@ beforeEach(() => {
   };
 });
 
-afterEach(cleanup);
-
-test('shows a loading state while the chat list is opening', () => {
+test('shows a loading state while the chat list is opening', async () => {
   state.isListLoading = true;
-  render(<DiscussionThreadView discussionId={'discussion-1' as never} />);
-  expect(screen.getByRole('status', { name: 'Opening chat…' })).toBeTruthy();
+  await render(<DiscussionThreadView discussionId={'discussion-1' as never} />);
+  await expect.element(page.getByRole('status', { name: 'Opening chat…' })).toBeInTheDocument();
 });
 
-test('shows an error when the chat is missing', () => {
+test('shows an error when the chat is missing', async () => {
   state.discussions = [];
-  render(<DiscussionThreadView discussionId={'missing' as never} />);
-  expect(screen.getByText('Chat not found')).toBeTruthy();
-  expect(screen.getByRole('link', { name: 'Back to chats' })).toBeTruthy();
+  await render(<DiscussionThreadView discussionId={'missing' as never} />);
+  await expect.element(page.getByText('Chat not found')).toBeInTheDocument();
+  await expect.element(page.getByRole('link', { name: 'Back to chats' })).toBeInTheDocument();
 });
 
-test('renders the empty thread state', () => {
-  render(<DiscussionThreadView discussionId={'discussion-1' as never} />);
-  expect(screen.getByText('Italy dates')).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Thread actions' })).toBeTruthy();
-  expect(screen.getByText('No messages yet')).toBeTruthy();
+test('renders the empty thread state', async () => {
+  await render(<DiscussionThreadView discussionId={'discussion-1' as never} />);
+  await expect.element(page.getByText('Italy dates')).toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Thread actions' })).toBeInTheDocument();
+  await expect.element(page.getByText('No messages yet')).toBeInTheDocument();
 });
 
-test('renders user and assistant messages', () => {
+test('renders user and assistant messages', async () => {
   state.thread.messages = [
     message({
       author: { name: 'Ada', userId: 'user-a' },
@@ -166,18 +166,18 @@ test('renders user and assistant messages', () => {
       text: 'I can compare flight options.'
     })
   ];
-  render(<DiscussionThreadView discussionId={'discussion-1' as never} />);
-  expect(screen.getByText('Airport?')).toBeTruthy();
-  expect(screen.getAllByText('Ada').length).toBeGreaterThan(0);
-  expect(screen.getByText('I can compare flight options.')).toBeTruthy();
+  await render(<DiscussionThreadView discussionId={'discussion-1' as never} />);
+  await expect.element(page.getByText('Airport?')).toBeInTheDocument();
+  expect(page.getByText('Ada').elements().length).toBeGreaterThan(0);
+  await expect.element(page.getByText('I can compare flight options.')).toBeInTheDocument();
 });
 
 test('forwards composer send and stop to the thread hook', async () => {
   state.thread.canStop = true;
-  render(<DiscussionThreadView discussionId={'discussion-1' as never} />);
+  await render(<DiscussionThreadView discussionId={'discussion-1' as never} />);
 
-  fireEvent.click(screen.getByRole('button', { name: 'Stop Groam' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Reply' }));
+  await page.getByRole('button', { name: 'Stop Groam' }).click();
+  await page.getByRole('button', { name: 'Reply' }).click();
 
   expect(state.stop).toHaveBeenCalled();
   expect(state.send).toHaveBeenCalledWith({ text: 'Hello from composer' });

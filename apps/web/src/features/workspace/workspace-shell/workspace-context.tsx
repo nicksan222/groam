@@ -54,7 +54,15 @@ export function WorkspaceProvider({ children }: PropsWithChildren) {
     (currentUserId === undefined || currentUserId === heldUserId);
   const workspace = isSignedOut ? null : (value ?? (canReuseHeld ? heldValue : null));
 
-  if (workspace) return <WorkspaceContext value={workspace}>{children}</WorkspaceContext>;
+  if (workspace) {
+    // A group switch opens a different workspace: remount so group-scoped state, such as
+    // pagination cursors, starts fresh instead of leaking across groups.
+    return (
+      <WorkspaceContext key={workspace.activeOrganization.id} value={workspace}>
+        {children}
+      </WorkspaceContext>
+    );
+  }
   if (isPending) return <WorkspaceLoading />;
   if (activationError) {
     return <WorkspaceError message={activationError} onRetry={retryActivation} />;

@@ -1,7 +1,8 @@
 import type { Id } from '@groam/backend/data-model';
-import { cleanup, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { IdeaDetailView } from './idea-detail-view';
 
 const proposalId = 'proposal-1' as Id<'tripProposals'>;
@@ -15,13 +16,15 @@ vi.mock('@groam/ai/ui/context/agent-context', () => ({
   useSetAgentContext: () => undefined
 }));
 
-vi.mock('@tanstack/react-router', () => ({
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
   Link: ({ children, to }: { children?: ReactNode; to: string }) => <a href={to}>{children}</a>,
   Navigate: ({ to }: { to: string }) => <div>navigate:{to}</div>,
   useNavigate: () => vi.fn()
 }));
 
-vi.mock('convex/react', () => ({
+vi.mock('convex/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('convex/react')>()),
   useQuery: () => state.trip
 }));
 
@@ -41,22 +44,20 @@ beforeEach(() => {
   state.trip = null;
 });
 
-afterEach(cleanup);
-
 describe('IdeaDetailView', () => {
-  test('shows a loading state while the idea is unresolved', () => {
-    render(<IdeaDetailView proposalId={proposalId} />);
-    expect(screen.getByRole('status', { name: 'Loading idea…' })).toBeTruthy();
+  test('shows a loading state while the idea is unresolved', async () => {
+    await render(<IdeaDetailView proposalId={proposalId} />);
+    await expect.element(page.getByRole('status', { name: 'Loading idea…' })).toBeInTheDocument();
   });
 
-  test('shows a not-found state when the idea is missing', () => {
+  test('shows a not-found state when the idea is missing', async () => {
     state.proposal = null;
-    render(<IdeaDetailView proposalId={proposalId} />);
-    expect(screen.getByText('Idea not found')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Back to ideas' })).toBeTruthy();
+    await render(<IdeaDetailView proposalId={proposalId} />);
+    await expect.element(page.getByText('Idea not found')).toBeInTheDocument();
+    await expect.element(page.getByRole('link', { name: 'Back to ideas' })).toBeInTheDocument();
   });
 
-  test('redirects a found idea to the nested clone', () => {
+  test('redirects a found idea to the nested clone', async () => {
     state.proposal = {
       id: proposalId,
       ideaName: 'coast-day',
@@ -65,8 +66,10 @@ describe('IdeaDetailView', () => {
       title: 'Add a coast day'
     };
     state.trip = { id: 'trip-1', name: 'Atlantic week' };
-    render(<IdeaDetailView proposalId={proposalId} />);
+    await render(<IdeaDetailView proposalId={proposalId} />);
 
-    expect(screen.getByText('navigate:/trips/$tripId/ideas/$proposalId/$view')).toBeTruthy();
+    await expect
+      .element(page.getByText('navigate:/trips/$tripId/ideas/$proposalId/$view'))
+      .toBeInTheDocument();
   });
 });

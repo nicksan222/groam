@@ -1,5 +1,5 @@
 import type { Id } from '@groam/backend/data-model';
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { describe, expect, test } from 'vite-plus/test';
 import { useTripActivityFilters } from './use-trip-activity-filters';
 import type { TripDetail } from './use-trips';
@@ -24,8 +24,8 @@ const activity: TripDetail['activity'] = [
 ];
 
 describe('useTripActivityFilters', () => {
-  test('starts with all people and actions visible', () => {
-    const { result } = renderHook(() => useTripActivityFilters(activity));
+  test('starts with all people and actions visible', async () => {
+    const { result } = await renderHook(() => useTripActivityFilters(activity));
     expect(result.current.visibleActivity).toHaveLength(2);
     expect(result.current.hasExtraFilters).toBe(false);
     expect(result.current.eventCountLabel).toBe('2 events');
@@ -35,16 +35,16 @@ describe('useTripActivityFilters', () => {
     ]);
   });
 
-  test('filters by person and clears extras', () => {
-    const { result } = renderHook(() => useTripActivityFilters(activity));
+  test('filters by person and clears extras', async () => {
+    const { result } = await renderHook(() => useTripActivityFilters(activity));
 
-    act(() => {
+    await act(() => {
       result.current.setUserId('user-2');
     });
     expect(result.current.visibleActivity.map((item) => item.id)).toEqual(['a2']);
     expect(result.current.hasExtraFilters).toBe(true);
 
-    act(() => {
+    await act(() => {
       result.current.clearFilters();
     });
     expect(result.current.visibleActivity).toHaveLength(2);

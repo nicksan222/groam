@@ -1,5 +1,5 @@
 import { env } from '@groam/env/web-client';
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { useMediaUpload } from './use-media-upload';
 
@@ -11,7 +11,8 @@ const convex = vi.hoisted(() => ({
 }));
 const notifications = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
 
-vi.mock('convex/react', () => ({
+vi.mock('convex/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('convex/react')>()),
   useAction: (...args: unknown[]) => convex.useAction(...args),
   useMutation: (...args: unknown[]) => convex.useMutation(...args)
 }));
@@ -31,7 +32,9 @@ beforeEach(() => {
   convex.save.mockResolvedValue({ mediaId: 'media-a', ok: true });
 });
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 function stubUploadResponse(body: unknown, status = 200) {
   const response = new Response(JSON.stringify(body), { status });
@@ -41,7 +44,7 @@ function stubUploadResponse(body: unknown, status = 200) {
 
 describe('useMediaUpload', () => {
   test('rejects unsupported files before requesting an upload URL', async () => {
-    const { result } = renderHook(() => useMediaUpload());
+    const { result } = await renderHook(() => useMediaUpload());
     const file = new File(['notes'], 'notes.txt', { type: 'text/plain' });
 
     await expect(act(() => result.current(file))).resolves.toBeNull();
@@ -52,9 +55,10 @@ describe('useMediaUpload', () => {
 
   test('reports oversized files through the error callback', async () => {
     const onError = vi.fn();
-    const { result } = renderHook(() => useMediaUpload());
-    const file = new File(['image'], 'huge.png', { type: 'image/png' });
-    Object.defineProperty(file, 'size', { value: 25 * 1024 * 1024 + 1 });
+    const { result } = await renderHook(() => useMediaUpload());
+    const file = new File([new Uint8Array(25 * 1024 * 1024 + 1)], 'huge.png', {
+      type: 'image/png'
+    });
 
     await expect(
       act(() => result.current(file, `${file.name} uploaded`, onError))
@@ -67,7 +71,7 @@ describe('useMediaUpload', () => {
 
   test('uploads to Convex storage and saves the resulting media id', async () => {
     stubUploadResponse({ storageId: 'storage-a' });
-    const { result } = renderHook(() => useMediaUpload());
+    const { result } = await renderHook(() => useMediaUpload());
 
     await expect(act(() => result.current(pngFile))).resolves.toBe('media-a');
 
@@ -82,7 +86,7 @@ describe('useMediaUpload', () => {
 
   test('can skip the success toast when a caller supplies a null message', async () => {
     stubUploadResponse({ storageId: 'storage-a' });
-    const { result } = renderHook(() => useMediaUpload());
+    const { result } = await renderHook(() => useMediaUpload());
 
     await expect(act(() => result.current(pngFile, null))).resolves.toBe('media-a');
     expect(notifications.success).not.toHaveBeenCalled();
@@ -90,7 +94,7 @@ describe('useMediaUpload', () => {
 
   test('surfaces malformed Convex upload responses', async () => {
     stubUploadResponse({});
-    const { result } = renderHook(() => useMediaUpload());
+    const { result } = await renderHook(() => useMediaUpload());
 
     await expect(act(() => result.current(pngFile))).resolves.toBeNull();
 
@@ -101,7 +105,7 @@ describe('useMediaUpload', () => {
   test('surfaces HTTP upload failures', async () => {
     stubUploadResponse({ storageId: 'storage-a' }, 500);
     const onError = vi.fn();
-    const { result } = renderHook(() => useMediaUpload());
+    const { result } = await renderHook(() => useMediaUpload());
 
     await expect(
       act(() => result.current(pngFile, `${pngFile.name} uploaded`, onError))
@@ -115,7 +119,7 @@ describe('useMediaUpload', () => {
   test('surfaces Convex save errors without claiming success', async () => {
     stubUploadResponse({ storageId: 'storage-a' });
     convex.save.mockResolvedValue({ error: 'The uploaded file was not found', ok: false });
-    const { result } = renderHook(() => useMediaUpload());
+    const { result } = await renderHook(() => useMediaUpload());
 
     await expect(act(() => result.current(pngFile))).resolves.toBeNull();
 
@@ -125,7 +129,7 @@ describe('useMediaUpload', () => {
 
   test('surfaces thrown upload URL failures', async () => {
     convex.generateUploadUrl.mockRejectedValue(new Error('Not signed in'));
-    const { result } = renderHook(() => useMediaUpload());
+    const { result } = await renderHook(() => useMediaUpload());
 
     await expect(act(() => result.current(pngFile))).resolves.toBeNull();
 

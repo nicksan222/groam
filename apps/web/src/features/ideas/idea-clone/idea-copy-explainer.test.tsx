@@ -1,16 +1,15 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { IdeaCopyExplainer } from './idea-copy-explainer';
 
-afterEach(cleanup);
+test('shows the shared trip and the private idea it creates', async () => {
+  await render(<IdeaCopyExplainer originalName="Atlantic week" />);
 
-test('shows the shared trip and the private idea it creates', () => {
-  render(<IdeaCopyExplainer originalName="Atlantic week" />);
-
-  expect(screen.getByLabelText('How an idea works')).toBeTruthy();
-  expect(screen.getByText('Atlantic week')).toBeTruthy();
-  expect(screen.getByText('Everyone sees this')).toBeTruthy();
-  expect(screen.getByText('Your idea')).toBeTruthy();
-  expect(screen.getByText('Edit here')).toBeTruthy();
-  expect(screen.getByText('New idea')).toBeTruthy();
+  await expect.element(page.getByLabelText('How an idea works')).toBeInTheDocument();
+  await expect.element(page.getByText('Atlantic week')).toBeInTheDocument();
+  await expect.element(page.getByText('Everyone sees this')).toBeInTheDocument();
+  await expect.element(page.getByText('Your idea')).toBeInTheDocument();
+  await expect.element(page.getByText('Edit here')).toBeInTheDocument();
+  await expect.element(page.getByText('New idea')).toBeInTheDocument();
 });

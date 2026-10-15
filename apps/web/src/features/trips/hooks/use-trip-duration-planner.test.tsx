@@ -1,11 +1,11 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { describe, expect, test, vi } from 'vite-plus/test';
 import { useTripDurationPlanner } from './use-trip-duration-planner';
 
 describe('useTripDurationPlanner', () => {
   test('tracks validity and skips save when unchanged', async () => {
     const onSave = vi.fn().mockResolvedValue(true);
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useTripDurationPlanner({
         minimumDays: 2,
         onSave,
@@ -28,7 +28,7 @@ describe('useTripDurationPlanner', () => {
 
   test('saves when the range changes and closes the field after a full range', async () => {
     const onSave = vi.fn().mockResolvedValue(true);
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useTripDurationPlanner({
         minimumDays: 2,
         onSave,
@@ -37,7 +37,7 @@ describe('useTripDurationPlanner', () => {
       })
     );
 
-    act(() => {
+    await act(() => {
       result.current.setOpenField('start');
       result.current.selectRange({
         from: new Date('2026-07-01T00:00:00'),

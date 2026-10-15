@@ -44,19 +44,19 @@ jobs:
       - name: Setup workspace
         uses: ./.github/actions/setup-workspace
 
-      - name: 📐 Format
+      - name: Format
         run: bun run format:check
 
-      - name: 🔍 Lint
+      - name: Lint
         run: bun run lint
 
-      - name: 🛡️ Audit dependencies
+      - name: Audit dependencies
         run: bun run audit
 
-      - name: 🩺 React Doctor
+      - name: React Doctor
         run: bun run react-doctor
 
-      - name: 🪦 Dead code
+      - name: Dead code
         run: bun run fallow
 
   typecheck:
@@ -74,7 +74,7 @@ jobs:
       - name: Setup workspace
         uses: ./.github/actions/setup-workspace
 
-      - name: 🔷 Typecheck
+      - name: Typecheck
         run: bun run typecheck
 
   unit:
@@ -92,19 +92,22 @@ jobs:
       - name: Setup workspace
         uses: ./.github/actions/setup-workspace
 
-      - name: 🧪 Unit tests
+      - name: Setup Chromium
+        uses: ./.github/actions/setup-chromium
+      - name: Unit tests
         run: bun run test
 
-  browser:
-    name: 🎭 Browser
+      - name: Showcase recording
+        run: bun run --cwd tooling/showcase test:browser
+
+  journeys:
+    name: 🎭 Journeys
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
       CI: 'true'
       CONVEX_AGENT_MODE: anonymous
-      # WebAuthn rejects IP addresses as relying-party domains. Keep the local
-      # static site on the same loopback service, but address it by hostname.
-      PLAYWRIGHT_BASE_URL: http://localhost:3211
+      STATIC_SITE_URL: http://localhost:3211
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -114,19 +117,8 @@ jobs:
       - name: Setup workspace
         uses: ./.github/actions/setup-workspace
 
-      - name: Cache Playwright browsers
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-          restore-keys: |
-            playwright-${{ runner.os }}-
-
-      - name: Install Playwright browser
-        run: bun run test:e2e:install --with-deps
-
-      - name: 🎬 Showcase recording
-        run: bun run --cwd tooling/showcase test:browser
+      - name: Setup Chromium
+        uses: ./.github/actions/setup-chromium
 
       - name: Start local Convex backend
         shell: bash
@@ -140,9 +132,8 @@ jobs:
             done
           '
           bunx convex env set BETTER_AUTH_SECRET "ci-only-better-auth-secret-not-for-production"
-          bunx convex env set SITE_URL "$PLAYWRIGHT_BASE_URL/"
 
-      - name: ⚙️ Verify generated code
+      - name: Verify generated code
         run: |
           bun run codegen
           git diff --exit-code
@@ -150,18 +141,19 @@ jobs:
       - name: Run pending migrations
         run: bun run migrations:run
 
+      - name: Journeys
+        run: bun run test:journeys
+
+      # The production build: published to the local static host and smoke-tested.
       - name: Publish local static sites
         run: bun run hosting:upload:web
 
       - name: Verify static routes
         shell: bash
         run: |
-          curl --fail --show-error --silent "$PLAYWRIGHT_BASE_URL/" >/dev/null
-          curl --fail --show-error --silent "$PLAYWRIGHT_BASE_URL/settings" >/dev/null
-          test "$(curl --output /dev/null --silent --write-out '%{http_code}' "$PLAYWRIGHT_BASE_URL/missing.js")" = "404"
-
-      - name: 🎭 Browser tests
-        run: bun run test:e2e
+          curl --fail --show-error --silent "$STATIC_SITE_URL/" >/dev/null
+          curl --fail --show-error --silent "$STATIC_SITE_URL/settings" >/dev/null
+          test "$(curl --output /dev/null --silent --write-out '%{http_code}' "$STATIC_SITE_URL/missing.js")" = "404"
 
       - name: Upload failure artifacts
         if: failure()
@@ -172,8 +164,7 @@ jobs:
           retention-days: 7
           path: |
             /tmp/convex.log
-            apps/web/playwright-report/
-            apps/web/test-results/
+            apps/web/.vitest/
 
       - name: Stop local Convex backend
         if: always()

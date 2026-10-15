@@ -1,6 +1,7 @@
 import type { UIMessage } from '@convex-dev/agent/react';
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { assistantContextMessage } from '#ai/agents';
 import { SystemMessage } from './system-message';
 
@@ -8,9 +9,8 @@ vi.mock('@convex-dev/agent/react', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@convex-dev/agent/react')>()),
   useSmoothText: (text: string) => [text]
 }));
-afterEach(cleanup);
 
-test('renders a durable context marker', () => {
+test('renders a durable context marker', async () => {
   const text = assistantContextMessage({
     agent: 'groam',
     key: 'trip:1',
@@ -29,6 +29,8 @@ test('renders a durable context marker', () => {
     stepOrder: 0,
     text
   };
-  render(<SystemMessage disabled={false} message={message} />);
-  expect(screen.getByRole('note').getAttribute('aria-label')).toContain('Context: Portugal');
+  await render(<SystemMessage disabled={false} message={message} />);
+  expect(page.getByRole('note').element().getAttribute('aria-label')).toContain(
+    'Context: Portugal'
+  );
 });

@@ -141,6 +141,7 @@ export function TripInformationFields({
             </FormField>
             <FormField label="Total group budget">
               <Input
+                data-testid={testIds.createTripBudget}
                 disabled={disabled}
                 min={1}
                 onChange={(event) => setValue('budget', event.target.value)}

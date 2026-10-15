@@ -18,9 +18,11 @@
   },
   "exports": {
     "./backend": "./src/backend/index.ts",
-    "./ids": "./src/playwright/ids.ts",
+    "./ids": "./src/testing/ids.ts",
     "./playwright": "./src/playwright/index.ts",
-    "./playwright/test": "./src/playwright/test.ts"
+    "./vitest": "./src/vitest/index.ts",
+    "./vitest/commands": "./src/vitest/commands.ts",
+    "./vitest/journey-backend": "./src/vitest/journey-backend.ts"
   },
   "imports": {
     "#src/*": "./src/*.ts"

@@ -1,9 +1,10 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import { expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { AssistantRecap } from './recap';
 
-test('renders a compact recap with verified highlights', () => {
-  render(
+test('renders a compact recap with verified highlights', async () => {
+  await render(
     <AssistantRecap
       emit={() => {}}
       on={() => ({ bound: false, emit: () => {}, shouldPreventDefault: false })}
@@ -16,7 +17,7 @@ test('renders a compact recap with verified highlights', () => {
     />
   );
 
-  expect(screen.getByText('Portugal recap')).toBeDefined();
-  expect(screen.getByText('3 stops planned')).toBeDefined();
-  expect(screen.getByText('2 decisions need approval')).toBeDefined();
+  await expect.element(page.getByText('Portugal recap')).toBeInTheDocument();
+  await expect.element(page.getByText('3 stops planned')).toBeInTheDocument();
+  await expect.element(page.getByText('2 decisions need approval')).toBeInTheDocument();
 });

@@ -1,5 +1,5 @@
 import { type Page, expect as playwrightExpect } from '@playwright/test';
-import { ids } from './ids';
+import { ids } from '#src/testing/ids';
 import { by, planTravel } from './locators';
 import { transferPdf } from './transfer-pdf';
 

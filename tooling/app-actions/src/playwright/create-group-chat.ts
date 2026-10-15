@@ -1,5 +1,5 @@
 import { type Page, expect as playwrightExpect } from '@playwright/test';
-import { ids } from './ids';
+import { ids } from '#src/testing/ids';
 import { type UiTarget, ui } from './interaction';
 import { by, chatMember, dialogSubmit } from './locators';
 import { openChatInbox } from './open-chat-inbox';

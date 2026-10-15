@@ -1,14 +1,13 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import { Sparkles } from 'lucide-react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { RemovableChip } from './removable-chip';
 
-afterEach(cleanup);
-
-test('renders a labeled chip and calls onRemove', () => {
+test('renders a labeled chip and calls onRemove', async () => {
   const onRemove = vi.fn();
 
-  render(
+  await render(
     <RemovableChip
       icon={Sparkles}
       label="@groam"
@@ -18,7 +17,7 @@ test('renders a labeled chip and calls onRemove', () => {
     />
   );
 
-  expect(screen.getByText('@groam')).toBeTruthy();
-  fireEvent.click(screen.getByRole('button', { name: 'Remove @groam' }));
+  await expect.element(page.getByText('@groam')).toBeInTheDocument();
+  await page.getByRole('button', { name: 'Remove @groam' }).click();
   expect(onRemove).toHaveBeenCalledTimes(1);
 });

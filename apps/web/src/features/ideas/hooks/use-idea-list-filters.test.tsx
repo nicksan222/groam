@@ -1,5 +1,5 @@
 import type { Id } from '@groam/backend/data-model';
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { describe, expect, test } from 'vite-plus/test';
 import { useIdeaListFilters } from './use-idea-list-filters';
 import type { WorkspaceIdea } from './use-workspace-ideas';
@@ -20,12 +20,12 @@ function idea(
 }
 
 describe('useIdeaListFilters', () => {
-  test('defaults to pending and filters drafts in', () => {
+  test('defaults to pending and filters drafts in', async () => {
     const proposals = [
       idea({ id: 'p1' as Id<'tripProposals'>, status: 'draft', title: 'Coast' }),
       idea({ id: 'p2' as Id<'tripProposals'>, status: 'merged', title: 'Done' })
     ];
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useIdeaListFilters({
         emptyFilterMessage: (filter) => `empty:${filter}`,
         proposals,
@@ -38,46 +38,46 @@ describe('useIdeaListFilters', () => {
     expect(result.current.empty).toBe('empty:pending');
   });
 
-  test('clearing status resets to the default filter', () => {
-    const { result } = renderHook(() =>
+  test('clearing status resets to the default filter', async () => {
+    const { result } = await renderHook(() =>
       useIdeaListFilters({
         emptyFilterMessage: () => 'none',
         proposals: []
       })
     );
 
-    act(() => {
+    await act(() => {
       result.current.setStatusFilter('all');
     });
     expect(result.current.hasExtraFilters).toBe(true);
 
-    act(() => {
+    await act(() => {
       result.current.clearStatusFilter();
     });
     expect(result.current.statusFilter).toBe('pending');
     expect(result.current.hasExtraFilters).toBe(false);
   });
 
-  test('filters by search query in the visible list', () => {
+  test('filters by search query in the visible list', async () => {
     const proposals = [
       idea({ id: 'p1' as Id<'tripProposals'>, status: 'draft', title: 'Coast day' }),
       idea({ id: 'p2' as Id<'tripProposals'>, status: 'draft', title: 'Museum morning' })
     ];
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useIdeaListFilters({
         emptyFilterMessage: () => 'none',
         proposals
       })
     );
 
-    act(() => {
+    await act(() => {
       result.current.setQuery('museum');
     });
     expect(result.current.visibleProposals.map((item) => item.id)).toEqual(['p2']);
   });
 
-  test('accepts an explicit all filter when proposals have not loaded', () => {
-    const { result } = renderHook(() =>
+  test('accepts an explicit all filter when proposals have not loaded', async () => {
+    const { result } = await renderHook(() =>
       useIdeaListFilters({
         defaultStatus: 'all',
         emptyFilterMessage: () => 'none',

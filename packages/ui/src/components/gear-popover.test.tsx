@@ -1,24 +1,21 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, expect, test } from 'vite-plus/test';
-import { stubPopoverEnvironment } from '#src/lib/stub-popover-environment';
+import { render } from '@groam/vitest-config/react';
+import { expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { GearPopover } from './gear-popover';
 import { PopoverDescription, PopoverHeader, PopoverTitle } from './popover';
 
-afterEach(cleanup);
-
-test('renders a gear trigger with an accessible label', () => {
-  render(
+test('renders a gear trigger with an accessible label', async () => {
+  await render(
     <GearPopover label="Issue settings">
       <p>Close issue</p>
     </GearPopover>
   );
 
-  expect(screen.getByRole('button', { name: 'Issue settings' })).toBeTruthy();
+  await expect.element(page.getByRole('button', { name: 'Issue settings' })).toBeInTheDocument();
 });
 
-test('caps popover height so a long assignee list can scroll under the header', () => {
-  stubPopoverEnvironment();
-  render(
+test('caps popover height so a long assignee list can scroll under the header', async () => {
+  await render(
     <GearPopover label="Edit assignees">
       <PopoverHeader>
         <PopoverTitle>Assignees</PopoverTitle>
@@ -29,7 +26,7 @@ test('caps popover height so a long assignee list can scroll under the header', 
     </GearPopover>
   );
 
-  fireEvent.click(screen.getByRole('button', { name: 'Edit assignees' }));
+  await page.getByRole('button', { name: 'Edit assignees' }).click();
   const content = document.querySelector('[data-slot="popover-content"]');
   const header = document.querySelector('[data-slot="popover-header"]');
 

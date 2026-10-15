@@ -1,6 +1,7 @@
 import type { Id } from '@groam/backend/data-model';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import {
   emptyActivityForm,
   type TripDestinationWithActivities
@@ -8,9 +9,7 @@ import {
 import type { TripActivityEditor } from '@/features/trips/hooks/use-trip-activity-editor';
 import { TripActivityFields } from './trip-activity-fields';
 
-afterEach(cleanup);
-
-test('explains an invalid cost instead of silently disabling the activity submit button', () => {
+test('explains an invalid cost instead of silently disabling the activity submit button', async () => {
   const editor = {
     ...emptyActivityForm({
       startDay: 1,
@@ -23,11 +22,11 @@ test('explains an invalid cost instead of silently disabling the activity submit
     patch: vi.fn(),
     tripStartDate: null
   } as unknown as TripActivityEditor;
-  render(<TripActivityFields editor={editor} idPrefix="activity" />);
-  expect(screen.getByText('Cost must be zero or more.')).toBeDefined();
+  await render(<TripActivityFields editor={editor} idPrefix="activity" />);
+  await expect.element(page.getByText('Cost must be zero or more.')).toBeInTheDocument();
 });
 
-test('keeps optional activity details collapsed for a quick inline add', () => {
+test('keeps optional activity details collapsed for a quick inline add', async () => {
   const editor = {
     ...emptyActivityForm({
       startDay: 2,
@@ -39,12 +38,15 @@ test('keeps optional activity details collapsed for a quick inline add', () => {
     patch: vi.fn(),
     tripStartDate: null
   } as unknown as TripActivityEditor;
-  render(<TripActivityFields compact editor={editor} idPrefix="activity" />);
+  await render(<TripActivityFields compact editor={editor} idPrefix="activity" />);
 
-  expect(screen.getByTestId('activity-title')).toBeDefined();
-  const disclosure = screen.getByText(/More options: dates/u).closest('details');
+  await expect.element(page.getByTestId('activity-title')).toBeInTheDocument();
+  const disclosure = page
+    .getByText(/More options: dates/u)
+    .element()
+    .closest('details');
   expect(disclosure?.open).toBe(false);
-  fireEvent.click(screen.getByText(/More options: dates/u));
+  await page.getByText(/More options: dates/u).click();
   expect(disclosure?.open).toBe(true);
-  expect(screen.getByText('Estimated cost for the group (EUR)')).toBeDefined();
+  await expect.element(page.getByText('Estimated cost for the group (EUR)')).toBeInTheDocument();
 });

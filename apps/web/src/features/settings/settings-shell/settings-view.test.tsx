@@ -1,5 +1,6 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import { afterEach, describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { SettingsView } from './settings-view';
 
 const testState = vi.hoisted(() => ({
@@ -69,7 +70,6 @@ vi.mock('@/features/settings/settings-panels/security-settings', () => ({
 }));
 
 afterEach(() => {
-  cleanup();
   testState.aiMounts = 0;
   testState.hideAi = false;
   testState.environmentConfigured = false;
@@ -82,53 +82,55 @@ afterEach(() => {
 });
 
 describe('SettingsView', () => {
-  test('keeps people management on the group settings section', () => {
-    render(<SettingsView activeSection="group" onSectionChange={vi.fn()} />);
-    expect(screen.getByTestId('invite-member')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'New group' })).toBeNull();
-    expect(screen.getByText('Group settings')).toBeTruthy();
-    expect(screen.getByText('People settings')).toBeTruthy();
+  test('keeps people management on the group settings section', async () => {
+    await render(<SettingsView activeSection="group" onSectionChange={vi.fn()} />);
+    await expect.element(page.getByTestId('invite-member')).toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'New group' })).not.toBeInTheDocument();
+    await expect.element(page.getByText('Group settings')).toBeInTheDocument();
+    await expect.element(page.getByText('People settings')).toBeInTheDocument();
   });
 
-  test('shows the AI section for every shell', () => {
-    render(<SettingsView activeSection="ai" onSectionChange={vi.fn()} />);
-    expect(screen.getByTestId('settings-section-ai')).toBeTruthy();
-    expect(screen.getByText('AI settings 1')).toBeTruthy();
+  test('shows the AI section for every shell', async () => {
+    await render(<SettingsView activeSection="ai" onSectionChange={vi.fn()} />);
+    await expect.element(page.getByTestId('settings-section-ai')).toBeInTheDocument();
+    await expect.element(page.getByText('AI settings 1')).toBeInTheDocument();
   });
 
-  test('hides hosted AI settings and redirects a direct AI section', () => {
+  test('hides hosted AI settings and redirects a direct AI section', async () => {
     testState.hideAi = true;
     testState.environmentConfigured = true;
     const onSectionChange = vi.fn();
-    render(<SettingsView activeSection="ai" onSectionChange={onSectionChange} />);
-    expect(screen.queryByTestId('settings-section-ai')).toBeNull();
-    expect(screen.queryByText(/AI settings/)).toBeNull();
+    await render(<SettingsView activeSection="ai" onSectionChange={onSectionChange} />);
+    await expect.element(page.getByTestId('settings-section-ai')).not.toBeInTheDocument();
+    await expect.element(page.getByText(/AI settings/)).not.toBeInTheDocument();
     expect(onSectionChange).toHaveBeenCalledWith('profile');
   });
 
-  test('keeps the AI tab hidden while showing progress for a direct AI section', () => {
+  test('keeps the AI tab hidden while showing progress for a direct AI section', async () => {
     testState.hideAi = true;
     testState.isAiAvailabilityLoading = true;
     const onSectionChange = vi.fn();
-    render(<SettingsView activeSection="ai" onSectionChange={onSectionChange} />);
-    expect(screen.queryByTestId('settings-section-ai')).toBeNull();
-    expect(screen.getByRole('status', { name: 'Loading AI settings…' })).toBeTruthy();
-    expect(screen.queryByText(/AI settings 1/)).toBeNull();
+    await render(<SettingsView activeSection="ai" onSectionChange={onSectionChange} />);
+    await expect.element(page.getByTestId('settings-section-ai')).not.toBeInTheDocument();
+    await expect
+      .element(page.getByRole('status', { name: 'Loading AI settings…' }))
+      .toBeInTheDocument();
+    await expect.element(page.getByText(/AI settings 1/)).not.toBeInTheDocument();
     expect(onSectionChange).not.toHaveBeenCalled();
   });
 
-  test('remounts AI settings when the active group changes', () => {
+  test('remounts AI settings when the active group changes', async () => {
     const onSectionChange = vi.fn();
-    const { rerender } = render(
+    const { rerender } = await render(
       <SettingsView activeSection="ai" onSectionChange={onSectionChange} />
     );
-    expect(screen.getByText('AI settings 1')).toBeTruthy();
+    await expect.element(page.getByText('AI settings 1')).toBeInTheDocument();
 
     testState.workspace = {
       ...testState.workspace,
       activeOrganization: { id: 'org-other', name: 'Other Group' }
     };
-    rerender(<SettingsView activeSection="ai" onSectionChange={onSectionChange} />);
-    expect(screen.getByText('AI settings 2')).toBeTruthy();
+    await rerender(<SettingsView activeSection="ai" onSectionChange={onSectionChange} />);
+    await expect.element(page.getByText('AI settings 2')).toBeInTheDocument();
   });
 });

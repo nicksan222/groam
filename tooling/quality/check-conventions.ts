@@ -133,13 +133,13 @@ if (missingActionRegistrations.length > 0) {
 const ambiguousActionImports = files.filter((file) => {
   if (!/\.[cm]?[jt]sx?$/u.test(file) || !existsSync(file)) return false;
   const source = readFileSync(file, 'utf8');
-  return /(?:from\s+|import\(\s*)['"]@groam\/app-actions(?:['"]|\/(?!backend(?:['"]|\/)|ids['"]|playwright(?:['"]|\/)))/u.test(
+  return /(?:from\s+|import\(\s*)['"]@groam\/app-actions(?:['"]|\/(?!backend(?:['"]|\/)|ids['"]|playwright(?:['"]|\/)|vitest(?:['"]|\/)))/u.test(
     source
   );
 });
 if (ambiguousActionImports.length > 0) {
   console.error(
-    `Import app actions through @groam/app-actions/backend, @groam/app-actions/ids, or @groam/app-actions/playwright:\n${ambiguousActionImports
+    `Import app actions through @groam/app-actions/backend, @groam/app-actions/ids, @groam/app-actions/playwright, or @groam/app-actions/vitest:\n${ambiguousActionImports
       .map((file) => `  - ${file}`)
       .join('\n')}`
   );

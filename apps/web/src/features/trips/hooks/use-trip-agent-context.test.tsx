@@ -1,7 +1,8 @@
 import { AgentContextProvider, useCurrentAgentContext } from '@groam/ai/ui/context/agent-context';
 import type { Id } from '@groam/backend/data-model';
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { tripScreenAgentContext, useTripAgentContext } from './use-trip-agent-context';
 import type { TripDetail } from './use-trips';
 
@@ -72,9 +73,7 @@ function Probe() {
   return <output aria-label="Trip agent context">{JSON.stringify(context)}</output>;
 }
 
-afterEach(cleanup);
-
-test('builds explicit screen data and capabilities for every trip section', () => {
+test('builds explicit screen data and capabilities for every trip section', async () => {
   const sections = ['activity', 'issues', 'itinerary', 'overview', 'ideas'] as const;
   for (const section of sections) {
     const context = tripScreenAgentContext(trip, section);
@@ -147,40 +146,40 @@ test('builds explicit screen data and capabilities for every trip section', () =
   });
 });
 
-test('forwards live trip section changes through the shared agent context hook', () => {
-  const view = render(
+test('forwards live trip section changes through the shared agent context hook', async () => {
+  const view = await render(
     <AgentContextProvider>
       <TripRegistration section="overview" />
       <Probe />
     </AgentContextProvider>
   );
-  expect(screen.getByRole('status', { name: 'Trip agent context' }).textContent).toContain(
+  expect(page.getByRole('status', { name: 'Trip agent context' }).element().textContent).toContain(
     'user-alex'
   );
 
-  view.rerender(
+  await view.rerender(
     <AgentContextProvider>
       <TripRegistration section="itinerary" />
       <Probe />
     </AgentContextProvider>
   );
-  expect(screen.getByRole('status', { name: 'Trip agent context' }).textContent).toContain(
+  expect(page.getByRole('status', { name: 'Trip agent context' }).element().textContent).toContain(
     'trip.activity.add'
   );
-  expect(screen.getByRole('status', { name: 'Trip agent context' }).textContent).not.toContain(
-    'user-alex'
-  );
+  expect(
+    page.getByRole('status', { name: 'Trip agent context' }).element().textContent
+  ).not.toContain('user-alex');
 
-  view.rerender(
+  await view.rerender(
     <AgentContextProvider>
       <TripRegistration section="ideas" />
       <Probe />
     </AgentContextProvider>
   );
-  expect(screen.getByRole('status', { name: 'Trip agent context' }).textContent).toContain(
+  expect(page.getByRole('status', { name: 'Trip agent context' }).element().textContent).toContain(
     'proposal-lisbon'
   );
-  expect(screen.getByRole('status', { name: 'Trip agent context' }).textContent).not.toContain(
-    'user-alex'
-  );
+  expect(
+    page.getByRole('status', { name: 'Trip agent context' }).element().textContent
+  ).not.toContain('user-alex');
 });

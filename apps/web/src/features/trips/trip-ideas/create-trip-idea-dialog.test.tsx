@@ -1,11 +1,10 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { CreateTripIdeaDialog } from '@/features/trips/trip-ideas/create-trip-idea-dialog';
 
-afterEach(cleanup);
-
-test('explains that starting an idea creates private work from the shared trip', () => {
-  render(
+test('explains that starting an idea creates private work from the shared trip', async () => {
+  await render(
     <CreateTripIdeaDialog
       isCreating={false}
       onCreate={vi.fn()}
@@ -15,51 +14,53 @@ test('explains that starting an idea creates private work from the shared trip',
     />
   );
 
-  expect(screen.getByRole('heading', { name: 'New idea' })).toBeTruthy();
-  expect(screen.getByText(/idea from the shared trip/u)).toBeTruthy();
-  expect(screen.getByText(/reviewed and applied/u)).toBeTruthy();
-  expect(screen.getByText('Atlantic week')).toBeTruthy();
-  expect(screen.getByText('Everyone sees this')).toBeTruthy();
-  expect(screen.getByText('Edit here')).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Create idea' })).toBeTruthy();
+  await expect.element(page.getByRole('heading', { name: 'New idea' })).toBeInTheDocument();
+  await expect.element(page.getByText(/idea from the shared trip/u)).toBeInTheDocument();
+  await expect.element(page.getByText(/reviewed and applied/u)).toBeInTheDocument();
+  await expect.element(page.getByText('Atlantic week')).toBeInTheDocument();
+  await expect.element(page.getByText('Everyone sees this')).toBeInTheDocument();
+  await expect.element(page.getByText('Edit here')).toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Create idea' })).toBeInTheDocument();
 });
 
 test('submits an optional custom idea name', async () => {
   const onCreate = vi.fn().mockResolvedValue(undefined);
-  render(
+  await render(
     <CreateTripIdeaDialog isCreating={false} onCreate={onCreate} onOpenChange={vi.fn()} open />
   );
 
-  fireEvent.change(screen.getByLabelText('What do you want to change?'), {
-    target: { value: '  Coastal route  ' }
-  });
-  fireEvent.click(screen.getByRole('button', { name: 'Create idea' }));
+  await page.getByLabelText('What do you want to change?').fill('  Coastal route  ');
+  await page.getByRole('button', { name: 'Create idea' }).click();
 
-  await waitFor(() => expect(onCreate).toHaveBeenCalledWith('Coastal route'));
+  await vi.waitFor(() => expect(onCreate).toHaveBeenCalledWith('Coastal route'));
 });
 
 test('requests an automatically generated name when left blank', async () => {
   const onCreate = vi.fn().mockResolvedValue(undefined);
-  render(
+  await render(
     <CreateTripIdeaDialog isCreating={false} onCreate={onCreate} onOpenChange={vi.fn()} open />
   );
 
-  fireEvent.click(screen.getByRole('button', { name: 'Create idea' }));
+  await page.getByRole('button', { name: 'Create idea' }).click();
 
-  await waitFor(() => expect(onCreate).toHaveBeenCalledWith(undefined));
+  await vi.waitFor(() => expect(onCreate).toHaveBeenCalledWith(undefined));
 });
 
-test('keeps the dialog open while an idea is being created', () => {
+test('keeps the dialog open while an idea is being created', async () => {
   const onOpenChange = vi.fn();
-  render(<CreateTripIdeaDialog isCreating onCreate={vi.fn()} onOpenChange={onOpenChange} open />);
+  await render(
+    <CreateTripIdeaDialog isCreating onCreate={vi.fn()} onOpenChange={onOpenChange} open />
+  );
 
-  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  await expect.element(page.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+  // Forced: a disabled control must ignore clicks, which is the behavior under test.
+  await page.getByRole('button', { name: 'Cancel' }).click({ force: true });
 
   expect(onOpenChange).not.toHaveBeenCalled();
 });
 
-test('does not mistake trips still loading for an empty group', () => {
-  render(
+test('does not mistake trips still loading for an empty group', async () => {
+  await render(
     <CreateTripIdeaDialog
       isCreating={false}
       onCreate={vi.fn()}
@@ -70,7 +71,7 @@ test('does not mistake trips still loading for an empty group', () => {
       tripsLoading
     />
   );
-  expect(screen.getByText('Loading trips…')).toBeTruthy();
-  expect(screen.queryByText('Start with a trip')).toBeNull();
-  expect(screen.getByRole('button', { name: 'Create idea' }).hasAttribute('disabled')).toBe(true);
+  await expect.element(page.getByText('Loading trips…')).toBeInTheDocument();
+  await expect.element(page.getByText('Start with a trip')).not.toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Create idea' })).toBeDisabled();
 });

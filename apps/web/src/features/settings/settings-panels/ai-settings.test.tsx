@@ -1,5 +1,6 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import { afterEach, describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { testIds } from '@/lib/test-ids';
 import { AiSettings } from './ai-settings';
 
@@ -40,7 +41,8 @@ const ai = vi.hoisted(() => ({
   updateDraft: vi.fn()
 }));
 
-vi.mock('@tanstack/react-router', () => ({
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
   Link: ({ children, to, ...props }: { children: import('react').ReactNode; to: string }) => (
     <a href={to} {...props}>
       {children}
@@ -52,7 +54,6 @@ vi.mock('@/features/settings/hooks/use-ai-settings', () => ({
 }));
 
 afterEach(() => {
-  cleanup();
   ai.canManageOrganization = true;
   ai.configured = false;
   ai.environmentConfigured = false;
@@ -75,39 +76,50 @@ afterEach(() => {
 });
 
 describe('AiSettings', () => {
-  test('explains that saved keys are personal and take priority', () => {
-    render(<AiSettings />);
-    expect(screen.getByText(/personal key follows your account/i)).toBeTruthy();
-    expect(screen.queryByTestId(testIds.settingsAiEnvironmentNotice)).toBeNull();
+  test('links to the background activity page', async () => {
+    await render(<AiSettings />);
+    await expect
+      .element(page.getByRole('link', { name: 'Background activity' }))
+      .toHaveAttribute('href', '/agents');
   });
 
-  test('shows an organization notice when a shared key is available', () => {
+  test('explains that saved keys are personal and take priority', async () => {
+    await render(<AiSettings />);
+    await expect.element(page.getByText(/personal key follows your account/i)).toBeInTheDocument();
+    await expect
+      .element(page.getByTestId(testIds.settingsAiEnvironmentNotice))
+      .not.toBeInTheDocument();
+  });
+
+  test('shows an organization notice when a shared key is available', async () => {
     ai.organizationConfigured = true;
     ai.effectiveProvider = 'openai';
     ai.effectiveSource = 'organization';
-    render(<AiSettings />);
-    expect(screen.getByTestId(testIds.settingsAiEnvironmentNotice).textContent).toMatch(
+    await render(<AiSettings />);
+    expect(page.getByTestId(testIds.settingsAiEnvironmentNotice).element().textContent).toMatch(
       /Organization connection available/i
     );
   });
 
-  test('clearly labels the shared organization connection', () => {
+  test('clearly labels the shared organization connection', async () => {
     ai.configured = true;
     ai.target = 'organization';
-    render(<AiSettings />);
-    expect(screen.getByText('Organization connection')).toBeTruthy();
-    expect(screen.getByText('Organization AI provider')).toBeTruthy();
-    expect(screen.getByText(/shared organization connection is ready/i)).toBeTruthy();
+    await render(<AiSettings />);
+    await expect.element(page.getByText('Organization connection')).toBeInTheDocument();
+    await expect.element(page.getByText('Organization AI provider')).toBeInTheDocument();
+    await expect
+      .element(page.getByText(/shared organization connection is ready/i))
+      .toBeInTheDocument();
   });
 
-  test('offers one-click OpenRouter connection when OpenRouter is selected', () => {
+  test('offers one-click OpenRouter connection when OpenRouter is selected', async () => {
     ai.provider = 'openrouter' as typeof ai.provider;
     ai.providerConnection = { connect: vi.fn(), label: 'Connect OpenRouter' };
-    render(<AiSettings />);
-    expect(screen.getByTestId(testIds.settingsAiConnectProvider)).toBeTruthy();
+    await render(<AiSettings />);
+    await expect.element(page.getByTestId(testIds.settingsAiConnectProvider)).toBeInTheDocument();
   });
 
-  test('asks for a base URL and hides web search for local hosts', () => {
+  test('asks for a base URL and hides web search for local hosts', async () => {
     ai.preset = {
       ...ai.preset,
       baseURL: 'http://127.0.0.1:11434/v1',
@@ -118,8 +130,8 @@ describe('AiSettings', () => {
     };
     ai.provider = 'compatible' as typeof ai.provider;
     ai.baseUrl = 'http://127.0.0.1:11434/v1';
-    render(<AiSettings />);
-    expect(screen.getByTestId(testIds.settingsAiBaseUrl)).toBeTruthy();
-    expect(screen.getByText(/Web search is off for this host/i)).toBeTruthy();
+    await render(<AiSettings />);
+    await expect.element(page.getByTestId(testIds.settingsAiBaseUrl)).toBeInTheDocument();
+    await expect.element(page.getByText(/Web search is off for this host/i)).toBeInTheDocument();
   });
 });

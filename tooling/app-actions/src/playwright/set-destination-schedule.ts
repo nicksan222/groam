@@ -1,5 +1,5 @@
 import { type Locator, expect as playwrightExpect } from '@playwright/test';
-import { ids } from './ids';
+import { ids } from '#src/testing/ids';
 
 const expect = playwrightExpect.configure({ timeout: 30_000 });
 

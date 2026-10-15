@@ -1,9 +1,8 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type { InvitationCode } from '@/types/invitation-codes';
 import { InvitationsSection } from './invitations-section';
-
-afterEach(cleanup);
 
 const codes = [
   {
@@ -15,23 +14,25 @@ const codes = [
   }
 ] as InvitationCode[];
 
-test('renders active codes and lets managers copy or revoke them', () => {
+test('renders active codes and lets managers copy or revoke them', async () => {
   const onCopy = vi.fn();
   const onRevoke = vi.fn();
-  render(<InvitationsSection codes={codes} onCopy={onCopy} onRevoke={onRevoke} pendingId={null} />);
+  await render(
+    <InvitationsSection codes={codes} onCopy={onCopy} onRevoke={onRevoke} pendingId={null} />
+  );
 
-  expect(screen.getByText('ABCD-EFGH-JKLM')).toBeTruthy();
-  expect(screen.getByText('member')).toBeTruthy();
-  expect(screen.getByLabelText('Search invitation codes')).toBeTruthy();
+  await expect.element(page.getByText('ABCD-EFGH-JKLM')).toBeInTheDocument();
+  await expect.element(page.getByText('member')).toBeInTheDocument();
+  await expect.element(page.getByLabelText('Search invitation codes')).toBeInTheDocument();
 
-  fireEvent.click(screen.getByRole('button', { name: 'Copy ABCD-EFGH-JKLM' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Revoke' }));
+  await page.getByRole('button', { name: 'Copy ABCD-EFGH-JKLM' }).click();
+  await page.getByRole('button', { name: 'Revoke' }).click();
   expect(onCopy).toHaveBeenCalledWith('ABCD-EFGH-JKLM');
   expect(onRevoke).toHaveBeenCalledWith('invitation-code-a');
 });
 
-test('disables revoke while the code is pending', () => {
-  render(
+test('disables revoke while the code is pending', async () => {
+  await render(
     <InvitationsSection
       codes={codes}
       onCopy={vi.fn()}
@@ -39,11 +40,11 @@ test('disables revoke while the code is pending', () => {
       pendingId={codes[0]!.id}
     />
   );
-  expect(screen.getByRole('button', { name: 'Revoke' })).toHaveProperty('disabled', true);
+  await expect.element(page.getByRole('button', { name: 'Revoke' })).toBeDisabled();
 });
 
-test('renders nothing when there are no active codes', () => {
-  const { container } = render(
+test('renders nothing when there are no active codes', async () => {
+  const { container } = await render(
     <InvitationsSection codes={[]} onCopy={vi.fn()} onRevoke={vi.fn()} pendingId={null} />
   );
   expect(container.innerHTML).toBe('');

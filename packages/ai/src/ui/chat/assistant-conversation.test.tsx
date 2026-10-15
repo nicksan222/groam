@@ -1,6 +1,7 @@
 import type { UIMessage } from '@convex-dev/agent/react';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { page, userEvent } from 'vite-plus/test/browser';
 import { assistantContextMessage } from '#ai/agents';
 import { AssistantConversation } from './assistant-conversation';
 
@@ -15,11 +16,10 @@ vi.mock('@convex-dev/agent/react', async (importOriginal) => ({
 }));
 
 afterEach(() => {
-  cleanup();
   smoothTextState.complete = true;
 });
 
-test('renders durable tool usage as chat activity', () => {
+test('renders durable tool usage as chat activity', async () => {
   const message = {
     _creationTime: 1,
     id: 'assistant-tool-1',
@@ -68,7 +68,7 @@ test('renders durable tool usage as chat activity', () => {
     text: 'I checked the screen.'
   } as unknown as UIMessage;
 
-  render(
+  await render(
     <AssistantConversation
       context={null}
       isOpening={false}
@@ -79,17 +79,19 @@ test('renders durable tool usage as chat activity', () => {
     />
   );
 
-  expect(screen.queryByText('Read screen context')).toBeNull();
-  expect(screen.getByText('Used propose thing')).toBeDefined();
-  expect(screen.getByText('Updated trip dates')).toBeDefined();
-  expect(screen.getByText('2027-01-01 – 2027-01-10')).toBeDefined();
-  expect(screen.getAllByText('Completed')).toHaveLength(2);
-  expect(screen.getByText('The result is recorded in this conversation.')).toBeDefined();
-  expect(screen.queryByText('@groam')).toBeNull();
-  expect(screen.getByRole('log').className).toContain('justify-end');
+  await expect.element(page.getByText('Read screen context')).not.toBeInTheDocument();
+  await expect.element(page.getByText('Used propose thing')).toBeInTheDocument();
+  await expect.element(page.getByText('Updated trip dates')).toBeInTheDocument();
+  await expect.element(page.getByText('2027-01-01 – 2027-01-10')).toBeInTheDocument();
+  expect(page.getByText('Completed').elements()).toHaveLength(2);
+  await expect
+    .element(page.getByText('The result is recorded in this conversation.'))
+    .toBeInTheDocument();
+  await expect.element(page.getByText('@groam')).not.toBeInTheDocument();
+  await expect.element(page.getByRole('log')).toHaveClass('justify-end');
 });
 
-test('shows tappable choices requested by an agent', () => {
+test('shows tappable choices requested by an agent', async () => {
   const onReply = vi.fn().mockResolvedValue(true);
   const message = {
     _creationTime: 1,
@@ -111,7 +113,7 @@ test('shows tappable choices requested by an agent', () => {
     text: 'Pick a time.'
   } as unknown as UIMessage;
 
-  render(
+  await render(
     <AssistantConversation
       context={null}
       isOpening={false}
@@ -123,11 +125,11 @@ test('shows tappable choices requested by an agent', () => {
     />
   );
 
-  fireEvent.click(screen.getByRole('button', { name: 'Morning' }));
+  await page.getByRole('button', { name: 'Morning' }).click();
   expect(onReply).toHaveBeenCalledWith('What time works best?\nMy choice: Morning');
 });
 
-test('keeps a submitted choice as a complete selected form instead of echoing its raw prompt', () => {
+test('keeps a submitted choice as a complete selected form instead of echoing its raw prompt', async () => {
   const question = 'Should I apply the reworked Lisbon itinerary?';
   const options = ['Yes — apply it', 'No — keep the current itinerary', 'Show hotels first'];
   const assistant = {
@@ -162,7 +164,7 @@ test('keeps a submitted choice as a complete selected form instead of echoing it
     text: responseText
   } as unknown as UIMessage;
 
-  render(
+  await render(
     <AssistantConversation
       context={null}
       isOpening={false}
@@ -174,11 +176,11 @@ test('keeps a submitted choice as a complete selected form instead of echoing it
     />
   );
 
-  expect(screen.getByRole('button', { name: options[0] }).getAttribute('aria-pressed')).toBe(
-    'true'
-  );
-  expect(screen.getByRole('button', { name: options[1] })).toBeDefined();
-  expect(screen.queryByText(`My choice: ${options[0]}`)).toBeNull();
+  await expect
+    .element(page.getByRole('button', { name: options[0] }))
+    .toHaveAttribute('aria-pressed', 'true');
+  await expect.element(page.getByRole('button', { name: options[1] })).toBeInTheDocument();
+  await expect.element(page.getByText(`My choice: ${options[0]}`)).not.toBeInTheDocument();
 });
 
 test('offers a multiline custom answer as the fourth choice', async () => {
@@ -205,7 +207,7 @@ test('offers a multiline custom answer as the fourth choice', async () => {
     text: 'Pick an area.'
   } as unknown as UIMessage;
 
-  render(
+  await render(
     <AssistantConversation
       context={null}
       isOpening={false}
@@ -217,23 +219,21 @@ test('offers a multiline custom answer as the fourth choice', async () => {
     />
   );
 
-  expect(screen.queryByRole('button', { name: 'Itinerary' })).toBeNull();
-  const customAnswer = screen.getByRole('textbox', { name: 'Custom answer' });
+  await expect.element(page.getByRole('button', { name: 'Itinerary' })).not.toBeInTheDocument();
+  const customAnswer = page.getByRole('textbox', { name: 'Custom answer' }).element();
   expect(customAnswer.tagName).toBe('TEXTAREA');
   expect(customAnswer.getAttribute('rows')).toBe('2');
-  fireEvent.change(customAnswer, {
-    target: { value: 'Check whether every reservation has a confirmation number.' }
-  });
-  fireEvent.click(screen.getByRole('button', { name: 'Send custom answer' }));
+  await userEvent.fill(customAnswer, 'Check whether every reservation has a confirmation number.');
+  await page.getByRole('button', { name: 'Send custom answer' }).click();
 
-  await waitFor(() =>
+  await vi.waitFor(() =>
     expect(onReply).toHaveBeenCalledWith(
       'What do you want me to check?\nMy choice: Check whether every reservation has a confirmation number.'
     )
   );
 });
 
-test('waits for preceding response text before showing a choice', () => {
+test('waits for preceding response text before showing a choice', async () => {
   const text = 'I asked which area to check — please pick one of the options above.';
   const message = {
     _creationTime: 1,
@@ -259,7 +259,7 @@ test('waits for preceding response text before showing a choice', () => {
   } as unknown as UIMessage;
   smoothTextState.complete = false;
 
-  const view = render(
+  const view = await render(
     <AssistantConversation
       context={null}
       isOpening={false}
@@ -271,10 +271,10 @@ test('waits for preceding response text before showing a choice', () => {
     />
   );
 
-  expect(screen.queryByText('What do you want me to check?')).toBeNull();
+  await expect.element(page.getByText('What do you want me to check?')).not.toBeInTheDocument();
 
   message.status = 'success';
-  view.rerender(
+  await view.rerender(
     <AssistantConversation
       context={null}
       isOpening={false}
@@ -285,10 +285,10 @@ test('waits for preceding response text before showing a choice', () => {
       status="Exhausted"
     />
   );
-  expect(screen.queryByText('What do you want me to check?')).toBeNull();
+  await expect.element(page.getByText('What do you want me to check?')).not.toBeInTheDocument();
 
   smoothTextState.complete = true;
-  view.rerender(
+  await view.rerender(
     <AssistantConversation
       context={null}
       isOpening={false}
@@ -299,10 +299,10 @@ test('waits for preceding response text before showing a choice', () => {
       status="Exhausted"
     />
   );
-  expect(screen.getByText('What do you want me to check?')).toBeDefined();
+  await expect.element(page.getByText('What do you want me to check?')).toBeInTheDocument();
 });
 
-test('wraps long choice text within the chat panel', () => {
+test('wraps long choice text within the chat panel', async () => {
   const longOption = `Keep ${'SplitAndMontréal'.repeat(20)} with detailed travel-day planning`;
   const message = {
     _creationTime: 1,
@@ -330,7 +330,7 @@ test('wraps long choice text within the chat panel', () => {
     text: 'Choose a route.'
   } as unknown as UIMessage;
 
-  render(
+  await render(
     <AssistantConversation
       context={null}
       isOpening={false}
@@ -342,13 +342,13 @@ test('wraps long choice text within the chat panel', () => {
     />
   );
 
-  expect(screen.getByRole('button', { name: longOption }).className).toContain('min-w-0');
-  expect(screen.getByRole('button', { name: longOption }).className).toContain('w-full');
-  expect(screen.getByText(longOption).className).toContain('[overflow-wrap:anywhere]');
+  await expect.element(page.getByRole('button', { name: longOption })).toHaveClass('min-w-0');
+  await expect.element(page.getByRole('button', { name: longOption })).toHaveClass('w-full');
+  await expect.element(page.getByText(longOption)).toHaveClass('[overflow-wrap:anywhere]');
 });
 
-test('shows a simple conversation preview while messages load', () => {
-  render(
+test('shows a simple conversation preview while messages load', async () => {
+  await render(
     <AssistantConversation
       context={null}
       isOpening={false}
@@ -359,12 +359,12 @@ test('shows a simple conversation preview while messages load', () => {
     />
   );
 
-  expect(screen.getByRole('status', { name: 'Loading messages' })).toBeDefined();
-  expect(screen.getByText('Bringing the conversation into view…')).toBeDefined();
+  await expect.element(page.getByRole('status', { name: 'Loading messages' })).toBeInTheDocument();
+  await expect.element(page.getByText('Bringing the conversation into view…')).toBeInTheDocument();
 });
 
-test('shows a polished activity state while the agent prepares a response', () => {
-  render(
+test('shows a polished activity state while the agent prepares a response', async () => {
+  await render(
     <AssistantConversation
       context={null}
       isOpening={false}
@@ -375,9 +375,11 @@ test('shows a polished activity state while the agent prepares a response', () =
     />
   );
 
-  expect(screen.getByText('Thinking…')).toBeDefined();
-  expect(screen.getByText('Reading the context and choosing the next step')).toBeDefined();
-  expect(screen.queryByText('...')).toBeNull();
+  await expect.element(page.getByText('Thinking…')).toBeInTheDocument();
+  await expect
+    .element(page.getByText('Reading the context and choosing the next step'))
+    .toBeInTheDocument();
+  await expect.element(page.getByText('...')).not.toBeInTheDocument();
 });
 
 test('renders and submits a generated json-render form', async () => {
@@ -417,7 +419,7 @@ test('renders and submits a generated json-render form', async () => {
     text
   } as unknown as UIMessage;
 
-  render(
+  await render(
     <AssistantConversation
       context={null}
       isOpening={false}
@@ -429,19 +431,19 @@ test('renders and submits a generated json-render form', async () => {
     />
   );
 
-  expect(await screen.findByText('Trip preferences', {}, { timeout: 3_000 })).toBeDefined();
-  expect(screen.queryByText(/\{"op":"add"/u)).toBeNull();
-  expect(screen.queryByText('Which pace should we use?')).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: 'Send preferences' }));
-  await waitFor(() =>
+  expect(await page.getByText('Trip preferences').findElement({ timeout: 3_000 })).toBeDefined();
+  await expect.element(page.getByText(/\{"op":"add"/u)).not.toBeInTheDocument();
+  await expect.element(page.getByText('Which pace should we use?')).not.toBeInTheDocument();
+  await page.getByRole('button', { name: 'Send preferences' }).click();
+  await vi.waitFor(() =>
     expect(onReply).toHaveBeenCalledWith(
       'Here are my form responses:\n{\n  "pace": "Balanced",\n  "seat": "Window"\n}'
     )
   );
-  expect(screen.getByText('Answers saved in this AI chat')).toBeDefined();
+  await expect.element(page.getByText('Answers saved in this AI chat')).toBeInTheDocument();
 });
 
-test('keeps a submitted generated form in the conversation instead of collapsing it into a response bubble', () => {
+test('keeps a submitted generated form in the conversation instead of collapsing it into a response bubble', async () => {
   const formText = `Choose a pace.\n\n\`\`\`spec
 {"op":"add","path":"/root","value":"form"}
 {"op":"add","path":"/elements/form","value":{"type":"Card","props":{"title":"Trip preferences","description":"Choose what works best"},"children":["summary"]}}
@@ -471,7 +473,7 @@ test('keeps a submitted generated form in the conversation instead of collapsing
     text: 'Here are my form responses:\n{\n  "pace": "Fast"\n}'
   } as unknown as UIMessage;
 
-  render(
+  await render(
     <AssistantConversation
       context={null}
       isOpening={false}
@@ -483,14 +485,14 @@ test('keeps a submitted generated form in the conversation instead of collapsing
     />
   );
 
-  expect(screen.getByText('Trip preferences')).toBeDefined();
-  expect(screen.getByText('Answers saved in this AI chat')).toBeDefined();
-  expect(screen.queryByText('Here are my form responses:')).toBeNull();
+  await expect.element(page.getByText('Trip preferences')).toBeInTheDocument();
+  await expect.element(page.getByText('Answers saved in this AI chat')).toBeInTheDocument();
+  await expect.element(page.getByText('Here are my form responses:')).not.toBeInTheDocument();
 });
 
-test('offers concise screen-aware starting prompts', () => {
+test('offers concise screen-aware starting prompts', async () => {
   const onReply = vi.fn().mockResolvedValue(true);
-  render(
+  await render(
     <AssistantConversation
       context={{
         capabilities: ['trip.status.read'],
@@ -508,16 +510,12 @@ test('offers concise screen-aware starting prompts', () => {
     />
   );
 
-  fireEvent.click(screen.getByRole('button', { name: 'Check what still needs attention' }));
+  await page.getByRole('button', { name: 'Check what still needs attention' }).click();
   expect(onReply).toHaveBeenCalledWith('What still needs attention for this trip?');
 });
 
 test('shows optimistic send status, sources, and completed-response actions', async () => {
-  const writeText = vi.fn().mockResolvedValue(undefined);
-  Object.defineProperty(navigator, 'clipboard', {
-    configurable: true,
-    value: { writeText }
-  });
+  const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined);
   const userMessage = {
     _creationTime: 1,
     id: 'optimistic-user-1',
@@ -549,7 +547,7 @@ test('shows optimistic send status, sources, and completed-response actions', as
     text: 'Here is a useful guide.'
   } as UIMessage;
 
-  render(
+  await render(
     <AssistantConversation
       context={null}
       isOpening={false}
@@ -560,15 +558,18 @@ test('shows optimistic send status, sources, and completed-response actions', as
     />
   );
 
-  expect(screen.getByText('Sending…')).toBeDefined();
-  expect(screen.getByRole('link', { name: /Portugal Travel Guide/u }).getAttribute('href')).toBe(
-    'https://example.com/portugal'
-  );
-  fireEvent.click(screen.getByRole('button', { name: 'Copy AI response' }));
-  await waitFor(() => expect(writeText).toHaveBeenCalledWith('Here is a useful guide.'));
+  await expect.element(page.getByText('Sending…')).toBeInTheDocument();
+  expect(
+    page
+      .getByRole('link', { name: /Portugal Travel Guide/u })
+      .element()
+      .getAttribute('href')
+  ).toBe('https://example.com/portugal');
+  await page.getByRole('button', { name: 'Copy AI response' }).click();
+  await vi.waitFor(() => expect(writeText).toHaveBeenCalledWith('Here is a useful guide.'));
 });
 
-test('shows failed responses without exposing internal system messages', () => {
+test('shows failed responses without exposing internal system messages', async () => {
   const onResend = vi.fn().mockResolvedValue(true);
   const message = {
     _creationTime: 1,
@@ -596,7 +597,7 @@ test('shows failed responses without exposing internal system messages', () => {
     text: 'Private system instruction'
   } as UIMessage;
 
-  render(
+  await render(
     <AssistantConversation
       context={null}
       isOpening={false}
@@ -608,15 +609,15 @@ test('shows failed responses without exposing internal system messages', () => {
     />
   );
 
-  expect(screen.getByRole('alert').textContent).toContain(
+  expect(page.getByRole('alert').element().textContent).toContain(
     'Groam AI could not complete that reply. Try again in a moment.'
   );
-  fireEvent.click(screen.getAllByRole('button', { name: 'Resend message' })[1]!);
+  await userEvent.click(page.getByRole('button', { name: 'Resend message' }).elements()[1]!);
   expect(onResend).toHaveBeenCalledWith(userMessage);
-  expect(screen.queryByText('Private system instruction')).toBeNull();
+  await expect.element(page.getByText('Private system instruction')).not.toBeInTheDocument();
 });
 
-test('shows the durable screen context recorded before a message', () => {
+test('shows the durable screen context recorded before a message', async () => {
   const text = assistantContextMessage({
     agent: 'groam',
     key: 'trip:trip-1:decisions',
@@ -636,7 +637,7 @@ test('shows the durable screen context recorded before a message', () => {
     text
   };
 
-  render(
+  await render(
     <AssistantConversation
       context={null}
       isOpening={false}
@@ -647,10 +648,12 @@ test('shows the durable screen context recorded before a message', () => {
     />
   );
 
-  const marker = screen.getByRole('note', {
-    name: 'Context: Portugal · Decisions, @groam, tagged Portugal'
-  });
-  expect(screen.getAllByRole('note')).toHaveLength(1);
+  const marker = page
+    .getByRole('note', {
+      name: 'Context: Portugal · Decisions, @groam, tagged Portugal'
+    })
+    .element();
+  expect(page.getByRole('note').elements()).toHaveLength(1);
   expect(marker.textContent).toContain('Portugal · Decisions · Portugal');
-  expect(screen.getByText('@groam')).toBeDefined();
+  await expect.element(page.getByText('@groam')).toBeInTheDocument();
 });

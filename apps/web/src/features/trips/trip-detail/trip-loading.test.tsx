@@ -1,15 +1,14 @@
 import { PageCrumbNav } from '@groam/ui/components/page-crumb-nav';
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { TripOverview } from '@/features/trips/trip-overview/trip-overview';
 import { TripPageHero } from './trip-page-hero';
 import { TripPageShell } from './trip-page-shell';
 import { TripSectionNav } from './trip-section-nav';
 
-afterEach(cleanup);
-
-test('trip notice sits below the header and tab navigation', () => {
-  const { container } = render(
+test('trip notice sits below the header and tab navigation', async () => {
+  const { container } = await render(
     <TripPageShell
       banner={<div data-testid="trip-notice">Notice</div>}
       body={<div>Trip content</div>}
@@ -21,13 +20,13 @@ test('trip notice sits below the header and tab navigation', () => {
 
   const content = container.querySelector('[data-slot="shell-content"]');
   const header = content?.querySelector('header');
-  const notice = screen.getByTestId('trip-notice');
+  const notice = page.getByTestId('trip-notice').element();
   expect(header?.contains(notice)).toBe(false);
   expect(notice.previousElementSibling?.textContent).toBe('Trip sections');
 });
 
-test('trip page uses one shared loading surface without rendering its unknown content', () => {
-  const { container } = render(
+test('trip page uses one shared loading surface without rendering its unknown content', async () => {
+  const { container } = await render(
     <TripPageShell
       body={<TripOverview isLoading />}
       crumb={
@@ -39,8 +38,10 @@ test('trip page uses one shared loading surface without rendering its unknown co
     />
   );
 
-  expect(screen.getByRole('status', { name: 'Loading trip…' })).toBeTruthy();
+  await expect.element(page.getByRole('status', { name: 'Loading trip…' })).toBeInTheDocument();
   expect(container.querySelectorAll('[data-slot="page-loading"]')).toHaveLength(1);
   expect(container.querySelector('[data-slot="skeleton"]')).toBeNull();
-  expect(screen.queryByRole('navigation', { name: 'Trip sections' })).toBeNull();
+  await expect
+    .element(page.getByRole('navigation', { name: 'Trip sections' }))
+    .not.toBeInTheDocument();
 });

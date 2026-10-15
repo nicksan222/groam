@@ -1,12 +1,11 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type {
   IdeaRebaseConflict,
   IdeaRebaseResult
 } from '@/features/trips/hooks/use-idea-rebase-reconciliation';
 import { IdeaRebaseReconciliation } from '@/features/trips/trip-ideas/idea-rebase-reconciliation';
-
-afterEach(cleanup);
 
 const conflicts: IdeaRebaseConflict[] = [
   {
@@ -29,7 +28,7 @@ const conflicts: IdeaRebaseConflict[] = [
   }
 ];
 
-function renderRebase({
+async function renderRebase({
   canRebase = true,
   onRebase,
   sourceChanged = true,
@@ -52,59 +51,63 @@ function renderRebase({
   );
 }
 
-test('shows a compact entry without a tinted wash when the shared trip moved', () => {
-  renderRebase({
+test('shows a compact entry without a tinted wash when the shared trip moved', async () => {
+  await renderRebase({
     onRebase: vi.fn().mockResolvedValue({ kind: 'applied' })
   });
 
-  expect(screen.getByText('The shared trip has changed since you started')).toBeTruthy();
-  const button = screen.getByRole('button', { name: 'Update from shared trip' });
-  expect(button).toBeTruthy();
-  expect(button).toHaveProperty('disabled', false);
-  expect(
-    screen.queryByText('Only the idea author or a group organizer can update this idea.')
-  ).toBeNull();
-  expect(button.className).not.toMatch(/bg-amber|bg-chart-4|bg-destructive/);
-  expect(button.closest('section')?.className).not.toMatch(
+  await expect
+    .element(page.getByText('The shared trip has changed since you started'))
+    .toBeInTheDocument();
+  const button = page.getByRole('button', { name: 'Update from shared trip' });
+  await expect.element(button).toBeEnabled();
+  await expect
+    .element(page.getByText('Only the idea author or a group organizer can update this idea.'))
+    .not.toBeInTheDocument();
+  expect(button.element().className).not.toMatch(/bg-amber|bg-chart-4|bg-destructive/);
+  expect(button.element().closest('section')?.className).not.toMatch(
     /bg-amber|bg-destructive\/5|bg-primary\/5/
   );
 });
 
-test('disables update for viewers who cannot change the idea', () => {
-  renderRebase({
+test('disables update for viewers who cannot change the idea', async () => {
+  await renderRebase({
     canRebase: false,
     onRebase: vi.fn()
   });
 
-  expect(screen.getByRole('button', { name: 'Update from shared trip' })).toHaveProperty(
-    'disabled',
-    true
-  );
-  expect(
-    screen.getByText('Only the idea author or a group organizer can update this idea.')
-  ).toBeTruthy();
+  await expect
+    .element(page.getByRole('button', { name: 'Update from shared trip' }))
+    .toBeDisabled();
+  await expect
+    .element(page.getByText('Only the idea author or a group organizer can update this idea.'))
+    .toBeInTheDocument();
 });
 
-test('uses a primary action when the idea already conflicts', () => {
-  renderRebase({
+test('uses a primary action when the idea already conflicts', async () => {
+  await renderRebase({
     onRebase: vi.fn(),
     sourceChanged: false,
     status: 'conflicted'
   });
 
-  expect(screen.getByText('The shared trip has changed since you started')).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Update from shared trip' })).toBeTruthy();
+  await expect
+    .element(page.getByText('The shared trip has changed since you started'))
+    .toBeInTheDocument();
+  await expect
+    .element(page.getByRole('button', { name: 'Update from shared trip' }))
+    .toBeInTheDocument();
 });
 
 test('fast-forwards without opening the screen when nothing remains to choose', async () => {
   const onRebase = vi.fn().mockResolvedValue({ kind: 'applied' });
-  renderRebase({ onRebase });
+  await renderRebase({ onRebase });
 
-  fireEvent.click(screen.getByRole('button', { name: 'Update from shared trip' }));
-  await waitFor(() => {
+  await page.getByRole('button', { name: 'Update from shared trip' }).click();
+  await vi.waitFor(() => {
     expect(onRebase).toHaveBeenCalledWith();
   });
-  expect(screen.queryByText('Update your idea')).toBeNull();
+  await expect.element(page.getByText('Update your idea')).not.toBeInTheDocument();
 });
 
 test('shows every overlap at once and applies keep-theirs then keep-yours', async () => {
@@ -112,39 +115,39 @@ test('shows every overlap at once and applies keep-theirs then keep-yours', asyn
     .fn()
     .mockResolvedValueOnce({ conflicts, kind: 'needs_choices' })
     .mockResolvedValueOnce({ kind: 'applied' });
-  renderRebase({ onRebase });
+  await renderRebase({ onRebase });
 
-  fireEvent.click(screen.getByRole('button', { name: 'Update from shared trip' }));
-  await waitFor(() => {
-    expect(screen.getByText('Choose what to keep')).toBeTruthy();
-  });
-  expect(screen.getByText('Trip details')).toBeTruthy();
-  expect(screen.getByText('Lisbon')).toBeTruthy();
+  await page.getByRole('button', { name: 'Update from shared trip' }).click();
+  await expect.element(page.getByText('Choose what to keep')).toBeInTheDocument();
+  await expect.element(page.getByText('Trip details')).toBeInTheDocument();
+  await expect.element(page.getByText('Lisbon')).toBeInTheDocument();
 
-  const takeTheirs = screen.getAllByRole('button', { name: 'Keep shared trip' });
-  const keepYours = screen.getAllByRole('button', { name: 'Keep my idea' });
-  fireEvent.click(takeTheirs[0]!);
-  fireEvent.click(keepYours[1]!);
-  fireEvent.click(screen.getByRole('button', { name: 'Update idea' }));
+  await page.getByRole('button', { name: 'Keep shared trip' }).first().click();
+  await page.getByRole('button', { name: 'Keep my idea' }).nth(1).click();
+  await page.getByRole('button', { name: 'Update idea' }).click();
 
-  await waitFor(() => {
+  await vi.waitFor(() => {
     expect(onRebase).toHaveBeenLastCalledWith([
       { choice: 'current', path: 'trip.json' },
       { choice: 'proposed', path: 'destinations/lisbon.json' }
     ]);
   });
-  await waitFor(() => {
-    expect(screen.getByRole('button', { name: 'Update from shared trip' })).toBeTruthy();
-  });
+  await expect
+    .element(page.getByRole('button', { name: 'Update from shared trip' }))
+    .toBeInTheDocument();
 });
 
-test('hides rebase when the shared trip has not moved and the idea is not conflicted', () => {
-  renderRebase({
+test('hides rebase when the shared trip has not moved and the idea is not conflicted', async () => {
+  await renderRebase({
     onRebase: vi.fn(),
     sourceChanged: false,
     status: 'in_review'
   });
 
-  expect(screen.queryByText('The shared trip has changed since you started')).toBeNull();
-  expect(screen.queryByRole('button', { name: 'Update from shared trip' })).toBeNull();
+  await expect
+    .element(page.getByText('The shared trip has changed since you started'))
+    .not.toBeInTheDocument();
+  await expect
+    .element(page.getByRole('button', { name: 'Update from shared trip' }))
+    .not.toBeInTheDocument();
 });

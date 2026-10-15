@@ -1,26 +1,25 @@
 import type { Id } from '@groam/backend/data-model';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import { afterEach, describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { IdeaCloneHeaderActions } from './idea-clone-header-actions';
 
 const navigate = vi.fn();
 
-vi.mock('@tanstack/react-router', () => ({
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
   useNavigate: () => navigate
 }));
-
-vi.mock('@groam/ui/components/dropdown-menu', async () => {
-  const { dropdownMenuTestMock } = await import('@/lib/test-mocks/dropdown-menu');
-  return dropdownMenuTestMock;
-});
 
 const proposalId = 'proposal-1' as Id<'tripProposals'>;
 const sharedTripId = 'trip-1' as Id<'trips'>;
 
-function renderActions(overrides: Partial<Parameters<typeof IdeaCloneHeaderActions>[0]> = {}) {
+async function renderActions(
+  overrides: Partial<Parameters<typeof IdeaCloneHeaderActions>[0]> = {}
+) {
   const onOpenShared = vi.fn();
   const onPrimary = vi.fn();
-  render(
+  await render(
     <IdeaCloneHeaderActions
       canEdit
       onEdit={vi.fn()}
@@ -38,54 +37,55 @@ function renderActions(overrides: Partial<Parameters<typeof IdeaCloneHeaderActio
 }
 
 afterEach(() => {
-  cleanup();
   navigate.mockClear();
 });
 
 describe('IdeaCloneHeaderActions', () => {
-  test('keeps the lifecycle action visible alongside editing and navigation', () => {
-    const { onPrimary } = renderActions();
+  test('keeps the lifecycle action visible alongside editing and navigation', async () => {
+    const { onPrimary } = await renderActions();
 
-    fireEvent.click(screen.getByTestId('idea-primary-action'));
+    await page.getByTestId('idea-primary-action').click();
     expect(onPrimary).toHaveBeenCalled();
-    expect(screen.getByTestId('trip-actions')).toBeTruthy();
+    await expect.element(page.getByTestId('trip-actions')).toBeInTheDocument();
   });
 
-  test('blocks the primary action while another one is running', () => {
-    const { onPrimary } = renderActions({ pending: true });
+  test('blocks the primary action while another one is running', async () => {
+    const { onPrimary } = await renderActions({ pending: true });
 
-    fireEvent.click(screen.getByTestId('idea-primary-action'));
+    await expect.element(page.getByTestId('idea-primary-action')).toBeDisabled();
+    // Forced: a disabled control must ignore clicks, which is the behavior under test.
+    await page.getByTestId('idea-primary-action').click({ force: true });
     expect(onPrimary).not.toHaveBeenCalled();
   });
 
-  test('drops the primary button when the idea has no next step', () => {
-    renderActions({ primary: null, status: 'closed' });
+  test('drops the primary button when the idea has no next step', async () => {
+    await renderActions({ primary: null, status: 'closed' });
 
-    expect(screen.queryByTestId('idea-primary-action')).toBeNull();
-    expect(screen.getByTestId('trip-actions')).toBeTruthy();
+    await expect.element(page.getByTestId('idea-primary-action')).not.toBeInTheDocument();
+    await expect.element(page.getByTestId('trip-actions')).toBeInTheDocument();
   });
 
-  test('keeps open-shared visible and open-changes in the overflow menu', () => {
-    const { onOpenShared } = renderActions();
+  test('keeps open-shared visible and open-changes in the overflow menu', async () => {
+    const { onOpenShared } = await renderActions();
 
-    fireEvent.click(screen.getByTestId('trip-actions'));
-    fireEvent.click(screen.getByText('Open changes'));
+    await page.getByTestId('trip-actions').click();
+    await page.getByText('Open changes').click();
     expect(navigate).toHaveBeenCalledWith(
       expect.objectContaining({
         params: { proposalId, tripId: sharedTripId, view: 'compare' }
       })
     );
 
-    fireEvent.click(screen.getByTestId('idea-open-shared'));
+    await page.getByTestId('idea-open-shared').click();
     expect(onOpenShared).toHaveBeenCalled();
   });
 
-  test('offers back-to-editing from compare instead of open-changes', () => {
-    renderActions({ view: 'compare' });
+  test('offers back-to-editing from compare instead of open-changes', async () => {
+    await renderActions({ view: 'compare' });
 
-    fireEvent.click(screen.getByTestId('trip-actions'));
-    expect(screen.queryByText('Open changes')).toBeNull();
-    fireEvent.click(screen.getByText('Back to editing'));
+    await page.getByTestId('trip-actions').click();
+    await expect.element(page.getByText('Open changes')).not.toBeInTheDocument();
+    await page.getByText('Back to editing').click();
     expect(navigate).toHaveBeenCalledWith(
       expect.objectContaining({
         params: { proposalId, tripId: sharedTripId, view: 'itinerary' }
@@ -94,16 +94,16 @@ describe('IdeaCloneHeaderActions', () => {
   });
 });
 
-test('lets an editor edit details without opening a menu', () => {
+test('lets an editor edit details without opening a menu', async () => {
   const onEdit = vi.fn();
-  renderActions({ onEdit });
-  fireEvent.click(screen.getByRole('button', { name: 'Edit details' }));
+  await renderActions({ onEdit });
+  await page.getByRole('button', { name: 'Edit details' }).click();
   expect(onEdit).toHaveBeenCalledOnce();
-  expect(screen.getByRole('button', { name: 'Open shared trip' })).toBeTruthy();
+  await expect.element(page.getByRole('button', { name: 'Open shared trip' })).toBeInTheDocument();
 });
 
-test('does not offer editing to a read-only viewer', () => {
-  renderActions({ canEdit: false });
-  expect(screen.queryByRole('button', { name: 'Edit details' })).toBeNull();
-  expect(screen.getByRole('button', { name: 'Open shared trip' })).toBeTruthy();
+test('does not offer editing to a read-only viewer', async () => {
+  await renderActions({ canEdit: false });
+  await expect.element(page.getByRole('button', { name: 'Edit details' })).not.toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Open shared trip' })).toBeInTheDocument();
 });

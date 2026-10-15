@@ -1,10 +1,10 @@
 import { SidebarProvider } from '@groam/ui/components/sidebar';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
-import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
+import { beforeEach, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type { DiscussionListItem } from '@/features/discussions/hooks/use-discussions';
 import { resetSidebarChromeStore, useSidebarChromeStore } from '@/lib/stores/sidebar-chrome-store';
-import { stubMatchMedia } from '@/testing/stub-match-media';
 import { ChatsSidebarNav } from './chats-sidebar-nav';
 
 const state = vi.hoisted(() => ({
@@ -13,7 +13,8 @@ const state = vi.hoisted(() => ({
   pathname: '/chat'
 }));
 
-vi.mock('@tanstack/react-router', () => ({
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
   Link: ({ children, to, ...props }: { children?: ReactNode; to: string }) => (
     <a href={to} {...props}>
       {children}
@@ -37,7 +38,7 @@ vi.mock('@/features/trips/hooks/use-trips', () => ({
   useTrips: () => ({ trips: [] })
 }));
 
-function renderNav() {
+async function renderNav() {
   return render(
     <SidebarProvider>
       <ul>
@@ -54,26 +55,22 @@ beforeEach(() => {
   state.discussions = [];
   state.isLoading = false;
   state.pathname = '/chat';
-  stubMatchMedia();
 });
 
-afterEach(() => {
-  cleanup();
-  vi.unstubAllGlobals();
-});
-
-test('offers a new chat item when the inbox is empty', () => {
-  renderNav();
-  expect(screen.queryByRole('button', { name: 'New chat' })).toBeNull();
-  fireEvent.click(screen.getByText('New chat'));
-  expect(
-    screen.getByText(
-      'Start a shared conversation with people in your group. Mention @groam if you want AI help in the thread.'
+test('offers a new chat item when the inbox is empty', async () => {
+  await renderNav();
+  await expect.element(page.getByRole('button', { name: 'New chat' })).not.toBeInTheDocument();
+  await page.getByText('New chat').click();
+  await expect
+    .element(
+      page.getByText(
+        'Start a shared conversation with people in your group. Mention @groam if you want AI help in the thread.'
+      )
     )
-  ).toBeTruthy();
+    .toBeInTheDocument();
 });
 
-test('collapses listed chats from the parent action without leaving the index link', () => {
+test('collapses listed chats from the parent action without leaving the index link', async () => {
   state.discussions = [
     {
       id: 'discussion-1',
@@ -85,19 +82,19 @@ test('collapses listed chats from the parent action without leaving the index li
     }
   ] as unknown as DiscussionListItem[];
 
-  renderNav();
-  expect(screen.getByText('Chat 1')).toBeTruthy();
-  expect(screen.getByRole('link', { name: 'Chat' }).getAttribute('href')).toBe('/chat');
+  await renderNav();
+  await expect.element(page.getByText('Chat 1')).toBeInTheDocument();
+  await expect.element(page.getByRole('link', { name: 'Chat' })).toHaveAttribute('href', '/chat');
 
-  fireEvent.click(screen.getByRole('link', { name: 'Chat' }));
-  expect(screen.getByText('Chat 1')).toBeTruthy();
+  await page.getByRole('link', { name: 'Chat' }).click();
+  await expect.element(page.getByText('Chat 1')).toBeInTheDocument();
 
-  fireEvent.click(screen.getByRole('button', { name: 'Collapse chat' }));
-  expect(screen.queryByText('Chat 1')).toBeNull();
-  expect(screen.getByRole('button', { name: 'Expand chat' })).toBeTruthy();
+  await page.getByRole('button', { name: 'Collapse chat' }).click();
+  await expect.element(page.getByText('Chat 1')).not.toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Expand chat' })).toBeInTheDocument();
 });
 
-test('lists chats and can reveal more than the first page', () => {
+test('lists chats and can reveal more than the first page', async () => {
   state.discussions = Array.from({ length: 6 }, (_, index) => ({
     id: `discussion-${index}`,
     lastMessage: null,
@@ -107,11 +104,11 @@ test('lists chats and can reveal more than the first page', () => {
     updatedAt: index
   })) as unknown as DiscussionListItem[];
 
-  renderNav();
-  expect(screen.getByText('Chat 1')).toBeTruthy();
-  expect(screen.getByText('Chat 5')).toBeTruthy();
-  expect(screen.queryByText('Chat 6')).toBeNull();
+  await renderNav();
+  await expect.element(page.getByText('Chat 1')).toBeInTheDocument();
+  await expect.element(page.getByText('Chat 5')).toBeInTheDocument();
+  await expect.element(page.getByText('Chat 6')).not.toBeInTheDocument();
 
-  fireEvent.click(screen.getByText('Load more'));
-  expect(screen.getByText('Chat 6')).toBeTruthy();
+  await page.getByText('Load more').click();
+  await expect.element(page.getByText('Chat 6')).toBeInTheDocument();
 });

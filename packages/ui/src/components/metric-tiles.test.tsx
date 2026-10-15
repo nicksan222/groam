@@ -1,12 +1,11 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import { MapPinned } from 'lucide-react';
-import { afterEach, expect, test } from 'vite-plus/test';
+import { expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { MetricTiles } from './metric-tiles';
 
-afterEach(cleanup);
-
-test('renders compact metric tiles with short and long labels', () => {
-  render(
+test('renders compact metric tiles with short and long labels', async () => {
+  await render(
     <MetricTiles
       items={[
         { icon: MapPinned, label: 'Trips', longLabel: 'Active trips', value: 7 },
@@ -15,9 +14,9 @@ test('renders compact metric tiles with short and long labels', () => {
     />
   );
 
-  expect(screen.getByText('7')).toBeTruthy();
-  expect(screen.getByText('Active trips')).toBeTruthy();
-  expect(screen.getByText('Trips')).toBeTruthy();
-  expect(screen.getByText('3')).toBeTruthy();
-  expect(screen.getAllByText('Settled')).toHaveLength(2);
+  await expect.element(page.getByText('7')).toBeInTheDocument();
+  await expect.element(page.getByText('Active trips')).toBeInTheDocument();
+  await expect.element(page.getByText('Trips')).toBeInTheDocument();
+  await expect.element(page.getByText('3')).toBeInTheDocument();
+  expect(page.getByText('Settled').elements()).toHaveLength(2);
 });

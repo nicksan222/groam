@@ -1,10 +1,11 @@
-import { renderHook } from '@testing-library/react';
+import { renderHook } from '@groam/vitest-config/react';
 import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { useWorkspaceAgentRuns } from './use-workspace-agent-runs';
 
 const convex = vi.hoisted(() => ({ usePaginatedQuery: vi.fn() }));
 
-vi.mock('convex/react', () => ({
+vi.mock('convex/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('convex/react')>()),
   usePaginatedQuery: (...args: unknown[]) => convex.usePaginatedQuery(...args)
 }));
 
@@ -17,8 +18,8 @@ beforeEach(() => {
   });
 });
 
-test('uses the supplied page size and exposes the first-page loading state', () => {
-  const { result } = renderHook(() => useWorkspaceAgentRuns({ initialNumItems: 10 }));
+test('uses the supplied page size and exposes the first-page loading state', async () => {
+  const { result } = await renderHook(() => useWorkspaceAgentRuns({ initialNumItems: 10 }));
 
   expect(result.current.isLoading).toBe(true);
   expect(convex.usePaginatedQuery).toHaveBeenCalledWith(
@@ -30,8 +31,8 @@ test('uses the supplied page size and exposes the first-page loading state', () 
   );
 });
 
-test('skips the query while preserving the standard page size', () => {
-  const { result } = renderHook(() => useWorkspaceAgentRuns('skip'));
+test('skips the query while preserving the standard page size', async () => {
+  const { result } = await renderHook(() => useWorkspaceAgentRuns('skip'));
 
   expect(result.current).toMatchObject({ isLoading: true, runs: [], status: 'LoadingFirstPage' });
   expect(convex.usePaginatedQuery).toHaveBeenCalledWith(expect.anything(), 'skip', {
@@ -39,12 +40,12 @@ test('skips the query while preserving the standard page size', () => {
   });
 });
 
-test('returns loaded workspace runs and pagination controls', () => {
+test('returns loaded workspace runs and pagination controls', async () => {
   const loadMore = vi.fn();
   const runs = [{ id: 'run-1', status: 'running' }];
   convex.usePaginatedQuery.mockReturnValue({ loadMore, results: runs, status: 'Exhausted' });
 
-  const { result } = renderHook(() => useWorkspaceAgentRuns());
+  const { result } = await renderHook(() => useWorkspaceAgentRuns());
 
   expect(result.current).toEqual({ isLoading: false, loadMore, runs, status: 'Exhausted' });
 });

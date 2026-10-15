@@ -6,7 +6,7 @@ typed target instead of reading environment globals directly.
 ```ts
 import { env } from '@groam/env/auth-client';
 import { env } from '@groam/env/web-client';
-import { env } from '@groam/env/playwright';
+import { env } from '@groam/env/journeys';
 import { env } from '@groam/env/seeder';
 ```
 
@@ -17,7 +17,7 @@ import { env } from '@groam/env/seeder';
 | `web-client`     | `VITE_CONVEX_URL`, `VITE_CONVEX_SITE_URL`, `VITE_SITE_URL`, Vite `BASE_URL`, `VITE_GROAM_SHELL` (`web` or `desktop`; default `web`), optional `VITE_PHOTON_URL` (default Photon), optional `VITE_MAP_TILES_URL` (OpenStreetMap raster template) |
 | `runtime`        | `CONVEX_AGENT_MODE`, `GROAM_CONVEX_URL`, `GROAM_DATA_DIR`, `GROAM_REPLACE_CONVEX_DIR`, `GROAM_SITE_ORIGIN`, `GROAM_STARTUP_TIMEOUT_MS` |
 | `desktop-tooling` | `CI`, `CONVEX_AGENT_MODE`, `VITE_MAP_TILES_URL`, `VITE_PHOTON_URL` for desktop build and development scripts |
-| `playwright`     | `PLAYWRIGHT_BASE_URL` (defaults to `VITE_CONVEX_SITE_URL` / Convex site `3211` for CI), `VITE_CONVEX_URL` and `VITE_CONVEX_SITE_URL` (local backend the per-worker test accounts are created on). Local dev against Vite: `vp run test:e2e:local` (`http://localhost:5173`, must match `VITE_SITE_URL`). |
+| `journeys`       | `CI`, `VITE_CONVEX_URL` and `VITE_CONVEX_SITE_URL` (local backend the per-file journey accounts are created on; defaults to the local Convex ports). |
 | `seeder`         | `SEED_CONVEX_URL`, `SEED_SITE_URL`, `SEED_USER_EMAIL`, `SEED_USER_PASSWORD`, `VITE_CONVEX_URL`, `VITE_CONVEX_SITE_URL` |
 
 `process.env` and `import.meta.env` access is restricted by the root lint

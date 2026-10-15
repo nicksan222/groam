@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { usePasswordSettings } from './use-password-settings';
 
@@ -15,8 +15,8 @@ beforeEach(() => {
 
 describe('usePasswordSettings', () => {
   test('changes the password and clears sensitive fields', async () => {
-    const { result } = renderHook(() => usePasswordSettings());
-    act(() =>
+    const { result } = await renderHook(() => usePasswordSettings());
+    await act(() =>
       result.current.updateState({
         confirmPassword: 'new-password',
         currentPassword: 'old-password',
@@ -42,8 +42,8 @@ describe('usePasswordSettings', () => {
   });
 
   test('rejects mismatched passwords without calling auth', async () => {
-    const { result } = renderHook(() => usePasswordSettings());
-    act(() =>
+    const { result } = await renderHook(() => usePasswordSettings());
+    await act(() =>
       result.current.updateState({
         confirmPassword: 'another-password',
         currentPassword: 'old-password',
@@ -58,8 +58,8 @@ describe('usePasswordSettings', () => {
   });
 
   test('rejects short passwords without calling auth', async () => {
-    const { result } = renderHook(() => usePasswordSettings());
-    act(() =>
+    const { result } = await renderHook(() => usePasswordSettings());
+    await act(() =>
       result.current.updateState({
         confirmPassword: 'short',
         currentPassword: 'old-password',
@@ -78,8 +78,8 @@ describe('usePasswordSettings', () => {
       data: null,
       error: { message: 'Current password is wrong' }
     });
-    const { result } = renderHook(() => usePasswordSettings());
-    act(() =>
+    const { result } = await renderHook(() => usePasswordSettings());
+    await act(() =>
       result.current.updateState({
         confirmPassword: 'new-password',
         currentPassword: 'wrong',

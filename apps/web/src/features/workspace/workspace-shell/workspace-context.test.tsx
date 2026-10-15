@@ -1,5 +1,6 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { beforeEach, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { WorkspaceProvider } from './workspace-context';
 
 const data = vi.hoisted(() => ({
@@ -44,72 +45,70 @@ beforeEach(() => {
   };
 });
 
-afterEach(cleanup);
-
-test('keeps the workspace mounted while auth queries refetch', () => {
-  const view = render(
+test('keeps the workspace mounted while auth queries refetch', async () => {
+  const view = await render(
     <WorkspaceProvider>
       <p>Trip page</p>
     </WorkspaceProvider>
   );
-  expect(screen.getByText('Trip page')).toBeTruthy();
+  await expect.element(page.getByText('Trip page')).toBeInTheDocument();
 
   data.current = { ...data.current, isPending: true, value: null };
-  view.rerender(
+  await view.rerender(
     <WorkspaceProvider>
       <p>Trip page</p>
     </WorkspaceProvider>
   );
 
-  expect(screen.getByText('Trip page')).toBeTruthy();
-  expect(screen.queryByText('Loading your workspace…')).toBeNull();
+  await expect.element(page.getByText('Trip page')).toBeInTheDocument();
+  await expect.element(page.getByText('Loading your workspace…')).not.toBeInTheDocument();
 });
 
-test('drops the held workspace once the viewer is signed out', () => {
-  const view = render(
+test('drops the held workspace once the viewer is signed out', async () => {
+  const view = await render(
     <WorkspaceProvider>
       <p>Trip page</p>
     </WorkspaceProvider>
   );
 
   data.current = { ...data.current, isPending: true, isSignedOut: true, value: null };
-  view.rerender(
+  await view.rerender(
     <WorkspaceProvider>
       <p>Trip page</p>
     </WorkspaceProvider>
   );
 
-  expect(screen.queryByText('Trip page')).toBeNull();
+  await expect.element(page.getByText('Trip page')).not.toBeInTheDocument();
 });
 
-test('shows the loading state on the very first load', () => {
+test('shows the loading state on the very first load', async () => {
   data.current = { ...data.current, isPending: true, value: null };
-  render(
+  await render(
     <WorkspaceProvider>
       <p>Trip page</p>
     </WorkspaceProvider>
   );
 
-  expect(screen.queryByText('Trip page')).toBeNull();
-  expect(screen.getByText('Loading your workspace…')).toBeTruthy();
+  await expect.element(page.getByText('Trip page')).not.toBeInTheDocument();
+  await expect.element(page.getByText('Loading your workspace…')).toBeInTheDocument();
 });
 
-test('drops the held workspace once auth settles without an active organization', () => {
-  const view = render(
+test('drops the held workspace once auth settles without an active organization', async () => {
+  const view = await render(
     <WorkspaceProvider>
       <p>Trip page</p>
     </WorkspaceProvider>
   );
-  expect(screen.getByText('Trip page')).toBeTruthy();
+  await expect.element(page.getByText('Trip page')).toBeInTheDocument();
 
   data.current = { ...data.current, isPending: false, value: null };
-  view.rerender(
+  await view.rerender(
     <WorkspaceProvider>
       <p>Trip page</p>
     </WorkspaceProvider>
   );
 
-  expect(screen.queryByText('Trip page')).toBeNull();
-  expect(screen.getByText('Welcome, Ada')).toBeTruthy();
-  expect(screen.getByText('Join with invitation code')).toBeTruthy();
+  await expect.element(page.getByText('Trip page')).not.toBeInTheDocument();
+  await expect.element(page.getByText('Welcome, Ada')).toBeInTheDocument();
+  await expect.element(page.getByText('Join with invitation code')).toBeInTheDocument();
 });

@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { useAccountRecoverySettings } from './use-account-recovery-settings';
 
@@ -17,7 +17,7 @@ beforeEach(() => {
 });
 
 test('verifies the current password and downloads a newly generated code set', async () => {
-  const { result } = renderHook(() => useAccountRecoverySettings());
+  const { result } = await renderHook(() => useAccountRecoverySettings());
 
   await act(() => result.current.generate('current-password'));
 
@@ -33,7 +33,7 @@ test('verifies the current password and downloads a newly generated code set', a
 
 test('surfaces generation failures without downloading a file', async () => {
   auth.generate.mockResolvedValue({ data: null, error: { message: 'Invalid password' } });
-  const { result } = renderHook(() => useAccountRecoverySettings());
+  const { result } = await renderHook(() => useAccountRecoverySettings());
 
   await act(() => result.current.generate('wrong-password'));
 

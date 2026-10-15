@@ -1,10 +1,11 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { useInvitationCodes } from './use-invitation-codes';
 
 const convex = vi.hoisted(() => ({ revoke: vi.fn(), useQuery: vi.fn() }));
 
-vi.mock('convex/react', () => ({
+vi.mock('convex/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('convex/react')>()),
   useMutation: () => convex.revoke,
   useQuery: (...args: unknown[]) => convex.useQuery(...args)
 }));
@@ -20,8 +21,8 @@ afterEach(() => {
 });
 
 describe('useInvitationCodes', () => {
-  test('skips the list query when invitation management is disabled', () => {
-    const { result } = renderHook(() => useInvitationCodes(false));
+  test('skips the list query when invitation management is disabled', async () => {
+    const { result } = await renderHook(() => useInvitationCodes(false));
 
     expect(convex.useQuery).toHaveBeenCalledWith(expect.anything(), 'skip');
     expect(result.current).toMatchObject({ codes: [], isLoading: false, pendingId: null });
@@ -30,7 +31,7 @@ describe('useInvitationCodes', () => {
   test('lists enabled codes and revokes a selected code', async () => {
     const codes = [{ id: 'invite-1', code: 'TRIP', expiresAt: null }];
     convex.useQuery.mockReturnValue(codes);
-    const { result } = renderHook(() => useInvitationCodes(true));
+    const { result } = await renderHook(() => useInvitationCodes(true));
 
     expect(convex.useQuery).toHaveBeenCalledWith(
       expect.anything(),
@@ -45,7 +46,7 @@ describe('useInvitationCodes', () => {
 
   test('clears the pending code and exposes a revoke error', async () => {
     convex.revoke.mockRejectedValueOnce(new Error('Already revoked'));
-    const { result } = renderHook(() => useInvitationCodes(true));
+    const { result } = await renderHook(() => useInvitationCodes(true));
 
     await act(() => result.current.revoke('invite-1' as never));
     expect(result.current).toMatchObject({ error: 'Already revoked', pendingId: null });
@@ -53,26 +54,26 @@ describe('useInvitationCodes', () => {
 
   test('uses the revoke fallback for an opaque backend rejection', async () => {
     convex.revoke.mockRejectedValueOnce(new Error('Server Error'));
-    const { result } = renderHook(() => useInvitationCodes(true));
+    const { result } = await renderHook(() => useInvitationCodes(true));
 
     await act(() => result.current.revoke('invite-1' as never));
 
     expect(result.current.error).toBe('Unable to revoke invitation code');
   });
 
-  test('refreshes enabled codes every minute and clears the interval when disabled', () => {
+  test('refreshes enabled codes every minute and clears the interval when disabled', async () => {
     vi.useFakeTimers();
     const now = vi.spyOn(Date, 'now').mockReturnValue(100);
-    const { rerender, unmount } = renderHook(({ enabled }) => useInvitationCodes(enabled), {
+    const { rerender, unmount } = await renderHook(({ enabled }) => useInvitationCodes(enabled), {
       initialProps: { enabled: true }
     });
 
     now.mockReturnValue(200);
-    act(() => {
+    await act(() => {
       vi.advanceTimersByTime(60_000);
     });
-    rerender({ enabled: false });
-    unmount();
+    await rerender({ enabled: false });
+    await unmount();
 
     expect(convex.useQuery).toHaveBeenCalledWith(expect.anything(), { now: 200 });
     now.mockRestore();
