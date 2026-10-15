@@ -6,7 +6,7 @@ best-effort basis through this repository.
 ## Before asking for help
 
 1. Read the local setup instructions in [CONTRIBUTING.md](CONTRIBUTING.md).
-2. Search the [documentation](README.md) and
+2. Search the [documentation](../README.md) and
    [existing issues](https://github.com/nicksan222/groam/issues).
 3. Reduce the problem to the smallest reproducible example and remove secrets,
    tokens, and personal data from logs or screenshots.

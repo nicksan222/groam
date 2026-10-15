@@ -10,7 +10,7 @@ community standards, and repository administration.
 | [@nicksan222](https://github.com/nicksan222) | Project maintainer |
 
 The repository's review ownership is defined in
-[`.github/CODEOWNERS`](.github/CODEOWNERS). Code ownership identifies requested
+[`.github/CODEOWNERS`](CODEOWNERS). Code ownership identifies requested
 reviewers; it does not prevent contributions from anyone.
 
 ## Responsibilities

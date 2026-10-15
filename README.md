@@ -99,27 +99,29 @@ Open [localhost:5173](http://localhost:5173) and sign in with
 | --- | --- |
 | `just check` | Run the complete CI quality suite |
 | `just test` | Run unit and integration tests |
+| `claude` | Start Claude Code with the repository harness (in the dev container) |
 | `just e2e-local` | Run Playwright against the local app |
 | `just desktop` | Start desktop development |
-| `just graphify-query "…"` | Search code relationships in plain language |
+| `just graphify-explain <symbol>` | Show a symbol, its callers, and its dependencies |
+| `just graphify-affected <symbol>` | List what a change to a symbol would affect |
 | `just graphify-refresh` | Refresh the local code graph after edits |
 | `just showcase` | Rebuild the scripted 4K product film |
 | `just showcase-gif` | Rebuild the full-length 1080p README preview from the committed film |
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the container workflow and project
-conventions. The [showcase guide](tooling/showcase/README.md) explains the
+See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for the container workflow, project
+conventions, and [AI-assisted development](.github/CONTRIBUTING.md#ai-assisted-development). The [showcase guide](tooling/showcase/README.md) explains the
 reproducible Playwright and Remotion film pipeline. For deployment details, see the
 [Convex backend guide](packages/backend/convex/README.md).
 
 ## Community
 
-Contributions are welcome. Read the [contribution guide](CONTRIBUTING.md), ask
-for help through [SUPPORT.md](SUPPORT.md), and follow the
-[Code of Conduct](CODE_OF_CONDUCT.md). Report security vulnerabilities privately
-as described in [SECURITY.md](SECURITY.md).
+Contributions are welcome. Read the [contribution guide](.github/CONTRIBUTING.md), ask
+for help through [SUPPORT.md](.github/SUPPORT.md), and follow the
+[Code of Conduct](.github/CODE_OF_CONDUCT.md). Report security vulnerabilities privately
+as described in [SECURITY.md](.github/SECURITY.md).
 
 Project governance and current maintainers are documented in
-[MAINTAINERS.md](MAINTAINERS.md).
+[MAINTAINERS.md](.github/MAINTAINERS.md).
 
 ## License
 

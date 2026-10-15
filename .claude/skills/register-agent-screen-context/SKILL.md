@@ -8,51 +8,66 @@ description: >-
 
 # Register agent screen context
 
-Every product page must call `useSetAgentContext` from
-`@groam/ai/ui/context/agent-context`. A route coverage test fails when a new
-page omits it.
-
-Call it in the **feature view**, not the route file.
+Every product page calls `useSetAgentContext` from
+`@groam/ai/ui/context/agent-context`. Call it in the **feature view**, not the
+route file. `apps/web/src/features/assistant/agent-context-coverage.test.ts`
+walks each route to its feature view and fails if none registers context
+(pure layout routes are listed in its `infrastructureRoutes`).
 
 ## Shape
+
+Adapted from `apps/web/src/features/ideas/idea-list/idea-list-view.tsx`:
 
 ```ts
 import { useSetAgentContext } from '@groam/ai/ui/context/agent-context';
 
 useSetAgentContext({
-  capabilities: [], // informational; not a security filter
-  data: { /* JSON-serializable snapshot of what the traveler sees */ },
-  description: 'What this screen is for, in one sentence.',
+  capabilities: [], // hints only; not a security filter
+  data: {
+    ideas: listedProposals.map((proposal) => ({
+      id: proposal.id,
+      status: proposal.status,
+      title: proposal.title
+    }))
+  },
+  description: 'Summarize open trip ideas across the group and help decide what to review next.',
   key: 'ideas:list',
   title: 'Ideas'
 });
 ```
 
-Trip screens also set `target`:
+`data` must be JSON-serializable (`AgentContextData`). The type is
+`AgentScreenContext` in `packages/ai/src/ui/context/agent-screen-context.ts`.
 
-```ts
-target: { kind: 'trip', section: 'overview', tripId: trip._id }
-```
+## Trip screens
 
-`section` is `'activity' | 'issues' | 'itinerary' | 'overview' | 'versions'`.
-Pass `null` while the entity is loading so the previous screen does not leak.
-
-Shared trip wiring lives in
-`apps/web/src/features/trips/hooks/use-trip-agent-context.ts` — reuse it
-instead of copying.
+Use `useTripAgentContext(trip, section)` from
+`apps/web/src/features/trips/hooks/use-trip-agent-context.ts` instead of
+building the object by hand. It sets
+`target: { kind: 'trip', section, tripId }`, where `section` is
+`'activity' | 'ideas' | 'issues' | 'itinerary' | 'overview' | 'versions'`
+(`AssistantTripSection` in `packages/ai/src/runtime/screen`), and passes
+`null` while the trip loads so the previous screen's context does not leak.
+Do the same (`useSetAgentContext(entity ? {...} : null)`) on other
+entity pages.
 
 ## Rules
 
-- Screen data is **not** injected into every model request. The agent calls
-  `getScreenContext` when it needs it.
-- `capabilities` on the page are hints. Tools are selected from the invoked
-  agent, attached entities, and backend-verified access.
+- Screen data is **not** injected into every model request; the agent calls
+  the `getScreenContext` tool when it needs it.
+- Page `capabilities` are hints. Tools come from the invoked agent, attached
+  entities, and backend-verified access.
 - Keep `data` small: ids, titles, statuses the traveler can already see. Do
   not dump entire itineraries.
 
-In tests, mock the hook:
+## Tests
+
+The hook throws outside `AgentContextProvider`, so view tests mock it (see
+`add-web-view-test`):
 
 ```ts
+import { vi } from 'vite-plus/test';
+
 vi.mock('@groam/ai/ui/context/agent-context', () => ({
   useSetAgentContext: () => undefined
 }));

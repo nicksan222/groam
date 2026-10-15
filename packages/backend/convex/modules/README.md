@@ -33,12 +33,13 @@ Scheduled jobs have no user. Keep those on raw `internalAction` /
 
 | Builder | Bound on `ctx` | Extra public args |
 | --- | --- | --- |
-| `workspaceQuery` / `workspaceMutation` / `workspaceAction` | `workspace` | — |
+| `workspaceQuery` / `workspaceMutation` / `workspaceAction` (`auth/workspace.ts`) | `workspace` | — |
 | `tripQuery` / `tripMutation` | `workspace`, `trip`, `role` | `tripId` |
 | `mutableTripMutation` | same, plus mutability checks | `tripId` |
+| `sharedTripQuery` / `sharedTripMutation` | same, for the shared trip view | `tripId` |
 | `destinationMutation` | same, plus `destination` | `tripId`, `destinationId` |
 
-Stack by composing `input` helpers in `modules/travel/trips/ctx.ts`, not by inventing
+Trip builders live in `modules/travel/trips/ctx.ts`. Stack by composing `input` helpers there, not by inventing
 entity classes or `(ctx, trip, workspace, role)` argument bags.
 
 ## Module shape
@@ -48,19 +49,22 @@ next to `agent/`, or `model.ts` next to `model/`.
 
 ```
 modules/travel/
-  trips/  destinations/  activities/  stays/  transfers/  covers/
-  issues/  packing/  preferences/  versions/  targets/  locations/  audit/
+  trips/  destinations/  activities/  stays/  transfers/  covers/  issues/
+  packing/  preferences/  versions/  targets/  locations/  travelers/  audit/
 modules/assistant/
-  agent/  model/  chat/  errors/  form/  registry/  screen/  tools/  validators/
+  agent/  model/  chat/  runs/  standalone/  errors/  screen/  validators/
 modules/discussions/
   threads/  messages/  assistant/  media/
 modules/media/
   library/  files/  attachments/
-routes/trips/                # public run — api.routes.trips.* stays stable
+modules/organizations/
+  invitations/
+routes/<domain>/             # public run — api.routes.<domain>.* stays stable
 ```
 
-Leaf modules with no subdomains (`auth/`, `ai/`, `organizations/`) stay as a
-small set of files.
+Leaf modules with no subdomains (`auth/`, `ai/`, `dev/`, `notifications/`,
+`references/`) stay as a small set of files. Assistant tool implementations live
+outside `convex/` in `packages/backend/assistant/tools/`.
 
 ## Rules
 

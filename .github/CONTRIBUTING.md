@@ -7,7 +7,7 @@ Groam is a collaborative group travel planner. You can run it fully locally
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/nicksan222/groam?quickstart=1)
 
-The checked-in [dev container](.devcontainer/devcontainer.json) is the source of
+The checked-in [dev container](../.devcontainer/devcontainer.json) is the source of
 truth for Bun, Node.js, Rust, native desktop libraries, editor extensions, and
 forwarded ports. Use GitHub Codespaces, or open the repository locally and choose
 **Dev Containers: Reopen in Container**. Its post-create step installs the locked
@@ -77,19 +77,15 @@ Graphify is preinstalled and indexed in the dev container. It parses code
 locally with no API key, external database, or hosted service:
 
 ```bash
-just graphify-query "how does workspace authorization reach Convex routes?"
-just graphify-explain "workspaceQuery"
-just graphify-path "workspaceQuery" "AgentRuns"
+just graphify-explain assertPlanner      # definition and direct neighbors
+just graphify-affected assertPlanner     # who calls or imports it
+just graphify-path assertMutable isTripAdmin
+just graphify-query "trip access planner" # matches identifiers, not prose
 ```
 
 Run `just graphify-refresh` after changing source files. The generated
 `graphify-out/` directory is intentionally local and ignored by Git.
 
-From a host terminal, prefix the same commands with the Dev Container CLI:
-
-```bash
-.devcontainer/devcontainer exec just graphify-query "how does authentication work?"
-```
 
 Graphify and its isolated Python environment are part of the container image;
 nothing is installed into the host or the Bun workspace.
@@ -106,7 +102,43 @@ Do not hand-edit `apps/web/src/routeTree.gen.ts`. Add routes as files under
   `export const run`
 - Environment variables go through `@groam/env/*` or Convex `defineApp({ env })`
 
-Agent-oriented layout notes live in [`CLAUDE.md`](CLAUDE.md).
+Agent-oriented layout notes live in [`CLAUDE.md`](../CLAUDE.md).
+
+## AI-assisted development
+
+[Claude Code](https://claude.com/claude-code) is the only supported agent
+harness; the repository carries no configuration for other coding agents. It
+is preinstalled in the dev container, where `claude` is aliased to
+[`tooling/claude/claude.sh`](../tooling/claude/claude.sh) (`just claude` runs the
+same launcher). The launcher wires up:
+
+- the Headroom proxy, which compresses tool output before it reaches the model;
+- the Caveman plugin from [`tooling/claude/settings.json`](../tooling/claude/settings.json);
+- the Convex MCP server from [`tooling/claude/mcp.json`](../tooling/claude/mcp.json)
+  (run `vp exec convex login` once to authorize it), and the Headroom MCP server
+  from [`tooling/claude/mcp.headroom.json`](../tooling/claude/mcp.headroom.json)
+  while the proxy is up.
+
+Set `CLAUDE_HEADROOM=off` to start Claude without the proxy, for example for
+Remote Control.
+
+Project skills live in [`.claude/skills`](../.claude/skills) and subagents in
+[`.claude/agents`](../.claude/agents): `developer`, `pm`, `pushback`, `reviewer`,
+`qa`, `traveler`, `scenario`, `upgrade-reviewer`, and `pr-maker`. The main
+session leads and delegates to them.
+
+Personal overrides stay out of Git:
+
+| File | Use it for |
+| --- | --- |
+| `.claude/settings.local.json` | Models, provider routing (Bedrock, Vertex, gateways), env, permissions |
+| `tooling/claude/mcp.local.json` | Extra MCP servers |
+| `CLAUDE.local.md` | Personal instructions |
+
+`vp run lint:claude` (part of `just lint` and `just check`, so it runs in CI)
+validates subagent and skill frontmatter, the shared settings and MCP JSON, and
+the launcher, and fails if files for another agent harness reappear. Agent-facing
+instructions, including the model override example, live in [`CLAUDE.md`](../CLAUDE.md).
 
 ## Proposing changes
 
@@ -122,4 +154,4 @@ the [Code of Conduct](CODE_OF_CONDUCT.md).
 ## License
 
 By contributing, you agree that your contributions are licensed under the MIT
-License ([`LICENSE`](LICENSE)).
+License ([`LICENSE`](../LICENSE)).

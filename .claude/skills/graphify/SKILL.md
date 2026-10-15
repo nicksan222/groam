@@ -5,52 +5,51 @@ description: Use for questions about Groam's architecture, symbols, call paths, 
 
 # Graphify for Groam
 
-Use the repository's pinned, code-only Graphify installation. It lives only in
-the dev-container image and needs no API key or external database.
+A local, code-only call/import graph built by tree-sitter (no API key, no
+network) at `graphify-out/graph.json`. Each recipe refreshes it incrementally
+first (about 2s, silent unless it fails), so it never goes stale.
 
-## Execution boundary
-
-When already inside the dev container or Codespaces, run the `just` commands
-below directly. From any host environment, including the Codex app, start the
-container and use the Dev Container CLI:
+## Recipes
 
 ```bash
-.devcontainer/devcontainer up
-.devcontainer/devcontainer exec just graphify-query "<question>"
+just graphify-explain assertPlanner           # definition site + every direct caller/callee/import
+just graphify-affected requireWorkspace       # reverse callers/importers, depth 2 (blast radius)
+just graphify-affected requireWorkspace 1     # direct dependents only
+just graphify-path assertMutable isTripAdmin  # shortest call/import chain A -> B
+just graphify-query "assertPlanner loadTripContext"  # BFS around matching nodes, max 80 lines
+just graphify-query "workspaceQuery" 150      # raise the output line cap
 ```
 
-The repository launcher delegates to the official Dev Container CLI and makes
-external Git worktree metadata available inside the container.
+- Matching is by **node label**, not meaning. Use identifiers (function, type,
+  or file names). Prose like "where is authorization enforced?" only matches
+  incidental words such as `trip`. Don't know the name yet? `rg` for it first,
+  then `explain` or `affected`.
+- `explain`, `affected` and `path` resolve the closest label. Check the
+  `Source:` line to confirm you got the node you meant. "No node matching"
+  means the name is wrong or excluded.
+- `path` tries call/import direction first. If no directed path exists, it
+  prints an undirected path, which may only pass through a shared importer.
 
-Never install Graphify, Python, `uv`, or repository dependencies on the host.
-Never install tools ad hoc in a running container. If the CLI or graph is
-missing, rebuild from the checked-in definition:
+## Reading output
 
-```bash
-.devcontainer/devcontainer rebuild
-.devcontainer/devcontainer exec just graphify-refresh
-```
+- `NODE <label> [src=<file> loc=L<n>]` is a symbol or file and its location.
+  An empty `src` means an external or unresolved reference such as
+  `ref_convex_values`.
+- `EDGE A --calls|imports|contains--> B at=<file>:L<n>` is a relationship and
+  where it happens.
+- A `[truncated ...]` or `TRUNCATED` notice means the query was too broad.
+  Narrow it to a sharper identifier.
 
-If Docker or `devcontainer` is unavailable, stop and ask the user to enable it.
-Do not use host runtimes or an inline Python fallback. Do not install Graphify
-Git hooks; this repository uses Husky.
+Treat results as leads. Open the cited lines and confirm before you act on them.
 
-## Search workflow
+## Coverage and fallback
 
-For architecture, ownership, call-flow, or cross-file questions, query the
-graph before opening source files:
+The index is code only. `tooling/graphify/exclude.txt` (gitignore syntax)
+leaves out tests (`*.test.ts(x)`, `apps/web/e2e/`), `*.json` manifests,
+`_generated/` code, `.claude/`, vendored Rust and media. For anything in those
+files, or for exact strings, literals, config keys, CSS and Markdown, use `rg`.
+Use `rg` as well when graphify comes back empty or vague.
 
-```bash
-just graphify-query "how does workspace authorization reach Convex routes?"
-just graphify-explain "workspaceQuery"
-just graphify-path "workspaceQuery" "AgentRuns"
-```
-
-Each query recipe refreshes the code-only graph first. Follow the returned
-source locations, inspect the relevant files, and verify conclusions against
-the code. Use containerized `rg` for exact strings or when Graphify finds no
-useful match. Run `just graphify-refresh` explicitly after a large edit when a
-query is not otherwise needed.
-
-The generated graph is private workspace state under `graphify-out/` and must
-not be committed.
+If `graphify` or `just` is missing, the dev container image is broken. Report
+it instead of installing anything. Never commit `graphify-out/`, and never run
+`graphify hook install` or `graphify claude install`.

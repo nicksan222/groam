@@ -1,48 +1,58 @@
 ---
 name: add-env-variable
 description: >-
-  Add a validated Groam environment variable through @groam/env or Convex
+  Add a validated Groam environment variable through @groam/env or the Convex
   defineApp env. Use when introducing a new env var, Vite VITE_* key, seeder
-  setting, or Convex dashboard secret — never process.env or import.meta.env
-  in app code.
+  or tooling setting, or Convex deployment secret — never read process.env or
+  import.meta.env in app code.
 ---
 
 # Add an environment variable
 
-Application code imports a typed target. Raw `process.env` / `import.meta.env`
-is allowed only inside `packages/env` and env bootstrap scripts.
+App code imports a typed, Envalid-validated target. Raw `process.env` /
+`import.meta.env` is allowed only inside `packages/env` and env bootstrap
+scripts.
 
-## Client / Node targets
+## Client / Node / tooling targets
 
-1. Add the Envalid field to the matching file under `packages/env/src/apps/`.
-2. Re-export a camelCase name on `env`.
-3. Import `import { env } from '@groam/env/<target>'`.
+1. Add the Envalid field to the matching `packages/env/src/apps/<target>.ts`
+   (with a `default` or `desc`).
+2. Expose it as a camelCase key on that file's exported `env` object.
+3. Import it: `import { env } from '@groam/env/<target>';`.
 
-| Target | Typical variables |
-| --- | --- |
-| `web-client` | `VITE_CONVEX_URL`, `VITE_SITE_URL`, `VITE_GROAM_SHELL` |
-| `auth-client` | `VITE_CONVEX_URL` |
-| `playwright` | `PLAYWRIGHT_BASE_URL`, seed credentials |
-| `seeder` | `SEED_*` URLs and demo login |
-| `runtime` | local Convex process flags |
-| `web` | `STATIC_HOSTING_BASE_PATH` |
+| Target | Used by | Examples |
+| --- | --- | --- |
+| `web-client` | `apps/web` (extends `auth-client`) | `VITE_SITE_URL`, `VITE_GROAM_SHELL`, `VITE_MAP_TILES_URL` |
+| `auth-client` | auth client | `VITE_CONVEX_URL`, `VITE_CONVEX_SITE_URL` |
+| `web` | web build | `STATIC_HOSTING_BASE_PATH` |
+| `convex-tooling` | `tooling/devkit` | AI keys synced to Convex, `GROAM_READY_TIMEOUT_SECONDS` |
+| `runtime` | installed-app runtime | `GROAM_CONVEX_URL`, `GROAM_DATA_DIR` |
+| `desktop-tooling` | `apps/desktop/scripts` | `VITE_PHOTON_URL`, `CI` |
+| `seeder` | `tooling/seeder` | `SEED_CONVEX_URL`, `SEED_USER_EMAIL` |
+| `playwright` | web E2E | `PLAYWRIGHT_BASE_URL`, seed credentials |
+| `showcase` | `tooling/showcase` | `SHOWCASE_*` |
+| `vitest` | `tooling/vitest-config` | `CI` |
 
-If the target is new, add `./<target>` to `packages/env/package.json` `exports`.
+A new target also needs `./<target>` in `packages/env/package.json`
+`exports`.
 
 ## Convex runtime
 
-Dashboard / deployment secrets go on `defineApp({ env })` in
-`packages/backend/convex/convex.config.ts`. Read them from the generated
-`env` in Convex functions — not from `@groam/env/*` and not from
-`process.env`.
+Deployment secrets go on `defineApp({ env: { … } })` in
+`packages/backend/convex/convex.config.ts`:
 
 ```ts
-// convex.config.ts
-AI_MODEL: v.optional(v.string()),
+MY_FEATURE_KEY: v.optional(v.string()),
 ```
 
-Local `.env.local` values sync to Convex during `vp run dev`. For one-off
-sets: `CONVEX_AGENT_MODE=anonymous vp exec convex env set NAME value`.
+Read them from the generated `env` (`import { env } from
+'#convex-generated/server'`) inside Convex functions — never from
+`@groam/env/*` or `process.env`.
+
+To sync the value from `.env.local` on `just dev`, also add it to
+`configuredConvexEnvironment` in `packages/env/src/apps/convex-tooling.ts`
+(`tooling/devkit/sync-ai-env.ts` pushes that map). One-off set against the
+local backend: `vp exec convex env set NAME value`.
 
 ## Do not
 

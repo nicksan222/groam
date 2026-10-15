@@ -2,41 +2,46 @@
 name: split-feature-tsx
 description: >-
   Split Groam feature TSX so each file exports one component and stays under
-  300 lines. Use when a view is growing, lint:conventions reports
-  component-files, or a file exports two React components.
+  300 lines. Use when a view is growing, lint reports component-files or
+  groam/max-lines, or a file exports two React components.
 ---
 
 # Split a feature TSX file
 
-`vp run lint:conventions` owns **file** size (`MAX_COMPONENT_FILE_LINES` =
-300) for `apps/web` and `packages/ai/src/ui` TSX. Oxlint (`groam/max-lines-per-function`) owns **function** size
-(250 lines). Do not add a third limit.
+Three limits, each owned by one check. Do not add a fourth.
+
+| Limit | Scope | Check |
+| --- | --- | --- |
+| One exported component per file | `.tsx` in `apps/web` and `packages/ai/src/ui` | `vp run lint:conventions` (`component-files`) |
+| 300 lines per file | `.ts`/`.tsx` in `apps/web/src/features` | oxlint `groam/max-lines` |
+| 250 lines per function | every `.tsx` | oxlint `groam/max-lines-per-function` |
+
+Tests (`*.test.tsx`, `*.spec.tsx`) are excluded. Run both with `vp run lint`.
 
 ## Rules
 
-- One exported component per file (`export function Foo`, `export const Foo =`).
-- Unnamed defaults (`export default memo(Foo)`) are ignored by the checker;
-  still prefer a named export.
-- Filename is kebab-case matching the component: `IdeaEmptyState` →
+- Count `export function Foo`, `export const Foo =`, and `export class Foo`.
+  Unnamed defaults (`export default memo(Foo)`) are ignored; prefer a named
+  export anyway.
+- Name the file after the component in kebab-case: `IdeaEmptyState` →
   `idea-empty-state.tsx`.
-- Colocate tests as `<name>.test.tsx` next to the file.
+- Colocate the test as `<name>.test.tsx`.
 
 ## How to split
 
-1. Extract a sibling file in the same feature folder (or a subfolder if several
-   pieces share a prefix, e.g. `trip-versions/`).
-2. Keep the page-level `*-view.tsx` as the composer.
-3. Move hooks already extracted into `hooks/`; do not leave `useFoo` in a
-   300-line view "for convenience".
-4. Re-run `vp run lint:conventions`.
+1. Extract a sibling file in the same area folder, or a subfolder when several
+   pieces share a prefix (e.g. `trips/trip-versions/`).
+2. Keep the page-level `*-view.tsx` as the composer; import siblings with `./`.
+3. Move state and Convex calls into `hooks/use-*.ts` (see `add-feature-hook`);
+   do not leave `useFoo` inside a long view "for convenience".
+4. Re-run `vp run lint`.
 
 ## Example
 
-`idea-list-view.tsx` composes `IdeaEmptyState`, `IdeaList`, and
-`CreateTripIdeaDialog` — it does not inline those trees.
+`apps/web/src/features/ideas/idea-list/idea-list-view.tsx` composes
+`IdeaEmptyState` (`./idea-empty-state`), `IdeaList` (`./idea-list`), and
+`CreateTripIdeaDialog` (`@/features/trips/trip-ideas/create-trip-idea-dialog`)
+instead of inlining their trees.
 
-## Not in scope
-
-- Ordinary `packages/ui` primitives are not under the one-component-per-file rule, but
-  still keep files focused.
-- Test files (`*.test.tsx`) are excluded from the component-file check.
+`packages/ui` primitives are outside these file-level checks; still keep them
+focused (see `place-ui-primitive`).

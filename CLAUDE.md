@@ -12,67 +12,58 @@ Convex agent skills for common tasks can be installed by running
 
 <!-- convex-ai-end -->
 
-## Environment and tooling
+## Environment
 
-Import validated variables from the target-specific `@groam/env/*` module. Do
-not read `process.env` or `import.meta.env` outside `packages/env`; Convex code
-uses the generated typed `env` from `_generated/server`. Vite+ (`vp check`:
-Oxfmt and Oxlint) is the sole formatter and linter. Run every workspace command
-through `vp` (`vp install`, `vp run <script>`, `vp test`, `vp check`); Bun is the
-package manager behind `vp install` and the runtime for standalone TS scripts.
-Shared lint/format policy (`tooling/oxc-config`), TypeScript, and React Doctor
-configuration belongs under `tooling`; the root `vite.config.ts` only composes
-it.
+You run inside the dev container. Run every command directly (`just`, `vp`,
+`bun`, `rg`, `graphify`); never wrap it in `devcontainer exec`. Toolchains are
+pinned in `.devcontainer/` (Bun `1.3.11`, Node `24`, Just, Graphify, Headroom):
+add or bump tooling there and rebuild, never install it ad hoc.
 
-### Dev container execution boundary
+- `just` lists the command map; `just check` runs the full CI gate.
+- Run workspace commands through Vite+: `vp install`, `vp run <script>`,
+  `vp test`, `vp check` (Oxfmt + Oxlint, the only formatter and linter). Bun is
+  the package manager behind `vp install` and the runtime for standalone TS
+  scripts.
+- Set `CONVEX_AGENT_MODE=anonymous` on every raw `convex` / `vp exec convex`
+  command. Local Convex is a self-hosted anonymous backend; it needs no login
+  or `CONVEX_ACCESS_TOKEN` (CI/deploy only). The `just` recipes set it already.
+- The pre-commit hook (`tooling/hooks/pre-commit`) runs codegen, `vp staged`,
+  conventions, React Doctor, and Fallow on staged changes. Never bypass it with
+  `--no-verify`.
 
-The checked-in dev container is the only supported development environment and
-the source of truth for every repository tool and dependency. When operating
-from the host, first ensure it is running:
+## Code search and context
 
-```bash
-.devcontainer/devcontainer up
-```
+Context is the scarce resource. Search narrow-to-wide and read only what you
+need:
 
-Run every non-Git shell command inside it:
+1. Architecture, ownership, call flow, "where does X happen", or any cross-file
+   question: Graphify first, searched by identifier, not prose (it matches
+   symbol names). Find a candidate name with `rg`, then
+   `just graphify-explain <symbol>` (definition and neighbors),
+   `just graphify-affected <symbol>` (callers and importers),
+   `just graphify-path <from> <to>`, or `just graphify-query "<identifiers>"`.
+   Lookups refresh `graphify-out/graph.json` first; open only the files they
+   return. Tests are not indexed; find them with `rg`. If the graph is missing, run `just graphify-refresh`. Never install
+   Graphify's Git hooks.
+2. Exact names or strings: `rg` (or the Grep tool) scoped to a package path.
+3. Broad sweeps across many files: delegate to the `Explore` subagent and keep
+   its conclusion, not the file dumps.
 
-```bash
-.devcontainer/devcontainer exec <command> [args...]
-```
+Read files by line range once you know where to look; do not re-read files you
+just edited. Skip generated and vendored output (`_generated/`,
+`routeTree.gen.ts`, `graphify-out/`, `vendor/`, lockfiles) unless the task is
+about them. Pipe noisy commands through `tail` or `rg` instead of dumping logs.
 
-This includes `just`, Bun, Node, Python, Graphify, `rg`, code generation,
-linters, typechecks, tests, builds, seeders, and development servers. Git
-commands may run directly on the host because the workspace is bind-mounted.
-The checked-in launcher still delegates to the official Dev Container CLI and
-also mounts Git's common directory when a Git worktree stores it outside the
-workspace. On a clean host, run
-`.devcontainer/devcontainer exec just check` before
-committing and use `git commit --no-verify` so Git hooks do not launch repository
-tooling outside the container. The `devcontainer` command itself also runs on
-the host. If Docker or the Dev
-Container CLI is unavailable, stop and ask the user to enable it; do not install
-project tooling on the host and do not fall back to host runtimes. Do not patch
-an ephemeral running container with global installs either; add or pin tooling
-in `.devcontainer/`, rebuild, and keep the setup reproducible. When already
-running inside the dev container or Codespaces, run repository commands
-directly without nesting another `devcontainer exec`.
-
-## Code search with Graphify
-
-The dev container preinstalls the pinned Graphify CLI and builds a local,
-code-only graph at `graphify-out/graph.json`. For architecture, ownership,
-call-flow, or cross-file questions, start with
-`.devcontainer/devcontainer exec just graphify-query "<question>"`,
-then inspect the returned source files. Use the same prefix with
-`just graphify-path "A" "B"` or `just graphify-explain "symbol"`. Omit the
-prefix only when already inside the container. These recipes incrementally
-refresh the graph first. Use containerized `rg` for exact strings.
-
-If Graphify or its graph is missing inside the container, rebuild it with
-`.devcontainer/devcontainer rebuild` and then run
-the containerized `just graphify-refresh`. Never install Graphify, `uv`, Python,
-or any other project tooling on the host. Do not install Graphify's Git hooks;
-this repository already manages hooks through Vite+ (`vp config`).
+`claude` (terminal alias, `just claude`, and the VS Code extension) runs
+`tooling/claude/claude.sh`. It starts or reuses the Headroom proxy, which
+compresses tool output, and loads `tooling/claude/settings.json`, the Convex MCP
+from `tooling/claude/mcp.json`, and the Headroom MCP from
+`tooling/claude/mcp.headroom.json` (only while the proxy is up). Use
+`headroom_retrieve` when a compressed marker hides detail you need. The Convex
+MCP (local logs, data, function specs) needs a one-time `vp exec convex login`;
+without it, use `rg` and the code. `CLAUDE_HEADROOM=off` skips the proxy (needed
+for Remote Control). Caveman mode is on by default (`CAVEMAN_DEFAULT_MODE`); say "stop
+caveman" for normal prose.
 
 ## Subagents
 
@@ -80,34 +71,76 @@ The main session leads: it owns scope, Git, and the user conversation, and
 delegates bounded work to the project subagents in `.claude/agents`: `pm`
 (acceptance criteria), `developer` (one slice), `qa` (verification), `reviewer`
 and `upgrade-reviewer` (contracts, migrations), `traveler` (usability),
-`pushback` (scope), `scenario` (local seed state), and `pr-maker` (authorized PRs
-only). Brief each with the question, permitted paths, acceptance evidence, and
-stopping point. Use only the lenses a change needs, run independent subagents
-in parallel, keep one writer per file, and never let two agents run dev servers,
-browsers, or seed resets at once. One owner runs the combined `just check`;
-report failed or unrun checks honestly, never weaken them.
+`pushback` (scope), `scenario` (local seed state), and `pr-maker` (authorized
+PRs only). Brief each with the question, permitted paths, acceptance evidence,
+and stopping point. Use only the lenses a change needs, run independent
+subagents in parallel, keep one writer per file, and never let two agents run
+dev servers, browsers, or seed resets at once. One owner runs the combined
+`just check`; report failed or unrun checks honestly, never weaken them.
 
-## Efficient search and context
+Project skills live in `.claude/skills`; load the matching one before adding a
+route, module, hook, env variable, test, or UI piece.
 
-Context is the scarce resource. Search narrow-to-wide and read only what you need:
+## Architecture and conventions
 
-1. Exact names or strings: `rg` (or the Grep tool) scoped to a package path.
-2. Architecture, ownership, call flow, "where does X happen": Graphify first
-   (`just graphify-query`, `graphify-path`, `graphify-explain`), then open only
-   the files it returns.
-3. Broad sweeps across many files: delegate to the `Explore` subagent and keep
-   its conclusion, not the file dumps.
+- **Web routes:** one TanStack Router file per route under
+  `apps/web/src/routes`, composing feature views only. Never hand-edit
+  `routeTree.gen.ts` or add a central route registry. Product UI lives in
+  `apps/web/src/features/<domain>`; queries, mutations, and async state live in
+  `features/<domain>/hooks`. Split high-churn context (dialogs, selections)
+  from stable workspace data so unrelated pages do not rerender.
+- **Backend:** public Convex functions live in `packages/backend/convex/routes`
+  as `export const run`. Domain modules in `packages/backend/convex/modules`
+  export schema fragments, custom function builders, and plain helpers that
+  take an enriched `ctx`; builders from `convex-helpers` bind `workspace` and
+  `trip` onto `ctx`. No entity classes. See
+  `packages/backend/convex/modules/README.md`.
+- **UI:** shared primitives live in `packages/ui`. Import them through
+  `@groam/ui/components/*`, `@groam/ui/hooks/*`, `@groam/ui/lib/*`, and
+  `@groam/ui/styles`; do not duplicate primitives in apps.
+- **Env:** import validated variables from `@groam/env/*`. Never read
+  `process.env` or `import.meta.env` outside `packages/env`; Convex code uses the
+  typed `env` from `_generated/server`.
+- **Tooling:** shared lint, format, TypeScript, and React Doctor config lives
+  under `tooling/`; root configs such as `vite.config.ts` only compose it.
+- **Enforced conventions:** `vp run lint:conventions` checks kebab-case file
+  and folder names, package-alias imports instead of `../`, semantic color
+  tokens, `ctx.db` only in `modules/` and `routes/` (never in `'use node'`
+  files), `@groam/env/*` instead of raw env access, public `@groam/ui`
+  entrypoints, and thin route files. `vp run lint:claude` validates this
+  harness.
 
-Read files by line range once you know where to look; do not re-read files you
-just edited. Skip generated and vendored output (`_generated/`,
-`routeTree.gen.ts`, `graphify-out/`, `vendor/`, lockfiles) unless the task is
-about them. Pipe noisy commands through `tail`/`rg` instead of dumping full logs.
-In the dev container `claude` is aliased to `tooling/claude/claude.sh`: it routes
-through the Headroom proxy, which compresses tool output (logs, JSON, diffs), and
-loads `tooling/claude/settings.json` plus the Convex and Headroom MCP servers in
-`tooling/claude/mcp.json`. Use `headroom_retrieve` when a compressed marker hides
-detail you need, and the Convex MCP for local logs, data, and function specs. Caveman mode (`CAVEMAN_DEFAULT_MODE` in the
-dev container) keeps replies terse by default; say "stop caveman" for normal prose.
+## Local runtime
+
+- `just dev` starts Convex, Vite, and the dashboard with package-labeled
+  output; `just web` starts only Vite against a running backend. `just codegen`
+  regenerates routes, the auth schema, and Convex bindings.
+- Ports: web `5173`, Convex API `3210`, Convex site/HTTP `3211`, dashboard
+  `6790`. `http://127.0.0.1:3211/` returns `503` locally because no static site
+  is uploaded; that is expected. The app is served by Vite on `5173`.
+- Browser e2e: `just e2e-local` against the running dev stack on
+  `http://localhost:5173` (must match `VITE_SITE_URL` for Better Auth).
+  `just e2e` targets the uploaded static site on `3211`, as CI does.
+- AI assistant features are optional and need an LLM provider key (see
+  `packages/env`).
+
+### Demo login and seed data
+
+Sign in at `http://localhost:5173/` as `demo@groam.example` / `GroamDemo123!`;
+it owns the "Groam Demo" workspace with sample trips and travelers. Extra
+travelers are `traveler.NNN@groam.example` (zero-padded, e.g.
+`traveler.001@groam.example`) with the same password. Defaults live in
+`packages/env/src/apps/seeder.ts`.
+
+With the backend running, `just seed` resets and seeds 30 users / 40 trips;
+`just seed --scale small` seeds 6 / 8 and `--scale large` 80 / 150. Pass
+`--no-reset` to keep existing data. Data persists in the git-ignored `.convex/`
+directory. `tooling/seeder` owns scenarios, fixtures, and plans and calls
+primitives from `@groam/app-actions/backend`.
+
+Without the seeded login, a fresh sign-up must create a group before the app is
+usable; the "Create group" button stays disabled until a name is typed (the
+"Acme Labs" placeholder is not a value). This is intended.
 
 ### Local overrides
 
@@ -130,101 +163,3 @@ Vertex, a gateway) only needs the alias mapping, for example:
 ```
 
 `CLAUDE_CODE_SUBAGENT_MODEL` forces one model for every subagent.
-
-## Web architecture
-
-Add product routes as independent TanStack Router files under
-`apps/web/src/routes`; never hand-edit `routeTree.gen.ts` or recreate a central
-route registry. Route files should only compose feature views. Keep reusable
-queries, mutations, and async state in `features/<domain>/hooks`, and split
-high-churn context (dialogs, selections) from stable workspace data so unrelated
-pages do not rerender.
-
-## Backend architecture
-
-Public Convex functions live under `packages/backend/convex/routes` as
-`export const run`. Domain modules under `packages/backend/convex/modules`
-export schema fragments, custom function builders, and plain helpers that take
-an enriched `ctx`. Builders from `convex-helpers` bind `workspace` and `trip`
-onto `ctx` so handlers do not thread auth bags. Do not add entity classes.
-See `packages/backend/convex/modules/README.md`.
-
-## UI development
-
-The shared UI package is `packages/ui`, adapted from OwnFit's component system.
-Apps import primitives through `@groam/ui/components/*`, shared hooks through
-`@groam/ui/hooks/*`, and global styles through `@groam/ui/styles`. Keep reusable
-UI behavior in this package instead of duplicating primitives in apps. Apps
-may also import `@groam/ui/lib/*` for shared className and avatar helpers.
-
-## Source conventions
-
-`vp run lint:conventions` (via `tooling/quality`) enforces kebab-case folder
-and source names, package-alias imports instead of `../`, semantic color
-tokens, Convex `ctx.db` only in `modules/` and `routes/` (never in `'use node'` files), `@groam/env/*`
-instead of raw Vite env access, public `@groam/ui` entrypoints, and thin
-TanStack route files that only compose feature views.
-
-## Development runtime
-
-The dev-container image pins Bun `1.3.11` (`packageManager`), Node `24`
-(`convex.json` `nodeVersion`), native dependencies, Just, and Graphify. Its
-post-create command installs the locked workspace and prepares the local code
-graph. Never install toolchains outside it; enter or invoke the dev container.
-
-Inside the container, start the stack with `just dev`. It runs each package's `dev` script in
-parallel through `vp run`, with package-labeled output. The individual steps are also available:
-`CONVEX_AGENT_MODE=anonymous vp exec convex dev --typecheck-components` (backend,
-writes `.env.local`), `CONVEX_AGENT_MODE=anonymous bun
-tooling/devkit/configure-auth.ts --write-vite-site-url` (Better Auth
-`BETTER_AUTH_SECRET`/`SITE_URL` + `VITE_SITE_URL`), and
-`vp run dev:web` (Vite only).
-
-Local Convex runs a self-hosted **anonymous** backend — set
-`CONVEX_AGENT_MODE=anonymous` for every `convex` / `vp exec convex` command so it
-never prompts for a Convex login. No `CONVEX_ACCESS_TOKEN` or cloud account is
-needed for local dev (that token is CI/deploy only, per `README.md`).
-
-Ports: web `5173`, Convex API `3210`, Convex site/HTTP `3211`,
-dashboard `6790`. Note `http://127.0.0.1:3211/` returns `503` in local dev
-because no static site is uploaded — that is expected; the app is served by Vite
-on `5173`, not the Convex site proxy.
-
-Browser e2e against a running `vp run dev` stack: `vp run test:e2e:local`
-(hits `http://localhost:5173`, which must match `VITE_SITE_URL` for Better
-Auth). CI uses `test:e2e` against the uploaded static site on `3211`.
-
-Seeded demo login (skip sign-up): the environment ships pre-seeded, so you can
-log in immediately instead of walking through sign-up and group creation. Sign
-in at `http://localhost:5173/` with the demo owner
-`demo@groam.example` / `GroamDemo123!`; it already owns the "Groam Demo"
-workspace with sample trips and travelers. Additional seeded travelers use
-`traveler.NNN@groam.example` (zero-padded, e.g. `traveler.001@groam.example`)
-with the same password. `tooling/seeder` owns seed scenarios, fixtures, plans,
-batching, and composition; it executes reusable primitives from
-`@groam/app-actions/backend`.
-`SEED_USER_EMAIL` / `SEED_USER_PASSWORD` defaults remain in
-`packages/env/src/apps/seeder.ts`.
-Re-seed at any time (local backend must be running) with `vp run seed`
-(defaults to 30 users / 40 trips), `vp run seed --scale small` (6 users /
-8 trips, used for the environment baseline), or `--scale large`. Seeding does a
-clean local reset by default; pass `--no-reset` to preserve existing data. The
-seeded database lives in the git-ignored `.convex/` directory, so it persists
-across restarts.
-
-App onboarding gotcha (only relevant when NOT using the seeded login): after a
-fresh sign-up you must create a group (organization) before the app is usable.
-The onboarding "Create group" button is intentionally disabled until you type a
-group name (placeholder "Acme Labs" is not a value) — this is not a bug.
-
-Use the root `Justfile` as the in-container command map (`just`, `just dev`,
-`just check`, `just codegen`). The package scripts remain the composable
-primitives used by Just, `vp run`, lifecycle hooks, and
-`.github/workflows/test-reusable.yml`; the AI
-assistant features are optional and only need an LLM provider key (see
-`packages/env`). Git pre-commit hooks (`tooling/hooks/pre-commit`, installed by `vp config`) run
-codegen, `vp staged`, conventions, React Doctor (staged), and Fallow (changed); CI owns
-`vp run check`. On hosts without the project toolchain, replace those hooks
-with the full containerized `just check` gate and commit with `--no-verify`.
-Installs use `VP_GIT_HOOKS=0` (matching CI) so container setup is independent of where
-Git metadata is mounted.
