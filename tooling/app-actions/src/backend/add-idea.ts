@@ -23,7 +23,7 @@ export async function startIdea(
   if (!input.tripId) throw new Error('The backend addIdea action requires tripId');
   const client = await authenticatedClient(backend, user);
   const result = await client.mutation(api.routes.trips.versions.create.run, {
-    ideaName: input.name,
+    title: input.name,
     tripId: input.tripId as Id<'trips'>
   });
   return { proposalId: result.proposalId, workingTripId: result.workingTripId };

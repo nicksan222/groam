@@ -9,4 +9,5 @@ export async function openSharedTrip(target: UiTarget): Promise<void> {
   const user = ui(target);
   await user.click(by(user.page, ids.ideaOpenShared));
   await expect(by(user.page, ids.tripHeading)).toBeVisible();
+  await expect(user.page).toHaveURL(/\/trips\/[a-z]{6}(?:[/?#]|$)/u);
 }
