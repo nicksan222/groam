@@ -183,6 +183,7 @@
       "version": "0.0.0",
       "devDependencies": {
         "@groam/typescript-config": "workspace:*",
+        "@groam/vitest-config": "workspace:*",
         "@types/bun": "^1.3.11",
         "@types/react": "^19.3.0",
         "@types/react-dom": "^19.3.0",
@@ -283,6 +284,7 @@
       },
       "devDependencies": {
         "@groam/typescript-config": "workspace:*",
+        "@groam/vitest-config": "workspace:*",
         "@types/node": "^26.6.3",
         "typescript": "~7.0.2",
         "vite": "catalog:",
@@ -297,6 +299,7 @@
       },
       "devDependencies": {
         "@groam/typescript-config": "workspace:*",
+        "@groam/vitest-config": "workspace:*",
         "@types/node": "^26.6.3",
         "typescript": "~7.0.2",
         "vite": "catalog:",
@@ -312,6 +315,7 @@
       },
       "devDependencies": {
         "@groam/typescript-config": "workspace:*",
+        "@groam/vitest-config": "workspace:*",
         "@types/node": "^26.6.3",
         "typescript": "~7.0.2",
         "vite": "catalog:",
@@ -339,6 +343,7 @@
       "devDependencies": {
         "@ffmpeg-installer/ffmpeg": "1.1.0",
         "@groam/typescript-config": "workspace:*",
+        "@groam/vitest-config": "workspace:*",
         "@types/node": "^26.6.3",
         "@types/react": "^19.3.0",
         "@types/react-dom": "^19.3.0",

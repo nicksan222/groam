@@ -1,5 +1,6 @@
+import { expectConsole } from '@groam/vitest-config/console';
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { afterEach, expect, test } from 'vite-plus/test';
 import { AssistantErrorBoundary } from './assistant-error-boundary';
 
 function BrokenAssistant(): never {
@@ -9,7 +10,8 @@ function BrokenAssistant(): never {
 afterEach(cleanup);
 
 test('contains assistant failures instead of taking down the workspace', () => {
-  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  // React reports the error the boundary catches.
+  expectConsole('error', 'Assistant subscription failed');
   const view = render(
     <div>
       <main>Trips remain available</main>
@@ -31,5 +33,4 @@ test('contains assistant failures instead of taking down the workspace', () => {
     </div>
   );
   expect(screen.getByText('Assistant recovered')).toBeDefined();
-  consoleError.mockRestore();
 });

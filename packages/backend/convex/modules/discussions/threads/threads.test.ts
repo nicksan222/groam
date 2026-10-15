@@ -1,7 +1,7 @@
 import { mockModel } from '@convex-dev/agent';
 import { makeFunctionReference } from 'convex/server';
 import { ConvexError, v } from 'convex/values';
-import { expect, test } from 'vite-plus/test';
+import { expect, test, vi } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
 import { action } from '#convex-generated/server';
@@ -9,6 +9,9 @@ import { AssistantSession } from '#convex/modules/assistant/agent/index';
 import { createOutsiderClient } from '#testing/factory';
 import { pngBlob } from '#testing/media';
 import { setupGroup } from '#testing/trips';
+
+// Agent replies stream through scheduled functions, so these tests need real timers.
+vi.useRealTimers();
 
 const paginationOpts = { cursor: null, numItems: 25 };
 

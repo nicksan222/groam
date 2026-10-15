@@ -1,3 +1,4 @@
+import { expectConsole } from '@groam/vitest-config/console';
 import { describe, expect, it } from 'vite-plus/test';
 import { video } from '#showcase';
 import {
@@ -108,6 +109,8 @@ describe('storyboard authoring', () => {
   });
 
   it('runs readable shots in order with transition time before each action', async () => {
+    // Recording narrates each action so the capture log reads like the script.
+    expectConsole('info', 'A user acts');
     const observed: string[] = [];
     const director: Director = {
       actor() {

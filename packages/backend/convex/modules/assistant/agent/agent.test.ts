@@ -2,12 +2,15 @@ import { mockModel } from '@convex-dev/agent';
 import { chatAgentCallSettings } from '@groam/ai/backend/provider';
 import { makeFunctionReference } from 'convex/server';
 import { ConvexError, v } from 'convex/values';
-import { expect, test } from 'vite-plus/test';
+import { expect, test, vi } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
 import { action, env } from '#convex-generated/server';
 import { AssistantSession } from '#convex/modules/assistant/agent/index';
 import { setupTrip, setupWritableTrip, tripActivityInput, tripLocationInput } from '#testing/trips';
+
+// Agent replies stream through scheduled functions, so these tests need real timers.
+vi.useRealTimers();
 
 const workspaceScreen = {
   capabilities: [] as [],

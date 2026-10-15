@@ -1629,6 +1629,35 @@ function tryNormalizeProposalTitle(value: string): string | null {
   }
 }
 
+/** What the Idea reviewer reads. Review runs are scheduled, so this needs no user session. */
+async function reviewContext(ctx: QueryCtx, proposalId: Id<'tripProposals'>) {
+  const proposal = await ctx.db.get('tripProposals', proposalId);
+  if (!proposal) throw new ConvexError('Idea trip not found');
+  if (!(proposal.reviewers ?? []).some((reviewer) => reviewer.kind === 'agent')) {
+    throw new Error('Idea reviewer is not assigned to review this proposal');
+  }
+  if (proposal.status !== 'in_review' && proposal.status !== 'conflicted') {
+    throw new Error('Submit the proposal before requesting idea review');
+  }
+  const working = await ctx.db.get('trips', proposal.workingTripId);
+  if (!working) throw new ConvexError('Idea trip not found');
+  const [base, proposed] = await Promise.all([
+    baseSnapshotFor(ctx, proposal),
+    VersionSnapshots.create(ctx, working)
+  ]);
+  return {
+    changes: await VersionPresentation.present(
+      ctx,
+      VersionChanges.diff(base, proposed),
+      proposal.organizationId
+    ),
+    organizationId: proposal.organizationId,
+    sourceTripId: proposal.sourceTripId,
+    title: proposal.title,
+    workingTripId: proposal.workingTripId
+  };
+}
+
 async function titleContext(ctx: QueryCtx, proposalId: Id<'tripProposals'>, generation: number) {
   const proposal = await ctx.db.get('tripProposals', proposalId);
   if (
@@ -1714,6 +1743,7 @@ export class TripVersions {
   static prepareResolution = prepareResolution;
   static prepareSubmit = prepareSubmit;
   static resolveFeedback = resolveFeedback;
+  static reviewContext = reviewContext;
   static setApproval = setApproval;
   static setReviewers = setReviewers;
   static titleContext = titleContext;

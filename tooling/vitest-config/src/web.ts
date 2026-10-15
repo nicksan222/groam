@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { setupFiles } from '@groam/vitest-config/setup-files';
 import { defineConfig } from 'vite-plus';
 import { resolveRepoRoot } from './repo-root.ts';
 
@@ -27,7 +28,8 @@ export function createWebVitestConfig(appRoot: string, options: { projectRoot?: 
       },
       environment: 'jsdom',
       include: ['src/**/*.test.{ts,tsx}'],
-      restoreMocks: true
+      restoreMocks: true,
+      setupFiles: [setupFiles.consoleGuard]
     }
   });
 }

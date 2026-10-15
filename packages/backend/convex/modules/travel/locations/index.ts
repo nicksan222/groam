@@ -11,7 +11,10 @@ type LocationFilters = {
   type: TripLocationType;
 };
 
-const index = new GeospatialIndex<string, LocationFilters>(components.geospatial);
+// The component logs every query at INFO by default.
+const index = new GeospatialIndex<string, LocationFilters>(components.geospatial, {
+  logLevel: 'WARN'
+});
 
 function key(type: TripLocationType, id: string): string {
   return `${type}:${id}`;

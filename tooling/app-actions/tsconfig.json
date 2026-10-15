@@ -5,5 +5,5 @@
     "paths": { "#ai/*": ["../../packages/ai/src/*"], "#src/*": ["./src/*"] },
     "types": ["node"]
   },
-  "include": ["src"]
+  "include": ["src", "vite.config.ts"]
 }

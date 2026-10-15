@@ -62,6 +62,10 @@ test('adds an activity to a scheduled destination', { timeout: 15_000 }, async (
 - Tests go through `client.query` / `client.mutation` / `client.action`;
   `ctx.db` stays in modules and routes.
 - Use `{ timeout: 15_000 }` as the floor for authenticated fixtures.
+- Scheduled functions wait on fake timers; drive them with
+  `finishAllScheduledFunctions(vi.runAllTimers)` or call `vi.useRealTimers()`.
+- Console output fails the test unless declared with `expectConsole(level,
+  pattern)` from `@groam/vitest-config/console`.
 
 ## Run
 

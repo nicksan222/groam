@@ -1,3 +1,4 @@
+import { expectConsole } from '@groam/vitest-config/console';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import type { TripListItem, WorkspaceTripProposal } from '@/features/trips/hooks/use-trips';
@@ -122,7 +123,8 @@ describe('DashboardView', () => {
   });
 
   test('shows a recovery screen when workspace queries throw', async () => {
-    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    // React reports the error the recovery boundary catches.
+    expectConsole('error', 'query failed');
     trips.useTrips.mockImplementation(() => {
       throw new Error('query failed');
     });

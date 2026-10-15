@@ -29,7 +29,10 @@
     "**/*.spec.tsx",
     "**/doctor.config.ts",
     // Oxlint loads the Groam lint plugin from tooling/oxc-config/lint.ts by path.
-    "tooling/oxc-config/plugin/index.ts"
+    "tooling/oxc-config/plugin/index.ts",
+    // Vitest loads these by path from tooling/vitest-config/src/setup-files.ts.
+    "tooling/vitest-config/src/console-guard/setup.ts",
+    "tooling/vitest-config/src/fake-scheduler.ts"
   ],
   "health": {
     "maxCyclomatic": 35,

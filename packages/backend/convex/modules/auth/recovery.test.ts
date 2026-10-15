@@ -1,3 +1,4 @@
+import { expectConsole } from '@groam/vitest-config/console';
 import { expect, test } from 'vite-plus/test';
 import { components } from '#convex-generated/api';
 import { createTestAuthClient } from '#testing/auth/client';
@@ -168,6 +169,8 @@ test('allows only one simultaneous reset from the same recovery set', async () =
   ]);
 
   expect(results.filter((result) => result.error === null)).toHaveLength(1);
+  // Only one reset wins, so Better Auth warns when the losing password tries to sign in.
+  expectConsole('warn', 'Invalid password');
   const signIns = await Promise.all(
     passwords.map((password) =>
       createTestAuthClient(convex).client.signIn.username({

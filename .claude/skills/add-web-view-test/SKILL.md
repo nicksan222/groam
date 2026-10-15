@@ -80,6 +80,9 @@ Reuse existing mocks before writing new ones: `@/testing/stub-match-media`,
   `@groam/app-actions/ids` (`add-test-id`).
 - Hook logic gets its own `hooks/use-<name>.test.ts(x)`; `packages/ui`
   primitives get a `*.test.tsx` beside the primitive.
+- Console output fails the test unless declared with `expectConsole(level,
+  pattern)` from `@groam/vitest-config/console`; never silence it with
+  `vi.spyOn(console, …)`.
 
 ## Run
 

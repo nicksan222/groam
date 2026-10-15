@@ -9,7 +9,10 @@
     "vite-plus": "catalog:"
   },
   "exports": {
+    "./console": "./src/console-guard/index.ts",
     "./convex": "./src/convex.ts",
+    "./node": "./src/node.ts",
+    "./setup-files": "./src/setup-files.ts",
     "./web": "./src/web.ts"
   },
   "license": "MIT",
