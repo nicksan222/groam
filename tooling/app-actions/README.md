@@ -13,10 +13,10 @@ To add a capability, create the same `<verb>.ts` in those three directories and
 attach it to `AppActions`, `BackendAppActions`, and `PlaywrightAppActions`. The
 conventions check rejects incomplete adapter pairs.
 
-Callers only use `@groam/app-actions/backend` or
-`@groam/app-actions/playwright`. This package owns how one operation reaches
-Groam; it does not own test, seed, or showcase scenarios. Reusable browser
-journeys are shared by web E2E tests and showcase films.
+Callers only use `@groam/app-actions/backend`, `@groam/app-actions/playwright`
+(the showcase films, which record a real browser), or
+`@groam/app-actions/vitest` (view tests and journeys). This package owns how one
+operation reaches Groam; it does not own test, seed, or showcase scenarios.
 
 ```ts
 import { createBackendActions } from '@groam/app-actions/backend';

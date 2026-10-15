@@ -43,10 +43,10 @@
   "scripts": {
     "build": "tsc -b && vp build",
     "dev": "vp dev --host 0.0.0.0",
+    "journeys": "vp test run --project journeys",
     "lint": "vp check .",
     "preview": "vp preview --host 0.0.0.0",
     "routes:generate": "NODE_ENV=production tsr generate",
-    "journeys": "vp test run --project journeys",
     "test": "vp test run --coverage --project unit --project views",
     "typecheck": "tsc -b"
   },

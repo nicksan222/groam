@@ -20,9 +20,9 @@ test('keeps resend available for an earlier message while a newer one is active'
     />
   );
 
-  const resend = page.getByRole('button', { name: 'Resend message' }).element();
-  expect(resend.hasAttribute('disabled')).toBe(false);
-  resend.click();
+  const resend = page.getByRole('button', { name: 'Resend message' });
+  await expect.element(resend).toBeEnabled();
+  await resend.click();
   expect(onResend).toHaveBeenCalledOnce();
 });
 

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { routeTree } from '@/routeTree.gen';
 
 /** A router that starts from the browser's current location. */
-export function createAppRouter() {
+function createAppRouter() {
   return createRouter({
     basepath: env.baseUrl,
     defaultPreload: 'intent',

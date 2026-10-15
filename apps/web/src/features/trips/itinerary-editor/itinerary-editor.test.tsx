@@ -2,12 +2,8 @@ import { render } from '@groam/vitest-config/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { testIds } from '@/lib/test-ids';
-import {
-  itineraryCalls,
-  itineraryTrip,
-  plannedActivity,
-  StatefulItineraryEditor
-} from '@/testing/itinerary-editor-fixture';
+import { StatefulItineraryEditor } from '@/testing/itinerary-editor-fixture';
+import { itineraryCalls, itineraryTrip, plannedActivity } from '@/testing/itinerary-fixture';
 
 vi.mock('@/features/media/hooks/use-media-upload', () => ({
   useMediaUpload: () => vi.fn()

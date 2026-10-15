@@ -1,5 +1,5 @@
 import { expect as playwrightExpect } from '@playwright/test';
-import type { ArchiveTripAction, ArchiveTripInput } from '#src/actions/archive-trip';
+import type { ArchiveTripAction } from '#src/actions/archive-trip';
 import { type UiTarget, ui } from '#src/playwright/interaction';
 import { by } from '#src/playwright/locators';
 import { ids } from '#src/testing/ids';
@@ -13,7 +13,3 @@ export const archiveTripAction: ArchiveTripAction<UiTarget> = async (target) => 
   await user.click(by(user.page, ids.tripActions));
   await expect(by(user.page, ids.tripActionRestore)).toBeVisible();
 };
-
-export function archiveTrip(target: UiTarget): Promise<void> {
-  return archiveTripAction(target, {} satisfies ArchiveTripInput);
-}

@@ -62,7 +62,6 @@
         "@groam/app-actions": "workspace:*",
         "@groam/typescript-config": "workspace:*",
         "@groam/vitest-config": "workspace:*",
-        "@playwright/test": "^1.63.0",
         "@tailwindcss/vite": "^4.2.2",
         "@tanstack/router-cli": "1.167.39",
         "@tanstack/router-plugin": "1.168.41",
@@ -282,6 +281,7 @@
         "typescript": "~7.0.2",
         "vite": "catalog:",
         "vite-plus": "catalog:",
+        "vitest": "catalog:",
       },
     },
     "tooling/devkit": {

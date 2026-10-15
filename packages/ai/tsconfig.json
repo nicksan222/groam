@@ -1,9 +1,13 @@
 {
   "extends": "@groam/typescript-config/react.json",
   "compilerOptions": {
+    // Bun installs vitest twice (vite-plus and the browser matchers each get a copy), which splits
+    // the `expect.element` types; resolving every `vitest` import to one copy joins them again.
     "paths": {
       "#ai/*": ["./src/*"],
-      "@groam/ai/*": ["./src/*"]
+      "@groam/ai/*": ["./src/*"],
+      "vitest": ["./node_modules/vitest"],
+      "vitest/internal/browser": ["./node_modules/vitest/dist/browser.d.ts"]
     },
     "types": ["node", "react", "react-dom", "vite/client"]
   },

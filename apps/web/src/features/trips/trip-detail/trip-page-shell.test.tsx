@@ -5,7 +5,8 @@ import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { ChangeSummary } from '@/features/trips/trip-versions/change-summary';
-import { itineraryTrip, StatefulItineraryEditor } from '@/testing/itinerary-editor-fixture';
+import { StatefulItineraryEditor } from '@/testing/itinerary-editor-fixture';
+import { itineraryTrip } from '@/testing/itinerary-fixture';
 import { TripPageShell } from './trip-page-shell';
 
 vi.mock('@/features/media/hooks/use-media-upload', () => ({
