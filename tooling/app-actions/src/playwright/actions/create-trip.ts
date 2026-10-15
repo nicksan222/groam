@@ -14,6 +14,8 @@ export async function createTrip(target: UiTarget, input: CreateTripInput): Prom
   await user.click(by(page, ids.navTrips));
   await expect(by(page, ids.tripsTitle)).toBeVisible();
   const emptyState = by(page, ids.createTripEmpty);
+  // Wait for the list to load; opening the dialog earlier loses it when the list re-renders.
+  await expect(emptyState.or(by(page, ids.tripCard)).first()).toBeVisible();
   await user.click((await emptyState.isVisible()) ? emptyState : createTripButton(page));
   await expect(by(page, ids.createTripDialog)).toBeVisible();
   await user.type(by(page, ids.createTripName), tripName);
