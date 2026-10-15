@@ -1,36 +1,34 @@
 import {
-  acceptGroupInvitation,
   addActivity,
-  addIdea,
   addStop,
   applyIdea,
   approveIdea,
-  createTrip,
-  inviteGroupMember,
   mockDestinationSearch,
   openAppPath,
+  openIdea,
   openIdeaFromList,
   openItinerary,
   openSharedTrip,
   requestIdeaReview,
   saveSevenDayRange,
-  signIn,
-  uniqueSuffix,
-  uniqueTestUser
+  signInAs,
+  uniqueSuffix
 } from '@groam/app-actions/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from '@groam/app-actions/playwright/test';
 
 test('an approved idea activity appears on the shared itinerary only after applying it', async ({
-  browser,
+  arrange,
+  newSignedOutPage,
   page
 }) => {
   test.setTimeout(180_000);
   await mockDestinationSearch(page);
-  await signIn(page);
   const suffix = uniqueSuffix();
-  const tripId = await createTrip(page, { name: `Applied itinerary ${suffix}` });
+  const reviewerAccount = await arrange.addMember('activity-reviewer');
+  const sharedTripId = await arrange.createTrip({ name: `Applied itinerary ${suffix}` });
   const ideaName = `Add a waterfront walk ${suffix}`;
-  await addIdea(page, { name: ideaName });
+  const idea = await arrange.startIdea({ name: ideaName, tripId: sharedTripId });
+  const { tripId } = await openIdea(page, { proposalId: idea.proposalId, tripId: sharedTripId });
   await saveSevenDayRange(page);
   await openItinerary(page);
   await addStop(page, { name: 'Porto', notes: 'River', startDay: '4', endDay: '5' });
@@ -44,16 +42,10 @@ test('an approved idea activity appears on the shared itinerary only after apply
   await openIdeaFromList(page, ideaName);
   await requestIdeaReview(page);
 
-  const code = await inviteGroupMember(page);
-  const reviewerContext = await browser.newContext();
-  try {
-    const reviewer = await reviewerContext.newPage();
-    await acceptGroupInvitation(reviewer, code, uniqueTestUser('activity-reviewer'));
-    await openIdeaFromList(reviewer, ideaName);
-    await approveIdea(reviewer);
-  } finally {
-    await reviewerContext.close();
-  }
+  const reviewer = await newSignedOutPage();
+  await signInAs(reviewer, reviewerAccount);
+  await openIdeaFromList(reviewer, ideaName);
+  await approveIdea(reviewer);
 
   await openAppPath(page, `trips/${tripId}/itinerary`);
   await expect(page.getByRole('region', { name: 'Day planner' })).toBeVisible();

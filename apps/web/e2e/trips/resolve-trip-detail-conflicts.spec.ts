@@ -2,25 +2,25 @@ import {
   addIdea,
   approveAndApplyIdea,
   by,
-  createTrip,
   ids,
   openAppPath,
+  openIdea,
   openIdeaComparison,
+  openTrip,
   openTripSection,
   reloadAppPage,
   requestIdeaReview,
   resolveTripDetailConflict,
-  signIn,
   uniqueSuffix,
   updateTrip
 } from '@groam/app-actions/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from '@groam/app-actions/playwright/test';
 
 test('keeps ordinary edits quiet and resolves real competing ideas with mixed choices', async ({
+  arrange,
   page
 }) => {
   test.setTimeout(180_000);
-  await signIn(page);
   const suffix = uniqueSuffix('detail-conflict');
   const initialName = `Original plan ${suffix}`;
   const sharedName = `Updated shared plan ${suffix}`;
@@ -28,7 +28,8 @@ test('keeps ordinary edits quiet and resolves real competing ideas with mixed ch
   const ideaTripName = `Idea plan ${suffix}`;
   const ideaNotes = `Idea dates ${suffix}`;
 
-  const tripId = await createTrip(page, { name: initialName });
+  const tripId = await arrange.createTrip({ name: initialName });
+  await openTrip(page, tripId);
   await addIdea(page, { name: ideaName });
   await updateTrip(page, { dateNotes: ideaNotes, name: ideaTripName });
   await openTripSection(page, 'itinerary');
@@ -37,10 +38,15 @@ test('keeps ordinary edits quiet and resolves real competing ideas with mixed ch
   await requestIdeaReview(page);
   const firstIdeaUrl = page.url();
 
-  await openAppPath(page, `trips/${tripId}/ideas`);
-  await addIdea(page, { name: `details/competing-${suffix}` });
-  await updateTrip(page, { dateNotes: 'Shared dates', name: sharedName });
-  await requestIdeaReview(page);
+  const competing = await arrange.startIdea({ name: `details/competing-${suffix}`, tripId });
+  await arrange.updateTrip({
+    dateNotes: 'Shared dates',
+    name: sharedName,
+    tripId: competing.workingTripId
+  });
+  await arrange.requestIdeaReview(competing.proposalId);
+  await openIdea(page, { proposalId: competing.proposalId, tripId });
+  await openIdeaComparison(page);
   await approveAndApplyIdea(page);
 
   await openAppPath(page, firstIdeaUrl);

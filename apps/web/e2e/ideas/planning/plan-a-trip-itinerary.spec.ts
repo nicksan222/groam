@@ -1,32 +1,28 @@
 import {
   addActivity,
-  addIdea,
   addStop,
-  createTrip,
   editActivity,
   mockDestinationSearch,
+  openIdea,
   openItinerary,
   openTrips,
   saveSevenDayRange,
-  signIn,
-  uniqueSuffix,
-  updateTrip
+  uniqueSuffix
 } from '@groam/app-actions/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from '@groam/app-actions/playwright/test';
 
-test('plans a trip itinerary on an idea working copy', async ({ page }) => {
+test('plans a trip itinerary on an idea working copy', async ({ arrange, page }) => {
   test.setTimeout(180_000);
   await mockDestinationSearch(page);
-  await signIn(page);
   const suffix = uniqueSuffix();
   const tripName = `Itinerary ${suffix}`;
   const ideaName = `dates/seven-day-plan-${suffix}`;
 
-  await createTrip(page, { name: tripName });
-  await addIdea(page, { name: ideaName });
+  const tripId = await arrange.createTrip({ name: tripName });
+  const idea = await arrange.startIdea({ name: ideaName, tripId });
+  await arrange.updateTrip({ budgetAmount: 1800, tripId: idea.workingTripId });
+  await openIdea(page, { proposalId: idea.proposalId, tripId });
   await saveSevenDayRange(page);
-
-  await updateTrip(page, { budgetAmount: 1800 });
 
   await openItinerary(page);
   await addStop(page, { endDay: '3', name: 'Lisbon', notes: 'Food and old town', startDay: '1' });

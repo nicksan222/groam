@@ -1,31 +1,32 @@
 import {
   addActivity,
-  addIdea,
   addStop,
-  createTrip,
   discardActivityChanges,
   ids,
   inlineActivityEditor,
   keepActivityPlan,
   mockDestinationSearch,
   openActivityPlan,
+  openIdea,
   openIdeaFromList,
   openIdeaItinerary,
   openItinerary,
   saveSevenDayRange,
-  signIn,
   uniqueSuffix
 } from '@groam/app-actions/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from '@groam/app-actions/playwright/test';
 
-test('cancelling edits or removal leaves the saved idea activity intact', async ({ page }) => {
+test('cancelling edits or removal leaves the saved idea activity intact', async ({
+  arrange,
+  page
+}) => {
   test.setTimeout(120_000);
   await mockDestinationSearch(page);
-  await signIn(page);
   const suffix = uniqueSuffix();
-  await createTrip(page, { name: `Cancel edits ${suffix}` });
+  const tripId = await arrange.createTrip({ name: `Cancel edits ${suffix}` });
   const ideaName = `Keep the plan ${suffix}`;
-  await addIdea(page, { name: ideaName });
+  const { proposalId } = await arrange.startIdea({ name: ideaName, tripId });
+  await openIdea(page, { proposalId, tripId });
   await saveSevenDayRange(page);
   await openItinerary(page);
   await addStop(page, { name: 'Porto', notes: 'Riverside', startDay: '1', endDay: '3' });

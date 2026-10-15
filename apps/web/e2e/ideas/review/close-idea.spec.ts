@@ -1,24 +1,20 @@
 import {
-  addIdea,
   closeIdea,
-  createTrip,
   filterWorkspaceIdeas,
   ideaRow,
   ids,
-  requestIdeaReview,
-  signIn,
-  uniqueSuffix,
-  updateTrip
+  openIdea,
+  uniqueSuffix
 } from '@groam/app-actions/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from '@groam/app-actions/playwright/test';
 
-test('deletes a draft idea without leaving an editable working copy', async ({ page }) => {
+test('deletes a draft idea without leaving an editable working copy', async ({ arrange, page }) => {
   test.setTimeout(120_000);
-  await signIn(page);
   const suffix = uniqueSuffix();
-  await createTrip(page, { name: `Abandoned trip ${suffix}` });
+  const tripId = await arrange.createTrip({ name: `Abandoned trip ${suffix}` });
   const name = `Abandoned idea ${suffix}`;
-  await addIdea(page, { name });
+  const { proposalId } = await arrange.startIdea({ name, tripId });
+  await openIdea(page, { proposalId, tripId });
   await closeIdea(page);
   await filterWorkspaceIdeas(page, 'Settled', [name]);
   const row = ideaRow(page, name);
@@ -26,15 +22,15 @@ test('deletes a draft idea without leaving an editable working copy', async ({ p
   await expect(row.getByTestId(ids.ideaContinue)).toHaveCount(0);
 });
 
-test('requires a reason to pass on an idea already in review', async ({ page }) => {
+test('requires a reason to pass on an idea already in review', async ({ arrange, page }) => {
   test.setTimeout(120_000);
-  await signIn(page);
   const suffix = uniqueSuffix();
-  await createTrip(page, { name: `Review trip ${suffix}` });
+  const tripId = await arrange.createTrip({ name: `Review trip ${suffix}` });
   const name = `Pass on idea ${suffix}`;
-  await addIdea(page, { name });
-  await updateTrip(page, { dateNotes: 'Try a different week' });
-  await requestIdeaReview(page);
+  const idea = await arrange.startIdea({ name, tripId });
+  await arrange.updateTrip({ dateNotes: 'Try a different week', tripId: idea.workingTripId });
+  await arrange.requestIdeaReview(idea.proposalId);
+  await openIdea(page, { proposalId: idea.proposalId, tripId });
   await closeIdea(page, 'The original week works better');
   await filterWorkspaceIdeas(page, 'Settled', [name]);
   const row = ideaRow(page, name);

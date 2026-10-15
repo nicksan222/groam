@@ -1,24 +1,21 @@
 import {
-  addGroupMemberViaInvite,
   chatMessage,
   chatRow,
   createGroupChat,
+  openApp,
   openChatInbox,
   reactToChatMessage,
   reloadAppPage,
   sendChatMessage,
-  signIn,
-  uniqueSuffix,
-  uniqueTestUser
+  uniqueSuffix
 } from '@groam/app-actions/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from '@groam/app-actions/playwright/test';
 
-test('a chat reaction remains visible after a page reload', async ({ browser, page }) => {
+test('a chat reaction remains visible after a page reload', async ({ arrange, page }) => {
   test.setTimeout(180_000);
-  await signIn(page);
   const suffix = uniqueSuffix();
-  const member = uniqueTestUser('reaction-member');
-  await addGroupMemberViaInvite(browser, page, member);
+  const member = await arrange.addMember('reaction-member');
+  await openApp(page);
   await openChatInbox(page);
   const title = `Reactions ${suffix}`;
   await createGroupChat(page, { memberName: member.name, title });

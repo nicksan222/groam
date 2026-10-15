@@ -1,22 +1,23 @@
 import {
   archiveTrip,
-  createTrip,
   filterTripsByStatus,
   openAppPath,
+  openTrip,
   openTripFromList,
   openTrips,
   restoreTrip,
-  signIn,
   tripCard,
   uniqueSuffix
 } from '@groam/app-actions/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from '@groam/app-actions/playwright/test';
 
-test('archived trips leave the active list and return after restoring', async ({ page }) => {
+test('archived trips leave the active list and return after restoring', async ({
+  arrange,
+  page
+}) => {
   test.setTimeout(90_000);
-  await signIn(page);
   const tripName = `Archive filter ${uniqueSuffix()}`;
-  await createTrip(page, { name: tripName });
+  await openTrip(page, await arrange.createTrip({ name: tripName }));
   await archiveTrip(page);
 
   await openAppPath(page, 'trips');

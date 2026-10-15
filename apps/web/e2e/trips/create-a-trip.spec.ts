@@ -3,17 +3,17 @@ import {
   by,
   createTrip,
   ids,
+  openApp,
   openTrips,
   restoreTrip,
-  signIn,
   tripCard,
   uniqueSuffix
 } from '@groam/app-actions/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from '@groam/app-actions/playwright/test';
 
 test('creates, archives, restores, and lists a destination-optional trip', async ({ page }) => {
   test.setTimeout(90_000);
-  await signIn(page);
+  await openApp(page);
   const tripName = `Beach idea ${uniqueSuffix()}`;
 
   await createTrip(page, {

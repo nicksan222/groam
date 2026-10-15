@@ -38,6 +38,11 @@ Stable locators are the `ids` object in
    `tooling/app-actions/src/playwright/<verb>.ts` (exported from its
    `index.ts`) instead of repeating the steps in a spec under
    `apps/web/e2e/`.
+5. Specs import `test`/`expect` from `@groam/app-actions/playwright/test`:
+   `page` is already signed in as the worker's own account and group, and
+   the `arrange` fixture creates trips, ideas, issues, and members through
+   the backend. Drive only the journey under test through the UI; second
+   users get a page from `newSignedOutPage()`.
 
 ## Rules
 

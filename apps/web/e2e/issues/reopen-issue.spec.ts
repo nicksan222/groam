@@ -1,25 +1,26 @@
 import {
   by,
-  createIssue,
-  createTrip,
   filterIssuesByStatus,
   ids,
   issueRow,
+  openIssue,
   openIssueFromInbox,
   openIssuesInbox,
   setIssueStatus,
-  signIn,
   uniqueSuffix
 } from '@groam/app-actions/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from '@groam/app-actions/playwright/test';
 
-test('reopening a closed issue moves it back into the open workspace filter', async ({ page }) => {
+test('reopening a closed issue moves it back into the open workspace filter', async ({
+  arrange,
+  page
+}) => {
   test.setTimeout(120_000);
-  await signIn(page);
   const suffix = uniqueSuffix();
   const title = `Reopen rainy-day plan ${suffix}`;
-  const tripId = await createTrip(page, { name: `Issue reopen trip ${suffix}` });
-  const issueId = await createIssue(page, { body: 'Check indoor alternatives.', title, tripId });
+  const tripId = await arrange.createTrip({ name: `Issue reopen trip ${suffix}` });
+  const issueId = await arrange.createIssue({ body: 'Check indoor alternatives.', title, tripId });
+  await openIssue(page, issueId);
   await setIssueStatus(page, { issueId, status: 'closed' });
 
   await openIssuesInbox(page);

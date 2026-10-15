@@ -2,29 +2,28 @@ import {
   by,
   createIssue,
   createPlaywrightActions,
-  createTrip,
   filterIssuesByStatus,
   ids,
   issueRow,
+  openApp,
   openAppPath,
   openIssueFromInbox,
   openIssuesInbox,
+  openTrip,
   openTripSection,
-  signIn,
   uniqueSuffix
 } from '@groam/app-actions/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from '@groam/app-actions/playwright/test';
 
-test('creates a trip issue and opens it as a first-class page', async ({ page }) => {
+test('creates a trip issue and opens it as a first-class page', async ({ arrange, page }) => {
   test.setTimeout(90_000);
-  await signIn(page);
   const suffix = uniqueSuffix();
   const tripName = `Issue trip ${suffix}`;
   const issueTitle = `Rainy-day plan ${suffix}`;
   const issueBody = 'Add a backup indoor day if it rains.';
   const app = createPlaywrightActions();
 
-  const tripId = await createTrip(page, { name: tripName });
+  const tripId = await openTrip(page, await arrange.createTrip({ name: tripName }));
   const issueId = await createIssue(page, { body: issueBody, title: issueTitle, tripId });
   const issueRecordId = await by(page, ids.issueHeading).getAttribute('data-issue-id');
   if (!issueRecordId) throw new Error('Created issue did not expose its record ID');
@@ -55,7 +54,7 @@ test('creates a trip issue and opens it as a first-class page', async ({ page })
 });
 
 test('lists workspace issues from the sidebar', async ({ page }) => {
-  await signIn(page);
+  await openApp(page);
   await openIssuesInbox(page);
   await expect(by(page, ids.issuesTitle)).toBeVisible();
 });

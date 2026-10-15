@@ -51,14 +51,15 @@ jobs:
         run: bun run check
 
   e2e:
-    name: Browser (${{ matrix.shard }}/4)
+    name: Browser (${{ matrix.shard }}/2)
     needs: [quality]
     runs-on: ubuntu-latest
     timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        # Each shard runs two Playwright workers, each with its own account and group.
+        shard: [1, 2]
     env:
       CI: 'true'
       CONVEX_AGENT_MODE: anonymous
@@ -102,7 +103,9 @@ jobs:
           bunx convex env set BETTER_AUTH_SECRET "ci-only-better-auth-secret-not-for-production"
           bunx convex env set SITE_URL "$PLAYWRIGHT_BASE_URL/"
 
+      # Generated code is identical in every shard; verifying it once is enough.
       - name: Verify generated code
+        if: matrix.shard == 1
         run: |
           bun run codegen
           git diff --exit-code
@@ -120,11 +123,8 @@ jobs:
           curl --fail --show-error --silent "$PLAYWRIGHT_BASE_URL/settings" >/dev/null
           test "$(curl --output /dev/null --silent --write-out '%{http_code}' "$PLAYWRIGHT_BASE_URL/missing.js")" = "404"
 
-      - name: Seed browser test data
-        run: bun run seed -- --users 1 --trips 0
-
       - name: Run browser tests
-        run: bun run test:e2e -- --shard=${{ matrix.shard }}/4
+        run: bun run test:e2e -- --shard=${{ matrix.shard }}/2
 
       - name: Upload failure artifacts
         if: failure()

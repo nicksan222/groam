@@ -1,26 +1,24 @@
 import {
-  addIdea,
   by,
-  createTrip,
   ids,
+  openIdea,
   returnIdeaToEditing,
   reviewIdeaChange,
-  signIn,
-  uniqueSuffix,
-  updateTrip
+  uniqueSuffix
 } from '@groam/app-actions/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from '@groam/app-actions/playwright/test';
 
 test('reviews an edit, comments without blocking it, and returns to editing on mobile', async ({
+  arrange,
   page
 }) => {
   test.setTimeout(120_000);
-  await signIn(page);
   const suffix = uniqueSuffix();
-  await createTrip(page, { name: `Review polish ${suffix}` });
-  await addIdea(page, { name: `Review dates ${suffix}` });
+  const tripId = await arrange.createTrip({ name: `Review polish ${suffix}` });
+  const idea = await arrange.startIdea({ name: `Review dates ${suffix}`, tripId });
   const note = `Prefer a relaxed weekend ${suffix}`;
-  await updateTrip(page, { dateNotes: note });
+  await arrange.updateTrip({ dateNotes: note, tripId: idea.workingTripId });
+  await openIdea(page, { proposalId: idea.proposalId, tripId });
   const comment = `Looks good, keeping this flexible. ${suffix}`;
   await reviewIdeaChange(page, { change: note, comment });
   await expect(by(page, ids.requestReview)).toBeEnabled();

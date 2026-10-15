@@ -1,51 +1,40 @@
 import {
-  acceptGroupInvitation,
-  addIdea,
   approveIdea,
   by,
-  createTrip,
   ids,
-  inviteGroupMember,
+  openIdea,
   openIdeaFromList,
-  requestIdeaReview,
   revokeIdeaApproval,
-  signIn,
-  uniqueSuffix,
-  uniqueTestUser,
-  updateTrip
+  signInAs,
+  uniqueSuffix
 } from '@groam/app-actions/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from '@groam/app-actions/playwright/test';
 
 test('revoking the only approval prevents an idea from being applied', async ({
-  browser,
+  arrange,
+  newSignedOutPage,
   page
 }) => {
   test.setTimeout(180_000);
-  await signIn(page);
   const suffix = uniqueSuffix();
   const ideaName = `Approval reversal ${suffix}`;
-  await createTrip(page, { name: `Review reversal ${suffix}` });
-  await addIdea(page, { name: ideaName });
-  await updateTrip(page, { dateNotes: 'More time by the river' });
-  await requestIdeaReview(page);
+  const reviewerAccount = await arrange.addMember('approval-reversal');
+  const tripId = await arrange.createTrip({ name: `Review reversal ${suffix}` });
+  const idea = await arrange.startIdea({ name: ideaName, tripId });
+  await arrange.updateTrip({ dateNotes: 'More time by the river', tripId: idea.workingTripId });
+  await arrange.requestIdeaReview(idea.proposalId);
 
-  const code = await inviteGroupMember(page);
-  const reviewerContext = await browser.newContext();
-  try {
-    const reviewer = await reviewerContext.newPage();
-    await acceptGroupInvitation(reviewer, code, uniqueTestUser('approval-reversal'));
-    await openIdeaFromList(reviewer, ideaName);
-    await approveIdea(reviewer);
-    await openIdeaFromList(page, ideaName);
-    await expect(by(page, ids.applyIdea).first()).toBeEnabled();
+  const reviewer = await newSignedOutPage();
+  await signInAs(reviewer, reviewerAccount);
+  await openIdeaFromList(reviewer, ideaName);
+  await approveIdea(reviewer);
+  await openIdea(page, { proposalId: idea.proposalId, tripId });
+  await expect(by(page, ids.applyIdea).first()).toBeEnabled();
 
-    await revokeIdeaApproval(reviewer);
-    await expect(by(reviewer, ids.approveIdea).first()).toHaveText(/Approve/u);
-    await expect(by(page, ids.applyIdea).first()).toBeDisabled();
+  await revokeIdeaApproval(reviewer);
+  await expect(by(reviewer, ids.approveIdea).first()).toHaveText(/Approve/u);
+  await expect(by(page, ids.applyIdea).first()).toBeDisabled();
 
-    await approveIdea(reviewer);
-    await expect(by(page, ids.applyIdea).first()).toBeEnabled();
-  } finally {
-    await reviewerContext.close();
-  }
+  await approveIdea(reviewer);
+  await expect(by(page, ids.applyIdea).first()).toBeEnabled();
 });

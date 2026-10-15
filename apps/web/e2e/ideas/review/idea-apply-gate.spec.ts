@@ -1,26 +1,25 @@
 import {
-  addIdea,
   by,
-  createTrip,
   ids,
+  openIdea,
+  openIdeaComparison,
   reloadAppPage,
-  requestIdeaReview,
-  signIn,
-  uniqueSuffix,
-  updateTrip
+  uniqueSuffix
 } from '@groam/app-actions/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from '@groam/app-actions/playwright/test';
 
 test('submitting an idea for review does not allow applying it without approval', async ({
+  arrange,
   page
 }) => {
   test.setTimeout(90_000);
-  await signIn(page);
   const suffix = uniqueSuffix();
-  await createTrip(page, { name: `Unapproved trip ${suffix}` });
-  await addIdea(page, { name: `Unapproved idea ${suffix}` });
-  await updateTrip(page, { dateNotes: 'A slower weekend' });
-  await requestIdeaReview(page);
+  const tripId = await arrange.createTrip({ name: `Unapproved trip ${suffix}` });
+  const idea = await arrange.startIdea({ name: `Unapproved idea ${suffix}`, tripId });
+  await arrange.updateTrip({ dateNotes: 'A slower weekend', tripId: idea.workingTripId });
+  await arrange.requestIdeaReview(idea.proposalId);
+  await openIdea(page, { proposalId: idea.proposalId, tripId });
+  await openIdeaComparison(page);
 
   await expect(by(page, ids.applyIdea).first()).toBeVisible();
   await expect(by(page, ids.applyIdea).first()).toBeDisabled();

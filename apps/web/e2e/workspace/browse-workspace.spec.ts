@@ -1,26 +1,22 @@
 import {
-  addIdea,
   by,
-  createIssue,
-  createTrip,
   expectHomeDashboard,
   ids,
+  openApp,
   openAppPath,
   openChatInbox,
   openFirstMobileListRow,
   openIssuesInbox,
   openMobileChat,
   openSettingsGroupSection,
-  openSharedTrip,
   recoverFromNotFound,
   selectSystemTheme,
-  signIn,
   uniqueSuffix
 } from '@groam/app-actions/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from '@groam/app-actions/playwright/test';
 
 test('group people live in settings, not the sidebar', async ({ page }) => {
-  await signIn(page);
+  await openApp(page);
   await expect(page.getByRole('link', { name: 'Group', exact: true })).toHaveCount(0);
   await openSettingsGroupSection(page);
   await expect(by(page, ids.inviteMember)).toBeVisible();
@@ -41,7 +37,7 @@ test('workspace routes and 404 recovery work', async ({ page }) => {
   page.on('console', (message) => {
     if (message.type() === 'error') errors.push(message.text());
   });
-  await signIn(page);
+  await openApp(page);
 
   await expect(by(page, ids.tripsTitle)).toBeVisible();
   await openIssuesInbox(page);
@@ -57,7 +53,7 @@ test('system theme and mobile navigation work', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'dark' });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => localStorage.removeItem('groam-theme'));
-  await signIn(page);
+  await openApp(page);
   await expect(page.locator('html')).toHaveClass(/dark/u);
 
   const navigation = by(page, ids.mobileNav);
@@ -66,14 +62,15 @@ test('system theme and mobile navigation work', async ({ page }) => {
   await selectSystemTheme(page);
 });
 
-test('mobile idea and issue lists keep titles readable and rows navigable', async ({ page }) => {
+test('mobile idea and issue lists keep titles readable and rows navigable', async ({
+  arrange,
+  page
+}) => {
   test.setTimeout(180_000);
-  await signIn(page);
   const suffix = uniqueSuffix();
-  const tripId = await createTrip(page, { name: `Mobile lists ${suffix}` });
-  await addIdea(page, { name: `Mobile idea ${suffix}` });
-  await openSharedTrip(page);
-  await createIssue(page, {
+  const tripId = await arrange.createTrip({ name: `Mobile lists ${suffix}` });
+  await arrange.startIdea({ name: `Mobile idea ${suffix}`, tripId });
+  await arrange.createIssue({
     body: 'Keep this issue title readable on a narrow screen.',
     title: `Mobile issue ${suffix}`,
     tripId

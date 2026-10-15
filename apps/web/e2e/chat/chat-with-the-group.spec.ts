@@ -1,21 +1,18 @@
 import {
-  addGroupMemberViaInvite,
   chatRow,
   createGroupChat,
+  openApp,
   openChatInbox,
   sendMessage,
-  signIn,
-  uniqueSuffix,
-  uniqueTestUser
+  uniqueSuffix
 } from '@groam/app-actions/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from '@groam/app-actions/playwright/test';
 
-test('chats with a group member', async ({ browser, page }) => {
+test('chats with a group member', async ({ arrange, page }) => {
   test.setTimeout(180_000);
-  await signIn(page);
   const suffix = uniqueSuffix();
-  const member = uniqueTestUser('chat-member');
-  await addGroupMemberViaInvite(browser, page, member);
+  const member = await arrange.addMember('chat-member');
+  await openApp(page);
 
   await openChatInbox(page);
   await createGroupChat(page, { memberName: member.name, title: `Dates thread ${suffix}` });

@@ -1,27 +1,28 @@
 import {
-  addIdea,
   addStop,
   continueActivityPlan,
-  createTrip,
   ids,
   inlineActivityEditor,
   mockDestinationSearch,
   openActivityPlan,
+  openIdea,
   openItinerary,
   saveSevenDayRange,
-  signIn,
   startActivityPlan,
   uniqueSuffix
 } from '@groam/app-actions/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from '@groam/app-actions/playwright/test';
 
-test('editing from a continuation day shows the complete activity range', async ({ page }) => {
+test('editing from a continuation day shows the complete activity range', async ({
+  arrange,
+  page
+}) => {
   test.setTimeout(120_000);
   await mockDestinationSearch(page);
-  await signIn(page);
   const suffix = uniqueSuffix();
-  await createTrip(page, { name: `Multi-day plan ${suffix}` });
-  await addIdea(page, { name: `Multi-day idea ${suffix}` });
+  const tripId = await arrange.createTrip({ name: `Multi-day plan ${suffix}` });
+  const { proposalId } = await arrange.startIdea({ name: `Multi-day idea ${suffix}`, tripId });
+  await openIdea(page, { proposalId, tripId });
   await saveSevenDayRange(page);
   await openItinerary(page);
   await addStop(page, { name: 'Porto', notes: 'River walk', startDay: '4', endDay: '6' });

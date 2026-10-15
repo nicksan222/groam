@@ -15,6 +15,10 @@ sudo chown -R "$(id -u):$(id -g)" "${persistent_dirs[@]}"
 
 VP_GIT_HOOKS=0 vp install --frozen-lockfile
 
+# Browser tests need the Chromium build matching the locked Playwright version;
+# its system libraries come from the Dockerfile.
+vp run test:e2e:install
+
 # Interactive `claude` in bash and zsh uses the repository harness (Headroom,
 # Caveman, MCP). An alias, not a PATH shim, so the harness still finds the real
 # binary. Home is rebuilt with the container, so this reruns on every rebuild;

@@ -1,18 +1,17 @@
 import {
   addActivity,
-  addIdea,
   addStop,
   continueActivityPlan,
-  createIssue,
-  createTrip,
   editActivity,
   ids,
   inlineActivityEditor,
   mockDestinationSearch,
   openActivityPlan,
   openIdeaComparison,
+  openIdea,
   openIdeaFromList,
   openIdeaItinerary,
+  openIssue,
   openItinerary,
   openSharedTrip,
   openTripSection,
@@ -20,23 +19,23 @@ import {
   requestIdeaReview,
   returnIdeaToEditing,
   saveSevenDayRange,
-  signIn,
   startActivityPlan,
   startIdeaFromIssue,
   uniqueSuffix
 } from '@groam/app-actions/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from '@groam/app-actions/playwright/test';
 
 test('adds, edits and removes activities on a later-day idea from both entry points', async ({
+  arrange,
   page
 }) => {
   test.setTimeout(120_000);
   await mockDestinationSearch(page);
-  await signIn(page);
   const suffix = uniqueSuffix();
   const ideaName = `Later-day activities ${suffix}`;
-  await createTrip(page, { name: `Later-day trip ${suffix}` });
-  await addIdea(page, { name: ideaName });
+  const tripId = await arrange.createTrip({ name: `Later-day trip ${suffix}` });
+  const { proposalId } = await arrange.startIdea({ name: ideaName, tripId });
+  await openIdea(page, { proposalId, tripId });
   await saveSevenDayRange(page);
   await openItinerary(page);
   await addStop(page, { name: 'Porto', notes: 'River walk', startDay: '4', endDay: '5' });
@@ -64,15 +63,16 @@ test('adds, edits and removes activities on a later-day idea from both entry poi
 });
 
 test('switches destination and day, returns from comparison, and submits activity changes for review', async ({
+  arrange,
   page
 }) => {
   test.setTimeout(150_000);
   await mockDestinationSearch(page);
-  await signIn(page);
   const suffix = uniqueSuffix();
   const ideaName = `Review activity ${suffix}`;
-  await createTrip(page, { name: `Review itinerary ${suffix}` });
-  await addIdea(page, { name: ideaName });
+  const tripId = await arrange.createTrip({ name: `Review itinerary ${suffix}` });
+  const { proposalId } = await arrange.startIdea({ name: ideaName, tripId });
+  await openIdea(page, { proposalId, tripId });
   await saveSevenDayRange(page);
   await openItinerary(page);
   await addStop(page, { name: 'Lisbon', notes: 'Old town', startDay: '1', endDay: '3' });
@@ -106,18 +106,21 @@ test('switches destination and day, returns from comparison, and submits activit
 });
 
 test('adds an activity to an issue-linked idea without changing the shared trip', async ({
+  arrange,
   page
 }) => {
   test.setTimeout(120_000);
   await mockDestinationSearch(page);
-  await signIn(page);
   const suffix = uniqueSuffix();
-  const tripId = await createTrip(page, { name: `Issue itinerary ${suffix}` });
-  await createIssue(page, {
-    title: `Plan a walk ${suffix}`,
-    body: 'Add a day out to the trip',
-    tripId
-  });
+  const tripId = await arrange.createTrip({ name: `Issue itinerary ${suffix}` });
+  await openIssue(
+    page,
+    await arrange.createIssue({
+      title: `Plan a walk ${suffix}`,
+      body: 'Add a day out to the trip',
+      tripId
+    })
+  );
   const ideaName = await startIdeaFromIssue(page);
   await saveSevenDayRange(page);
   await openIdeaItinerary(page);

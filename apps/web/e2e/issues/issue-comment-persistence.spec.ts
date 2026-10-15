@@ -1,24 +1,22 @@
 import {
   by,
-  createIssue,
   createPlaywrightActions,
-  createTrip,
   ids,
+  openIssue,
   openIssueFromInbox,
   openIssueFromTrip,
-  signIn,
   uniqueSuffix
 } from '@groam/app-actions/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from '@groam/app-actions/playwright/test';
 
-test('issue comments persist across trip and workspace views', async ({ page }) => {
+test('issue comments persist across trip and workspace views', async ({ arrange, page }) => {
   test.setTimeout(90_000);
-  await signIn(page);
   const suffix = uniqueSuffix();
   const title = `Issue conversation ${suffix}`;
   const comment = `Check the museum schedule ${suffix}`;
-  const tripId = await createTrip(page, { name: `Comment trip ${suffix}` });
-  const issueId = await createIssue(page, { body: 'Need an indoor alternative.', title, tripId });
+  const tripId = await arrange.createTrip({ name: `Comment trip ${suffix}` });
+  const issueId = await arrange.createIssue({ body: 'Need an indoor alternative.', title, tripId });
+  await openIssue(page, issueId);
   await createPlaywrightActions().addIssueComment(page, { content: comment, issueId });
   await expect(by(page, ids.issueComment)).toBeEmpty();
 

@@ -1,25 +1,26 @@
 import {
-  addIdea,
   addInlineActivity,
   addStop,
-  createTrip,
   editInlineActivity,
   ids,
   mockDestinationSearch,
+  openIdea,
   openItinerary,
   saveSevenDayRange,
-  signIn,
   uniqueSuffix
 } from '@groam/app-actions/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from '@groam/app-actions/playwright/test';
 
-test('plans morning and afternoon activities directly within an idea day', async ({ page }) => {
+test('plans morning and afternoon activities directly within an idea day', async ({
+  arrange,
+  page
+}) => {
   test.setTimeout(150_000);
   await mockDestinationSearch(page);
-  await signIn(page);
   const suffix = uniqueSuffix();
-  await createTrip(page, { name: `Inline itinerary ${suffix}` });
-  await addIdea(page, { name: `Plan this day ${suffix}` });
+  const tripId = await arrange.createTrip({ name: `Inline itinerary ${suffix}` });
+  const { proposalId } = await arrange.startIdea({ name: `Plan this day ${suffix}`, tripId });
+  await openIdea(page, { proposalId, tripId });
   await saveSevenDayRange(page);
   await openItinerary(page);
   await addStop(page, { name: 'Lisbon', notes: 'Explore the city', startDay: '1', endDay: '3' });
@@ -49,13 +50,16 @@ test('plans morning and afternoon activities directly within an idea day', async
   await expect(page.getByTestId(ids.activityInlineEditor)).toHaveCount(0);
 });
 
-test('switching a shared day’s destination keeps the inline activity draft', async ({ page }) => {
+test('switching a shared day’s destination keeps the inline activity draft', async ({
+  arrange,
+  page
+}) => {
   test.setTimeout(150_000);
   await mockDestinationSearch(page);
-  await signIn(page);
   const suffix = uniqueSuffix();
-  await createTrip(page, { name: `Shared day ${suffix}` });
-  await addIdea(page, { name: `Two places ${suffix}` });
+  const tripId = await arrange.createTrip({ name: `Shared day ${suffix}` });
+  const { proposalId } = await arrange.startIdea({ name: `Two places ${suffix}`, tripId });
+  await openIdea(page, { proposalId, tripId });
   await saveSevenDayRange(page);
   await openItinerary(page);
   await addStop(page, { name: 'Lisbon', notes: 'Old town', startDay: '1', endDay: '2' });
@@ -79,13 +83,16 @@ test('switching a shared day’s destination keeps the inline activity draft', a
   ).toContainText('Porto');
 });
 
-test('mobile day planning keeps the inline activity form in the schedule', async ({ page }) => {
+test('mobile day planning keeps the inline activity form in the schedule', async ({
+  arrange,
+  page
+}) => {
   test.setTimeout(120_000);
   await mockDestinationSearch(page);
-  await signIn(page);
   const suffix = uniqueSuffix();
-  await createTrip(page, { name: `Mobile day plan ${suffix}` });
-  await addIdea(page, { name: `Mobile activities ${suffix}` });
+  const tripId = await arrange.createTrip({ name: `Mobile day plan ${suffix}` });
+  const { proposalId } = await arrange.startIdea({ name: `Mobile activities ${suffix}`, tripId });
+  await openIdea(page, { proposalId, tripId });
   await saveSevenDayRange(page);
   await openItinerary(page);
   await addStop(page, { name: 'Porto', notes: 'River', startDay: '2', endDay: '3' });

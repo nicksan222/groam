@@ -1,26 +1,24 @@
 import {
   addIdea,
   by,
-  createTrip,
   ideaRow,
   ids,
   openIdeaFromList,
   openSharedTrip,
+  openTrip,
   openTripSection,
   openWorkspaceIdeas,
-  signIn,
   uniqueSuffix
 } from '@groam/app-actions/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from '@groam/app-actions/playwright/test';
 
-test('starts an idea and opens first-class idea routes', async ({ page }) => {
+test('starts an idea and opens first-class idea routes', async ({ arrange, page }) => {
   test.setTimeout(180_000);
-  await signIn(page);
   const suffix = uniqueSuffix();
   const tripName = `Idea routes ${suffix}`;
   const ideaName = `routes/open-idea-${suffix}`;
 
-  const tripId = await createTrip(page, { name: tripName });
+  const tripId = await openTrip(page, await arrange.createTrip({ name: tripName }));
   await addIdea(page, { name: ideaName });
   await openSharedTrip(page);
   await expect(by(page, ids.tripHeading)).toHaveAttribute('data-trip-name', tripName);

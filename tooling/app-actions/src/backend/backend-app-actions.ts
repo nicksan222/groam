@@ -16,7 +16,7 @@ import type { UpdateTripInput } from '#src/actions/update-trip';
 import { AppActions } from '#src/app-actions';
 import { addActivity } from './add-activity';
 import { addDestinationToIdea } from './add-destination-to-idea';
-import { addIdea } from './add-idea';
+import { addIdea, startIdea } from './add-idea';
 import { addIssueComment } from './add-issue-comment';
 import { applyIdea } from './apply-idea';
 import { approveIdea } from './approve-idea';
@@ -76,6 +76,8 @@ export class BackendAppActions extends AppActions<AuthenticatedAppUser> {
     sendMessage({ backend: this.backend, user }, input);
   readonly setIssueStatus = (user: AuthenticatedAppUser, input: SetIssueStatusInput) =>
     setIssueStatus({ backend: this.backend, user }, input);
+  readonly startIdea = (user: AuthenticatedAppUser, input: AddIdeaInput) =>
+    startIdea({ backend: this.backend, user }, input);
   readonly updateTrip = (user: AuthenticatedAppUser, input: UpdateTripInput) =>
     updateTrip({ backend: this.backend, user }, input);
 

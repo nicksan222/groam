@@ -1,8 +1,8 @@
-import { ids, openBackgroundActivity, signIn } from '@groam/app-actions/playwright';
-import { expect, test } from '@playwright/test';
+import { ids, openApp, openBackgroundActivity } from '@groam/app-actions/playwright';
+import { expect, test } from '@groam/app-actions/playwright/test';
 
 test('background activity is discoverable in settings and opens a real run', async ({ page }) => {
-  await signIn(page);
+  await openApp(page);
   await expect(page.getByRole('complementary').getByTestId(ids.navAgents)).toHaveCount(0);
   const result = await openBackgroundActivity(page);
   if (result === 'empty') {

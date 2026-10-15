@@ -2,21 +2,22 @@ import {
   addFirstDestination,
   addIdea,
   by,
-  createTrip,
   ids,
   mockDestinationSearch,
   openDestinationDetails,
+  openTrip,
   openTripSection,
-  signIn,
   uniqueSuffix
 } from '@groam/app-actions/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from '@groam/app-actions/playwright/test';
 
-test('starts an idea and adds the first destination through one composer', async ({ page }) => {
+test('starts an idea and adds the first destination through one composer', async ({
+  arrange,
+  page
+}) => {
   test.setTimeout(120_000);
   await mockDestinationSearch(page);
-  await signIn(page);
-  await createTrip(page, { name: `First destination ${uniqueSuffix()}` });
+  await openTrip(page, await arrange.createTrip({ name: `First destination ${uniqueSuffix()}` }));
   await expect(by(page, ids.tripActionAddStop)).toHaveCount(0);
   await addIdea(page, { name: `First stop idea ${uniqueSuffix()}` });
   await openTripSection(page, 'itinerary');

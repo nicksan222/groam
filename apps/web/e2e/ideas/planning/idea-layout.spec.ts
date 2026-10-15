@@ -1,26 +1,28 @@
 import {
-  addIdea,
   by,
-  createTrip,
   ids,
+  openApp,
   openIdeaComparison,
   openIdeaFromList,
+  openTrip,
   openTripSection,
   openWorkspaceIdeas,
   pageCanvas,
   resolvedBackground,
-  signIn,
   twoColumnPageLayout,
   uniqueSuffix
 } from '@groam/app-actions/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from '@groam/app-actions/playwright/test';
 
-test('idea tabs share the page canvas while itinerary uses its full width', async ({ page }) => {
+test('idea tabs share the page canvas while itinerary uses its full width', async ({
+  arrange,
+  page
+}) => {
   test.setTimeout(120_000);
-  await signIn(page);
-  await createTrip(page, { name: `Layout defaults ${uniqueSuffix()}` });
+  const tripId = await arrange.createTrip({ name: `Layout defaults ${uniqueSuffix()}` });
   const ideaName = `Consistent tabs ${uniqueSuffix()}`;
-  await addIdea(page, { name: ideaName });
+  await arrange.startIdea({ name: ideaName, tripId });
+  await openApp(page);
   await openWorkspaceIdeas(page);
   const sidebarLink = await by(page, ids.navTrips).elementHandle();
   if (!sidebarLink) throw new Error('Expected workspace navigation');
@@ -66,10 +68,9 @@ test('idea tabs share the page canvas while itinerary uses its full width', asyn
   }
 });
 
-test('all shared trip tabs retain the Overview canvas', async ({ page }) => {
+test('all shared trip tabs retain the Overview canvas', async ({ arrange, page }) => {
   test.setTimeout(120_000);
-  await signIn(page);
-  await createTrip(page, { name: `Trip canvas ${uniqueSuffix()}` });
+  await openTrip(page, await arrange.createTrip({ name: `Trip canvas ${uniqueSuffix()}` }));
   for (const dark of [false, true]) {
     await page.evaluate(
       (enabled) => document.documentElement.classList.toggle('dark', enabled),

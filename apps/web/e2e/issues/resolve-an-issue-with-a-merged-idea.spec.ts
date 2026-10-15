@@ -1,54 +1,48 @@
 import {
-  acceptGroupInvitation,
   applyIdea,
   approveIdea,
   by,
-  createIssue,
-  createTrip,
   idFromPath,
   ids,
-  inviteGroupMember,
   openAppPath,
   openIdeaFromList,
+  openIssue,
   requestIdeaReview,
-  signIn,
+  signInAs,
   startIdeaFromIssue,
   uniqueSuffix,
-  uniqueTestUser,
   updateTrip
 } from '@groam/app-actions/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from '@groam/app-actions/playwright/test';
 
 test('creates a trip, makes an issue, and resolves it with a merged idea', async ({
-  browser,
+  arrange,
+  newSignedOutPage,
   page
 }) => {
   test.setTimeout(180_000);
-  await signIn(page);
   const suffix = uniqueSuffix();
-  const member = uniqueTestUser('approver');
-
-  const tripId = await createTrip(page, { name: `Merge trip ${suffix}` });
-  const issueId = await createIssue(page, {
-    body: 'If it rains we need a museum day.',
-    title: `Need indoor backup ${suffix}`,
-    tripId
-  });
+  const member = await arrange.addMember('approver');
+  const tripId = await arrange.createTrip({ name: `Merge trip ${suffix}` });
+  const issueId = await openIssue(
+    page,
+    await arrange.createIssue({
+      body: 'If it rains we need a museum day.',
+      title: `Need indoor backup ${suffix}`,
+      tripId
+    })
+  );
 
   const ideaName = await startIdeaFromIssue(page);
 
   await updateTrip(page, { dateNotes: 'Indoor museum day if it rains' });
   await requestIdeaReview(page);
 
-  const invitationCode = await inviteGroupMember(page);
-  const memberContext = await browser.newContext();
-  const memberPage = await memberContext.newPage();
-  await acceptGroupInvitation(memberPage, invitationCode, member);
+  const memberPage = await newSignedOutPage();
+  await signInAs(memberPage, member);
   await openIdeaFromList(memberPage, ideaName);
   await expect(memberPage).toHaveURL(/\/trips\/[^/]+\/ideas\/[^/]+/u, { timeout: 20_000 });
   await approveIdea(memberPage);
-  await memberPage.close();
-  await memberContext.close();
 
   await page.bringToFront();
   await openIdeaFromList(page, ideaName);

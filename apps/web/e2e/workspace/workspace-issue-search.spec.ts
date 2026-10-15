@@ -1,25 +1,24 @@
 import {
-  createIssue,
-  createTrip,
   issueRow,
-  openAppPath,
+  openApp,
   openIssuesInbox,
   searchIssues,
-  signIn,
   uniqueSuffix
 } from '@groam/app-actions/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from '@groam/app-actions/playwright/test';
 
-test('workspace issue search finds the matching issue and clears cleanly', async ({ page }) => {
+test('workspace issue search finds the matching issue and clears cleanly', async ({
+  arrange,
+  page
+}) => {
   test.setTimeout(120_000);
-  await signIn(page);
   const suffix = uniqueSuffix();
   const first = `Museum issue ${suffix}`;
   const second = `Ferry issue ${suffix}`;
-  const tripId = await createTrip(page, { name: `Issue search trip ${suffix}` });
-  await createIssue(page, { body: 'Check opening hours.', title: first, tripId });
-  await openAppPath(page, `trips/${tripId}/issues`);
-  await createIssue(page, { body: 'Check departure time.', title: second, tripId });
+  const tripId = await arrange.createTrip({ name: `Issue search trip ${suffix}` });
+  await arrange.createIssue({ body: 'Check opening hours.', title: first, tripId });
+  await arrange.createIssue({ body: 'Check departure time.', title: second, tripId });
+  await openApp(page);
   await openIssuesInbox(page);
 
   await searchIssues(page, 'Ferry issue');
