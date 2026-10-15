@@ -36,8 +36,6 @@ jobs:
           mkdir -p \
             "$HOME/.convex" \
             "$HOME/.claude" \
-            "$HOME/.codex" \
-            "$HOME/.copilot" \
             "$HOME/.config/gh" \
             "$HOME/.config/gcloud"
 

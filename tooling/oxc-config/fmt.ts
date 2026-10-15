@@ -18,7 +18,6 @@ export const fmt = {
     '**/generated.ts',
     '**/routeTree.gen.ts',
     '**/vendor/**',
-    '.agents/**',
     '.claude/**'
   ]
 } satisfies FmtConfig;

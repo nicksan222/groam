@@ -106,7 +106,7 @@ Do not hand-edit `apps/web/src/routeTree.gen.ts`. Add routes as files under
   `export const run`
 - Environment variables go through `@groam/env/*` or Convex `defineApp({ env })`
 
-Agent-oriented layout notes live in [`AGENTS.md`](AGENTS.md).
+Agent-oriented layout notes live in [`CLAUDE.md`](CLAUDE.md).
 
 ## Proposing changes
 

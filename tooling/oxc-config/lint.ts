@@ -33,7 +33,6 @@ export const lint = {
     '**/generated.ts',
     '**/routeTree.gen.ts',
     '**/vendor/**',
-    '.agents/**',
     '.claude/**'
   ],
   rules: {

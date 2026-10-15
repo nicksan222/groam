@@ -78,7 +78,7 @@ const files = execFileSync('git', ['ls-files', '--cached', '--others', '--exclud
   .trim()
   .split('\n')
   .filter(
-    (file) => file && !file.includes('/vendor/') && !file.startsWith('.agents/skills/impeccable/')
+    (file) => file && !file.includes('/vendor/') && !file.startsWith('.claude/skills/impeccable/')
   );
 
 const misplacedBrowserSpecs = files.filter(

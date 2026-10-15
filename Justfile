@@ -12,40 +12,10 @@ install:
 dev:
     CONVEX_AGENT_MODE=anonymous vp run dev
 
-# Start or attach the Claude development team.
-[positional-arguments]
-agents *args:
-    python3 .agents/team/agents.py up "$@"
-
-alias agent := agents
-
-# Run Claude Code.
+# Run Claude Code through Headroom with the repo's settings and MCP servers.
 [positional-arguments]
 claude *args:
-    claude "$@"
-
-# Check tools and Claude login without model requests.
-[positional-arguments]
-agents-doctor *args:
-    python3 .agents/team/agents.py doctor "$@"
-
-# List roles and models.
-agents-list:
-    python3 .agents/team/agents.py list
-
-# Stop this team or selected roles.
-[positional-arguments]
-agents-stop *args:
-    python3 .agents/team/agents.py down "$@"
-
-# Restart conversations and clear the checkpoint, preserving code.
-[positional-arguments]
-agents-reset *args:
-    python3 .agents/team/agents.py reset "$@"
-
-# Test the launcher without model requests.
-agents-test:
-    python3 .agents/team/test-agents.py
+    tooling/claude/claude.sh "$@"
 
 # Start only the web app (the backend must already be running).
 web:
@@ -56,7 +26,7 @@ desktop:
     vp run dev:desktop
 
 # Run the complete CI quality suite.
-check: agents-test
+check:
     vp run check
 
 # Generate routes, auth schema, and Convex bindings.
@@ -69,7 +39,13 @@ update-convex-agent-files:
 
 # Build or incrementally refresh the local, API-key-free code graph.
 graphify-refresh:
-    graphify extract . --code-only --no-cluster
+    #!/usr/bin/env bash
+    set -euo pipefail
+    excludes=()
+    while IFS= read -r pattern; do
+      [[ -z "$pattern" || "$pattern" == \#* ]] || excludes+=(--exclude "$pattern")
+    done < tooling/graphify/exclude.txt
+    graphify extract . --code-only --no-cluster "${excludes[@]}"
 
 # Refresh, then search the code graph with a natural-language question.
 graphify-query question: graphify-refresh

@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "headroom": {
+      "command": "headroom",
+      "args": ["mcp", "serve"]
+    },
+    "convex": {
+      "command": "vp",
+      "args": ["exec", "convex", "mcp", "start"],
+      "env": { "CONVEX_AGENT_MODE": "anonymous" }
+    }
+  }
+}

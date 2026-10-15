@@ -3,5 +3,10 @@
   "functions": "packages/backend/convex/",
   "node": {
     "nodeVersion": "24"
+  },
+  "aiFiles": {
+    "skills": {
+      "agents": ["claude-code"]
+    }
   }
 }

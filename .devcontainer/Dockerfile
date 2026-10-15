@@ -5,9 +5,10 @@ FROM ghcr.io/casey/just:1.58.0 AS just
 FROM mcr.microsoft.com/devcontainers/javascript-node:24-trixie
 
 ARG CLAUDE_VERSION=2.1.287
-ARG HERDR_VERSION=0.9.3
 ARG GRAPHIFY_VERSION=0.9.63
 ARG GRAPHIFY_EXCLUDE_NEWER=2026-09-18
+ARG HEADROOM_VERSION=0.41.0
+ARG HEADROOM_EXCLUDE_NEWER=2026-10-15
 
 COPY --from=uv /uv /uvx /usr/local/bin/
 COPY --from=just /just /usr/local/bin/
@@ -31,19 +32,6 @@ RUN apt-get update \
     wget \
     xdg-utils \
   && rm -rf /var/lib/apt/lists/*
-
-# Checksum-pinned Herdr builds for both container architectures.
-RUN set -eu; \
-    case "$(uname -m)" in \
-      x86_64) arch=x86_64; checksum=18a8dc65f1c2fa485884344356dea1cfd911c6f06cf46fa78e193f4087f4dba7 ;; \
-      aarch64) arch=aarch64; checksum=4de7aa3e25678812e92960de64f7c2aaa1bca1f0f80a3c5e559837e231e1f5c0 ;; \
-      *) echo "Unsupported Herdr architecture" >&2; exit 1 ;; \
-    esac; \
-    curl -fsSL -o /tmp/herdr \
-      "https://github.com/herdrdev/herdr/releases/download/v${HERDR_VERSION}/herdr-linux-${arch}"; \
-    printf '%s  /tmp/herdr\n' "$checksum" | sha256sum --check; \
-    install -m 755 /tmp/herdr /usr/local/bin/herdr; \
-    rm /tmp/herdr
 
 # Native Claude; credentials are host-mounted and auto-updates disabled.
 USER node
@@ -78,4 +66,14 @@ RUN UV_TOOL_DIR=/opt/uv/tools \
       --exclude-newer "${GRAPHIFY_EXCLUDE_NEWER}" \
       --python /usr/bin/python3 \
       "graphifyy==${GRAPHIFY_VERSION}" \
+  && rm -rf /root/.cache/uv
+
+# Headroom compresses tool output before it reaches Claude (`tooling/claude/claude.sh`).
+# Proxy + code extras only: the ML/voice extras would pull in torch.
+RUN UV_TOOL_DIR=/opt/uv/tools \
+    UV_TOOL_BIN_DIR=/usr/local/bin \
+    uv tool install \
+      --exclude-newer "${HEADROOM_EXCLUDE_NEWER}" \
+      --python /usr/bin/python3 \
+      "headroom-ai[proxy,code]==${HEADROOM_VERSION}" \
   && rm -rf /root/.cache/uv

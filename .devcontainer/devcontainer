@@ -11,7 +11,7 @@ workspace="$(git rev-parse --show-toplevel)"
 git_common_dir="$(git rev-parse --path-format=absolute --git-common-dir)"
 mount_args=()
 
-# Codex and other Git worktrees can keep their common Git directory outside
+# Git worktrees can keep their common Git directory outside
 # the workspace bind mount. Mirror it at the same absolute path so the .git
 # pointer remains valid inside the container.
 if [[ -f "$workspace/.git" ]]; then

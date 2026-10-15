@@ -29,6 +29,7 @@ interface ImportMeta {
 declare namespace Bun {
   const env: NodeJS.ProcessEnv;
   function sleep(milliseconds: number): Promise<void>;
+  const YAML: { parse(input: string): unknown };
   function spawn(
     command: string[],
     options?: {
