@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { journeyCommands } from '@groam/app-actions/vitest/commands';
+import { env as testEnv } from '@groam/env/vitest';
 import { env } from '@groam/env/web';
 import { createWebVitestConfig } from '@groam/vitest-config/web';
 import tailwindcss from '@tailwindcss/vite';
@@ -22,10 +23,10 @@ const testConfig = createWebVitestConfig(import.meta.dirname, {
       },
       {
         // Full-app journeys against one live backend wait longer than mounted views, and run
-        // a few files at a time so that backend keeps up.
+        // a few files at a time so that backend keeps up (two on a shared 4-core CI runner).
         expect: { poll: { timeout: 30_000 } },
         include: ['e2e/**/*.test.tsx'],
-        maxWorkers: 4,
+        maxWorkers: testEnv.isCI ? 2 : 4,
         name: 'journeys',
         setupFiles: ['./src/browser-setup.ts'],
         testTimeout: 60_000
