@@ -38,8 +38,8 @@ export default function App() {
   // its queries would otherwise rerun signed out and fail.
   const signOut = useCallback(async () => {
     setSigningOut(true);
-    const result = await authClient.signOut();
-    if (result.error) setSigningOut(false);
+    const { error } = await authClient.signOut().catch((cause: unknown) => ({ error: cause }));
+    if (error) setSigningOut(false);
     else resetAuthForm();
   }, [resetAuthForm]);
 

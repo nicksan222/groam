@@ -19,7 +19,7 @@ env:
 jobs:
   provision:
     name: Create Convex project and environments
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Checkout
@@ -55,7 +55,7 @@ jobs:
   deploy:
     name: Bring ${{ matrix.environment }} online
     needs: [provision, test]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     strategy:
       fail-fast: false

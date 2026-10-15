@@ -28,11 +28,6 @@ export async function getBetterAuth(ctx: WorkspaceFunctionCtx) {
   return await authComponent.getAuth(createAuth, ctx);
 }
 
-type BetterAuthAccess = Awaited<ReturnType<typeof getBetterAuth>>;
-type BetterAuthSession = NonNullable<
-  Awaited<ReturnType<BetterAuthAccess['auth']['api']['getSession']>>
->;
-
 export type OrganizationRosterMember = {
   handle: string;
   image: string | null;
@@ -53,40 +48,33 @@ export type Workspace = {
   viewerName: string;
 };
 
-function requireActiveOrganizationId(session: BetterAuthSession['session']): string {
-  const organizationId =
-    'activeOrganizationId' in session ? session.activeOrganizationId : undefined;
-  if (typeof organizationId !== 'string' || organizationId.length === 0) {
-    throw new ConvexError('No active organization');
-  }
-  return organizationId;
-}
-
 export async function requireWorkspace(ctx: WorkspaceFunctionCtx): Promise<Workspace> {
   const identity = await ctx.auth.getUserIdentity();
-  if (identity === null) {
+  if (identity === null || typeof identity.sessionId !== 'string') {
     throw new ConvexError('Not authenticated');
   }
 
-  const authAccess = await getBetterAuth(ctx);
-  const authSession = await authAccess.auth.api.getSession({ headers: authAccess.headers });
-  if (!authSession) {
+  const access = await ctx.runQuery(components.betterAuth.workspace.access, {
+    sessionId: identity.sessionId,
+    userId: identity.subject
+  });
+  // As Better Auth's getSession does, a session past its expiry no longer signs anyone in.
+  if (access === null || access.expiresAt <= Date.now()) {
     throw new ConvexError('Not authenticated');
   }
-
-  const organizationId = requireActiveOrganizationId(authSession.session);
-  const organizationMembership = await authAccess.auth.api
-    .getActiveMemberRole({ headers: authAccess.headers, query: { organizationId } })
-    .catch(() => {
-      throw new ConvexError('Organization access denied');
-    });
+  if (!access.activeOrganizationId) {
+    throw new ConvexError('No active organization');
+  }
+  if (access.role === null) {
+    throw new ConvexError('Organization access denied');
+  }
 
   return {
-    organizationId,
-    organizationRole: organizationMembership.role,
+    organizationId: access.activeOrganizationId,
+    organizationRole: access.role,
     tokenIdentifier: identity.tokenIdentifier,
-    userId: authSession.user.id,
-    viewerName: authSession.user.name
+    userId: identity.subject,
+    viewerName: access.userName
   };
 }
 

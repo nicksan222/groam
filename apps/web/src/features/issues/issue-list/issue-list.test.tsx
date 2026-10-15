@@ -3,6 +3,7 @@ import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
+import { expectPhoneListRow } from '@/testing/phone-list';
 import { IssueList, type IssueListItem } from './issue-list';
 
 const navigate = vi.hoisted(() => vi.fn());
@@ -96,17 +97,8 @@ describe('on a phone', () => {
   test('keeps titles readable, drops secondary columns and opens a row on tap', async () => {
     await page.viewport(390, 844);
     await renderList();
-    await expect.element(firstRow()).toBeVisible();
-
-    const cells = [...firstRow().element().querySelectorAll('td')];
-    await expect.poll(() => cells[0]?.getBoundingClientRect().width).toBeGreaterThan(200);
-    // Only the title and status stay.
-    expect(cells.filter((cell) => cell.checkVisibility())).toHaveLength(2);
+    await expectPhoneListRow(firstRow());
     await expect.element(page.getByText('Opened by')).not.toBeVisible();
-    await expect.element(page.getByRole('button', { name: 'Columns' })).not.toBeInTheDocument();
-    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
-      document.documentElement.clientWidth
-    );
 
     // The title is a real link, so a tap navigates without needing row activation.
     await expect.element(firstRow().getByRole('link')).toHaveAttribute('href', '/issues/$issueId');

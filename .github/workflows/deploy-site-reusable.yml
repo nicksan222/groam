@@ -27,7 +27,7 @@ env:
 jobs:
   deploy:
     name: Deploy ${{ inputs.site }} to ${{ inputs.environment }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment:
       name: ${{ inputs.environment }}

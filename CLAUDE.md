@@ -105,10 +105,10 @@ route, module, hook, env variable, test, or UI piece.
   under `tooling/`; root configs such as `vite.config.ts` only compose it.
 - **Enforced conventions:** `vp run lint:conventions` checks kebab-case file
   and folder names, package-alias imports instead of `../`, semantic color
-  tokens, `ctx.db` only in `modules/` and `routes/` (never in `'use node'`
-  files), `@groam/env/*` instead of raw env access, public `@groam/ui`
-  entrypoints, and thin route files. `vp run lint:claude` validates this
-  harness.
+  tokens, `ctx.db` only in `components/`, `modules/`, and `routes/` (never in
+  `'use node'` files), `@groam/env/*` instead of raw env access, public
+  `@groam/ui` entrypoints, and thin route files. `vp run lint:claude`
+  validates this harness.
 
 ## Local runtime
 

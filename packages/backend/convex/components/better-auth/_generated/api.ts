@@ -11,6 +11,7 @@
 import type * as adapter from "../adapter.js";
 import type * as auth from "../auth.js";
 import type * as generated from "../generated.js";
+import type * as workspace from "../workspace.js";
 
 import type {
   ApiFromModules,
@@ -23,6 +24,7 @@ const fullApi: ApiFromModules<{
   adapter: typeof adapter;
   auth: typeof auth;
   generated: typeof generated;
+  workspace: typeof workspace;
 }> = anyApi as any;
 
 /**
