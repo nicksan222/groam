@@ -4,6 +4,7 @@ import {
   createGroup,
   createTripFromTrips,
   deleteCurrentGroup,
+  expectGone,
   ids,
   openTrips,
   switchGroup,
@@ -21,11 +22,12 @@ test('group switching isolates reactive Convex data', async () => {
 
   await createGroup({ name: organizationName });
 
-  await createTripFromTrips({ name: tripName });
+  await createTripFromTrips({ name: tripName }, 'empty');
   await expect.element(by(ids.tripHeading)).toHaveAttribute('data-trip-name', tripName);
 
   await switchGroup({ name: homeGroupName });
-  await expect.element(tripCard(tripName)).not.toBeInTheDocument();
+  await expect.element(by(ids.groupSwitcher)).toHaveAttribute('data-group-name', homeGroupName);
+  await expectGone(tripCard(tripName));
 
   await switchGroup({ name: organizationName });
   await openTrips();

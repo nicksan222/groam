@@ -81,18 +81,6 @@ const files = execFileSync('git', ['ls-files', '--cached', '--others', '--exclud
     (file) => file && !file.includes('/vendor/') && !file.startsWith('.claude/skills/impeccable/')
   );
 
-const misplacedBrowserSpecs = files.filter(
-  (file) => /\.spec\.[cm]?[jt]sx?$/u.test(file) && !file.startsWith('apps/web/e2e/')
-);
-if (misplacedBrowserSpecs.length > 0) {
-  console.error(
-    `Browser journey specs belong to apps/web/e2e:\n${misplacedBrowserSpecs
-      .map((file) => `  - ${file}`)
-      .join('\n')}`
-  );
-  process.exit(1);
-}
-
 const actionNames = readdirSync('tooling/app-actions/src/actions')
   .filter((file) => file.endsWith('.ts'))
   .map((file) => file.slice(0, -3));
@@ -161,7 +149,7 @@ const manualProductInteractions = productInteractionFiles.flatMap((file) => {
 });
 if (manualProductInteractions.length > 0) {
   console.error(
-    `Compose product interactions through @groam/app-actions/playwright:\n${manualProductInteractions
+    `Compose product interactions through @groam/app-actions/vitest (journeys) or @groam/app-actions/playwright (films):\n${manualProductInteractions
       .map((file) => `  - ${file}`)
       .join('\n')}`
   );

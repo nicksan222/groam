@@ -1,5 +1,6 @@
 import { UiThemeProvider } from '@groam/ui/components/theme-provider';
 import { render } from '@groam/vitest-config/react';
+import { useViewport } from '@groam/vitest-config/viewport';
 import { afterEach, beforeEach, describe, expect, test } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { AppearanceSettings } from './appearance-settings';
@@ -14,7 +15,6 @@ beforeEach(() => {
 afterEach(() => {
   localStorage.removeItem('groam-theme');
   document.documentElement.classList.remove('dark', 'light');
-  return page.viewport(1280, 800);
 });
 
 async function renderAppearance() {
@@ -64,7 +64,7 @@ describe('color theme', () => {
   });
 
   test('fits a phone without scrolling sideways', async () => {
-    await page.viewport(390, 844);
+    await useViewport(390, 844);
     await renderAppearance();
     await expect.element(page.getByRole('button', { name: 'System' })).toBeVisible();
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(

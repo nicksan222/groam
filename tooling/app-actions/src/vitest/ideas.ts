@@ -4,7 +4,7 @@ import { ids } from '#src/testing/ids';
 import { openAppPath } from './app-host';
 import { by, dialogSubmit, ideaRow } from './locators';
 import { openTripSection } from './open-trips';
-import { expectPath, idFromPath, isVisible, tap, enter } from './queries';
+import { expectGone, expectPath, idFromPath, inOrder, tap, enter } from './queries';
 
 export type OpenIdeaInput = { proposalId: string; tripId: string };
 
@@ -26,12 +26,16 @@ export async function openWorkspaceIdeas(): Promise<void> {
   await expect.element(by(ids.ideasTitle)).toBeVisible();
 }
 
-export async function openIdeaFromList(ideaName: string): Promise<void> {
+/**
+ * Opens an idea from the workspace Ideas list. The author's own draft offers `continue`; every
+ * other idea (in review, or someone else's) offers `view`.
+ */
+export async function openIdeaFromList(
+  idea: { name: string } | { title: string },
+  action: 'continue' | 'view'
+): Promise<void> {
   await openWorkspaceIdeas();
-  const row = ideaRow(ideaName);
-  await expect.element(row).toBeVisible();
-  const continueDraft = row.getByTestId(ids.ideaContinue);
-  await tap(isVisible(continueDraft) ? continueDraft : row.getByTestId(ids.ideaView));
+  await tap(by(action === 'continue' ? ids.ideaContinue : ids.ideaView, ideaRow(idea)));
   await expectPath(/\/(?:trips\/[^/]+\/)?ideas\/[^/?]+/u);
 }
 
@@ -42,10 +46,9 @@ export async function filterWorkspaceIdeas(
   await openWorkspaceIdeas();
   await tap(page.getByLabelText('Filter ideas by status'));
   await tap(page.getByRole('option', { name: status }));
-  for (const title of titles) {
-    // oxlint-disable-next-line react-doctor/async-await-in-loop -- Vitest requires each expect.element to be awaited.
-    await expect.element(ideaRow(title)).toBeVisible();
-  }
+  await inOrder(titles, async (title) => {
+    await expect.element(ideaRow({ title })).toBeVisible();
+  });
 }
 
 /** Starts an idea from the trip's Ideas tab and returns the short idea id from the URL. */
@@ -55,25 +58,22 @@ export async function addIdea(input: { name: string }): Promise<string> {
   await expect.element(by(ids.startIdeaDialog)).toBeVisible();
   await enter(by(ids.startIdeaName), input.name);
   await tap(dialogSubmit(ids.startIdeaDialog));
-  await expect.element(by(ids.startIdeaDialog)).not.toBeInTheDocument();
+  await expectGone(by(ids.startIdeaDialog));
   await expectPath(/\/trips\/[^/]+\/ideas\/[^/]+/u);
   await expect.element(by(ids.tripHeading)).toBeVisible();
-  return /\/ideas\/([^/?]+)/u.exec(location.pathname)?.[1] ?? '';
+  return idFromPath('ideas');
 }
 
 export async function startWorkspaceIdea(input: { title: string; tripName: string }) {
   await openWorkspaceIdeas();
-  const startButton = by(ids.startIdea);
-  await tap(
-    isVisible(startButton) ? startButton : page.getByRole('button', { name: 'Start an idea' })
-  );
+  await tap(by(ids.startIdea));
   const dialog = by(ids.startIdeaDialog);
   await expect.element(dialog).toBeVisible();
   await tap(dialog.getByRole('combobox', { name: 'Trip' }));
   await tap(page.getByRole('option', { name: input.tripName }));
   await enter(by(ids.startIdeaName), input.title);
   await tap(dialogSubmit(ids.startIdeaDialog));
-  await expect.element(dialog).not.toBeInTheDocument();
+  await expectGone(dialog);
   await expect.element(by(ids.ideaWorkspace)).toBeVisible();
 }
 
@@ -88,7 +88,7 @@ export async function closeIdea(reason?: string): Promise<void> {
     await enter(by(ids.closeIdeaReason, dialog), reason);
   }
   await tap(dialog.getByRole('button', { name: label }));
-  await expect.element(dialog).not.toBeInTheDocument();
+  await expectGone(dialog);
 }
 
 export async function openIdeaComparison(): Promise<void> {
@@ -104,19 +104,14 @@ export async function requestIdeaReview(): Promise<void> {
   await tap(compareTab);
   await expect.element(by(ids.requestReview).first()).toBeEnabled();
   await tap(by(ids.requestReview).first());
-  await expect.poll(() => by(ids.requestReview).elements().length).toBe(0);
+  await expectGone(by(ids.requestReview));
 }
 
-export async function approveIdea(approved = true): Promise<void> {
+export async function approveIdea(): Promise<void> {
   const approval = by(ids.approveIdea).first();
-  await expect.element(approval).toBeVisible();
-  const isApproved = approval.element().textContent?.includes('Remove approval') ?? false;
-  if (isApproved === approved) return;
   await tap(approval);
-  await expect.element(approval).toMatchTextContent(approved ? /Remove approval/u : /Approve/u);
+  await expect.element(approval).toMatchTextContent(/Remove approval/u);
 }
-
-export const revokeIdeaApproval = () => approveIdea(false);
 
 export async function applyIdea(): Promise<void> {
   const apply = by(ids.applyIdea).first();
@@ -126,7 +121,7 @@ export async function applyIdea(): Promise<void> {
     .element(page.getByRole('heading', { name: 'Apply this idea to the shared trip?' }))
     .toBeVisible();
   await tap(by(ids.applyIdeaConfirm));
-  await expect.poll(() => by(ids.applyIdeaConfirm).elements().length).toBe(0);
+  await expectGone(by(ids.applyIdeaConfirm));
   await expect.element(page.getByText('Applied to the shared trip').first()).toBeVisible();
 }
 
@@ -149,7 +144,7 @@ export async function reviewIdeaChange(input: { change: string; comment: string 
   await tap(change.getByRole('button', { name: /^Comment on /u }));
   await enter(change.getByRole('textbox'), input.comment);
   await tap(change.getByRole('button', { name: 'Add comment' }));
-  await expect.poll(() => change.getByRole('textbox').elements().length).toBe(0);
+  await expectGone(change.getByRole('textbox'));
   await expect.element(change).toMatchTextContent(input.comment);
 }
 
@@ -168,29 +163,25 @@ export async function resolveTripDetailConflict(
   await tap(by(ids.itineraryDetailsResolve));
   const dialog = page.getByRole('dialog', { name: 'Choose what to keep — trip details' });
   const sides = dialog.getByLabelText('Compared sides');
-  for (const side of input.expectedSides ?? []) {
-    // oxlint-disable-next-line react-doctor/async-await-in-loop -- Vitest requires each expect.element to be awaited.
+  await inOrder(input.expectedSides ?? [], async (side) => {
     await expect.element(sides).toMatchTextContent(side);
-  }
-  for (const branch of input.expectedBranches ?? []) {
+  });
+  await inOrder(input.expectedBranches ?? [], async (branch) => {
     const shared = dialog.getByRole('region', { name: `Shared trip branch for ${branch.field}` });
     const idea = dialog.getByRole('region', { name: `This idea branch for ${branch.field}` });
-    // oxlint-disable-next-line react-doctor/async-await-in-loop -- Vitest requires each expect.element to be awaited.
     await expect.element(shared).toMatchTextContent(branch.shared);
     await expect.element(idea).toMatchTextContent(branch.idea);
-  }
+  });
   await tap(dialog.getByRole('button', { name: 'Keep all mine' }));
-  for (const choice of input.choices ?? []) {
+  await inOrder(input.choices ?? [], (choice) => {
     const source = choice.source === 'shared' ? 'shared trip' : 'this idea';
-    // oxlint-disable-next-line react-doctor/async-await-in-loop -- Each choice updates the dialog the next one reads.
-    await tap(dialog.getByRole('button', { name: `Keep ${source} for ${choice.field}` }));
-  }
+    return tap(dialog.getByRole('button', { name: `Keep ${source} for ${choice.field}` }));
+  });
   await tap(dialog.getByRole('button', { name: 'Review result' }));
   const preview = dialog.getByRole('region', { name: 'Result preview' });
-  for (const value of input.expectedPreview ?? []) {
-    // oxlint-disable-next-line react-doctor/async-await-in-loop -- Vitest requires each expect.element to be awaited.
+  await inOrder(input.expectedPreview ?? [], async (value) => {
     await expect.element(preview.getByText(value)).toBeVisible();
-  }
+  });
   await tap(by(ids.itineraryDetailsResolveApply));
-  await expect.element(dialog).not.toBeInTheDocument();
+  await expectGone(dialog);
 }

@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite-plus';
 import { playwright } from 'vite-plus/test/browser-playwright';
 import type { BrowserConfigOptions, BrowserInstanceOption } from 'vite-plus/test/node';
+import { defaultViewport } from './default-viewport.ts';
 import { resolveRepoRoot } from './repo-root.ts';
 import { setupFiles } from './setup-files.ts';
 
@@ -72,8 +73,12 @@ export function createWebVitestConfig(appRoot: string, options: WebVitestOptions
                       ...instance
                     })),
                     // Real clicks wait for actionable targets; fail fast instead of at the test timeout.
-                    provider: playwright({ actionTimeout: 5_000 }),
-                    viewport: { height: 800, width: 1280 }
+                    // A fixed locale keeps locale-formatted markup (calendar `data-day`) stable.
+                    provider: playwright({
+                      actionTimeout: 5_000,
+                      contextOptions: { locale: 'en-US' }
+                    }),
+                    viewport: defaultViewport
                   },
                   include: browserTests
                 }

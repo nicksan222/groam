@@ -6,13 +6,14 @@ import {
   continueActivityPlan,
   editActivity,
   environment,
+  expectGone,
   ids,
+  openAppPath,
   openIdea,
   openIdeaComparison,
   openIdeaFromList,
   openIdeaItinerary,
   openIssue,
-  openItinerary,
   openSharedTrip,
   openTripSection,
   requestIdeaReview,
@@ -37,8 +38,7 @@ test('plans an activity on an idea, compares it, and submits the change for revi
   await openApp();
   await openIdea({ proposalId, tripId });
   await saveSevenDayRange();
-  await openItinerary();
-  await addStop({ name: 'Lisbon', notes: 'Old town', startDay: '1', endDay: '3' });
+  await addStop({ first: true, name: 'Lisbon', notes: 'Old town', startDay: '1', endDay: '3' });
   await addStop({ name: 'Porto', notes: 'River', startDay: '4', endDay: '5' });
 
   await startActivityPlan(5);
@@ -51,11 +51,11 @@ test('plans an activity on an idea, compares it, and submits the change for revi
   await expect.element(by(ids.compareSharedTrip)).toMatchTextContent('Cruise on the Douro');
   await returnIdeaToEditing();
   await editActivity({ title: 'Cruise on the Douro', address: 'Cais da Ribeira' });
-  await openIdeaFromList(ideaName);
+  await openIdeaFromList({ title: ideaName }, 'continue');
   await openIdeaComparison();
   await requestIdeaReview();
   // Authors may still amend their working copy during review.
-  await openIdeaFromList(ideaName);
+  await openIdeaFromList({ title: ideaName }, 'view');
   await expect.element(by(ids.ideaPrimaryAction)).toMatchTextContent('Approve');
   await openIdeaItinerary();
   await editActivity({ title: 'Cruise on the Douro', address: 'Cais da Ribeira 42' });
@@ -75,13 +75,14 @@ test('adds an activity to an issue-linked idea without changing the shared trip'
   const ideaName = await startIdeaFromIssue();
   await saveSevenDayRange();
   await openIdeaItinerary();
-  await addStop({ name: 'Lisbon', notes: 'Walk', startDay: '1', endDay: '3' });
+  await addStop({ first: true, name: 'Lisbon', notes: 'Walk', startDay: '1', endDay: '3' });
   await addActivity({ destination: 'Lisbon, Portugal', title: 'Walk through Alfama' });
   await openSharedTrip();
-  await openTripSection('itinerary');
-  await expect.element(page.getByText('Walk through Alfama')).not.toBeInTheDocument();
+  await openAppPath(`trips/${tripId}/itinerary`);
+  await expect.element(page.getByRole('region', { name: 'Day planner' })).toBeVisible();
+  await expectGone(page.getByText('Walk through Alfama'));
   await openTripSection('ideas');
-  await openIdeaFromList(ideaName);
+  await openIdeaFromList({ name: ideaName }, 'continue');
   await openIdeaItinerary();
   await expect
     .element(page.getByRole('button', { name: 'Edit Walk through Alfama' }))

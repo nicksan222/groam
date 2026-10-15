@@ -1,6 +1,7 @@
 import Shell from '@groam/ui/components/shell/client';
 import { SidebarProvider } from '@groam/ui/components/sidebar';
 import { render } from '@groam/vitest-config/react';
+import { useViewport } from '@groam/vitest-config/viewport';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
@@ -123,9 +124,8 @@ beforeEach(() => {
   document.documentElement.classList.remove('dark');
 });
 
-afterEach(async () => {
+afterEach(() => {
   document.documentElement.classList.remove('dark');
-  await page.viewport(1280, 800);
 });
 
 describe('supporting column', () => {
@@ -136,7 +136,7 @@ describe('supporting column', () => {
     [1023, true],
     [390, true]
   ])('at %ipx wide the column stacked is %s', async (width, stacked) => {
-    await page.viewport(width, 1000);
+    await useViewport(width, 1000);
     await render(<TripPage tab="overview" />);
     await expect.element(page.getByText('Supporting column')).toBeVisible();
     const layout = twoColumnLayout();
@@ -149,7 +149,7 @@ describe('supporting column', () => {
   test.each([1440, 1024, 390])(
     'the comparison tab lays out exactly like the overview at %ipx',
     async (width) => {
-      await page.viewport(width, 1000);
+      await useViewport(width, 1000);
       const view = await render(<TripPage tab="overview" />);
       await expect.element(page.getByText('Supporting column')).toBeVisible();
       const overview = { canvas: pageCanvas(), layout: twoColumnLayout() };
@@ -164,7 +164,7 @@ describe('itinerary tab', () => {
   test.each([1440, 1024, 390])(
     'uses the full body width without a supporting column at %ipx',
     async (width) => {
-      await page.viewport(width, 1000);
+      await useViewport(width, 1000);
       await render(<TripPage tab="itinerary" />);
       await expect.element(page.getByRole('region', { name: 'Itinerary editor' })).toBeVisible();
       await expect.element(page.getByText('Supporting column')).not.toBeInTheDocument();
@@ -199,7 +199,7 @@ describe('page canvas', () => {
     ['dark', true, 390]
   ])('every tab paints the canvas token in %s mode at %ipx', async (_mode, dark, width) => {
     document.documentElement.classList.toggle('dark', dark);
-    await page.viewport(width, 1000);
+    await useViewport(width, 1000);
     const view = await render(<TripPage tab="overview" />);
     await expect.element(page.getByText('Supporting column')).toBeVisible();
     const overview = pageCanvas();

@@ -29,7 +29,7 @@ scripts.
 | `runtime` | installed-app runtime | `GROAM_CONVEX_URL`, `GROAM_DATA_DIR` |
 | `desktop-tooling` | `apps/desktop/scripts` | `VITE_PHOTON_URL`, `CI` |
 | `seeder` | `tooling/seeder` | `SEED_CONVEX_URL`, `SEED_USER_EMAIL` |
-| `journeys` | browser journeys (`apps/web/e2e`) | `CI`, `VITE_CONVEX_URL`, `VITE_CONVEX_SITE_URL` |
+| `journeys` | browser journeys (`apps/web/e2e`) | `VITE_CONVEX_URL`, `VITE_CONVEX_SITE_URL` |
 | `showcase` | `tooling/showcase` | `SHOWCASE_*` |
 | `vitest` | `tooling/vitest-config` | `CI` |
 

@@ -1,5 +1,6 @@
 import { render } from '@groam/vitest-config/react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { useViewport } from '@groam/vitest-config/viewport';
+import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { testIds } from '@/lib/test-ids';
 import { StatefulItineraryEditor } from '@/testing/itinerary-editor-fixture';
@@ -12,8 +13,6 @@ vi.mock('@/features/media/hooks/use-media-upload', () => ({
 beforeEach(() => {
   vi.clearAllMocks();
 });
-
-afterEach(() => page.viewport(1280, 800));
 
 const day = (number: number) => page.getByRole('region', { name: `Day ${number} schedule` });
 const editor = () => page.getByRole('region', { name: /^(?:Add an activity to|Edit) /u });
@@ -381,7 +380,7 @@ describe('inline day planning', () => {
   });
 
   test('keeps the inline form inside the schedule on a phone without overflow', async () => {
-    await page.viewport(390, 844);
+    await useViewport(390, 844);
     await render(
       <StatefulItineraryEditor
         initial={itineraryTrip([{ endDay: 3, name: 'Porto', startDay: 2 }])}

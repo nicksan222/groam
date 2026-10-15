@@ -1,4 +1,4 @@
-import { type CreateTripFormInput, createTrip as fillCreateTrip } from '@groam/app-actions/vitest';
+import { type CreateTripFormInput, fillCreateTripDialog } from '@groam/app-actions/vitest';
 import { render } from '@groam/vitest-config/react';
 import { expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
@@ -101,7 +101,7 @@ test.each<[string, CreateTripFormInput, Record<string, unknown>]>([
   ]
 ])('creates a trip with %s and no cover file', async (_, input, expected) => {
   const { createTrip, onCreated } = await renderDialog();
-  await fillCreateTrip(input);
+  await fillCreateTripDialog(input);
 
   await expect.poll(() => onCreated.mock.calls).toEqual([['trip_123']]);
   expect(createTrip).toHaveBeenCalledExactlyOnceWith(
@@ -121,7 +121,7 @@ test.each<[string, CreateTripFormInput, string]>([
   ['a negative budget', { budget: -5, name }, testIds.createTripBudget]
 ])('rejects %s without creating a trip', async (_, input, field) => {
   const { createTrip } = await renderDialog();
-  await fillCreateTrip(input);
+  await fillCreateTripDialog(input);
 
   await expect.element(page.getByTestId(field)).toBeInvalid();
   expect(createTrip).not.toHaveBeenCalled();

@@ -1,4 +1,5 @@
 import { render } from '@groam/vitest-config/react';
+import { useViewport } from '@groam/vitest-config/viewport';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page, userEvent } from 'vite-plus/test/browser';
 import {
@@ -89,7 +90,7 @@ afterEach(() => {
 });
 
 // Between the mobile (768px) and docked (1280px) breakpoints the assistant opens as an overlay.
-beforeEach(() => page.viewport(1024, 800));
+beforeEach(() => useViewport(1024, 800));
 
 const context: AgentScreenContext = {
   capabilities: ['trip.status.read'],
@@ -146,7 +147,7 @@ describe('AiAssistantWidget', () => {
   });
 
   test('keeps the wide-screen assistant dock nonmodal', async () => {
-    await page.viewport(1440, 900);
+    await useViewport(1440, 900);
     await renderWidget();
     await page.getByRole('button', { name: 'Open Groam AI' }).click();
     await expect
@@ -159,7 +160,7 @@ describe('AiAssistantWidget', () => {
     await renderWidget();
     await page.getByRole('button', { name: 'Open Groam AI' }).click();
     await page.getByRole('textbox', { name: 'Assistant prompt' }).fill('draft resize check');
-    await page.viewport(1440, 900);
+    await useViewport(1440, 900);
     await expect.element(page.getByRole('dialog', { name: 'Groam AI' })).not.toBeInTheDocument();
     await expect
       .element(page.getByRole('textbox', { name: 'Assistant prompt' }))

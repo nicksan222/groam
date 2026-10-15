@@ -4,6 +4,7 @@ import {
   arrange,
   by,
   currentPath,
+  expectGone,
   ids,
   openAppPath,
   openIdea,
@@ -34,10 +35,9 @@ test('keeps ordinary edits quiet and resolves real competing ideas with mixed ch
   await addIdea({ name: ideaName });
   await updateTrip({ dateNotes: ideaNotes, name: ideaTripName });
   await openTripSection('itinerary');
-  await expect.poll(() => by(ids.itineraryDetailsResolve).elements().length).toBe(0);
-  await expect
-    .poll(() => page.getByText('The shared trip has changed since you started').elements().length)
-    .toBe(0);
+  await expect.element(page.getByRole('region', { name: 'Itinerary editor' })).toBeVisible();
+  await expectGone(by(ids.itineraryDetailsResolve));
+  await expectGone(page.getByText('The shared trip has changed since you started'));
   await requestIdeaReview();
   const firstIdeaUrl = currentPath();
 
@@ -65,13 +65,11 @@ test('keeps ordinary edits quiet and resolves real competing ideas with mixed ch
     expectedSides: [sharedName, ideaName]
   });
   await expect.element(by(ids.tripHeading)).toHaveAttribute('data-trip-name', sharedName);
-  await expect.poll(() => by(ids.itineraryDetailsResolve).elements().length).toBe(0);
+  await expectGone(by(ids.itineraryDetailsResolve));
   await reloadAppPage();
   await expect.element(by(ids.tripHeading)).toHaveAttribute('data-trip-name', sharedName);
-  await expect.poll(() => by(ids.itineraryDetailsResolve).elements().length).toBe(0);
+  await expectGone(by(ids.itineraryDetailsResolve));
   await openIdeaComparison();
-  await expect
-    .poll(() => page.getByText('The shared trip has changed since you started').elements().length)
-    .toBe(0);
+  await expectGone(page.getByText('The shared trip has changed since you started'));
   await expect.element(page.getByText(ideaNotes)).toBeVisible();
 });

@@ -28,13 +28,13 @@ test('starts an idea and opens first-class idea routes', async () => {
   await expect.element(by(ids.tripHeading)).toHaveAttribute('data-trip-name', tripName);
   await openTripSection('ideas');
 
-  const draftRow = ideaRow(ideaName);
+  const draftRow = ideaRow({ title: ideaName });
   await expect.element(by(ids.ideaContinue, draftRow)).toBeVisible();
   await presentAttribute(draftRow, 'data-idea-id');
 
   await openWorkspaceIdeas();
-  await expect.element(ideaRow(ideaName)).toBeVisible();
+  await expect.element(ideaRow({ title: ideaName })).toBeVisible();
 
-  await openIdeaFromList(ideaName);
+  await openIdeaFromList({ title: ideaName }, 'continue');
   await expectPath(new RegExp(`/trips/${tripId}/ideas/[a-z]{6}/overview(?:\\?.*)?$`, 'u'));
 });

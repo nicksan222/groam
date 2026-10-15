@@ -1,6 +1,7 @@
 import { render } from '@groam/vitest-config/react';
+import { useViewport } from '@groam/vitest-config/viewport';
 import type { ReactNode } from 'react';
-import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
+import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { DiscussionDetailsSheet } from '@/features/discussions/discussion-sheets/discussion-details-sheet';
 import { DiscussionParticipantsSheet } from '@/features/discussions/discussion-sheets/discussion-participants-sheet';
@@ -69,10 +70,8 @@ beforeEach(() => {
   vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined);
 });
 
-afterEach(() => page.viewport(1280, 800));
-
 test('puts thread actions on the far right of the header', async () => {
-  await page.viewport(390, 844);
+  await useViewport(390, 844);
   await render(<DiscussionThreadHeader discussion={discussion} />);
 
   await expect.element(page.getByTestId('chat-heading')).toHaveTextContent('Italy dates');

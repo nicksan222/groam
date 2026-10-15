@@ -93,7 +93,7 @@ Both participants assert the shared result. The reset is local only; no deployme
 | Location | Responsibility |
 | --- | --- |
 | `video.ts` | The film — edit here |
-| `../app-actions/src/playwright/` | Shared Groam UI workflows for tests and films |
+| `../app-actions/src/playwright/` | Shared Groam UI workflows for films (tests use the browser-mode adapter in `../app-actions/src/vitest/`) |
 | src/authoring/storyboard.ts | Typed scenes, actions and screen choices |
 | `src/capture/` | Isolated browser sessions, PNG capture, common clock |
 | `src/video/` | Remotion composition, windows, transitions and cursor |

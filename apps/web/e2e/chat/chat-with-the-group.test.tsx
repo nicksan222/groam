@@ -3,7 +3,7 @@ import {
   chatRow,
   createGroupChat,
   openChatInbox,
-  sendMessage,
+  sendChatMessage,
   uniqueSuffix
 } from '@groam/app-actions/vitest';
 import { expect, test } from 'vite-plus/test';
@@ -15,7 +15,7 @@ test('chats with a group member', async () => {
   await openApp();
 
   await createGroupChat({ memberName: member.name, title: `Dates thread ${suffix}` });
-  await sendMessage({ text: `Should we aim for late July? (${suffix})` });
+  await sendChatMessage(`Should we aim for late July? (${suffix})`);
   await openChatInbox();
   await expect.element(chatRow(`Dates thread ${suffix}`)).toBeVisible();
 });

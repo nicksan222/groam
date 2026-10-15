@@ -4,6 +4,7 @@ import type { ActiveOrganization } from '@/features/workspace/workspace-shell/wo
 import { useOrganizationSettings } from './use-organization-settings';
 
 const auth = vi.hoisted(() => ({
+  getSession: vi.fn().mockResolvedValue({ data: null, error: null }),
   list: vi.fn(),
   remove: vi.fn(),
   setActive: vi.fn(),
@@ -13,6 +14,7 @@ const logo = vi.hoisted(() => ({ clear: vi.fn(), upload: vi.fn() }));
 
 vi.mock('@groam/auth/client', () => ({
   authClient: {
+    getSession: auth.getSession,
     organization: {
       delete: auth.remove,
       list: auth.list,

@@ -1,10 +1,9 @@
-import { authClient } from '@groam/auth/client';
 import { Toaster } from '@groam/ui/components/sonner';
 import { Spinner } from '@groam/ui/components/spinner';
-import { Authenticated, AuthLoading, Unauthenticated, useConvexAuth } from 'convex/react';
-import { lazy, Suspense, useCallback, useState } from 'react';
-import { SignOutContext } from '@/features/auth/sign-out-context';
-import { useAuthFormStore } from '@/lib/stores/auth-form-store';
+import { Authenticated, AuthLoading, Unauthenticated } from 'convex/react';
+import { Activity, lazy, Suspense } from 'react';
+import { useSessionChange } from '@/features/auth/hooks/use-session-change';
+import { SessionChangeContext } from '@/features/auth/session-change-context';
 
 const AuthScreen = lazy(() =>
   import('@/features/auth/auth-screen').then(({ AuthScreen }) => ({
@@ -29,33 +28,22 @@ function LoadingSession() {
 }
 
 export default function App() {
-  const { isAuthenticated } = useConvexAuth();
-  const resetAuthForm = useAuthFormStore((store) => store.reset);
-  const [isSigningOut, setSigningOut] = useState(false);
-  if (isSigningOut && !isAuthenticated) setSigningOut(false);
-
-  // The server ends the session before the client hears of it, so leave the workspace first:
-  // its queries would otherwise rerun signed out and fail.
-  const signOut = useCallback(async () => {
-    setSigningOut(true);
-    const { error } = await authClient.signOut().catch((cause: unknown) => ({ error: cause }));
-    if (error) setSigningOut(false);
-    else resetAuthForm();
-  }, [resetAuthForm]);
+  const { changeSession, isChangingSession } = useSessionChange();
 
   return (
-    <SignOutContext value={signOut}>
+    <SessionChangeContext value={changeSession}>
       <AuthLoading>
         <LoadingSession />
       </AuthLoading>
       <Authenticated>
-        {isSigningOut ? (
-          <LoadingSession />
-        ) : (
+        {/* Hidden, the router keeps its state in case the session survives (a wrong code); once
+            Convex holds a new session it remounts. */}
+        {isChangingSession && <LoadingSession />}
+        <Activity mode={isChangingSession ? 'hidden' : 'visible'}>
           <Suspense fallback={<LoadingSession />}>
             <AppRouter />
           </Suspense>
-        )}
+        </Activity>
       </Authenticated>
       <Unauthenticated>
         <Suspense fallback={<LoadingSession />}>
@@ -63,6 +51,6 @@ export default function App() {
         </Suspense>
       </Unauthenticated>
       <Toaster position="bottom-right" richColors />
-    </SignOutContext>
+    </SessionChangeContext>
   );
 }

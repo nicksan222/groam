@@ -2,7 +2,7 @@ import { expect } from 'vite-plus/test';
 import { page, userEvent } from 'vite-plus/test/browser';
 import { ids } from '#src/testing/ids';
 import { by, dialogSubmit, groupSwitcherItem } from './locators';
-import { tap, enter } from './queries';
+import { expectGone, tap, enter } from './queries';
 
 export async function openSettingsGroupSection(): Promise<void> {
   await tap(by(ids.navSettings));
@@ -63,7 +63,7 @@ export async function redeemGroupInvitationCode(invitationCode: string): Promise
   await expect.element(by(ids.joinGroupDialog)).toBeVisible();
   await enter(by(ids.joinGroupCode), invitationCode);
   await tap(dialogSubmit(ids.joinGroupDialog));
-  await expect.element(by(ids.joinGroupDialog)).not.toBeInTheDocument();
+  await expectGone(by(ids.joinGroupDialog));
 }
 
 /** Pastes a copied invitation code into the onboarding join form and joins the group. */

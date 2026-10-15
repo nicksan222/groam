@@ -8,7 +8,6 @@ import {
   openAppPath,
   openIdea,
   openIdeaFromList,
-  openItinerary,
   openSharedTrip,
   requestIdeaReview,
   saveSevenDayRange,
@@ -28,15 +27,14 @@ test('an approved idea activity appears on the shared itinerary only after apply
   await openApp();
   const { tripId } = await openIdea({ proposalId: idea.proposalId, tripId: sharedTripId });
   await saveSevenDayRange();
-  await openItinerary();
-  await addStop({ name: 'Porto', notes: 'River', startDay: '4', endDay: '5' });
+  await addStop({ first: true, name: 'Porto', notes: 'River', startDay: '4', endDay: '5' });
   await addActivity({ destination: 'Porto, Portugal', title: 'Waterfront walk' });
   await openSharedTrip();
   await openAppPath(`trips/${tripId}/itinerary`);
   const planner = page.getByRole('region', { name: 'Day planner' });
   await expect.element(planner).toBeVisible();
   await expect.element(planner).not.toMatchTextContent('Waterfront walk');
-  await openIdeaFromList(ideaName);
+  await openIdeaFromList({ title: ideaName }, 'continue');
   await requestIdeaReview();
 
   // A second person reviews: their own screens are covered by view tests, so they act through the backend.
@@ -45,7 +43,7 @@ test('an approved idea activity appears on the shared itinerary only after apply
   await openAppPath(`trips/${tripId}/itinerary`);
   await expect.element(planner).toBeVisible();
   await expect.element(planner).not.toMatchTextContent('Waterfront walk');
-  await openIdeaFromList(ideaName);
+  await openIdeaFromList({ title: ideaName }, 'view');
   await applyIdea();
   await openSharedTrip();
   await openAppPath(`trips/${tripId}/itinerary`);

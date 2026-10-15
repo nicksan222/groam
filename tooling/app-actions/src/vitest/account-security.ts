@@ -2,7 +2,6 @@ import { expect, vi } from 'vite-plus/test';
 import { cdp, page } from 'vite-plus/test/browser';
 import { ids } from '#src/testing/ids';
 import type { TestUserCredentials } from '#src/testing/unique-test-user';
-import { reloadAppPage } from './app-host';
 import { signIn, signOut } from './auth';
 import { by } from './locators';
 import { tap, enter } from './queries';
@@ -125,8 +124,6 @@ export async function enableTwoFactorAndSignInWithBackupCode(
   await tap(by(ids.settingsTwoFactorConfirm));
   await expect.element(page.getByText(/Status:\s*Enabled/u)).toBeVisible();
   await signOut();
-  // Wait for the auth form to remount after sign-out before entering new credentials.
-  await reloadAppPage();
   await expect.element(by(ids.authEmail)).toBeVisible();
   await signIn({ email: user.username, password: user.password });
   await enter(by(ids.authTwoFactorCode), backupCode);

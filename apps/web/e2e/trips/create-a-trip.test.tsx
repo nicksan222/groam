@@ -15,7 +15,7 @@ test('creates, archives, restores, and lists a destination-optional trip', async
   await openApp();
   const tripName = `Beach idea ${uniqueSuffix()}`;
 
-  await createTripFromTrips({ dateNotes: 'Late July', durationDays: 8, name: tripName });
+  await createTripFromTrips({ dateNotes: 'Late July', durationDays: 8, name: tripName }, 'empty');
   await expect
     .element(by(ids.tripDestination))
     .toHaveAttribute('data-destination-status', 'undecided');

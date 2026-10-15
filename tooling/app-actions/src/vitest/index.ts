@@ -17,14 +17,8 @@ export {
   signOut,
   signUp
 } from './auth';
-export {
-  createGroupChat,
-  openChatInbox,
-  reactToChatMessage,
-  sendChatMessage,
-  sendMessage
-} from './chat';
-export { type CreateTripFormInput, createTrip } from './create-trip';
+export { createGroupChat, openChatInbox, reactToChatMessage, sendChatMessage } from './chat';
+export { type CreateTripFormInput, fillCreateTripDialog } from './create-trip';
 export { environment, forgetPreviousVisit } from './environment';
 export {
   acceptGroupInvitation,
@@ -53,7 +47,6 @@ export {
   type ResolveTripDetailConflictInput,
   resolveTripDetailConflict,
   returnIdeaToEditing,
-  revokeIdeaApproval,
   reviewIdeaChange,
   startWorkspaceIdea,
   type TripDetailConflictChoice
@@ -62,7 +55,6 @@ export {
   addIssueComment,
   assignIssue,
   createIssue,
-  expectIssueStatus,
   filterIssuesByStatus,
   type IssueAssignee,
   type IssueStatus,
@@ -71,7 +63,6 @@ export {
   openIssueFromInbox,
   openIssueFromTrip,
   openIssuesInbox,
-  openIssueWithStatus,
   setIssueStatus,
   startIdeaFromIssue
 } from './issues';
@@ -80,56 +71,29 @@ export {
   type AddStopInput,
   addActivity,
   addFirstDestination,
-  addInlineActivity,
   addStop,
   continueActivityPlan,
-  discardActivityChanges,
   editActivity,
-  editInlineActivity,
-  type InlineActivityPeriod,
-  keepActivityPlan,
-  openActivityPlan,
   openDestinationDetails,
-  removeActivityPlan,
   saveSevenDayRange,
-  setActivityDayRange,
-  setDestinationSchedule,
   startActivityPlan
 } from './itinerary';
-export {
-  horizontalOverflow,
-  itineraryEditorWidth,
-  pageCanvas,
-  resolvedBackground,
-  setViewport,
-  twoColumnPageLayout,
-  useColorScheme
-} from './layout';
 export {
   activityCard,
   assistantPanel,
   by,
-  calendarDay,
   chatMember,
   chatMessage,
   chatRow,
   css,
   destinationCard,
-  destinationResult,
-  dialogSubmit,
   groupSwitcherItem,
   ideaRow,
-  inlineActivityEditor,
   issueRow,
   issueStatusOption,
-  named,
-  planTravel,
-  stayCard,
   tripCard
 } from './locators';
 export {
-  expectTripsReady,
-  openItinerary,
   openSharedTrip,
   openTrip,
   openTripFromList,
@@ -137,20 +101,8 @@ export {
   openTripSection,
   type TripSection
 } from './open-trips';
-export {
-  attribute,
-  currentPath,
-  expectCount,
-  expectGone,
-  expectHidden,
-  expectPath,
-  expectText,
-  idFromPath,
-  isVisible,
-  presentAttribute
-} from './queries';
+export { currentPath, expectGone, expectPath, idFromPath, presentAttribute } from './queries';
 export { searchIdeas, searchIssues, searchTrips } from './search-trips';
-export { openBackgroundActivity } from './settings';
 export {
   archiveTrip,
   createTripFromTrips,
@@ -159,11 +111,4 @@ export {
   type TripStatusFilter,
   updateTrip
 } from './trips';
-export {
-  expectHomeDashboard,
-  type MobileWorkspaceList,
-  openFirstMobileListRow,
-  openMobileChat,
-  recoverFromNotFound,
-  selectSystemTheme
-} from './workspace';
+export { expectHomeDashboard, recoverFromNotFound } from './workspace';

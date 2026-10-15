@@ -1,6 +1,7 @@
 import { render } from '@groam/vitest-config/react';
+import { useViewport } from '@groam/vitest-config/viewport';
 import { type ComponentProps, type ReactNode, useState } from 'react';
-import { afterEach, describe, expect, test } from 'vite-plus/test';
+import { describe, expect, test } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { ChangeSummary } from './change-summary';
 import type { ProposalFeedbackItem } from './proposal-types';
@@ -75,8 +76,6 @@ test('supports scanning, collapsing, and reopening changes without hiding remova
     .toHaveAttribute('aria-expanded', 'true');
   expect(page.getByText('Lunch booking').elements().length).toBeGreaterThan(1);
 });
-
-afterEach(() => page.viewport(1280, 800));
 
 const card = (label: string) => page.getByRole('article').filter({ hasText: label });
 
@@ -154,7 +153,7 @@ describe('commenting on a change', () => {
 
 describe('on a phone', () => {
   test('stacks each detail under its own label and never scrolls sideways', async () => {
-    await page.viewport(390, 844);
+    await useViewport(390, 844);
     await renderInTripPage(<ChangeSummary changes={changes} status="draft" />);
     const museum = card('Museum visit');
     await expect.element(museum.getByText('Afternoon visit')).toBeVisible();
@@ -169,7 +168,7 @@ describe('on a phone', () => {
   });
 
   test('keeps the collapse control reachable and the layout intact after collapsing', async () => {
-    await page.viewport(390, 844);
+    await useViewport(390, 844);
     await renderInTripPage(<ChangeSummary changes={changes} status="draft" />);
     await page.getByRole('button', { name: 'Collapse all' }).click();
     await expect.element(page.getByRole('button', { name: 'Expand all' })).toBeVisible();

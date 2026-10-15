@@ -23,6 +23,7 @@
     "./node": "./src/node.ts",
     "./react": "./src/react.ts",
     "./setup-files": "./src/setup-files.ts",
+    "./viewport": "./src/viewport.ts",
     "./web": "./src/web.ts"
   },
   "license": "MIT",

@@ -10,7 +10,7 @@ description: >-
 # Add a Convex test
 
 Colocate `<topic>.test.ts` next to the module under
-`packages/backend/convex/modules/...` (Convex excludes `*.test.ts` from
+`packages/backend/convex/modules/<domain>/` (Convex excludes `*.test.ts` from
 deploys). Import test APIs from `vite-plus/test`, not `vitest`.
 
 ## Setup

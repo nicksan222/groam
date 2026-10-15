@@ -56,20 +56,25 @@ just desktop
 
 ## Checks
 
-Run what CI runs before opening a pull request:
+Run the CI gate before opening a pull request:
 
 ```bash
 just check
 ```
 
+`just check` covers audit, typecheck, lint, unit tests, React Doctor, and
+Fallow. CI also runs the browser journeys (`just journeys`, below) and the
+showcase recording (`bun run --cwd tooling/showcase test:browser`), and builds
+the desktop app on each platform; `just check` runs none of those.
+
 Smaller loops:
 
-| Command          | What it does                       |
-| ---------------- | ---------------------------------- |
-| `just lint`      | Conventions, syncpack, `vp check`  |
-| `just typecheck` | TypeScript                         |
-| `just test`      | Unit tests                         |
-| `just e2e-local` | Playwright against Vite on `:5173` |
+| Command          | What it does                                                                  |
+| ---------------- | ----------------------------------------------------------------------------- |
+| `just lint`      | Conventions, Claude harness, syncpack, `vp check`                             |
+| `just typecheck` | TypeScript                                                                    |
+| `just test`      | Unit and view tests                                                           |
+| `just journeys`  | Browser journeys against the running local backend (start it with `just dev`) |
 
 ## Search the code graph
 
@@ -85,8 +90,6 @@ just graphify-query "trip access planner" # matches identifiers, not prose
 
 Run `just graphify-refresh` after changing source files. The generated
 `graphify-out/` directory is intentionally local and ignored by Git.
-
-
 Graphify and its isolated Python environment are part of the container image;
 nothing is installed into the host or the Bun workspace.
 
@@ -95,7 +98,7 @@ Do not hand-edit `apps/web/src/routeTree.gen.ts`. Add routes as files under
 
 ## Conventions
 
-- Import through package aliases (`@groam/ui`, `@groam/ai-contracts`, `@/features/…`),
+- Import through package aliases (`@groam/ui`, `@groam/app-actions`, `@/features/…`),
   never parent `../` paths across packages
 - Semantic color tokens only (no hex / rgb / Tailwind gradients in features)
 - Public Convex functions live under `packages/backend/convex/routes` as

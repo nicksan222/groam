@@ -5,6 +5,7 @@ import { render } from '@groam/vitest-config/react';
 import { ConvexReactClient } from 'convex/react';
 import { onTestFinished } from 'vite-plus/test';
 import { AppRoot } from '@/app-root';
+import { useAuthFormStore } from '@/lib/stores/auth-form-store';
 
 let mounted: { app: Awaited<ReturnType<typeof render>>; client: ConvexReactClient } | undefined;
 
@@ -23,6 +24,8 @@ async function unmountApp(): Promise<void> {
  */
 async function mountApp(path: string): Promise<void> {
   await unmountApp();
+  // A page load starts the auth form over; its store would otherwise outlive the remount.
+  useAuthFormStore.getState().reset();
   history.replaceState(null, '', path);
   const client = new ConvexReactClient(env.convexUrl, { expectAuth: true });
   mounted = { app: await render(<AppRoot client={client} />), client };
@@ -32,6 +35,14 @@ async function mountApp(path: string): Promise<void> {
 
 // The driver reloads a page by mounting the app again.
 registerAppHost({ open: mountApp });
+
+/** Leaves the page and signs the browser out, so no mounted query outlives the session. */
+async function leaveSession(): Promise<void> {
+  await unmountApp();
+  // A real sign-out also resets the auth client's in-memory session.
+  await authClient.signOut();
+  await forgetPreviousVisit();
+}
 
 /**
  * Signs in as this file's owner (or `as`) and mounts the whole app at `path`.
@@ -44,12 +55,9 @@ export async function openApp(
   const account = await arrange.account();
   const credentials = options.as ?? account.credentials;
   const { data: current } = await authClient.getSession();
-  // Someone returning to the app stays signed in; switching people leaves the page and signs the
-  // browser out first, so no mounted query outlives the session.
+  // Someone returning to the app stays signed in; switching people signs the browser out first.
   if (current?.user.email !== credentials.email) {
-    await unmountApp();
-    await authClient.signOut();
-    await forgetPreviousVisit();
+    await leaveSession();
     const { error } = await authClient.signIn.email({
       email: credentials.email,
       password: credentials.password
@@ -64,9 +72,6 @@ export async function openApp(
 
 /** Mounts the whole app with nobody signed in, as a visitor sees it. */
 export async function openSignedOutApp(path = '/'): Promise<void> {
-  // A real sign-out also resets the auth client's in-memory session.
-  await unmountApp();
-  await authClient.signOut();
-  await forgetPreviousVisit();
+  await leaveSession();
   await mountApp(path);
 }

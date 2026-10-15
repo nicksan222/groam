@@ -2,21 +2,21 @@ import type { CreateIssueInput } from '#src/actions/create-issue';
 import type { CreateTripInput } from '#src/actions/create-trip';
 import type { UpdateTripInput } from '#src/actions/update-trip';
 import type { AuthenticatedAppUser } from '#src/backend/ensure-user';
-import { uniqueTestUser } from '#src/testing/unique-test-user';
 import {
   createE2eBackend,
-  createWorkerAccount,
+  createJourneyAccount,
   joinWorkspaceAsMember,
-  type WorkerAccount
-} from '#src/testing/worker-account';
+  type JourneyAccount
+} from '#src/testing/journey-account';
+import { uniqueTestUser } from '#src/testing/unique-test-user';
 
 // Journey files run in parallel; each one owns an account and group, created on first use.
-const accounts = new Map<string, Promise<WorkerAccount>>();
+const accounts = new Map<string, Promise<JourneyAccount>>();
 
-function accountFor(testPath: string): Promise<WorkerAccount> {
+function accountFor(testPath: string): Promise<JourneyAccount> {
   let account = accounts.get(testPath);
   if (!account) {
-    account = createWorkerAccount(createE2eBackend(), accounts.size);
+    account = createJourneyAccount(createE2eBackend(), accounts.size);
     accounts.set(testPath, account);
   }
   return account;
@@ -32,7 +32,7 @@ function memberFor(email: string): AuthenticatedAppUser {
 }
 
 function asOwner<Args extends unknown[], Result>(
-  run: (owner: WorkerAccount, ...args: Args) => Promise<Result>
+  run: (owner: JourneyAccount, ...args: Args) => Promise<Result>
 ) {
   return async (testPath: string, ...args: Args) => run(await accountFor(testPath), ...args);
 }

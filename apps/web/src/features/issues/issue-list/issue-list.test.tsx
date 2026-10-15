@@ -1,9 +1,10 @@
 import type { Id } from '@groam/backend/data-model';
 import { render } from '@groam/vitest-config/react';
+import { useViewport } from '@groam/vitest-config/viewport';
 import type { ReactNode } from 'react';
-import { afterEach, describe, expect, test, vi } from 'vite-plus/test';
+import { describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
-import { expectPhoneListRow } from '@/testing/phone-list';
+import { expectPhoneListRow, expectWideListRow } from '@/testing/phone-list';
 import { IssueList, type IssueListItem } from './issue-list';
 
 const navigate = vi.hoisted(() => vi.fn());
@@ -86,8 +87,6 @@ test('searches visible issue fields and can clear the filter', async () => {
 });
 
 describe('on a phone', () => {
-  afterEach(() => page.viewport(1280, 800));
-
   const firstRow = () =>
     page
       .getByRole('row')
@@ -95,7 +94,7 @@ describe('on a phone', () => {
       .first();
 
   test('keeps titles readable, drops secondary columns and opens a row on tap', async () => {
-    await page.viewport(390, 844);
+    await useViewport(390, 844);
     await renderList();
     await expectPhoneListRow(firstRow());
     await expect.element(page.getByText('Opened by')).not.toBeVisible();
@@ -106,8 +105,7 @@ describe('on a phone', () => {
 
   test('shows the author and assignee columns again on a wide screen', async () => {
     await renderList();
-    const cells = [...firstRow().element().querySelectorAll('td')];
-    expect(cells.filter((cell) => cell.checkVisibility()).length).toBeGreaterThan(2);
+    await expectWideListRow(firstRow());
     await expect.element(page.getByText('Opened by')).toBeVisible();
   });
 });

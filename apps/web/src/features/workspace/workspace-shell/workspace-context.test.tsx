@@ -1,6 +1,7 @@
 import { render } from '@groam/vitest-config/react';
 import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
+import { useGroupActivationStore } from '@/lib/stores/group-activation-store';
 import { WorkspaceProvider } from './workspace-context';
 
 const data = vi.hoisted(() => ({
@@ -35,6 +36,7 @@ const workspace = {
 };
 
 beforeEach(() => {
+  useGroupActivationStore.setState({ organizationId: null });
   data.current = {
     activationError: null,
     isPending: false,
@@ -111,4 +113,26 @@ test('drops the held workspace once auth settles without an active organization'
   await expect.element(page.getByText('Trip page')).not.toBeInTheDocument();
   await expect.element(page.getByText('Welcome, Ada')).toBeInTheDocument();
   await expect.element(page.getByText('Join with invitation code')).toBeInTheDocument();
+});
+
+test('hides the workspace while another group is activated and resumes once it is active', async () => {
+  const view = await render(
+    <WorkspaceProvider>
+      <p>Trip page</p>
+    </WorkspaceProvider>
+  );
+  useGroupActivationStore.setState({ organizationId: 'organization-b' });
+  await expect.element(page.getByText('Trip page')).not.toBeVisible();
+
+  data.current = {
+    ...data.current,
+    value: { ...workspace, activeOrganization: { id: 'organization-b', members: [] } }
+  };
+  await view.rerender(
+    <WorkspaceProvider>
+      <p>Trip page</p>
+    </WorkspaceProvider>
+  );
+  await expect.element(page.getByText('Trip page')).toBeVisible();
+  expect(useGroupActivationStore.getState().organizationId).toBeNull();
 });

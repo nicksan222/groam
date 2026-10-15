@@ -5,7 +5,6 @@ import {
   editActivity,
   environment,
   openIdea,
-  openItinerary,
   openTrips,
   saveSevenDayRange,
   uniqueSuffix
@@ -27,8 +26,13 @@ test('plans a trip itinerary on an idea working copy', async () => {
   await openIdea({ proposalId: idea.proposalId, tripId });
   await saveSevenDayRange();
 
-  await openItinerary();
-  await addStop({ endDay: '3', name: 'Lisbon', notes: 'Food and old town', startDay: '1' });
+  await addStop({
+    endDay: '3',
+    first: true,
+    name: 'Lisbon',
+    notes: 'Food and old town',
+    startDay: '1'
+  });
   await addStop({ endDay: '5', name: 'Porto', notes: 'River and cellars', startDay: '4' });
 
   await addActivity({

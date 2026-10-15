@@ -4,7 +4,7 @@ import { ids } from '#src/testing/ids';
 import { openAppPath } from './app-host';
 import { by, dialogSubmit, issueRow, issueStatusOption } from './locators';
 import { openTripSection } from './open-trips';
-import { expectPath, idFromPath, presentAttribute, tap, enter } from './queries';
+import { expectGone, expectPath, idFromPath, presentAttribute, tap, enter } from './queries';
 
 export type IssueStatus = 'closed' | 'open';
 export type IssueStatusFilter = 'all' | 'closed' | 'open';
@@ -47,18 +47,6 @@ export async function openIssueFromTrip(tripId: string, title: string): Promise<
   await expect.element(by(ids.issueHeading)).toMatchTextContent(title);
 }
 
-export async function expectIssueStatus(status: IssueStatus): Promise<void> {
-  await expect.element(by(ids.issueStatus)).toHaveAttribute('data-status', status);
-}
-
-export async function openIssueWithStatus(input: {
-  status: IssueStatus;
-  title: string;
-}): Promise<void> {
-  await openIssueFromInbox(input.title, { status: input.status });
-  await expectIssueStatus(input.status);
-}
-
 export async function setIssueStatus(status: IssueStatus): Promise<void> {
   const current = by(ids.issueStatus);
   await expect.element(current).toBeInTheDocument();
@@ -75,7 +63,7 @@ export async function createIssue(input: { body: string; title: string }): Promi
   await enter(by(ids.createIssueTitle), input.title);
   await enter(by(ids.createIssueBody), input.body);
   await tap(dialogSubmit(ids.createIssueDialog));
-  await expect.element(by(ids.createIssueDialog)).not.toBeInTheDocument();
+  await expectGone(by(ids.createIssueDialog));
   await presentAttribute(by(ids.issueHeading), 'data-issue-id');
   return idFromPath('issues');
 }

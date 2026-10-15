@@ -5,7 +5,7 @@ import type { AppWorkspace } from '#src/backend/ensure-workspace';
 import { type TestUserCredentials, uniqueTestUser } from './unique-test-user';
 
 /** One journey file's own user and group, so parallel files never share data. */
-export type WorkerAccount = {
+export type JourneyAccount = {
   backend: BackendAppActions;
   credentials: TestUserCredentials;
   user: AuthenticatedAppUser;
@@ -16,22 +16,22 @@ export function createE2eBackend(): BackendAppActions {
   return createBackendActions({ convexUrl: env.convexUrl, siteUrl: env.convexSiteUrl });
 }
 
-export async function createWorkerAccount(
+export async function createJourneyAccount(
   backend: BackendAppActions,
-  workerIndex: number
-): Promise<WorkerAccount> {
-  const credentials = uniqueTestUser(`worker-${workerIndex}`);
+  journeyIndex: number
+): Promise<JourneyAccount> {
+  const credentials = uniqueTestUser(`journey-${journeyIndex}`);
   const user = await backend.ensureUser(credentials);
   const workspace = await backend.ensureWorkspace(user, {
     createIfMissing: true,
-    name: `E2E Worker ${workerIndex} ${credentials.username.slice(-8)}`
+    name: `E2E Journey ${journeyIndex} ${credentials.username.slice(-8)}`
   });
   return { backend, credentials, user, workspace };
 }
 
 /** Adds a fresh member to the account's group through the backend instead of the invite UI. */
 export async function joinWorkspaceAsMember(
-  account: WorkerAccount,
+  account: JourneyAccount,
   prefix = 'member'
 ): Promise<{ credentials: TestUserCredentials; member: AuthenticatedAppUser }> {
   const credentials = uniqueTestUser(prefix);

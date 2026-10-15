@@ -2,7 +2,7 @@ import { expect } from 'vite-plus/test';
 import { page, userEvent } from 'vite-plus/test/browser';
 import { ids } from '#src/testing/ids';
 import { by, chatMember, chatMessage, dialogSubmit } from './locators';
-import { tap, enter } from './queries';
+import { expectGone, tap, enter } from './queries';
 
 export async function openChatInbox(): Promise<void> {
   await tap(by(ids.navChat));
@@ -27,7 +27,7 @@ export async function createGroupChat(input: {
   await expect.element(memberButton).toBeVisible();
   await tap(memberButton);
   await tap(dialogSubmit(ids.newChatDialog));
-  await expect.element(dialog).not.toBeInTheDocument();
+  await expectGone(dialog);
   await expect.element(by(ids.chatHeading)).toMatchTextContent(input.title);
 }
 
@@ -39,8 +39,6 @@ export async function sendChatMessage(message: string): Promise<void> {
   await userEvent.keyboard('{Enter}');
   await expect.element(chatMessage(message)).toBeVisible();
 }
-
-export const sendMessage = (input: { text: string }) => sendChatMessage(input.text);
 
 export async function reactToChatMessage(message: string, reaction: string): Promise<void> {
   const row = chatMessage(message);

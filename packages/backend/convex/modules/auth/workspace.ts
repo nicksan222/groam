@@ -58,7 +58,8 @@ export async function requireWorkspace(ctx: WorkspaceFunctionCtx): Promise<Works
     sessionId: identity.sessionId,
     userId: identity.subject
   });
-  // As Better Auth's getSession does, a session past its expiry no longer signs anyone in.
+  // As Better Auth's getSession does, a session past its expiry no longer signs anyone in. Reading
+  // the clock is fine here: it matches getSession, and token refresh bounds how stale a query gets.
   if (access === null || access.expiresAt <= Date.now()) {
     throw new ConvexError('Not authenticated');
   }

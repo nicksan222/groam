@@ -1,4 +1,10 @@
-import { arrange, searchTrips, tripCard, uniqueSuffix } from '@groam/app-actions/vitest';
+import {
+  arrange,
+  expectGone,
+  searchTrips,
+  tripCard,
+  uniqueSuffix
+} from '@groam/app-actions/vitest';
 import { expect, test } from 'vite-plus/test';
 import { openApp } from '@/testing/open-app';
 
@@ -12,7 +18,7 @@ test('trip search only shows matching plans and clearing it restores the list', 
 
   await searchTrips(first);
   await expect.element(tripCard(first)).toBeVisible();
-  await expect.element(tripCard(second)).not.toBeInTheDocument();
+  await expectGone(tripCard(second));
   await searchTrips('');
   await expect.element(tripCard(first)).toBeVisible();
   await expect.element(tripCard(second)).toBeVisible();

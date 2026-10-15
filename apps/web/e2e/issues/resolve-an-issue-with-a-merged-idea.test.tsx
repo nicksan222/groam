@@ -36,7 +36,7 @@ test('creates a trip, makes an issue, and resolves it with a merged idea', async
   // A group member approves; their own screens are covered by view tests, so they use the backend.
   await arrange.approveIdea({ ideaName, memberEmail: member.email, tripId });
 
-  await openIdeaFromList(ideaName);
+  await openIdeaFromList({ name: ideaName }, 'view');
   await applyIdea();
 
   await openAppPath(`issues/${issueId}`);

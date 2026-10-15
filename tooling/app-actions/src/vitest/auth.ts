@@ -1,26 +1,26 @@
-import { expect, vi } from 'vite-plus/test';
+import { expect } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { ids } from '#src/testing/ids';
 import { uniqueTestUser, type TestUserCredentials } from '#src/testing/unique-test-user';
 import { by } from './locators';
-import { isVisible, tap, enter } from './queries';
+import { expectGone, tap, enter } from './queries';
 
 /** Signs up through the auth form of a signed-out app. */
 export async function signUp(user: TestUserCredentials): Promise<void> {
   await expect.element(by(ids.authSubmit)).toBeVisible();
-  if (!isVisible(by(ids.authName))) await tap(by(ids.authSwitchFlow));
+  // A signed-out app opens on the sign-in form; its switch link leads to sign-up.
+  await expect.element(by(ids.authSwitchFlow)).toMatchTextContent('Sign up');
+  await tap(by(ids.authSwitchFlow));
   await expect.element(by(ids.authName)).toBeVisible();
   await enter(by(ids.authName), user.name);
   await enter(by(ids.authEmail), user.username);
   await enter(by(ids.authPassword), user.password);
   await tap(by(ids.authSubmit));
-  await expect.poll(() => page.getByRole('alert').elements().length).toBe(0);
+  await expectGone(page.getByRole('alert'));
   await expect.element(by(ids.onboardingWelcome)).toBeVisible();
 }
 
 export async function expectWorkspaceReady(): Promise<void> {
-  const retry = by(ids.workspaceErrorRetry);
-  if (isVisible(retry)) await tap(retry);
   await expect.element(by(ids.navTrips)).toBeVisible();
 }
 
@@ -43,17 +43,11 @@ export async function completeOnboarding(input?: CompleteOnboardingInput) {
   return { groupName, user };
 }
 
+/** Signs out through the user menu and waits for the auth form. */
 export async function signOut(): Promise<void> {
-  await vi.waitFor(
-    async () => {
-      if (isVisible(by(ids.authSubmit))) return;
-      const menuItem = page.getByRole('menuitem', { name: 'Sign out' });
-      if (!isVisible(menuItem)) await tap(by(ids.navUserTrigger));
-      await menuItem.click({ timeout: 2000 });
-      await expect.element(by(ids.authSubmit), { timeout: 2000 }).toBeVisible();
-    },
-    { timeout: 10_000 }
-  );
+  await tap(by(ids.navUserTrigger));
+  await tap(page.getByRole('menuitem', { name: 'Sign out' }));
+  await expect.element(by(ids.authSubmit)).toBeVisible();
 }
 
 /** Fills the auth form's credentials and submits it. */

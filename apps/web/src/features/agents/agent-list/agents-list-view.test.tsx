@@ -1,5 +1,6 @@
 import { render } from '@groam/vitest-config/react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { useViewport } from '@groam/vitest-config/viewport';
+import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import type { WorkspaceAgentRun } from '@/features/agents/hooks/use-workspace-agent-runs';
 import { testIds } from '@/lib/test-ids';
@@ -74,8 +75,6 @@ function run(
     ...overrides
   };
 }
-
-afterEach(() => page.viewport(1280, 800));
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -247,7 +246,7 @@ describe('AgentsListView', () => {
     };
 
     test('puts the title above its description and the empty state below, inside the page', async () => {
-      await page.viewport(width, 844);
+      await useViewport(width, 844);
       await render(<AgentsListView />);
       const title = page.getByTestId(testIds.agentsTitle);
       const description = page.getByText(/^Work Groam is doing for your group/u);
@@ -265,7 +264,7 @@ describe('AgentsListView', () => {
     });
 
     test('keeps a populated run table inside the page', async () => {
-      await page.viewport(width, 844);
+      await useViewport(width, 844);
       state.runs = [
         run({
           id: 'run-long' as WorkspaceAgentRun['id'],

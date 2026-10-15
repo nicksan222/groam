@@ -49,13 +49,17 @@ export const activityCard = (title: string) =>
   named(ids.activityCard, 'data-activity-title', title);
 export const inlineActivityEditor = (scope: LocatorScope = page) =>
   by(ids.activityInlineEditor, scope);
-export const stayCard = (title: string) => named(ids.stayCard, 'data-stay-name', title);
 export const issueRow = (title: string) => named(ids.issueRow, 'data-issue-title', title);
-export const ideaRow = (ideaTitle: string) =>
-  page
-    .getByTestId(ids.ideaRow)
-    .filter({ has: page.getByRole('heading', { name: ideaTitle }) })
-    .or(named(ids.ideaRow, 'data-idea-name', ideaTitle));
+/**
+ * An idea row by the idea's title (its heading, what a started-with-a-title idea shows) or by its
+ * branch name (what the app derives from a name typed into the start-idea dialog).
+ */
+export const ideaRow = (idea: { name: string } | { title: string }) =>
+  'name' in idea
+    ? named(ids.ideaRow, 'data-idea-name', idea.name)
+    : page
+        .getByTestId(ids.ideaRow)
+        .filter({ has: page.getByRole('heading', { name: idea.title }) });
 export const chatRow = (title: string) => named(ids.chatRow, 'data-chat-title', title);
 export const chatMember = (name: string) => named(ids.chatMember, 'data-member-name', name);
 export const chatMessage = (content: string) => named(ids.chatMessage, 'data-content', content);
@@ -63,12 +67,6 @@ export const groupSwitcherItem = (groupName: string) =>
   named(ids.groupSwitcherItem, 'data-group-name', groupName);
 export const issueStatusOption = (status: 'all' | 'closed' | 'open') =>
   named(ids.issueStatusOption, 'data-status', status);
-
-export function planTravel(from: string, to: string): Locator {
-  return css(
-    `[data-testid="${ids.planTravel}"][data-from=${JSON.stringify(from)}][data-to=${JSON.stringify(to)}]`
-  );
-}
 
 export function calendarDay(dayValue?: string): Locator {
   return css(

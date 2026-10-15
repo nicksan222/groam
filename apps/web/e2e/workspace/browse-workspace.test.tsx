@@ -1,7 +1,9 @@
 import {
   by,
+  expectGone,
   expectHomeDashboard,
   expectPath,
+  expectWorkspaceReady,
   ids,
   openAppPath,
   openChatInbox,
@@ -13,11 +15,10 @@ import { expect, test } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { openApp } from '@/testing/open-app';
 
-// The system-theme/mobile-navigation and mobile list-row tests are layout checks of single
-// components and are left to view tests. Console errors are now caught for every journey.
 test('group people live in settings, not the sidebar', async () => {
   await openApp();
-  await expect.poll(() => page.getByRole('link', { name: 'Group' }).elements().length).toBe(0);
+  await expectWorkspaceReady();
+  await expectGone(page.getByRole('link', { name: 'Group' }));
   await openSettingsGroupSection();
   await expect.element(by(ids.inviteMember)).toBeVisible();
   await expect.element(page.getByRole('heading', { name: 'Members' })).toBeVisible();

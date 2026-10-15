@@ -2,13 +2,9 @@ import { expect } from 'vite-plus/test';
 import { ids } from '#src/testing/ids';
 import { openAppPath } from './app-host';
 import { by, tripCard } from './locators';
-import { expectPath, idFromPath, isVisible, tap } from './queries';
+import { expectPath, idFromPath, tap } from './queries';
 
 export type TripSection = 'activity' | 'ideas' | 'issues' | 'itinerary' | 'overview';
-
-export async function expectTripsReady(): Promise<void> {
-  await expect.element(by(ids.tripsTitle)).toBeVisible();
-}
 
 export async function openTrips(): Promise<void> {
   await tap(by(ids.navTrips));
@@ -40,17 +36,8 @@ export async function openTripSection(section: TripSection): Promise<void> {
     itinerary: ids.tripSectionItinerary,
     overview: ids.tripSectionOverview
   } as const;
-  await expect.element(by(ids.tripSectionOverview)).toBeVisible();
-  const selected = by(sectionIds[section]);
-  // Without a shared itinerary tab the itinerary lives under Overview.
-  if (section === 'itinerary' && !isVisible(selected)) {
-    await tap(by(ids.tripSectionOverview));
-    return;
-  }
-  await tap(selected);
+  await tap(by(sectionIds[section]));
 }
-
-export const openItinerary = () => openTripSection('itinerary');
 
 export async function openSharedTrip(): Promise<void> {
   await tap(by(ids.ideaOpenShared));

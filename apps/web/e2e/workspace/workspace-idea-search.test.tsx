@@ -21,9 +21,9 @@ test('workspace idea search finds the matching proposal and clears cleanly', asy
   await openWorkspaceIdeas();
 
   await searchIdeas('Museum proposal');
-  await expect.element(ideaRow(second)).toBeVisible();
-  await expectGone(ideaRow(first));
+  await expect.element(ideaRow({ title: second })).toBeVisible();
+  await expectGone(ideaRow({ title: first }));
   await searchIdeas('');
-  await expect.element(ideaRow(second)).toBeVisible();
-  await expect.element(ideaRow(first)).toBeVisible();
+  await expect.element(ideaRow({ title: second })).toBeVisible();
+  await expect.element(ideaRow({ title: first })).toBeVisible();
 });

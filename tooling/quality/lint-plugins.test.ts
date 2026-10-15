@@ -197,34 +197,29 @@ describe('feature architecture boundaries', () => {
   });
 });
 
-describe('Playwright contract boundaries', () => {
-  const spec = 'apps/web/e2e/example.spec.ts';
-  const interpolation = ['$', '{tripId}'].join('');
+describe('browser locator contract', () => {
+  const journey = 'apps/web/e2e/example.test.tsx';
+  const driver = 'tooling/app-actions/src/vitest/example.ts';
   const idInterpolation = ['$', '{ids.dialog}'].join('');
 
   test('keeps browser test IDs in the shared contract', () => {
-    for (const source of ["page.getByTestId('save-trip')", "by(page, 'save-trip')"]) {
-      const result = lint(`${source};`, spec);
-      expect(result.status).toBe(1);
-      expect(result.output).toContain('Use ids from @groam/app-actions/playwright');
+    for (const file of [journey, driver]) {
+      for (const source of [
+        "page.getByTestId('save-trip')",
+        "by(page, 'save-trip')",
+        "by('save-trip')"
+      ]) {
+        const result = lint(`${source};`, file);
+        expect(result.status).toBe(1);
+        expect(result.output).toContain('Use ids from @groam/app-actions/ids');
+      }
     }
 
     expect(
       lint(
-        `page.getByTestId(ids.saveTrip); by(page, ids.saveTrip); page.getByTestId(\`${idInterpolation}-submit\`);`,
-        spec
+        `page.getByTestId(ids.saveTrip); by(page, ids.saveTrip); by(ids.saveTrip); page.getByTestId(\`${idInterpolation}-submit\`);`,
+        driver
       ).status
     ).toBe(0);
-  });
-
-  test('keeps internal browser navigation base-aware', () => {
-    for (const source of ["page.goto('/trips');", `page.goto(\`/trips/${interpolation}\`);`]) {
-      const result = lint(source, spec);
-      expect(result.status).toBe(1);
-      expect(result.output).toContain('Wrap internal Playwright paths with appHref');
-    }
-
-    expect(lint("page.goto(appHref('trips'));", spec).status).toBe(0);
-    expect(lint("page.goto('https://groam.example/trips');", spec).status).toBe(0);
   });
 });

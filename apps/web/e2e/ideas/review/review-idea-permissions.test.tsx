@@ -33,14 +33,14 @@ test('reviewers can inspect and approve an idea but cannot edit its working copy
   await openIdea({ proposalId, tripId });
   await saveSevenDayRange();
   await openTripSection('overview');
-  await addStop({ name: 'Porto', notes: 'River walk', startDay: '1', endDay: '3' });
+  await addStop({ first: true, name: 'Porto', notes: 'River walk', startDay: '1', endDay: '3' });
   await addActivity({ destination: 'Porto, Portugal', title: 'Riverside walk' });
   await updateTrip({ dateNotes: 'Prefer more time on the coast' });
   await requestIdeaReview();
 
   // The same browser now belongs to the reviewer, one person at a time.
   await openApp('/trips', { as: reviewer });
-  await openIdeaFromList(ideaName);
+  await openIdeaFromList({ title: ideaName }, 'view');
   await expect.element(by(ids.ideaPrimaryAction)).toMatchTextContent('Approve');
   await expectGone(by(ids.tripActionEdit));
   await expect.element(by(ids.ideaSectionCompare)).toBeVisible();
@@ -57,7 +57,7 @@ test('reviewers can inspect and approve an idea but cannot edit its working copy
   await expect.element(by(ids.approveIdea).first()).toMatchTextContent(/Remove approval/u);
 
   await openApp();
-  await openIdeaFromList(ideaName);
+  await openIdeaFromList({ title: ideaName }, 'view');
   await openIdeaItinerary();
   await expect.element(page.getByRole('button', { name: 'Edit Riverside walk' })).toBeVisible();
 });

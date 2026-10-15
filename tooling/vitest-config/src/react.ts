@@ -24,6 +24,7 @@ const mounted = new Set<Mount>();
  * trigger React's act() warning (which the console guard would fail).
  */
 export async function act<Result>(work: () => Result | Promise<Result>): Promise<Result> {
+  const previous = globalThis.IS_REACT_ACT_ENVIRONMENT;
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   try {
     let result!: Result;
@@ -32,7 +33,7 @@ export async function act<Result>(work: () => Result | Promise<Result>): Promise
     });
     return result;
   } finally {
-    globalThis.IS_REACT_ACT_ENVIRONMENT = false;
+    globalThis.IS_REACT_ACT_ENVIRONMENT = previous;
   }
 }
 

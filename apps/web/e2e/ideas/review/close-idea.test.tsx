@@ -21,7 +21,7 @@ test('deletes a draft idea without leaving an editable working copy', async () =
   await openIdea({ proposalId, tripId });
   await closeIdea();
   await filterWorkspaceIdeas('Settled', [name]);
-  const row = ideaRow(name);
+  const row = ideaRow({ title: name });
   await expect.element(row).toHaveAttribute('data-status', 'closed');
   await expectGone(by(ids.ideaContinue, row));
 });
@@ -37,7 +37,7 @@ test('requires a reason to pass on an idea already in review', async () => {
   await openIdea({ proposalId: idea.proposalId, tripId });
   await closeIdea('The original week works better');
   await filterWorkspaceIdeas('Settled', [name]);
-  const row = ideaRow(name);
+  const row = ideaRow({ title: name });
   await expect.element(row).toHaveAttribute('data-status', 'closed');
   await expectGone(by(ids.ideaContinue, row));
 });

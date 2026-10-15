@@ -70,7 +70,7 @@
     "lint": "vp run lint:conventions && vp run lint:claude && vp run lint:packages && vp check",
     "lint:claude": "bun tooling/quality/check-claude-harness.ts",
     "lint:conventions": "bun tooling/quality/check-conventions.ts",
-    "lint:packages": "vp exec syncpack lint --config tooling/syncpack.config.json",
+    "lint:packages": "vp exec syncpack lint --config tooling/syncpack.config.json && vp exec syncpack format --check --config tooling/syncpack.config.json",
     "migrations:run": "vp exec convex run migrations:runAll '{}'",
     "migrations:run:prod": "vp exec convex run migrations:runAll '{}' --prod",
     "migrations:status": "vp exec convex run --component migrations lib:getStatus",

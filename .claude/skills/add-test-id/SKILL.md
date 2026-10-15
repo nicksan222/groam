@@ -10,7 +10,7 @@ description: >-
 # Add a test id
 
 Stable locators are the `ids` object in
-`tooling/app-actions/src/playwright/ids.ts`, published as
+`tooling/app-actions/src/testing/ids.ts`, published as
 `@groam/app-actions/ids`. The web app re-exports it as `testIds` from
 `@/lib/test-ids`.
 

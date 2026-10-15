@@ -38,7 +38,7 @@
     "tooling/vitest-config/src/console-guard/setup.ts",
     "tooling/vitest-config/src/fake-scheduler.ts",
     // Browser-mode setups load these by path from each package's vite.config.ts.
-    "apps/web/src/browser-setup.ts",
+    "apps/web/src/journeys-setup.ts",
     "apps/web/src/views-setup.ts",
     "packages/*/src/browser-setup.ts",
     "packages/ai/src/browser-setup.css"

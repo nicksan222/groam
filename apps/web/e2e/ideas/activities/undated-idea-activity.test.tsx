@@ -6,8 +6,8 @@ import {
   environment,
   openIdea,
   openIdeaFromList,
+  openTripSection,
   openIdeaItinerary,
-  openItinerary,
   uniqueSuffix
 } from '@groam/app-actions/vitest';
 import { expect, test } from 'vite-plus/test';
@@ -22,13 +22,13 @@ test('plans and revisits an activity before trip dates or destination days are s
   const { proposalId } = await arrange.startIdea({ name: ideaName, tripId });
   await openApp();
   await openIdea({ proposalId, tripId });
-  await openItinerary();
+  await openTripSection('itinerary');
   await addFirstDestination({ name: 'Porto', notes: 'River walk' });
   await addActivity({ destination: 'Porto, Portugal', title: 'Explore the old town' });
   await expect
     .element(page.getByRole('region', { name: 'Day 1 schedule' }))
     .toMatchTextContent('Explore the old town');
-  await openIdeaFromList(ideaName);
+  await openIdeaFromList({ title: ideaName }, 'continue');
   await openIdeaItinerary();
   await editActivity({ title: 'Explore the old town', address: 'Ribeira, Porto' });
 });

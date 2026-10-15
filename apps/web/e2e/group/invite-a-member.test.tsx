@@ -4,6 +4,7 @@ import {
   arrange,
   by,
   environment,
+  expectGone,
   ids,
   inviteGroupMember,
   openSettingsGroupSection,
@@ -45,7 +46,7 @@ test('a member pastes an invitation code, joins the group and plans on its trips
   await expect.element(by(ids.tripRole)).toHaveAttribute('data-role', 'participant');
   await expect.element(by(ids.sharedTripBanner)).toBeVisible();
   await expect.element(by(ids.sharedTripNewIdea)).toBeVisible();
-  await expect.element(page.getByRole('button', { name: 'Edit details' })).not.toBeInTheDocument();
+  await expectGone(page.getByRole('button', { name: 'Edit details' }));
 
   await addIdea({ name: `member/idea-${suffix}` });
   await updateTrip({ dateNotes: 'First week of May' });
@@ -60,5 +61,5 @@ test('opens the group gracefully when the code belongs to an existing membership
   await redeemGroupInvitationCode(invitationCode);
 
   await expect.element(by(ids.groupSwitcher)).toHaveAttribute('data-group-name', groupName);
-  await expect.element(page.getByText('Unable to join group')).not.toBeInTheDocument();
+  await expectGone(page.getByText('Unable to join group'));
 });

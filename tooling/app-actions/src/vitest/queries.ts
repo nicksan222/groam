@@ -1,45 +1,30 @@
 import { expect } from 'vite-plus/test';
 import { type Locator } from 'vite-plus/test/browser';
 
-/** Whether any element matching the locator is currently rendered and visible. */
-export function isVisible(locator: Locator): boolean {
-  return locator
-    .elements()
-    .some((element) => element.checkVisibility({ visibilityProperty: true }));
-}
-
-/** Waits until exactly `count` elements match the locator. */
-export async function expectCount(locator: Locator, count: number): Promise<void> {
-  await expect.poll(() => locator.elements().length).toBe(count);
+/**
+ * Runs `step` for each item, one after another. Steps either read what the previous one changed
+ * or assert (`expect.element` must be awaited, and the repo's lint rule rejects `Promise.all`
+ * around it), so they cannot run together.
+ */
+export async function inOrder<Item>(
+  items: readonly Item[],
+  step: (item: Item) => Promise<void>
+): Promise<void> {
+  for (const item of items) {
+    // oxlint-disable-next-line react-doctor/async-await-in-loop -- Sequential by design, see above.
+    await step(item);
+  }
 }
 
 /** Waits until nothing matches the locator. */
-export function expectGone(locator: Locator): Promise<void> {
-  return expectCount(locator, 0);
-}
-
-/** Waits until the locator is absent or hidden. */
-export async function expectHidden(locator: Locator): Promise<void> {
-  await expect.poll(() => isVisible(locator)).toBe(false);
-}
-
-/** Waits until any element matches, then returns the attribute of the first. */
-export async function attribute(locator: Locator, name: string): Promise<string | null> {
-  await expect.element(locator).toBeInTheDocument();
-  return locator.element().getAttribute(name);
+export async function expectGone(locator: Locator): Promise<void> {
+  await expect.poll(() => locator.elements().length).toBe(0);
 }
 
 /** Waits until the element has some non-empty value for an attribute and returns it. */
 export async function presentAttribute(locator: Locator, name: string): Promise<string> {
   await expect.poll(() => locator.query()?.getAttribute(name) ?? '').toMatch(/.+/u);
   return locator.element().getAttribute(name) ?? '';
-}
-
-/** Waits until the element's text matches. */
-export async function expectText(locator: Locator, pattern: RegExp | string): Promise<void> {
-  await expect
-    .poll(() => locator.query()?.textContent?.replaceAll(/\s+/gu, ' ').trim() ?? '')
-    [typeof pattern === 'string' ? 'toBe' : 'toMatch'](pattern as never);
 }
 
 /** The current location as the app sees it. */

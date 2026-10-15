@@ -1,7 +1,8 @@
 import { useSidebar } from '@groam/ui/hooks/use-sidebar';
 import { render } from '@groam/vitest-config/react';
+import { useViewport } from '@groam/vitest-config/viewport';
 import type { ComponentProps } from 'react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { WorkspaceShell } from './workspace-shell';
 
@@ -43,10 +44,8 @@ beforeEach(() => {
   route.pathname = '/trips';
 });
 
-afterEach(() => page.viewport(1280, 800));
-
 describe('mobile navigation on a phone', () => {
-  beforeEach(() => page.viewport(390, 844));
+  beforeEach(() => useViewport(390, 844));
 
   test('offers the four planning areas, the assistant and a menu', async () => {
     await render(<WorkspaceShell />);

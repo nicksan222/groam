@@ -16,6 +16,7 @@ const testConfig = createWebVitestConfig(import.meta.dirname, {
         include: [
           'src/**/*.test.tsx',
           'src/features/**/hooks/*.test.ts',
+          // A .ts test that needs a DOM (it clicks a download anchor), which the Node unit project lacks.
           'src/lib/download-text-file.test.ts'
         ],
         name: 'views',
@@ -29,7 +30,7 @@ const testConfig = createWebVitestConfig(import.meta.dirname, {
         include: ['e2e/**/*.test.tsx'],
         maxWorkers: testEnv.isCI ? 2 : 4,
         name: 'journeys',
-        setupFiles: ['./src/browser-setup.ts'],
+        setupFiles: ['./src/journeys-setup.ts'],
         testTimeout: testEnv.isCI ? 120_000 : 60_000
       }
     ],
