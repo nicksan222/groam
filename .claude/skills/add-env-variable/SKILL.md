@@ -25,7 +25,7 @@ scripts.
 | `web-client` | `apps/web` (extends `auth-client`) | `VITE_SITE_URL`, `VITE_GROAM_SHELL`, `VITE_MAP_TILES_URL` |
 | `auth-client` | auth client | `VITE_CONVEX_URL`, `VITE_CONVEX_SITE_URL` |
 | `web` | web build | `STATIC_HOSTING_BASE_PATH` |
-| `convex-tooling` | `tooling/devkit` | AI keys synced to Convex, `GROAM_READY_TIMEOUT_SECONDS` |
+| `convex-tooling` | `tooling/devkit` | `GROAM_READY_TIMEOUT_SECONDS` |
 | `runtime` | installed-app runtime | `GROAM_CONVEX_URL`, `GROAM_DATA_DIR` |
 | `desktop-tooling` | `apps/desktop/scripts` | `VITE_PHOTON_URL`, `CI` |
 | `seeder` | `tooling/seeder` | `SEED_CONVEX_URL`, `SEED_USER_EMAIL` |
@@ -49,12 +49,12 @@ Read them from the generated `env` (`import { env } from
 '#convex-generated/server'`) inside Convex functions — never from
 `@groam/env/*` or `process.env`.
 
-To sync the value from `.env.local` on `just dev`, also add it to
-`configuredConvexEnvironment` in `packages/env/src/apps/convex-tooling.ts`
-(`tooling/devkit/sync-ai-env.ts` pushes that map). One-off set against the
-local backend: `vp exec convex env set NAME value`.
+Set deployment values explicitly through the normal deployment configuration. For a
+local backend, use `CONVEX_AGENT_MODE=anonymous vp exec convex env set NAME value`.
+ChatGPT credentials are personal OAuth grants stored by the ChatGPT module; they
+are not environment variables and must not be synced from developer credentials.
 
 ## Do not
 
 - Read `import.meta.env.VITE_*` in `apps/web` or `packages/ui`.
-- Put LLM keys in client env; they stay Convex-side or in Settings → AI.
+- Add AI provider keys or deployment-funded inference fallbacks. Use the personal ChatGPT connection.

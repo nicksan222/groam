@@ -30,7 +30,7 @@ jobs:
     uses: ./.github/workflows/test-reusable.yml
 
   backend:
-    name: Deploy backend and migrations to ${{ inputs.environment }}
+    name: Deploy backend to ${{ inputs.environment }}
     needs: [test]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -74,9 +74,6 @@ jobs:
           if ! bunx convex env list --names-only | grep --quiet '^BETTER_AUTH_SECRET$'; then
             bunx convex env set BETTER_AUTH_SECRET "$(openssl rand -base64 48)"
           fi
-
-      - name: Run pending migrations
-        run: bun run migrations:run
 
       - name: Revoke deploy key
         if: always()

@@ -5,7 +5,6 @@ import { localOrigins } from '@groam/devkit/constants';
 import { isHttpOk, waitForHttp } from '@groam/devkit/http-readiness';
 import { repoRoot } from '@groam/devkit/repo-root';
 import { runConvex } from '@groam/devkit/run-convex';
-import { syncOptionalAiEnvironment } from '@groam/devkit/sync-ai-env';
 import { isConvexBackendResponding, waitForBackend } from '@groam/devkit/wait-for-backend';
 import { env as desktopToolingEnv } from '@groam/env/desktop-tooling';
 
@@ -38,7 +37,6 @@ const convex = backendReady
 if (!backendReady) console.info('[groam] Starting Convex backend');
 await waitForBackend(localOrigins.convexApi);
 configureAuth({ siteUrl: localOrigins.vite, writeViteSiteUrl: true });
-syncOptionalAiEnvironment();
 
 const viteReady = await isHttpOk(`${localOrigins.viteLoopback}/`);
 const vite = viteReady

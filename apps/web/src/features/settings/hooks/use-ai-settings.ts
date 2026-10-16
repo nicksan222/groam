@@ -1,160 +1,107 @@
-import { aiKeyProvider, isAiKeyProviderId } from '@groam/ai/backend/providers/keys';
 import { api } from '@groam/backend/api';
-import { useMutation, useQuery } from 'convex/react';
-import type { FunctionReturnType } from 'convex/server';
-import { useState } from 'react';
-import { useShallow } from 'zustand/react/shallow';
-import { useAiProviderAuth } from '@/features/settings/hooks/use-ai-provider-auth';
+import { env } from '@groam/env/web-client';
+import { useAction, useMutation, useQuery } from 'convex/react';
+import { useEffect, useState } from 'react';
 import { errorMessage } from '@/lib/errors';
-import { useAiSettingsDraftStore } from '@/lib/stores/settings-stores';
-import type { AiProviderAuthTarget } from '@/types/ai-provider-auth';
+import type { ChatGptConnectionId, ChatGptModel } from '@/types/ai-settings';
 
-// oxlint-disable-next-line groam/no-local-type-definitions -- derived Convex return type
-type Remote = FunctionReturnType<typeof api.routes.settings.ai.get.run>;
-// oxlint-disable-next-line groam/no-local-type-definitions -- derived settings-store slice
-type AiDraft = Pick<
-  ReturnType<typeof useAiSettingsDraftStore.getState>,
-  'apiKey' | 'baseUrl' | 'error' | 'isPending' | 'message' | 'model' | 'provider'
->;
-
-function effectiveSettings(remote: Remote | undefined) {
-  if (remote?.effectiveSource === 'personal') return remote.personal;
-  if (remote?.effectiveSource === 'organization') return remote.organization;
-  return undefined;
-}
-
-function deriveAiSettings(
-  remote: Remote | undefined,
-  target: AiProviderAuthTarget,
-  draft: AiDraft
-) {
-  const selected = remote?.[target];
-  const provider = draft.provider ?? selected?.provider ?? 'openrouter';
-  const preset = aiKeyProvider(provider);
-  const model = draft.model ?? (provider === selected?.provider ? (selected.model ?? '') : '');
-  const baseUrl =
-    draft.baseUrl ??
-    (provider === selected?.provider ? (selected.baseUrl ?? '') : (preset.baseURL ?? ''));
-  const configured = selected?.configured ?? false;
-  const canSave = Boolean(
-    draft.apiKey.trim() ||
-    (configured && provider === selected?.provider) ||
-    (preset.requiresBaseUrl && !configured)
-  );
-  return {
-    baseUrl,
-    canSave,
-    configured,
-    effective: effectiveSettings(remote),
-    model,
-    preset,
-    provider
-  };
-}
-
-function useAiSettingsWriter({
-  baseUrl,
-  model,
-  organizationId,
-  provider,
-  requiresBaseUrl,
-  target
-}: {
-  baseUrl: string;
-  model: string;
-  organizationId: string | null;
-  provider: ReturnType<typeof aiKeyProvider>['id'];
-  requiresBaseUrl: boolean;
-  target: AiProviderAuthTarget;
-}) {
-  const saveMutation = useMutation(api.routes.settings.ai.set.run);
-  const patch = useAiSettingsDraftStore((state) => state.patch);
-
-  return async (apiKey: string | null, writeTarget = target) => {
-    patch({ error: null, isPending: true, message: null });
-    try {
-      await saveMutation({
-        apiKey,
-        baseUrl: requiresBaseUrl ? baseUrl.trim() || null : null,
-        model: model.trim() || null,
-        ...(writeTarget === 'organization' ? { organizationId } : {}),
-        provider,
-        ...(writeTarget === 'organization' ? { target: writeTarget } : {})
-      });
-      let message = 'AI settings saved.';
-      if (apiKey === null) message = 'AI key removed.';
-      else if (apiKey) message = 'AI key saved.';
-      patch({ apiKey: '', baseUrl: null, message, model: null, provider: null });
-    } catch (error) {
-      patch({ error: errorMessage(error, 'Unable to save the AI key') });
-    } finally {
-      patch({ isPending: false });
-    }
-  };
+async function openAuthorization(
+  authorization: Promise<{ authorizationUrl: string }>,
+  popup: Window | null
+): Promise<null> {
+  try {
+    const { authorizationUrl } = await authorization;
+    if (env.isDesktop) {
+      const { invoke } = await import('@tauri-apps/api/core');
+      await invoke('open_chatgpt_authorization', { url: authorizationUrl });
+    } else if (popup) popup.location.href = authorizationUrl;
+    else window.location.assign(authorizationUrl);
+    return null;
+  } catch (cause) {
+    popup?.close();
+    throw cause;
+  }
 }
 
 export function useAiSettings() {
-  const remote = useQuery(api.routes.settings.ai.get.run, {}) as Remote | undefined;
-  const [target, setTargetState] = useState<AiProviderAuthTarget>('personal');
-  const draft = useAiSettingsDraftStore(
-    useShallow((s) => ({
-      apiKey: s.apiKey,
-      baseUrl: s.baseUrl,
-      error: s.error,
-      isPending: s.isPending,
-      message: s.message,
-      model: s.model,
-      provider: s.provider
-    }))
-  );
-  const patch = useAiSettingsDraftStore((s) => s.patch);
-  const selectProviderInStore = useAiSettingsDraftStore((s) => s.selectProvider);
-  const { baseUrl, canSave, configured, effective, model, preset, provider } = deriveAiSettings(
-    remote,
-    target,
-    draft
-  );
-  const effectiveSource = remote?.effectiveSource ?? 'unconfigured';
-  const organizationId = remote?.organizationId ?? null;
-  const providerConnection = useAiProviderAuth(provider, target, organizationId);
-  const write = useAiSettingsWriter({
-    baseUrl,
-    model,
-    organizationId,
-    provider,
-    requiresBaseUrl: Boolean(preset.requiresBaseUrl),
-    target
-  });
+  const remote = useQuery(api.routes.settings.ai.get.run, {});
+  const connectAction = useAction(api.routes.settings.ai.connect.run);
+  const disconnectAction = useAction(api.routes.settings.ai.disconnect.run);
+  const modelsAction = useAction(api.routes.settings.ai.models.run);
+  const selectMutation = useMutation(api.routes.settings.ai.select.run);
+  const acknowledgeMutation = useMutation(api.routes.settings.ai.acknowledge.run);
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [isPending, setPending] = useState(false);
+  const [models, setModels] = useState<ChatGptModel[]>([]);
+  const [modelsLoading, setModelsLoading] = useState(false);
+  const connection = remote?.connections.find((item) => item.id === remote.activeConnectionId);
+  const connectionId = connection?.connected && !connection.needsReconnect ? connection.id : null;
+
+  useEffect(() => {
+    let cancelled = false;
+    setModels([]);
+    setModelsLoading(false);
+    if (!connectionId) return;
+    setModelsLoading(true);
+    void modelsAction({ connectionId })
+      .then((catalog) => {
+        if (!cancelled) setModels(catalog);
+      })
+      .catch((cause: unknown) => {
+        if (!cancelled) setError(errorMessage(cause, 'Unable to load ChatGPT models'));
+      })
+      .finally(() => {
+        if (!cancelled) setModelsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [connectionId, modelsAction]);
+
+  const perform = async (operation: Promise<string | null>, success?: string) => {
+    setPending(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const result = await operation;
+      const successMessage = success ?? result;
+      if (successMessage) setMessage(successMessage);
+    } catch (cause) {
+      setError(errorMessage(cause, 'Unable to update your ChatGPT connection'));
+    } finally {
+      setPending(false);
+    }
+  };
 
   return {
-    baseUrl,
-    canManageOrganization: remote?.canManageOrganization ?? false,
-    canSave,
-    configured,
-    draft,
-    effectiveModel: effective?.model ?? null,
-    effectiveProvider: effective?.provider ?? null,
-    effectiveSource,
-    environmentConfigured: remote?.environmentConfigured ?? false,
-    fromEnvironment: remote?.environmentConfigured ?? false,
+    remote,
+    connection,
+    models,
+    modelsLoading,
+    error,
+    message,
+    isPending,
     isLoading: remote === undefined,
-    model,
-    organizationConfigured: remote?.organization.configured ?? false,
-    preset,
-    provider,
-    providerConnection,
-    remove: () => write(null),
-    save: () => write(draft.apiKey.trim()),
-    selectProvider: (value: string) => {
-      if (isAiKeyProviderId(value) && value !== provider) selectProviderInStore(value);
+    connect: (id?: ChatGptConnectionId) => {
+      // Open synchronously so browser popup protection does not discard the OAuth window.
+      const popup = env.isDesktop ? null : window.open('about:blank', '_blank');
+      if (popup) popup.opener = null;
+      return perform(openAuthorization(connectAction(id ? { connectionId: id } : {}), popup));
     },
-    setTarget: (value: string) => {
-      if (value === 'personal' || (value === 'organization' && remote?.canManageOrganization)) {
-        useAiSettingsDraftStore.getState().resetDraft();
-        setTargetState(value);
-      }
-    },
-    target,
-    updateDraft: patch
+    disconnect: (id: ChatGptConnectionId) =>
+      perform(
+        disconnectAction({ connectionId: id }).then((result) =>
+          result.revoked
+            ? 'ChatGPT disconnected.'
+            : 'ChatGPT disconnected from Groam. Manage any remaining authorization in ChatGPT settings.'
+        )
+      ),
+    selectConnection: (id: ChatGptConnectionId) => perform(selectMutation({ connectionId: id })),
+    selectModel: (model: string) =>
+      connectionId
+        ? perform(selectMutation({ connectionId, model }), 'ChatGPT model saved.')
+        : Promise.resolve(),
+    acknowledge: () => perform(acknowledgeMutation({}))
   };
 }

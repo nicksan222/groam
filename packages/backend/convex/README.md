@@ -1,6 +1,6 @@
 # Convex backend
 
-- `convex.config.ts` mounts Better Auth, Agent, Rate Limiter, the geospatial index, migrations, and both Static Hosting instances.
+- `convex.config.ts` mounts Better Auth, Agent, Rate Limiter, the geospatial index, and both Static Hosting instances.
 - `components/better-auth/` owns Better Auth's isolated local component.
 - `modules/auth/`, `auth.config.ts`, and `http.ts` provide application auth integration and routing.
 - `routes/` owns public Convex functions for product domains. See `modules/README.md`.
@@ -85,60 +85,45 @@ those models.
 
 ## AI configuration
 
-### Setup
+Sign in to Groam, then open **Settings → AI → Continue with ChatGPT**. Each
+traveler connects their own eligible ChatGPT account. Eligible requests count
+against that account's plan, including work started by that traveler in the
+background. Connecting ChatGPT does not replace the Groam application account.
+Disconnect or reconnect from the same settings page; access can also be managed
+in ChatGPT settings.
 
-```sh
-npx convex env set AI_PROVIDER openai # or anthropic/google
-npx convex env set AI_MODEL "your-model-id"
-npx convex env set OPENAI_API_KEY "your-key" # or ANTHROPIC_API_KEY/GOOGLE_GENERATIVE_AI_API_KEY
-```
+There are no provider selectors, API-key inputs, custom inference hosts, or
+workspace-shared credentials. Startup tooling no longer copies developer API
+keys or AI provider variables from `.env.local` to Convex. Existing deployment
+keys do not provide a fallback. Models come from the connected account's catalog.
+A missing or expired connection stops AI work and asks the traveler to connect
+or reconnect.
 
-OpenRouter uses the OpenAI-compatible adapter:
+### Local web and desktop
 
-```sh
-npx convex env set AI_PROVIDER openai
-npx convex env set OPENAI_API_MODE chat
-npx convex env set OPENAI_BASE_URL https://openrouter.ai/api/v1
-npx convex env set OPENAI_API_KEY "your-openrouter-key"
-npx convex env set AI_MODEL "your-openrouter-model-id"
-```
+The local runtime uses OAuth with PKCE and the loopback callback
+`http://127.0.0.1:3211/auth/chatgpt/callback`, served by the existing Convex HTTP
+server. The browser completing authorization must be able to reach that loopback
+address. The backend stores personal credentials and validates the authorization
+before enabling AI; tokens are not returned to browser settings queries.
 
-Local AI values in `.env.local` are synchronized to Convex by `vp run dev`
-(the hosted-web development path). Credential selection is centralized and uses
-deployment credentials first, then an account-wide personal key, then the active
-organization's shared key. Personal and organization connections support OpenAI,
-Anthropic, Google, OpenRouter, and OpenAI-compatible hosts such as Ollama. OpenRouter
-can be connected with OAuth PKCE from **Settings → AI**; stored secrets are never
-returned to the browser. When deployment credentials cover every configured agent,
-AI settings are hidden and stored keys are ignored. OpenAI-compatible and OpenRouter
-keys run in `chat` mode, so provider-native web search is disabled for those hosts.
+### Self-hosted and remote development
 
-The Convex Cloud deployment owner selects the provider and model with typed variables
-registered in `convex.config.ts`:
+A self-hosted local runtime can use the same authorization flow when the browser
+can reach its callback. For a remote VM, an SSH tunnel forwarding local port 3211
+to the runtime's port 3211 may provide that reachability while retaining the VM's
+host identity. Keep the tunnel active through authorization. Groam does not
+currently provide a credential-import command. See OpenAI's
+[self-hosted VM guidance](https://developers.openai.com/siwc/token-sharing-open-source/self-hosted-vms)
+for the supported authorization constraints.
 
-- `AI_PROVIDER`: `openai` (default), `anthropic`, or `google`
-- `AI_MODEL`: any model identifier accepted by the selected provider; defaults
-  to `gpt-5-mini`, `claude-sonnet-4-5`, or `gemini-2.5-flash`
-- `AI_WEB_SEARCH`: `enabled` (default) or `disabled`
-- `AI_AGENT_MODELS`: an optional validated JSON map for assigning different
-  providers and models to individual agents, for example
-  `{"groam":{"provider":"openai","model":"gpt-5-mini"},"reviewer":{"provider":"anthropic","model":"claude-haiku-4-5"}}`
-- Provider credentials: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or
-  `GOOGLE_GENERATIVE_AI_API_KEY`
-- Optional provider endpoints: `OPENAI_BASE_URL`, `ANTHROPIC_BASE_URL`, and
-  `GOOGLE_GENERATIVE_AI_BASE_URL`
-- `OPENAI_API_MODE`: `responses` (default) or `chat`
+### Shared hosted deployments
 
-OpenAI-compatible hosts can use `AI_PROVIDER=openai` with
-`OPENAI_BASE_URL` and their model id. Provider and mode values are validated by
-Convex before deployment; per-agent JSON is parsed into a typed, agent-checked
-map before any model is created. Each provider receives its required native web
-search tool name (`web_search` or `google_search`). Missing credentials fail
-with the exact relevant variable name; the default remains
-`Groam AI is not configured. Add an API key in Settings → AI.` Local development never
-installs or starts a fallback model server. Point Settings → AI at Ollama
-(`http://127.0.0.1:11434/v1`) or set `OPENAI_BASE_URL` on the Convex deployment
-for any OpenAI-compatible host.
+AI connection is unavailable for a shared hosted deployment until OpenAI-approved
+ChatGPT plan-usage access and its integration contract are supplied. A website
+client ID alone does not enable plan-funded inference. The public local OAuth
+flow must not be repurposed with a shared remote callback. See the
+[official integration documentation](https://developers.openai.com/siwc/token-sharing-open-source).
 
 Better Auth secrets (`BETTER_AUTH_SECRET`, `SITE_URL`) are written by
 `tooling/devkit/configure-auth.ts` during `vp run dev` / desktop runtime

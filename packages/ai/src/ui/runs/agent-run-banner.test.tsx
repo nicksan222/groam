@@ -59,13 +59,13 @@ test('shows only the latest run event as activity', async () => {
   await expect.element(page.getByText('Step 5')).toBeInTheDocument();
 });
 
-test('presents failed provider credit errors once without repeating the event label', async () => {
+test('presents ChatGPT usage limits once without repeating the event label', async () => {
   await render(
     <AgentRunBanner
       agentLabel="Issue agent"
       events={[{ id: 'event-fail', label: agentRunEventLabels.runFailed }]}
       run={{
-        error: 'This request requires more credits, or fewer max_tokens.',
+        error: 'subscription_sharing_usage_limit_exceeded',
         headline: agentRunEventLabels.runFailed,
         id: 'run-1',
         issueId: 'issue-1',
@@ -79,7 +79,7 @@ test('presents failed provider credit errors once without repeating the event la
   expect(
     page
       .getByText(
-        'The model provider said: This request requires more credits, or fewer max_tokens.'
+        'ChatGPT usage limit reached for this app. Review your limits in ChatGPT Settings → Usage before trying again.'
       )
       .element()
   ).toBeTruthy();
@@ -98,7 +98,7 @@ test('retries from zero only when the issue run failed', async () => {
       onRetry={onRetry}
       retryTestId="agent-retry-from-zero"
       run={{
-        error: 'This request requires more credits, or fewer max_tokens.',
+        error: 'subscription_sharing_usage_limit_exceeded',
         headline: agentRunEventLabels.runFailed,
         id: 'run-1',
         issueId: 'issue-1',

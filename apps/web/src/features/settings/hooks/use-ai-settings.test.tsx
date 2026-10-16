@@ -1,295 +1,142 @@
 import { act, renderHook } from '@groam/vitest-config/react';
-import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
-import { useAiProviderAuthStore, useAiSettingsDraftStore } from '@/lib/stores/settings-stores';
+import { getFunctionName, type FunctionReference } from 'convex/server';
+import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { useAiSettings } from './use-ai-settings';
 
+const desktop = vi.hoisted(() => ({ env: { isDesktop: false }, invoke: vi.fn() }));
+vi.mock('@groam/env/web-client', () => ({ env: desktop.env }));
+vi.mock('@tauri-apps/api/core', () => ({ invoke: desktop.invoke }));
+
 const convex = vi.hoisted(() => ({
-  save: vi.fn(),
-  useMutation: vi.fn(),
+  connect: vi.fn(),
+  disconnect: vi.fn(),
+  models: vi.fn(),
+  select: vi.fn(),
+  acknowledge: vi.fn(),
   useQuery: vi.fn()
 }));
-
 vi.mock('convex/react', async (importOriginal) => ({
   ...(await importOriginal<typeof import('convex/react')>()),
-  useMutation: (...args: unknown[]) => convex.useMutation(...args),
-  useQuery: (...args: unknown[]) => convex.useQuery(...args)
+  useQuery: (...args: unknown[]) => convex.useQuery(...args),
+  useAction: (route: unknown) =>
+    getFunctionName(route as FunctionReference<'action'>).includes('/connect:')
+      ? convex.connect
+      : getFunctionName(route as FunctionReference<'action'>).includes('/disconnect:')
+        ? convex.disconnect
+        : convex.models,
+  useMutation: (route: unknown) =>
+    getFunctionName(route as FunctionReference<'mutation'>).includes('/select:')
+      ? convex.select
+      : convex.acknowledge
 }));
-
-type StoredSettings = {
-  baseUrl: string | null;
-  configured: boolean;
-  model: string | null;
-  provider: 'anthropic' | 'compatible' | 'google' | 'openai' | 'openrouter' | null;
+const account = {
+  id: 'connection-a',
+  label: 'Personal ChatGPT',
+  email: 'user@example.com',
+  clientId: 'client-a',
+  connected: true,
+  needsReconnect: false,
+  model: 'gpt-test'
 };
-
-function remoteSettings({
-  canManageOrganization = true,
-  environmentConfigured = false,
-  organization = {},
-  personal = {}
-}: {
-  canManageOrganization?: boolean;
-  environmentConfigured?: boolean;
-  organization?: Partial<StoredSettings>;
-  personal?: Partial<StoredSettings>;
-} = {}) {
-  const empty = { baseUrl: null, configured: false, model: null, provider: null } as const;
-  const personalSettings = { ...empty, ...personal };
-  const organizationSettings = { ...empty, ...organization };
-  return {
-    canManageOrganization,
-    effectiveSource: environmentConfigured
-      ? ('deployment' as const)
-      : personalSettings.configured
-        ? ('personal' as const)
-        : organizationSettings.configured
-          ? ('organization' as const)
-          : ('unconfigured' as const),
-    environmentConfigured,
-    organizationId: 'organization-a',
-    organization: organizationSettings,
-    personal: personalSettings
-  };
-}
-
+const remote = {
+  available: true,
+  unavailableReason: null,
+  activeConnectionId: account.id,
+  planNoticeAcknowledged: false,
+  connections: [account]
+};
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.unstubAllGlobals();
-  sessionStorage.clear();
-  localStorage.clear();
-  window.history.replaceState({}, '', '/');
-  useAiSettingsDraftStore.getState().resetDraft();
-  useAiProviderAuthStore.getState().setSession(null);
-  convex.useMutation.mockReturnValue(convex.save);
-  convex.useQuery.mockReturnValue(remoteSettings());
-  convex.save.mockResolvedValue(null);
+  desktop.env.isDesktop = false;
+  desktop.invoke.mockResolvedValue(undefined);
+  convex.useQuery.mockReturnValue(remote);
+  convex.models.mockResolvedValue([{ slug: 'gpt-test', displayName: 'Test model' }]);
+  convex.select.mockResolvedValue(null);
+  convex.disconnect.mockResolvedValue({ revoked: true });
+  convex.acknowledge.mockResolvedValue(null);
+});
+test('loads the active account model catalog', async () => {
+  const { result } = await renderHook(() => useAiSettings());
+  await vi.waitFor(() =>
+    expect(result.current.models).toEqual([{ slug: 'gpt-test', displayName: 'Test model' }])
+  );
+  expect(convex.models).toHaveBeenCalledWith({ connectionId: account.id });
+});
+test('clears and reloads models when the active account changes', async () => {
+  const { result, rerender } = await renderHook(() => useAiSettings());
+  await vi.waitFor(() => expect(result.current.models).toHaveLength(1));
+  convex.models.mockResolvedValue([{ slug: 'other', displayName: 'Other model' }]);
+  convex.useQuery.mockReturnValue({
+    ...remote,
+    activeConnectionId: 'connection-b',
+    connections: [{ ...account, id: 'connection-b' }]
+  });
+  await rerender();
+  await vi.waitFor(() => expect(result.current.models[0]?.slug).toBe('other'));
+  expect(convex.models).toHaveBeenLastCalledWith({ connectionId: 'connection-b' });
+});
+test('saves a model only for the active connection', async () => {
+  const { result } = await renderHook(() => useAiSettings());
+  await act(() => result.current.selectModel('gpt-test'));
+  expect(convex.select).toHaveBeenCalledWith({ connectionId: account.id, model: 'gpt-test' });
+});
+test('disconnects and reports incomplete remote revocation', async () => {
+  convex.disconnect.mockResolvedValue({ revoked: false });
+  const { result } = await renderHook(() => useAiSettings());
+  await act(() =>
+    result.current.disconnect(account.id as Parameters<typeof result.current.disconnect>[0])
+  );
+  expect(convex.disconnect).toHaveBeenCalledWith({ connectionId: account.id });
+  expect(result.current.message).toContain('Manage any remaining authorization');
+});
+test('does not load models for an account requiring reconnection', async () => {
+  convex.useQuery.mockReturnValue({
+    ...remote,
+    connections: [{ ...account, needsReconnect: true }]
+  });
+  await renderHook(() => useAiSettings());
+  expect(convex.models).not.toHaveBeenCalled();
+});
+test('acknowledges the plan usage notice', async () => {
+  const { result } = await renderHook(() => useAiSettings());
+  await act(() => result.current.acknowledge());
+  expect(convex.acknowledge).toHaveBeenCalledWith({});
+});
+test('opens authorization without storing credentials in the browser', async () => {
+  const popup = { opener: window, location: { href: '' }, close: vi.fn() };
+  const open = vi.spyOn(window, 'open').mockReturnValue(popup as unknown as Window);
+  convex.connect.mockResolvedValue({
+    authorizationUrl: 'https://auth.openai.com/authorize?state=opaque'
+  });
+  const { result } = await renderHook(() => useAiSettings());
+  await act(() => result.current.connect());
+  expect(open).toHaveBeenCalledWith('about:blank', '_blank');
+  expect(popup.opener).toBe(null);
+  expect(popup.location.href).toBe('https://auth.openai.com/authorize?state=opaque');
+  expect(convex.connect).toHaveBeenCalledWith({});
+  open.mockRestore();
+});
+test('closes the authorization window and displays connection failures', async () => {
+  const popup = { opener: window, close: vi.fn() };
+  const open = vi.spyOn(window, 'open').mockReturnValue(popup as unknown as Window);
+  convex.connect.mockRejectedValue(new Error('ChatGPT plan access is unavailable'));
+  const { result } = await renderHook(() => useAiSettings());
+  await act(() => result.current.connect());
+  expect(popup.close).toHaveBeenCalled();
+  expect(result.current.error).toBe('ChatGPT plan access is unavailable');
+  open.mockRestore();
 });
 
-describe('useAiSettings', () => {
-  test('recommends OpenRouter when the user has no personal connection', async () => {
-    const { result } = await renderHook(() => useAiSettings());
-    expect(result.current.provider).toBe('openrouter');
-  });
-
-  test('saves an OpenRouter key and optional model', async () => {
-    const { result } = await renderHook(() => useAiSettings());
-    await act(() =>
-      result.current.updateDraft({
-        apiKey: ' sk-or-test ',
-        model: ' anthropic/claude-sonnet-4 ',
-        provider: 'openrouter'
-      })
-    );
-
-    await act(() => result.current.save());
-
-    expect(convex.save).toHaveBeenCalledWith({
-      apiKey: 'sk-or-test',
-      baseUrl: null,
-      model: 'anthropic/claude-sonnet-4',
-      provider: 'openrouter'
-    });
-    expect(result.current.draft).toMatchObject({
-      apiKey: '',
-      error: null,
-      isPending: false,
-      message: 'AI key saved.'
-    });
-  });
-
-  test('removes a stored key', async () => {
-    convex.useQuery.mockReturnValue(
-      remoteSettings({ personal: { configured: true, provider: 'openai' } })
-    );
-    const { result } = await renderHook(() => useAiSettings());
-
-    await act(() => result.current.remove());
-
-    expect(convex.save).toHaveBeenCalledWith({
-      apiKey: null,
-      baseUrl: null,
-      model: null,
-      provider: 'openai'
-    });
-    expect(result.current.draft.message).toBe('AI key removed.');
-    expect(result.current.configured).toBe(true);
-    expect(result.current.fromEnvironment).toBe(false);
-    expect(result.current.provider).toBe('openai');
-  });
-
-  test('saves and removes the selected organization connection explicitly', async () => {
-    convex.useQuery.mockReturnValue(
-      remoteSettings({
-        organization: { configured: true, provider: 'openai' }
-      })
-    );
-    const { result } = await renderHook(() => useAiSettings());
-
-    await act(() => result.current.setTarget('organization'));
-    await act(() => result.current.updateDraft({ apiKey: 'sk-shared-new' }));
-    await act(() => result.current.save());
-    expect(convex.save).toHaveBeenLastCalledWith({
-      apiKey: 'sk-shared-new',
-      baseUrl: null,
-      model: null,
-      organizationId: 'organization-a',
-      provider: 'openai',
-      target: 'organization'
-    });
-
-    await act(() => result.current.remove());
-    expect(convex.save).toHaveBeenLastCalledWith({
-      apiKey: null,
-      baseUrl: null,
-      model: null,
-      organizationId: 'organization-a',
-      provider: 'openai',
-      target: 'organization'
-    });
-  });
-
-  test('does not let a member select the organization target', async () => {
-    convex.useQuery.mockReturnValue(remoteSettings({ canManageOrganization: false }));
-    const { result } = await renderHook(() => useAiSettings());
-
-    await act(() => result.current.setTarget('organization'));
-
-    expect(result.current.target).toBe('personal');
-  });
-
-  test('uses the backend-selected personal source over an organization fallback', async () => {
-    convex.useQuery.mockReturnValue(
-      remoteSettings({
-        organization: { configured: true, model: 'gpt-4.1-mini', provider: 'openai' },
-        personal: { configured: true, model: 'claude-sonnet-4-5', provider: 'anthropic' }
-      })
-    );
-    const { result } = await renderHook(() => useAiSettings());
-
-    expect(result.current.effectiveSource).toBe('personal');
-    expect(result.current.effectiveProvider).toBe('anthropic');
-    expect(result.current.effectiveModel).toBe('claude-sonnet-4-5');
-  });
-
-  test('exposes when Convex env is supplying AI credentials', async () => {
-    convex.useQuery.mockReturnValue(remoteSettings({ environmentConfigured: true }));
-    const { result } = await renderHook(() => useAiSettings());
-    expect(result.current.fromEnvironment).toBe(true);
-    expect(result.current.configured).toBe(false);
-  });
-
-  test('surfaces save failures', async () => {
-    convex.save.mockRejectedValue(
-      new Error('Only organization owners and admins can manage group settings')
-    );
-    const { result } = await renderHook(() => useAiSettings());
-
-    await act(() => result.current.save());
-
-    expect(result.current.draft.error).toBe(
-      'Only organization owners and admins can manage group settings'
-    );
-  });
-
-  test('keeps the saved model while the provider stays the same', async () => {
-    convex.useQuery.mockReturnValue(
-      remoteSettings({
-        personal: { configured: true, model: 'gpt-4.1-mini', provider: 'openai' }
-      })
-    );
-    const { result } = await renderHook(() => useAiSettings());
-    expect(result.current.provider).toBe('openai');
-    expect(result.current.model).toBe('gpt-4.1-mini');
-  });
-
-  test('does not keep a saved model after switching providers', async () => {
-    convex.useQuery.mockReturnValue(
-      remoteSettings({
-        personal: { configured: true, model: 'gpt-4.1-mini', provider: 'openai' }
-      })
-    );
-    const { result } = await renderHook(() => useAiSettings());
-
-    await act(() => result.current.selectProvider('openrouter'));
-    expect(result.current.provider).toBe('openrouter');
-    expect(result.current.model).toBe('');
-
-    await act(() => result.current.updateDraft({ apiKey: 'sk-or-new' }));
-    await act(() => result.current.save());
-
-    expect(convex.save).toHaveBeenCalledWith({
-      apiKey: 'sk-or-new',
-      baseUrl: null,
-      model: null,
-      provider: 'openrouter'
-    });
-  });
-
-  test('saves a model change without sending a new key', async () => {
-    convex.useQuery.mockReturnValue(
-      remoteSettings({
-        personal: { configured: true, model: 'gpt-4.1-mini', provider: 'openai' }
-      })
-    );
-    const { result } = await renderHook(() => useAiSettings());
-    expect(result.current.canSave).toBe(true);
-
-    await act(() => result.current.updateDraft({ model: 'gpt-4.1' }));
-    await act(() => result.current.save());
-
-    expect(convex.save).toHaveBeenCalledWith({
-      apiKey: '',
-      baseUrl: null,
-      model: 'gpt-4.1',
-      provider: 'openai'
-    });
-    expect(result.current.draft.message).toBe('AI settings saved.');
-  });
-
-  test('requires a new key after switching providers', async () => {
-    convex.useQuery.mockReturnValue(
-      remoteSettings({
-        personal: { configured: true, model: 'gpt-4.1-mini', provider: 'openai' }
-      })
-    );
-    const { result } = await renderHook(() => useAiSettings());
-
-    await act(() => result.current.selectProvider('anthropic'));
-    expect(result.current.canSave).toBe(false);
-  });
-
-  test('requires a new key after switching from OpenAI to a local host', async () => {
-    convex.useQuery.mockReturnValue(
-      remoteSettings({
-        personal: { configured: true, model: 'gpt-4.1-mini', provider: 'openai' }
-      })
-    );
-    const { result } = await renderHook(() => useAiSettings());
-
-    await act(() => result.current.selectProvider('compatible'));
-    expect(result.current.canSave).toBe(false);
-  });
-
-  test('saves a local OpenAI-compatible host with a base URL', async () => {
-    const { result } = await renderHook(() => useAiSettings());
-    await act(() => result.current.selectProvider('compatible'));
-    expect(result.current.canSave).toBe(true);
-    expect(result.current.baseUrl).toBe('http://127.0.0.1:11434/v1');
-
-    await act(() =>
-      result.current.updateDraft({
-        apiKey: 'ollama',
-        baseUrl: ' http://127.0.0.1:1234/v1 ',
-        model: 'llama3.2'
-      })
-    );
-    await act(() => result.current.save());
-
-    expect(convex.save).toHaveBeenCalledWith({
-      apiKey: 'ollama',
-      baseUrl: 'http://127.0.0.1:1234/v1',
-      model: 'llama3.2',
-      provider: 'compatible'
-    });
-  });
+test('opens desktop authorization in the system browser through Tauri', async () => {
+  desktop.env.isDesktop = true;
+  const open = vi.spyOn(window, 'open');
+  const originalLocation = window.location.href;
+  const url = 'https://auth.openai.com/api/accounts/authorize?state=opaque';
+  convex.connect.mockResolvedValue({ authorizationUrl: url });
+  const { result } = await renderHook(() => useAiSettings());
+  await act(() => result.current.connect());
+  expect(desktop.invoke).toHaveBeenCalledWith('open_chatgpt_authorization', { url });
+  expect(open).not.toHaveBeenCalled();
+  expect(window.location.href).toBe(originalLocation);
+  open.mockRestore();
 });

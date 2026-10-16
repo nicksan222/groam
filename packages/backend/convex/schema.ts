@@ -1,5 +1,5 @@
 import { defineSchema } from 'convex/server';
-import { aiTables } from './modules/ai/schema';
+import { chatGptTables } from './modules/ai/chatgpt/schema';
 import { assistantRunTables } from './modules/assistant/runs/schema';
 import { discussionTables } from './modules/discussions/threads/schema';
 import { mediaTables } from './modules/media/library/schema';
@@ -18,7 +18,7 @@ import { tripTables } from './modules/travel/trips/schema';
 import { tripVersionTables } from './modules/travel/versions/schema';
 
 export default defineSchema({
-  ...aiTables,
+  ...chatGptTables,
   ...assistantRunTables,
   ...mediaTables,
   ...discussionTables,

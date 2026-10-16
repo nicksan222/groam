@@ -1,32 +1,25 @@
 import { v } from 'convex/values';
-import { publicAiSettings } from '#convex/modules/ai/settings';
-import { aiKeyProviderValidator } from '#convex/modules/ai/validators';
+import { publicChatGptSettings } from '#convex/modules/ai/chatgpt/settings';
 import { workspaceQuery } from '#convex/modules/auth/workspace';
 
 export const run = workspaceQuery({
   args: {},
   returns: v.object({
-    canManageOrganization: v.boolean(),
-    effectiveSource: v.union(
-      v.literal('deployment'),
-      v.literal('organization'),
-      v.literal('personal'),
-      v.literal('unconfigured')
-    ),
-    environmentConfigured: v.boolean(),
-    organizationId: v.string(),
-    organization: v.object({
-      baseUrl: v.union(v.string(), v.null()),
-      configured: v.boolean(),
-      model: v.union(v.string(), v.null()),
-      provider: v.union(aiKeyProviderValidator, v.null())
-    }),
-    personal: v.object({
-      baseUrl: v.union(v.string(), v.null()),
-      configured: v.boolean(),
-      model: v.union(v.string(), v.null()),
-      provider: v.union(aiKeyProviderValidator, v.null())
-    })
+    available: v.boolean(),
+    unavailableReason: v.union(v.string(), v.null()),
+    activeConnectionId: v.union(v.id('chatgptConnections'), v.null()),
+    planNoticeAcknowledged: v.boolean(),
+    connections: v.array(
+      v.object({
+        id: v.id('chatgptConnections'),
+        label: v.string(),
+        email: v.union(v.string(), v.null()),
+        clientId: v.string(),
+        connected: v.boolean(),
+        needsReconnect: v.boolean(),
+        model: v.union(v.string(), v.null())
+      })
+    )
   }),
-  handler: async (ctx) => await publicAiSettings(ctx)
+  handler: async (ctx) => await publicChatGptSettings(ctx, ctx.workspace.userId)
 });

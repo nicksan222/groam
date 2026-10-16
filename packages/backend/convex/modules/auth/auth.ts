@@ -32,7 +32,7 @@ export const authComponent = createClient<DataModel, typeof authSchema>(componen
   triggers: {
     user: {
       onDelete: async (ctx, user) => {
-        await ctx.runMutation(internal.modules.ai.settings.removeUserSettings, {
+        await ctx.runMutation(internal.modules.ai.chatgpt.storage.removeUserConnections, {
           userId: user._id
         });
       }

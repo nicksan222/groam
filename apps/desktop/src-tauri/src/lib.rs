@@ -7,6 +7,7 @@ use std::{
   time::Duration,
 };
 
+mod chatgpt;
 mod data_dir;
 mod updater;
 
@@ -550,7 +551,8 @@ pub fn run() {
     .invoke_handler(tauri::generate_handler![
       groam_data_dir_path,
       export_groam_data,
-      import_groam_data
+      import_groam_data,
+      chatgpt::open_chatgpt_authorization
     ])
     .setup(|app| {
       app.manage(DataOpLock(Arc::new(Mutex::new(()))));

@@ -139,9 +139,6 @@ jobs:
           bun run codegen
           git diff --exit-code
 
-      - name: Run pending migrations
-        run: bun run migrations:run
-
       # A failing journey keeps its Playwright trace (network, console, DOM) in the failure artifact.
       - name: Journeys
         run: bun run test:journeys -- --browser.trace=retain-on-failure

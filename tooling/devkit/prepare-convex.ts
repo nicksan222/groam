@@ -2,7 +2,6 @@ import { fileURLToPath } from 'node:url';
 import { configureAuth } from '@groam/devkit/configure-auth';
 import { localOrigins } from '@groam/devkit/constants';
 import { runConvex } from '@groam/devkit/run-convex';
-import { syncOptionalAiEnvironment } from '@groam/devkit/sync-ai-env';
 import {
   isConvexBackendResponding,
   resolveWaitTimeoutMs,
@@ -25,7 +24,7 @@ try {
   await waitForBackend(backendUrl, { timeoutMs: resolveWaitTimeoutMs() });
 } catch (error) {
   console.info(error instanceof Error ? error.message : error);
-  console.info('Skipping auth and AI env until Convex is running.');
+  console.info('Skipping auth configuration until Convex is running.');
   process.exit(0);
 }
 
@@ -33,7 +32,6 @@ configureAuth({
   siteUrl: localOrigins.vite,
   writeViteSiteUrl: true
 });
-syncOptionalAiEnvironment();
 
 if (await isConvexBackendResponding(backendUrl)) {
   console.info('Restarting the local backend under the Convex dev watcher.');

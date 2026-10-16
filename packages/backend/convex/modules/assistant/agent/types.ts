@@ -1,6 +1,6 @@
 import type { ChatAgentId } from '@groam/ai/agents';
 import { resolveActiveTripId } from '@groam/ai/runtime/targets';
-import type { AssistantProviderConfiguration } from '#backend/ai/providers/index';
+import type { AssistantProviderConfiguration } from '#backend/ai/chatgpt/model';
 import type { Id } from '#convex-generated/dataModel';
 import type { AssistantScreen } from '#convex/modules/assistant/validators/index';
 

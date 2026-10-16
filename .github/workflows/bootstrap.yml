@@ -99,9 +99,6 @@ jobs:
             bunx convex env set BETTER_AUTH_SECRET "$(openssl rand -base64 48)"
           fi
 
-      - name: Run pending migrations
-        run: bun run migrations:run
-
       - name: Deploy web app
         run: bun run hosting:upload:web:prod
 

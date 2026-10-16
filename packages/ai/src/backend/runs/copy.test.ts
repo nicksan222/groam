@@ -2,14 +2,16 @@ import { expect, test } from 'vite-plus/test';
 import { presentAgentRunMessage } from './copy';
 import { agentRunCopy, agentRunEventLabels } from './events';
 
-test('maps failed provider credit errors to shared assistant copy', () => {
+test('maps ChatGPT usage limits to shared assistant copy', () => {
   expect(
     presentAgentRunMessage({
-      error: 'This request requires more credits, or fewer max_tokens.',
+      error: 'subscription_sharing_usage_limit_exceeded',
       headline: 'Run failed',
       status: 'failed'
     })
-  ).toBe('The model provider said: This request requires more credits, or fewer max_tokens.');
+  ).toBe(
+    'ChatGPT usage limit reached for this app. Review your limits in ChatGPT Settings → Usage before trying again.'
+  );
 });
 
 test('keeps a live headline when the run is still working', () => {

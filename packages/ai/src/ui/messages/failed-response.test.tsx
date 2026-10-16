@@ -9,25 +9,24 @@ test('shows the default failure copy when no provider error is available', async
   await expect.element(page.getByRole('alert')).toHaveTextContent(DEFAULT_ASSISTANT_FAILURE);
 });
 
-test('forwards the model provider error in the failed bubble', async () => {
+test('explains ChatGPT app usage limits in the failed bubble', async () => {
   await render(
     <FailedResponse
       disabled={false}
       error={{
         data: {
           error: {
-            message:
-              'This request requires more credits, or fewer max_tokens. You requested up to 1024 tokens, but can only afford 245.'
+            code: 'subscription_sharing_usage_limit_exceeded'
           }
         },
-        statusCode: 402
+        statusCode: 429
       }}
     />
   );
   await expect
     .element(page.getByRole('alert'))
     .toHaveTextContent(
-      'The model provider said: This request requires more credits, or fewer max_tokens. You requested up to 1024 tokens, but can only afford 245.'
+      'ChatGPT usage limit reached for this app. Review your limits in ChatGPT Settings → Usage before trying again.'
     );
 });
 

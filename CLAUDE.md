@@ -122,8 +122,9 @@ route, module, hook, env variable, test, or UI piece.
   tests are the `views` setup; `just journeys` runs the `journeys` setup
   (`apps/web/e2e`): the real app against the running local backend, served on
   `5174`, which local Better Auth trusts.
-- AI assistant features are optional and need an LLM provider key (see
-  `packages/env`).
+- AI assistant features use personal ChatGPT OAuth connections in Settings → AI.
+  Resolve inference through `AssistantProvider.configured`; do not add provider
+  API keys, gateway fallbacks, or deployment-funded inference.
 
 ### Demo login and seed data
 

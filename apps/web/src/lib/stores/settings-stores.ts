@@ -1,12 +1,9 @@
-import { type AiKeyProviderId, isAiKeyProviderId } from '@groam/ai/backend/providers/keys';
 import type { authClient } from '@groam/auth/client';
 import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
 import type {
   ActiveOrganization,
   Session
 } from '@/features/workspace/workspace-shell/workspace-state';
-import type { AiProviderAuthSession } from '@/types/ai-provider-auth';
 
 // oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type SettingsPatch<T> = Partial<T> & { patch?: never; reset?: never };
@@ -153,60 +150,3 @@ export const useSessionSettingsStore = create<SessionSettingsStore>((set) => ({
   patch: (update) => set((state) => ({ ...state, ...update })),
   reset: () => set(emptySessionSettings)
 }));
-
-// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
-type AiSettingsDraft = {
-  apiKey: string;
-  baseUrl: string | null;
-  error: string | null;
-  isPending: boolean;
-  message: string | null;
-  model: string | null;
-  provider: AiKeyProviderId | null;
-};
-
-// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
-type AiSettingsDraftStore = AiSettingsDraft & {
-  patch: (update: Partial<AiSettingsDraft>) => void;
-  resetDraft: () => void;
-  selectProvider: (value: string) => void;
-};
-
-const emptyAiDraft: AiSettingsDraft = {
-  apiKey: '',
-  baseUrl: null,
-  error: null,
-  isPending: false,
-  message: null,
-  model: null,
-  provider: null
-};
-
-export const useAiSettingsDraftStore = create<AiSettingsDraftStore>((set, get) => ({
-  ...emptyAiDraft,
-  patch: (update) => set((state) => ({ ...state, ...update })),
-  resetDraft: () => set(emptyAiDraft),
-  selectProvider: (value) => {
-    if (!isAiKeyProviderId(value) || value === get().provider) return;
-    set({ baseUrl: null, model: null, provider: value });
-  }
-}));
-
-// oxlint-disable-next-line groam/no-local-type-definitions -- local store implementation shape
-type AiProviderAuthStore = {
-  session: AiProviderAuthSession | null;
-  setSession: (session: AiProviderAuthSession | null) => void;
-};
-
-export const useAiProviderAuthStore = create<AiProviderAuthStore>()(
-  persist(
-    (set) => ({
-      session: null,
-      setSession: (session) => set({ session })
-    }),
-    {
-      name: 'groam.ai-provider-auth',
-      storage: createJSONStorage(() => sessionStorage)
-    }
-  )
-);

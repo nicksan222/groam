@@ -1,46 +1,38 @@
 import { render } from '@groam/vitest-config/react';
-import { afterEach, describe, expect, test, vi } from 'vite-plus/test';
+import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
-import { testIds } from '@/lib/test-ids';
 import { AiSettings } from './ai-settings';
 
 const ai = vi.hoisted(() => ({
-  canManageOrganization: true,
-  canSave: false,
-  configured: false,
-  draft: {
-    apiKey: '',
-    baseUrl: null as string | null,
-    error: null as string | null,
-    isPending: false,
-    message: null as string | null
+  remote: {
+    available: true,
+    unavailableReason: null as string | null,
+    activeConnectionId: null,
+    planNoticeAcknowledged: false,
+    connections: [] as Array<{
+      id: string;
+      label: string;
+      email: string;
+      connected: boolean;
+      needsReconnect: boolean;
+      model: string | null;
+    }>
   },
-  effectiveModel: null as string | null,
-  effectiveProvider: null as 'openai' | null,
-  effectiveSource: 'unconfigured' as 'deployment' | 'organization' | 'personal' | 'unconfigured',
-  environmentConfigured: false,
-  organizationConfigured: false,
+  connection: undefined as
+    | undefined
+    | { connected: boolean; needsReconnect: boolean; model: string | null },
+  models: [],
+  modelsLoading: false,
   isLoading: false,
-  baseUrl: '',
-  model: '',
-  preset: {
-    baseURL: undefined as string | undefined,
-    defaultModel: undefined as string | undefined,
-    hint: 'Uses OpenAI’s official API.',
-    keyPlaceholder: 'sk-…',
-    requiresBaseUrl: undefined as boolean | undefined,
-    webSearch: undefined as boolean | undefined
-  },
-  provider: 'openai' as const,
-  providerConnection: null as null | { connect: () => Promise<void>; label: string },
-  remove: vi.fn(),
-  save: vi.fn(),
-  selectProvider: vi.fn(),
-  setTarget: vi.fn(),
-  target: 'personal' as 'organization' | 'personal',
-  updateDraft: vi.fn()
+  isPending: false,
+  error: null,
+  message: null,
+  connect: vi.fn(),
+  disconnect: vi.fn(),
+  selectConnection: vi.fn(),
+  selectModel: vi.fn(),
+  acknowledge: vi.fn()
 }));
-
 vi.mock('@tanstack/react-router', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@tanstack/react-router')>()),
   Link: ({ children, to, ...props }: { children: import('react').ReactNode; to: string }) => (
@@ -49,89 +41,60 @@ vi.mock('@tanstack/react-router', async (importOriginal) => ({
     </a>
   )
 }));
-vi.mock('@/features/settings/hooks/use-ai-settings', () => ({
-  useAiSettings: () => ai
-}));
-
-afterEach(() => {
-  ai.canManageOrganization = true;
-  ai.configured = false;
-  ai.environmentConfigured = false;
-  ai.organizationConfigured = false;
-  ai.effectiveModel = null;
-  ai.effectiveProvider = null;
-  ai.effectiveSource = 'unconfigured';
-  ai.baseUrl = '';
-  ai.provider = 'openai';
-  ai.providerConnection = null;
-  ai.target = 'personal';
-  ai.preset = {
-    baseURL: undefined,
-    defaultModel: undefined,
-    hint: 'Uses OpenAI’s official API.',
-    keyPlaceholder: 'sk-…',
-    requiresBaseUrl: undefined,
-    webSearch: undefined
-  };
+vi.mock('@/features/settings/hooks/use-ai-settings', () => ({ useAiSettings: () => ai }));
+beforeEach(() => {
+  vi.clearAllMocks();
+  ai.remote.available = true;
+  ai.remote.unavailableReason = null;
+  ai.remote.planNoticeAcknowledged = false;
+  ai.remote.connections = [];
+  ai.connection = undefined;
 });
-
-describe('AiSettings', () => {
-  test('links to the background activity page', async () => {
-    await render(<AiSettings />);
-    await expect
-      .element(page.getByRole('link', { name: 'Background activity' }))
-      .toHaveAttribute('href', '/agents');
-  });
-
-  test('explains that saved keys are personal and take priority', async () => {
-    await render(<AiSettings />);
-    await expect.element(page.getByText(/personal key follows your account/i)).toBeInTheDocument();
-    await expect
-      .element(page.getByTestId(testIds.settingsAiEnvironmentNotice))
-      .not.toBeInTheDocument();
-  });
-
-  test('shows an organization notice when a shared key is available', async () => {
-    ai.organizationConfigured = true;
-    ai.effectiveProvider = 'openai';
-    ai.effectiveSource = 'organization';
-    await render(<AiSettings />);
-    expect(page.getByTestId(testIds.settingsAiEnvironmentNotice).element().textContent).toMatch(
-      /Organization connection available/i
-    );
-  });
-
-  test('clearly labels the shared organization connection', async () => {
-    ai.configured = true;
-    ai.target = 'organization';
-    await render(<AiSettings />);
-    await expect.element(page.getByText('Organization connection')).toBeInTheDocument();
-    await expect.element(page.getByText('Organization AI provider')).toBeInTheDocument();
-    await expect
-      .element(page.getByText(/shared organization connection is ready/i))
-      .toBeInTheDocument();
-  });
-
-  test('offers one-click OpenRouter connection when OpenRouter is selected', async () => {
-    ai.provider = 'openrouter' as typeof ai.provider;
-    ai.providerConnection = { connect: vi.fn(), label: 'Connect OpenRouter' };
-    await render(<AiSettings />);
-    await expect.element(page.getByTestId(testIds.settingsAiConnectProvider)).toBeInTheDocument();
-  });
-
-  test('asks for a base URL and hides web search for local hosts', async () => {
-    ai.preset = {
-      ...ai.preset,
-      baseURL: 'http://127.0.0.1:11434/v1',
-      hint: 'Ollama, LM Studio, vLLM, or any OpenAI-compatible /v1 host. Web search is off.',
-      keyPlaceholder: 'ollama',
-      requiresBaseUrl: true,
-      webSearch: false
-    };
-    ai.provider = 'compatible' as typeof ai.provider;
-    ai.baseUrl = 'http://127.0.0.1:11434/v1';
-    await render(<AiSettings />);
-    await expect.element(page.getByTestId(testIds.settingsAiBaseUrl)).toBeInTheDocument();
-    await expect.element(page.getByText(/Web search is off for this host/i)).toBeInTheDocument();
-  });
+test('offers ChatGPT sign in and background activity', async () => {
+  await render(<AiSettings />);
+  await expect
+    .element(page.getByRole('link', { name: 'Background activity' }))
+    .toHaveAttribute('href', '/agents');
+  await page.getByRole('button', { name: 'Continue with ChatGPT' }).click();
+  expect(ai.connect).toHaveBeenCalled();
+});
+test('explains hosted deployment unavailability and disables connection', async () => {
+  ai.remote.available = false;
+  ai.remote.unavailableReason = 'This hosted deployment requires approved ChatGPT plan access.';
+  await render(<AiSettings />);
+  await expect.element(page.getByText(ai.remote.unavailableReason)).toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Continue with ChatGPT' })).toBeDisabled();
+});
+test('shows the one-time plan usage explanation after connection', async () => {
+  ai.connection = { connected: true, needsReconnect: false, model: null };
+  await render(<AiSettings />);
+  await expect
+    .element(page.getByText(/usage counts against your connected ChatGPT plan/))
+    .toBeInTheDocument();
+  await page.getByRole('button', { name: 'Got it' }).click();
+  expect(ai.acknowledge).toHaveBeenCalled();
+  await expect
+    .element(page.getByRole('link', { name: 'Manage ChatGPT usage' }))
+    .toHaveAttribute('href', 'https://chatgpt.com/settings/usage');
+});
+test('hides the plan notice after acknowledgment', async () => {
+  ai.connection = { connected: true, needsReconnect: false, model: null };
+  ai.remote.planNoticeAcknowledged = true;
+  await render(<AiSettings />);
+  await expect.element(page.getByRole('button', { name: 'Got it' })).not.toBeInTheDocument();
+});
+test('offers reconnection for expired authorization', async () => {
+  ai.remote.connections = [
+    {
+      id: 'one',
+      label: 'Personal account',
+      email: 'user@example.com',
+      connected: false,
+      needsReconnect: true,
+      model: null
+    }
+  ];
+  await render(<AiSettings />);
+  await page.getByRole('button', { name: 'Reconnect', exact: true }).click();
+  expect(ai.connect).toHaveBeenCalledWith('one');
 });
