@@ -4,7 +4,7 @@ Choose a folder by asking: **what developer or delivery job does this perform?**
 
 | Folder | Sole responsibility |
 | --- | --- |
-| `app-actions` | Shared app capability contracts plus backend and Playwright adapters |
+| `app-actions` | Shared app capability contracts plus backend, Vite+ browser-mode (`src/vitest`) and Playwright adapters |
 | `claude` | Claude Code launcher (`claude.sh`), shared plugin settings, and MCP servers |
 | `oxc-config` | Shared Oxlint/Oxfmt policy and the Groam lint plugin (not a package) |
 | `devkit` | Reusable local-process, readiness, and local auth/environment helpers |

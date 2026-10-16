@@ -1,17 +1,18 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import { Archive } from 'lucide-react';
-import { afterEach, expect, test } from 'vite-plus/test';
+import { expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { InlineNotice } from './inline-notice';
 
-afterEach(cleanup);
-
-test('renders an icon, title, and supporting copy', () => {
-  render(
+test('renders an icon, title, and supporting copy', async () => {
+  await render(
     <InlineNotice icon={Archive} title="This trip is archived and read-only.">
       Planning data and activity are preserved.
     </InlineNotice>
   );
 
-  expect(screen.getByText('This trip is archived and read-only.')).toBeTruthy();
-  expect(screen.getByText('Planning data and activity are preserved.')).toBeTruthy();
+  await expect.element(page.getByText('This trip is archived and read-only.')).toBeInTheDocument();
+  await expect
+    .element(page.getByText('Planning data and activity are preserved.'))
+    .toBeInTheDocument();
 });

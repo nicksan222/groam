@@ -1,0 +1,13 @@
+diff --git a/lib/coreBundle.js b/lib/coreBundle.js
+index 8ed8bb5de1b12c7c050191123b22a119298826bb..8200b47d2534019c9a785b60cb1ae0c6f7b3b6f3 100644
+--- a/lib/coreBundle.js
++++ b/lib/coreBundle.js
+@@ -12366,7 +12366,7 @@ var init_progress = __esm({
+               this._forceAbortPromise.reject(timeoutError);
+               this._controller.abort(timeoutError);
+             }
+-          }, deadline - monotonicTime());
++          }, Math.max(0, deadline - monotonicTime()));
+         }
+         try {
+           if (this._pendingAbortError)

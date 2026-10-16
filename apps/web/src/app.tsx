@@ -1,7 +1,9 @@
 import { Toaster } from '@groam/ui/components/sonner';
 import { Spinner } from '@groam/ui/components/spinner';
 import { Authenticated, AuthLoading, Unauthenticated } from 'convex/react';
-import { lazy, Suspense } from 'react';
+import { Activity, lazy, Suspense } from 'react';
+import { useSessionChange } from '@/features/auth/hooks/use-session-change';
+import { SessionChangeContext } from '@/features/auth/session-change-context';
 
 const AuthScreen = lazy(() =>
   import('@/features/auth/auth-screen').then(({ AuthScreen }) => ({
@@ -26,15 +28,22 @@ function LoadingSession() {
 }
 
 export default function App() {
+  const { changeSession, isChangingSession } = useSessionChange();
+
   return (
-    <>
+    <SessionChangeContext value={changeSession}>
       <AuthLoading>
         <LoadingSession />
       </AuthLoading>
       <Authenticated>
-        <Suspense fallback={<LoadingSession />}>
-          <AppRouter />
-        </Suspense>
+        {/* Hidden, the router keeps its state in case the session survives (a wrong code); once
+            Convex holds a new session it remounts. */}
+        {isChangingSession && <LoadingSession />}
+        <Activity mode={isChangingSession ? 'hidden' : 'visible'}>
+          <Suspense fallback={<LoadingSession />}>
+            <AppRouter />
+          </Suspense>
+        </Activity>
       </Authenticated>
       <Unauthenticated>
         <Suspense fallback={<LoadingSession />}>
@@ -42,6 +51,6 @@ export default function App() {
         </Suspense>
       </Unauthenticated>
       <Toaster position="bottom-right" richColors />
-    </>
+    </SessionChangeContext>
   );
 }

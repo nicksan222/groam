@@ -1,8 +1,8 @@
 import type { Id } from '@groam/backend/data-model';
-import { stubPopoverEnvironment } from '@groam/ui/lib/stub-popover-environment';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import {
   WorkspaceContext,
   type WorkspaceContextValue
@@ -26,7 +26,8 @@ const state = vi.hoisted(() => ({
   issue: null as null | Record<string, unknown>
 }));
 
-vi.mock('@tanstack/react-router', () => ({
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
   Link: ({ children, to }: { children?: ReactNode; to: string }) => <a href={to}>{children}</a>,
   useNavigate: () => vi.fn()
 }));
@@ -65,7 +66,6 @@ function issue(overrides: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  stubPopoverEnvironment();
   actions.addComment.mockResolvedValue(true);
   actions.assignIssueAgent.mockResolvedValue(true);
   actions.implement.mockResolvedValue(null);
@@ -74,9 +74,7 @@ beforeEach(() => {
   state.issue = issue();
 });
 
-afterEach(cleanup);
-
-function renderIssue(ui: ReactNode, viewerName = 'Lea Demo') {
+async function renderIssue(ui: ReactNode, viewerName = 'Lea Demo') {
   return render(
     <WorkspaceContext.Provider
       value={
@@ -92,100 +90,99 @@ function renderIssue(ui: ReactNode, viewerName = 'Lea Demo') {
 }
 
 function composerBadge() {
-  const composer = screen.getByLabelText('Issue comment');
+  const composer = page.getByLabelText('Issue comment').element();
   return composer
     .closest('[data-slot="timeline-item"]')
     ?.querySelector('[data-slot="timeline-badge"]');
 }
 
 describe('IssueDetail', () => {
-  test('keeps metadata in the sidebar and close next to comment', () => {
-    renderIssue(<IssueDetail issueId={issueId} />);
+  test('keeps metadata in the sidebar and close next to comment', async () => {
+    await renderIssue(<IssueDetail issueId={issueId} />);
     expect(composerBadge()?.textContent).toBe('LD');
 
-    expect(screen.getByRole('heading', { name: 'Assignees' })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Idea' })).toBeTruthy();
-    expect(screen.getByText('No one')).toBeTruthy();
-    expect(screen.getByText('None yet')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Edit assignees' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Edit idea' })).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Assign Issue agent' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'New idea' })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Close issue' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Comment' })).toBeTruthy();
-    expect(screen.queryByRole('heading', { name: 'Discussion' })).toBeNull();
+    await expect.element(page.getByRole('heading', { name: 'Assignees' })).toBeInTheDocument();
+    await expect.element(page.getByRole('heading', { name: 'Idea' })).toBeInTheDocument();
+    await expect.element(page.getByText('No one')).toBeInTheDocument();
+    await expect.element(page.getByText('None yet')).toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'Edit assignees' })).toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'Edit idea' })).toBeInTheDocument();
+    await expect
+      .element(page.getByRole('button', { name: 'Assign Issue agent' }))
+      .not.toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'New idea' })).not.toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'Close issue' })).toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'Comment' })).toBeInTheDocument();
+    await expect.element(page.getByRole('heading', { name: 'Discussion' })).not.toBeInTheDocument();
     expect(document.querySelector('[data-slot="shell-two-columns"]')?.className).toContain(
       'xl:grid-cols-[minmax(0,1fr)_20rem]'
     );
     expect(document.querySelector('[data-slot="shell-right-column"]')?.className).toContain(
       'xl:sticky'
     );
-    expect(screen.getByRole('heading', { name: 'Decide by' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Decide by' })).toBeTruthy();
-    expect(screen.getByText('Choose a date')).toBeTruthy();
+    await expect.element(page.getByRole('heading', { name: 'Decide by' })).toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'Decide by' })).toBeInTheDocument();
+    await expect.element(page.getByText('Choose a date')).toBeInTheDocument();
     expect(document.querySelector('input[type="date"]')).toBeNull();
   });
 
-  test('sets a decide-by date from the calendar popover', () => {
+  test('sets a decide-by date from the calendar popover', async () => {
     state.issue = issue({ dueAt: new Date(2026, 7, 23, 12).getTime() });
-    renderIssue(<IssueDetail issueId={issueId} />);
+    await renderIssue(<IssueDetail issueId={issueId} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Decide by' }));
-    const next = new Date(2026, 7, 24);
-    const day = document.querySelector(
-      `[data-slot="calendar"] [data-day="${next.toLocaleDateString()}"]`
-    );
-    expect(day).toBeTruthy();
-    fireEvent.click(day as Element);
+    await page.getByRole('button', { name: 'Decide by' }).click();
+    await page.getByRole('button', { name: /August 24th, 2026/u }).click();
     expect(actions.setDueAt).toHaveBeenCalledWith(new Date(2026, 7, 24, 12).getTime());
   });
 
-  test('clears an optional decide-by date', () => {
+  test('clears an optional decide-by date', async () => {
     state.issue = issue({ dueAt: new Date(2026, 7, 23, 12).getTime() });
-    renderIssue(<IssueDetail issueId={issueId} />);
+    await renderIssue(<IssueDetail issueId={issueId} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Decide by' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Clear date' }));
+    await page.getByRole('button', { name: 'Decide by' }).click();
+    await page.getByRole('button', { name: 'Clear date' }).click();
     expect(actions.setDueAt).toHaveBeenCalledWith(null);
   });
 
-  test('assigns the Issue agent from the assignees gear popover', () => {
-    renderIssue(<IssueDetail issueId={issueId} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Edit assignees' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Assign Issue agent' }));
+  test('assigns the Issue agent from the assignees gear popover', async () => {
+    await renderIssue(<IssueDetail issueId={issueId} />);
+    await page.getByRole('button', { name: 'Edit assignees' }).click();
+    await page.getByRole('button', { name: 'Assign Issue agent' }).click();
     expect(actions.assignIssueAgent).toHaveBeenCalledOnce();
   });
 
-  test('starts an idea from the idea gear popover', () => {
-    renderIssue(<IssueDetail issueId={issueId} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Edit idea' }));
-    fireEvent.click(screen.getByRole('button', { name: 'New idea' }));
+  test('starts an idea from the idea gear popover', async () => {
+    await renderIssue(<IssueDetail issueId={issueId} />);
+    await page.getByRole('button', { name: 'Edit idea' }).click();
+    await page.getByRole('button', { name: 'New idea' }).click();
     expect(actions.implement).toHaveBeenCalledOnce();
   });
 
-  test('hides sidebar actions the viewer cannot take', () => {
+  test('hides sidebar actions the viewer cannot take', async () => {
     state.issue = issue({ canManage: false });
-    renderIssue(<IssueDetail issueId={issueId} />);
+    await renderIssue(<IssueDetail issueId={issueId} />);
 
-    expect(screen.getByText('No one')).toBeTruthy();
-    expect(screen.getByText('None yet')).toBeTruthy();
-    expect(screen.getByText('No date yet')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Edit assignees' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Edit idea' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Close issue' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Decide by' })).toBeNull();
+    await expect.element(page.getByText('No one')).toBeInTheDocument();
+    await expect.element(page.getByText('None yet')).toBeInTheDocument();
+    await expect.element(page.getByText('No date yet')).toBeInTheDocument();
+    await expect
+      .element(page.getByRole('button', { name: 'Edit assignees' }))
+      .not.toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'Edit idea' })).not.toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'Close issue' })).not.toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'Decide by' })).not.toBeInTheDocument();
   });
 
-  test('keeps assign available on a closed issue without starting an idea', () => {
+  test('keeps assign available on a closed issue without starting an idea', async () => {
     state.issue = issue({ status: 'closed' });
-    renderIssue(<IssueDetail issueId={issueId} />);
+    await renderIssue(<IssueDetail issueId={issueId} />);
 
-    expect(screen.getByRole('button', { name: 'Edit assignees' })).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Edit idea' })).toBeNull();
-    expect(screen.getByText('None yet')).toBeTruthy();
+    await expect.element(page.getByRole('button', { name: 'Edit assignees' })).toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'Edit idea' })).not.toBeInTheDocument();
+    await expect.element(page.getByText('None yet')).toBeInTheDocument();
   });
 
-  test('renders later comments in the same thread as the opening body', () => {
+  test('renders later comments in the same thread as the opening body', async () => {
     state.issue = issue({
       comments: [
         {
@@ -198,15 +195,17 @@ describe('IssueDetail', () => {
         }
       ]
     });
-    renderIssue(<IssueDetail issueId={issueId} />);
+    await renderIssue(<IssueDetail issueId={issueId} />);
 
-    expect(screen.getByText('Add a coast day near Lisbon.')).toBeTruthy();
-    expect(screen.getByText('Jordan Lee')).toBeTruthy();
-    expect(screen.getByText('Keep the afternoon free for the coast.')).toBeTruthy();
+    await expect.element(page.getByText('Add a coast day near Lisbon.')).toBeInTheDocument();
+    await expect.element(page.getByText('Jordan Lee')).toBeInTheDocument();
+    await expect
+      .element(page.getByText('Keep the afternoon free for the coast.'))
+      .toBeInTheDocument();
     expect(composerBadge()?.textContent).toBe('LD');
   });
 
-  test('renders assignment system events in the discussion thread', () => {
+  test('renders assignment system events in the discussion thread', async () => {
     state.issue = issue({
       comments: [
         {
@@ -219,14 +218,16 @@ describe('IssueDetail', () => {
         }
       ]
     });
-    renderIssue(<IssueDetail issueId={issueId} />);
+    await renderIssue(<IssueDetail issueId={issueId} />);
 
-    expect(screen.getByText('Alex Morgan assigned this to Sam Planner')).toBeTruthy();
+    await expect
+      .element(page.getByText('Alex Morgan assigned this to Sam Planner'))
+      .toBeInTheDocument();
     // Opening body is the only comment card; the assign event is a compact system line.
-    expect(screen.getAllByText(/commented/u)).toHaveLength(1);
+    expect(page.getByText(/commented/u).elements()).toHaveLength(1);
   });
 
-  test('clusters consecutive assignment events onto one quiet rail marker', () => {
+  test('clusters consecutive assignment events onto one quiet rail marker', async () => {
     state.issue = issue({
       comments: [
         {
@@ -255,11 +256,15 @@ describe('IssueDetail', () => {
         }
       ]
     });
-    renderIssue(<IssueDetail issueId={issueId} />);
+    await renderIssue(<IssueDetail issueId={issueId} />);
 
-    expect(screen.getByText('Alex Morgan assigned this to Sam Planner')).toBeTruthy();
-    expect(screen.getByText('Alex Morgan unassigned Sam Planner')).toBeTruthy();
-    expect(screen.getByText('Alex Morgan assigned this to Issue agent')).toBeTruthy();
+    await expect
+      .element(page.getByText('Alex Morgan assigned this to Sam Planner'))
+      .toBeInTheDocument();
+    await expect.element(page.getByText('Alex Morgan unassigned Sam Planner')).toBeInTheDocument();
+    await expect
+      .element(page.getByText('Alex Morgan assigned this to Issue agent'))
+      .toBeInTheDocument();
 
     const timelineItems = document.querySelectorAll('[data-slot="timeline-item"]');
     // Opening comment + one system cluster + composer.
@@ -267,40 +272,38 @@ describe('IssueDetail', () => {
     expect(timelineItems[1]?.querySelectorAll('[data-slot="timeline-badge"]')).toHaveLength(1);
   });
 
-  test('shows a linked idea in the sidebar instead of starting a new one', () => {
+  test('shows a linked idea in the sidebar instead of starting a new one', async () => {
     state.issue = issue({
       idea: { id: 'proposal-1', status: 'in_review', title: 'Coast day draft' }
     });
-    renderIssue(<IssueDetail issueId={issueId} />);
+    await renderIssue(<IssueDetail issueId={issueId} />);
 
-    expect(screen.getByText('Coast day draft')).toBeTruthy();
-    expect(screen.getByText('in review')).toBeTruthy();
-    expect(screen.getByRole('link', { name: /Coast day draft/u }).getAttribute('href')).toBe(
-      '/trips/$tripId/ideas/$proposalId/$view'
-    );
-    expect(screen.queryByRole('button', { name: 'Edit idea' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'New idea' })).toBeNull();
+    await expect.element(page.getByText('Coast day draft')).toBeInTheDocument();
+    await expect.element(page.getByText('in review')).toBeInTheDocument();
+    await expect
+      .element(page.getByRole('link', { name: /Coast day draft/u }))
+      .toHaveAttribute('href', '/trips/$tripId/ideas/$proposalId/$view');
+    await expect.element(page.getByRole('button', { name: 'Edit idea' })).not.toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'New idea' })).not.toBeInTheDocument();
   });
 
-  test('shows an assigned person as a compact row', () => {
+  test('shows an assigned person as a compact row', async () => {
     state.issue = issue({
       assignee: { agentId: 'issue', kind: 'agent', name: 'Issue agent' }
     });
-    renderIssue(<IssueDetail issueId={issueId} />);
+    await renderIssue(<IssueDetail issueId={issueId} />);
 
-    expect(screen.getByText('Issue agent')).toBeTruthy();
-    expect(screen.queryByText('No one')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Edit assignees' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Unassign Issue agent' }));
+    await expect.element(page.getByText('Issue agent')).toBeInTheDocument();
+    await expect.element(page.getByText('No one')).not.toBeInTheDocument();
+    await page.getByRole('button', { name: 'Edit assignees' }).click();
+    await page.getByRole('button', { name: 'Unassign Issue agent' }).click();
     expect(actions.unassign).toHaveBeenCalledOnce();
   });
 
-  test('submits a comment from the thread composer', () => {
-    renderIssue(<IssueDetail issueId={issueId} />);
-    fireEvent.change(screen.getByLabelText('Issue comment'), {
-      target: { value: 'Can we keep this flexible?' }
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Comment' }));
+  test('submits a comment from the thread composer', async () => {
+    await renderIssue(<IssueDetail issueId={issueId} />);
+    await page.getByLabelText('Issue comment').fill('Can we keep this flexible?');
+    await page.getByRole('button', { name: 'Comment' }).click();
     expect(actions.addComment).toHaveBeenCalledWith('Can we keep this flexible?');
   });
 });

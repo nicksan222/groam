@@ -1,8 +1,8 @@
 import { expect as playwrightExpect } from '@playwright/test';
 import type { ApproveIdeaAction, ApproveIdeaInput } from '#src/actions/approve-idea';
-import { ids } from '#src/playwright/ids';
 import { type UiTarget, ui } from '#src/playwright/interaction';
 import { by } from '#src/playwright/locators';
+import { ids } from '#src/testing/ids';
 
 const expect = playwrightExpect.configure({ timeout: 30_000 });
 
@@ -17,8 +17,4 @@ export const approveIdeaAction: ApproveIdeaAction<UiTarget> = async (target, inp
 
 export function approveIdea(target: UiTarget): Promise<void> {
   return approveIdeaAction(target, {} satisfies ApproveIdeaInput);
-}
-
-export function revokeIdeaApproval(target: UiTarget): Promise<void> {
-  return approveIdeaAction(target, { approved: false });
 }

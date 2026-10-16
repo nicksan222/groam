@@ -1,14 +1,13 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import { Sparkles } from 'lucide-react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { SuggestRow } from './suggest-row';
 
-afterEach(cleanup);
-
-test('renders a suggestion row and reports selection', () => {
+test('renders a suggestion row and reports selection', async () => {
   const onSelect = vi.fn();
 
-  render(
+  await render(
     <SuggestRow
       description="Ask Groam — reply visible to everyone"
       icon={<Sparkles />}
@@ -17,7 +16,7 @@ test('renders a suggestion row and reports selection', () => {
     />
   );
 
-  expect(screen.getByText('@groam')).toBeTruthy();
-  fireEvent.click(screen.getByRole('button', { name: /@groam/ }));
+  await expect.element(page.getByText('@groam')).toBeInTheDocument();
+  await page.getByRole('button', { name: /@groam/ }).click();
   expect(onSelect).toHaveBeenCalledTimes(1);
 });

@@ -1,16 +1,15 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { PageLoading } from './page-loading';
 
-afterEach(cleanup);
-
-test('announces one loading status without fake controls or skeletons', () => {
-  const { container } = render(<PageLoading label="Loading trips…" />);
-  expect(screen.getAllByRole('status')).toHaveLength(1);
-  expect(screen.getByRole('status').getAttribute('aria-busy')).toBe('true');
-  expect(screen.getByRole('status').getAttribute('aria-live')).toBe('polite');
-  expect(screen.getByText('Loading trips…')).toBeTruthy();
+test('announces one loading status without fake controls or skeletons', async () => {
+  const { container } = await render(<PageLoading label="Loading trips…" />);
+  expect(page.getByRole('status').elements()).toHaveLength(1);
+  await expect.element(page.getByRole('status')).toHaveAttribute('aria-busy', 'true');
+  await expect.element(page.getByRole('status')).toHaveAttribute('aria-live', 'polite');
+  await expect.element(page.getByText('Loading trips…')).toBeInTheDocument();
   expect(container.querySelector('[data-slot="skeleton"]')).toBeNull();
-  expect(screen.queryByRole('button')).toBeNull();
+  await expect.element(page.getByRole('button')).not.toBeInTheDocument();
   expect(container.querySelector('.motion-safe\\:animate-pulse')).toBeTruthy();
 });

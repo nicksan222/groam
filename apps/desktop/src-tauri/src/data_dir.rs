@@ -6,24 +6,6 @@ use std::{
 
 pub(crate) const RUNTIME_BUILD_STAMP: &str = ".groam-runtime-build";
 
-pub(crate) fn copy_dir(source: &Path, destination: &Path) -> io::Result<()> {
-  fs::create_dir_all(destination)?;
-  for entry in fs::read_dir(source)? {
-    let entry = entry?;
-    let target = destination.join(entry.file_name());
-    let source_path = entry.path();
-    let file_type = entry.file_type()?;
-    if file_type.is_symlink() {
-      copy_symlink(&source_path, &target)?;
-    } else if file_type.is_dir() {
-      copy_dir(&source_path, &target)?;
-    } else if file_type.is_file() {
-      fs::copy(&source_path, target)?;
-    }
-  }
-  Ok(())
-}
-
 fn copy_backup_dir(source: &Path, destination: &Path) -> io::Result<()> {
   fs::create_dir_all(destination)?;
   for entry in fs::read_dir(source)? {
@@ -43,18 +25,6 @@ fn copy_backup_dir(source: &Path, destination: &Path) -> io::Result<()> {
     }
   }
   Ok(())
-}
-
-fn copy_symlink(source: &Path, destination: &Path) -> io::Result<()> {
-  // Materialize links so a writable runtime copy does not depend on
-  // read-only packaged resources (workspace node_modules, etc.).
-  if source.is_dir() {
-    copy_dir(source, destination)
-  } else if source.is_file() {
-    fs::copy(source, destination).map(|_| ())
-  } else {
-    Ok(())
-  }
 }
 
 fn overlay_symlink(source: &Path, destination: &Path) -> io::Result<()> {
@@ -381,7 +351,7 @@ pub(crate) fn finish_failed_swap(
 #[cfg(test)]
 mod tests {
   use super::{
-    copy_dir, finish_failed_swap, overlay_dir, recover_interrupted_data_dir, recover_pointer,
+    finish_failed_swap, overlay_dir, recover_interrupted_data_dir, recover_pointer,
     replace_dir, replace_dir_keep_previous, sync_writable_runtime,
   };
   use std::{
@@ -650,34 +620,6 @@ mod tests {
       .filter(|name| name.contains("importing"))
       .collect();
     assert!(leftovers.is_empty(), "{leftovers:?}");
-    fs::remove_dir_all(&parent).ok();
-  }
-
-  #[test]
-  fn copy_dir_materializes_symlinks() {
-    let parent = temp_parent();
-    let source = parent.join("staged");
-    let dest = parent.join("writable");
-    fs::create_dir_all(source.join("packages")).expect("packages");
-    fs::write(source.join("packages/app.txt"), "from-package").expect("package file");
-    fs::create_dir_all(source.join("node_modules")).expect("node_modules");
-    std::os::unix::fs::symlink(
-      "../packages/app.txt",
-      source.join("node_modules/app.txt"),
-    )
-    .expect("symlink");
-
-    copy_dir(&source, &dest).expect("copy");
-    assert_eq!(
-      fs::read_to_string(dest.join("node_modules/app.txt")).expect("copied link"),
-      "from-package"
-    );
-    assert!(
-      fs::symlink_metadata(dest.join("node_modules/app.txt"))
-        .expect("meta")
-        .file_type()
-        .is_file()
-    );
     fs::remove_dir_all(&parent).ok();
   }
 

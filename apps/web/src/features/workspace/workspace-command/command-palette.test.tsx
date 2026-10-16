@@ -1,10 +1,12 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { beforeEach, expect, test, vi } from 'vite-plus/test';
+import { page, userEvent } from 'vite-plus/test/browser';
 import { CommandPalette } from './command-palette';
 
 const navigate = vi.hoisted(() => vi.fn());
 
-vi.mock('@tanstack/react-router', () => ({
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
   useNavigate: () => navigate
 }));
 
@@ -41,12 +43,10 @@ beforeEach(() => {
   navigate.mockReset();
 });
 
-afterEach(cleanup);
-
-test('command palette jumps to the nested idea clone', () => {
-  render(<CommandPalette />);
-  fireEvent.keyDown(window, { key: 'k', metaKey: true });
-  fireEvent.click(screen.getByRole('button', { name: /Coast day/u }));
+test('command palette jumps to the nested idea clone', async () => {
+  await render(<CommandPalette />);
+  await userEvent.keyboard('{Meta>}k{/Meta}');
+  await page.getByRole('button', { name: /Coast day/u }).click();
   expect(navigate).toHaveBeenCalledWith({
     params: { proposalId: 'idea-1', tripId: 'trip-coast', view: 'overview' },
     search: {},

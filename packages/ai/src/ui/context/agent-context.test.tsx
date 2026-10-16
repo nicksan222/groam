@@ -1,5 +1,6 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import {
   AgentContextProvider,
   type AgentScreenContext,
@@ -27,49 +28,47 @@ function ContextProbe() {
   );
 }
 
-afterEach(cleanup);
-
-test('forwards registered page data and reacts to structural context updates', () => {
-  const view = render(
+test('forwards registered page data and reacts to structural context updates', async () => {
+  const view = await render(
     <AgentContextProvider>
       <Registration context={overview} />
       <ContextProbe />
     </AgentContextProvider>
   );
-  expect(screen.getByRole('status', { name: 'Current agent context' }).textContent).toContain(
-    'approvalCount'
-  );
+  expect(
+    page.getByRole('status', { name: 'Current agent context' }).element().textContent
+  ).toContain('approvalCount');
 
-  view.rerender(
+  await view.rerender(
     <AgentContextProvider>
       <Registration context={{ ...overview, data: { approvalCount: 2 } }} />
       <ContextProbe />
     </AgentContextProvider>
   );
-  expect(screen.getByRole('status', { name: 'Current agent context' }).textContent).toContain(
-    '"approvalCount":2'
-  );
+  expect(
+    page.getByRole('status', { name: 'Current agent context' }).element().textContent
+  ).toContain('"approvalCount":2');
 });
 
-test('restores the parent context when a more specific registration unmounts', () => {
-  const view = render(
+test('restores the parent context when a more specific registration unmounts', async () => {
+  const view = await render(
     <AgentContextProvider>
       <Registration context={overview} />
       <Registration context={{ ...overview, key: 'trip:1:itinerary', title: 'Itinerary' }} />
       <ContextProbe />
     </AgentContextProvider>
   );
-  expect(screen.getByRole('status', { name: 'Current agent context' }).textContent).toContain(
-    'Itinerary'
-  );
+  expect(
+    page.getByRole('status', { name: 'Current agent context' }).element().textContent
+  ).toContain('Itinerary');
 
-  view.rerender(
+  await view.rerender(
     <AgentContextProvider>
       <Registration context={overview} />
       <ContextProbe />
     </AgentContextProvider>
   );
-  expect(screen.getByRole('status', { name: 'Current agent context' }).textContent).toContain(
-    'Trip overview'
-  );
+  expect(
+    page.getByRole('status', { name: 'Current agent context' }).element().textContent
+  ).toContain('Trip overview');
 });

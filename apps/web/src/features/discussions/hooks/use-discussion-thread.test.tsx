@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import type { DiscussionMessage } from './use-discussion-thread';
 import { useDiscussionThread } from './use-discussion-thread';
@@ -26,7 +26,8 @@ vi.mock('@convex-dev/agent/react', () => ({
   })
 }));
 
-vi.mock('convex/react', () => ({
+vi.mock('convex/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('convex/react')>()),
   useAction: () => deps.respond,
   useMutation: () => deps.mutate,
   useQuery: () => deps.attachments
@@ -82,21 +83,25 @@ beforeEach(() => {
 });
 
 test('refuses to send when the thread is missing or the payload is empty', async () => {
-  const { result } = renderHook(() => useDiscussionThread('discussion-1' as never, null));
+  const { result } = await renderHook(() => useDiscussionThread('discussion-1' as never, null));
 
   await expect(result.current.send({ text: 'Hello' })).resolves.toBe(false);
   expect(deps.mutate).not.toHaveBeenCalled();
 });
 
 test('refuses empty text without files', async () => {
-  const { result } = renderHook(() => useDiscussionThread('discussion-1' as never, 'thread-1'));
+  const { result } = await renderHook(() =>
+    useDiscussionThread('discussion-1' as never, 'thread-1')
+  );
 
   await expect(result.current.send({ text: '   ' })).resolves.toBe(false);
   expect(deps.mutate).not.toHaveBeenCalled();
 });
 
 test('toasts when more than five files are attached', async () => {
-  const { result } = renderHook(() => useDiscussionThread('discussion-1' as never, 'thread-1'));
+  const { result } = await renderHook(() =>
+    useDiscussionThread('discussion-1' as never, 'thread-1')
+  );
   const files = Array.from(
     { length: 6 },
     (_, index) => new File(['x'], `${index}.png`, { type: 'image/png' })
@@ -108,7 +113,9 @@ test('toasts when more than five files are attached', async () => {
 });
 
 test('uploads media then sends and asks Groam to reply', async () => {
-  const { result } = renderHook(() => useDiscussionThread('discussion-1' as never, 'thread-1'));
+  const { result } = await renderHook(() =>
+    useDiscussionThread('discussion-1' as never, 'thread-1')
+  );
   const file = new File(['img'], 'sunset.png', { type: 'image/png' });
 
   await act(async () => {
@@ -132,7 +139,9 @@ test('uploads media then sends and asks Groam to reply', async () => {
 
 test('aborts send when a media upload fails', async () => {
   deps.upload.mockResolvedValue(null);
-  const { result } = renderHook(() => useDiscussionThread('discussion-1' as never, 'thread-1'));
+  const { result } = await renderHook(() =>
+    useDiscussionThread('discussion-1' as never, 'thread-1')
+  );
 
   await expect(
     result.current.send({
@@ -145,14 +154,18 @@ test('aborts send when a media upload fails', async () => {
 
 test('toasts and returns false when send throws', async () => {
   deps.mutate.mockRejectedValue(new Error('offline'));
-  const { result } = renderHook(() => useDiscussionThread('discussion-1' as never, 'thread-1'));
+  const { result } = await renderHook(() =>
+    useDiscussionThread('discussion-1' as never, 'thread-1')
+  );
 
   await expect(result.current.send({ text: 'Hello' })).resolves.toBe(false);
   expect(toast.error).toHaveBeenCalledWith('offline');
 });
 
 test('shows a pending user message until the server copy arrives', async () => {
-  const { result } = renderHook(() => useDiscussionThread('discussion-1' as never, 'thread-1'));
+  const { result } = await renderHook(() =>
+    useDiscussionThread('discussion-1' as never, 'thread-1')
+  );
 
   await act(async () => {
     await result.current.send({ text: 'On my way' });
@@ -165,13 +178,15 @@ test('shows a pending user message until the server copy arrives', async () => {
   });
 });
 
-test('merges attachment query results onto listed messages', () => {
+test('merges attachment query results onto listed messages', async () => {
   deps.messages = [userMessage({ id: 'msg-1', text: 'Sent a photo' })];
   deps.attachments = {
     'msg-1': [{ contentType: 'image/png', name: 'a.png', url: 'https://cdn/a.png' }]
   };
 
-  const { result } = renderHook(() => useDiscussionThread('discussion-1' as never, 'thread-1'));
+  const { result } = await renderHook(() =>
+    useDiscussionThread('discussion-1' as never, 'thread-1')
+  );
 
   expect(result.current.messages[0]?.attachments).toEqual([
     { contentType: 'image/png', name: 'a.png', url: 'https://cdn/a.png' }
@@ -189,7 +204,9 @@ test('stops a streaming assistant reply', async () => {
       text: 'Let me'
     })
   ];
-  const { result } = renderHook(() => useDiscussionThread('discussion-1' as never, 'thread-1'));
+  const { result } = await renderHook(() =>
+    useDiscussionThread('discussion-1' as never, 'thread-1')
+  );
 
   expect(result.current.canStop).toBe(true);
   await act(async () => {
@@ -212,7 +229,9 @@ test('toasts when stopping Groam fails', async () => {
     })
   ];
   deps.mutate.mockRejectedValue(new Error('busy'));
-  const { result } = renderHook(() => useDiscussionThread('discussion-1' as never, 'thread-1'));
+  const { result } = await renderHook(() =>
+    useDiscussionThread('discussion-1' as never, 'thread-1')
+  );
 
   await expect(result.current.stop()).resolves.toBe(false);
   expect(toast.error).toHaveBeenCalledWith('busy');

@@ -1,24 +1,8 @@
 import { SidebarProvider } from '@groam/ui/components/sidebar';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { SidebarCollapsibleItem } from './sidebar-collapsible-item';
-
-function stubMatchMedia(matches = false) {
-  vi.stubGlobal(
-    'matchMedia',
-    (query: string) =>
-      ({
-        addEventListener: vi.fn(),
-        addListener: vi.fn(),
-        dispatchEvent: vi.fn(),
-        matches,
-        media: query,
-        onchange: null,
-        removeEventListener: vi.fn(),
-        removeListener: vi.fn()
-      }) as unknown as MediaQueryList
-  );
-}
 
 function Harness({
   child = 'Child item',
@@ -45,37 +29,29 @@ function Harness({
   );
 }
 
-beforeEach(() => {
-  stubMatchMedia();
+test('hides children while collapsed', async () => {
+  await render(<Harness onOpenChange={vi.fn()} open={false} />);
+  await expect.element(page.getByText('Child item')).not.toBeInTheDocument();
+  await expect
+    .element(page.getByRole('button', { name: 'Expand trips' }))
+    .toHaveAttribute('aria-expanded', 'false');
 });
 
-afterEach(() => {
-  cleanup();
-  vi.unstubAllGlobals();
-});
-
-test('hides children while collapsed', () => {
-  render(<Harness onOpenChange={vi.fn()} open={false} />);
-  expect(screen.queryByText('Child item')).toBeNull();
-  expect(screen.getByRole('button', { name: 'Expand trips' }).getAttribute('aria-expanded')).toBe(
-    'false'
-  );
-});
-
-test('the hover action toggles children without following the parent link', () => {
+test('the hover action toggles children without following the parent link', async () => {
   const onOpenChange = vi.fn();
-  const { rerender } = render(<Harness onOpenChange={onOpenChange} open={true} />);
+  const { rerender } = await render(<Harness onOpenChange={onOpenChange} open={true} />);
 
-  expect(screen.getByText('Child item')).toBeTruthy();
-  fireEvent.click(screen.getByRole('link', { name: 'Trips' }));
+  await expect.element(page.getByText('Child item')).toBeInTheDocument();
+  await page.getByRole('link', { name: 'Trips' }).click();
   expect(onOpenChange).not.toHaveBeenCalled();
 
-  fireEvent.click(screen.getByRole('button', { name: 'Collapse trips' }));
+  await page.getByRole('button', { name: 'Collapse trips' }).click();
   expect(onOpenChange).toHaveBeenCalledWith(false);
 
-  rerender(<Harness onOpenChange={onOpenChange} open={false} />);
-  expect(screen.queryByText('Child item')).toBeNull();
-  expect(screen.getByRole('button', { name: 'Expand trips' }).getAttribute('aria-expanded')).toBe(
-    'false'
-  );
+  await rerender(<Harness onOpenChange={onOpenChange} open={false} />);
+  // The collapse animates out before the content unmounts.
+  await expect.element(page.getByText('Child item')).not.toBeInTheDocument();
+  await expect
+    .element(page.getByRole('button', { name: 'Expand trips' }))
+    .toHaveAttribute('aria-expanded', 'false');
 });

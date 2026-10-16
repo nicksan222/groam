@@ -1,21 +1,12 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import { useState } from 'react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { DayTimeRangePicker } from './day-time-range-picker';
 
-afterEach(cleanup);
-
-test('combines a bounded day range with precise local times', () => {
-  vi.stubGlobal(
-    'ResizeObserver',
-    class {
-      disconnect() {}
-      observe() {}
-      unobserve() {}
-    }
-  );
+test('combines a bounded day range with precise local times', async () => {
   const onChange = vi.fn();
-  render(
+  await render(
     <DayTimeRangePicker
       bounds={{ maximumDay: 4, startDate: '2027-06-01', totalDays: 4 }}
       label="Train schedule"
@@ -25,11 +16,9 @@ test('combines a bounded day range with precise local times', () => {
     />
   );
 
-  expect(screen.getByRole('button', { name: /Day 1, Jun 1/ })).toBeDefined();
-  expect(screen.getByRole('button', { name: /Day 2, Jun 2/ })).toBeDefined();
-  fireEvent.change(screen.getByLabelText('Arrival time (optional)'), {
-    target: { value: '09:30' }
-  });
+  await expect.element(page.getByRole('button', { name: /Day 1, Jun 1/ })).toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: /Day 2, Jun 2/ })).toBeInTheDocument();
+  await page.getByLabelText('Arrival time (optional)').fill('09:30');
   expect(onChange).toHaveBeenCalledWith({
     endDay: 2,
     endTime: '09:30',
@@ -38,7 +27,7 @@ test('combines a bounded day range with precise local times', () => {
   });
 });
 
-test('extends a saved single day into a range', () => {
+test('extends a saved single day into a range', async () => {
   function RangeEditor() {
     const [value, setValue] = useState({ endDay: 4, endTime: '', startDay: 4, startTime: '' });
     return (
@@ -50,19 +39,19 @@ test('extends a saved single day into a range', () => {
       />
     );
   }
-  render(<RangeEditor />);
-  fireEvent.click(screen.getByRole('button', { name: 'Day 4, Start and End' }));
-  expect(screen.getByRole('button', { name: 'Day 4, Start' }).getAttribute('aria-pressed')).toBe(
-    'true'
-  );
-  fireEvent.click(screen.getByRole('button', { name: 'Day 6' }));
-  expect(screen.getByText(/3 days · Start Day 4 · End Day 6/u)).toBeDefined();
-  expect(screen.getByRole('button', { name: 'Day 6, End' }).getAttribute('aria-pressed')).toBe(
-    'true'
-  );
+  await render(<RangeEditor />);
+  await page.getByRole('button', { name: 'Day 4, Start and End' }).click();
+  await expect
+    .element(page.getByRole('button', { name: 'Day 4, Start' }))
+    .toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: 'Day 6' }).click();
+  await expect.element(page.getByText(/3 days · Start Day 4 · End Day 6/u)).toBeInTheDocument();
+  await expect
+    .element(page.getByRole('button', { name: 'Day 6, End' }))
+    .toHaveAttribute('aria-pressed', 'true');
 });
 
-test('commits a new single day immediately so saving during a selection cannot persist old days', () => {
+test('commits a new single day immediately so saving during a selection cannot persist old days', async () => {
   const changes = vi.fn();
   function RangeEditor() {
     const [value, setValue] = useState({ endDay: 6, endTime: '', startDay: 4, startTime: '' });
@@ -78,16 +67,20 @@ test('commits a new single day immediately so saving during a selection cannot p
       />
     );
   }
-  render(<RangeEditor />);
-  fireEvent.click(screen.getByRole('button', { name: 'Day 5' }));
+  await render(<RangeEditor />);
+  await page.getByRole('button', { name: 'Day 5' }).click();
   expect(changes).toHaveBeenLastCalledWith({
     endDay: 5,
     endTime: '',
     startDay: 5,
     startTime: ''
   });
-  expect(screen.getByText('Start Day 5 — pick end day or keep one day.')).toBeDefined();
-  fireEvent.click(screen.getByRole('button', { name: 'Day 5, Start' }));
+  await expect
+    .element(page.getByText('Start Day 5 — pick end day or keep one day.'))
+    .toBeInTheDocument();
+  await page.getByRole('button', { name: 'Day 5, Start' }).click();
   expect(changes).toHaveBeenCalledTimes(1);
-  expect(screen.getByRole('button', { name: 'Day 5, Start and End' })).toBeDefined();
+  await expect
+    .element(page.getByRole('button', { name: 'Day 5, Start and End' }))
+    .toBeInTheDocument();
 });

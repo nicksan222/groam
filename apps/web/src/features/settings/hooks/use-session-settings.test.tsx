@@ -1,4 +1,4 @@
-import { act, renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { useSessionSettings } from './use-session-settings';
 
@@ -35,9 +35,9 @@ beforeEach(() => {
 
 describe('useSessionSettings', () => {
   test('loads sessions and revokes one by token', async () => {
-    const { result } = renderHook(() => useSessionSettings());
+    const { result } = await renderHook(() => useSessionSettings());
 
-    await waitFor(() => expect(result.current.state.sessions).toHaveLength(2));
+    await vi.waitFor(() => expect(result.current.state.sessions).toHaveLength(2));
     await act(() => result.current.revoke('other-token'));
 
     expect(auth.revokeSession).toHaveBeenCalledWith({ token: 'other-token' });
@@ -46,9 +46,9 @@ describe('useSessionSettings', () => {
   });
 
   test('signs out every session except the current one', async () => {
-    const { result } = renderHook(() => useSessionSettings());
+    const { result } = await renderHook(() => useSessionSettings());
 
-    await waitFor(() => expect(result.current.state.sessions).toHaveLength(2));
+    await vi.waitFor(() => expect(result.current.state.sessions).toHaveLength(2));
     await act(() => result.current.revokeOthers('current-token'));
 
     expect(auth.revokeOtherSessions).toHaveBeenCalledOnce();
@@ -60,9 +60,9 @@ describe('useSessionSettings', () => {
       data: null,
       error: { message: 'Sessions unavailable' }
     });
-    const { result } = renderHook(() => useSessionSettings());
+    const { result } = await renderHook(() => useSessionSettings());
 
-    await waitFor(() => expect(result.current.state.error).toBe('Sessions unavailable'));
+    await vi.waitFor(() => expect(result.current.state.error).toBe('Sessions unavailable'));
     await act(() => result.current.refresh());
 
     expect(result.current.state.error).toBeNull();
@@ -71,9 +71,9 @@ describe('useSessionSettings', () => {
 
   test('keeps sessions and reports revoke failures', async () => {
     auth.revokeSession.mockResolvedValue({ error: { message: 'Session is already revoked' } });
-    const { result } = renderHook(() => useSessionSettings());
+    const { result } = await renderHook(() => useSessionSettings());
 
-    await waitFor(() => expect(result.current.state.sessions).toHaveLength(2));
+    await vi.waitFor(() => expect(result.current.state.sessions).toHaveLength(2));
     await act(() => result.current.revoke('other-token'));
 
     expect(result.current.state.sessions).toHaveLength(2);
@@ -83,9 +83,9 @@ describe('useSessionSettings', () => {
 
   test('keeps all sessions when signing out others fails', async () => {
     auth.revokeOtherSessions.mockResolvedValue({ error: {} });
-    const { result } = renderHook(() => useSessionSettings());
+    const { result } = await renderHook(() => useSessionSettings());
 
-    await waitFor(() => expect(result.current.state.sessions).toHaveLength(2));
+    await vi.waitFor(() => expect(result.current.state.sessions).toHaveLength(2));
     await act(() => result.current.revokeOthers('current-token'));
 
     expect(result.current.state.sessions).toHaveLength(2);

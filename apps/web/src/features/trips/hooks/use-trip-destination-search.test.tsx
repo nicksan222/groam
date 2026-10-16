@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { useTripDestinationSearch } from './use-trip-destination-search';
 
@@ -19,18 +19,18 @@ afterEach(() => {
 });
 
 describe('useTripDestinationSearch', () => {
-  test('starts closed and clears query on close', () => {
-    const { result } = renderHook(() => useTripDestinationSearch());
+  test('starts closed and clears query on close', async () => {
+    const { result } = await renderHook(() => useTripDestinationSearch());
     expect(result.current.isOpen).toBe(false);
     expect(result.current.isLoading).toBe(false);
 
-    act(() => {
+    await act(() => {
       result.current.open();
       result.current.setQuery('Li');
     });
     expect(result.current.isOpen).toBe(true);
 
-    act(() => {
+    await act(() => {
       result.current.onOpenChange(false);
     });
     expect(result.current.isOpen).toBe(false);
@@ -38,8 +38,8 @@ describe('useTripDestinationSearch', () => {
   });
 
   test('debounces search while open', async () => {
-    const { result } = renderHook(() => useTripDestinationSearch());
-    act(() => {
+    const { result } = await renderHook(() => useTripDestinationSearch());
+    await act(() => {
       result.current.open();
       result.current.setQuery('Lisbon');
     });
@@ -62,27 +62,27 @@ describe('useTripDestinationSearch', () => {
           finishOldSearch = resolve;
         })
     );
-    const { result } = renderHook(() => useTripDestinationSearch(true));
-    act(() => result.current.setQuery('Lisbon'));
+    const { result } = await renderHook(() => useTripDestinationSearch(true));
+    await act(() => result.current.setQuery('Lisbon'));
     await act(async () => {
       await vi.advanceTimersByTimeAsync(350);
     });
-    act(() => result.current.setQuery('Porto'));
+    await act(() => result.current.setQuery('Porto'));
     expect(result.current.isLoading).toBe(true);
     expect(result.current.results).toEqual([]);
-    await act(async () => {
+    await act(() => {
       finishOldSearch([{ name: 'Lisbon' }]);
     });
     expect(result.current.results).toEqual([]);
     expect(result.current.isLoading).toBe(true);
-    act(() => result.current.setQuery(''));
+    await act(() => result.current.setQuery(''));
     expect(result.current.isLoading).toBe(false);
   });
 
   test('shows search errors and handles non-Error rejections', async () => {
     search.searchLocations.mockRejectedValue('offline');
-    const { result } = renderHook(() => useTripDestinationSearch());
-    act(() => {
+    const { result } = await renderHook(() => useTripDestinationSearch());
+    await act(() => {
       result.current.open();
       result.current.setQuery('Rome');
     });

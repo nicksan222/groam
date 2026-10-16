@@ -1,16 +1,16 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { describe, expect, test, vi } from 'vite-plus/test';
 import { useThreadMessageEdit, useThreadMessageEditing } from './use-thread-message-edit';
 
 describe('useThreadMessageEditing', () => {
-  test('toggles the editing boolean', () => {
-    const { result } = renderHook(() => useThreadMessageEditing());
+  test('toggles the editing boolean', async () => {
+    const { result } = await renderHook(() => useThreadMessageEditing());
     expect(result.current.editing).toBe(false);
-    act(() => {
+    await act(() => {
       result.current.startEditing();
     });
     expect(result.current.editing).toBe(true);
-    act(() => {
+    await act(() => {
       result.current.stopEditing();
     });
     expect(result.current.editing).toBe(false);
@@ -18,37 +18,37 @@ describe('useThreadMessageEditing', () => {
 });
 
 describe('useThreadMessageEdit', () => {
-  test('blocks empty saves and submits trimmed text', () => {
+  test('blocks empty saves and submits trimmed text', async () => {
     const onSave = vi.fn();
     const onCancel = vi.fn();
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useThreadMessageEdit({ initialText: 'hello', onCancel, onSave })
     );
 
-    act(() => {
+    await act(() => {
       result.current.setDraft('   ');
     });
     expect(result.current.canSave).toBe(false);
-    act(() => {
+    await act(() => {
       result.current.submit();
     });
     expect(onSave).not.toHaveBeenCalled();
 
-    act(() => {
+    await act(() => {
       result.current.setDraft('  updated  ');
       result.current.submit();
     });
     expect(onSave).toHaveBeenCalledWith('updated');
   });
 
-  test('Escape cancels and Cmd+Enter saves', () => {
+  test('Escape cancels and Cmd+Enter saves', async () => {
     const onSave = vi.fn();
     const onCancel = vi.fn();
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useThreadMessageEdit({ initialText: 'hello', onCancel, onSave })
     );
 
-    act(() => {
+    await act(() => {
       result.current.onKeyDown({
         key: 'Escape',
         preventDefault: vi.fn()
@@ -56,7 +56,7 @@ describe('useThreadMessageEdit', () => {
     });
     expect(onCancel).toHaveBeenCalled();
 
-    act(() => {
+    await act(() => {
       result.current.setDraft('next');
       result.current.onKeyDown({
         key: 'Enter',

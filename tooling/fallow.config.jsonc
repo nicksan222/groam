@@ -13,7 +13,13 @@
   ],
   // These packages are runtime-loaded by Vitest or the toolchain. vite-plus is the dev
   // toolchain; its only "production" importer is the Oxlint plugin entry below.
-  "ignoreDependencies": ["@edge-runtime/vm", "jiti", "vite-plus"],
+  "ignoreDependencies": [
+    "@edge-runtime/vm",
+    // The Playwright provider behind vite-plus/test/browser-playwright.
+    "@vitest/browser-playwright",
+    "jiti",
+    "vite-plus"
+  ],
   "entry": [
     "tooling/showcase/src/video/index.tsx",
     "apps/web/src/main.tsx",
@@ -25,11 +31,17 @@
     "packages/backend/scripts/generate-auth-schema.ts",
     "**/*.test.ts",
     "**/*.test.tsx",
-    "**/*.spec.ts",
-    "**/*.spec.tsx",
     "**/doctor.config.ts",
     // Oxlint loads the Groam lint plugin from tooling/oxc-config/lint.ts by path.
-    "tooling/oxc-config/plugin/index.ts"
+    "tooling/oxc-config/plugin/index.ts",
+    // Vitest loads these by path from tooling/vitest-config/src/setup-files.ts.
+    "tooling/vitest-config/src/console-guard/setup.ts",
+    "tooling/vitest-config/src/fake-scheduler.ts",
+    // Browser-mode setups load these by path from each package's vite.config.ts.
+    "apps/web/src/journeys-setup.ts",
+    "apps/web/src/views-setup.ts",
+    "packages/*/src/browser-setup.ts",
+    "packages/ai/src/browser-setup.css"
   ],
   "health": {
     "maxCyclomatic": 35,

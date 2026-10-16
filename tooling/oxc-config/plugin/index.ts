@@ -12,8 +12,7 @@ import noNativeBrowserDialogs from './rules/no-native-browser-dialogs.ts';
 import noNativeInteractiveElements from './rules/no-native-interactive-elements.ts';
 import noNestedPlanningPageBody from './rules/no-nested-planning-page-body.ts';
 import noRawInternalAnchors from './rules/no-raw-internal-anchors.ts';
-import noRawPlaywrightPaths from './rules/no-raw-playwright-paths.ts';
-import noRawPlaywrightTestIds from './rules/no-raw-playwright-test-ids.ts';
+import noRawLocatorTestIds from './rules/no-raw-locator-test-ids.ts';
 import noRawTestIds from './rules/no-raw-test-ids.ts';
 import noReExportAll from './rules/no-re-export-all.ts';
 import planningPageBody from './rules/planning-page-body.ts';
@@ -38,8 +37,7 @@ export default definePlugin({
     'no-native-interactive-elements': noNativeInteractiveElements,
     'no-nested-planning-page-body': noNestedPlanningPageBody,
     'no-raw-internal-anchors': noRawInternalAnchors,
-    'no-raw-playwright-paths': noRawPlaywrightPaths,
-    'no-raw-playwright-test-ids': noRawPlaywrightTestIds,
+    'no-raw-locator-test-ids': noRawLocatorTestIds,
     'no-raw-test-ids': noRawTestIds,
     'no-re-export-all': noReExportAll,
     'planning-page-body': planningPageBody,

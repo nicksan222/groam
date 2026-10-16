@@ -1,7 +1,8 @@
 import type { Id } from '@groam/backend/data-model';
-import { cleanup, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { TripIdeasPanel } from '@/features/trips/trip-ideas/trip-ideas-panel';
 
@@ -24,7 +25,8 @@ const versions = vi.hoisted(() => ({
     | undefined
 }));
 
-vi.mock('@tanstack/react-router', () => ({
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
   Link: ({ children, to }: { children?: ReactNode; to: string }) => <a href={to}>{children}</a>,
   useNavigate: () => vi.fn()
 }));
@@ -66,23 +68,25 @@ beforeEach(() => {
   versions.createVersion.mockResolvedValue(null);
 });
 
-afterEach(cleanup);
-
 describe('TripIdeasPanel', () => {
-  test('renders the ideas header and a link to the workspace list', () => {
-    render(<TripIdeasPanel onStartIdea={vi.fn()} trip={trip()} />);
+  test('renders the ideas header and a link to the workspace list', async () => {
+    await render(<TripIdeasPanel onStartIdea={vi.fn()} trip={trip()} />);
 
-    expect(screen.getByRole('heading', { name: 'Ideas' })).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'All ideas' }).getAttribute('href')).toBe('/ideas');
-    expect(screen.getAllByRole('button', { name: 'New idea' }).length).toBeGreaterThan(0);
-    expect(screen.queryByRole('button', { name: /Open \d+/u })).toBeNull();
-    expect(screen.queryByRole('button', { name: /Settled \d+/u })).toBeNull();
-    expect(screen.queryByText('Open ideas')).toBeNull();
-    expect(screen.queryByText('Need a tweak')).toBeNull();
-    expect(screen.queryByText('Added to trip')).toBeNull();
+    await expect.element(page.getByRole('heading', { name: 'Ideas' })).toBeInTheDocument();
+    await expect
+      .element(page.getByRole('link', { name: 'All ideas' }))
+      .toHaveAttribute('href', '/ideas');
+    expect(page.getByRole('button', { name: 'New idea' }).elements().length).toBeGreaterThan(0);
+    await expect.element(page.getByRole('button', { name: /Open \d+/u })).not.toBeInTheDocument();
+    await expect
+      .element(page.getByRole('button', { name: /Settled \d+/u }))
+      .not.toBeInTheDocument();
+    await expect.element(page.getByText('Open ideas')).not.toBeInTheDocument();
+    await expect.element(page.getByText('Need a tweak')).not.toBeInTheDocument();
+    await expect.element(page.getByText('Added to trip')).not.toBeInTheDocument();
   });
 
-  test('uses the same search-and-status toolbar as the workspace ideas list', () => {
+  test('uses the same search-and-status toolbar as the workspace ideas list', async () => {
     versions.proposals = [
       {
         author: { name: 'Alex Morgan', userId: 'user-alex' },
@@ -98,15 +102,14 @@ describe('TripIdeasPanel', () => {
         workingTripId: 'working-1' as Id<'trips'>
       }
     ];
-    render(<TripIdeasPanel onStartIdea={vi.fn()} trip={trip()} />);
+    await render(<TripIdeasPanel onStartIdea={vi.fn()} trip={trip()} />);
 
-    const toolbar = document.querySelector('[aria-label="Filter ideas"]');
-    expect(toolbar?.className).toContain('flex');
-    expect(toolbar?.className).toContain('items-center');
-    expect(toolbar?.className).not.toContain('dashboard-panel');
-    expect(screen.queryByRole('button', { name: /All \d+/u })).toBeNull();
-    expect(screen.getByLabelText('Search ideas')).toBeTruthy();
-    expect(screen.getByLabelText('Filter ideas by status').textContent).toContain('Open');
-    expect(screen.getByText('Add a coast day')).toBeTruthy();
+    const toolbar = page.getByLabelText('Filter ideas');
+    await expect.element(toolbar).toHaveClass('flex', 'items-center');
+    await expect.element(toolbar).not.toHaveClass('dashboard-panel');
+    await expect.element(page.getByRole('button', { name: /All \d+/u })).not.toBeInTheDocument();
+    await expect.element(page.getByLabelText('Search ideas')).toBeInTheDocument();
+    expect(page.getByLabelText('Filter ideas by status').element().textContent).toContain('Open');
+    await expect.element(page.getByText('Add a coast day')).toBeInTheDocument();
   });
 });

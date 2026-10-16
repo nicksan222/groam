@@ -1,5 +1,6 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type { AgentRun } from '@/features/agents/hooks/use-agent';
 import { testIds } from '@/lib/test-ids';
 import { AgentDetailView } from './agent-detail-view';
@@ -45,9 +46,12 @@ vi.mock('@/features/agents/hooks/use-agent-run', () => ({
   useStartQueuedAssignRuns: () => undefined
 }));
 
-vi.mock('@tanstack/react-router', async () => {
+vi.mock('@tanstack/react-router', async (importOriginal) => {
   const { createAgentTestRouterMock } = await import('@/features/agents/agent-test-router-mock');
-  return createAgentTestRouterMock(vi.fn(), { preventDefault: true });
+  return {
+    ...(await importOriginal<typeof import('@tanstack/react-router')>()),
+    ...createAgentTestRouterMock(vi.fn(), { preventDefault: true })
+  };
 });
 
 beforeEach(() => {
@@ -57,10 +61,8 @@ beforeEach(() => {
   state.status = 'Exhausted';
 });
 
-afterEach(cleanup);
-
 describe('AgentDetailView', () => {
-  test('puts the back link above the title hero and status badges', () => {
+  test('puts the back link above the title hero and status badges', async () => {
     state.agent = {
       activeRunCount: 1,
       assignedIssueCount: 1,
@@ -71,18 +73,20 @@ describe('AgentDetailView', () => {
       status: 'working',
       surface: 'standalone'
     };
-    render(<AgentDetailView agentId="issue" />);
+    await render(<AgentDetailView agentId="issue" />);
 
-    const back = screen.getByRole('link', { name: 'All agents' });
-    const title = screen.getByTestId('agent-detail-title');
-    expect(back.getAttribute('href')).toBe('/agents');
-    expect(back.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(title.textContent).toContain('Issue agent');
-    expect(screen.getByText('Works assigned issues')).toBeTruthy();
-    expect(screen.getByText('Worker')).toBeTruthy();
+    const back = page.getByRole('link', { name: 'All agents' });
+    const title = page.getByTestId('agent-detail-title');
+    await expect.element(back).toHaveAttribute('href', '/agents');
+    expect(
+      back.element().compareDocumentPosition(title.element()) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    expect(title.element().textContent).toContain('Issue agent');
+    await expect.element(page.getByText('Works assigned issues')).toBeInTheDocument();
+    await expect.element(page.getByText('Worker')).toBeInTheDocument();
   });
 
-  test('lists this agent’s runs as links to the run page, not a split detail pane', () => {
+  test('lists this agent’s runs as links to the run page, not a split detail pane', async () => {
     state.agent = {
       activeRunCount: 0,
       assignedIssueCount: 2,
@@ -147,16 +151,18 @@ describe('AgentDetailView', () => {
         updatedAt: 1
       }
     ];
-    render(<AgentDetailView agentId="issue" />);
-    expect(screen.getByRole('heading', { name: 'Runs' })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /Rainy-day option/u }).getAttribute('href')).toBe(
-      '/agents/issue/run-rain'
+    await render(<AgentDetailView agentId="issue" />);
+    await expect.element(page.getByRole('heading', { name: 'Runs' })).toBeInTheDocument();
+    await expect
+      .element(page.getByRole('link', { name: /Rainy-day option/u }))
+      .toHaveAttribute('href', '/agents/issue/run-rain');
+    await expect
+      .element(page.getByRole('link', { name: /Coast day/u }))
+      .toHaveAttribute('href', '/agents/issue/run-coast');
+    await expect.element(page.getByTestId(testIds.agentRunDetail)).not.toBeInTheDocument();
+    await expect.element(page.getByText('Assigned issues')).not.toBeInTheDocument();
+    expect(page.getByTestId(testIds.agentsRoster).element().className).not.toMatch(
+      /max-h-\[50%\]/u
     );
-    expect(screen.getByRole('link', { name: /Coast day/u }).getAttribute('href')).toBe(
-      '/agents/issue/run-coast'
-    );
-    expect(screen.queryByTestId(testIds.agentRunDetail)).toBeNull();
-    expect(screen.queryByText('Assigned issues')).toBeNull();
-    expect(screen.getByTestId(testIds.agentsRoster).className).not.toMatch(/max-h-\[50%\]/u);
   });
 });

@@ -1,6 +1,7 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type { WorkspaceIdea } from '@/features/ideas/hooks/use-workspace-ideas';
 import { IdeaListView } from './idea-list-view';
 
@@ -43,7 +44,8 @@ vi.mock('@/features/ideas/hooks/use-workspace-ideas', () => ({
   })
 }));
 
-vi.mock('@tanstack/react-router', () => ({
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
   Link: ({ children, to }: { children?: ReactNode; to: string }) => <a href={to}>{children}</a>,
   useNavigate: () => vi.fn()
 }));
@@ -56,27 +58,27 @@ beforeEach(() => {
   state.status = 'Exhausted';
 });
 
-afterEach(cleanup);
-
 describe('IdeaListView', () => {
-  test('shows a labeled loading state while ideas load', () => {
+  test('shows a labeled loading state while ideas load', async () => {
     state.isLoading = true;
-    render(<IdeaListView />);
-    expect(screen.getByRole('status', { name: 'Loading ideas…' })).toBeTruthy();
+    await render(<IdeaListView />);
+    await expect.element(page.getByRole('status', { name: 'Loading ideas…' })).toBeInTheDocument();
   });
 
-  test('invites the group to start an idea when none exist', () => {
-    render(<IdeaListView />);
-    expect(screen.getByTestId('empty-screen')).toBeTruthy();
-    expect(screen.getByText('Start an idea')).toBeTruthy();
-    expect(screen.queryByText('Acme Labs')).toBeNull();
-    expect(screen.getByTestId('ideas-title')).toBeTruthy();
-    expect(screen.getAllByText(/idea until the group reviews/u).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole('button', { name: 'New idea' })).toHaveLength(1);
-    expect(screen.queryByRole('button', { name: 'Delete draft' })).toBeNull();
+  test('invites the group to start an idea when none exist', async () => {
+    await render(<IdeaListView />);
+    await expect.element(page.getByTestId('empty-screen')).toBeInTheDocument();
+    await expect.element(page.getByText('Start an idea')).toBeInTheDocument();
+    await expect.element(page.getByText('Acme Labs')).not.toBeInTheDocument();
+    await expect.element(page.getByTestId('ideas-title')).toBeInTheDocument();
+    expect(page.getByText(/idea until the group reviews/u).elements().length).toBeGreaterThan(0);
+    expect(page.getByRole('button', { name: 'New idea' }).elements()).toHaveLength(1);
+    await expect
+      .element(page.getByRole('button', { name: 'Delete draft' }))
+      .not.toBeInTheDocument();
   });
 
-  test('renders workspace ideas with their trip names', () => {
+  test('renders workspace ideas with their trip names', async () => {
     state.proposals = [
       {
         author: { name: 'Alex Morgan', userId: 'user-alex' },
@@ -91,21 +93,25 @@ describe('IdeaListView', () => {
         workingTripId: 'working-1' as WorkspaceIdea['workingTripId']
       }
     ];
-    render(<IdeaListView />);
-    expect(screen.queryByText('Acme Labs')).toBeNull();
-    expect(screen.getByTestId('ideas-title')).toBeTruthy();
-    expect(screen.getByText('Add a coast day')).toBeTruthy();
-    expect(screen.getAllByText('Atlantic week')).toHaveLength(2);
-    expect(screen.getByText('In review')).toBeTruthy();
-    expect(screen.queryByText('Coast day')).toBeNull();
-    expect(screen.getByRole('link', { name: 'Open' }).getAttribute('href')).toBe(
-      '/trips/$tripId/ideas/$proposalId/$view'
-    );
-    expect(screen.queryByRole('button', { name: 'Delete draft' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Close without applying' })).toBeNull();
+    await render(<IdeaListView />);
+    await expect.element(page.getByText('Acme Labs')).not.toBeInTheDocument();
+    await expect.element(page.getByTestId('ideas-title')).toBeInTheDocument();
+    await expect.element(page.getByText('Add a coast day')).toBeInTheDocument();
+    expect(page.getByText('Atlantic week').elements()).toHaveLength(2);
+    await expect.element(page.getByText('In review')).toBeInTheDocument();
+    await expect.element(page.getByText('Coast day')).not.toBeInTheDocument();
+    await expect
+      .element(page.getByRole('link', { name: 'Open' }))
+      .toHaveAttribute('href', '/trips/$tripId/ideas/$proposalId/$view');
+    await expect
+      .element(page.getByRole('button', { name: 'Delete draft' }))
+      .not.toBeInTheDocument();
+    await expect
+      .element(page.getByRole('button', { name: 'Close without applying' }))
+      .not.toBeInTheDocument();
   });
 
-  test('pins the viewer’s draft to the top of the workspace list', () => {
+  test('pins the viewer’s draft to the top of the workspace list', async () => {
     state.proposals = [
       {
         author: { name: 'Alex Morgan', userId: 'user-alex' },
@@ -132,14 +138,19 @@ describe('IdeaListView', () => {
         workingTripId: 'working-1' as WorkspaceIdea['workingTripId']
       }
     ];
-    render(<IdeaListView />);
-    expect(screen.queryByLabelText('Your pending idea')).toBeNull();
-    expect(screen.getByText('Your draft')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Continue editing' })).toBeTruthy();
-    expect(screen.getByTestId('idea-continue')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Delete draft' })).toBeNull();
-    const titles = screen
-      .getAllByRole('heading', { level: 4 })
+    await render(<IdeaListView />);
+    await expect.element(page.getByLabelText('Your pending idea')).not.toBeInTheDocument();
+    await expect.element(page.getByText('Your draft')).toBeInTheDocument();
+    await expect
+      .element(page.getByRole('button', { name: 'Continue editing' }))
+      .toBeInTheDocument();
+    await expect.element(page.getByTestId('idea-continue')).toBeInTheDocument();
+    await expect
+      .element(page.getByRole('button', { name: 'Delete draft' }))
+      .not.toBeInTheDocument();
+    const titles = page
+      .getByRole('heading', { level: 4 })
+      .elements()
       .map((heading) => heading.textContent);
     expect(titles[0]).toBe('Extend the stay');
     expect(document.querySelector('[data-viewer-draft="true"]')?.className).toContain(

@@ -1,7 +1,8 @@
 import type { Id } from '@groam/backend/data-model';
-import { cleanup, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { IssueDetailView } from './issue-detail-view';
 
 const state = vi.hoisted(() => ({
@@ -43,7 +44,8 @@ vi.mock('@groam/ai/ui/context/agent-context', () => ({
   useSetAgentContext: () => undefined
 }));
 
-vi.mock('@tanstack/react-router', () => ({
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
   Link: ({ children, to }: { children?: ReactNode; to: string }) => <a href={to}>{children}</a>,
   useNavigate: () => vi.fn()
 }));
@@ -101,44 +103,42 @@ beforeEach(() => {
   state.run = null;
 });
 
-afterEach(cleanup);
-
 describe('IssueDetailView', () => {
-  test('shows a loading state while the issue is unresolved', () => {
-    render(<IssueDetailView issueId={issueId} />);
-    expect(screen.getByRole('status', { name: 'Loading issue…' })).toBeTruthy();
+  test('shows a loading state while the issue is unresolved', async () => {
+    await render(<IssueDetailView issueId={issueId} />);
+    await expect.element(page.getByRole('status', { name: 'Loading issue…' })).toBeInTheDocument();
   });
 
-  test('shows a not-found state when the issue is missing', () => {
+  test('shows a not-found state when the issue is missing', async () => {
     state.issue = null;
-    render(<IssueDetailView issueId={issueId} />);
-    expect(screen.getByText('Issue not found')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Back to issues' })).toBeTruthy();
+    await render(<IssueDetailView issueId={issueId} />);
+    await expect.element(page.getByText('Issue not found')).toBeInTheDocument();
+    await expect.element(page.getByRole('link', { name: 'Back to issues' })).toBeInTheDocument();
   });
 
-  test('puts the back link above a title hero and status badge', () => {
+  test('puts the back link above a title hero and status badge', async () => {
     state.issue = loadedIssue();
-    render(<IssueDetailView issueId={issueId} />);
+    await render(<IssueDetailView issueId={issueId} />);
 
-    const back = screen.getByRole('link', { name: 'All issues' });
-    const title = screen.getByRole('heading', { name: /Coast day/u });
+    const back = page.getByRole('link', { name: 'All issues' }).element();
+    const title = page.getByRole('heading', { name: /Coast day/u }).element();
     expect(back.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(screen.getByText('Open')).toBeTruthy();
-    expect(screen.getByText(/opened by/u).textContent).toMatch(/Alex Morgan/u);
-    expect(screen.getByRole('link', { name: 'Atlantic week' })).toBeTruthy();
-    expect(screen.queryByText(/Open · Atlantic week/u)).toBeNull();
+    await expect.element(page.getByText('Open')).toBeInTheDocument();
+    expect(page.getByText(/opened by/u).element().textContent).toMatch(/Alex Morgan/u);
+    await expect.element(page.getByRole('link', { name: 'Atlantic week' })).toBeInTheDocument();
+    await expect.element(page.getByText(/Open · Atlantic week/u)).not.toBeInTheDocument();
   });
 
-  test('renders the issue body as the opening timeline comment', () => {
+  test('renders the issue body as the opening timeline comment', async () => {
     state.issue = loadedIssue();
-    render(<IssueDetailView issueId={issueId} />);
-    expect(screen.getByText('Add a coast day near Lisbon.')).toBeTruthy();
-    expect(screen.getByText('Author')).toBeTruthy();
-    expect(screen.queryByRole('heading', { name: 'Discussion' })).toBeNull();
+    await render(<IssueDetailView issueId={issueId} />);
+    await expect.element(page.getByText('Add a coast day near Lisbon.')).toBeInTheDocument();
+    await expect.element(page.getByText('Author')).toBeInTheDocument();
+    await expect.element(page.getByRole('heading', { name: 'Discussion' })).not.toBeInTheDocument();
     expect(document.querySelector('[data-slot="timeline"]')).toBeTruthy();
   });
 
-  test('renders the issue agent banner when Groam is assigned', () => {
+  test('renders the issue agent banner when Groam is assigned', async () => {
     state.issue = {
       ...loadedIssue(),
       assignee: { agentId: 'issue', kind: 'agent' }
@@ -150,7 +150,7 @@ describe('IssueDetailView', () => {
       issueId,
       status: 'running'
     };
-    render(<IssueDetailView issueId={issueId} />);
-    expect(screen.getByTestId('issue-agent-banner')).toBeTruthy();
+    await render(<IssueDetailView issueId={issueId} />);
+    await expect.element(page.getByTestId('issue-agent-banner')).toBeInTheDocument();
   });
 });

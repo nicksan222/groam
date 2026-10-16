@@ -1,6 +1,6 @@
-import { stubPopoverEnvironment } from '@groam/ui/lib/stub-popover-environment';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type { TripListItem, WorkspaceTripProposal } from '@/features/trips/hooks/use-trips';
 import {
   mockTripWorkspace,
@@ -10,33 +10,48 @@ import {
 import { resetTripWorkspaceView, trips } from '@/features/trips/test-workspace-mocks';
 import { TripListView } from './trip-list-view';
 
-beforeEach(() => {
-  stubPopoverEnvironment();
-  Element.prototype.scrollIntoView = vi.fn();
-  resetTripWorkspaceView();
+vi.mock('@groam/ai/ui/context/agent-context', async () => {
+  const { agentContextModule } = await import('@/features/trips/test-workspace-mocks');
+  return agentContextModule;
 });
 
-afterEach(() => {
-  cleanup();
-  vi.unstubAllGlobals();
+vi.mock('@/features/workspace/workspace-shell/workspace-state', async () => {
+  const { workspaceStateModule } = await import('@/features/trips/test-workspace-mocks');
+  return workspaceStateModule;
+});
+
+vi.mock('@/features/trips/hooks/use-trips', async () => {
+  const { useTripsModule } = await import('@/features/trips/test-workspace-mocks');
+  return useTripsModule;
+});
+
+vi.mock('@tanstack/react-router', async () => {
+  const { tripRouterModule } = await import('@/features/trips/test-workspace-mocks');
+  return tripRouterModule();
+});
+
+beforeEach(() => {
+  resetTripWorkspaceView();
 });
 
 describe('TripListView', () => {
   test('shows trip card chrome while trips load', async () => {
     mockTripWorkspace(trips, { isLoading: true });
-    render(<TripListView />);
+    await render(<TripListView />);
 
-    expect(await screen.findByRole('status', { name: 'Loading trips…' })).toBeTruthy();
+    await expect.element(page.getByRole('status', { name: 'Loading trips…' })).toBeInTheDocument();
     expect(document.querySelectorAll('[data-slot="page-loading"]')).toHaveLength(1);
     expect(document.querySelector('[data-slot="skeleton"]')).toBeNull();
   });
 
   test('invites the group to create a trip when the portfolio is empty', async () => {
-    render(<TripListView />);
+    await render(<TripListView />);
 
-    expect(await screen.findByTestId('empty-screen')).toBeTruthy();
-    expect(screen.getByText('Where should we go next?')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Create your first trip' })).toBeTruthy();
+    await expect.element(page.getByTestId('empty-screen')).toBeInTheDocument();
+    await expect.element(page.getByText('Where should we go next?')).toBeInTheDocument();
+    await expect
+      .element(page.getByRole('button', { name: 'Create your first trip' }))
+      .toBeInTheDocument();
   });
 
   test('renders trip cards with open and settled idea timelines', async () => {
@@ -59,14 +74,14 @@ describe('TripListView', () => {
         })
       ]
     });
-    render(<TripListView />);
+    await render(<TripListView />);
 
-    expect(await screen.findByRole('heading', { name: 'Atlantic week' })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Open dates' })).toBeTruthy();
-    expect(screen.getByText('Add a coast day')).toBeTruthy();
-    expect(screen.getAllByText(/Ideas:/u).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/1 open/u).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/1 applied/u).length).toBeGreaterThan(0);
+    await expect.element(page.getByRole('heading', { name: 'Atlantic week' })).toBeInTheDocument();
+    await expect.element(page.getByRole('heading', { name: 'Open dates' })).toBeInTheDocument();
+    await expect.element(page.getByText('Add a coast day')).toBeInTheDocument();
+    await expect.element(page.getByText(/Ideas:/u).first()).toBeInTheDocument();
+    await expect.element(page.getByText(/1 open/u).first()).toBeInTheDocument();
+    await expect.element(page.getByText(/1 applied/u).first()).toBeInTheDocument();
   });
 
   test('renders a search-and-status toolbar and hides archived trips by default', async () => {
@@ -80,13 +95,15 @@ describe('TripListView', () => {
         })
       ]
     });
-    render(<TripListView />);
+    await render(<TripListView />);
 
-    expect(await screen.findByRole('region', { name: 'Filter trips' })).toBeTruthy();
-    expect(screen.getByRole('searchbox', { name: 'Search trips' })).toBeTruthy();
-    expect(screen.getByLabelText('Filter trips by status').textContent).toContain('Active');
-    expect(screen.getByRole('heading', { name: 'Atlantic week' })).toBeTruthy();
-    expect(screen.queryByRole('heading', { name: 'Lisbon long weekend 37' })).toBeNull();
+    await expect.element(page.getByRole('region', { name: 'Filter trips' })).toBeInTheDocument();
+    await expect.element(page.getByRole('searchbox', { name: 'Search trips' })).toBeInTheDocument();
+    expect(page.getByLabelText('Filter trips by status').element().textContent).toContain('Active');
+    await expect.element(page.getByRole('heading', { name: 'Atlantic week' })).toBeInTheDocument();
+    await expect
+      .element(page.getByRole('heading', { name: 'Lisbon long weekend 37' }))
+      .not.toBeInTheDocument();
   });
 
   test('shows archived trips when the archived filter is selected', async () => {
@@ -100,13 +117,17 @@ describe('TripListView', () => {
         })
       ]
     });
-    render(<TripListView />);
+    await render(<TripListView />);
 
-    await screen.findByRole('heading', { name: 'Atlantic week' });
-    fireEvent.click(screen.getByLabelText('Filter trips by status'));
-    fireEvent.click(screen.getByRole('option', { name: 'Archived' }));
+    await expect.element(page.getByRole('heading', { name: 'Atlantic week' })).toBeInTheDocument();
+    await page.getByLabelText('Filter trips by status').click();
+    await page.getByRole('option', { name: 'Archived' }).click();
 
-    expect(await screen.findByRole('heading', { name: 'Lisbon long weekend 37' })).toBeTruthy();
-    expect(screen.queryByRole('heading', { name: 'Atlantic week' })).toBeNull();
+    await expect
+      .element(page.getByRole('heading', { name: 'Lisbon long weekend 37' }))
+      .toBeInTheDocument();
+    await expect
+      .element(page.getByRole('heading', { name: 'Atlantic week' }))
+      .not.toBeInTheDocument();
   });
 });

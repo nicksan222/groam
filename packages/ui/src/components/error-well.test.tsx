@@ -1,12 +1,11 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { ErrorWell } from './error-well';
 
-afterEach(cleanup);
+test('renders destructive alert copy', async () => {
+  const { container } = await render(<ErrorWell>Search failed</ErrorWell>);
 
-test('renders destructive alert copy', () => {
-  const { container } = render(<ErrorWell>Search failed</ErrorWell>);
-
-  expect(screen.getByRole('alert').textContent).toBe('Search failed');
+  expect(page.getByRole('alert').element().textContent).toBe('Search failed');
   expect(container.firstElementChild?.getAttribute('data-slot')).toBe('error-well');
 });

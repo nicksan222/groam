@@ -81,18 +81,6 @@ const files = execFileSync('git', ['ls-files', '--cached', '--others', '--exclud
     (file) => file && !file.includes('/vendor/') && !file.startsWith('.claude/skills/impeccable/')
   );
 
-const misplacedBrowserSpecs = files.filter(
-  (file) => /\.spec\.[cm]?[jt]sx?$/u.test(file) && !file.startsWith('apps/web/e2e/')
-);
-if (misplacedBrowserSpecs.length > 0) {
-  console.error(
-    `Browser journey specs belong to apps/web/e2e:\n${misplacedBrowserSpecs
-      .map((file) => `  - ${file}`)
-      .join('\n')}`
-  );
-  process.exit(1);
-}
-
 const actionNames = readdirSync('tooling/app-actions/src/actions')
   .filter((file) => file.endsWith('.ts'))
   .map((file) => file.slice(0, -3));
@@ -133,13 +121,13 @@ if (missingActionRegistrations.length > 0) {
 const ambiguousActionImports = files.filter((file) => {
   if (!/\.[cm]?[jt]sx?$/u.test(file) || !existsSync(file)) return false;
   const source = readFileSync(file, 'utf8');
-  return /(?:from\s+|import\(\s*)['"]@groam\/app-actions(?:['"]|\/(?!backend(?:['"]|\/)|ids['"]|playwright(?:['"]|\/)))/u.test(
+  return /(?:from\s+|import\(\s*)['"]@groam\/app-actions(?:['"]|\/(?!backend(?:['"]|\/)|ids['"]|playwright(?:['"]|\/)|vitest(?:['"]|\/)))/u.test(
     source
   );
 });
 if (ambiguousActionImports.length > 0) {
   console.error(
-    `Import app actions through @groam/app-actions/backend, @groam/app-actions/ids, or @groam/app-actions/playwright:\n${ambiguousActionImports
+    `Import app actions through @groam/app-actions/backend, @groam/app-actions/ids, @groam/app-actions/playwright, or @groam/app-actions/vitest:\n${ambiguousActionImports
       .map((file) => `  - ${file}`)
       .join('\n')}`
   );
@@ -161,7 +149,7 @@ const manualProductInteractions = productInteractionFiles.flatMap((file) => {
 });
 if (manualProductInteractions.length > 0) {
   console.error(
-    `Compose product interactions through @groam/app-actions/playwright:\n${manualProductInteractions
+    `Compose product interactions through @groam/app-actions/vitest (journeys) or @groam/app-actions/playwright (films):\n${manualProductInteractions
       .map((file) => `  - ${file}`)
       .join('\n')}`
   );
@@ -231,7 +219,7 @@ const messages: Record<ConventionFinding['category'], string> = {
   'legacy-modules': 'Use TypeScript instead of .mjs for repository-owned modules',
   names: 'Source filenames must use kebab-case',
   'parent-imports': 'Parent-directory imports must use package aliases',
-  'raw-convex-access': 'Raw Convex database access must stay inside modules and routes',
+  'raw-convex-access': 'Raw Convex database access must stay inside components, modules and routes',
   'route-imports':
     'Web route files must only compose feature views and may import from @/features, @/lib, @tanstack/react-router, or @groam packages',
   'ui-imports':

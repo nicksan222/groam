@@ -1,17 +1,12 @@
-import { stubPopoverEnvironment } from '@groam/ui/lib/stub-popover-environment';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type { DiscussionMessage } from '@/features/discussions/hooks/use-discussion-thread';
 import { ThreadMessage } from './thread-message';
 
 vi.mock('@groam/ai/ui/chat/assistant-chat-message', () => ({
   AssistantChatMessage: ({ message }: { message: { text: string } }) => <div>{message.text}</div>
 }));
-
-vi.mock('@groam/ui/components/dropdown-menu', async () => {
-  const { dropdownMenuTestMock } = await import('@/lib/test-mocks/dropdown-menu');
-  return dropdownMenuTestMock;
-});
 
 function message(partial: Partial<DiscussionMessage> = {}): DiscussionMessage {
   return {
@@ -28,18 +23,12 @@ function message(partial: Partial<DiscussionMessage> = {}): DiscussionMessage {
   } as DiscussionMessage;
 }
 
-beforeEach(() => {
-  stubPopoverEnvironment();
-});
-
 afterEach(() => {
-  cleanup();
-  vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
 
-test('keeps reaction stamps and edit controls out of the always-visible row', () => {
-  render(
+test('keeps reaction stamps and edit controls out of the always-visible row', async () => {
+  await render(
     <ThreadMessage
       message={message({ mine: true })}
       onEdit={vi.fn()}
@@ -49,26 +38,27 @@ test('keeps reaction stamps and edit controls out of the always-visible row', ()
     />
   );
 
-  expect(screen.getByText('Hi!')).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Add reaction' })).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Message actions' })).toBeTruthy();
-  expect(screen.queryByRole('button', { name: 'Agree' })).toBeNull();
-  expect(screen.queryByText('👍')).toBeNull();
+  await expect.element(page.getByText('Hi!')).toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Add reaction' })).toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Message actions' })).toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Agree' })).not.toBeInTheDocument();
+  await expect.element(page.getByText('👍')).not.toBeInTheDocument();
 });
 
-test('reacts from the stamp picker', () => {
+test('reacts from the stamp picker', async () => {
   const onReact = vi.fn();
-  render(<ThreadMessage message={message()} onReact={onReact} reactions={[]} />);
+  await render(<ThreadMessage message={message()} onReact={onReact} reactions={[]} />);
 
-  fireEvent.click(screen.getByRole('button', { name: 'Add reaction' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Agree' }));
+  await page.getByText('Hi!').hover();
+  await page.getByRole('button', { name: 'Add reaction' }).click();
+  await page.getByRole('button', { name: 'Agree' }).click();
 
   expect(onReact).toHaveBeenCalledWith('👍');
 });
 
-test('toggles an existing reaction chip on the bubble', () => {
+test('toggles an existing reaction chip on the bubble', async () => {
   const onReact = vi.fn();
-  render(
+  await render(
     <ThreadMessage
       message={message()}
       onReact={onReact}
@@ -76,12 +66,12 @@ test('toggles an existing reaction chip on the bubble', () => {
     />
   );
 
-  fireEvent.click(screen.getByRole('button', { name: "Let's go" }));
+  await page.getByRole('button', { name: "Let's go" }).click();
   expect(onReact).toHaveBeenCalledWith('🎉');
 });
 
-test("does not offer edit or delete on someone else's message", () => {
-  render(
+test("does not offer edit or delete on someone else's message", async () => {
+  await render(
     <ThreadMessage
       message={message({ author: { name: 'Ada', userId: 'user-a' }, mine: false })}
       onReact={vi.fn()}
@@ -89,12 +79,14 @@ test("does not offer edit or delete on someone else's message", () => {
     />
   );
 
-  expect(screen.queryByRole('button', { name: 'Message actions' })).toBeNull();
+  await expect
+    .element(page.getByRole('button', { name: 'Message actions' }))
+    .not.toBeInTheDocument();
 });
 
 test('edits a message from the actions menu', async () => {
   const onEdit = vi.fn();
-  render(
+  await render(
     <ThreadMessage
       message={message({ mine: true, text: 'Hi!' })}
       onEdit={onEdit}
@@ -104,10 +96,11 @@ test('edits a message from the actions menu', async () => {
     />
   );
 
-  fireEvent.click(screen.getByRole('button', { name: 'Message actions' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
-  fireEvent.change(screen.getByLabelText('Edit message'), { target: { value: 'See you in Rome' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  await page.getByText('Hi!').hover();
+  await page.getByRole('button', { name: 'Message actions' }).click();
+  await page.getByRole('menuitem', { name: 'Edit' }).click();
+  await page.getByLabelText('Edit message').fill('See you in Rome');
+  await page.getByRole('button', { name: 'Save' }).click();
 
   expect(onEdit).toHaveBeenCalledWith('See you in Rome');
 });
@@ -115,7 +108,7 @@ test('edits a message from the actions menu', async () => {
 test('deletes a message after confirmation', async () => {
   const onRemove = vi.fn();
   vi.spyOn(window, 'confirm').mockReturnValue(true);
-  render(
+  await render(
     <ThreadMessage
       message={message({ mine: true })}
       onEdit={vi.fn()}
@@ -125,8 +118,9 @@ test('deletes a message after confirmation', async () => {
     />
   );
 
-  fireEvent.click(screen.getByRole('button', { name: 'Message actions' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+  await page.getByText('Hi!').hover();
+  await page.getByRole('button', { name: 'Message actions' }).click();
+  await page.getByRole('menuitem', { name: 'Delete' }).click();
 
-  await waitFor(() => expect(onRemove).toHaveBeenCalled());
+  await vi.waitFor(() => expect(onRemove).toHaveBeenCalled());
 });

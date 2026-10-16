@@ -1,17 +1,16 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { SettingsPanel } from './settings-panel';
 
-afterEach(cleanup);
-
-test('renders a padded settings panel around its children', () => {
-  const { container } = render(
+test('renders a padded settings panel around its children', async () => {
+  const { container } = await render(
     <SettingsPanel>
       <p>Profile fields</p>
     </SettingsPanel>
   );
 
-  expect(screen.getByText('Profile fields')).toBeTruthy();
+  await expect.element(page.getByText('Profile fields')).toBeInTheDocument();
   expect(container.firstElementChild?.getAttribute('data-slot')).toBe('settings-panel');
   expect(container.firstElementChild?.className).toContain('dashboard-panel');
 });

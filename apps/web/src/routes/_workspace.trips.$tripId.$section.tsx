@@ -11,7 +11,9 @@ export const Route = createFileRoute('/_workspace/trips/$tripId/$section')({
 });
 
 function TripSectionRoute() {
-  const { section, tripId } = useResolvedParams(Route.useParams());
+  // Redirects keep the reference as written; ReferenceProvider canonicalizes it once.
+  const params = Route.useParams();
+  const { section, tripId } = useResolvedParams(params);
   const { addDestination = false, issue, proposal } = Route.useSearch();
 
   if (section === 'issues' && issue) {
@@ -21,7 +23,7 @@ function TripSectionRoute() {
   if (section === 'versions' && proposal) {
     return (
       <Navigate
-        params={{ proposalId: proposal, tripId, view: 'compare' }}
+        params={{ proposalId: proposal, tripId: params.tripId, view: 'compare' }}
         replace
         to="/trips/$tripId/ideas/$proposalId/$view"
       />
@@ -29,13 +31,19 @@ function TripSectionRoute() {
   }
 
   if (section === 'versions') {
-    return <Navigate params={{ section: 'ideas', tripId }} replace to="/trips/$tripId/$section" />;
+    return (
+      <Navigate
+        params={{ section: 'ideas', tripId: params.tripId }}
+        replace
+        to="/trips/$tripId/$section"
+      />
+    );
   }
 
   if (section === 'ideas' && proposal) {
     return (
       <Navigate
-        params={{ proposalId: proposal, tripId, view: 'compare' }}
+        params={{ proposalId: proposal, tripId: params.tripId, view: 'compare' }}
         replace
         to="/trips/$tripId/ideas/$proposalId/$view"
       />
@@ -44,7 +52,11 @@ function TripSectionRoute() {
 
   if (section === 'comments' || section === 'decisions' || !isTripSection(section)) {
     return (
-      <Navigate params={{ section: 'overview', tripId }} replace to="/trips/$tripId/$section" />
+      <Navigate
+        params={{ section: 'overview', tripId: params.tripId }}
+        replace
+        to="/trips/$tripId/$section"
+      />
     );
   }
 

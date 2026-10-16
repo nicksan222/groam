@@ -93,7 +93,7 @@ export function CreateTripIdeaDialog({
           <Select
             disabled={tripsLoading || isCreating || trips.length === 0}
             onValueChange={(value) => onSelectedTripIdChange(value as Id<'trips'>)}
-            value={resolvedTripId}
+            value={resolvedTripId ?? ''}
           >
             <SelectTrigger aria-label="Trip" className="w-full">
               <SelectValue placeholder={tripsLoading ? 'Loading trips…' : 'Choose a trip'} />

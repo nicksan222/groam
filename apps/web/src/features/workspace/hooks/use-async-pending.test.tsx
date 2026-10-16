@@ -1,10 +1,10 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { describe, expect, test } from 'vite-plus/test';
 import { useAsyncPending } from './use-async-pending';
 
 describe('useAsyncPending', () => {
   test('sets pending while the action runs and clears afterward', async () => {
-    const { result } = renderHook(() => useAsyncPending());
+    const { result } = await renderHook(() => useAsyncPending());
     expect(result.current.isPending).toBe(false);
 
     let resolve!: (value: string) => void;
@@ -13,7 +13,7 @@ describe('useAsyncPending', () => {
     });
 
     let finished: Promise<string | undefined>;
-    act(() => {
+    await act(() => {
       finished = result.current.run(() => promise);
     });
     expect(result.current.isPending).toBe(true);
@@ -26,7 +26,7 @@ describe('useAsyncPending', () => {
   });
 
   test('clears pending when the action rejects', async () => {
-    const { result } = renderHook(() => useAsyncPending());
+    const { result } = await renderHook(() => useAsyncPending());
     await act(async () => {
       await expect(
         result.current.run(async () => {

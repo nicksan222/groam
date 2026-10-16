@@ -1,5 +1,5 @@
-import { expect, test } from 'vite-plus/test';
-import { api } from '#convex-generated/api';
+import { expect, onTestFinished, test, vi } from 'vite-plus/test';
+import { api, components } from '#convex-generated/api';
 import {
   isOrganizationManager,
   requireWorkspace,
@@ -33,6 +33,37 @@ test('denies callers who are no longer members of the active organization', asyn
   await expect(revoked.client.query(api.routes.media.list.run, { limit: 1 })).rejects.toThrow(
     /Organization access denied|No active organization/u
   );
+});
+
+test('denies sessions that were signed out or have expired', async () => {
+  const signedOut = await createAuthenticatedTest({ organization: { name: 'Signed Out Group' } });
+  await signedOut.authClient.signOut();
+  await expect(signedOut.client.query(api.routes.media.list.run, { limit: 1 })).rejects.toThrow(
+    'Not authenticated'
+  );
+
+  const expired = await createAuthenticatedTest({ organization: { name: 'Expired Group' } });
+  await expect(
+    expired.client.query(api.routes.media.list.run, { limit: 1 })
+  ).resolves.toBeDefined();
+  const aYearLater = vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 365 * 24 * 60 * 60 * 1000);
+  onTestFinished(() => aYearLater.mockRestore());
+  await expect(expired.client.query(api.routes.media.list.run, { limit: 1 })).rejects.toThrow(
+    'Not authenticated'
+  );
+});
+
+test('ignores a session that belongs to someone else', async () => {
+  const { addUser, owner } = await setupGroup();
+  const member = await addUser('Member');
+  const { data } = await owner.authClient.getSession();
+  if (!data) throw new Error('The owner has no session');
+  const accessAs = (userId: string) =>
+    owner.client.run((ctx) =>
+      ctx.runQuery(components.betterAuth.workspace.access, { sessionId: data.session.id, userId })
+    );
+  await expect(accessAs(owner.userId)).resolves.not.toBeNull();
+  await expect(accessAs(member.userId)).resolves.toBeNull();
 });
 
 test('roster includes the authenticated caller and teammates in the active organization', async () => {

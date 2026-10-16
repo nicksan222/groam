@@ -1,9 +1,9 @@
 import { SidebarProvider } from '@groam/ui/components/sidebar';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
-import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
+import { beforeEach, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { resetSidebarChromeStore, useSidebarChromeStore } from '@/lib/stores/sidebar-chrome-store';
-import { stubMatchMedia } from '@/testing/stub-match-media';
 import { tripListItem } from './test-fixtures';
 import { TripsSidebarNav } from './trips-sidebar-nav';
 
@@ -14,7 +14,8 @@ const state = vi.hoisted(() => ({
   trips: [] as ReturnType<typeof tripListItem>[]
 }));
 
-vi.mock('@tanstack/react-router', () => ({
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
   Link: ({ children, to, ...props }: { children?: ReactNode; to: string }) => (
     <a href={to} {...props}>
       {children}
@@ -25,7 +26,8 @@ vi.mock('@tanstack/react-router', () => ({
   useParams: () => ({})
 }));
 
-vi.mock('convex/react', () => ({
+vi.mock('convex/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('convex/react')>()),
   useMutation: () => vi.fn()
 }));
 
@@ -43,7 +45,7 @@ vi.mock('@/features/trips/hooks/use-trips', () => ({
   })
 }));
 
-function renderNav() {
+async function renderNav() {
   return render(
     <SidebarProvider>
       <ul>
@@ -61,33 +63,27 @@ beforeEach(() => {
   state.pathname = '/trips';
   state.status = 'Exhausted';
   state.trips = [];
-  stubMatchMedia();
 });
 
-afterEach(() => {
-  cleanup();
-  vi.unstubAllGlobals();
+test('offers a new trip item when the portfolio is empty', async () => {
+  await renderNav();
+  await expect.element(page.getByText('New trip')).toBeInTheDocument();
+  await page.getByText('New trip').click();
+  await expect.element(page.getByText('Create trip dialog')).toBeInTheDocument();
 });
 
-test('offers a new trip item when the portfolio is empty', () => {
-  renderNav();
-  expect(screen.getByText('New trip')).toBeTruthy();
-  fireEvent.click(screen.getByText('New trip'));
-  expect(screen.getByText('Create trip dialog')).toBeTruthy();
-});
-
-test('lists trips and collapses them from the parent action without leaving the index link', () => {
+test('lists trips and collapses them from the parent action without leaving the index link', async () => {
   state.trips = [tripListItem({ name: 'Atlantic week' })];
 
-  renderNav();
-  expect(screen.getByText('Atlantic week')).toBeTruthy();
-  expect(screen.getByRole('link', { name: 'Trips' }).getAttribute('href')).toBe('/trips');
-  expect(screen.queryByRole('button', { name: 'Create trip' })).toBeNull();
+  await renderNav();
+  await expect.element(page.getByText('Atlantic week')).toBeInTheDocument();
+  await expect.element(page.getByRole('link', { name: 'Trips' })).toHaveAttribute('href', '/trips');
+  await expect.element(page.getByRole('button', { name: 'Create trip' })).not.toBeInTheDocument();
 
-  fireEvent.click(screen.getByRole('link', { name: 'Trips' }));
-  expect(screen.getByText('Atlantic week')).toBeTruthy();
+  await page.getByRole('link', { name: 'Trips' }).click();
+  await expect.element(page.getByText('Atlantic week')).toBeInTheDocument();
 
-  fireEvent.click(screen.getByRole('button', { name: 'Collapse trips' }));
-  expect(screen.queryByText('Atlantic week')).toBeNull();
-  expect(screen.getByRole('button', { name: 'Expand trips' })).toBeTruthy();
+  await page.getByRole('button', { name: 'Collapse trips' }).click();
+  await expect.element(page.getByText('Atlantic week')).not.toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Expand trips' })).toBeInTheDocument();
 });

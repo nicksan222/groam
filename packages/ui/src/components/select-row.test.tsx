@@ -1,14 +1,13 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import { MapPin } from 'lucide-react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { SelectRow } from './select-row';
 
-afterEach(cleanup);
-
-test('renders a selectable row and reports selection', () => {
+test('renders a selectable row and reports selection', async () => {
   const onSelect = vi.fn();
 
-  render(
+  await render(
     <SelectRow
       icon={<MapPin />}
       onSelect={onSelect}
@@ -18,8 +17,8 @@ test('renders a selectable row and reports selection', () => {
     />
   );
 
-  expect(screen.getByText('Lisbon')).toBeTruthy();
-  expect(screen.getByText('City · Portugal')).toBeTruthy();
-  fireEvent.click(screen.getByRole('button', { name: /Lisbon/ }));
+  await expect.element(page.getByText('Lisbon')).toBeInTheDocument();
+  await expect.element(page.getByText('City · Portugal')).toBeInTheDocument();
+  await page.getByRole('button', { name: /Lisbon/ }).click();
   expect(onSelect).toHaveBeenCalledTimes(1);
 });

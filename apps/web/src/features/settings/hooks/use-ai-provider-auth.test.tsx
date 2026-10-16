@@ -1,11 +1,12 @@
-import { act, renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { useAiProviderAuthStore, useAiSettingsDraftStore } from '@/lib/stores/settings-stores';
 import { useAiProviderAuth } from './use-ai-provider-auth';
 
 const convex = vi.hoisted(() => ({ save: vi.fn() }));
 
-vi.mock('convex/react', () => ({
+vi.mock('convex/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('convex/react')>()),
   useMutation: () => convex.save
 }));
 
@@ -43,9 +44,9 @@ describe('useAiProviderAuth', () => {
         )
       );
 
-      renderHook(() => useAiProviderAuth('openrouter', target, organizationId));
+      await renderHook(() => useAiProviderAuth('openrouter', target, organizationId));
 
-      await waitFor(() =>
+      await vi.waitFor(() =>
         expect(convex.save).toHaveBeenCalledWith({
           apiKey: `${target}-key`,
           baseUrl: null,
@@ -62,15 +63,15 @@ describe('useAiProviderAuth', () => {
     }
   );
 
-  test('returns no connection for a provider without an authentication strategy', () => {
-    const { result } = renderHook(() => useAiProviderAuth('openai', 'personal', null));
+  test('returns no connection for a provider without an authentication strategy', async () => {
+    const { result } = await renderHook(() => useAiProviderAuth('openai', 'personal', null));
 
     expect(result.current).toBeNull();
     expect(convex.save).not.toHaveBeenCalled();
   });
 
   test('binds a new organization connection to its initiating organization', async () => {
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useAiProviderAuth('openrouter', 'organization', 'organization-a')
     );
 
@@ -85,7 +86,7 @@ describe('useAiProviderAuth', () => {
 
   test('surfaces failures while starting a connection', async () => {
     vi.spyOn(crypto.subtle, 'digest').mockRejectedValueOnce(new Error('Crypto unavailable'));
-    const { result } = renderHook(() => useAiProviderAuth('openrouter', 'personal', null));
+    const { result } = await renderHook(() => useAiProviderAuth('openrouter', 'personal', null));
 
     await act(() => result.current?.connect());
 
@@ -109,9 +110,9 @@ describe('useAiProviderAuth', () => {
     );
     vi.stubGlobal('fetch', fetchMock);
     convex.save.mockRejectedValueOnce(new Error('Network unavailable'));
-    const { result } = renderHook(() => useAiProviderAuth('openai', 'personal', null));
+    const { result } = await renderHook(() => useAiProviderAuth('openai', 'personal', null));
 
-    await waitFor(() =>
+    await vi.waitFor(() =>
       expect(useAiSettingsDraftStore.getState().error).toBe('Network unavailable')
     );
     expect(useAiProviderAuthStore.getState().session).not.toBeNull();
@@ -134,9 +135,11 @@ describe('useAiProviderAuth', () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
 
-    renderHook(() => useAiProviderAuth('openai', 'organization', 'organization-b'));
+    await renderHook(() => useAiProviderAuth('openai', 'organization', 'organization-b'));
 
-    await waitFor(() => expect(useAiSettingsDraftStore.getState().error).toContain('Switch back'));
+    await vi.waitFor(() =>
+      expect(useAiSettingsDraftStore.getState().error).toContain('Switch back')
+    );
     expect(fetchMock).not.toHaveBeenCalled();
     expect(window.location.search).toBe('?code=organization-code');
     expect(useAiProviderAuthStore.getState().session).not.toBeNull();

@@ -1,11 +1,10 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, expect, test } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#tsx/components/tabs';
 
-afterEach(cleanup);
-
-test('connects the selected tab with its visible panel', () => {
-  render(
+test('connects the selected tab with its visible panel', async () => {
+  await render(
     <Tabs defaultValue="day">
       <TabsList aria-label="Planning tools">
         <TabsTrigger value="day">Day planner</TabsTrigger>
@@ -15,8 +14,10 @@ test('connects the selected tab with its visible panel', () => {
       <TabsContent value="route">Route content</TabsContent>
     </Tabs>
   );
-  expect(screen.getByRole('tabpanel', { name: 'Day planner' }).textContent).toBe('Day content');
-  fireEvent.mouseDown(screen.getByRole('tab', { name: 'Route' }), { button: 0, ctrlKey: false });
-  expect(screen.getByRole('tabpanel', { name: 'Route' }).textContent).toBe('Route content');
-  expect(screen.queryByRole('tabpanel', { name: 'Day planner' })).toBeNull();
+  expect(page.getByRole('tabpanel', { name: 'Day planner' }).element().textContent).toBe(
+    'Day content'
+  );
+  await page.getByRole('tab', { name: 'Route' }).click();
+  expect(page.getByRole('tabpanel', { name: 'Route' }).element().textContent).toBe('Route content');
+  await expect.element(page.getByRole('tabpanel', { name: 'Day planner' })).not.toBeInTheDocument();
 });

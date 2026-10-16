@@ -67,15 +67,10 @@ typecheck:
 test:
     vp run test
 
-# Run browser tests against the CI-style static site.
+# Run browser journeys against the running local backend (`just dev`).
 [group('quality')]
-e2e:
-    vp run test:e2e
-
-# Run browser tests against Vite on localhost:5173.
-[group('quality')]
-e2e-local:
-    vp run test:e2e:local
+journeys:
+    vp run test:journeys
 
 # Format manifests and source files.
 [group('quality')]

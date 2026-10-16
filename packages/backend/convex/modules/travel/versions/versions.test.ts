@@ -561,6 +561,27 @@ test('assigns Idea reviewer on create and accepts advisory agent feedback withou
   ]);
 });
 
+test('gives the scheduled Idea reviewer its context without a user session', async () => {
+  const { owner, tripId } = await setupTrip();
+  const version = await owner.client.mutation(api.routes.trips.versions.create.run, { tripId });
+  await owner.client.mutation(api.routes.trips.update.run, {
+    input: changedTripDetails,
+    tripId: version.workingTripId
+  });
+  const context = internal.modules.travel.versions.agent.review.index.context;
+  // Review runs are scheduled, so they query as no one: `owner.test` carries no identity.
+  await expect(owner.test.query(context, { proposalId: version.proposalId })).rejects.toThrow(
+    'Submit the proposal before requesting idea review'
+  );
+
+  await owner.client.action(api.routes.trips.versions.submit.run, {
+    proposalId: version.proposalId
+  });
+  const reviewed = await owner.test.query(context, { proposalId: version.proposalId });
+  expect(reviewed).toMatchObject({ sourceTripId: tripId, workingTripId: version.workingTripId });
+  expect(reviewed.changes.length).toBeGreaterThan(0);
+});
+
 test('stores a passing Groam review without adding blocking feedback', async () => {
   const { owner, tripId, users } = await setupTrip(1);
   const author = users[0];

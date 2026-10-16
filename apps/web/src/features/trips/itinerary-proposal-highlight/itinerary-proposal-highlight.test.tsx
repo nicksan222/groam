@@ -1,10 +1,9 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, test } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { describe, expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type { ItineraryChange } from '@/features/trips/hooks/itinerary-proposal-changes';
 import { ItineraryDetailsChangeCard } from './itinerary-details-change-card';
 import { ItineraryProposalHighlight } from './itinerary-proposal-highlight';
-
-afterEach(cleanup);
 
 const change = (overrides: Partial<ItineraryChange> = {}): ItineraryChange => ({
   change: 'modified',
@@ -29,27 +28,27 @@ function highlight(kind: ItineraryChange['change']) {
 }
 
 describe('ItineraryProposalHighlight', () => {
-  test('leaves unchanged itinerary items without idea chrome', () => {
-    render(
+  test('leaves unchanged itinerary items without idea chrome', async () => {
+    await render(
       <ItineraryProposalHighlight change={null}>
         <h3>Lisbon</h3>
       </ItineraryProposalHighlight>
     );
 
-    expect(screen.getByRole('heading', { name: 'Lisbon' })).toBeTruthy();
-    expect(screen.queryByText('New')).toBeNull();
-    expect(screen.queryByText('Changed')).toBeNull();
-    expect(screen.queryByText('Removed from shared trip')).toBeNull();
+    await expect.element(page.getByRole('heading', { name: 'Lisbon' })).toBeInTheDocument();
+    await expect.element(page.getByText('New')).not.toBeInTheDocument();
+    await expect.element(page.getByText('Changed')).not.toBeInTheDocument();
+    await expect.element(page.getByText('Removed from shared trip')).not.toBeInTheDocument();
     expect(document.querySelector('[data-proposal-change]')).toBeNull();
   });
 
-  test('marks added, changed, and removed items with a quiet left rail instead of a full outline', () => {
-    const { rerender } = render(
+  test('marks added, changed, and removed items with a quiet left rail instead of a full outline', async () => {
+    const { rerender } = await render(
       <ItineraryProposalHighlight change={change({ change: 'added', fields: [] })}>
         <h3>Porto</h3>
       </ItineraryProposalHighlight>
     );
-    expect(screen.getByText('New').className).toContain('sr-only');
+    await expect.element(page.getByText('New')).toHaveClass('sr-only');
     expect(highlight('added')?.className).toContain('p-0');
     expect(highlight('added')?.className).not.toContain('p-2');
     expect(highlight('added')?.className).not.toContain('border-emerald-500');
@@ -59,13 +58,15 @@ describe('ItineraryProposalHighlight', () => {
     );
     expect(document.querySelector('[data-slot="badge"]')).toBeNull();
 
-    rerender(
+    await rerender(
       <ItineraryProposalHighlight change={change()}>
         <h3>Lisbon</h3>
       </ItineraryProposalHighlight>
     );
-    expect(screen.getByText('Changed').className).toContain('sr-only');
-    expect(screen.getByText('Day notes: Lisbon notes → Porto notes')).toBeTruthy();
+    await expect.element(page.getByText('Changed')).toHaveClass('sr-only');
+    await expect
+      .element(page.getByText('Day notes: Lisbon notes → Porto notes'))
+      .toBeInTheDocument();
     expect(highlight('modified')?.className).toContain('p-0');
     expect(highlight('modified')?.className).not.toContain('p-2');
     expect(highlight('modified')?.className).not.toContain('border-amber-500');
@@ -74,12 +75,12 @@ describe('ItineraryProposalHighlight', () => {
     );
     expect(document.querySelector('[data-slot="badge"]')).toBeNull();
 
-    rerender(
+    await rerender(
       <ItineraryProposalHighlight change={change({ change: 'removed', fields: [] })}>
         <h3>Faro</h3>
       </ItineraryProposalHighlight>
     );
-    expect(screen.getByText('Removed from shared trip').className).toContain('sr-only');
+    await expect.element(page.getByText('Removed from shared trip')).toHaveClass('sr-only');
     expect(highlight('removed')?.className).toContain('p-0');
     expect(highlight('removed')?.className).not.toContain('p-2');
     expect(highlight('removed')?.className).toContain('opacity-70');
@@ -92,8 +93,8 @@ describe('ItineraryProposalHighlight', () => {
 });
 
 describe('ItineraryDetailsChangeCard', () => {
-  test('renders trip-detail diffs in a border well with warmer copy and diff pills', () => {
-    render(
+  test('renders trip-detail diffs in a border well with warmer copy and diff pills', async () => {
+    await render(
       <ItineraryDetailsChangeCard
         change={change({
           entity: 'details',
@@ -121,9 +122,11 @@ describe('ItineraryDetailsChangeCard', () => {
       />
     );
 
-    const title = screen.getByRole('heading', {
-      name: 'Trip details differ from the shared trip'
-    });
+    const title = page
+      .getByRole('heading', {
+        name: 'Trip details differ from the shared trip'
+      })
+      .element();
     const card = title.closest('section');
     expect(card?.className).toContain('border');
     expect(card?.className).toContain('rounded-lg');
@@ -131,25 +134,29 @@ describe('ItineraryDetailsChangeCard', () => {
     expect(card?.className).not.toContain('dashboard-panel');
     expect(card?.className).not.toContain('border-amber-500');
     expect(card?.getAttribute('data-proposal-change')).toBe('modified');
-    expect(screen.getByText('Conflict')).toBeTruthy();
-    expect(
-      screen.getByText(
-        'The shared trip and your idea have different trip details. Choose what to keep.'
+    await expect.element(page.getByText('Conflict')).toBeInTheDocument();
+    await expect
+      .element(
+        page.getByText(
+          'The shared trip and your idea have different trip details. Choose what to keep.'
+        )
       )
-    ).toBeTruthy();
-    expect(screen.queryByText(/Duration: 11 days → 42 days · Start date/)).toBeNull();
+      .toBeInTheDocument();
+    await expect
+      .element(page.getByText(/Duration: 11 days → 42 days · Start date/))
+      .not.toBeInTheDocument();
 
     const text = card?.textContent ?? '';
     expect(text.indexOf('Trip details differ from the shared trip')).toBeLessThan(
       text.indexOf('Duration')
     );
-    expect(screen.getByText('Duration')).toBeTruthy();
-    expect(screen.getByText('11 days')).toBeTruthy();
-    expect(screen.getByText('42 days')).toBeTruthy();
-    expect(screen.getByText('Start date')).toBeTruthy();
-    expect(screen.getByText('Not set')).toBeTruthy();
-    expect(screen.getByText('2026-08-12')).toBeTruthy();
-    expect(screen.getByLabelText('What changed')).toBeTruthy();
+    await expect.element(page.getByText('Duration')).toBeInTheDocument();
+    await expect.element(page.getByText('11 days')).toBeInTheDocument();
+    await expect.element(page.getByText('42 days')).toBeInTheDocument();
+    await expect.element(page.getByText('Start date')).toBeInTheDocument();
+    await expect.element(page.getByText('Not set')).toBeInTheDocument();
+    await expect.element(page.getByText('2026-08-12')).toBeInTheDocument();
+    await expect.element(page.getByLabelText('What changed')).toBeInTheDocument();
     expect(document.querySelector('[data-slot="badge"]')).toBeNull();
   });
 });

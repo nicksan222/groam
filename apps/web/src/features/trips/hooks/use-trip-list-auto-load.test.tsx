@@ -1,14 +1,13 @@
-import { act, cleanup, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { afterEach, describe, expect, test, vi } from 'vite-plus/test';
 import { useTripListAutoLoad } from './use-trip-list-auto-load';
 
 afterEach(() => {
-  cleanup();
   vi.unstubAllGlobals();
 });
 
 describe('useTripListAutoLoad', () => {
-  test('loads once when visible, waits during loading, and rearms for the next page', () => {
+  test('loads once when visible, waits during loading, and rearms for the next page', async () => {
     const callbacks: IntersectionObserverCallback[] = [];
     const observe = vi.fn();
     const disconnect = vi.fn();
@@ -23,45 +22,43 @@ describe('useTripListAutoLoad', () => {
       }
     );
     const loadMore = vi.fn();
-    const { result, rerender, unmount } = renderHook(
+    const { result, rerender, unmount } = await renderHook(
       ({ status }: { status: 'LoadingMore' | 'CanLoadMore' | 'Exhausted' }) =>
         useTripListAutoLoad({ loadMore, status }),
       { initialProps: { status: 'LoadingMore' } }
     );
     result.current.current = document.createElement('div');
-    rerender({ status: 'CanLoadMore' });
-    const emit = (index: number, isIntersecting: boolean) =>
-      act(() =>
+    await rerender({ status: 'CanLoadMore' });
+    const emit = async (index: number, isIntersecting: boolean) =>
+      await act(() =>
         callbacks[index]?.(
           [{ isIntersecting } as IntersectionObserverEntry],
           {} as IntersectionObserver
         )
       );
-    emit(0, false);
+    await emit(0, false);
     expect(loadMore).not.toHaveBeenCalled();
-    emit(0, true);
-    emit(0, true);
+    await emit(0, true);
+    await emit(0, true);
     expect(loadMore).toHaveBeenCalledExactlyOnceWith(25);
-    rerender({ status: 'LoadingMore' });
-    emit(0, true);
+    await rerender({ status: 'LoadingMore' });
+    await emit(0, true);
     expect(loadMore).toHaveBeenCalledTimes(1);
-    rerender({ status: 'CanLoadMore' });
-    emit(1, true);
+    await rerender({ status: 'CanLoadMore' });
+    await emit(1, true);
     expect(loadMore).toHaveBeenCalledTimes(2);
-    rerender({ status: 'Exhausted' });
-    emit(1, true);
+    await rerender({ status: 'Exhausted' });
+    await emit(1, true);
     expect(loadMore).toHaveBeenCalledTimes(2);
     expect(observe).toHaveBeenCalledTimes(2);
-    unmount();
+    await unmount();
     expect(disconnect).toHaveBeenCalled();
   });
 
-  test('keeps manual pagination usable when the observer API is unavailable', () => {
+  test('keeps manual pagination usable when the observer API is unavailable', async () => {
     vi.stubGlobal('IntersectionObserver', undefined);
     const loadMore = vi.fn();
-    expect(() =>
-      renderHook(() => useTripListAutoLoad({ loadMore, status: 'CanLoadMore' }))
-    ).not.toThrow();
+    await renderHook(() => useTripListAutoLoad({ loadMore, status: 'CanLoadMore' }));
     expect(loadMore).not.toHaveBeenCalled();
   });
 });

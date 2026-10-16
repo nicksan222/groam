@@ -1,5 +1,5 @@
 import type { Id } from '@groam/backend/data-model';
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { describe, expect, test } from 'vite-plus/test';
 import type { IssueListItem } from './issue-list-item';
 import { useIssueListFilters } from './use-issue-list-filters';
@@ -18,12 +18,12 @@ function issue(
 }
 
 describe('useIssueListFilters', () => {
-  test('defaults to open issues', () => {
+  test('defaults to open issues', async () => {
     const issues = [
       issue({ id: 'i1' as Id<'tripIssues'>, status: 'open', title: 'Coast' }),
       issue({ id: 'i2' as Id<'tripIssues'>, status: 'closed', title: 'Done' })
     ];
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useIssueListFilters({
         emptyFilterMessage: (filter) => `empty:${filter}`,
         issues
@@ -35,12 +35,12 @@ describe('useIssueListFilters', () => {
     expect(result.current.empty).toBe('empty:open');
   });
 
-  test('honors an external default status', () => {
+  test('honors an external default status', async () => {
     const issues = [
       issue({ id: 'i1' as Id<'tripIssues'>, status: 'open', title: 'Coast' }),
       issue({ id: 'i2' as Id<'tripIssues'>, status: 'closed', title: 'Done' })
     ];
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useIssueListFilters({
         defaultStatus: 'closed',
         emptyFilterMessage: () => 'none',
@@ -52,28 +52,28 @@ describe('useIssueListFilters', () => {
     expect(result.current.hasExtraFilters).toBe(false);
   });
 
-  test('clearing status resets to the default filter', () => {
-    const { result } = renderHook(() =>
+  test('clearing status resets to the default filter', async () => {
+    const { result } = await renderHook(() =>
       useIssueListFilters({
         emptyFilterMessage: () => 'none',
         issues: []
       })
     );
 
-    act(() => {
+    await act(() => {
       result.current.setStatusFilter('closed');
     });
     expect(result.current.hasExtraFilters).toBe(true);
 
-    act(() => {
+    await act(() => {
       result.current.clearStatusFilter();
     });
     expect(result.current.statusFilter).toBe('open');
     expect(result.current.hasExtraFilters).toBe(false);
   });
 
-  test('handles an unloaded issue list and all-status selection', () => {
-    const { result } = renderHook(() =>
+  test('handles an unloaded issue list and all-status selection', async () => {
+    const { result } = await renderHook(() =>
       useIssueListFilters({
         defaultStatus: 'all',
         emptyFilterMessage: () => 'none',

@@ -1,5 +1,5 @@
 import type { Id } from '@groam/backend/data-model';
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { useTripIssue, useTripIssues } from './use-trip-issues';
 
@@ -10,7 +10,10 @@ const convex = vi.hoisted(() => ({
 }));
 const notifications = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
 
-vi.mock('convex/react', () => convex);
+vi.mock('convex/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('convex/react')>()),
+  ...convex
+}));
 vi.mock('@groam/ui/components/toast', () => ({ toast: notifications }));
 
 const tripId = 'trip-1' as Id<'trips'>;
@@ -40,7 +43,7 @@ describe('useTripIssues', () => {
     const create = vi.fn().mockResolvedValue(issueId);
     convex.useQuery.mockReturnValue([{ id: issueId }]);
     convex.useMutation.mockReturnValue(create);
-    const { result } = renderHook(() => useTripIssues(tripId));
+    const { result } = await renderHook(() => useTripIssues(tripId));
 
     await act(async () => {
       expect(await result.current.createIssue('Coast day', 'Body')).toBe(issueId);
@@ -51,7 +54,7 @@ describe('useTripIssues', () => {
   test('returns null and toasts when issue creation fails', async () => {
     const create = vi.fn().mockRejectedValue(new Error('Trip is archived'));
     convex.useMutation.mockReturnValue(create);
-    const { result } = renderHook(() => useTripIssues(tripId));
+    const { result } = await renderHook(() => useTripIssues(tripId));
 
     let created: Id<'tripIssues'> | null = null;
     await act(async () => {
@@ -81,7 +84,7 @@ describe('useTripIssue', () => {
       .mockReturnValueOnce(status)
       .mockReturnValueOnce(due)
       .mockReturnValueOnce(assign);
-    const { result } = renderHook(() => useTripIssue(issueId));
+    const { result } = await renderHook(() => useTripIssue(issueId));
 
     await act(async () => {
       expect(await result.current.addComment('A note')).toBe(true);
@@ -100,7 +103,7 @@ describe('useTripIssue', () => {
     const createVersion = vi.fn();
     convex.useQuery.mockReturnValue(undefined);
     convex.useMutation.mockReturnValue(createVersion);
-    const { result } = renderHook(() => useTripIssue(issueId));
+    const { result } = await renderHook(() => useTripIssue(issueId));
 
     await act(async () => expect(await result.current.implement()).toBeNull());
     expect(createVersion).not.toHaveBeenCalled();
@@ -109,7 +112,7 @@ describe('useTripIssue', () => {
     const comment = vi.fn().mockRejectedValue(new Error('Issue is closed'));
     convex.useQuery.mockReturnValue(openIssue);
     convex.useMutation.mockReturnValue(comment);
-    const { result } = renderHook(() => useTripIssue(issueId));
+    const { result } = await renderHook(() => useTripIssue(issueId));
 
     await act(async () => {
       expect(await result.current.addComment('Can we keep this flexible?')).toBe(false);
@@ -123,7 +126,7 @@ describe('useTripIssue', () => {
     const status = vi.fn().mockRejectedValue(new Error('Only organizers can close issues'));
     convex.useQuery.mockReturnValue(openIssue);
     convex.useMutation.mockReturnValue(status);
-    const { result } = renderHook(() => useTripIssue(issueId));
+    const { result } = await renderHook(() => useTripIssue(issueId));
 
     await act(async () => {
       expect(await result.current.setStatus('closed')).toBe(false);
@@ -137,7 +140,7 @@ describe('useTripIssue', () => {
     const assign = vi.fn().mockRejectedValue(new Error('Issue agent is unavailable'));
     convex.useQuery.mockReturnValue(openIssue);
     convex.useMutation.mockReturnValue(assign);
-    const { result } = renderHook(() => useTripIssue(issueId));
+    const { result } = await renderHook(() => useTripIssue(issueId));
 
     await act(async () => {
       expect(await result.current.assignIssueAgent()).toBe(false);
@@ -154,7 +157,7 @@ describe('useTripIssue', () => {
     const assign = vi.fn().mockRejectedValue(new Error('Only organizers can assign issues'));
     convex.useQuery.mockReturnValue(openIssue);
     convex.useMutation.mockReturnValue(assign);
-    const { result } = renderHook(() => useTripIssue(issueId));
+    const { result } = await renderHook(() => useTripIssue(issueId));
 
     await act(async () => {
       expect(await result.current.unassign()).toBe(false);
@@ -168,7 +171,7 @@ describe('useTripIssue', () => {
     const createVersion = vi.fn().mockRejectedValue(new Error('Issue already has an idea'));
     convex.useQuery.mockReturnValue(openIssue);
     convex.useMutation.mockReturnValue(createVersion);
-    const { result } = renderHook(() => useTripIssue(issueId));
+    const { result } = await renderHook(() => useTripIssue(issueId));
 
     let version = null;
     await act(async () => {

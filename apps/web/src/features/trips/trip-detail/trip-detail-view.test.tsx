@@ -1,7 +1,8 @@
 import type { Id } from '@groam/backend/data-model';
-import { cleanup, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import type { TripSection } from '@/features/trips/trip-sections';
 import { TripDetailView } from './trip-detail-view';
@@ -11,7 +12,8 @@ const state = vi.hoisted(() => ({
   trip: undefined as TripDetail | undefined
 }));
 
-vi.mock('@tanstack/react-router', () => ({
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
   Link: ({ children, to }: { children?: ReactNode; to: string }) => <a href={to}>{children}</a>,
   Navigate: ({ to }: { to: string }) => <div>navigate:{to}</div>,
   useNavigate: () => vi.fn()
@@ -29,7 +31,8 @@ vi.mock('@/features/trips/hooks/use-trips', () => ({
   })
 }));
 
-vi.mock('@/features/trips/hooks/use-trip-versions', () => ({
+vi.mock('@/features/trips/hooks/use-trip-versions', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/features/trips/hooks/use-trip-versions')>()),
   useTripVersions: () => ({
     createVersion: vi.fn(),
     proposals: [
@@ -136,7 +139,7 @@ function tripDetail(overrides: Partial<TripDetail> = {}): TripDetail {
   } as TripDetail;
 }
 
-function renderTrip(section: TripSection, trip: TripDetail = tripDetail()) {
+async function renderTrip(section: TripSection, trip: TripDetail = tripDetail()) {
   state.exists = true;
   state.trip = trip;
   return render(<TripDetailView addDestinationOpen={false} section={section} tripId={trip.id} />);
@@ -147,33 +150,37 @@ beforeEach(() => {
   state.trip = undefined;
 });
 
-afterEach(cleanup);
-
 describe('TripDetailView idea workspace', () => {
   test.each(['overview', 'itinerary', 'ideas', 'activity'] as const)(
     'redirects a working-trip idea to the nested clone on %s',
-    (section) => {
-      renderTrip(section);
+    async (section) => {
+      await renderTrip(section);
 
-      expect(screen.getByText('navigate:/trips/$tripId/ideas/$proposalId/$view')).toBeTruthy();
-      expect(screen.queryByLabelText('Idea workspace')).toBeNull();
+      await expect
+        .element(page.getByText('navigate:/trips/$tripId/ideas/$proposalId/$view'))
+        .toBeInTheDocument();
+      await expect.element(page.getByLabelText('Idea workspace')).not.toBeInTheDocument();
     }
   );
 
-  test('does not redirect a shared trip', () => {
-    renderTrip('overview', tripDetail({ id: 'source-1' as Id<'trips'>, proposal: null }));
+  test('does not redirect a shared trip', async () => {
+    await renderTrip('overview', tripDetail({ id: 'source-1' as Id<'trips'>, proposal: null }));
 
-    expect(screen.queryByText('navigate:/trips/$tripId/ideas/$proposalId/$view')).toBeNull();
-    expect(screen.queryByLabelText('Idea workspace')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Open shared trip' })).toBeNull();
-    expect(screen.getByText('Overview section')).toBeTruthy();
+    await expect
+      .element(page.getByText('navigate:/trips/$tripId/ideas/$proposalId/$view'))
+      .not.toBeInTheDocument();
+    await expect.element(page.getByLabelText('Idea workspace')).not.toBeInTheDocument();
+    await expect
+      .element(page.getByRole('button', { name: 'Open shared trip' }))
+      .not.toBeInTheDocument();
+    await expect.element(page.getByText('Overview section')).toBeInTheDocument();
   });
 });
 
 test.each(['overview', 'itinerary'] as const)(
   'renders the full viewing page at %s with one creation action',
-  (section) => {
-    renderTrip(
+  async (section) => {
+    await renderTrip(
       section,
       tripDetail({
         id: 'source-1' as Id<'trips'>,
@@ -188,10 +195,14 @@ test.each(['overview', 'itinerary'] as const)(
         }
       })
     );
-    expect(screen.getByRole('region', { name: 'Trip at a glance' })).toBeTruthy();
-    expect(screen.getByText('Itinerary section')).toBeTruthy();
-    expect(screen.getAllByRole('button', { name: 'New idea' })).toHaveLength(1);
-    expect(screen.queryByTestId('trip-section-itinerary')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Edit details' })).toBeNull();
+    await expect
+      .element(page.getByRole('region', { name: 'Trip at a glance' }))
+      .toBeInTheDocument();
+    await expect.element(page.getByText('Itinerary section')).toBeInTheDocument();
+    expect(page.getByRole('button', { name: 'New idea' }).elements()).toHaveLength(1);
+    await expect.element(page.getByTestId('trip-section-itinerary')).not.toBeInTheDocument();
+    await expect
+      .element(page.getByRole('button', { name: 'Edit details' }))
+      .not.toBeInTheDocument();
   }
 );

@@ -1,5 +1,6 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { TripIdeaNotice } from '@/features/trips/trip-ideas/trip-idea-notice';
 
 vi.mock('@/features/ideas/hooks/use-idea-context', () => ({
@@ -9,10 +10,8 @@ vi.mock('@/features/ideas/hooks/use-idea-context', () => ({
   })
 }));
 
-afterEach(cleanup);
-
-test('shows a hint when viewing someone else’s idea', () => {
-  render(<TripIdeaNotice />);
-  expect(screen.getByText('Someone else’s idea')).toBeTruthy();
-  expect(screen.getByText(/Alex Morgan/u)).toBeTruthy();
+test('shows a hint when viewing someone else’s idea', async () => {
+  await render(<TripIdeaNotice />);
+  await expect.element(page.getByText('Someone else’s idea')).toBeInTheDocument();
+  await expect.element(page.getByText(/Alex Morgan/u)).toBeInTheDocument();
 });

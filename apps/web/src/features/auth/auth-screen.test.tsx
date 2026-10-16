@@ -1,8 +1,14 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { auth } from '@/features/auth/auth-client-mock';
 import { useAuthFormStore } from '@/lib/stores/auth-form-store';
 import { AuthScreen } from './auth-screen';
+
+vi.mock('@groam/auth/client', async () => {
+  const { authClientMock } = await import('@/features/auth/auth-client-mock');
+  return { authClient: authClientMock };
+});
 
 beforeEach(() => {
   useAuthFormStore.getState().reset();
@@ -10,38 +16,37 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  cleanup();
   vi.restoreAllMocks();
 });
 
 describe('AuthScreen', () => {
-  test('renders the sign-in form by default', () => {
-    render(<AuthScreen />);
+  test('renders the sign-in form by default', async () => {
+    await render(<AuthScreen />);
 
-    expect(screen.getByRole('link', { name: 'Groam home' })).toBeTruthy();
-    expect(screen.getByText('Welcome back')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Sign in' })).toBeTruthy();
-    expect(screen.queryByLabelText(/^Name/u)).toBeNull();
+    await expect.element(page.getByRole('link', { name: 'Groam home' })).toBeInTheDocument();
+    await expect.element(page.getByText('Welcome back')).toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'Sign in' })).toBeInTheDocument();
+    await expect.element(page.getByLabelText(/^Name/u)).not.toBeInTheDocument();
   });
 
-  test('switches to sign-up and shows the name field', () => {
-    render(<AuthScreen />);
+  test('switches to sign-up and shows the name field', async () => {
+    await render(<AuthScreen />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Sign up' }));
+    await page.getByRole('button', { name: 'Sign up' }).click();
 
-    expect(screen.getByText('Create your account')).toBeTruthy();
-    expect(screen.getByLabelText(/^Name/u)).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Create account' })).toBeTruthy();
+    await expect.element(page.getByText('Create your account')).toBeInTheDocument();
+    await expect.element(page.getByLabelText(/^Name/u)).toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'Create account' })).toBeInTheDocument();
   });
 
   test('shows validation feedback when required fields are missing', async () => {
-    render(<AuthScreen />);
+    await render(<AuthScreen />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
+    await page.getByRole('button', { name: 'Sign in' }).click();
 
-    expect((await screen.findByRole('alert')).textContent).toBe(
-      'Complete every required field to continue.'
-    );
+    await expect
+      .element(page.getByRole('alert'))
+      .toHaveTextContent('Complete every required field to continue.');
     expect(auth.signIn).not.toHaveBeenCalled();
   });
 
@@ -50,35 +55,25 @@ describe('AuthScreen', () => {
       data: null,
       error: { message: 'Invalid email or password' }
     });
-    render(<AuthScreen />);
+    await render(<AuthScreen />);
 
-    fireEvent.change(screen.getByLabelText(/^Username or email/u), {
-      target: { value: 'traveler' }
-    });
-    fireEvent.change(screen.getByLabelText(/^Password/u), {
-      target: { value: 'password123' }
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
+    await page.getByLabelText(/^Username or email/u).fill('traveler');
+    await page.getByLabelText(/^Password/u).fill('password123');
+    await page.getByRole('button', { name: 'Sign in' }).click();
 
-    await waitFor(() =>
-      expect(screen.getByRole('alert').textContent).toBe('Invalid email or password')
-    );
+    await expect.element(page.getByRole('alert')).toHaveTextContent('Invalid email or password');
   });
 
   test('submits sign-up credentials on the create-account flow', async () => {
-    render(<AuthScreen />);
+    await render(<AuthScreen />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Sign up' }));
-    fireEvent.change(screen.getByLabelText(/^Name/u), { target: { value: 'Traveler' } });
-    fireEvent.change(screen.getByLabelText(/^Username/u), {
-      target: { value: 'traveler' }
-    });
-    fireEvent.change(screen.getByLabelText(/^Password/u), {
-      target: { value: 'password123' }
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
+    await page.getByRole('button', { name: 'Sign up' }).click();
+    await page.getByLabelText(/^Name/u).fill('Traveler');
+    await page.getByLabelText(/^Username/u).fill('traveler');
+    await page.getByLabelText(/^Password/u).fill('password123');
+    await page.getByRole('button', { name: 'Create account' }).click();
 
-    await waitFor(() =>
+    await vi.waitFor(() =>
       expect(auth.signUp).toHaveBeenCalledWith({
         email: expect.stringMatching(/@users\.invalid$/u),
         name: 'Traveler',
@@ -88,13 +83,13 @@ describe('AuthScreen', () => {
     );
   });
 
-  test('shows the saved-code recovery form', () => {
-    render(<AuthScreen />);
+  test('shows the saved-code recovery form', async () => {
+    await render(<AuthScreen />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Recover account with a saved code' }));
+    await page.getByRole('button', { name: 'Recover account with a saved code' }).click();
 
-    expect(screen.getByText('Recover your account')).toBeTruthy();
-    expect(screen.getByLabelText(/^Saved recovery code/u)).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Reset password' })).toBeTruthy();
+    await expect.element(page.getByText('Recover your account')).toBeInTheDocument();
+    await expect.element(page.getByLabelText(/^Saved recovery code/u)).toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'Reset password' })).toBeInTheDocument();
   });
 });

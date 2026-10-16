@@ -1,5 +1,5 @@
 import type { AssistantAgentId } from '@groam/ai/agents';
-import { renderHook } from '@testing-library/react';
+import { renderHook } from '@groam/vitest-config/react';
 import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { useAgent, useAgentRecord } from './use-agent';
 
@@ -8,7 +8,8 @@ const convex = vi.hoisted(() => ({
   useQuery: vi.fn()
 }));
 
-vi.mock('convex/react', () => ({
+vi.mock('convex/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('convex/react')>()),
   usePaginatedQuery: (...args: unknown[]) => convex.usePaginatedQuery(...args),
   useQuery: (...args: unknown[]) => convex.useQuery(...args)
 }));
@@ -23,8 +24,8 @@ beforeEach(() => {
   });
 });
 
-test('skips both queries until an agent is selected', () => {
-  const { result } = renderHook(() => useAgent(undefined));
+test('skips both queries until an agent is selected', async () => {
+  const { result } = await renderHook(() => useAgent(undefined));
 
   expect(result.current.agent).toBeUndefined();
   expect(result.current.runs).toEqual([]);
@@ -34,7 +35,7 @@ test('skips both queries until an agent is selected', () => {
   });
 });
 
-test('returns an agent record and its paginated runs', () => {
+test('returns an agent record and its paginated runs', async () => {
   const agentId = 'trip-planner' as AssistantAgentId;
   const loadMore = vi.fn();
   const agent = { id: agentId, name: 'Trip planner' };
@@ -42,7 +43,7 @@ test('returns an agent record and its paginated runs', () => {
   convex.useQuery.mockReturnValue(agent);
   convex.usePaginatedQuery.mockReturnValue({ loadMore, results: runs, status: 'CanLoadMore' });
 
-  const { result } = renderHook(() => useAgent(agentId));
+  const { result } = await renderHook(() => useAgent(agentId));
 
   expect(result.current).toEqual({ agent, loadMore, runs, status: 'CanLoadMore' });
   expect(convex.useQuery).toHaveBeenCalledWith(expect.anything(), { agentId });
@@ -55,9 +56,9 @@ test('returns an agent record and its paginated runs', () => {
   );
 });
 
-test('normalizes a null agent record to undefined', () => {
+test('normalizes a null agent record to undefined', async () => {
   convex.useQuery.mockReturnValue(null);
-  const { result } = renderHook(() => useAgentRecord('trip-planner' as AssistantAgentId));
+  const { result } = await renderHook(() => useAgentRecord('trip-planner' as AssistantAgentId));
 
   expect(result.current).toBeUndefined();
 });

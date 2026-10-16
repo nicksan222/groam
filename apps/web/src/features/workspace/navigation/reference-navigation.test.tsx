@@ -1,3 +1,4 @@
+import { render } from '@groam/vitest-config/react';
 import {
   createMemoryHistory,
   createRootRoute,
@@ -6,14 +7,13 @@ import {
   Outlet,
   RouterProvider
 } from '@tanstack/react-router';
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
+import { beforeEach, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { ReferenceContext, useResolvedParams } from '@/features/workspace/hooks/reference-context';
 import { CanonicalLink, Link } from '@/features/workspace/navigation/reference-link';
 import { ReferenceContent } from '@/features/workspace/workspace-shell/reference-content';
 import { ReferenceProvider } from '@/features/workspace/workspace-shell/reference-provider';
 
-afterEach(cleanup);
 beforeEach(() => {
   mocks.useQueries.mockClear();
   vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
@@ -34,11 +34,12 @@ const mocks = vi.hoisted(() => ({
   )
 }));
 
-vi.mock('convex/react', () => ({
+vi.mock('convex/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('convex/react')>()),
   useQueries: mocks.useQueries
 }));
 
-function mount(path: string) {
+async function mount(path: string) {
   const root = createRootRoute({
     component: () => (
       <ReferenceProvider>
@@ -69,37 +70,41 @@ function mount(path: string) {
     routeTree: root.addChildren([trip]),
     history: createMemoryHistory({ initialEntries: [path] })
   });
-  render(<RouterProvider router={router} />);
+  await render(<RouterProvider router={router} />);
   return router;
 }
 
 test('loads a short URL using the internal ID and renders short links', async () => {
-  mount('/trips/abcdef');
-  expect(await screen.findByText('Record: long-trip-id')).toBeTruthy();
-  expect(screen.getByRole('link', { name: 'Overview' }).getAttribute('href')).toBe(
-    '/trips/abcdef/overview'
-  );
+  await mount('/trips/abcdef');
+  await expect.element(page.getByText('Record: long-trip-id')).toBeInTheDocument();
+  await expect
+    .element(page.getByRole('link', { name: 'Overview' }))
+    .toHaveAttribute('href', '/trips/abcdef/overview');
 });
 
 test('canonicalizes an existing long link without losing search or hash', async () => {
-  const router = mount('/trips/long-trip-id?focus=map#details');
-  await screen.findByText('Record: long-trip-id');
-  await waitFor(() => expect(router.state.location.pathname).toBe('/trips/abcdef'));
+  const router = await mount('/trips/long-trip-id?focus=map#details');
+  await expect.element(page.getByText('Record: long-trip-id')).toBeInTheDocument();
+  await vi.waitFor(() => expect(router.state.location.pathname).toBe('/trips/abcdef'));
   expect(router.state.location.searchStr).toContain('focus=map');
   expect(router.state.location.hash).toBe('details');
 });
 
 test('does not render a record when its short reference is unavailable', async () => {
-  mount('/trips/zzzzzz');
-  expect(await screen.findByText('This page was not found or is unavailable to you.')).toBeTruthy();
-  expect(screen.queryByText('Record: long-trip-id')).toBeNull();
+  await mount('/trips/zzzzzz');
+  await expect
+    .element(page.getByText('This page was not found or is unavailable to you.'))
+    .toBeInTheDocument();
+  await expect.element(page.getByText('Record: long-trip-id')).not.toBeInTheDocument();
 });
 
 test('keeps workspace navigation mounted while an idea reference loads', async () => {
-  mount('/trips/pending');
-  expect(await screen.findByRole('status', { name: 'Opening page…' })).toBeTruthy();
-  expect(screen.getByRole('complementary', { name: 'Workspace navigation' })).toBeTruthy();
-  expect(screen.queryByText('Record: pending')).toBeNull();
+  await mount('/trips/pending');
+  await expect.element(page.getByRole('status', { name: 'Opening page…' })).toBeInTheDocument();
+  await expect
+    .element(page.getByRole('complementary', { name: 'Workspace navigation' }))
+    .toBeInTheDocument();
+  await expect.element(page.getByText('Record: pending')).not.toBeInTheDocument();
 });
 
 test('renders a known canonical reference without resolving it again', async () => {
@@ -118,10 +123,10 @@ test('renders a known canonical reference without resolving it again', async () 
     history: createMemoryHistory({ initialEntries: ['/'] })
   });
 
-  render(<RouterProvider router={router} />);
+  await render(<RouterProvider router={router} />);
 
-  expect((await screen.findByRole('link', { name: 'Canonical trip' })).getAttribute('href')).toBe(
-    '/trips/abcdef'
-  );
+  await expect
+    .element(page.getByRole('link', { name: 'Canonical trip' }))
+    .toHaveAttribute('href', '/trips/abcdef');
   expect(mocks.useQueries).not.toHaveBeenCalled();
 });

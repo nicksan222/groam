@@ -1,10 +1,10 @@
-import { SidebarProvider } from '@groam/ui/components/sidebar';
+import { SidebarMenuButton, SidebarProvider } from '@groam/ui/components/sidebar';
 import { SidebarCollapsibleItem } from '@groam/ui/components/sidebar-collapsible-item';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { beforeEach, expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { useSidebarSectionOpen } from '@/features/workspace/hooks/use-sidebar-section-open';
 import { resetSidebarChromeStore } from '@/lib/stores/sidebar-chrome-store';
-import { stubMatchMedia } from '@/testing/stub-match-media';
 
 function Harness({
   child = 'Child item',
@@ -22,7 +22,11 @@ function Harness({
           data-active={sectionActive}
           onOpenChange={setOpen}
           open={open}
-          trigger={<a href="#trips">Trips</a>}
+          trigger={
+            <SidebarMenuButton asChild>
+              <a href="#trips">Trips</a>
+            </SidebarMenuButton>
+          }
         >
           <li>{child}</li>
         </SidebarCollapsibleItem>
@@ -32,46 +36,40 @@ function Harness({
 }
 
 beforeEach(() => {
-  stubMatchMedia();
   resetSidebarChromeStore();
 });
 
-afterEach(() => {
-  cleanup();
-  vi.unstubAllGlobals();
+test('stays collapsed when the section is not active', async () => {
+  await render(<Harness sectionActive={false} />);
+  await expect.element(page.getByText('Child item')).not.toBeInTheDocument();
+  await expect
+    .element(page.getByRole('button', { name: 'Expand trips' }))
+    .toHaveAttribute('aria-expanded', 'false');
 });
 
-test('stays collapsed when the section is not active', () => {
-  render(<Harness sectionActive={false} />);
-  expect(screen.queryByText('Child item')).toBeNull();
-  expect(screen.getByRole('button', { name: 'Expand trips' }).getAttribute('aria-expanded')).toBe(
-    'false'
-  );
+test('the hover action toggles children without following the parent link', async () => {
+  await render(<Harness sectionActive={true} />);
+
+  await page.getByRole('link', { name: 'Trips' }).click();
+  await expect.element(page.getByText('Child item')).not.toBeInTheDocument();
+  await page.getByRole('button', { name: 'Expand trips' }).click();
+  await expect.element(page.getByText('Child item')).toBeInTheDocument();
+
+  await page.getByRole('button', { name: 'Collapse trips' }).click();
+  await expect.element(page.getByText('Child item')).not.toBeInTheDocument();
+  await expect
+    .element(page.getByRole('button', { name: 'Expand trips' }))
+    .toHaveAttribute('aria-expanded', 'false');
+
+  await page.getByRole('button', { name: 'Expand trips' }).click();
+  await expect.element(page.getByText('Child item')).toBeInTheDocument();
 });
 
-test('the hover action toggles children without following the parent link', () => {
-  render(<Harness sectionActive={true} />);
+test('keeps the sidebar quiet when navigating into a section', async () => {
+  const { rerender } = await render(<Harness sectionActive={false} />);
+  await expect.element(page.getByText('Child item')).not.toBeInTheDocument();
 
-  fireEvent.click(screen.getByRole('link', { name: 'Trips' }));
-  expect(screen.queryByText('Child item')).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: 'Expand trips' }));
-  expect(screen.getByText('Child item')).toBeTruthy();
-
-  fireEvent.click(screen.getByRole('button', { name: 'Collapse trips' }));
-  expect(screen.queryByText('Child item')).toBeNull();
-  expect(screen.getByRole('button', { name: 'Expand trips' }).getAttribute('aria-expanded')).toBe(
-    'false'
-  );
-
-  fireEvent.click(screen.getByRole('button', { name: 'Expand trips' }));
-  expect(screen.getByText('Child item')).toBeTruthy();
-});
-
-test('keeps the sidebar quiet when navigating into a section', () => {
-  const { rerender } = render(<Harness sectionActive={false} />);
-  expect(screen.queryByText('Child item')).toBeNull();
-
-  rerender(<Harness sectionActive={true} />);
-  expect(screen.queryByText('Child item')).toBeNull();
-  expect(screen.getByRole('button', { name: 'Expand trips' })).toBeTruthy();
+  await rerender(<Harness sectionActive={true} />);
+  await expect.element(page.getByText('Child item')).not.toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Expand trips' })).toBeInTheDocument();
 });

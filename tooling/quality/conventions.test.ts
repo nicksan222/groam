@@ -138,7 +138,7 @@ describe('inspectFile', () => {
     );
   });
 
-  test('keeps raw Convex database access inside modules and routes', () => {
+  test('keeps raw Convex database access inside components, modules and routes', () => {
     expect(
       inspectFile(
         'packages/backend/convex/http.ts',
@@ -154,6 +154,12 @@ describe('inspectFile', () => {
       inspectFile(
         'packages/backend/convex/routes/trips/create.ts',
         'export const run = { handler: async (ctx) => ctx.db.get("trips", id) };'
+      )
+    ).toEqual([]);
+    expect(
+      inspectFile(
+        'packages/backend/convex/components/better-auth/workspace.ts',
+        'export const access = { handler: async (ctx) => ctx.db.get("session", id) };'
       )
     ).toEqual([]);
     expect(

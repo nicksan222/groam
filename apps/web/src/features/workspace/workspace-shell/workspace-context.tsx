@@ -8,10 +8,11 @@ import { Label } from '@groam/ui/components/label';
 import { PageLoading } from '@groam/ui/components/page-loading';
 import { Spinner } from '@groam/ui/components/spinner';
 import { SHELL_TITLE } from '@groam/ui/lib/shell-layout';
-import { type PropsWithChildren, useEffect, useRef, useState } from 'react';
+import { Activity, type PropsWithChildren, useEffect, useRef, useState } from 'react';
 import { useAsyncPending } from '@/features/workspace/hooks/use-async-pending';
 import { useWorkspaceData } from '@/features/workspace/hooks/use-workspace-data';
 import { errorMessage } from '@/lib/errors';
+import { useGroupActivationStore } from '@/lib/stores/group-activation-store';
 import { testIds } from '@/lib/test-ids';
 import { JoinFirstGroupForm } from './join-first-group-form';
 import { createSlug, WorkspaceContext, type WorkspaceContextValue } from './workspace-state';
@@ -53,8 +54,27 @@ export function WorkspaceProvider({ children }: PropsWithChildren) {
     heldUserId !== undefined &&
     (currentUserId === undefined || currentUserId === heldUserId);
   const workspace = isSignedOut ? null : (value ?? (canReuseHeld ? heldValue : null));
+  const activatingId = useGroupActivationStore((store) => store.organizationId);
+  const activeId = workspace?.activeOrganization.id;
+  const isSwitchingGroup = activatingId !== null && activatingId !== activeId;
 
-  if (workspace) return <WorkspaceContext value={workspace}>{children}</WorkspaceContext>;
+  useEffect(() => {
+    if (activatingId !== null && activatingId === activeId) {
+      useGroupActivationStore.setState({ organizationId: null });
+    }
+  }, [activatingId, activeId]);
+
+  if (workspace) {
+    // A group switch opens a different workspace: hide the old one (dropping its queries) until
+    // the session reports the new group, then remount so group-scoped state, such as pagination
+    // cursors, starts fresh instead of leaking across groups.
+    return (
+      <WorkspaceContext key={workspace.activeOrganization.id} value={workspace}>
+        {isSwitchingGroup && <WorkspaceLoading />}
+        <Activity mode={isSwitchingGroup ? 'hidden' : 'visible'}>{children}</Activity>
+      </WorkspaceContext>
+    );
+  }
   if (isPending) return <WorkspaceLoading />;
   if (activationError) {
     return <WorkspaceError message={activationError} onRetry={retryActivation} />;

@@ -1,6 +1,7 @@
 import { authClient } from '@groam/auth/client';
 import { useEffect } from 'react';
 import { useShallow } from 'zustand/react/shallow';
+import { activateOrganization } from '@/features/workspace/hooks/use-organization-activation';
 import type { ActiveOrganization } from '@/features/workspace/workspace-shell/workspace-state';
 import { errorMessage } from '@/lib/errors';
 import { useOrganizationSettingsStore } from '@/lib/stores/settings-stores';
@@ -91,9 +92,4 @@ async function removeOrganization(organizationId: string) {
   if (fallback) await activateOrganization(fallback.id);
   const result = await authClient.organization.delete({ organizationId });
   if (result.error) throw new Error(result.error.message ?? 'Unable to delete group');
-}
-
-async function activateOrganization(organizationId: string) {
-  const activation = await authClient.organization.setActive({ organizationId });
-  if (activation.error) throw new Error(activation.error.message ?? 'Unable to switch groups');
 }

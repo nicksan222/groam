@@ -1,5 +1,6 @@
 import { authClient } from '@groam/auth/client';
-import { useState } from 'react';
+import { use, useState } from 'react';
+import { SessionChangeContext } from '@/features/auth/session-change-context';
 import { downloadTextFile } from '@/lib/download-text-file';
 import { errorMessage } from '@/lib/errors';
 import type { TwoFactorEnrollment } from '@/types/account-security';
@@ -17,6 +18,7 @@ export function useTwoFactorSettings(initiallyEnabled: boolean) {
   const [isEnabled, setEnabled] = useState(initiallyEnabled);
   const [isPending, setPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const changeSession = use(SessionChangeContext);
 
   const run = async <T extends { error: { message?: null | string } | null }>(
     request: Promise<T>,
@@ -46,11 +48,11 @@ export function useTwoFactorSettings(initiallyEnabled: boolean) {
   };
 
   const confirmEnrollment = async (code: string) => {
+    // Confirming enrollment replaces the session.
     const result = await run(
-      authClient.twoFactor.verifyTotp({
-        code: code.trim(),
-        trustDevice: true
-      }),
+      changeSession(() =>
+        authClient.twoFactor.verifyTotp({ code: code.trim(), trustDevice: true })
+      ),
       'Invalid authenticator code'
     );
     if (result) {
@@ -71,8 +73,9 @@ export function useTwoFactorSettings(initiallyEnabled: boolean) {
   };
 
   const disable = async (password: string) => {
+    // Disabling replaces the session.
     const result = await run(
-      authClient.twoFactor.disable({ password }),
+      changeSession(() => authClient.twoFactor.disable({ password })),
       'Unable to disable two-factor authentication'
     );
     if (result) {

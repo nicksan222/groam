@@ -1,13 +1,12 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { PanelNotFound } from './panel-not-found';
 
-afterEach(cleanup);
-
-test('renders a missing-panel message and back action', () => {
+test('renders a missing-panel message and back action', async () => {
   const onBack = vi.fn();
 
-  render(
+  await render(
     <PanelNotFound
       backLabel="Back to ideas"
       message="Idea not found in this trip"
@@ -15,7 +14,7 @@ test('renders a missing-panel message and back action', () => {
     />
   );
 
-  expect(screen.getByText('Idea not found in this trip')).toBeTruthy();
-  fireEvent.click(screen.getByRole('button', { name: 'Back to ideas' }));
+  await expect.element(page.getByText('Idea not found in this trip')).toBeInTheDocument();
+  await page.getByRole('button', { name: 'Back to ideas' }).click();
   expect(onBack).toHaveBeenCalledTimes(1);
 });

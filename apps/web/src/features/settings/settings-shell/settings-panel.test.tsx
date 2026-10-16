@@ -1,6 +1,7 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import { MonitorCog } from 'lucide-react';
-import { afterEach, describe, expect, test } from 'vite-plus/test';
+import { describe, expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import {
   SettingsAside,
   SettingsFooter,
@@ -10,11 +11,9 @@ import {
   SettingsStack
 } from './settings-panel';
 
-afterEach(cleanup);
-
 describe('settings layout primitives', () => {
-  test('SettingsStack groups panels with vertical spacing', () => {
-    const { container } = render(
+  test('SettingsStack groups panels with vertical spacing', async () => {
+    const { container } = await render(
       <SettingsStack>
         <p>First panel</p>
         <p>Second panel</p>
@@ -22,12 +21,12 @@ describe('settings layout primitives', () => {
     );
 
     expect(container.firstElementChild?.className).toContain('space-y-5');
-    expect(screen.getByText('First panel')).toBeTruthy();
-    expect(screen.getByText('Second panel')).toBeTruthy();
+    await expect.element(page.getByText('First panel')).toBeInTheDocument();
+    await expect.element(page.getByText('Second panel')).toBeInTheDocument();
   });
 
-  test('SettingsPanelHeading renders title, description, and optional action', () => {
-    render(
+  test('SettingsPanelHeading renders title, description, and optional action', async () => {
+    await render(
       <SettingsPanelHeading
         action={<button type="button">Refresh</button>}
         description="Panel details"
@@ -36,25 +35,25 @@ describe('settings layout primitives', () => {
       />
     );
 
-    expect(screen.getByRole('heading', { name: 'Panel title' })).toBeTruthy();
-    expect(screen.getByText('Panel details')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Refresh' })).toBeTruthy();
+    await expect.element(page.getByRole('heading', { name: 'Panel title' })).toBeInTheDocument();
+    await expect.element(page.getByText('Panel details')).toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'Refresh' })).toBeInTheDocument();
   });
 
-  test('SettingsFooter renders action content', () => {
-    render(
+  test('SettingsFooter renders action content', async () => {
+    await render(
       <SettingsFooter>
         <p>Footer note</p>
         <button type="button">Save</button>
       </SettingsFooter>
     );
 
-    expect(screen.getByText('Footer note')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Save' })).toBeTruthy();
+    await expect.element(page.getByText('Footer note')).toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'Save' })).toBeInTheDocument();
   });
 
-  test('SettingsAside renders informational copy', () => {
-    render(
+  test('SettingsAside renders informational copy', async () => {
+    await render(
       <SettingsAside
         description="Theme changes apply on this device only."
         icon={MonitorCog}
@@ -62,12 +61,14 @@ describe('settings layout primitives', () => {
       />
     );
 
-    expect(screen.getByRole('heading', { name: 'Saved locally' })).toBeTruthy();
-    expect(screen.getByText('Theme changes apply on this device only.')).toBeTruthy();
+    await expect.element(page.getByRole('heading', { name: 'Saved locally' })).toBeInTheDocument();
+    await expect
+      .element(page.getByText('Theme changes apply on this device only.'))
+      .toBeInTheDocument();
   });
 
-  test('SettingsSplitLayout renders main content and aside column', () => {
-    render(
+  test('SettingsSplitLayout renders main content and aside column', async () => {
+    await render(
       <SettingsSplitLayout aside={<p>Aside content</p>}>
         <SettingsPanel>
           <p>Main content</p>
@@ -75,7 +76,7 @@ describe('settings layout primitives', () => {
       </SettingsSplitLayout>
     );
 
-    expect(screen.getByText('Main content')).toBeTruthy();
-    expect(screen.getByText('Aside content')).toBeTruthy();
+    await expect.element(page.getByText('Main content')).toBeInTheDocument();
+    await expect.element(page.getByText('Aside content')).toBeInTheDocument();
   });
 });

@@ -1,19 +1,23 @@
 import type { Id } from '@groam/backend/data-model';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
+import { useViewport } from '@groam/vitest-config/viewport';
 import type { ReactNode } from 'react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
+import { expectPhoneListRow, expectWideListRow } from '@/testing/phone-list';
 import { IssueList, type IssueListItem } from './issue-list';
 
-vi.mock('@tanstack/react-router', () => ({
+const navigate = vi.hoisted(() => vi.fn());
+
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
   Link: ({ children, className, to }: { children?: ReactNode; className?: string; to: string }) => (
     <a className={className} href={to}>
       {children}
     </a>
   ),
-  useNavigate: () => vi.fn()
+  useNavigate: () => navigate
 }));
-
-afterEach(cleanup);
 
 const issues: IssueListItem[] = [
   {
@@ -38,7 +42,7 @@ const issues: IssueListItem[] = [
   }
 ];
 
-function renderList() {
+async function renderList() {
   return render(
     <IssueList
       emptyFilterMessage={(filter) =>
@@ -53,31 +57,55 @@ function renderList() {
   );
 }
 
-test('renders a compact search-and-status toolbar instead of stacked filter chrome', () => {
-  renderList();
+test('renders a compact search-and-status toolbar instead of stacked filter chrome', async () => {
+  await renderList();
 
   const toolbar = document.querySelector('[aria-label="Filter issues"]');
   expect(toolbar?.className).toContain('flex');
   expect(toolbar?.className).toContain('items-center');
   expect(toolbar?.className).not.toContain('dashboard-panel');
   expect(document.querySelector('table')).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Issue' })).toBeTruthy();
-  expect(screen.queryByRole('button', { name: /Open \d+/u })).toBeNull();
-  expect(screen.queryByRole('button', { name: /Closed \d+/u })).toBeNull();
-  expect(screen.getByLabelText('Search issues')).toBeTruthy();
-  expect(screen.getByLabelText('Filter issues by status').textContent).toContain('Open');
-  expect(screen.getByText('Coast day')).toBeTruthy();
-  expect(screen.getByText('Museum morning')).toBeTruthy();
+  await expect.element(page.getByRole('button', { name: 'Issue' })).toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: /Open \d+/u })).not.toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: /Closed \d+/u })).not.toBeInTheDocument();
+  await expect.element(page.getByLabelText('Search issues')).toBeInTheDocument();
+  expect(page.getByLabelText('Filter issues by status').element().textContent).toContain('Open');
+  await expect.element(page.getByText('Coast day')).toBeInTheDocument();
+  await expect.element(page.getByText('Museum morning')).toBeInTheDocument();
 });
 
-test('searches visible issue fields and can clear the filter', () => {
-  renderList();
+test('searches visible issue fields and can clear the filter', async () => {
+  await renderList();
 
-  fireEvent.change(screen.getByLabelText('Search issues'), { target: { value: 'museum' } });
-  expect(screen.queryByText('Coast day')).toBeNull();
-  expect(screen.getByText('Museum morning')).toBeTruthy();
+  await page.getByLabelText('Search issues').fill('museum');
+  await expect.element(page.getByText('Coast day')).not.toBeInTheDocument();
+  await expect.element(page.getByText('Museum morning')).toBeInTheDocument();
 
-  fireEvent.click(screen.getByRole('button', { name: 'Clear issue filters' }));
-  expect(screen.getByText('Coast day')).toBeTruthy();
-  expect((screen.getByLabelText('Search issues') as HTMLInputElement).value).toBe('');
+  await page.getByRole('button', { name: 'Clear issue filters' }).click();
+  await expect.element(page.getByText('Coast day')).toBeInTheDocument();
+  await expect.element(page.getByLabelText('Search issues')).toHaveValue('');
+});
+
+describe('on a phone', () => {
+  const firstRow = () =>
+    page
+      .getByRole('row')
+      .filter({ has: page.getByRole('link', { name: /Coast day|Museum morning/u }) })
+      .first();
+
+  test('keeps titles readable, drops secondary columns and opens a row on tap', async () => {
+    await useViewport(390, 844);
+    await renderList();
+    await expectPhoneListRow(firstRow());
+    await expect.element(page.getByText('Opened by')).not.toBeVisible();
+
+    // The title is a real link, so a tap navigates without needing row activation.
+    await expect.element(firstRow().getByRole('link')).toHaveAttribute('href', '/issues/$issueId');
+  });
+
+  test('shows the author and assignee columns again on a wide screen', async () => {
+    await renderList();
+    await expectWideListRow(firstRow());
+    await expect.element(page.getByText('Opened by')).toBeVisible();
+  });
 });

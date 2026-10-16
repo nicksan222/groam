@@ -1,11 +1,10 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, expect, test } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test } from 'vite-plus/test';
+import { page, userEvent } from 'vite-plus/test/browser';
 import { SearchInput } from './search-input';
 
-afterEach(cleanup);
-
-test('renders a compact search field with icon, placeholder, and label', () => {
-  const { container } = render(
+test('renders a compact search field with icon, placeholder, and label', async () => {
+  const { container } = await render(
     <SearchInput aria-label="Search activity" placeholder="Search activity…" />
   );
 
@@ -15,7 +14,7 @@ test('renders a compact search field with icon, placeholder, and label', () => {
   expect(field?.className).toContain('flex-1');
   expect(field?.querySelector('svg')).toBeTruthy();
 
-  const input = screen.getByRole('searchbox', { name: 'Search activity' });
+  const input = page.getByRole('searchbox', { name: 'Search activity' }).element();
   expect(input.getAttribute('placeholder')).toBe('Search activity…');
   expect(input.getAttribute('type')).toBe('search');
   expect(input.className).toContain('h-8');
@@ -23,9 +22,9 @@ test('renders a compact search field with icon, placeholder, and label', () => {
   expect(input.className).toContain('bg-transparent');
 });
 
-test('forwards controlled value, onChange, and disabled', () => {
+test('forwards controlled value, onChange, and disabled', async () => {
   const seen: string[] = [];
-  const { rerender } = render(
+  const { rerender } = await render(
     <SearchInput
       aria-label="Filter people"
       onChange={(event) => seen.push(event.target.value)}
@@ -33,19 +32,21 @@ test('forwards controlled value, onChange, and disabled', () => {
     />
   );
 
-  const input = screen.getByRole('searchbox', { name: 'Filter people' }) as HTMLInputElement;
+  const input = page
+    .getByRole('searchbox', { name: 'Filter people' })
+    .element() as HTMLInputElement;
   expect(input.value).toBe('Alex');
-  fireEvent.change(input, { target: { value: 'Sam' } });
+  await userEvent.fill(input, 'Sam');
   expect(seen).toEqual(['Sam']);
 
-  rerender(<SearchInput aria-label="Filter people" disabled value="Alex" />);
-  expect(
-    (screen.getByRole('searchbox', { name: 'Filter people' }) as HTMLInputElement).disabled
-  ).toBe(true);
+  await rerender(<SearchInput aria-label="Filter people" disabled value="Alex" />);
+  await expect.element(page.getByRole('searchbox', { name: 'Filter people' })).toBeDisabled();
 });
 
-test('merges layout class names onto the wrapper', () => {
-  const { container } = render(<SearchInput aria-label="Search trips" className="max-w-sm" />);
+test('merges layout class names onto the wrapper', async () => {
+  const { container } = await render(
+    <SearchInput aria-label="Search trips" className="max-w-sm" />
+  );
 
   expect(container.firstElementChild?.className).toContain('max-w-sm');
   expect(container.firstElementChild?.className).toContain('flex-1');

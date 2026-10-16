@@ -1,11 +1,15 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { beforeEach, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { WorkspaceAssistantWidget } from './workspace-assistant-widget';
 
 const location = vi.hoisted(() => ({ pathname: '/' }));
 const widget = vi.hoisted(() => vi.fn());
 
-vi.mock('@tanstack/react-router', () => ({ useLocation: () => location }));
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
+  useLocation: () => location
+}));
 vi.mock('@groam/ai/ui/chat/ai-assistant-widget', () => ({
   AiAssistantWidget: () => {
     widget();
@@ -13,8 +17,9 @@ vi.mock('@groam/ai/ui/chat/ai-assistant-widget', () => ({
   }
 }));
 
-beforeEach(() => vi.clearAllMocks());
-afterEach(cleanup);
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 test.each([
   '/agents',
@@ -30,10 +35,12 @@ test.each([
   '/group/members',
   '/unknown',
   '/trips-archive'
-])('does not mount the assistant on %s', (pathname) => {
+])('does not mount the assistant on %s', async (pathname) => {
   location.pathname = pathname;
-  render(<WorkspaceAssistantWidget organizationId="workspace-1" />);
-  expect(screen.queryByRole('complementary', { name: 'Groam AI' })).toBeNull();
+  await render(<WorkspaceAssistantWidget organizationId="workspace-1" />);
+  await expect
+    .element(page.getByRole('complementary', { name: 'Groam AI' }))
+    .not.toBeInTheDocument();
   expect(widget).not.toHaveBeenCalled();
 });
 
@@ -48,20 +55,22 @@ test.each([
   '/issues',
   '/issues/issue-1',
   '/inbox'
-])('keeps contextual assistance available on %s', (pathname) => {
+])('keeps contextual assistance available on %s', async (pathname) => {
   location.pathname = pathname;
-  render(<WorkspaceAssistantWidget organizationId="workspace-1" />);
-  expect(screen.getByRole('complementary', { name: 'Groam AI' })).toBeTruthy();
+  await render(<WorkspaceAssistantWidget organizationId="workspace-1" />);
+  await expect.element(page.getByRole('complementary', { name: 'Groam AI' })).toBeInTheDocument();
 });
 
-test('removes the widget when navigating to a run and restores it on planning pages', () => {
+test('removes the widget when navigating to a run and restores it on planning pages', async () => {
   location.pathname = '/trips/trip-1/overview';
-  const view = render(<WorkspaceAssistantWidget organizationId="workspace-1" />);
-  expect(screen.getByRole('complementary', { name: 'Groam AI' })).toBeTruthy();
+  const view = await render(<WorkspaceAssistantWidget organizationId="workspace-1" />);
+  await expect.element(page.getByRole('complementary', { name: 'Groam AI' })).toBeInTheDocument();
   location.pathname = '/agents/reviewer/run-1';
-  view.rerender(<WorkspaceAssistantWidget organizationId="workspace-1" />);
-  expect(screen.queryByRole('complementary', { name: 'Groam AI' })).toBeNull();
+  await view.rerender(<WorkspaceAssistantWidget organizationId="workspace-1" />);
+  await expect
+    .element(page.getByRole('complementary', { name: 'Groam AI' }))
+    .not.toBeInTheDocument();
   location.pathname = '/ideas';
-  view.rerender(<WorkspaceAssistantWidget organizationId="workspace-1" />);
-  expect(screen.getByRole('complementary', { name: 'Groam AI' })).toBeTruthy();
+  await view.rerender(<WorkspaceAssistantWidget organizationId="workspace-1" />);
+  await expect.element(page.getByRole('complementary', { name: 'Groam AI' })).toBeInTheDocument();
 });

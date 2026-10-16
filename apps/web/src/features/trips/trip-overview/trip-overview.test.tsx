@@ -1,6 +1,7 @@
 import type { Id } from '@groam/backend/data-model';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { expectRouteStopPhotos } from '@/features/trips/expect-route-stop-photos';
 import { nextStepFor } from '@/features/trips/hooks/trip-overview-next-step';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
@@ -91,12 +92,8 @@ const handlers = {
   retryCover: vi.fn().mockResolvedValue(true)
 };
 
-afterEach(() => {
-  cleanup();
-});
-
 describe('nextStepFor', () => {
-  test('guides planners through destination, window, length, then itinerary', () => {
+  test('guides planners through destination, window, length, then itinerary', async () => {
     expect(
       nextStepFor({
         hasDestination: false,
@@ -133,17 +130,23 @@ describe('nextStepFor', () => {
 });
 
 describe('TripOverview', () => {
-  test('shows the empty-route prompt when a trip has no destinations', () => {
-    render(<TripOverview hidePageCover trip={tripDetail()} {...handlers} />);
+  test('shows the empty-route prompt when a trip has no destinations', async () => {
+    await render(<TripOverview hidePageCover trip={tripDetail()} {...handlers} />);
 
-    expect(screen.getByText('No route yet')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Add first destination' })).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Plan this with me' })).toBeNull();
-    expect(screen.queryByRole('heading', { name: 'Summer escape' })).toBeNull();
+    await expect.element(page.getByText('No route yet')).toBeInTheDocument();
+    await expect
+      .element(page.getByRole('button', { name: 'Add first destination' }))
+      .toBeInTheDocument();
+    await expect
+      .element(page.getByRole('button', { name: 'Plan this with me' }))
+      .not.toBeInTheDocument();
+    await expect
+      .element(page.getByRole('heading', { name: 'Summer escape' }))
+      .not.toBeInTheDocument();
   });
 
-  test('lists all route stops vertically when destinations exist', () => {
-    render(
+  test('lists all route stops vertically when destinations exist', async () => {
+    await render(
       <TripOverview
         hidePageCover
         trip={tripDetail({
@@ -165,24 +168,24 @@ describe('TripOverview', () => {
       />
     );
 
-    expect(screen.getByText('Lisbon')).toBeTruthy();
-    expect(screen.getByText('Porto')).toBeTruthy();
-    expect(screen.getByText('Trip basics')).toBeTruthy();
-    const readiness = screen.getByText('Trip basics').closest('aside');
+    await expect.element(page.getByText('Lisbon')).toBeInTheDocument();
+    await expect.element(page.getByText('Porto')).toBeInTheDocument();
+    await expect.element(page.getByText('Trip basics')).toBeInTheDocument();
+    const readiness = page.getByText('Trip basics').element().closest('aside');
     expect(readiness?.className).toContain('xl:sticky');
     expect(readiness?.className).not.toContain('order-first');
     expect(readiness?.parentElement?.className).toContain('xl:grid-cols-[minmax(0,1fr)_20rem]');
-    expect(screen.getByRole('list', { name: 'Route stops' })).toBeTruthy();
+    await expect.element(page.getByRole('list', { name: 'Route stops' })).toBeInTheDocument();
     expect(document.querySelectorAll('.border-t.border-border').length).toBeGreaterThan(0);
     expect(document.querySelector('[data-slot="overview-properties"]')).toBeTruthy();
-    expect(screen.getByText('7 days')).toBeTruthy();
+    await expect.element(page.getByText('7 days')).toBeInTheDocument();
     expect(document.querySelector('[data-slot="timeline"][data-variant="route"]')).toBeNull();
-    expectRouteStopPhotos('https://example.com/lisbon.jpg');
+    await expectRouteStopPhotos('https://example.com/lisbon.jpg');
   });
 
-  test('routes the next-step action to itinerary once foundations are set', () => {
+  test('routes the next-step action to itinerary once foundations are set', async () => {
     const onOpenItinerary = vi.fn();
-    render(
+    await render(
       <TripOverview
         hidePageCover
         trip={tripDetail({
@@ -196,13 +199,13 @@ describe('TripOverview', () => {
       />
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Build the itinerary' }));
+    await page.getByRole('button', { name: 'Build the itinerary' }).click();
     expect(onOpenItinerary).toHaveBeenCalledOnce();
   });
 
-  test('lets a locked participant start an idea from the dates panel', () => {
+  test('lets a locked participant start an idea from the dates panel', async () => {
     const onStartVersion = vi.fn();
-    render(
+    await render(
       <TripOverview
         hidePageCover
         trip={tripDetail({
@@ -222,24 +225,24 @@ describe('TripOverview', () => {
       />
     );
 
-    expect(screen.queryByText('This is the shared trip')).toBeNull();
-    expect(
-      screen.getByText(
-        'Everyone sees these dates. Start an idea to try others — the shared trip stays put.'
+    await expect.element(page.getByText('This is the shared trip')).not.toBeInTheDocument();
+    await expect
+      .element(
+        page.getByText(
+          'Everyone sees these dates. Start an idea to try others — the shared trip stays put.'
+        )
       )
-    ).toBeTruthy();
-    expect(screen.getByText('Shared')).toBeTruthy();
-    const dates = document.querySelector('#trip-length');
-    expect(dates).toBeTruthy();
-    fireEvent.click(within(dates as HTMLElement).getByRole('button', { name: 'New idea' }));
+      .toBeInTheDocument();
+    await expect.element(page.getByText('Shared')).toBeInTheDocument();
+    await page.getByRole('button', { name: 'New idea' }).click();
     expect(onStartVersion).toHaveBeenCalledOnce();
     expect(handlers.onEditDetails).not.toHaveBeenCalled();
-    expect(screen.queryByRole('button', { name: 'Saved' })).toBeNull();
+    await expect.element(page.getByRole('button', { name: 'Saved' })).not.toBeInTheDocument();
   });
 
-  test('does not offer start-an-idea actions on an idea workspace', () => {
+  test('does not offer start-an-idea actions on an idea workspace', async () => {
     const onStartVersion = vi.fn();
-    render(
+    await render(
       <TripOverview
         hidePageCover
         trip={tripDetail({
@@ -264,13 +267,13 @@ describe('TripOverview', () => {
       />
     );
 
-    expect(screen.queryByText('This is the shared trip')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'New idea' })).toBeNull();
+    await expect.element(page.getByText('This is the shared trip')).not.toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'New idea' })).not.toBeInTheDocument();
     expect(onStartVersion).not.toHaveBeenCalled();
   });
 
-  test('does not duplicate Issues or Ideas lists on overview', () => {
-    render(
+  test('does not duplicate Issues or Ideas lists on overview', async () => {
+    await render(
       <TripOverview
         hidePageCover
         trip={tripDetail({
@@ -281,12 +284,12 @@ describe('TripOverview', () => {
       />
     );
 
-    expect(screen.queryByRole('heading', { name: 'Issues' })).toBeNull();
-    expect(screen.queryByRole('heading', { name: 'Ideas' })).toBeNull();
+    await expect.element(page.getByRole('heading', { name: 'Issues' })).not.toBeInTheDocument();
+    await expect.element(page.getByRole('heading', { name: 'Ideas' })).not.toBeInTheDocument();
   });
 
-  test('shows packing in the planning overview, including idea copies', () => {
-    const shared = render(
+  test('shows packing in the planning overview, including idea copies', async () => {
+    const shared = await render(
       <TripOverview
         hidePageCover
         trip={tripDetail({
@@ -296,10 +299,10 @@ describe('TripOverview', () => {
         {...handlers}
       />
     );
-    expect(shared.getByRole('heading', { name: 'Packing' })).toBeTruthy();
-    shared.unmount();
+    await expect.element(page.getByRole('heading', { name: 'Packing' })).toBeInTheDocument();
+    await shared.unmount();
 
-    render(
+    const idea = await render(
       <TripOverview
         hidePageCover
         trip={tripDetail({
@@ -310,10 +313,10 @@ describe('TripOverview', () => {
         {...handlers}
       />
     );
-    expect(screen.getByRole('heading', { name: 'Packing' })).toBeTruthy();
+    await expect.element(page.getByRole('heading', { name: 'Packing' })).toBeInTheDocument();
+    await idea.unmount();
 
-    cleanup();
-    const archived = render(
+    await render(
       <TripOverview
         hidePageCover
         trip={tripDetail({
@@ -324,15 +327,15 @@ describe('TripOverview', () => {
         {...handlers}
       />
     );
-    expect(archived.queryByRole('heading', { name: 'Packing' })).toBeNull();
+    await expect.element(page.getByRole('heading', { name: 'Packing' })).not.toBeInTheDocument();
   });
 });
 
 describe('TripReadingOverview', () => {
   test.each([false, true])(
     'shows facts without planning controls when canPropose is %s',
-    (canPropose) => {
-      render(
+    async (canPropose) => {
+      await render(
         <TripReadingOverview
           itinerary={<section aria-label="Full itinerary">Lisbon itinerary</section>}
           trip={tripDetail({
@@ -350,20 +353,24 @@ describe('TripReadingOverview', () => {
           tripState={{} as TripState}
         />
       );
-      expect(screen.getByText('7 days')).toBeTruthy();
-      expect(screen.queryByRole('spinbutton')).toBeNull();
-      expect(screen.queryByText('Trip basics')).toBeNull();
-      expect(
-        screen.queryByRole('button', { name: /Add stop|Edit details|Set trip length/u })
-      ).toBeNull();
-      expect(screen.getByRole('region', { name: 'Full itinerary' })).toBeTruthy();
-      expect(screen.queryByRole('button', { name: 'View itinerary' })).toBeNull();
-      expect(screen.getByRole('heading', { name: 'Packing' })).toBeTruthy();
+      await expect.element(page.getByText('7 days')).toBeInTheDocument();
+      await expect.element(page.getByRole('spinbutton')).not.toBeInTheDocument();
+      await expect.element(page.getByText('Trip basics')).not.toBeInTheDocument();
+      await expect
+        .element(page.getByRole('button', { name: /Add stop|Edit details|Set trip length/u }))
+        .not.toBeInTheDocument();
+      await expect
+        .element(page.getByRole('region', { name: 'Full itinerary' }))
+        .toBeInTheDocument();
+      await expect
+        .element(page.getByRole('button', { name: 'View itinerary' }))
+        .not.toBeInTheDocument();
+      await expect.element(page.getByRole('heading', { name: 'Packing' })).toBeInTheDocument();
     }
   );
 
-  test('shows a neutral empty state instead of an edit prompt', () => {
-    render(
+  test('shows a neutral empty state instead of an edit prompt', async () => {
+    await render(
       <TripReadingOverview
         itinerary={<p>No destinations planned yet</p>}
         trip={tripDetail({
@@ -380,9 +387,9 @@ describe('TripReadingOverview', () => {
         tripState={{} as TripState}
       />
     );
-    expect(screen.getByText('Idea preview')).toBeTruthy();
-    expect(screen.getByText('No destinations planned yet')).toBeTruthy();
-    expect(screen.queryByRole('button')).toBeNull();
-    expect(screen.getByRole('heading', { name: 'Packing' })).toBeTruthy();
+    await expect.element(page.getByText('Idea preview')).toBeInTheDocument();
+    await expect.element(page.getByText('No destinations planned yet')).toBeInTheDocument();
+    await expect.element(page.getByRole('button')).not.toBeInTheDocument();
+    await expect.element(page.getByRole('heading', { name: 'Packing' })).toBeInTheDocument();
   });
 });

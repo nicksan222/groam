@@ -1,15 +1,14 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { ListFilterSection, ListFilterToolbar } from './list-filter-toolbar';
-
-afterEach(cleanup);
 
 const statusOptions = [
   { label: 'Open', value: 'open' },
   { label: 'All', value: 'all' }
 ] as const;
 
-function renderToolbar({
+async function renderToolbar({
   hasFilters = false,
   query = '',
   status = 'open'
@@ -22,7 +21,7 @@ function renderToolbar({
   const onQueryChange = vi.fn();
   const onStatusChange = vi.fn();
 
-  render(
+  await render(
     <ListFilterToolbar
       ariaLabel="Filter issues"
       clearAriaLabel="Clear issue filters"
@@ -45,23 +44,26 @@ function renderToolbar({
   return { onClear, onQueryChange, onStatusChange };
 }
 
-test('renders a compact search field and the selected status', () => {
-  renderToolbar();
+test('renders a compact search field and the selected status', async () => {
+  await renderToolbar();
 
-  const toolbar = screen.getByRole('region', { name: 'Filter issues' });
+  const toolbar = page.getByRole('region', { name: 'Filter issues' }).element();
   expect(toolbar.getAttribute('data-slot')).toBe('list-filter-toolbar');
   expect(toolbar.className).toContain('flex-wrap');
   expect(toolbar.className).toContain('gap-2');
-  const searchInput = screen
+  const searchInput = page
     .getByRole('searchbox', { name: 'Search issues' })
+    .element()
     .closest('[data-slot="search-input"]');
   expect(searchInput?.className).toContain('sm:max-w-56');
-  expect(screen.getByLabelText('Filter issues by status').textContent).toContain('Open');
-  expect(screen.queryByRole('button', { name: 'Clear issue filters' })).toBeNull();
+  expect(page.getByLabelText('Filter issues by status').element().textContent).toContain('Open');
+  await expect
+    .element(page.getByRole('button', { name: 'Clear issue filters' }))
+    .not.toBeInTheDocument();
 });
 
-test('wraps toolbar and content with data-table list spacing', () => {
-  render(
+test('wraps toolbar and content with data-table list spacing', async () => {
+  await render(
     <ListFilterSection>
       <ListFilterToolbar
         ariaLabel="Filter issues"
@@ -84,20 +86,18 @@ test('wraps toolbar and content with data-table list spacing', () => {
     </ListFilterSection>
   );
 
-  const section = screen.getByText('Results').parentElement;
+  const section = page.getByText('Results').element().parentElement;
   expect(section?.getAttribute('data-slot')).toBe('list-filter-section');
   expect(section?.className).toContain('space-y-2.5');
 });
 
-test('forwards search changes and shows a clear action when filters are active', () => {
-  const { onClear, onQueryChange } = renderToolbar({ hasFilters: true, query: 'coast' });
+test('forwards search changes and shows a clear action when filters are active', async () => {
+  const { onClear, onQueryChange } = await renderToolbar({ hasFilters: true, query: 'coast' });
 
-  fireEvent.change(screen.getByRole('searchbox', { name: 'Search issues' }), {
-    target: { value: 'lisbon' }
-  });
+  await page.getByRole('searchbox', { name: 'Search issues' }).fill('lisbon');
   expect(onQueryChange).toHaveBeenCalledWith('lisbon');
 
-  fireEvent.click(screen.getByRole('button', { name: 'Clear issue filters' }));
+  await page.getByRole('button', { name: 'Clear issue filters' }).click();
   expect(onClear).toHaveBeenCalledTimes(1);
-  expect(screen.getByText('Showing 2 of 5 issues')).toBeTruthy();
+  await expect.element(page.getByText('Showing 2 of 5 issues')).toBeInTheDocument();
 });

@@ -2,12 +2,16 @@ import { mkdtemp, readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { expectConsole } from '@groam/vitest-config/console';
 import { errors, expect as expectPage } from '@playwright/test';
 import { expect, it, vi } from 'vite-plus/test';
 import { assertPngSize } from '#src/capture/png';
 import { recordScenario } from '#src/capture/record';
 
 it('captures two isolated browsers observing the same update and finalizes every frame', async () => {
+  // Recording reports its progress.
+  expectConsole('info', 'Preparing 1920×1080 desktops');
+  expectConsole('info', 'Recording: Plan together');
   let shared = '';
   let screenshotAttempts = 0;
   const server = createServer((request, response) => {

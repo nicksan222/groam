@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { useCommandPalette } from './use-command-palette';
 
@@ -26,7 +26,10 @@ const hooks = vi.hoisted(() => ({
   trips: vi.fn()
 }));
 
-vi.mock('@tanstack/react-router', () => ({ useNavigate: () => navigate }));
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
+  useNavigate: () => navigate
+}));
 vi.mock('@/features/agents/hooks/use-agent-roster', () => ({
   useAgentRoster: (...args: unknown[]) => hooks.agents(...args)
 }));
@@ -61,8 +64,8 @@ beforeEach(() => {
 });
 
 describe('useCommandPalette', () => {
-  test('keeps searches skipped until opened and toggles with the keyboard shortcut', () => {
-    const { unmount } = renderHook(() => useCommandPalette());
+  test('keeps searches skipped until opened and toggles with the keyboard shortcut', async () => {
+    const { unmount } = await renderHook(() => useCommandPalette());
     expect(hooks.trips).toHaveBeenCalledWith('skip');
     expect(hooks.discussions).toHaveBeenCalledWith('skip');
 
@@ -70,18 +73,18 @@ describe('useCommandPalette', () => {
     window.dispatchEvent(event);
     expect(event.defaultPrevented).toBe(true);
     expect(chrome.toggle).toHaveBeenCalledOnce();
-    unmount();
+    await unmount();
   });
 
-  test('builds results from loaded data and navigates after closing', () => {
+  test('builds results from loaded data and navigates after closing', async () => {
     chrome.open = true;
     chrome.query = 'paris';
     data.trips = [{ id: 'trip-1', name: 'Paris escape' }];
-    const { result } = renderHook(() => useCommandPalette());
+    const { result } = await renderHook(() => useCommandPalette());
 
     expect(hooks.trips).toHaveBeenCalledWith({ includeArchived: false, initialNumItems: 25 });
     expect(result.current.results[0]).toMatchObject({ id: 'trip:trip-1', kind: 'Trip' });
-    act(() => result.current.go(result.current.results[0]!));
+    await act(() => result.current.go(result.current.results[0]!));
     expect(chrome.closeAndClear).toHaveBeenCalledOnce();
     expect(navigate).toHaveBeenCalledWith(result.current.results[0]?.href);
   });

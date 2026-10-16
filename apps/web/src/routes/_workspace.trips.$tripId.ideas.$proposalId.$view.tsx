@@ -11,13 +11,14 @@ export const Route = createFileRoute('/_workspace/trips/$tripId/ideas/$proposalI
 });
 
 function IdeaCloneSectionRoute() {
-  const { proposalId, tripId, view } = useResolvedParams(Route.useParams());
+  const params = Route.useParams();
+  const { proposalId, tripId, view } = useResolvedParams(params);
   const search = Route.useSearch();
 
   if (!isIdeaCloneView(view)) {
     return (
       <Navigate
-        params={{ proposalId, tripId, view: defaultIdeaCloneView }}
+        params={{ ...params, view: defaultIdeaCloneView }}
         replace
         to="/trips/$tripId/ideas/$proposalId/$view"
       />

@@ -1,11 +1,10 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { AuthCard } from './auth-card';
 
-afterEach(cleanup);
-
-test('renders the title, description, children, and footer', () => {
-  render(
+test('renders the title, description, children, and footer', async () => {
+  await render(
     <AuthCard
       description="Sign in to continue"
       footer="By continuing you agree to the terms."
@@ -15,19 +14,19 @@ test('renders the title, description, children, and footer', () => {
     </AuthCard>
   );
 
-  expect(screen.getByText('Welcome back')).toBeTruthy();
-  expect(screen.getByText('Sign in to continue')).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Sign in' })).toBeTruthy();
-  expect(screen.getByText('By continuing you agree to the terms.')).toBeTruthy();
+  await expect.element(page.getByText('Welcome back')).toBeInTheDocument();
+  await expect.element(page.getByText('Sign in to continue')).toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Sign in' })).toBeInTheDocument();
+  await expect.element(page.getByText('By continuing you agree to the terms.')).toBeInTheDocument();
 });
 
-test('renders optional header extra content', () => {
-  render(
+test('renders optional header extra content', async () => {
+  await render(
     <AuthCard headerExtra={<span>Your workspace awaits</span>} title="Create your account">
       <input aria-label="Email" />
     </AuthCard>
   );
 
-  expect(screen.getByText('Your workspace awaits')).toBeTruthy();
-  expect(screen.getByLabelText('Email')).toBeTruthy();
+  await expect.element(page.getByText('Your workspace awaits')).toBeInTheDocument();
+  await expect.element(page.getByLabelText('Email')).toBeInTheDocument();
 });

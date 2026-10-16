@@ -1,8 +1,7 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { ChangeCommentComposer } from './change-comment-composer';
-
-afterEach(cleanup);
 
 test('locks the composer during posting and only submits once', async () => {
   let complete: (saved: boolean) => void = () => {};
@@ -13,27 +12,31 @@ test('locks the composer during posting and only submits once', async () => {
       })
   );
   const onCancel = vi.fn();
-  render(<ChangeCommentComposer label="Museum visit" onCancel={onCancel} onComment={onComment} />);
-  fireEvent.change(screen.getByRole('textbox'), { target: { value: '  Can we go earlier?  ' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Add comment' }));
-  expect(screen.getByRole('textbox')).toHaveProperty('disabled', true);
-  expect(screen.getByRole('button', { name: 'Cancel' })).toHaveProperty('disabled', true);
-  fireEvent.submit(screen.getByRole('textbox').closest('form')!);
+  await render(
+    <ChangeCommentComposer label="Museum visit" onCancel={onCancel} onComment={onComment} />
+  );
+  await page.getByRole('textbox').fill('  Can we go earlier?  ');
+  await page.getByRole('button', { name: 'Add comment' }).click();
+  await expect.element(page.getByRole('textbox')).toBeDisabled();
+  await expect.element(page.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+  page.getByRole('textbox').element().closest('form')?.requestSubmit();
   expect(onComment).toHaveBeenCalledTimes(1);
   expect(onComment).toHaveBeenCalledWith('Can we go earlier?');
   complete(true);
-  await waitFor(() => expect(onCancel).toHaveBeenCalledOnce());
+  await vi.waitFor(() => expect(onCancel).toHaveBeenCalledOnce());
 });
 
 test('keeps the draft after an error and allows a successful retry', async () => {
   const onComment = vi.fn().mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce(true);
   const onCancel = vi.fn();
-  render(<ChangeCommentComposer label="Museum visit" onCancel={onCancel} onComment={onComment} />);
-  fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Keep the afternoon free.' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Add comment' }));
-  await screen.findByRole('alert');
-  expect(screen.getByRole('textbox')).toHaveProperty('value', 'Keep the afternoon free.');
+  await render(
+    <ChangeCommentComposer label="Museum visit" onCancel={onCancel} onComment={onComment} />
+  );
+  await page.getByRole('textbox').fill('Keep the afternoon free.');
+  await page.getByRole('button', { name: 'Add comment' }).click();
+  await expect.element(page.getByRole('alert')).toBeInTheDocument();
+  await expect.element(page.getByRole('textbox')).toHaveValue('Keep the afternoon free.');
   expect(onCancel).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole('button', { name: 'Add comment' }));
-  await waitFor(() => expect(onCancel).toHaveBeenCalledOnce());
+  await page.getByRole('button', { name: 'Add comment' }).click();
+  await vi.waitFor(() => expect(onCancel).toHaveBeenCalledOnce());
 });

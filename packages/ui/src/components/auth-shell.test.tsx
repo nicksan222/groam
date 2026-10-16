@@ -1,5 +1,6 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { AuthShell } from './auth-shell';
 
 vi.mock('next-themes', () => ({
@@ -11,20 +12,19 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  cleanup();
   vi.restoreAllMocks();
 });
 
-test('renders the branded home link and children', () => {
-  render(
+test('renders the branded home link and children', async () => {
+  await render(
     <AuthShell>
       <p>Sign in form</p>
     </AuthShell>
   );
 
-  const home = screen.getByRole('link', { name: 'Groam home' });
+  const home = page.getByRole('link', { name: 'Groam home' }).element();
   expect(home.getAttribute('href')).toBe('/');
-  expect(screen.getByText('groam')).toBeTruthy();
-  expect(screen.getByText('Sign in form')).toBeTruthy();
+  await expect.element(page.getByText('groam')).toBeInTheDocument();
+  await expect.element(page.getByText('Sign in form')).toBeInTheDocument();
   expect(document.querySelector('[data-slot="aurora-background"]')).toBeTruthy();
 });

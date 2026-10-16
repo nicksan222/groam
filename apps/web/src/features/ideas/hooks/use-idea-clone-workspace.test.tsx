@@ -1,5 +1,5 @@
 import type { Id } from '@groam/backend/data-model';
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { useIdeaCloneWorkspace } from './use-idea-clone-workspace';
 
@@ -17,7 +17,10 @@ const deps = vi.hoisted(() => ({
   useTripVersion: vi.fn()
 }));
 
-vi.mock('@tanstack/react-router', () => ({ useNavigate: () => deps.navigate }));
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
+  useNavigate: () => deps.navigate
+}));
 vi.mock('./use-idea-context', () => ({ useIdeaContext: () => deps.useIdeaContext() }));
 vi.mock('@/features/trips/hooks/use-proposal-action-runner', () => ({
   useProposalActionRunner: () => deps.useProposalActionRunner()
@@ -75,16 +78,16 @@ beforeEach(() => {
   deps.useProposalActionRunner.mockReturnValue({ pendingAction: null, run: deps.run });
 });
 
-function renderWorkspace(view: 'compare' | 'itinerary' | 'overview' = 'compare') {
+async function renderWorkspace(view: 'compare' | 'itinerary' | 'overview' = 'compare') {
   return renderHook(() => useIdeaCloneWorkspace({ proposalId, sharedTripId, view, workingTripId }));
 }
 
-test('submits a viewer draft and registers the compare screen as ideas context', () => {
-  const { result } = renderWorkspace();
+test('submits a viewer draft and registers the compare screen as ideas context', async () => {
+  const { result } = await renderWorkspace();
 
   expect(result.current.primary).toMatchObject({ intent: 'submit' });
   expect(deps.useTripAgentContext).toHaveBeenCalledWith(expect.anything(), 'ideas');
-  act(() => {
+  await act(() => {
     result.current.runPrimary();
   });
   expect(deps.run).toHaveBeenCalledWith(
@@ -93,9 +96,9 @@ test('submits a viewer draft and registers the compare screen as ideas context',
   );
 });
 
-test('preserves route references when changing clone views and allows detail editing', () => {
-  const { result } = renderWorkspace('overview');
-  act(() => {
+test('preserves route references when changing clone views and allows detail editing', async () => {
+  const { result } = await renderWorkspace('overview');
+  await act(() => {
     result.current.editDetails();
     result.current.openView('itinerary', true);
   });
@@ -113,23 +116,23 @@ test('preserves route references when changing clone views and allows detail edi
   expect(navigation.params({})).toEqual({ proposalId, tripId: sharedTripId, view: 'itinerary' });
 });
 
-test('marks a missing working trip as unavailable and keeps the page loading', () => {
+test('marks a missing working trip as unavailable and keeps the page loading', async () => {
   deps.useTrip.mockReturnValue({ exists: false, trip: undefined });
   deps.useReadyValue.mockReturnValue({ isLoading: true, value: undefined });
-  const { result } = renderWorkspace('itinerary');
+  const { result } = await renderWorkspace('itinerary');
 
   expect(result.current).toMatchObject({ missing: true, showLoading: true, trip: undefined });
   expect(result.current.planningSection).toBe('itinerary');
 });
 
 test('opens an additional destination directly when no return travel exists', async () => {
-  const { result } = renderWorkspace('overview');
+  const { result } = await renderWorkspace('overview');
 
   await act(async () => {
     result.current.navigation.openAddDestination();
     await Promise.resolve();
   });
-  act(() => {
+  await act(() => {
     result.current.navigation.openSection('itinerary');
   });
 
@@ -142,15 +145,15 @@ test('opens an additional destination directly when no return travel exists', as
   expect(navigations[1]?.params({})).toMatchObject({ view: 'itinerary' });
 });
 
-test('keeps loading while a present trip has not resolved', () => {
+test('keeps loading while a present trip has not resolved', async () => {
   deps.useReadyValue.mockReturnValue({ isLoading: false, value: undefined });
 
-  const { result } = renderWorkspace();
+  const { result } = await renderWorkspace();
 
   expect(result.current).toMatchObject({ missing: false, showLoading: true, trip: undefined });
 });
 
-test('does not open editing or run a primary action when neither is allowed', () => {
+test('does not open editing or run a primary action when neither is allowed', async () => {
   deps.useTrip.mockReturnValue({
     exists: true,
     trip: { departureTransfer: null, id: workingTripId, permissions: { canEdit: false } }
@@ -161,9 +164,9 @@ test('does not open editing or run a primary action when neither is allowed', ()
   });
   deps.useIdeaContext.mockReturnValue({ proposal: undefined, sharedTrip: undefined });
   deps.useTripVersion.mockReturnValue({ approve: vi.fn(), proposal: undefined, submit: vi.fn() });
-  const { result } = renderWorkspace('overview');
+  const { result } = await renderWorkspace('overview');
 
-  act(() => {
+  await act(() => {
     result.current.editDetails();
     result.current.runPrimary();
   });
@@ -188,7 +191,7 @@ test('confirms before replacing return travel and handles close and shared navig
     }
   });
   deps.confirm.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
-  const { result } = renderWorkspace('itinerary');
+  const { result } = await renderWorkspace('itinerary');
 
   await act(async () => {
     result.current.navigation.openAddDestination();
@@ -200,7 +203,7 @@ test('confirms before replacing return travel and handles close and shared navig
     result.current.navigation.openAddDestination();
     await Promise.resolve();
   });
-  act(() => {
+  await act(() => {
     result.current.navigation.closeAddDestination();
     result.current.openShared();
   });
@@ -219,7 +222,7 @@ test('confirms before replacing return travel and handles close and shared navig
   );
 });
 
-test('runs approval and opens apply confirmation for review proposals', () => {
+test('runs approval and opens apply confirmation for review proposals', async () => {
   const approve = vi.fn();
   deps.useTripVersion.mockReturnValue({
     approve,
@@ -232,9 +235,9 @@ test('runs approval and opens apply confirmation for review proposals', () => {
     },
     submit: vi.fn()
   });
-  const { result, rerender } = renderWorkspace();
+  const { result, rerender } = await renderWorkspace();
 
-  act(() => {
+  await act(() => {
     result.current.runPrimary();
   });
   expect(deps.run).toHaveBeenCalledWith('approve', expect.any(Function));
@@ -250,8 +253,8 @@ test('runs approval and opens apply confirmation for review proposals', () => {
     },
     submit: vi.fn()
   });
-  rerender();
-  act(() => {
+  await rerender();
+  await act(() => {
     result.current.runPrimary();
   });
 

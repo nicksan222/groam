@@ -1,12 +1,15 @@
 import type { Id } from '@groam/backend/data-model';
-import { renderHook } from '@testing-library/react';
+import { renderHook } from '@groam/vitest-config/react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { useEnsureDestinationCovers } from './use-ensure-destination-covers';
 import type { TripDetail } from './use-trips';
 
 const convex = vi.hoisted(() => ({ useMutation: vi.fn() }));
 
-vi.mock('convex/react', () => convex);
+vi.mock('convex/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('convex/react')>()),
+  ...convex
+}));
 
 const tripId = 'trip-1' as Id<'trips'>;
 
@@ -16,25 +19,25 @@ beforeEach(() => {
 });
 
 describe('useEnsureDestinationCovers', () => {
-  test('ensures covers when at least one destination has no cover status', () => {
+  test('ensures covers when at least one destination has no cover status', async () => {
     const ensure = vi.fn().mockResolvedValue(null);
     convex.useMutation.mockReturnValue(ensure);
 
-    renderHook(() =>
+    await renderHook(() =>
       useEnsureDestinationCovers(tripId, { destinations: [{ coverStatus: null }] } as TripDetail)
     );
 
     expect(ensure).toHaveBeenCalledWith({ tripId });
   });
 
-  test('does not request covers while the trip is loading or all covers are resolved', () => {
+  test('does not request covers while the trip is loading or all covers are resolved', async () => {
     const ensure = vi.fn();
     convex.useMutation.mockReturnValue(ensure);
 
-    const { rerender } = renderHook(({ trip }) => useEnsureDestinationCovers(tripId, trip), {
+    const { rerender } = await renderHook(({ trip }) => useEnsureDestinationCovers(tripId, trip), {
       initialProps: { trip: undefined as TripDetail | undefined }
     });
-    rerender({ trip: { destinations: [{ coverStatus: 'ready' }] } as TripDetail });
+    await rerender({ trip: { destinations: [{ coverStatus: 'ready' }] } as TripDetail });
 
     expect(ensure).not.toHaveBeenCalled();
   });

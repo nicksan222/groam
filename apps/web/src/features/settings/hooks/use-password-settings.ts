@@ -1,5 +1,7 @@
 import { authClient } from '@groam/auth/client';
+import { use } from 'react';
 import { useShallow } from 'zustand/react/shallow';
+import { SessionChangeContext } from '@/features/auth/session-change-context';
 import { errorMessage } from '@/lib/errors';
 import { usePasswordSettingsStore } from '@/lib/stores/settings-stores';
 
@@ -15,6 +17,7 @@ export function usePasswordSettings() {
     }))
   );
   const patch = usePasswordSettingsStore((store) => store.patch);
+  const changeSession = use(SessionChangeContext);
 
   const save = async () => {
     if (state.newPassword.length < 8) {
@@ -28,11 +31,14 @@ export function usePasswordSettings() {
 
     patch({ error: null, isPending: true, message: null });
     try {
-      const result = await authClient.changePassword({
-        currentPassword: state.currentPassword,
-        newPassword: state.newPassword,
-        revokeOtherSessions: true
-      });
+      // Revoking the other sessions replaces this one too.
+      const result = await changeSession(() =>
+        authClient.changePassword({
+          currentPassword: state.currentPassword,
+          newPassword: state.newPassword,
+          revokeOtherSessions: true
+        })
+      );
       if (result.error) throw new Error(result.error.message ?? 'Unable to change password');
       patch({
         confirmPassword: '',

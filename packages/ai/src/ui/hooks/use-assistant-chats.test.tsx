@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import type { AssistantBackendApi } from '#ai/ui/hooks/assistant-functions';
 import { toggleContextTagReferences, useAssistantChats } from './use-assistant-chats';
@@ -70,7 +70,7 @@ beforeEach(() => {
 });
 
 test('lists chats and creates a new durable Agent thread', async () => {
-  const { result } = renderHook(() => useAssistantChats(api));
+  const { result } = await renderHook(() => useAssistantChats(api));
 
   expect(result.current.chats).toEqual(mocks.chats);
   expect(result.current.catalog).toEqual(mocks.catalog);
@@ -99,7 +99,7 @@ test('lists chats and creates a new durable Agent thread', async () => {
 });
 
 test('updates typed context tags and reports failures', async () => {
-  const { result } = renderHook(() => useAssistantChats(api));
+  const { result } = await renderHook(() => useAssistantChats(api));
   await act(() => result.current.setTags('thread-1', [{ id: 'trip-1', kind: 'trip' }]));
   expect(mocks.setTags).toHaveBeenCalledWith({
     tags: [{ id: 'trip-1', kind: 'trip' }],
@@ -111,7 +111,7 @@ test('updates typed context tags and reports failures', async () => {
   expect(mocks.error).toHaveBeenCalledWith('Tag update failed');
 });
 
-test('projects and toggles stored context attachments', () => {
+test('projects and toggles stored context attachments', async () => {
   const tags = [
     { id: 'activity-1', kind: 'activity' as const, label: 'Alfama walk', tripId: 'trip-1' }
   ];

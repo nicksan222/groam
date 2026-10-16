@@ -1,10 +1,10 @@
-import { render } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import { expect, test } from 'vite-plus/test';
 import Timeline from './index';
 import { TimelineItem } from './timeline-item';
 
-test('timeline parts fall back to the default variant without a provider', () => {
-  const { container } = render(
+test('timeline parts fall back to the default variant without a provider', async () => {
+  const { container } = await render(
     <Timeline.Item>
       <Timeline.Badge>AB</Timeline.Badge>
       <Timeline.Body>Event</Timeline.Body>
@@ -22,8 +22,8 @@ test('timeline parts fall back to the default variant without a provider', () =>
   );
 });
 
-test('keeps connector segments outside the avatar badge', () => {
-  const { container } = render(<TimelineItem data-testid="item" />);
+test('keeps connector segments outside the avatar badge', async () => {
+  const { container } = await render(<TimelineItem data-testid="item" />);
   const item = container.querySelector('[data-slot="timeline-item"]');
 
   expect(item?.className).toContain('before:top-9');
@@ -33,8 +33,8 @@ test('keeps connector segments outside the avatar badge', () => {
   expect(item?.className).not.toContain('before:top-0');
 });
 
-test('condensed default items use tighter vertical rhythm', () => {
-  const { container } = render(
+test('condensed default items use tighter vertical rhythm', async () => {
+  const { container } = await render(
     <Timeline>
       <Timeline.Item condensed data-testid="item" />
     </Timeline>
@@ -45,8 +45,8 @@ test('condensed default items use tighter vertical rhythm', () => {
   expect(item?.getAttribute('data-condensed')).toBe('');
 });
 
-test('minimal variant uses a segmented hairline with markers between segments', () => {
-  const { container } = render(
+test('minimal variant uses a segmented hairline with markers between segments', async () => {
+  const { container } = await render(
     <Timeline variant="minimal">
       <Timeline.Item data-testid="item" />
     </Timeline>
@@ -64,8 +64,8 @@ test('minimal variant uses a segmented hairline with markers between segments', 
   expect(item?.getAttribute('data-condensed')).toBe('');
 });
 
-test('activity variant uses a segmented hairline centered on the actor avatar', () => {
-  const { container } = render(
+test('activity variant uses a segmented hairline centered on the actor avatar', async () => {
+  const { container } = await render(
     <Timeline variant="activity">
       <Timeline.Item data-testid="item" />
     </Timeline>
@@ -85,8 +85,8 @@ test('activity variant uses a segmented hairline centered on the actor avatar', 
   expect(item?.getAttribute('data-condensed')).toBeNull();
 });
 
-test('activity condensed items tighten padding and keep the hairline on the badge', () => {
-  const { container } = render(
+test('activity condensed items tighten padding and keep the hairline on the badge', async () => {
+  const { container } = await render(
     <Timeline variant="activity">
       <Timeline.Item condensed data-testid="item" />
     </Timeline>
@@ -101,8 +101,8 @@ test('activity condensed items tighten padding and keep the hairline on the badg
   expect(container.querySelector('[data-testid="item"]')?.getAttribute('data-condensed')).toBe('');
 });
 
-test('route variant uses a segmented hairline centered on the 128px photo marker', () => {
-  const { container } = render(
+test('route variant uses a segmented hairline centered on the 128px photo marker', async () => {
+  const { container } = await render(
     <Timeline variant="route">
       <Timeline.Item data-testid="item" />
     </Timeline>

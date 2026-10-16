@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { expect, test } from 'vite-plus/test';
 import {
   rebaseBlockedReason,
@@ -38,14 +38,14 @@ const conflicts = [
   }
 ];
 
-test('explains rebase as a working-copy update for the author or group admin', () => {
+test('explains rebase as a working-copy update for the author or group admin', async () => {
   expect(rebaseBlockedReason(true)).toBeNull();
   expect(rebaseBlockedReason(false)).toBe(
     'Only the idea author or a group organizer can update this idea.'
   );
 });
 
-test('formats progress and explanations for one conflict at a time', () => {
+test('formats progress and explanations for one conflict at a time', async () => {
   expect(rebaseProgressLabel(0, 0)).toBe('');
   expect(rebaseProgressLabel(1, 5)).toBe('Change 2 of 5');
   expect(rebaseExplanation(conflicts[0]!)).toBe('The shared trip and this idea both changed name.');
@@ -58,10 +58,10 @@ test('formats progress and explanations for one conflict at a time', () => {
   ).toBe('The shared trip changed name. This idea changed duration.');
 });
 
-test('walks first, middle, and last steps and records keep-shared vs keep-idea', () => {
-  const { result } = renderHook(() => useIdeaRebaseReconciliation());
+test('walks first, middle, and last steps and records keep-shared vs keep-idea', async () => {
+  const { result } = await renderHook(() => useIdeaRebaseReconciliation());
 
-  act(() => {
+  await act(() => {
     result.current.start(conflicts);
   });
   expect(result.current.open).toBe(true);
@@ -71,7 +71,7 @@ test('walks first, middle, and last steps and records keep-shared vs keep-idea',
   expect(result.current.isLast).toBe(false);
 
   let choice = { completed: false, resolutions: [] as ReturnType<typeof resolutionsFromChoices> };
-  act(() => {
+  await act(() => {
     choice = result.current.choose('current');
   });
   expect(choice.completed).toBe(false);
@@ -80,24 +80,24 @@ test('walks first, middle, and last steps and records keep-shared vs keep-idea',
   expect(result.current.isFirst).toBe(false);
   expect(result.current.isLast).toBe(false);
 
-  act(() => {
+  await act(() => {
     result.current.choose('proposed');
   });
   expect(result.current.progressLabel).toBe('Change 3 of 3');
   expect(result.current.isLast).toBe(true);
 
-  act(() => {
+  await act(() => {
     result.current.back();
   });
   expect(result.current.progressLabel).toBe('Change 2 of 3');
   expect(result.current.currentChoice).toBe('proposed');
 
-  act(() => {
+  await act(() => {
     choice = result.current.choose('proposed');
   });
   expect(choice.completed).toBe(false);
 
-  act(() => {
+  await act(() => {
     choice = result.current.choose('current');
   });
   expect(choice).toEqual({
@@ -110,8 +110,8 @@ test('walks first, middle, and last steps and records keep-shared vs keep-idea',
   });
 });
 
-test('does not open a wizard when there is nothing to reconcile', () => {
-  const { result } = renderHook(() => useIdeaRebaseReconciliation());
+test('does not open a wizard when there is nothing to reconcile', async () => {
+  const { result } = await renderHook(() => useIdeaRebaseReconciliation());
   expect(result.current.open).toBe(false);
   expect(result.current.total).toBe(0);
   expect(result.current.current).toBeUndefined();

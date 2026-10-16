@@ -23,7 +23,6 @@ env:
   GIT_CONFIG_COUNT: '1'
   GIT_CONFIG_KEY_0: init.defaultBranch
   GIT_CONFIG_VALUE_0: main
-  TURBO_TELEMETRY_DISABLED: '1'
 
 jobs:
   test:
@@ -33,7 +32,7 @@ jobs:
   backend:
     name: Deploy backend and migrations to ${{ inputs.environment }}
     needs: [test]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment:
       name: ${{ inputs.environment }}
@@ -98,7 +97,7 @@ jobs:
   smoke-test:
     name: Smoke test ${{ inputs.environment }}
     needs: [backend, sites]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     environment:
       name: ${{ inputs.environment }}

@@ -4,5 +4,5 @@
     "lib": ["ES2023", "DOM"],
     "paths": { "#ai/*": ["../../packages/ai/src/*"] }
   },
-  "include": ["src"]
+  "include": ["src", "vite.config.ts"]
 }

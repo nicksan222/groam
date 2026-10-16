@@ -1854,4 +1854,18 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         Name
       >;
     };
+    workspace: {
+      access: FunctionReference<
+        "query",
+        "internal",
+        { sessionId: string; userId: string },
+        null | {
+          activeOrganizationId: null | string;
+          expiresAt: number;
+          role: null | string;
+          userName: string;
+        },
+        Name
+      >;
+    };
   };

@@ -1,19 +1,18 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { SectionCard } from './section-card';
 
-afterEach(cleanup);
-
-test('renders a titled card with optional action and body content', () => {
-  render(
+test('renders a titled card with optional action and body content', async () => {
+  await render(
     <SectionCard action={<button type="button">Invite</button>} title="Group members">
       <p>Ada Lovelace</p>
     </SectionCard>
   );
 
-  expect(screen.getByText('Group members')).toBeTruthy();
-  expect(screen.getByText('Ada Lovelace')).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Invite' })).toBeTruthy();
+  await expect.element(page.getByText('Group members')).toBeInTheDocument();
+  await expect.element(page.getByText('Ada Lovelace')).toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Invite' })).toBeInTheDocument();
   const card = document.querySelector('[data-slot="section-card"]');
   expect(card).toBeTruthy();
   expect(card?.className).toContain('gap-0');

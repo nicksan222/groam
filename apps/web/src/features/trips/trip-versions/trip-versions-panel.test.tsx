@@ -1,7 +1,8 @@
 import type { Id } from '@groam/backend/data-model';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { TripVersionsPanel } from '@/features/trips/trip-versions/trip-versions-panel';
 import {
@@ -28,7 +29,8 @@ const versions = vi.hoisted(() => ({
     | undefined
 }));
 
-vi.mock('@tanstack/react-router', () => ({
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
   Link: ({ children, to }: { children?: React.ReactNode; to: string }) => (
     <a href={to}>{children}</a>
   ),
@@ -82,7 +84,7 @@ function listProposal(
   };
 }
 
-function renderIdea(ui: ReactNode, viewerName = 'Lea Demo', viewerUserId = 'user-lea') {
+async function renderIdea(ui: ReactNode, viewerName = 'Lea Demo', viewerUserId = 'user-lea') {
   return render(
     <WorkspaceContext.Provider
       value={{ session: { user: { id: viewerUserId, name: viewerName } } } as WorkspaceContextValue}
@@ -97,33 +99,31 @@ beforeEach(() => {
   versions.proposals = [];
 });
 
-afterEach(cleanup);
-
 describe('TripVersionsPanel', () => {
-  test('shows New idea when the trip can start ideas', () => {
-    renderIdea(<TripVersionsPanel onStartIdea={vi.fn()} trip={trip()} />);
-    expect(screen.getAllByRole('button', { name: 'New idea' }).length).toBeGreaterThan(0);
+  test('shows New idea when the trip can start ideas', async () => {
+    await renderIdea(<TripVersionsPanel onStartIdea={vi.fn()} trip={trip()} />);
+    expect(page.getByRole('button', { name: 'New idea' }).elements().length).toBeGreaterThan(0);
   });
 
-  test('lists ideas with titles and Open', () => {
+  test('lists ideas with titles and Open', async () => {
     versions.proposals = [listProposal()];
-    renderIdea(<TripVersionsPanel onStartIdea={vi.fn()} trip={trip()} />);
-    expect(screen.getByText('Add a coast day')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Open' })).toBeTruthy();
+    await renderIdea(<TripVersionsPanel onStartIdea={vi.fn()} trip={trip()} />);
+    await expect.element(page.getByText('Add a coast day')).toBeInTheDocument();
+    await expect.element(page.getByRole('link', { name: 'Open' })).toBeInTheDocument();
   });
 
-  test('shows Continue for the viewer’s draft', () => {
+  test('shows Continue for the viewer’s draft', async () => {
     versions.proposals = [
       listProposal({ status: 'draft', author: { name: 'Lea Demo', userId: 'user-lea' } })
     ];
-    renderIdea(<TripVersionsPanel onStartIdea={vi.fn()} trip={trip()} />);
-    expect(screen.getByRole('button', { name: /Continue/u })).toBeTruthy();
+    await renderIdea(<TripVersionsPanel onStartIdea={vi.fn()} trip={trip()} />);
+    await expect.element(page.getByRole('button', { name: /Continue/u })).toBeInTheDocument();
   });
 
-  test('calls onStartIdea from the New idea button', () => {
+  test('calls onStartIdea from the New idea button', async () => {
     const onStartIdea = vi.fn();
-    renderIdea(<TripVersionsPanel onStartIdea={onStartIdea} trip={trip()} />);
-    fireEvent.click(screen.getAllByRole('button', { name: 'New idea' })[0]!);
+    await renderIdea(<TripVersionsPanel onStartIdea={onStartIdea} trip={trip()} />);
+    await page.getByRole('button', { name: 'New idea' }).first().click();
     expect(onStartIdea).toHaveBeenCalled();
   });
 });

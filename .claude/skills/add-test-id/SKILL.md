@@ -1,7 +1,7 @@
 ---
 name: add-test-id
 description: >-
-  Add a stable data-testid for Groam Playwright and Testing Library locators.
+  Add a stable data-testid for Groam browser-mode view tests and journeys.
   Use when a new control, dialog, row, or empty-state action needs a test
   hook — ids live in @groam/app-actions/ids, never as inline strings in one
   app.
@@ -10,7 +10,7 @@ description: >-
 # Add a test id
 
 Stable locators are the `ids` object in
-`tooling/app-actions/src/playwright/ids.ts`, published as
+`tooling/app-actions/src/testing/ids.ts`, published as
 `@groam/app-actions/ids`. The web app re-exports it as `testIds` from
 `@/lib/test-ids`.
 
@@ -31,13 +31,18 @@ Stable locators are the `ids` object in
    <Button data-testid={testIds.agentStop}>Stop</Button>
    ```
 
-3. Query the same key in tests: `screen.getByTestId(testIds.agentStop)` in
-   Testing Library (`add-web-view-test`), `page.getByTestId(ids.agentStop)`
-   in Playwright.
-4. For a repeated browser journey, add or reuse a helper in
-   `tooling/app-actions/src/playwright/<verb>.ts` (exported from its
-   `index.ts`) instead of repeating the steps in a spec under
-   `apps/web/e2e/`.
+3. Query the same key in tests: `page.getByTestId(testIds.agentStop)` in
+   view tests (`add-web-view-test`) and journeys.
+4. For a repeated browser step, add or reuse a helper in
+   `tooling/app-actions/src/vitest/<verb>.ts` (exported from its
+   `index.ts`) built on `page` locators from `vite-plus/test/browser`,
+   instead of repeating the steps in a test.
+5. View tests and journeys use the same steps. Journeys
+   (`apps/web/e2e/**/*.test.tsx`) mount the whole app with `openApp(path)`
+   from `@/testing/open-app`, signed in as the file's own account and group;
+   `arrange` from `@groam/app-actions/vitest` creates trips, ideas, issues,
+   and members through the backend, and other people act through it too.
+   Drive only the journey under test through the UI.
 
 ## Rules
 

@@ -1,5 +1,7 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { expectConsole } from '@groam/vitest-config/console';
+import { render } from '@groam/vitest-config/react';
+import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type { TripListItem, WorkspaceTripProposal } from '@/features/trips/hooks/use-trips';
 import {
   mockTripWorkspace,
@@ -9,6 +11,26 @@ import {
 } from '@/features/trips/test-fixtures';
 import { resetTripWorkspaceView, trips } from '@/features/trips/test-workspace-mocks';
 import { DashboardView } from './dashboard-view';
+
+vi.mock('@groam/ai/ui/context/agent-context', async () => {
+  const { agentContextModule } = await import('@/features/trips/test-workspace-mocks');
+  return agentContextModule;
+});
+
+vi.mock('@/features/workspace/workspace-shell/workspace-state', async () => {
+  const { workspaceStateModule } = await import('@/features/trips/test-workspace-mocks');
+  return workspaceStateModule;
+});
+
+vi.mock('@/features/trips/hooks/use-trips', async () => {
+  const { useTripsModule } = await import('@/features/trips/test-workspace-mocks');
+  return useTripsModule;
+});
+
+vi.mock('@tanstack/react-router', async () => {
+  const { tripRouterModule } = await import('@/features/trips/test-workspace-mocks');
+  return tripRouterModule();
+});
 
 const tripsUi = vi.hoisted(() => ({
   openCreate: vi.fn()
@@ -23,28 +45,28 @@ beforeEach(() => {
   tripsUi.openCreate.mockClear();
 });
 
-afterEach(cleanup);
-
 describe('DashboardView', () => {
   test('shows home layout chrome while trips and ideas load', async () => {
     mockTripWorkspace(trips, { isLoading: true });
-    render(<DashboardView />);
+    await render(<DashboardView />);
 
-    expect(await screen.findByRole('status', { name: 'Loading your workspace…' })).toBeTruthy();
+    await expect
+      .element(page.getByRole('status', { name: 'Loading your workspace…' }))
+      .toBeInTheDocument();
     expect(document.querySelectorAll('[data-slot="page-loading"]')).toHaveLength(1);
     expect(document.querySelector('[data-slot="skeleton"]')).toBeNull();
   });
 
   test('invites the group to start a trip when home is empty', async () => {
     mockTripWorkspace(trips, { tripItems: [trip({ archivedAt: now, name: 'Last year' })] });
-    render(<DashboardView />);
+    await render(<DashboardView />);
 
-    expect(await screen.findByTestId('empty-screen')).toBeTruthy();
-    expect(screen.getByText('Where should we go next?')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Create a trip' }));
+    await expect.element(page.getByTestId('empty-screen')).toBeInTheDocument();
+    await expect.element(page.getByText('Where should we go next?')).toBeInTheDocument();
+    await page.getByRole('button', { name: 'Create a trip' }).click();
     expect(tripsUi.openCreate).toHaveBeenCalledTimes(1);
-    expect(screen.queryByRole('link', { name: 'View trips' })).toBeNull();
-    expect(screen.queryByText('Atlantic week')).toBeNull();
+    await expect.element(page.getByRole('link', { name: 'View trips' })).not.toBeInTheDocument();
+    await expect.element(page.getByText('Atlantic week')).not.toBeInTheDocument();
   });
 
   test('surfaces waiting ideas, trips, drafts, and settled work', async () => {
@@ -72,27 +94,35 @@ describe('DashboardView', () => {
         })
       ]
     });
-    render(<DashboardView />);
+    await render(<DashboardView />);
 
-    expect(screen.getByText('Acme Labs')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Create trip' }));
+    await expect.element(page.getByText('Acme Labs')).toBeInTheDocument();
+    await page.getByRole('button', { name: 'Create trip' }).click();
     expect(tripsUi.openCreate).toHaveBeenCalledTimes(1);
-    expect(await screen.findByRole('heading', { name: 'Atlantic week' })).toBeTruthy();
-    expect(screen.getByText('Please review the coast day')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Review idea' })).toBeTruthy();
-    expect(screen.getByText('Packing list')).toBeTruthy();
-    expect(screen.getByText('Train tickets')).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Open dates' })).toBeTruthy();
-    expect(screen.getByText('Agree on the travel period')).toBeTruthy();
-    expect(screen.queryByText('Decide now')).toBeNull();
-    expect(screen.getByRole('heading', { name: 'Needs your attention' })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Recent ideas' })).toBeTruthy();
-    expect(screen.getByText('Based on the 3 most recent ideas.')).toBeTruthy();
-    expect(screen.getByLabelText('Recent idea status distribution')).toBeTruthy();
-    expect(screen.getByText('1 item needs attention')).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Continue planning' })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Your ideas' })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Recently decided' })).toBeTruthy();
+    await expect.element(page.getByRole('heading', { name: 'Atlantic week' })).toBeInTheDocument();
+    await expect.element(page.getByText('Please review the coast day')).toBeInTheDocument();
+    await expect.element(page.getByRole('link', { name: 'Review idea' })).toBeInTheDocument();
+    await expect.element(page.getByText('Packing list')).toBeInTheDocument();
+    await expect.element(page.getByText('Train tickets')).toBeInTheDocument();
+    await expect.element(page.getByRole('heading', { name: 'Open dates' })).toBeInTheDocument();
+    await expect.element(page.getByText('Agree on the travel period')).toBeInTheDocument();
+    await expect.element(page.getByText('Decide now')).not.toBeInTheDocument();
+    await expect
+      .element(page.getByRole('heading', { name: 'Needs your attention' }))
+      .toBeInTheDocument();
+    await expect.element(page.getByRole('heading', { name: 'Recent ideas' })).toBeInTheDocument();
+    await expect.element(page.getByText('Based on the 3 most recent ideas.')).toBeInTheDocument();
+    await expect
+      .element(page.getByLabelText('Recent idea status distribution'))
+      .toBeInTheDocument();
+    await expect.element(page.getByText('1 item needs attention')).toBeInTheDocument();
+    await expect
+      .element(page.getByRole('heading', { name: 'Continue planning' }))
+      .toBeInTheDocument();
+    await expect.element(page.getByRole('heading', { name: 'Your ideas' })).toBeInTheDocument();
+    await expect
+      .element(page.getByRole('heading', { name: 'Recently decided' }))
+      .toBeInTheDocument();
   });
 
   test('caps review requests and dashboard lists without implying workspace totals', async () => {
@@ -111,26 +141,35 @@ describe('DashboardView', () => {
         })
       )
     });
-    render(<DashboardView />);
+    await render(<DashboardView />);
 
-    expect(await screen.findByText('Review request 1')).toBeTruthy();
-    expect(screen.getByText('Review request 3')).toBeTruthy();
-    expect(screen.queryByText('Review request 4')).toBeNull();
-    expect(screen.getByRole('heading', { name: 'Planning trip 4' })).toBeTruthy();
-    expect(screen.queryByRole('heading', { name: 'Planning trip 5' })).toBeNull();
-    expect(screen.queryByText(/6 active trips/i)).toBeNull();
+    await expect.element(page.getByText('Review request 1')).toBeInTheDocument();
+    await expect.element(page.getByText('Review request 3')).toBeInTheDocument();
+    await expect.element(page.getByText('Review request 4')).not.toBeInTheDocument();
+    await expect
+      .element(page.getByRole('heading', { name: 'Planning trip 4' }))
+      .toBeInTheDocument();
+    await expect
+      .element(page.getByRole('heading', { name: 'Planning trip 5' }))
+      .not.toBeInTheDocument();
+    await expect.element(page.getByText(/6 active trips/i)).not.toBeInTheDocument();
   });
 
   test('shows a recovery screen when workspace queries throw', async () => {
-    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    // React reports the error the recovery boundary catches.
+    expectConsole('error', 'query failed');
     trips.useTrips.mockImplementation(() => {
       throw new Error('query failed');
     });
-    render(<DashboardView />);
+    await render(<DashboardView />);
 
-    expect(await screen.findByText('Something went wrong')).toBeTruthy();
-    expect(screen.getByText('The workspace home could not be loaded.')).toBeTruthy();
-    expect(screen.getByText('Open trips to keep planning, or try again.')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Try again' })).toBeTruthy();
+    await expect.element(page.getByText('Something went wrong')).toBeInTheDocument();
+    await expect
+      .element(page.getByText('The workspace home could not be loaded.'))
+      .toBeInTheDocument();
+    await expect
+      .element(page.getByText('Open trips to keep planning, or try again.'))
+      .toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
   });
 });

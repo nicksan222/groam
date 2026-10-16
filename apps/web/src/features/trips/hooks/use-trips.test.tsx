@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import type { CreateTripInput } from './use-trips';
 import { useTrip, useTrips, useWorkspaceTripProposals } from './use-trips';
@@ -15,7 +15,10 @@ const storage = vi.hoisted(() => ({
   uploadToConvexStorage: vi.fn()
 }));
 
-vi.mock('convex/react', () => convex);
+vi.mock('convex/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('convex/react')>()),
+  ...convex
+}));
 vi.mock('@groam/ui/components/toast', () => ({ toast: notifications }));
 vi.mock('@/features/media/convex-storage-upload', () => storage);
 vi.mock('@/features/workspace/workspace-shell/workspace-state', () => ({
@@ -43,7 +46,9 @@ describe('useTrips', () => {
     const upload = vi.fn();
     convex.useAction.mockReturnValue(create);
     convex.useMutation.mockReturnValue(upload);
-    const { result } = renderHook(() => useTrips({ includeArchived: false, initialNumItems: 10 }));
+    const { result } = await renderHook(() =>
+      useTrips({ includeArchived: false, initialNumItems: 10 })
+    );
 
     await act(async () => {
       expect(await result.current.createTrip(input, null)).toBe('trip-1');
@@ -69,7 +74,7 @@ describe('useTrips', () => {
       json: async () => ({ storageId: 'raw-id' })
     });
     storage.storageIdFromUploadResponse.mockReturnValue('storage-1');
-    const { result } = renderHook(() => useTrips());
+    const { result } = await renderHook(() => useTrips());
     const valid = new File(['cover'], 'cover.png', { type: 'image/png' });
 
     await act(async () => {
@@ -95,14 +100,14 @@ describe('useTrips', () => {
   });
 });
 
-test('skips trip pagination on request and exposes workspace proposals', () => {
-  const skipped = renderHook(() => useTrips('skip'));
+test('skips trip pagination on request and exposes workspace proposals', async () => {
+  const skipped = await renderHook(() => useTrips('skip'));
   expect(convex.usePaginatedQuery).toHaveBeenCalledWith(expect.anything(), 'skip', {
     initialNumItems: 25
   });
   expect(skipped.result.current.trips).toEqual([{ id: 'trip-1', name: 'Portugal' }]);
 
-  const proposals = renderHook(() => useWorkspaceTripProposals({ initialNumItems: 5 }));
+  const proposals = await renderHook(() => useWorkspaceTripProposals({ initialNumItems: 5 }));
   expect(convex.usePaginatedQuery).toHaveBeenLastCalledWith(
     expect.anything(),
     {},
@@ -122,7 +127,7 @@ test('exposes trip mutations for planning, travel details, and cover management'
     json: async () => ({ storageId: 'raw' })
   });
   storage.storageIdFromUploadResponse.mockReturnValue('cover-storage');
-  const { result } = renderHook(() => useTrip('trip-1' as never));
+  const { result } = await renderHook(() => useTrip('trip-1' as never));
 
   await act(async () => {
     await result.current.archive();
@@ -171,7 +176,7 @@ test('reports failed trip actions and treats null or loading trips as absent', a
   const failedArchive = vi.fn().mockRejectedValue(new Error('Read only'));
   convex.useMutation.mockReturnValue(failedArchive);
   convex.useQuery.mockReturnValue(null);
-  const missing = renderHook(() => useTrip('trip-1' as never));
+  const missing = await renderHook(() => useTrip('trip-1' as never));
   await act(async () => {
     expect(await missing.result.current.archive()).toBe(false);
   });
@@ -180,6 +185,6 @@ test('reports failed trip actions and treats null or loading trips as absent', a
   expect(missing.result.current.trip).toBeUndefined();
 
   convex.useQuery.mockReturnValue(undefined);
-  const loading = renderHook(() => useTrip('trip-1' as never));
+  const loading = await renderHook(() => useTrip('trip-1' as never));
   expect(loading.result.current.exists).toBeUndefined();
 });

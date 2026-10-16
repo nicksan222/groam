@@ -1,6 +1,7 @@
 import type { Id } from '@groam/backend/data-model';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { TripPageHero } from './trip-page-hero';
 
@@ -8,7 +9,8 @@ vi.mock('@/features/trips/hooks/use-trip-travelers', () => ({
   useTripTravelers: () => ({ goingCount: 3 })
 }));
 
-vi.mock('@/features/trips/hooks/use-trip-versions', () => ({
+vi.mock('@/features/trips/hooks/use-trip-versions', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/features/trips/hooks/use-trip-versions')>()),
   useTripVersions: () => ({ proposals: [] })
 }));
 
@@ -60,7 +62,7 @@ function tripDetail(overrides: Partial<TripDetail> = {}): TripDetail {
   } as TripDetail;
 }
 
-function renderHero(
+async function renderHero(
   trip: TripDetail = tripDetail(),
   retryCover: () => Promise<boolean> = vi.fn().mockResolvedValue(true)
 ) {
@@ -69,48 +71,47 @@ function renderHero(
   );
 }
 
-afterEach(cleanup);
-
 describe('TripPageHero banner layout', () => {
-  test('keeps its text inset so only the surrounding band goes full bleed', () => {
-    renderHero();
+  test('keeps its text inset so only the surrounding band goes full bleed', async () => {
+    await renderHero();
 
-    const row = screen.getByTestId('trip-heading').closest('div')?.parentElement?.parentElement;
+    const row = page.getByTestId('trip-heading').element().closest('div')
+      ?.parentElement?.parentElement;
     expect(row?.className).toContain('px-4');
     expect(row?.className).not.toContain('-mx-');
     expect(row?.className).not.toContain('w-screen');
   });
 
-  test('separates the title, destination, and meta line', () => {
-    renderHero();
+  test('separates the title, destination, and meta line', async () => {
+    await renderHero();
 
-    expect(screen.getByTestId('trip-destination').className).toContain('mt-1');
-    expect(screen.getByTestId('trip-role').className).toContain('mt-1');
+    await expect.element(page.getByTestId('trip-destination')).toHaveClass('mt-1');
+    await expect.element(page.getByTestId('trip-role')).toHaveClass('mt-1');
   });
 });
 
 describe('TripPageHero cover refresh', () => {
   test('lets an editor find another automatic cover from the thumbnail', async () => {
     const retryCover = vi.fn().mockResolvedValue(true);
-    renderHero(tripDetail(), retryCover);
+    await renderHero(tripDetail(), retryCover);
 
-    const button = screen.getByRole('button', { name: 'Find another image' });
-    expect(button).toBeTruthy();
-    fireEvent.click(button);
+    await page.getByRole('button', { name: 'Find another image' }).click();
 
     expect(retryCover).toHaveBeenCalledOnce();
-    expect(await screen.findByRole('button', { name: 'Find another image' })).toBeTruthy();
+    await expect
+      .element(page.getByRole('button', { name: 'Find another image' }))
+      .toBeInTheDocument();
   });
 
-  test('shows a loading state on the thumbnail while a new cover is pending', () => {
-    renderHero(tripDetail({ coverStatus: 'pending' }));
+  test('shows a loading state on the thumbnail while a new cover is pending', async () => {
+    await renderHero(tripDetail({ coverStatus: 'pending' }));
 
-    const button = screen.getByRole('button', { name: 'Finding another image' });
-    expect((button as HTMLButtonElement).disabled).toBe(true);
-    expect(button.getAttribute('aria-busy')).toBe('true');
-    expect(screen.getByLabelText('Loading')).toBeTruthy();
-    expect(button.parentElement?.className).toContain('opacity-100');
-    expect(button.parentElement?.className).toContain('motion-reduce:transition-none');
+    const button = page.getByRole('button', { name: 'Finding another image' });
+    await expect.element(button).toBeDisabled();
+    await expect.element(button).toHaveAttribute('aria-busy', 'true');
+    await expect.element(page.getByLabelText('Loading')).toBeInTheDocument();
+    expect(button.element().parentElement?.className).toContain('opacity-100');
+    expect(button.element().parentElement?.className).toContain('motion-reduce:transition-none');
   });
 
   test('disables the control while the refetch request is in flight', async () => {
@@ -121,29 +122,27 @@ describe('TripPageHero cover refresh', () => {
           resolveRetry = resolve;
         })
     );
-    renderHero(tripDetail(), retryCover);
+    await renderHero(tripDetail(), retryCover);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Find another image' }));
+    await page.getByRole('button', { name: 'Find another image' }).click();
 
-    const busy = await screen.findByRole('button', { name: 'Finding another image' });
-    expect((busy as HTMLButtonElement).disabled).toBe(true);
-    expect(screen.getByLabelText('Loading')).toBeTruthy();
+    await expect
+      .element(page.getByRole('button', { name: 'Finding another image' }))
+      .toBeDisabled();
+    await expect.element(page.getByLabelText('Loading')).toBeInTheDocument();
 
     resolveRetry(true);
-    expect(
-      ((await screen.findByRole('button', { name: 'Find another image' })) as HTMLButtonElement)
-        .disabled
-    ).toBe(false);
+    await expect.element(page.getByRole('button', { name: 'Find another image' })).toBeEnabled();
   });
 
-  test('labels a failed automatic cover as a retry', () => {
-    renderHero(tripDetail({ coverAttribution: null, coverStatus: 'failed', coverUrl: null }));
+  test('labels a failed automatic cover as a retry', async () => {
+    await renderHero(tripDetail({ coverAttribution: null, coverStatus: 'failed', coverUrl: null }));
 
-    expect(screen.getByRole('button', { name: 'Retry cover' })).toBeTruthy();
+    await expect.element(page.getByRole('button', { name: 'Retry cover' })).toBeInTheDocument();
   });
 
-  test('hides the refetch control when the traveler cannot change the cover', () => {
-    renderHero(
+  test('hides the refetch control when the traveler cannot change the cover', async () => {
+    await renderHero(
       tripDetail({
         permissions: {
           canArchive: false,
@@ -156,14 +155,20 @@ describe('TripPageHero cover refresh', () => {
       })
     );
 
-    expect(screen.queryByRole('button', { name: 'Find another image' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Finding another image' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Retry cover' })).toBeNull();
+    await expect
+      .element(page.getByRole('button', { name: 'Find another image' }))
+      .not.toBeInTheDocument();
+    await expect
+      .element(page.getByRole('button', { name: 'Finding another image' }))
+      .not.toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'Retry cover' })).not.toBeInTheDocument();
   });
 
-  test('does not offer refetch on an uploaded cover', () => {
-    renderHero(tripDetail({ coverAttribution: null, coverStatus: 'ready' }));
+  test('does not offer refetch on an uploaded cover', async () => {
+    await renderHero(tripDetail({ coverAttribution: null, coverStatus: 'ready' }));
 
-    expect(screen.queryByRole('button', { name: 'Find another image' })).toBeNull();
+    await expect
+      .element(page.getByRole('button', { name: 'Find another image' }))
+      .not.toBeInTheDocument();
   });
 });

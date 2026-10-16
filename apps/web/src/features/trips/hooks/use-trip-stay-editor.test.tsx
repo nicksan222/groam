@@ -1,5 +1,5 @@
 import type { Id } from '@groam/backend/data-model';
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { useTripStayEditor } from './use-trip-stay-editor';
 
@@ -23,8 +23,8 @@ beforeEach(() => {
 });
 
 describe('useTripStayEditor', () => {
-  test('opens a new stay and tracks editing boolean', () => {
-    const { result } = renderHook(() =>
+  test('opens a new stay and tracks editing boolean', async () => {
+    const { result } = await renderHook(() =>
       useTripStayEditor({
         addStay: vi.fn(),
         destination: destination as never,
@@ -32,7 +32,7 @@ describe('useTripStayEditor', () => {
       })
     );
     expect(result.current.isEditing).toBe(false);
-    act(() => {
+    await act(() => {
       result.current.open();
     });
     expect(result.current.isEditing).toBe(true);
@@ -41,7 +41,7 @@ describe('useTripStayEditor', () => {
 
   test('saves a new stay and closes on success', async () => {
     const addStay = vi.fn().mockResolvedValue(true);
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useTripStayEditor({
         addStay,
         destination: destination as never,
@@ -49,7 +49,7 @@ describe('useTripStayEditor', () => {
       })
     );
 
-    act(() => {
+    await act(() => {
       result.current.open();
       result.current.patch({ title: 'Hotel' });
     });
@@ -64,14 +64,14 @@ describe('useTripStayEditor', () => {
 
   test('keeps editing open for invalid and failed saves', async () => {
     const addStay = vi.fn().mockResolvedValue(false);
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useTripStayEditor({ addStay, destination: destination as never, updateStay: vi.fn() })
     );
 
-    act(() => result.current.open());
+    await act(() => result.current.open());
     await act(async () => expect(await result.current.save()).toBe(false));
     expect(addStay).not.toHaveBeenCalled();
-    act(() => result.current.patch({ title: 'Hotel' }));
+    await act(() => result.current.patch({ title: 'Hotel' }));
     await act(async () => expect(await result.current.save()).toBe(false));
     expect(addStay).toHaveBeenCalled();
     expect(result.current.isEditing).toBe(true);
@@ -89,11 +89,11 @@ describe('useTripStayEditor', () => {
       title: 'Hotel',
       attachments: []
     };
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useTripStayEditor({ addStay: vi.fn(), destination: destination as never, updateStay })
     );
 
-    act(() => result.current.open(stay as never));
+    await act(() => result.current.open(stay as never));
     await act(async () => expect(await result.current.save()).toBe(true));
     expect(updateStay).toHaveBeenCalledWith(stay.id, expect.anything());
 
@@ -107,14 +107,14 @@ describe('useTripStayEditor', () => {
   });
 
   test('closes and safely ignores empty upload selections', async () => {
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useTripStayEditor({
         addStay: vi.fn(),
         destination: destination as never,
         updateStay: vi.fn()
       })
     );
-    act(() => {
+    await act(() => {
       result.current.open();
       result.current.close();
     });

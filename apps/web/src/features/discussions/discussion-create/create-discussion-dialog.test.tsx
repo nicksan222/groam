@@ -1,5 +1,6 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { beforeEach, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { CreateDiscussionDialog } from './create-discussion-dialog';
 
 const dialog = vi.hoisted(() => ({
@@ -33,33 +34,33 @@ beforeEach(() => {
   dialog.rosterLoading = false;
 });
 
-afterEach(cleanup);
-
 test('requires a title before creating a chat', async () => {
-  render(<CreateDiscussionDialog onClose={vi.fn()} onCreated={vi.fn()} open />);
-  fireEvent.click(screen.getByRole('button', { name: /Ada Lovelace/u }));
-  fireEvent.click(screen.getByRole('button', { name: 'Start chat' }));
-  expect((await screen.findByRole('alert')).textContent).toBe('Give this chat a name.');
+  await render(<CreateDiscussionDialog onClose={vi.fn()} onCreated={vi.fn()} open />);
+  await page.getByRole('button', { name: /Ada Lovelace/u }).click();
+  await page.getByRole('button', { name: 'Start chat' }).click();
+  await expect.element(page.getByRole('alert')).toHaveTextContent('Give this chat a name.');
   expect(dialog.createDiscussion).not.toHaveBeenCalled();
 });
 
 test('requires at least one member', async () => {
-  render(<CreateDiscussionDialog onClose={vi.fn()} onCreated={vi.fn()} open />);
-  fireEvent.change(screen.getByLabelText(/Title/u), { target: { value: 'Italy dates' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Start chat' }));
-  expect((await screen.findByRole('alert')).textContent).toBe('Invite at least one group member.');
+  await render(<CreateDiscussionDialog onClose={vi.fn()} onCreated={vi.fn()} open />);
+  await page.getByLabelText(/Title/u).fill('Italy dates');
+  await page.getByRole('button', { name: 'Start chat' }).click();
+  await expect
+    .element(page.getByRole('alert'))
+    .toHaveTextContent('Invite at least one group member.');
   expect(dialog.createDiscussion).not.toHaveBeenCalled();
 });
 
 test('creates a chat and reports the new id', async () => {
   const onCreated = vi.fn();
-  render(<CreateDiscussionDialog onClose={vi.fn()} onCreated={onCreated} open />);
+  await render(<CreateDiscussionDialog onClose={vi.fn()} onCreated={onCreated} open />);
 
-  fireEvent.change(screen.getByLabelText(/Title/u), { target: { value: '  Italy dates  ' } });
-  fireEvent.click(screen.getByRole('button', { name: /Ada Lovelace/u }));
-  fireEvent.click(screen.getByRole('button', { name: 'Start chat' }));
+  await page.getByLabelText(/Title/u).fill('  Italy dates  ');
+  await page.getByRole('button', { name: /Ada Lovelace/u }).click();
+  await page.getByRole('button', { name: 'Start chat' }).click();
 
-  await waitFor(() =>
+  await vi.waitFor(() =>
     expect(dialog.createDiscussion).toHaveBeenCalledWith({
       clientRequestId: expect.any(String),
       memberUserIds: ['user-a'],
@@ -71,18 +72,20 @@ test('creates a chat and reports the new id', async () => {
 
 test('surfaces create failures in the dialog', async () => {
   dialog.createDiscussion.mockResolvedValue(null);
-  render(<CreateDiscussionDialog onClose={vi.fn()} onCreated={vi.fn()} open />);
+  await render(<CreateDiscussionDialog onClose={vi.fn()} onCreated={vi.fn()} open />);
 
-  fireEvent.change(screen.getByLabelText(/Title/u), { target: { value: 'Italy dates' } });
-  fireEvent.click(screen.getByRole('button', { name: /Ada Lovelace/u }));
-  fireEvent.click(screen.getByRole('button', { name: 'Start chat' }));
+  await page.getByLabelText(/Title/u).fill('Italy dates');
+  await page.getByRole('button', { name: /Ada Lovelace/u }).click();
+  await page.getByRole('button', { name: 'Start chat' }).click();
 
-  expect((await screen.findByRole('alert')).textContent).toBe('Unable to start this chat');
+  await expect.element(page.getByRole('alert')).toHaveTextContent('Unable to start this chat');
 });
 
-test('blocks creating a chat when the group has no members', () => {
+test('blocks creating a chat when the group has no members', async () => {
   dialog.members = [];
-  render(<CreateDiscussionDialog onClose={vi.fn()} onCreated={vi.fn()} open />);
-  expect(screen.getByText('Invite someone to your group before starting a chat.')).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Start chat' })).toHaveProperty('disabled', true);
+  await render(<CreateDiscussionDialog onClose={vi.fn()} onCreated={vi.fn()} open />);
+  await expect
+    .element(page.getByText('Invite someone to your group before starting a chat.'))
+    .toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Start chat' })).toBeDisabled();
 });

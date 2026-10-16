@@ -76,6 +76,8 @@ function AssigneeSection({
         const assigned = issue.assignee?.kind === 'user' && issue.assignee.userId === member.userId;
         return (
           <MenuRow
+            aria-label={assigned ? `Unassign ${member.user.name}` : `Assign ${member.user.name}`}
+            aria-pressed={assigned}
             disabled={pending}
             key={member.userId}
             onClick={() =>

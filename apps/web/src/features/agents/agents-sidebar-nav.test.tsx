@@ -1,8 +1,8 @@
 import { SidebarProvider } from '@groam/ui/components/sidebar';
-import { cleanup, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
-import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
-import { stubMatchMedia } from '@/testing/stub-match-media';
+import { beforeEach, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { AgentsSidebarNav } from './agents-sidebar-nav';
 
 const state = vi.hoisted(() => ({
@@ -10,7 +10,8 @@ const state = vi.hoisted(() => ({
   pathname: '/agents'
 }));
 
-vi.mock('@tanstack/react-router', () => ({
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
   Link: ({ children, to }: { children?: ReactNode; to: string }) => <a href={to}>{children}</a>,
   useLocation: () => ({ pathname: state.pathname })
 }));
@@ -19,7 +20,7 @@ vi.mock('./hooks/use-agent-roster', () => ({
   useAgentRoster: () => ({ agents: state.agents })
 }));
 
-function renderNav() {
+async function renderNav() {
   return render(
     <SidebarProvider>
       <ul>
@@ -33,21 +34,17 @@ beforeEach(() => {
   vi.clearAllMocks();
   state.agents = [];
   state.pathname = '/agents';
-  stubMatchMedia();
 });
 
-afterEach(() => {
-  cleanup();
-  vi.unstubAllGlobals();
+test('links to the agents roster', async () => {
+  await renderNav();
+  await expect
+    .element(page.getByRole('link', { name: 'Agents' }))
+    .toHaveAttribute('href', '/agents');
 });
 
-test('links to the agents roster', () => {
-  renderNav();
-  expect(screen.getByRole('link', { name: 'Agents' }).getAttribute('href')).toBe('/agents');
-});
-
-test('shows an active-run count when workers are busy', () => {
+test('shows an active-run count when workers are busy', async () => {
   state.agents = [{ activeRunCount: 2 }, { activeRunCount: 1 }];
-  renderNav();
-  expect(screen.getByText('3')).toBeTruthy();
+  await renderNav();
+  await expect.element(page.getByText('3')).toBeInTheDocument();
 });

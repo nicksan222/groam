@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { useGroupActions } from './use-group-actions';
 
@@ -18,7 +18,7 @@ vi.mock('@groam/auth/client', () => ({
   }
 }));
 
-function setup() {
+async function setup() {
   return renderHook(() =>
     useGroupActions({
       organizationId: 'organization-a'
@@ -26,12 +26,14 @@ function setup() {
   );
 }
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 describe('useGroupActions', () => {
   test('surfaces leave-group errors', async () => {
     auth.leave.mockResolvedValue({ data: null, error: { message: 'Owner cannot leave' } });
-    const { result } = setup();
+    const { result } = await setup();
 
     await act(() => result.current.leaveGroup());
 
@@ -42,7 +44,7 @@ describe('useGroupActions', () => {
 
   test('uses a fallback when leaving fails without a message', async () => {
     auth.leave.mockResolvedValue({ data: null, error: {} });
-    const { result } = setup();
+    const { result } = await setup();
 
     await act(() => result.current.leaveGroup());
 
@@ -51,7 +53,7 @@ describe('useGroupActions', () => {
 
   test('removes a member and clears the pending state', async () => {
     auth.removeMember.mockResolvedValue({ data: {}, error: null });
-    const { result } = setup();
+    const { result } = await setup();
 
     await act(() => result.current.removeMember('member-a'));
 
@@ -65,7 +67,7 @@ describe('useGroupActions', () => {
 
   test('uses the remove-member fallback on an API error', async () => {
     auth.removeMember.mockResolvedValue({ error: {} });
-    const { result } = setup();
+    const { result } = await setup();
 
     await act(() => result.current.removeMember('member-a'));
 
@@ -76,7 +78,7 @@ describe('useGroupActions', () => {
     auth.updateMemberRole
       .mockResolvedValueOnce({ data: {}, error: null })
       .mockResolvedValueOnce({ error: { message: 'Role denied' } });
-    const { result } = setup();
+    const { result } = await setup();
 
     await act(() => result.current.updateMemberRole('member-a', 'admin'));
     expect(auth.updateMemberRole).toHaveBeenCalledWith({

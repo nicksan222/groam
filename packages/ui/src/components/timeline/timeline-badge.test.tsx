@@ -1,9 +1,9 @@
-import { render } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import { expect, test } from 'vite-plus/test';
 import Timeline from './index';
 
-test('default badge uses the square marker track', () => {
-  const { container } = render(
+test('default badge uses the square marker track', async () => {
+  const { container } = await render(
     <Timeline>
       <Timeline.Item>
         <Timeline.Badge>1</Timeline.Badge>
@@ -22,8 +22,8 @@ test('default badge uses the square marker track', () => {
   expect(badge?.getAttribute('data-variant')).toBe('default');
 });
 
-test('minimal badge uses the circular marker track', () => {
-  const { container } = render(
+test('minimal badge uses the circular marker track', async () => {
+  const { container } = await render(
     <Timeline variant="minimal">
       <Timeline.Item>
         <Timeline.Badge>1</Timeline.Badge>
@@ -40,8 +40,8 @@ test('minimal badge uses the circular marker track', () => {
   expect(badge?.getAttribute('data-variant')).toBe('minimal');
 });
 
-test('activity badge uses a compact circular avatar', () => {
-  const { container } = render(
+test('activity badge uses a compact circular avatar', async () => {
+  const { container } = await render(
     <Timeline variant="activity">
       <Timeline.Item>
         <Timeline.Badge>GD</Timeline.Badge>
@@ -62,8 +62,8 @@ test('activity badge uses a compact circular avatar', () => {
   expect(badge?.getAttribute('data-variant')).toBe('activity');
 });
 
-test('route badge uses a postcard photo marker', () => {
-  const { container } = render(
+test('route badge uses a postcard photo marker', async () => {
+  const { container } = await render(
     <Timeline variant="route">
       <Timeline.Item>
         <Timeline.Badge>1</Timeline.Badge>

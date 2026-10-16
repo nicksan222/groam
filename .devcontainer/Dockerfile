@@ -12,7 +12,8 @@ COPY --from=uv /uv /uvx /usr/local/bin/
 COPY --from=just /just /usr/local/bin/
 
 # Tauri 2 Linux prerequisites (https://tauri.app/start/prerequisites/) plus the
-# extra packages from tauri-apps/tauri-action's GitHub workflow.
+# extra packages from tauri-apps/tauri-action's GitHub workflow. libnss3 and
+# libnspr4 are the only libraries Playwright's Chromium needs beyond them.
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     build-essential \
@@ -20,6 +21,8 @@ RUN apt-get update \
     file \
     libayatana-appindicator3-dev \
     libgtk-3-dev \
+    libnspr4 \
+    libnss3 \
     librsvg2-dev \
     libssl-dev \
     libwebkit2gtk-4.1-dev \

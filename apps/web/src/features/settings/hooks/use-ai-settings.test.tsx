@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { useAiProviderAuthStore, useAiSettingsDraftStore } from '@/lib/stores/settings-stores';
 import { useAiSettings } from './use-ai-settings';
@@ -9,7 +9,8 @@ const convex = vi.hoisted(() => ({
   useQuery: vi.fn()
 }));
 
-vi.mock('convex/react', () => ({
+vi.mock('convex/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('convex/react')>()),
   useMutation: (...args: unknown[]) => convex.useMutation(...args),
   useQuery: (...args: unknown[]) => convex.useQuery(...args)
 }));
@@ -65,14 +66,14 @@ beforeEach(() => {
 });
 
 describe('useAiSettings', () => {
-  test('recommends OpenRouter when the user has no personal connection', () => {
-    const { result } = renderHook(() => useAiSettings());
+  test('recommends OpenRouter when the user has no personal connection', async () => {
+    const { result } = await renderHook(() => useAiSettings());
     expect(result.current.provider).toBe('openrouter');
   });
 
   test('saves an OpenRouter key and optional model', async () => {
-    const { result } = renderHook(() => useAiSettings());
-    act(() =>
+    const { result } = await renderHook(() => useAiSettings());
+    await act(() =>
       result.current.updateDraft({
         apiKey: ' sk-or-test ',
         model: ' anthropic/claude-sonnet-4 ',
@@ -100,7 +101,7 @@ describe('useAiSettings', () => {
     convex.useQuery.mockReturnValue(
       remoteSettings({ personal: { configured: true, provider: 'openai' } })
     );
-    const { result } = renderHook(() => useAiSettings());
+    const { result } = await renderHook(() => useAiSettings());
 
     await act(() => result.current.remove());
 
@@ -122,10 +123,10 @@ describe('useAiSettings', () => {
         organization: { configured: true, provider: 'openai' }
       })
     );
-    const { result } = renderHook(() => useAiSettings());
+    const { result } = await renderHook(() => useAiSettings());
 
-    act(() => result.current.setTarget('organization'));
-    act(() => result.current.updateDraft({ apiKey: 'sk-shared-new' }));
+    await act(() => result.current.setTarget('organization'));
+    await act(() => result.current.updateDraft({ apiKey: 'sk-shared-new' }));
     await act(() => result.current.save());
     expect(convex.save).toHaveBeenLastCalledWith({
       apiKey: 'sk-shared-new',
@@ -147,32 +148,32 @@ describe('useAiSettings', () => {
     });
   });
 
-  test('does not let a member select the organization target', () => {
+  test('does not let a member select the organization target', async () => {
     convex.useQuery.mockReturnValue(remoteSettings({ canManageOrganization: false }));
-    const { result } = renderHook(() => useAiSettings());
+    const { result } = await renderHook(() => useAiSettings());
 
-    act(() => result.current.setTarget('organization'));
+    await act(() => result.current.setTarget('organization'));
 
     expect(result.current.target).toBe('personal');
   });
 
-  test('uses the backend-selected personal source over an organization fallback', () => {
+  test('uses the backend-selected personal source over an organization fallback', async () => {
     convex.useQuery.mockReturnValue(
       remoteSettings({
         organization: { configured: true, model: 'gpt-4.1-mini', provider: 'openai' },
         personal: { configured: true, model: 'claude-sonnet-4-5', provider: 'anthropic' }
       })
     );
-    const { result } = renderHook(() => useAiSettings());
+    const { result } = await renderHook(() => useAiSettings());
 
     expect(result.current.effectiveSource).toBe('personal');
     expect(result.current.effectiveProvider).toBe('anthropic');
     expect(result.current.effectiveModel).toBe('claude-sonnet-4-5');
   });
 
-  test('exposes when Convex env is supplying AI credentials', () => {
+  test('exposes when Convex env is supplying AI credentials', async () => {
     convex.useQuery.mockReturnValue(remoteSettings({ environmentConfigured: true }));
-    const { result } = renderHook(() => useAiSettings());
+    const { result } = await renderHook(() => useAiSettings());
     expect(result.current.fromEnvironment).toBe(true);
     expect(result.current.configured).toBe(false);
   });
@@ -181,7 +182,7 @@ describe('useAiSettings', () => {
     convex.save.mockRejectedValue(
       new Error('Only organization owners and admins can manage group settings')
     );
-    const { result } = renderHook(() => useAiSettings());
+    const { result } = await renderHook(() => useAiSettings());
 
     await act(() => result.current.save());
 
@@ -190,13 +191,13 @@ describe('useAiSettings', () => {
     );
   });
 
-  test('keeps the saved model while the provider stays the same', () => {
+  test('keeps the saved model while the provider stays the same', async () => {
     convex.useQuery.mockReturnValue(
       remoteSettings({
         personal: { configured: true, model: 'gpt-4.1-mini', provider: 'openai' }
       })
     );
-    const { result } = renderHook(() => useAiSettings());
+    const { result } = await renderHook(() => useAiSettings());
     expect(result.current.provider).toBe('openai');
     expect(result.current.model).toBe('gpt-4.1-mini');
   });
@@ -207,13 +208,13 @@ describe('useAiSettings', () => {
         personal: { configured: true, model: 'gpt-4.1-mini', provider: 'openai' }
       })
     );
-    const { result } = renderHook(() => useAiSettings());
+    const { result } = await renderHook(() => useAiSettings());
 
-    act(() => result.current.selectProvider('openrouter'));
+    await act(() => result.current.selectProvider('openrouter'));
     expect(result.current.provider).toBe('openrouter');
     expect(result.current.model).toBe('');
 
-    act(() => result.current.updateDraft({ apiKey: 'sk-or-new' }));
+    await act(() => result.current.updateDraft({ apiKey: 'sk-or-new' }));
     await act(() => result.current.save());
 
     expect(convex.save).toHaveBeenCalledWith({
@@ -230,10 +231,10 @@ describe('useAiSettings', () => {
         personal: { configured: true, model: 'gpt-4.1-mini', provider: 'openai' }
       })
     );
-    const { result } = renderHook(() => useAiSettings());
+    const { result } = await renderHook(() => useAiSettings());
     expect(result.current.canSave).toBe(true);
 
-    act(() => result.current.updateDraft({ model: 'gpt-4.1' }));
+    await act(() => result.current.updateDraft({ model: 'gpt-4.1' }));
     await act(() => result.current.save());
 
     expect(convex.save).toHaveBeenCalledWith({
@@ -245,37 +246,37 @@ describe('useAiSettings', () => {
     expect(result.current.draft.message).toBe('AI settings saved.');
   });
 
-  test('requires a new key after switching providers', () => {
+  test('requires a new key after switching providers', async () => {
     convex.useQuery.mockReturnValue(
       remoteSettings({
         personal: { configured: true, model: 'gpt-4.1-mini', provider: 'openai' }
       })
     );
-    const { result } = renderHook(() => useAiSettings());
+    const { result } = await renderHook(() => useAiSettings());
 
-    act(() => result.current.selectProvider('anthropic'));
+    await act(() => result.current.selectProvider('anthropic'));
     expect(result.current.canSave).toBe(false);
   });
 
-  test('requires a new key after switching from OpenAI to a local host', () => {
+  test('requires a new key after switching from OpenAI to a local host', async () => {
     convex.useQuery.mockReturnValue(
       remoteSettings({
         personal: { configured: true, model: 'gpt-4.1-mini', provider: 'openai' }
       })
     );
-    const { result } = renderHook(() => useAiSettings());
+    const { result } = await renderHook(() => useAiSettings());
 
-    act(() => result.current.selectProvider('compatible'));
+    await act(() => result.current.selectProvider('compatible'));
     expect(result.current.canSave).toBe(false);
   });
 
   test('saves a local OpenAI-compatible host with a base URL', async () => {
-    const { result } = renderHook(() => useAiSettings());
-    act(() => result.current.selectProvider('compatible'));
+    const { result } = await renderHook(() => useAiSettings());
+    await act(() => result.current.selectProvider('compatible'));
     expect(result.current.canSave).toBe(true);
     expect(result.current.baseUrl).toBe('http://127.0.0.1:11434/v1');
 
-    act(() =>
+    await act(() =>
       result.current.updateDraft({
         apiKey: 'ollama',
         baseUrl: ' http://127.0.0.1:1234/v1 ',

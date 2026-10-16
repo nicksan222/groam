@@ -1,4 +1,5 @@
 import { env } from '@groam/env/vitest';
+import { setupFiles } from '@groam/vitest-config/setup-files';
 import { defineConfig } from 'vite-plus';
 
 export const convexVitestConfig = defineConfig({
@@ -20,6 +21,7 @@ export const convexVitestConfig = defineConfig({
       }
     },
     environment: 'edge-runtime',
-    include: ['convex/**/*.test.ts']
+    include: ['convex/**/*.test.ts'],
+    setupFiles: [setupFiles.consoleGuard, setupFiles.fakeScheduler]
   }
 });

@@ -1,6 +1,6 @@
 import type { Id } from '@groam/backend/data-model';
 import { toast } from '@groam/ui/components/toast';
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { useCreateIdea, useViewerOpenIdeas, useWorkspaceIdeas } from './use-workspace-ideas';
 
@@ -10,7 +10,8 @@ const convex = vi.hoisted(() => ({
   useQuery: vi.fn()
 }));
 
-vi.mock('convex/react', () => ({
+vi.mock('convex/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('convex/react')>()),
   useMutation: (...args: unknown[]) => convex.useMutation(...args),
   usePaginatedQuery: (...args: unknown[]) => convex.usePaginatedQuery(...args),
   useQuery: (...args: unknown[]) => convex.useQuery(...args)
@@ -29,8 +30,8 @@ beforeEach(() => {
   convex.useQuery.mockReturnValue(undefined);
 });
 
-test('uses the requested workspace idea page size and loading status', () => {
-  const { result } = renderHook(() => useWorkspaceIdeas({ initialNumItems: 12 }));
+test('uses the requested workspace idea page size and loading status', async () => {
+  const { result } = await renderHook(() => useWorkspaceIdeas({ initialNumItems: 12 }));
 
   expect(result.current).toMatchObject({ isLoading: true, proposals: [] });
   expect(convex.usePaginatedQuery).toHaveBeenCalledWith(
@@ -42,9 +43,9 @@ test('uses the requested workspace idea page size and loading status', () => {
   );
 });
 
-test('skips workspace and viewer idea queries when requested', () => {
-  renderHook(() => useWorkspaceIdeas('skip'));
-  renderHook(() => useViewerOpenIdeas('skip'));
+test('skips workspace and viewer idea queries when requested', async () => {
+  await renderHook(() => useWorkspaceIdeas('skip'));
+  await renderHook(() => useViewerOpenIdeas('skip'));
 
   expect(convex.usePaginatedQuery).toHaveBeenCalledWith(expect.anything(), 'skip', {
     initialNumItems: 25
@@ -52,8 +53,8 @@ test('skips workspace and viewer idea queries when requested', () => {
   expect(convex.useQuery).toHaveBeenCalledWith(expect.anything(), 'skip');
 });
 
-test('normalizes an unresolved viewer list to an empty loading result', () => {
-  const { result } = renderHook(() => useViewerOpenIdeas());
+test('normalizes an unresolved viewer list to an empty loading result', async () => {
+  const { result } = await renderHook(() => useViewerOpenIdeas());
 
   expect(result.current).toEqual({ isLoading: true, proposals: [] });
 });
@@ -61,7 +62,7 @@ test('normalizes an unresolved viewer list to an empty loading result', () => {
 test('creates an untitled idea and reports creation failures', async () => {
   const create = vi.fn().mockRejectedValue(new Error('Trip is archived'));
   convex.useMutation.mockReturnValue(create);
-  const { result } = renderHook(() => useCreateIdea());
+  const { result } = await renderHook(() => useCreateIdea());
 
   let proposal: unknown;
   await act(async () => {

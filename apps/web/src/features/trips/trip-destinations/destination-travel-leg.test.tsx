@@ -1,16 +1,14 @@
 import type { Id } from '@groam/backend/data-model';
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { testIds } from '@/lib/test-ids';
-import { stubMatchMedia } from '@/testing/stub-match-media';
 import { DestinationTravelLeg } from './destination-travel-leg';
 import type { Destination, TripActivityActions } from './destination-types';
 
 vi.mock('@/features/trips/hooks/use-itinerary-proposal-changes', () => ({
   useItineraryChange: () => null
 }));
-
-afterEach(() => cleanup());
 
 const id = <Table extends 'tripDestinations'>(value: string) => value as Id<Table>;
 
@@ -40,7 +38,7 @@ const actions = {
   setDestinationTransfer: vi.fn()
 } as unknown as TripActivityActions;
 
-function renderLeg(
+async function renderLeg(
   options: {
     canManage?: boolean;
     next?: Destination | undefined;
@@ -57,7 +55,6 @@ function renderLeg(
         startDay: 5
       }))
     : undefined;
-  stubMatchMedia();
   return render(
     <DestinationTravelLeg
       actions={actions}
@@ -71,41 +68,39 @@ function renderLeg(
   );
 }
 
-test('shows a full-width hop between stops with no timeline rail', () => {
-  const { container } = renderLeg();
+test('shows a full-width hop between stops with no timeline rail', async () => {
+  const { container } = await renderLeg();
 
   expect(container.querySelector('[data-slot="destination-stop-rail"]')).toBeNull();
-  const hop = screen.getByTestId(testIds.destinationTravelLeg);
-  expect(hop).toBeTruthy();
-  expect(hop.className).toContain('w-full');
-
-  expect(hop.className).not.toContain('justify-center');
-  expect(hop.className).not.toContain('py-8');
-  const leg = hop.querySelector('[data-slot="destination-travel-leg"]');
+  const hop = page.getByTestId(testIds.destinationTravelLeg);
+  await expect.element(hop).toHaveClass('w-full');
+  await expect.element(hop).not.toHaveClass('justify-center');
+  await expect.element(hop).not.toHaveClass('py-8');
+  const leg = hop.element().querySelector('[data-slot="destination-travel-leg"]');
   expect(leg?.className).toContain('w-full');
   expect(leg?.className).not.toContain('max-w-sm');
   expect(leg?.className).not.toContain('bg-muted');
-  expect(screen.getByText('How we go')).toBeTruthy();
-  expect(screen.getByText('Lisbon')).toBeTruthy();
-  expect(screen.getByText('Porto')).toBeTruthy();
-  expect(
-    screen.getByText('Travel not planned yet — flight, train, drive, ferry, or TBD.')
-  ).toBeTruthy();
-  expect(screen.getByTestId(testIds.planTravel)).toBeTruthy();
-  expect(screen.getByText('Plan travel')).toBeTruthy();
+  await expect.element(page.getByText('How we go')).toBeInTheDocument();
+  await expect.element(page.getByText('Lisbon')).toBeInTheDocument();
+  await expect.element(page.getByText('Porto')).toBeInTheDocument();
+  await expect
+    .element(page.getByText('Travel not planned yet — flight, train, drive, ferry, or TBD.'))
+    .toBeInTheDocument();
+  await expect.element(page.getByTestId(testIds.planTravel)).toBeInTheDocument();
+  await expect.element(page.getByText('Plan travel')).toBeInTheDocument();
 });
 
-test('keeps the empty hop for viewers who cannot edit travel', () => {
-  renderLeg({ canManage: false });
+test('keeps the empty hop for viewers who cannot edit travel', async () => {
+  await renderLeg({ canManage: false });
 
-  expect(screen.getByTestId(testIds.destinationTravelLeg)).toBeTruthy();
-  expect(
-    screen.getByText('Travel not planned yet — flight, train, drive, ferry, or TBD.')
-  ).toBeTruthy();
-  expect(screen.queryByTestId(testIds.planTravel)).toBeNull();
+  await expect.element(page.getByTestId(testIds.destinationTravelLeg)).toBeInTheDocument();
+  await expect
+    .element(page.getByText('Travel not planned yet — flight, train, drive, ferry, or TBD.'))
+    .toBeInTheDocument();
+  await expect.element(page.getByTestId(testIds.planTravel)).not.toBeInTheDocument();
 });
 
-test('renders nothing after the last stop', () => {
-  const { container } = renderLeg({}, false);
+test('renders nothing after the last stop', async () => {
+  const { container } = await renderLeg({}, false);
   expect(container.firstChild).toBeNull();
 });

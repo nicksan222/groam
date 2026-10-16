@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import type { FormEvent } from 'react';
 import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { useInviteDialog } from './use-invite-dialog';
@@ -7,7 +7,8 @@ const backend = vi.hoisted(() => ({
   createInvitation: vi.fn()
 }));
 
-vi.mock('convex/react', () => ({
+vi.mock('convex/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('convex/react')>()),
   useMutation: () => backend.createInvitation
 }));
 
@@ -18,14 +19,12 @@ vi.mock('@groam/backend/api', () => ({
 beforeEach(() => {
   vi.clearAllMocks();
   backend.createInvitation.mockResolvedValue({ code: 'ABCD-EFGH-JKLM' });
-  Object.assign(navigator, {
-    clipboard: { writeText: vi.fn().mockResolvedValue(undefined) }
-  });
+  vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined);
 });
 
 test('useInviteDialog creates an invitation code and resets on close', async () => {
   const onClose = vi.fn();
-  const { result } = renderHook(() => useInviteDialog({ onClose }));
+  const { result } = await renderHook(() => useInviteDialog({ onClose }));
 
   await act(async () => {
     await result.current.submit({
@@ -42,7 +41,7 @@ test('useInviteDialog creates an invitation code and resets on close', async () 
   expect(navigator.clipboard.writeText).toHaveBeenCalledWith('ABCD-EFGH-JKLM');
   expect(result.current.copied).toBe(true);
 
-  act(() => {
+  await act(() => {
     result.current.close();
   });
 
@@ -52,7 +51,7 @@ test('useInviteDialog creates an invitation code and resets on close', async () 
 
 test('keeps the dialog actionable when creating or copying a code fails', async () => {
   backend.createInvitation.mockRejectedValue(new Error('Invitation limit reached'));
-  const { result } = renderHook(() => useInviteDialog({ onClose: vi.fn() }));
+  const { result } = await renderHook(() => useInviteDialog({ onClose: vi.fn() }));
   await act(async () => {
     await result.current.submit({ preventDefault: vi.fn() } as unknown as FormEvent);
     await result.current.copyCode();

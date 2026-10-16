@@ -13,19 +13,19 @@ env:
   GIT_CONFIG_COUNT: '1'
   GIT_CONFIG_KEY_0: init.defaultBranch
   GIT_CONFIG_VALUE_0: main
-  TURBO_TELEMETRY_DISABLED: '1'
 
 jobs:
-  quality:
-    name: Quality
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
+  lint:
+    name: 🧹 Lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     env:
       CI: 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # Fallow's hotspot analysis reads git history.
           fetch-depth: 0
           persist-credentials: false
 
@@ -44,27 +44,24 @@ jobs:
       - name: Setup workspace
         uses: ./.github/actions/setup-workspace
 
-      - name: Format check
-        run: bun run format:check
+      - name: Lint
+        run: bun run lint
 
-      - name: Lint, typecheck, and unit tests
-        run: bun run check
+      - name: Audit dependencies
+        run: bun run audit
 
-  e2e:
-    name: Browser (${{ matrix.shard }}/4)
-    needs: [quality]
-    runs-on: ubuntu-latest
-    timeout-minutes: 90
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2, 3, 4]
+      - name: React Doctor
+        run: bun run react-doctor
+
+      - name: Dead code
+        run: bun run fallow
+
+  typecheck:
+    name: 🔷 Typecheck
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     env:
       CI: 'true'
-      CONVEX_AGENT_MODE: anonymous
-      # WebAuthn rejects IP addresses as relying-party domains. Keep the local
-      # static site on the same loopback service, but address it by hostname.
-      PLAYWRIGHT_BASE_URL: http://localhost:3211
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -74,19 +71,52 @@ jobs:
       - name: Setup workspace
         uses: ./.github/actions/setup-workspace
 
-      - name: Cache Playwright browsers
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Typecheck
+        run: bun run typecheck
+
+  unit:
+    name: 🧪 Unit tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CI: 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-          restore-keys: |
-            playwright-${{ runner.os }}-
+          persist-credentials: false
 
-      - name: Install Playwright browser
-        run: bun run test:e2e:install --with-deps
+      - name: Setup workspace
+        uses: ./.github/actions/setup-workspace
 
-      - name: Test showcase recording
+      - name: Setup Chromium
+        uses: ./.github/actions/setup-chromium
+
+      - name: Unit tests
+        run: bun run test
+
+      - name: Showcase recording
         run: bun run --cwd tooling/showcase test:browser
+
+  journeys:
+    name: 🎭 Journeys
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      CI: 'true'
+      CONVEX_AGENT_MODE: anonymous
+      STATIC_SITE_URL: http://localhost:3211
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup workspace
+        uses: ./.github/actions/setup-workspace
+
+      - name: Setup Chromium
+        uses: ./.github/actions/setup-chromium
 
       - name: Start local Convex backend
         shell: bash
@@ -99,8 +129,10 @@ jobs:
               sleep 2
             done
           '
-          bunx convex env set BETTER_AUTH_SECRET "ci-only-better-auth-secret-not-for-production"
-          bunx convex env set SITE_URL "$PLAYWRIGHT_BASE_URL/"
+
+      # The same auth setup as local dev: a secret and the Vite site the passkey rpID comes from.
+      - name: Configure auth
+        run: bun tooling/devkit/configure-auth.ts
 
       - name: Verify generated code
         run: |
@@ -110,33 +142,32 @@ jobs:
       - name: Run pending migrations
         run: bun run migrations:run
 
+      # A failing journey keeps its Playwright trace (network, console, DOM) in the failure artifact.
+      - name: Journeys
+        run: bun run test:journeys -- --browser.trace=retain-on-failure
+
+      # The production build: published to the local static host and smoke-tested.
       - name: Publish local static sites
         run: bun run hosting:upload:web
 
       - name: Verify static routes
         shell: bash
         run: |
-          curl --fail --show-error --silent "$PLAYWRIGHT_BASE_URL/" >/dev/null
-          curl --fail --show-error --silent "$PLAYWRIGHT_BASE_URL/settings" >/dev/null
-          test "$(curl --output /dev/null --silent --write-out '%{http_code}' "$PLAYWRIGHT_BASE_URL/missing.js")" = "404"
-
-      - name: Seed browser test data
-        run: bun run seed -- --users 1 --trips 0
-
-      - name: Run browser tests
-        run: bun run test:e2e -- --shard=${{ matrix.shard }}/4
+          curl --fail --show-error --silent "$STATIC_SITE_URL/" >/dev/null
+          curl --fail --show-error --silent "$STATIC_SITE_URL/settings" >/dev/null
+          test "$(curl --output /dev/null --silent --write-out '%{http_code}' "$STATIC_SITE_URL/missing.js")" = "404"
 
       - name: Upload failure artifacts
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: test-failure-${{ github.run_id }}-${{ matrix.shard }}
+          name: test-failure-${{ github.run_id }}
           if-no-files-found: ignore
+          include-hidden-files: true
           retention-days: 7
           path: |
             /tmp/convex.log
-            apps/web/playwright-report/
-            apps/web/test-results/
+            apps/web/.vitest/
 
       - name: Stop local Convex backend
         if: always()
@@ -147,8 +178,7 @@ jobs:
           fi
 
   desktop:
-    name: Desktop (${{ matrix.platform }})
-    needs: [quality]
+    name: 🖥️ Desktop (${{ matrix.platform }})
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 90
     env:
@@ -164,11 +194,11 @@ jobs:
             target: x86_64-unknown-linux-gnu
             bundles: deb
           - platform: macos-arm
-            runner: macos-latest
+            runner: macos-26
             target: aarch64-apple-darwin
             bundles: app,dmg
           - platform: windows
-            runner: windows-latest
+            runner: windows-2025
             target: x86_64-pc-windows-msvc
             bundles: nsis
     steps:
@@ -184,6 +214,19 @@ jobs:
         uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
         with:
           targets: ${{ matrix.target }}
+
+      # Dependencies dominate the release build; keep the bundles themselves out of the cache.
+      - name: Cache Rust build
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            apps/desktop/src-tauri/target/
+            !apps/desktop/src-tauri/target/*/release/bundle/
+          key: rust-${{ matrix.target }}-${{ hashFiles('apps/desktop/src-tauri/Cargo.lock') }}
+          restore-keys: rust-${{ matrix.target }}-
 
       - name: Install Linux desktop dependencies
         if: matrix.platform == 'linux'

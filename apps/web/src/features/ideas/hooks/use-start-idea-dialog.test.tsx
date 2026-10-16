@@ -1,5 +1,5 @@
 import type { Id } from '@groam/backend/data-model';
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { useStartIdeaDialog } from './use-start-idea-dialog';
 
@@ -12,7 +12,8 @@ vi.mock('./use-workspace-ideas', () => ({
   useCreateIdea: () => deps.createIdea
 }));
 
-vi.mock('@tanstack/react-router', () => ({
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
   useNavigate: () => deps.navigate
 }));
 
@@ -22,19 +23,19 @@ beforeEach(() => {
 });
 
 describe('useStartIdeaDialog', () => {
-  test('tracks dialog and trip selection booleans', () => {
-    const { result } = renderHook(() => useStartIdeaDialog());
+  test('tracks dialog and trip selection booleans', async () => {
+    const { result } = await renderHook(() => useStartIdeaDialog());
     expect(result.current.dialogOpen).toBe(false);
     expect(result.current.isCreating).toBe(false);
 
-    act(() => {
+    await act(() => {
       result.current.openDialog();
       result.current.setSelectedTripId('trip-1' as Id<'trips'>);
     });
     expect(result.current.dialogOpen).toBe(true);
     expect(result.current.selectedTripId).toBe('trip-1');
 
-    act(() => {
+    await act(() => {
       result.current.onOpenChange(false);
     });
     expect(result.current.dialogOpen).toBe(false);
@@ -42,8 +43,8 @@ describe('useStartIdeaDialog', () => {
   });
 
   test('starts an idea and navigates on success', async () => {
-    const { result } = renderHook(() => useStartIdeaDialog());
-    act(() => {
+    const { result } = await renderHook(() => useStartIdeaDialog());
+    await act(() => {
       result.current.setSelectedTripId('trip-1' as Id<'trips'>);
       result.current.openDialog();
     });
@@ -59,7 +60,7 @@ describe('useStartIdeaDialog', () => {
   });
 
   test('no-ops when no trip is selected', async () => {
-    const { result } = renderHook(() => useStartIdeaDialog());
+    const { result } = await renderHook(() => useStartIdeaDialog());
     await act(async () => {
       await result.current.startIdea();
     });
@@ -68,8 +69,8 @@ describe('useStartIdeaDialog', () => {
 
   test('stops creating without navigation when the idea service returns no version', async () => {
     deps.createIdea.mockResolvedValue(null);
-    const { result } = renderHook(() => useStartIdeaDialog());
-    act(() => result.current.setSelectedTripId('trip-1' as Id<'trips'>));
+    const { result } = await renderHook(() => useStartIdeaDialog());
+    await act(() => result.current.setSelectedTripId('trip-1' as Id<'trips'>));
     await act(() => result.current.startIdea());
     expect(result.current.isCreating).toBe(false);
     expect(deps.navigate).not.toHaveBeenCalled();

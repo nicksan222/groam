@@ -118,6 +118,7 @@ for (const [name, skill] of skills) {
   findings.push(...checkSkill(skill.file, name, skill.frontmatter, targets));
   if (vendoredSkills.has(name)) continue;
   findings.push(...danglingReferences(skill.file, skill.body, targets));
+  checkRepoPaths(skill.file, skill.body);
   for (const link of relativeLinks(skill.body)) {
     if (!existsSync(normalize(join(dirname(skill.file), link)))) {
       findings.push({ file: skill.file, message: `link target ${link} does not exist` });

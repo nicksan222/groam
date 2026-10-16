@@ -128,10 +128,10 @@ export function MessageComposer({
               >
                 <Paperclip className="size-[1.125rem]" />
               </Button>
+              {/* The button above opens this picker; hidden so assistive tech hears one control. */}
               <input
                 accept={fileAccept}
-                aria-label="Attach files"
-                className="sr-only"
+                hidden
                 multiple
                 onChange={(event) => {
                   const files = [...(event.target.files ?? [])];

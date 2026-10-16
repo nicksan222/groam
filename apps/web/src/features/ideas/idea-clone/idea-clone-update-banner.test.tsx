@@ -1,5 +1,6 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { needsSharedTripUpdate } from '@/features/ideas/hooks/idea-needs-update';
 import type { ProposalDetail } from '@/types/trips';
 import { IdeaCloneUpdateBanner } from './idea-clone-update-banner';
@@ -18,10 +19,8 @@ function proposal(overrides: Partial<ProposalDetail> = {}): ProposalDetail {
   } as ProposalDetail;
 }
 
-afterEach(cleanup);
-
 describe('needsSharedTripUpdate', () => {
-  test('is true when the shared trip moved ahead or the idea is conflicted', () => {
+  test('is true when the shared trip moved ahead or the idea is conflicted', async () => {
     expect(needsSharedTripUpdate(proposal({ sourceChanged: true }))).toBe(true);
     expect(needsSharedTripUpdate(proposal({ status: 'conflicted' }))).toBe(true);
     expect(needsSharedTripUpdate(proposal())).toBe(false);
@@ -29,21 +28,21 @@ describe('needsSharedTripUpdate', () => {
 });
 
 describe('IdeaCloneUpdateBanner', () => {
-  test('stays hidden for a clean draft', () => {
-    const { container } = render(
+  test('stays hidden for a clean draft', async () => {
+    const { container } = await render(
       <IdeaCloneUpdateBanner onRebase={vi.fn()} pendingAction={null} proposal={proposal()} />
     );
     expect(container.firstChild).toBeNull();
   });
 
-  test('renders the update flow when the shared trip has changed', () => {
-    render(
+  test('renders the update flow when the shared trip has changed', async () => {
+    await render(
       <IdeaCloneUpdateBanner
         onRebase={vi.fn()}
         pendingAction={null}
         proposal={proposal({ sourceChanged: true })}
       />
     );
-    expect(screen.getByTestId('idea-update-flow')).toBeTruthy();
+    await expect.element(page.getByTestId('idea-update-flow')).toBeInTheDocument();
   });
 });

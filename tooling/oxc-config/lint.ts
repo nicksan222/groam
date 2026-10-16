@@ -215,12 +215,12 @@ export const lint = {
       rules: { 'groam/no-native-interactive-elements': 'error' }
     },
     {
-      files: ['**/apps/web/e2e/**', '**/tooling/app-actions/src/playwright/**'],
-      rules: { 'groam/no-raw-playwright-test-ids': 'error' }
-    },
-    {
-      files: ['**/apps/web/e2e/**'],
-      rules: { 'groam/no-raw-playwright-paths': 'error' }
+      files: [
+        '**/apps/web/e2e/**',
+        '**/tooling/app-actions/src/playwright/**',
+        '**/tooling/app-actions/src/vitest/**'
+      ],
+      rules: { 'groam/no-raw-locator-test-ids': 'error' }
     }
   ]
 } satisfies LintConfig;

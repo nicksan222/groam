@@ -1,7 +1,8 @@
 import type { Id } from '@groam/backend/data-model';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { TripIssuesPanel } from '@/features/trips/trip-issues/trip-issues-panel';
 
@@ -20,7 +21,8 @@ const issues = vi.hoisted(() => ({
     | undefined
 }));
 
-vi.mock('@tanstack/react-router', () => ({
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
   Link: ({ children, to }: { children?: ReactNode; to: string }) => <a href={to}>{children}</a>,
   useNavigate: () => vi.fn()
 }));
@@ -59,30 +61,30 @@ beforeEach(() => {
   issues.createIssue.mockResolvedValue(null);
 });
 
-afterEach(cleanup);
-
 describe('TripIssuesPanel', () => {
-  test('shows a loading state while issues are unresolved', () => {
+  test('shows a loading state while issues are unresolved', async () => {
     issues.issues = undefined;
-    render(<TripIssuesPanel trip={trip()} />);
+    await render(<TripIssuesPanel trip={trip()} />);
 
-    expect(screen.getByRole('status', { name: 'Loading issues…' })).toBeTruthy();
+    await expect.element(page.getByRole('status', { name: 'Loading issues…' })).toBeInTheDocument();
   });
 
-  test('renders the issues header when the list is empty', () => {
-    render(<TripIssuesPanel trip={trip()} />);
+  test('renders the issues header when the list is empty', async () => {
+    await render(<TripIssuesPanel trip={trip()} />);
 
-    expect(screen.getByRole('heading', { name: 'Issues' })).toBeTruthy();
-    expect(screen.getByText('There are no open issues in this trip.')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'All issues' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'New issue' })).toBeTruthy();
+    await expect.element(page.getByRole('heading', { name: 'Issues' })).toBeInTheDocument();
+    await expect
+      .element(page.getByText('There are no open issues in this trip.'))
+      .toBeInTheDocument();
+    await expect.element(page.getByRole('link', { name: 'All issues' })).toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'New issue' })).toBeInTheDocument();
   });
 
-  test('opens a trip-scoped create-issue dialog from New issue', () => {
-    render(<TripIssuesPanel trip={trip()} />);
+  test('opens a trip-scoped create-issue dialog from New issue', async () => {
+    await render(<TripIssuesPanel trip={trip()} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'New issue' }));
+    await page.getByRole('button', { name: 'New issue' }).click();
 
-    expect(screen.getByTestId('create-issue-dialog').textContent).toBe(tripId);
+    await expect.element(page.getByTestId('create-issue-dialog')).toHaveTextContent(tripId);
   });
 });

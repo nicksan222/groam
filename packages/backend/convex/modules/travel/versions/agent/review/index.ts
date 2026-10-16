@@ -30,24 +30,7 @@ export const context = internalQuery({
     title: v.string(),
     workingTripId: v.id('trips')
   }),
-  handler: async (ctx, { proposalId }) => {
-    const proposal = await TripVersions.get(ctx, proposalId);
-    if (!proposal.reviewers.some((reviewer) => reviewer.kind === 'agent')) {
-      throw new Error('Idea reviewer is not assigned to review this proposal');
-    }
-    if (proposal.status !== 'in_review' && proposal.status !== 'conflicted') {
-      throw new Error('Submit the proposal before requesting idea review');
-    }
-    const stored = await ctx.db.get('tripProposals', proposalId);
-    if (!stored) throw new Error('Proposal not found');
-    return {
-      changes: proposal.changes,
-      organizationId: stored.organizationId,
-      sourceTripId: stored.sourceTripId,
-      title: proposal.title,
-      workingTripId: stored.workingTripId
-    };
-  }
+  handler: (ctx, { proposalId }) => TripVersions.reviewContext(ctx, proposalId)
 });
 
 export const finish = internalMutation({

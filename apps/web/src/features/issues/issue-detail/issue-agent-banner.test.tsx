@@ -1,7 +1,8 @@
 import type { Id } from '@groam/backend/data-model';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
-import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
+import { beforeEach, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { IssueAgentBanner } from './issue-agent-banner';
 
 const retry = vi.hoisted(() => vi.fn());
@@ -18,7 +19,8 @@ const state = vi.hoisted(() => ({
   }
 }));
 
-vi.mock('@tanstack/react-router', () => ({
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
   Link: ({ children, to }: { children?: ReactNode; to: string }) => <a href={to}>{children}</a>
 }));
 
@@ -37,14 +39,12 @@ beforeEach(() => {
   state.run = null;
 });
 
-afterEach(cleanup);
-
-test('hides when the Issue agent has no run', () => {
-  render(<IssueAgentBanner issueId={issueId} />);
-  expect(screen.queryByTestId('issue-agent-banner')).toBeNull();
+test('hides when the Issue agent has no run', async () => {
+  await render(<IssueAgentBanner issueId={issueId} />);
+  await expect.element(page.getByTestId('issue-agent-banner')).not.toBeInTheDocument();
 });
 
-test('renders the shared agent run banner for an issue run', () => {
+test('renders the shared agent run banner for an issue run', async () => {
   state.run = {
     error: null,
     headline: 'Started working',
@@ -53,13 +53,15 @@ test('renders the shared agent run banner for an issue run', () => {
     status: 'running',
     surface: 'standalone'
   };
-  render(<IssueAgentBanner issueId={issueId} />);
-  expect(screen.getByTestId('issue-agent-banner')).toBeTruthy();
-  expect(screen.getByText('Issue agent')).toBeTruthy();
-  expect(screen.queryByRole('button', { name: 'Retry from zero' })).toBeNull();
+  await render(<IssueAgentBanner issueId={issueId} />);
+  await expect.element(page.getByTestId('issue-agent-banner')).toBeInTheDocument();
+  await expect.element(page.getByText('Issue agent')).toBeInTheDocument();
+  await expect
+    .element(page.getByRole('button', { name: 'Retry from zero' }))
+    .not.toBeInTheDocument();
 });
 
-test('retries from zero when the Issue agent run failed', () => {
+test('retries from zero when the Issue agent run failed', async () => {
   state.run = {
     error: 'The model timed out',
     headline: 'Run failed',
@@ -68,7 +70,7 @@ test('retries from zero when the Issue agent run failed', () => {
     status: 'failed',
     surface: 'standalone'
   };
-  render(<IssueAgentBanner issueId={issueId} />);
-  fireEvent.click(screen.getByRole('button', { name: 'Retry from zero' }));
+  await render(<IssueAgentBanner issueId={issueId} />);
+  await page.getByRole('button', { name: 'Retry from zero' }).click();
   expect(retry).toHaveBeenCalledWith({ runId: 'run-1' });
 });

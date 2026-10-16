@@ -1,6 +1,7 @@
 import type { Id } from '@groam/backend/data-model';
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, expect, test } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type { Destination } from './destination-types';
 import { ScheduledDestinationDays } from './scheduled-destination-days';
 
@@ -27,15 +28,13 @@ function destination(
   };
 }
 
-afterEach(cleanup);
-
-test('marks sibling stop days as taken in the day strip', () => {
+test('marks sibling stop days as taken in the day strip', async () => {
   const destinations = [
     destination({ endDay: 2, id: id('lisbon'), name: 'Lisbon', position: 0, startDay: 1 }),
     destination({ endDay: 4, id: id('montreal'), name: 'Montreal', position: 1, startDay: 3 })
   ];
 
-  render(
+  await render(
     <ScheduledDestinationDays
       canManage
       destination={destinations[1]!}
@@ -52,22 +51,22 @@ test('marks sibling stop days as taken in the day strip', () => {
     />
   );
 
-  expect(screen.getByRole('button', { name: 'Day 1, Taken' }).hasAttribute('data-taken')).toBe(
-    true
-  );
-  expect(screen.queryByRole('button', { name: 'Day 2, Taken' })).toBeNull();
-  expect(screen.queryByRole('button', { name: 'Day 3, Taken' })).toBeNull();
-  expect(screen.queryByRole('button', { name: 'Day 4, Taken' })).toBeNull();
+  await expect
+    .element(page.getByRole('button', { name: 'Day 1, Taken' }))
+    .toHaveAttribute('data-taken');
+  await expect.element(page.getByRole('button', { name: 'Day 2, Taken' })).not.toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Day 3, Taken' })).not.toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Day 4, Taken' })).not.toBeInTheDocument();
 });
 
-test('marks earlier stops fully taken when editing a later stop', () => {
+test('marks earlier stops fully taken when editing a later stop', async () => {
   const destinations = [
     destination({ endDay: 2, id: id('lisbon'), name: 'Lisbon', position: 0, startDay: 1 }),
     destination({ endDay: 4, id: id('montreal'), name: 'Montreal', position: 1, startDay: 3 }),
     destination({ endDay: 7, id: id('porto'), name: 'Porto', position: 2, startDay: 5 })
   ];
 
-  render(
+  await render(
     <ScheduledDestinationDays
       canManage
       destination={destinations[2]!}
@@ -84,14 +83,14 @@ test('marks earlier stops fully taken when editing a later stop', () => {
     />
   );
 
-  expect(screen.getByRole('button', { name: 'Day 1, Taken' }).hasAttribute('data-taken')).toBe(
-    true
-  );
-  expect(screen.getByRole('button', { name: 'Day 2, Taken' }).hasAttribute('data-taken')).toBe(
-    true
-  );
-  expect(screen.getByRole('button', { name: 'Day 3, Taken' }).hasAttribute('data-taken')).toBe(
-    true
-  );
-  expect(screen.queryByRole('button', { name: 'Day 4, Taken' })).toBeNull();
+  await expect
+    .element(page.getByRole('button', { name: 'Day 1, Taken' }))
+    .toHaveAttribute('data-taken');
+  await expect
+    .element(page.getByRole('button', { name: 'Day 2, Taken' }))
+    .toHaveAttribute('data-taken');
+  await expect
+    .element(page.getByRole('button', { name: 'Day 3, Taken' }))
+    .toHaveAttribute('data-taken');
+  await expect.element(page.getByRole('button', { name: 'Day 4, Taken' })).not.toBeInTheDocument();
 });

@@ -1,5 +1,6 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { SessionSettings } from './session-settings';
 
 const sessions = vi.hoisted(() => ({
@@ -53,31 +54,29 @@ beforeEach(() => {
   };
 });
 
-afterEach(cleanup);
-
 describe('SessionSettings', () => {
-  test('lists active sessions and marks the current browser', () => {
-    render(<SessionSettings currentToken="current-token" />);
+  test('lists active sessions and marks the current browser', async () => {
+    await render(<SessionSettings currentToken="current-token" />);
 
-    expect(screen.getByText('2 active sessions')).toBeTruthy();
-    expect(screen.getByText('Current')).toBeTruthy();
-    expect(screen.getByText(/Chrome on macOS/u)).toBeTruthy();
-    expect(screen.getByText(/Safari on iOS/u)).toBeTruthy();
+    await expect.element(page.getByText('2 active sessions')).toBeInTheDocument();
+    await expect.element(page.getByText('Current')).toBeInTheDocument();
+    await expect.element(page.getByText(/Chrome on macOS/u)).toBeInTheDocument();
+    await expect.element(page.getByText(/Safari on iOS/u)).toBeInTheDocument();
   });
 
   test('revokes another session from the panel', async () => {
-    render(<SessionSettings currentToken="current-token" />);
+    await render(<SessionSettings currentToken="current-token" />);
 
-    fireEvent.click(screen.getByRole('button', { name: /Sign out Safari on iOS/u }));
+    await page.getByRole('button', { name: /Sign out Safari on iOS/u }).click();
 
-    await waitFor(() => expect(sessions.revoke).toHaveBeenCalledWith('other-token'));
+    await vi.waitFor(() => expect(sessions.revoke).toHaveBeenCalledWith('other-token'));
   });
 
   test('signs out every other session at once', async () => {
-    render(<SessionSettings currentToken="current-token" />);
+    await render(<SessionSettings currentToken="current-token" />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Sign out others' }));
+    await page.getByRole('button', { name: 'Sign out others' }).click();
 
-    await waitFor(() => expect(sessions.revokeOthers).toHaveBeenCalledWith('current-token'));
+    await vi.waitFor(() => expect(sessions.revokeOthers).toHaveBeenCalledWith('current-token'));
   });
 });

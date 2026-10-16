@@ -4,5 +4,5 @@
     "resolveJsonModule": true,
     "types": ["bun", "node", "react", "react-dom"]
   },
-  "include": ["src"]
+  "include": ["src", "vite.config.ts"]
 }

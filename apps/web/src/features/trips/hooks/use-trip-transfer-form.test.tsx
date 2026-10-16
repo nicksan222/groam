@@ -1,5 +1,5 @@
 import type { Id } from '@groam/backend/data-model';
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { useTripTransferForm } from './use-trip-transfer-form';
 
@@ -19,16 +19,18 @@ function options(
   };
 }
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 describe('useTripTransferForm', () => {
   test('creates a normalized, typed activity transfer draft', async () => {
     const onSave = vi.fn().mockResolvedValue(true);
-    const { result } = renderHook(() => useTripTransferForm(options({ onSave })));
+    const { result } = await renderHook(() => useTripTransferForm(options({ onSave })));
 
     expect(result.current.mode).toBe('walk');
     expect(result.current.canSave).toBe(true);
-    act(() => {
+    await act(() => {
       result.current.setMode('public_transit');
       result.current.setDuration('35');
       result.current.setTiming({
@@ -58,16 +60,16 @@ describe('useTripTransferForm', () => {
 
   test('explains every invalid duration and preserves a failed draft', async () => {
     const onSave = vi.fn().mockResolvedValue(false);
-    const { result } = renderHook(() => useTripTransferForm(options({ onSave })));
+    const { result } = await renderHook(() => useTripTransferForm(options({ onSave })));
 
-    act(() => result.current.setDuration('1.5'));
+    await act(() => result.current.setDuration('1.5'));
     expect(result.current.durationError).toBe('Use a whole number of minutes.');
     expect(result.current.canSave).toBe(false);
-    act(() => result.current.setDuration('0'));
+    await act(() => result.current.setDuration('0'));
     expect(result.current.durationError).toBe('Duration must be at least 1 minute.');
-    act(() => result.current.setDuration('10081'));
+    await act(() => result.current.setDuration('10081'));
     expect(result.current.durationError).toBe('Duration cannot exceed 7 days.');
-    act(() => result.current.setDuration('45'));
+    await act(() => result.current.setDuration('45'));
 
     await act(() => result.current.save());
 
@@ -78,7 +80,7 @@ describe('useTripTransferForm', () => {
     });
   });
 
-  test('detects unchanged edits and enables save only after a meaningful change', () => {
+  test('detects unchanged edits and enables save only after a meaningful change', async () => {
     const initial = {
       attachments: [{ id: mediaId('media-1'), name: 'ticket.pdf' }],
       durationMinutes: 90,
@@ -86,17 +88,17 @@ describe('useTripTransferForm', () => {
       notes: 'Carriage 4',
       timing: null
     };
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useTripTransferForm(options({ initial, kind: 'destination' }))
     );
 
     expect(result.current.hasChanges).toBe(false);
     expect(result.current.canSave).toBe(false);
     expect(result.current.mode).toBe('train');
-    act(() => result.current.setNotes('Carriage 5'));
+    await act(() => result.current.setNotes('Carriage 5'));
     expect(result.current.hasChanges).toBe(true);
     expect(result.current.canSave).toBe(true);
-    act(() => result.current.removeAttachment(mediaId('media-1')));
+    await act(() => result.current.removeAttachment(mediaId('media-1')));
     expect(result.current.attachments).toEqual([]);
   });
 
@@ -114,12 +116,12 @@ describe('useTripTransferForm', () => {
         startTime: '08:35'
       }
     };
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useTripTransferForm(options({ initial, kind: 'destination', onSave }))
     );
 
     expect(result.current.timingEnabled).toBe(true);
-    act(() => result.current.setExactTiming(false));
+    await act(() => result.current.setExactTiming(false));
     expect(result.current.hasChanges).toBe(true);
     await act(() => result.current.save());
     expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ timing: undefined }));
@@ -142,7 +144,7 @@ describe('useTripTransferForm', () => {
       new File(['b'], 'b.pdf', { type: 'application/pdf' }),
       new File(['c'], 'c.pdf', { type: 'application/pdf' })
     ];
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useTripTransferForm(options({ initial, kind: 'destination', uploadMedia }))
     );
 
@@ -167,7 +169,7 @@ describe('useTripTransferForm', () => {
       new File(['b'], 'invalid.exe'),
       new File(['c'], 'offline.pdf', { type: 'application/pdf' })
     ];
-    const { result } = renderHook(() => useTripTransferForm(options({ uploadMedia })));
+    const { result } = await renderHook(() => useTripTransferForm(options({ uploadMedia })));
 
     await act(() => result.current.uploadFiles(files));
 
@@ -188,7 +190,7 @@ describe('useTripTransferForm', () => {
       notes: null,
       timing: null
     };
-    const existing = renderHook(() => useTripTransferForm(options({ initial, onRemove })));
+    const existing = await renderHook(() => useTripTransferForm(options({ initial, onRemove })));
 
     await act(() => existing.result.current.remove());
     expect(existing.result.current.status).toEqual({
@@ -196,7 +198,7 @@ describe('useTripTransferForm', () => {
       message: 'The travel connection could not be removed.'
     });
 
-    const fresh = renderHook(() => useTripTransferForm(options({ onRemove })));
+    const fresh = await renderHook(() => useTripTransferForm(options({ onRemove })));
     await act(() => fresh.result.current.remove());
     expect(onRemove).toHaveBeenCalledTimes(1);
   });
@@ -210,7 +212,7 @@ describe('useTripTransferForm', () => {
       notes: null,
       timing: null
     };
-    const { result } = renderHook(() => useTripTransferForm(options({ initial, onRemove })));
+    const { result } = await renderHook(() => useTripTransferForm(options({ initial, onRemove })));
 
     await act(() => result.current.remove());
 
@@ -233,11 +235,11 @@ describe('useTripTransferForm', () => {
       notes: null,
       timing: null
     };
-    const { result } = renderHook(() =>
+    const { result } = await renderHook(() =>
       useTripTransferForm(options({ initial, kind: 'destination', onSave }))
     );
 
-    act(() => result.current.setNotes('Delayed'));
+    await act(() => result.current.setNotes('Delayed'));
     await act(() => result.current.save());
     expect(result.current.status).toEqual({
       kind: 'error',

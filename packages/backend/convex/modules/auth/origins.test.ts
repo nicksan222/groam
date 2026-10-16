@@ -2,12 +2,15 @@ import { describe, expect, test } from 'vite-plus/test';
 import { resolveAuthTrustedOrigins } from './origins';
 
 describe('resolveAuthTrustedOrigins', () => {
-  test('trusts every supported Vite loopback alias for local development', () => {
+  test('trusts every loopback alias of the app and journey servers for local development', () => {
     expect(resolveAuthTrustedOrigins('http://127.0.0.1:3211', 'http://127.0.0.1:3211')).toEqual([
       'http://127.0.0.1:3211',
       'http://localhost:5173',
       'http://127.0.0.1:5173',
-      'http://[::1]:5173'
+      'http://[::1]:5173',
+      'http://localhost:5174',
+      'http://127.0.0.1:5174',
+      'http://[::1]:5174'
     ]);
   });
 

@@ -16,8 +16,7 @@ rules that Oxlint has no built-in equivalent for.
 | `no-direct-sonner-imports` | Keeps app notifications behind the shared UI facade |
 | `no-raw-test-ids` | Keeps production web locators in the shared `testIds` contract |
 | `no-raw-internal-anchors` | Keeps internal navigation in TanStack Router |
-| `no-raw-playwright-paths` | Keeps browser navigation aware of the configured app base |
-| `no-raw-playwright-test-ids` | Keeps browser locators in the shared `ids` contract |
+| `no-raw-locator-test-ids` | Keeps journey, browser-mode driver, and film locators in the shared `ids` contract |
 | `no-native-browser-dialogs` | Routes browser prompts through the app dialog abstraction |
 | `no-direct-web-storage` | Routes persistence through feature stores or shared adapters |
 | `shell-columns` | Protects shared page-column composition and geometry |

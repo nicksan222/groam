@@ -1,37 +1,12 @@
 import { SidebarProvider } from '@groam/ui/components/sidebar';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { SidebarNestedLoadMore } from './sidebar-nested-load-more';
 
-function stubMatchMedia(matches = false) {
-  vi.stubGlobal(
-    'matchMedia',
-    (query: string) =>
-      ({
-        addEventListener: vi.fn(),
-        addListener: vi.fn(),
-        dispatchEvent: vi.fn(),
-        matches,
-        media: query,
-        onchange: null,
-        removeEventListener: vi.fn(),
-        removeListener: vi.fn()
-      }) as unknown as MediaQueryList
-  );
-}
-
-beforeEach(() => {
-  stubMatchMedia();
-});
-
-afterEach(() => {
-  cleanup();
-  vi.unstubAllGlobals();
-});
-
-test('invokes onLoadMore from the idle control', () => {
+test('invokes onLoadMore from the idle control', async () => {
   const onLoadMore = vi.fn();
-  render(
+  await render(
     <SidebarProvider>
       <ul>
         <SidebarNestedLoadMore onLoadMore={onLoadMore} />
@@ -39,13 +14,13 @@ test('invokes onLoadMore from the idle control', () => {
     </SidebarProvider>
   );
 
-  fireEvent.click(screen.getByText('Load more'));
+  await page.getByText('Load more').click();
   expect(onLoadMore).toHaveBeenCalledTimes(1);
 });
 
-test('disables the control while more items are loading', () => {
+test('disables the control while more items are loading', async () => {
   const onLoadMore = vi.fn();
-  render(
+  await render(
     <SidebarProvider>
       <ul>
         <SidebarNestedLoadMore isLoadingMore onLoadMore={onLoadMore} />
@@ -53,6 +28,7 @@ test('disables the control while more items are loading', () => {
     </SidebarProvider>
   );
 
-  fireEvent.click(screen.getByText('Loading…'));
+  // Real clicks wait for an enabled target; force it to prove the disabled control ignores it.
+  await page.getByText('Loading…').click({ force: true });
   expect(onLoadMore).not.toHaveBeenCalled();
 });

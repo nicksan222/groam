@@ -1,16 +1,10 @@
 import type { Id } from '@groam/backend/data-model';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import type { TripState } from './trip-detail-types';
 import { TripNavigationActions } from './trip-navigation-actions';
-
-vi.mock('@groam/ui/components/dropdown-menu', async () => {
-  const { dropdownMenuTestMock } = await import('@/lib/test-mocks/dropdown-menu');
-  return dropdownMenuTestMock;
-});
-
-afterEach(cleanup);
 
 function trip(overrides: Partial<TripDetail> = {}): TripDetail {
   return {
@@ -41,9 +35,9 @@ function tripState(): TripState {
   } as unknown as TripState;
 }
 
-test('puts Delete draft in the actions menu', () => {
+test('puts Delete draft in the actions menu', async () => {
   const onCloseIdea = vi.fn();
-  render(
+  await render(
     <TripNavigationActions
       onCloseIdea={onCloseIdea}
       onEdit={vi.fn()}
@@ -53,14 +47,14 @@ test('puts Delete draft in the actions menu', () => {
     />
   );
 
-  fireEvent.click(screen.getByTestId('trip-actions'));
-  fireEvent.click(screen.getByTestId('close-idea-header'));
+  await page.getByTestId('trip-actions').click();
+  await page.getByTestId('close-idea-header').click();
   expect(onCloseIdea).toHaveBeenCalledOnce();
 });
 
-test('puts Close without applying in the actions menu for a submitted idea', () => {
+test('puts Close without applying in the actions menu for a submitted idea', async () => {
   const onCloseIdea = vi.fn();
-  render(
+  await render(
     <TripNavigationActions
       onCloseIdea={onCloseIdea}
       onEdit={vi.fn()}
@@ -78,6 +72,6 @@ test('puts Close without applying in the actions menu for a submitted idea', () 
     />
   );
 
-  fireEvent.click(screen.getByTestId('trip-actions'));
-  expect(screen.getByText('Close without applying')).toBeTruthy();
+  await page.getByTestId('trip-actions').click();
+  await expect.element(page.getByText('Close without applying')).toBeInTheDocument();
 });

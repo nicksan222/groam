@@ -170,7 +170,7 @@ function AuroraBackground({
 
     let renderer: Renderer;
     try {
-      // Probe first so jsdom / no-WebGL environments exit before ogl constructs a canvas.
+      // Probe first so environments without WebGL exit before ogl constructs a canvas.
       const probe = document.createElement('canvas');
       const gl2 = probe.getContext('webgl2');
       const gl1 = gl2 ?? probe.getContext('webgl');

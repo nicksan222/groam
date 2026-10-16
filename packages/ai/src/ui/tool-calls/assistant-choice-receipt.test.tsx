@@ -1,5 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { AssistantChoiceReceipt } from './assistant-choice-receipt';
 
 const choice = {
@@ -11,8 +12,8 @@ const choice = {
   question: 'Should I apply the reworked Lisbon itinerary?'
 };
 
-test('keeps the complete choice form visible with the submitted choice selected', () => {
-  render(
+test('keeps the complete choice form visible with the submitted choice selected', async () => {
+  await render(
     <AssistantChoiceReceipt
       choice={choice}
       disabled={false}
@@ -21,11 +22,11 @@ test('keeps the complete choice form visible with the submitted choice selected'
     />
   );
 
-  expect(screen.getByText(choice.question)).toBeDefined();
+  await expect.element(page.getByText(choice.question)).toBeInTheDocument();
   for (const option of choice.options)
-    expect(screen.getByRole('button', { name: option })).toBeDefined();
-  expect(screen.getByRole('button', { name: choice.options[0] }).getAttribute('aria-pressed')).toBe(
-    'true'
-  );
-  expect(screen.getByRole('textbox', { name: 'Custom answer' })).toBeDefined();
+    await expect.element(page.getByRole('button', { name: option })).toBeInTheDocument();
+  await expect
+    .element(page.getByRole('button', { name: choice.options[0] }))
+    .toHaveAttribute('aria-pressed', 'true');
+  await expect.element(page.getByRole('textbox', { name: 'Custom answer' })).toBeInTheDocument();
 });

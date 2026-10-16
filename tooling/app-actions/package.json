@@ -1,6 +1,6 @@
 {
   "name": "@groam/app-actions",
-  "description": "Shared application capabilities with backend and Playwright adapters.",
+  "description": "Shared application capabilities with backend, Playwright (showcase), and Vite+ browser-mode adapters.",
   "version": "0.0.0",
   "dependencies": {
     "@groam/backend": "workspace:*",
@@ -10,15 +10,20 @@
   },
   "devDependencies": {
     "@groam/typescript-config": "workspace:*",
+    "@groam/vitest-config": "workspace:*",
     "@types/node": "^26.6.3",
     "typescript": "~7.0.2",
     "vite": "catalog:",
-    "vite-plus": "catalog:"
+    "vite-plus": "catalog:",
+    "vitest": "catalog:"
   },
   "exports": {
     "./backend": "./src/backend/index.ts",
-    "./ids": "./src/playwright/ids.ts",
-    "./playwright": "./src/playwright/index.ts"
+    "./ids": "./src/testing/ids.ts",
+    "./playwright": "./src/playwright/index.ts",
+    "./vitest": "./src/vitest/index.ts",
+    "./vitest/commands": "./src/vitest/commands.ts",
+    "./vitest/journey-backend": "./src/vitest/journey-backend.ts"
   },
   "imports": {
     "#src/*": "./src/*.ts"

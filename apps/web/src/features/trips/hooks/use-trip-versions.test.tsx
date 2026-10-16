@@ -1,5 +1,5 @@
 import type { Id } from '@groam/backend/data-model';
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { useTripProposalDetail, useTripVersion, useTripVersions } from './use-trip-versions';
 
@@ -10,7 +10,10 @@ const convex = vi.hoisted(() => ({
 }));
 const notifications = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
 
-vi.mock('convex/react', () => convex);
+vi.mock('convex/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('convex/react')>()),
+  ...convex
+}));
 vi.mock('@groam/ui/components/toast', () => ({ toast: notifications }));
 
 const tripId = 'trip-1' as Id<'trips'>;
@@ -26,7 +29,7 @@ beforeEach(() => {
 test('creates an isolated version and returns its working trip', async () => {
   const create = vi.fn().mockResolvedValue({ proposalId, workingTripId: tripId });
   convex.useMutation.mockReturnValue(create);
-  const { result } = renderHook(() => useTripVersions(tripId));
+  const { result } = await renderHook(() => useTripVersions(tripId));
 
   let version = null;
   await act(async () => {
@@ -40,7 +43,7 @@ test('creates an isolated version and returns its working trip', async () => {
 test('passes a custom idea name to Convex', async () => {
   const create = vi.fn().mockResolvedValue({ proposalId, workingTripId: tripId });
   convex.useMutation.mockReturnValue(create);
-  const { result } = renderHook(() => useTripVersions(tripId));
+  const { result } = await renderHook(() => useTripVersions(tripId));
 
   await act(async () => {
     await result.current.createVersion({ ideaName: 'itinerary/add-coast-day' });
@@ -52,7 +55,7 @@ test('passes a custom idea name to Convex', async () => {
 test('uses skip while versions are disabled and announces a titled idea', async () => {
   const create = vi.fn().mockResolvedValue({ proposalId, workingTripId: tripId });
   convex.useMutation.mockReturnValue(create);
-  const { result } = renderHook(() => useTripVersions(tripId, false));
+  const { result } = await renderHook(() => useTripVersions(tripId, false));
 
   await act(async () => {
     await result.current.createVersion({
@@ -74,7 +77,7 @@ test('uses Convex actions for submit, apply, and rebase workflows', async () => 
     .mockReturnValueOnce(submit)
     .mockReturnValueOnce(merge)
     .mockReturnValueOnce(rebase);
-  const { result } = renderHook(() => useTripVersion(proposalId));
+  const { result } = await renderHook(() => useTripVersion(proposalId));
 
   await act(async () => {
     expect(await result.current.submit()).toBe(true);
@@ -95,7 +98,7 @@ test('reports a clean idea review clearly', async () => {
     .mockReturnValueOnce(vi.fn())
     .mockReturnValueOnce(vi.fn())
     .mockReturnValueOnce(review);
-  const { result } = renderHook(() => useTripVersion(proposalId));
+  const { result } = await renderHook(() => useTripVersion(proposalId));
 
   await act(async () => {
     expect(await result.current.requestAgentReview()).toBe(true);
@@ -109,7 +112,7 @@ test('reports a clean idea review clearly', async () => {
 
 test('reports failed version actions without claiming success', async () => {
   convex.useAction.mockReturnValue(vi.fn().mockRejectedValue(new Error('Git unavailable')));
-  const { result } = renderHook(() => useTripVersion(proposalId));
+  const { result } = await renderHook(() => useTripVersion(proposalId));
 
   await act(async () => {
     expect(await result.current.submit()).toBe(false);
@@ -122,7 +125,7 @@ test('runs approval, close, feedback, reviewer, resolve, and agent-review workfl
   const mutation = vi.fn().mockResolvedValue(null);
   convex.useAction.mockReturnValue(action);
   convex.useMutation.mockReturnValue(mutation);
-  const { result } = renderHook(() => useTripVersion(proposalId));
+  const { result } = await renderHook(() => useTripVersion(proposalId));
 
   await act(async () => {
     expect(await result.current.approve(false)).toBe(true);
@@ -153,7 +156,7 @@ test('runs approval, close, feedback, reviewer, resolve, and agent-review workfl
 test('returns null and reports failed rebases and agent reviews', async () => {
   const failed = vi.fn().mockRejectedValue(new Error('Remote unavailable'));
   convex.useAction.mockReturnValue(failed);
-  const { result } = renderHook(() => useTripVersion(proposalId));
+  const { result } = await renderHook(() => useTripVersion(proposalId));
 
   await act(async () => {
     expect(await result.current.rebase([{ choice: 'proposed', path: 'details/name' }])).toBeNull();
@@ -162,15 +165,15 @@ test('returns null and reports failed rebases and agent reviews', async () => {
   expect(notifications.error).toHaveBeenCalledWith('Remote unavailable');
 });
 
-test('skips idea detail queries until a proposal id is available', () => {
-  renderHook(() => useTripProposalDetail());
+test('skips idea detail queries until a proposal id is available', async () => {
+  await renderHook(() => useTripProposalDetail());
   expect(convex.useQuery).toHaveBeenCalledWith(expect.anything(), 'skip');
 });
 
 test('returns null and toasts when idea creation fails', async () => {
   const create = vi.fn().mockRejectedValue(new Error('Trip is archived'));
   convex.useMutation.mockReturnValue(create);
-  const { result } = renderHook(() => useTripVersions(tripId));
+  const { result } = await renderHook(() => useTripVersions(tripId));
 
   let version = null;
   await act(async () => {

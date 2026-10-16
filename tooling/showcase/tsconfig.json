@@ -11,5 +11,5 @@
       "#video/*": ["./src/video/*.tsx"]
     }
   },
-  "include": ["src", "video.ts"]
+  "include": ["src", "video.ts", "vite.config.ts"]
 }

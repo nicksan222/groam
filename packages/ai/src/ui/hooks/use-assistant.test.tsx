@@ -1,5 +1,5 @@
 import type { UIMessage } from '@convex-dev/agent/react';
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import type { AgentScreenContext } from '#ai/ui/context/agent-context';
 import type { AssistantBackendApi } from '#ai/ui/hooks/assistant-functions';
@@ -112,14 +112,14 @@ beforeEach(() => {
 });
 
 test('opens one durable thread only when page context is available', async () => {
-  const withoutContext = renderHook(() => useAssistant(null, api));
+  const withoutContext = await renderHook(() => useAssistant(null, api));
   await act(() => withoutContext.result.current.open());
   expect(mocks.open).not.toHaveBeenCalled();
-  withoutContext.unmount();
+  await withoutContext.unmount();
 
   mocks.actionIndex = 0;
   mocks.mutationIndex = 0;
-  const { result } = renderHook(() => useAssistant(context, api));
+  const { result } = await renderHook(() => useAssistant(context, api));
   await act(() => result.current.open());
   expect(mocks.open).toHaveBeenCalledWith({
     screen: {
@@ -136,12 +136,12 @@ test('opens one durable thread only when page context is available', async () =>
   await act(() => result.current.open());
   expect(mocks.open).toHaveBeenCalledTimes(1);
 
-  act(() => result.current.selectThread('thread-2'));
+  await act(() => result.current.selectThread('thread-2'));
   expect(result.current.threadId).toBe('thread-2');
 });
 
 test('keeps a known thread subscribed while the assistant surface is closed, but does not send', async () => {
-  const { result } = renderHook(() =>
+  const { result } = await renderHook(() =>
     useAssistant(context, api, { enabled: false, threadId: 'selected-thread' })
   );
 
@@ -151,19 +151,19 @@ test('keeps a known thread subscribed while the assistant surface is closed, but
 });
 
 test('retains the opened thread and cached messages across a close and reopen', async () => {
-  const { result, rerender } = renderHook(
+  const { result, rerender } = await renderHook(
     ({ enabled }: { enabled: boolean }) => useAssistant(context, api, { enabled }),
     { initialProps: { enabled: true } }
   );
   await act(() => result.current.open());
   mocks.messages = [message('assistant-1', 'assistant', 'Already here')];
-  rerender({ enabled: false });
+  await rerender({ enabled: false });
 
   expect(result.current.threadId).toBe('thread-1');
   expect(result.current.messages.map((item) => item.text)).toEqual(['Already here']);
   expect(mocks.messageArgs[mocks.messageArgs.length - 1]).toEqual({ threadId: 'thread-1' });
 
-  rerender({ enabled: true });
+  await rerender({ enabled: true });
   expect(result.current.threadId).toBe('thread-1');
   expect(mocks.open).toHaveBeenCalledTimes(1);
 });
@@ -177,12 +177,12 @@ test('debounces screen navigation and injects only the latest context into the t
       key: 'trip:trip-1:itinerary',
       title: 'Portugal · Itinerary'
     } satisfies AgentScreenContext;
-    const { result, rerender } = renderHook(
+    const { result, rerender } = await renderHook(
       ({ screen }: { screen: AgentScreenContext }) => useAssistant(screen, api),
       { initialProps: { screen: context } }
     );
     await act(() => result.current.open());
-    rerender({ screen: nextContext });
+    await rerender({ screen: nextContext });
     await act(async () => {
       vi.advanceTimersByTime(180);
       await Promise.resolve();
@@ -206,7 +206,9 @@ test('debounces screen navigation and injects only the latest context into the t
 });
 
 test('uses a selected chat thread without opening another one', async () => {
-  const { result } = renderHook(() => useAssistant(context, api, { threadId: 'selected-thread' }));
+  const { result } = await renderHook(() =>
+    useAssistant(context, api, { threadId: 'selected-thread' })
+  );
 
   await act(() => result.current.open());
   expect(mocks.open).not.toHaveBeenCalled();
@@ -217,7 +219,7 @@ test('uses a selected chat thread without opening another one', async () => {
 });
 
 test('clears from a message and regenerates it through the resend route', async () => {
-  const { result } = renderHook(() => useAssistant(context, api));
+  const { result } = await renderHook(() => useAssistant(context, api));
   await act(() => result.current.open());
   const original = message('user-7', 'user', '@groam Rework the itinerary', { order: 7 });
 
@@ -243,7 +245,7 @@ test('clears from a message and regenerates it through the resend route', async 
 
 test('forwards registered data and a typesafe @agent selection', async () => {
   mocks.send.mockResolvedValue(null);
-  const { result } = renderHook(() => useAssistant(context, api));
+  const { result } = await renderHook(() => useAssistant(context, api));
   await act(() => result.current.open());
 
   await expect(result.current.send('   ')).resolves.toBe(false);
@@ -276,12 +278,12 @@ test('shows the user message before a streamed assistant response reaches the su
         finishSend = () => resolve(null);
       })
   );
-  const { rerender, result } = renderHook(() =>
+  const { rerender, result } = await renderHook(() =>
     useAssistant(context, api, { threadId: 'thread-1' })
   );
 
   let sendPromise: Promise<boolean> | undefined;
-  act(() => {
+  await act(() => {
     sendPromise = result.current.send('Show this immediately');
   });
   expect(result.current.messages.map(({ role, text }) => ({ role, text }))).toEqual([
@@ -292,7 +294,7 @@ test('shows the user message before a streamed assistant response reaches the su
     message('context-1', 'system', 'Current screen'),
     message('assistant-1', 'assistant', '', { order: 2, status: 'streaming' })
   ];
-  rerender();
+  await rerender();
   expect(result.current.messages.map(({ role, text }) => ({ role, text }))).toEqual([
     { role: 'system', text: 'Current screen' },
     { role: 'user', text: 'Show this immediately' },
@@ -304,7 +306,7 @@ test('shows the user message before a streamed assistant response reaches the su
     message('user-1', 'user', 'Show this immediately'),
     message('assistant-1', 'assistant', '', { order: 2, status: 'streaming' })
   ];
-  rerender();
+  await rerender();
   expect(result.current.messages.filter(({ role }) => role === 'user')).toHaveLength(1);
 
   finishSend?.();
@@ -313,7 +315,7 @@ test('shows the user message before a streamed assistant response reaches the su
 
 test('stops a durable response stream by message order', async () => {
   mocks.messages = [message('assistant-7', 'assistant', '', { order: 7, status: 'streaming' })];
-  const { result } = renderHook(() => useAssistant(context, api, { threadId: 'thread-1' }));
+  const { result } = await renderHook(() => useAssistant(context, api, { threadId: 'thread-1' }));
 
   expect(result.current.isResponding).toBe(true);
   await act(() => result.current.stop());
@@ -323,7 +325,7 @@ test('stops a durable response stream by message order', async () => {
 
 test('returns false and reports provider failures', async () => {
   mocks.send.mockRejectedValue(new Error('Provider unavailable'));
-  const { result } = renderHook(() => useAssistant(context, api));
+  const { result } = await renderHook(() => useAssistant(context, api));
   await act(() => result.current.open());
 
   let sent = true;

@@ -1,9 +1,9 @@
-import { render } from '@testing-library/react';
+import { render } from '@groam/vitest-config/react';
 import { expect, test } from 'vite-plus/test';
 import Timeline from './index';
 
-test('renders a dashed break between items', () => {
-  const { container } = render(
+test('renders a dashed break between items', async () => {
+  const { container } = await render(
     <Timeline>
       <Timeline.Item>Above</Timeline.Item>
       <Timeline.Break />
@@ -15,8 +15,8 @@ test('renders a dashed break between items', () => {
   expect(separator?.className).toContain('border-dashed');
 });
 
-test('minimal body matches the compact marker height', () => {
-  const { container } = render(
+test('minimal body matches the compact marker height', async () => {
+  const { container } = await render(
     <Timeline variant="minimal">
       <Timeline.Item>
         <Timeline.Body>Content</Timeline.Body>
@@ -30,8 +30,8 @@ test('minimal body matches the compact marker height', () => {
   expect(body?.getAttribute('data-variant')).toBe('minimal');
 });
 
-test('activity body aligns with the actor avatar', () => {
-  const { container } = render(
+test('activity body aligns with the actor avatar', async () => {
+  const { container } = await render(
     <Timeline variant="activity">
       <Timeline.Item>
         <Timeline.Body>Content</Timeline.Body>

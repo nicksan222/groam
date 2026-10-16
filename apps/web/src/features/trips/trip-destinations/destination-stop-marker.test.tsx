@@ -1,31 +1,42 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { render } from '@groam/vitest-config/react';
+import { expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
 import { DestinationStopMarker } from './destination-stop-marker';
 
-afterEach(cleanup);
+// Real images: a one-pixel PNG loads, a missing path fails, so the browser fires the events.
+const pixel =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
-test('announces photo discovery and then image loading until the image arrives', () => {
-  const { container, rerender } = render(
+test('announces photo discovery and then image loading until the image arrives', async () => {
+  const { rerender } = await render(
     <DestinationStopMarker coverStatus="pending" coverUrl={null} name="Lisbon" stop={1} />
   );
-  expect(screen.getByRole('status').textContent).toContain('Finding a photo of Lisbon');
-  rerender(
-    <DestinationStopMarker coverStatus="ready" coverUrl="/lisbon.jpg" name="Lisbon" stop={1} />
+  expect(page.getByRole('status').element().textContent).toContain('Finding a photo of Lisbon');
+  await rerender(
+    <DestinationStopMarker
+      coverStatus="ready"
+      coverUrl={`${pixel}#lisbon`}
+      name="Lisbon"
+      stop={1}
+    />
   );
-  expect(screen.getByRole('status').textContent).toContain('Loading photo of Lisbon');
-  const photo = container.querySelector('img');
-  if (!photo) throw new Error('Expected destination photo');
-  fireEvent.load(photo);
-  expect(screen.queryByRole('status')).toBeNull();
-  rerender(
-    <DestinationStopMarker coverStatus="ready" coverUrl="/new-lisbon.jpg" name="Lisbon" stop={1} />
+  expect(page.getByRole('status').element().textContent).toContain('Loading photo of Lisbon');
+  await expect.element(page.getByRole('status')).not.toBeInTheDocument();
+  await rerender(
+    <DestinationStopMarker
+      coverStatus="ready"
+      coverUrl={`${pixel}#new-lisbon`}
+      name="Lisbon"
+      stop={1}
+    />
   );
-  expect(screen.getByRole('status').textContent).toContain('Loading photo of Lisbon');
+  expect(page.getByRole('status').element().textContent).toContain('Loading photo of Lisbon');
+  await expect.element(page.getByRole('status')).not.toBeInTheDocument();
 });
 
-test('hands failed images back to the compact destination fallback', () => {
+test('hands failed images back to the compact destination fallback', async () => {
   const onCoverError = vi.fn();
-  const { container } = render(
+  await render(
     <DestinationStopMarker
       coverStatus="ready"
       coverUrl="/broken.jpg"
@@ -34,8 +45,5 @@ test('hands failed images back to the compact destination fallback', () => {
       stop={1}
     />
   );
-  const photo = container.querySelector('img');
-  if (!photo) throw new Error('Expected destination photo');
-  fireEvent.error(photo);
-  expect(onCoverError).toHaveBeenCalledOnce();
+  await expect.poll(() => onCoverError.mock.calls.length).toBe(1);
 });
