@@ -9,6 +9,12 @@ Everything specific to the packaged desktop application lives here:
 Cross-client process and environment helpers stay in `@groam/devkit`; desktop code imports them
 rather than duplicating startup behavior.
 
+## ChatGPT connection
+
+Desktop uses the local ChatGPT authorization flow. Keep the desktop runtime
+running through sign-in; see [AI configuration](../../packages/backend/convex/README.md#ai-configuration)
+for setup and callback requirements.
+
 ## Releases
 
 The `Release` GitHub Actions workflow runs every Monday at 06:17 UTC and can also be started

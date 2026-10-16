@@ -9,13 +9,13 @@
  */
 
 import type * as http from "../http.js";
-import type * as migrations from "../migrations.js";
-import type * as modules_ai_hosts from "../modules/ai/hosts.js";
+import type * as modules_ai_chatgpt_actions from "../modules/ai/chatgpt/actions.js";
+import type * as modules_ai_chatgpt_callback from "../modules/ai/chatgpt/callback.js";
+import type * as modules_ai_chatgpt_settings from "../modules/ai/chatgpt/settings.js";
+import type * as modules_ai_chatgpt_storage from "../modules/ai/chatgpt/storage.js";
+import type * as modules_ai_chatgpt_types from "../modules/ai/chatgpt/types.js";
 import type * as modules_ai_limits from "../modules/ai/limits.js";
 import type * as modules_ai_provider from "../modules/ai/provider.js";
-import type * as modules_ai_providers from "../modules/ai/providers.js";
-import type * as modules_ai_settings from "../modules/ai/settings.js";
-import type * as modules_ai_validators from "../modules/ai/validators.js";
 import type * as modules_assistant_agent_index from "../modules/assistant/agent/index.js";
 import type * as modules_assistant_agent_instructions from "../modules/assistant/agent/instructions.js";
 import type * as modules_assistant_agent_session from "../modules/assistant/agent/session.js";
@@ -178,8 +178,12 @@ import type * as routes_organizations_invitations_list from "../routes/organizat
 import type * as routes_organizations_invitations_redeem from "../routes/organizations/invitations/redeem.js";
 import type * as routes_organizations_invitations_revoke from "../routes/organizations/invitations/revoke.js";
 import type * as routes_references_resolve from "../routes/references/resolve.js";
+import type * as routes_settings_ai_acknowledge from "../routes/settings/ai/acknowledge.js";
+import type * as routes_settings_ai_connect from "../routes/settings/ai/connect.js";
+import type * as routes_settings_ai_disconnect from "../routes/settings/ai/disconnect.js";
 import type * as routes_settings_ai_get from "../routes/settings/ai/get.js";
-import type * as routes_settings_ai_set from "../routes/settings/ai/set.js";
+import type * as routes_settings_ai_models from "../routes/settings/ai/models.js";
+import type * as routes_settings_ai_select from "../routes/settings/ai/select.js";
 import type * as routes_settings_reviews_get from "../routes/settings/reviews/get.js";
 import type * as routes_settings_reviews_set from "../routes/settings/reviews/set.js";
 import type * as routes_trips_archive from "../routes/trips/archive.js";
@@ -259,13 +263,13 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   http: typeof http;
-  migrations: typeof migrations;
-  "modules/ai/hosts": typeof modules_ai_hosts;
+  "modules/ai/chatgpt/actions": typeof modules_ai_chatgpt_actions;
+  "modules/ai/chatgpt/callback": typeof modules_ai_chatgpt_callback;
+  "modules/ai/chatgpt/settings": typeof modules_ai_chatgpt_settings;
+  "modules/ai/chatgpt/storage": typeof modules_ai_chatgpt_storage;
+  "modules/ai/chatgpt/types": typeof modules_ai_chatgpt_types;
   "modules/ai/limits": typeof modules_ai_limits;
   "modules/ai/provider": typeof modules_ai_provider;
-  "modules/ai/providers": typeof modules_ai_providers;
-  "modules/ai/settings": typeof modules_ai_settings;
-  "modules/ai/validators": typeof modules_ai_validators;
   "modules/assistant/agent/index": typeof modules_assistant_agent_index;
   "modules/assistant/agent/instructions": typeof modules_assistant_agent_instructions;
   "modules/assistant/agent/session": typeof modules_assistant_agent_session;
@@ -428,8 +432,12 @@ declare const fullApi: ApiFromModules<{
   "routes/organizations/invitations/redeem": typeof routes_organizations_invitations_redeem;
   "routes/organizations/invitations/revoke": typeof routes_organizations_invitations_revoke;
   "routes/references/resolve": typeof routes_references_resolve;
+  "routes/settings/ai/acknowledge": typeof routes_settings_ai_acknowledge;
+  "routes/settings/ai/connect": typeof routes_settings_ai_connect;
+  "routes/settings/ai/disconnect": typeof routes_settings_ai_disconnect;
   "routes/settings/ai/get": typeof routes_settings_ai_get;
-  "routes/settings/ai/set": typeof routes_settings_ai_set;
+  "routes/settings/ai/models": typeof routes_settings_ai_models;
+  "routes/settings/ai/select": typeof routes_settings_ai_select;
   "routes/settings/reviews/get": typeof routes_settings_reviews_get;
   "routes/settings/reviews/set": typeof routes_settings_reviews_set;
   "routes/trips/archive": typeof routes_trips_archive;
@@ -532,7 +540,6 @@ export declare const components: {
   betterAuth: import("../components/better-auth/_generated/component.js").ComponentApi<"betterAuth">;
   agent: import("@convex-dev/agent/_generated/component.js").ComponentApi<"agent">;
   geospatial: import("@convex-dev/geospatial/_generated/component.js").ComponentApi<"geospatial">;
-  migrations: import("@convex-dev/migrations/_generated/component.js").ComponentApi<"migrations">;
   rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
   web: import("@convex-dev/static-hosting/_generated/component.js").ComponentApi<"web">;
 };

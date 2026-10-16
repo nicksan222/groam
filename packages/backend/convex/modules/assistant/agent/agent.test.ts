@@ -1,11 +1,10 @@
 import { mockModel } from '@convex-dev/agent';
-import { chatAgentCallSettings } from '@groam/ai/backend/provider';
 import { makeFunctionReference } from 'convex/server';
 import { ConvexError, v } from 'convex/values';
 import { expect, test, vi } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
-import { action, env } from '#convex-generated/server';
+import { action } from '#convex-generated/server';
 import { AssistantSession } from '#convex/modules/assistant/agent/index';
 import { setupTrip, setupWritableTrip, tripActivityInput, tripLocationInput } from '#testing/trips';
 
@@ -36,7 +35,6 @@ type MockReply =
   | 'context'
   | 'create'
   | 'dates'
-  | 'limits'
   | 'proposals'
   | 'screen'
   | 'status'
@@ -61,21 +59,9 @@ function toolResponse(toolName: string, toolCallId: string, input: object, text:
 function languageModelForReply(
   reply: MockReply,
   destinationId: Id<'tripDestinations'>,
-  tripId: Id<'trips'>,
-  observeMaxOutputTokens: (value: number | undefined) => void
+  tripId: Id<'trips'>
 ) {
   switch (reply) {
-    case 'limits': {
-      const response = mockModel({
-        content: [{ text: 'The response stayed within its output budget.', type: 'text' }]
-      });
-      return mockModel({
-        doStream: async (options) => {
-          observeMaxOutputTokens(options.maxOutputTokens);
-          return await response.doStream(options);
-        }
-      });
-    }
     case 'dates':
       return toolResponse(
         'startTripVersion',
@@ -149,7 +135,7 @@ function languageModelForReply(
 }
 
 function isWorkspaceReply(reply: MockReply): boolean {
-  return ['context', 'create', 'limits', 'screen'].includes(reply);
+  return ['context', 'create', 'screen'].includes(reply);
 }
 
 function agentForReply(_reply: MockReply) {
@@ -168,7 +154,6 @@ export const sendWithMockModel = action({
       v.literal('context'),
       v.literal('create'),
       v.literal('dates'),
-      v.literal('limits'),
       v.literal('screen'),
       v.literal('stay')
     ),
@@ -180,10 +165,7 @@ export const sendWithMockModel = action({
     if (!(await ctx.auth.getUserIdentity())) throw new ConvexError('Not authenticated');
     // Only the provider is deterministic: the real Agent loop still resolves,
     // executes, and persists each emitted tool call.
-    let observedMaxOutputTokens: number | undefined;
-    const languageModel = languageModelForReply(reply, destinationId, target.tripId, (value) => {
-      observedMaxOutputTokens = value;
-    });
+    const languageModel = languageModelForReply(reply, destinationId, target.tripId);
     const section = reply === 'status' ? 'overview' : 'itinerary';
     const result = await AssistantSession.continueWithModel(
       ctx,
@@ -203,14 +185,6 @@ export const sendWithMockModel = action({
       },
       languageModel
     );
-    if (reply === 'limits') {
-      const expected = chatAgentCallSettings(env.OPENAI_BASE_URL).maxOutputTokens;
-      if (observedMaxOutputTokens !== expected) {
-        throw new Error(
-          `Expected maxOutputTokens to be ${expected}, received ${observedMaxOutputTokens}`
-        );
-      }
-    }
     return result;
   }
 });
@@ -224,16 +198,7 @@ const sendWithMockModelReference = makeFunctionReference<
   {
     destinationId: Id<'tripDestinations'>;
     prompt: string;
-    reply:
-      | 'add'
-      | 'context'
-      | 'create'
-      | 'dates'
-      | 'limits'
-      | 'proposals'
-      | 'screen'
-      | 'status'
-      | 'stay';
+    reply: 'add' | 'context' | 'create' | 'dates' | 'proposals' | 'screen' | 'status' | 'stay';
     threadId: string;
     tripId: Id<'trips'>;
   },
@@ -251,20 +216,6 @@ async function setupAssistantThread() {
   });
   return { destinationId, owner, threadId, tripId };
 }
-
-test('caps model output so compatible providers do not request their full token window', async () => {
-  const { destinationId, owner, threadId, tripId } = await setupAssistantThread();
-
-  await expect(
-    owner.client.action(sendWithMockModelReference, {
-      destinationId,
-      prompt: 'Summarize this trip.',
-      reply: 'limits',
-      threadId,
-      tripId
-    })
-  ).resolves.toBeNull();
-});
 
 test('builds one verified context for the current trip screen', async () => {
   const { owner, sharedTripId, tripId } = await setupWritableTrip(0);

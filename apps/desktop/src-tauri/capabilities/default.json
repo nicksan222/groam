@@ -11,6 +11,7 @@
     "dialog:default",
     "allow-export-groam-data",
     "allow-groam-data-dir-path",
-    "allow-import-groam-data"
+    "allow-import-groam-data",
+    "allow-open-chatgpt-authorization"
   ]
 }

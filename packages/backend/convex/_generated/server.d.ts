@@ -30,18 +30,7 @@ import type { DataModel } from "./dataModel.js";
 type Env = {
   readonly CONVEX_CLOUD_URL: string;
   readonly CONVEX_SITE_URL: string;
-  readonly AI_AGENT_MODELS: string | undefined;
-  readonly AI_MODEL: string | undefined;
-  readonly AI_PROVIDER: "openai" | "anthropic" | "google" | undefined;
-  readonly AI_WEB_SEARCH: "enabled" | "disabled" | undefined;
-  readonly ANTHROPIC_API_KEY: string | undefined;
-  readonly ANTHROPIC_BASE_URL: string | undefined;
   readonly CONVEX_SITE_URL: string | undefined;
-  readonly GOOGLE_GENERATIVE_AI_API_KEY: string | undefined;
-  readonly GOOGLE_GENERATIVE_AI_BASE_URL: string | undefined;
-  readonly OPENAI_API_KEY: string | undefined;
-  readonly OPENAI_API_MODE: "chat" | "responses" | undefined;
-  readonly OPENAI_BASE_URL: string | undefined;
   readonly SITE_URL: string | undefined;
 };
 

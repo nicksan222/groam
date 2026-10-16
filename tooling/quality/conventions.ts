@@ -13,7 +13,6 @@ const gradient = /(?:linear|radial|conic)-gradient\s*\(|\bbg-(?:gradient|linear|
 const rawConvexAccess = /\b(?:ctx|this\.ctx)\s*\.\s*db\b/gu;
 const convexDbRoot = /^packages\/backend\/convex\/(?:components|modules|routes)\//u;
 const convexNodeRuntime = /(?:^|\n)\s*['"]use node['"]/u;
-const convexMigration = /^packages\/backend\/convex\/migrations\.ts$/u;
 const backendTestSupport = /^packages\/backend\/(?:convex\/.*\.test\.ts|testing\/)/u;
 const envPackage = /^packages\/env\//u;
 const importMetaEnv = /\bimport\.meta\.env\b/u;
@@ -191,7 +190,6 @@ function inspectRawConvexAccess(filePath: string, source: string): ConventionFin
   const isNonNodeBackendFile =
     filePath.startsWith('packages/backend/convex/') &&
     !convexDbRoot.test(filePath) &&
-    !convexMigration.test(filePath) &&
     !backendTestSupport.test(filePath);
   const isNodeRuntimeBackendFile = convexDbRoot.test(filePath) && convexNodeRuntime.test(source);
   if (!isNonNodeBackendFile && !isNodeRuntimeBackendFile) return [];

@@ -122,8 +122,9 @@ route, module, hook, env variable, test, or UI piece.
   tests are the `views` setup; `just journeys` runs the `journeys` setup
   (`apps/web/e2e`): the real app against the running local backend, served on
   `5174`, which local Better Auth trusts.
-- AI assistant features are optional and need an LLM provider key (see
-  `packages/env`).
+- For AI setup and deployment constraints, see
+  [AI configuration](packages/backend/convex/README.md#ai-configuration).
+  Load `.claude/skills/convex-agent/SKILL.md` before changing agent integration.
 
 ### Demo login and seed data
 

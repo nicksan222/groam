@@ -10,26 +10,22 @@ test('wraps provider failures in a ConvexError', () => {
 
 test('reads ConvexError data through the shared failure mapper', () => {
   expect(
-    AssistantErrors.message(new ConvexError('Groam AI is not configured. Add OPENAI_API_KEY.'))
+    AssistantErrors.message(
+      new ConvexError('Connect ChatGPT in Settings → AI to use your ChatGPT plan.')
+    )
   ).toMatch(/Settings → AI/i);
 });
 
-test('maps nested AI_APICallError 402 through ConvexError wrapping', () => {
-  const provider =
-    'This request requires more credits, or fewer max_tokens. You requested up to 1024 tokens, but can only afford 245.';
+test('preserves actionable ChatGPT usage errors through ConvexError wrapping', () => {
   const apiError = Object.assign(new Error('An error occurred.'), {
-    data: {
-      error: {
-        message: provider
-      }
-    },
+    data: { error: { code: 'subscription_sharing_usage_limit_exceeded' } },
     name: 'AI_APICallError',
-    statusCode: 402
+    statusCode: 429
   });
   const wrapped = AssistantErrors.from(apiError);
-  expect(wrapped).toMatchObject({ data: expect.stringContaining(provider) });
-  expect(AssistantErrors.message(wrapped)).toContain(provider);
+  expect(wrapped).toMatchObject({ data: expect.stringContaining('ChatGPT usage limit reached') });
+  expect(AssistantErrors.message(wrapped)).toContain('ChatGPT Settings → Usage');
   expect(new ConvexError(AssistantErrors.message(wrapped))).toMatchObject({
-    data: expect.stringContaining(provider)
+    data: expect.stringContaining('ChatGPT usage limit reached')
   });
 });

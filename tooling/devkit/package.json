@@ -18,7 +18,6 @@
     "./http-readiness": "./http-readiness.ts",
     "./repo-root": "./repo-root.ts",
     "./run-convex": "./run-convex.ts",
-    "./sync-ai-env": "./sync-ai-env.ts",
     "./wait-for-backend": "./wait-for-backend.ts"
   },
   "license": "MIT",

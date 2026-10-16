@@ -39,7 +39,7 @@ export const run = internalAction({
       const result = await generateText({
         maxOutputTokens: MAX_TITLE_OUTPUT_TOKENS,
         model: (
-          await AssistantProvider.configured(ctx, 'groam', {
+          await AssistantProvider.configured(ctx, {
             organizationId,
             userId: credentialOwnerUserId
           })

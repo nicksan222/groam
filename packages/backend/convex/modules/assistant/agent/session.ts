@@ -1,6 +1,5 @@
 import { Agent, updateThreadMetadata } from '@convex-dev/agent';
 import { type AssistantAgentId, isDefaultAssistantChatTitle } from '@groam/ai/agents';
-import { chatAgentCallSettings } from '@groam/ai/backend/provider';
 import { type AssistantScreen, assistantConversationContextKey } from '@groam/ai/runtime/screen';
 import {
   assistantThreadSummary,
@@ -11,7 +10,7 @@ import { ConvexError } from 'convex/values';
 import { createRegisteredAssistantTools } from '#backend/assistant/tools/index';
 import { components, internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
-import { type ActionCtx, env } from '#convex-generated/server';
+import { type ActionCtx } from '#convex-generated/server';
 import { AssistantProvider } from '#convex/modules/ai/provider';
 import { AssistantChats } from '#convex/modules/assistant/chat/index';
 import { AssistantErrors } from '#convex/modules/assistant/errors/index';
@@ -73,7 +72,6 @@ function createAssistant({
     ...(configuration.providerTools ? { providerTools: configuration.providerTools } : {})
   });
   return new Agent(components.agent, {
-    callSettings: chatAgentCallSettings(env.OPENAI_BASE_URL),
     contextOptions: { excludeToolMessages: false, recentMessages: 100 },
     instructions: AssistantInstructions.for(agentId, scope, registered.guidance),
     languageModel: configuration.languageModel,
@@ -129,6 +127,7 @@ async function continueAssistantWithConfiguration(
     screen: target.screen,
     threadId: target.threadId
   });
+  // oxlint-disable-next-line react-doctor/server-sequential-independent-await -- Persist the prompt before continuing its thread.
   const { thread } = await assistant.continueThread(ctx, {
     threadId: target.threadId,
     userId: access.userId
@@ -196,7 +195,6 @@ async function savedPromptMessageId({
   threadId: string;
 }): Promise<string> {
   if (promptMessageId) return promptMessageId;
-  await purgeLegacySystemMessages(ctx, assistant, threadId);
   const { messages } = await assistant.saveMessages(ctx, {
     messages: [{ content: prompt, role: 'user' }],
     skipEmbeddings: true,
@@ -231,26 +229,6 @@ function generatedChatTitle(threadTitle: string | null, prompt: string): string 
 
 function isAbortError(error: unknown): boolean {
   return error instanceof Error && error.name === 'AbortError';
-}
-
-async function purgeLegacySystemMessages(
-  ctx: ActionCtx,
-  assistant: ReturnType<typeof createAssistant>,
-  threadId: string
-): Promise<void> {
-  const messages = await assistant.listMessages(ctx, {
-    paginationOpts: { cursor: null, numItems: 100 },
-    threadId
-  });
-  const systemMessages = [];
-  for (const message of messages.page) {
-    if (message.message?.role === 'system') systemMessages.push(message);
-  }
-  await Promise.all(
-    systemMessages.map(
-      async (message) => await assistant.deleteMessage(ctx, { messageId: message._id })
-    )
-  );
 }
 
 /** Action-side private and discussion assistant turns. */
@@ -295,7 +273,7 @@ export class AssistantSession {
     await continueAssistantWithConfiguration(
       ctx,
       target,
-      await AssistantProvider.configured(ctx, target.agent, {
+      await AssistantProvider.configured(ctx, {
         organizationId: access.organizationId,
         userId: access.credentialOwnerUserId
       }),
@@ -309,7 +287,7 @@ export class AssistantSession {
     target: AssistantTarget & { messageId: string; order: number; stepOrder: number }
   ): Promise<null> {
     const access = await workspaceAccess(ctx, target.threadId);
-    const configuration = await AssistantProvider.configured(ctx, target.agent, {
+    const configuration = await AssistantProvider.configured(ctx, {
       organizationId: access.organizationId,
       userId: access.credentialOwnerUserId
     });
@@ -336,7 +314,6 @@ export class AssistantSession {
     ) {
       throw new ConvexError('The selected assistant message cannot be resent');
     }
-    await purgeLegacySystemMessages(ctx, assistant, target.threadId);
     let startOrder = target.order;
     let startStepOrder: number | undefined = target.stepOrder + 1;
     while (true) {
@@ -378,7 +355,7 @@ export class AssistantSession {
     return await continueAssistantWithConfiguration(
       ctx,
       target,
-      await AssistantProvider.configured(ctx, target.agent, {
+      await AssistantProvider.configured(ctx, {
         organizationId: access.organizationId,
         userId: access.credentialOwnerUserId
       }),

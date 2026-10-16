@@ -3,7 +3,6 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { configureAuth } from '@groam/devkit/configure-auth';
 import { waitForHttp } from '@groam/devkit/http-readiness';
-import { syncOptionalAiEnvironment } from '@groam/devkit/sync-ai-env';
 import { linkDataDirectory } from './data-dir';
 import { runtimeEnv } from './env';
 import { isBackendResponding, waitForBackend } from './wait-for-backend';
@@ -46,8 +45,6 @@ process.on('SIGTERM', () => shutdown('SIGTERM'));
 
 await waitForBackend();
 configureAuth({ siteUrl: runtimeEnv.siteUrl, writeViteSiteUrl: false });
-syncOptionalAiEnvironment();
-runStep('Running pending migrations', ['bun', 'run', 'migrations:run']);
 runStep('Publishing static sites', ['bun', 'run', 'hosting:upload:web:desktop']);
 await waitForHttp(`${runtimeEnv.siteOrigin}/`);
 

@@ -3,13 +3,10 @@ const REDACTED_MESSAGES = new Set(['An error occurred', 'An error occurred.']);
 export const DEFAULT_ASSISTANT_FAILURE =
   'Groam AI could not complete that reply. Try again in a moment.';
 
-export const UNCONFIGURED_ASSISTANT =
-  'Groam AI is not configured. Add an API key in Settings → AI.';
+export const CHATGPT_RECONNECT = 'Reconnect ChatGPT in Settings → AI to continue using your plan.';
 
 const PROVIDER_PREFIX = 'The model provider said: ';
 const MAX_FORWARDED_MESSAGE = 400;
-const CREDITS_FALLBACK =
-  'Groam AI is temporarily unavailable because the model provider is out of credits. Try again later or ask with a shorter message.';
 
 function isOpaqueServerWrapper(message: string): boolean {
   return (
@@ -52,30 +49,34 @@ function pickJsonMessage(value: unknown, depth = 0): string | null {
   return null;
 }
 
+function collectJson(raw: string, depth: number, seen: Set<unknown>, out: string[]): void {
+  try {
+    collectCandidates(JSON.parse(raw), depth + 1, seen, out);
+  } catch {
+    /* Ignore diagnostic text that is not JSON. */
+  }
+}
+function collectDiagnostics(record: Record<string, unknown>, out: string[]): void {
+  if (typeof record.code === 'string') out.push(record.code);
+  const status = record.statusCode ?? record.status;
+  if (status === 401) out.push('chatgpt_unauthorized');
+  if (status === 429) out.push('rate_limit_exceeded');
+  if (record.reconnect === true) out.push('chatgpt_reconnect');
+}
 function collectCandidates(value: unknown, depth: number, seen: Set<unknown>, out: string[]): void {
   if (depth > 6 || value == null || seen.has(value)) return;
   if (typeof value === 'string') {
-    const fromJson = tryJsonErrorMessage(value);
-    out.push(fromJson ?? value);
+    out.push(tryJsonErrorMessage(value) ?? value);
+    if (value.trim().startsWith('{')) collectJson(value, depth, seen, out);
     return;
   }
   if (typeof value !== 'object') return;
   seen.add(value);
   const record = value as Record<string, unknown>;
-
-  if ('data' in record) collectCandidates(record.data, depth + 1, seen, out);
-  if ('error' in record && record.error !== value)
-    collectCandidates(record.error, depth + 1, seen, out);
-  if (typeof record.message === 'string') {
-    const fromJson = tryJsonErrorMessage(record.message);
-    out.push(fromJson ?? record.message);
-  }
-  if (typeof record.responseBody === 'string') {
-    const fromJson = tryJsonErrorMessage(record.responseBody);
-    if (fromJson) out.push(fromJson);
-  }
-  if ('cause' in record && record.cause !== value)
-    collectCandidates(record.cause, depth + 1, seen, out);
+  for (const key of ['data', 'error', 'message', 'cause'])
+    collectCandidates(record[key], depth + 1, seen, out);
+  if (typeof record.responseBody === 'string') collectJson(record.responseBody, depth, seen, out);
+  collectDiagnostics(record, out);
 }
 
 function sanitizeFailureMessage(text: string): string | null {
@@ -100,6 +101,11 @@ function sanitizeFailureMessage(text: string): string | null {
     .replace(/\bsk-[A-Za-z0-9_-]{8,}\b/gu, '[redacted]')
     .replace(/\bBearer\s+[A-Za-z0-9._-]+/giu, 'Bearer [redacted]')
     .replace(/\b(api[_-]?key\s*[:=]\s*)\S+/giu, '$1[redacted]')
+    .replace(
+      /(["']?(?:access[_-]?token|refresh[_-]?token|id[_-]?token)["']?\s*[:=]\s*["']?)[^\s,;"']+/giu,
+      '$1[redacted]'
+    )
+    .replace(/\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/gu, '[redacted]')
     .replace(/\b(cookie\s*[:=]\s*)[^\s;]+/giu, '$1[redacted]');
   value = value.trim();
   if (!value) return null;
@@ -111,7 +117,9 @@ function isGroamAuthored(message: string): boolean {
   return (
     message.startsWith('Groam AI') ||
     message.startsWith(PROVIDER_PREFIX) ||
-    message === UNCONFIGURED_ASSISTANT
+    message.startsWith('ChatGPT') ||
+    message.startsWith('Reconnect ChatGPT') ||
+    message.startsWith('Connect ChatGPT')
   );
 }
 
@@ -120,58 +128,51 @@ function withProviderPrefix(message: string): string {
   return `${PROVIDER_PREFIX}${message}`;
 }
 
-function hasPaymentRequiredStatus(
-  error: unknown,
-  depth = 0,
-  seen: Set<unknown> = new Set()
-): boolean {
-  if (depth > 5 || typeof error !== 'object' || error === null || seen.has(error)) return false;
-  seen.add(error);
-  const record = error as {
-    cause?: unknown;
-    data?: unknown;
-    error?: unknown;
-    status?: unknown;
-    statusCode?: unknown;
-  };
-  if (record.statusCode === 402 || record.status === 402) return true;
-  return (
-    hasPaymentRequiredStatus(record.cause, depth + 1, seen) ||
-    hasPaymentRequiredStatus(record.data, depth + 1, seen) ||
-    hasPaymentRequiredStatus(record.error, depth + 1, seen)
-  );
-}
-
-function looksUnconfigured(haystack: string): boolean {
-  return (
-    haystack.includes('not configured') ||
-    haystack.includes('missing openai') ||
-    haystack.includes('missing openrouter') ||
-    haystack.includes('add openai_api_key') ||
-    haystack.includes('add an api key')
-  );
-}
-
-function looksLikeCreditFailure(error: unknown, haystack: string): boolean {
-  return (
-    hasPaymentRequiredStatus(error) ||
-    haystack.includes('more credits') ||
-    haystack.includes('out of credits') ||
-    haystack.includes('can only afford') ||
-    haystack.includes('insufficient') ||
-    (haystack.includes('max_tokens') && haystack.includes('afford')) ||
-    haystack.includes('quota') ||
-    haystack.includes('billing') ||
-    haystack.includes('payment required')
-  );
-}
-
 const FAILURE_MESSAGE_PATTERNS: readonly { matches: readonly string[]; message: string }[] = [
   {
-    message: 'Groam AI is busy right now. Wait a moment and try again.',
-    matches: ['rate limit', 'too many requests', '429', 'capacity']
+    matches: ['subscription_sharing_usage_limit_exceeded'],
+    message:
+      'ChatGPT usage limit reached for this app. Review your limits in ChatGPT Settings → Usage before trying again.'
   },
-  { message: UNCONFIGURED_ASSISTANT, matches: ['api key', 'invalid key'] },
+  {
+    matches: ['subscription_sharing_usage_unavailable', 'subscription_sharing_user_unavailable'],
+    message: 'ChatGPT plan usage is temporarily unavailable. Try again later.'
+  },
+  {
+    matches: ['subscription_sharing_user_not_eligible'],
+    message:
+      'ChatGPT plan usage is unavailable for this account or workspace. Check your ChatGPT plan and workspace policy.'
+  },
+  {
+    matches: [
+      'subscription_sharing_unsupported_capability',
+      'subscription_sharing_route_not_supported'
+    ],
+    message:
+      'ChatGPT does not support this request. Change the model or requested capability before trying again.'
+  },
+  {
+    matches: ['chatpass_v2_scope_not_authorized', 'chatpass_v2_invalid_authorization_context'],
+    message:
+      'ChatGPT did not authorize this operation. Check the account connection and plan permissions in Settings → AI.'
+  },
+  {
+    matches: [
+      'chatgpt_reconnect',
+      'chatgpt_unauthorized',
+      'invalid_grant',
+      'invalid_refresh_token',
+      'refresh_token_expired',
+      'refresh_token_invalidated',
+      'refresh_token_reused',
+      'subscription_sharing_invalid_user'
+    ],
+    message: CHATGPT_RECONNECT
+  },
+  {
+    message: 'Groam AI is busy right now. Wait a moment and try again.',
+    matches: ['rate limit', 'rate_limit', 'too many requests', '429', 'capacity']
+  },
   {
     message: 'Groam AI lost connection while replying. Try again in a moment.',
     matches: ['timeout', 'timed out', 'network', 'fetch failed', 'econnreset', 'socket']
@@ -179,7 +180,7 @@ const FAILURE_MESSAGE_PATTERNS: readonly { matches: readonly string[]; message: 
   {
     message:
       'That conversation is too long for Groam AI right now. Start a new chat or send a shorter message.',
-    matches: ['context length', 'too long', 'maximum context']
+    matches: ['context length', 'context_length', 'too long', 'maximum context']
   },
   {
     message: 'Groam AI could not reply to that message because of a provider safety check.',
@@ -209,12 +210,8 @@ export function assistantFailureMessage(error: unknown): string {
   }
   const haystack = candidates.join('\n').toLowerCase();
 
-  if (forwarded && looksUnconfigured(forwarded.toLowerCase())) return UNCONFIGURED_ASSISTANT;
-  if (looksUnconfigured(haystack) && !forwarded) return UNCONFIGURED_ASSISTANT;
-
+  const mapped = failureMessageForHaystack(haystack);
+  if (mapped) return mapped;
   if (forwarded) return withProviderPrefix(forwarded);
-
-  if (looksLikeCreditFailure(error, haystack)) return CREDITS_FALLBACK;
-
-  return failureMessageForHaystack(haystack) ?? DEFAULT_ASSISTANT_FAILURE;
+  return DEFAULT_ASSISTANT_FAILURE;
 }
