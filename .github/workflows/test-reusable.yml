@@ -25,6 +25,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # Fallow's hotspot analysis reads git history.
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Lint GitHub Actions
@@ -140,8 +142,9 @@ jobs:
       - name: Run pending migrations
         run: bun run migrations:run
 
+      # A failing journey keeps its Playwright trace (network, console, DOM) in the failure artifact.
       - name: Journeys
-        run: bun run test:journeys
+        run: bun run test:journeys -- --browser.trace=retain-on-failure
 
       # The production build: published to the local static host and smoke-tested.
       - name: Publish local static sites
