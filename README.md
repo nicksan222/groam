@@ -35,13 +35,9 @@ screen-aware AI into one workspace.
 | **Context-aware AI** | Ask about the trip and screen in view, review itineraries, and work with specialized issue and idea agents. |
 | **Local-first development** | Run the web app and Convex backend locally without a cloud account, or package the same app for desktop. |
 
-Groam uses one personal **Continue with ChatGPT** connection in **Settings → AI**.
-Eligible AI requests count against the initiating user's connected ChatGPT plan;
-Groam never falls back to a developer or workspace API key. Application login
-remains separate from connecting ChatGPT. Local web and desktop runtimes support
-loopback authorization. Shared hosted AI remains unavailable until an
-OpenAI-approved plan-usage integration is supplied; see the
-[backend setup guide](packages/backend/convex/README.md#ai-configuration).
+Connect a personal ChatGPT account in **Settings → AI** for AI features.
+See [AI configuration](packages/backend/convex/README.md#ai-configuration)
+for setup and supported deployments.
 
 ## How it fits together
 

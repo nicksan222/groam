@@ -85,44 +85,23 @@ those models.
 
 ## AI configuration
 
-Sign in to Groam, then open **Settings → AI → Continue with ChatGPT**. Each
-traveler connects their own eligible ChatGPT account. Eligible requests count
-against that account's plan, including work started by that traveler in the
-background. Connecting ChatGPT does not replace the Groam application account.
-Disconnect or reconnect from the same settings page; access can also be managed
-in ChatGPT settings.
+Sign in to Groam, then open **Settings → AI → Continue with ChatGPT**.
+Each traveler connects their own account, selects an available model, and can
+reconnect or disconnect from the same page. Connecting ChatGPT is separate from
+Groam login. Eligible requests, including background work, use the initiating
+traveler's ChatGPT plan. Missing or expired connections stop AI work; there is
+no developer API-key or shared-credential fallback. Credentials stay in the
+backend, outside environment variables and browser settings queries.
 
-There are no provider selectors, API-key inputs, custom inference hosts, or
-workspace-shared credentials. Startup tooling no longer copies developer API
-keys or AI provider variables from `.env.local` to Convex. Existing deployment
-keys do not provide a fallback. Models come from the connected account's catalog.
-A missing or expired connection stops AI work and asks the traveler to connect
-or reconnect.
+Local web and desktop authorization returns to the running Convex HTTP server at
+`http://127.0.0.1:3211/auth/chatgpt/callback`. Keep the runtime running and ensure
+the authorizing browser can reach that address. Remote development may need an
+SSH tunnel forwarding local port 3211 to the runtime's port 3211; keep it active
+through sign-in. See OpenAI's [self-hosted VM guidance](https://developers.openai.com/siwc/token-sharing-open-source/self-hosted-vms).
 
-### Local web and desktop
-
-The local runtime uses OAuth with PKCE and the loopback callback
-`http://127.0.0.1:3211/auth/chatgpt/callback`, served by the existing Convex HTTP
-server. The browser completing authorization must be able to reach that loopback
-address. The backend stores personal credentials and validates the authorization
-before enabling AI; tokens are not returned to browser settings queries.
-
-### Self-hosted and remote development
-
-A self-hosted local runtime can use the same authorization flow when the browser
-can reach its callback. For a remote VM, an SSH tunnel forwarding local port 3211
-to the runtime's port 3211 may provide that reachability while retaining the VM's
-host identity. Keep the tunnel active through authorization. Groam does not
-currently provide a credential-import command. See OpenAI's
-[self-hosted VM guidance](https://developers.openai.com/siwc/token-sharing-open-source/self-hosted-vms)
-for the supported authorization constraints.
-
-### Shared hosted deployments
-
-AI connection is unavailable for a shared hosted deployment until OpenAI-approved
-ChatGPT plan-usage access and its integration contract are supplied. A website
-client ID alone does not enable plan-funded inference. The public local OAuth
-flow must not be repurposed with a shared remote callback. See the
+Shared hosted AI is unavailable until an OpenAI-approved ChatGPT plan-usage
+integration is supplied. A website client ID alone does not enable plan-funded
+inference; the local OAuth flow must not use a shared remote callback. See the
 [official integration documentation](https://developers.openai.com/siwc/token-sharing-open-source).
 
 Better Auth secrets (`BETTER_AUTH_SECRET`, `SITE_URL`) are written by

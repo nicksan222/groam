@@ -11,16 +11,9 @@ rather than duplicating startup behavior.
 
 ## ChatGPT connection
 
-After signing in to Groam, open **Settings → AI → Continue with ChatGPT** to
-connect a personal eligible account. Eligible AI usage counts against that user's
-ChatGPT plan. Groam does not use developer API keys or shared workspace
-credentials as a fallback.
-
-Authorization opens the browser and returns to the local Convex HTTP server at
-`http://127.0.0.1:3211/auth/chatgpt/callback`. Keep the desktop runtime running
-through sign-in. Use the same settings page to reconnect or disconnect. Connecting
-ChatGPT is separate from signing in to Groam. Shared remote backends require an
-OpenAI-approved hosted plan-usage integration; a client ID alone is insufficient.
+Desktop uses the local ChatGPT authorization flow. Keep the desktop runtime
+running through sign-in; see [AI configuration](../../packages/backend/convex/README.md#ai-configuration)
+for setup and callback requirements.
 
 ## Releases
 
