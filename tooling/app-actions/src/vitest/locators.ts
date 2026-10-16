@@ -1,4 +1,5 @@
 import { type Locator, locators, page } from 'vite-plus/test/browser';
+import type { IssueStatus, IssueStatusFilter } from '#src/actions/set-issue-status';
 import { ids } from '#src/testing/ids';
 
 declare module 'vite-plus/test/browser' {
@@ -49,6 +50,13 @@ export const activityCard = (title: string) =>
   named(ids.activityCard, 'data-activity-title', title);
 export const inlineActivityEditor = (scope: LocatorScope = page) =>
   by(ids.activityInlineEditor, scope);
+const cardLinkedTo = (testId: string, title: string) =>
+  by(testId).filter({ has: page.getByRole('link', { name: title, exact: true }) });
+export const issueCard = (title: string) => cardLinkedTo(ids.issueCard, title);
+/** A trip board lane by its key (`agreed`, `review`, `open`, `in_progress`, `closed`, `wont_do`). */
+export const boardLane = (lane: string) => named(ids.tripBoardLane, 'data-lane', lane);
+/** The draggable wrapper of a board card, labelled with the card's title. */
+export const boardDraggable = (title: string) => cardLinkedTo(ids.tripBoardDraggable, title);
 export const issueRow = (title: string) => named(ids.issueRow, 'data-issue-title', title);
 /**
  * An idea row by the idea's title (its heading, what a started-with-a-title idea shows) or by its
@@ -65,8 +73,10 @@ export const chatMember = (name: string) => named(ids.chatMember, 'data-member-n
 export const chatMessage = (content: string) => named(ids.chatMessage, 'data-content', content);
 export const groupSwitcherItem = (groupName: string) =>
   named(ids.groupSwitcherItem, 'data-group-name', groupName);
-export const issueStatusOption = (status: 'all' | 'closed' | 'open') =>
+export const issueStatusOption = (status: IssueStatusFilter) =>
   named(ids.issueStatusOption, 'data-status', status);
+export const issueStatusSelectOption = (status: IssueStatus) =>
+  named(ids.issueStatusSelectOption, 'data-status', status);
 
 export function calendarDay(dayValue?: string): Locator {
   return css(

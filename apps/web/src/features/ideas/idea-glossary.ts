@@ -52,27 +52,12 @@ export const ideaEmptyHeadline = `Start an ${ideaNoun.toLowerCase()}`;
 export const ideaEmptyDescription =
   'Your edits stay in an idea until the group reviews and applies them.';
 
-export const sharedTripBannerTitle = 'Shared trip — read-only';
-export const sharedTripBannerDescription = 'Changes are made in ideas and applied after review.';
-
 export function ideaCompareTabLabel(changeCount: number) {
   return `Changes (${changeCount})`;
 }
 
-export function ideaOnTripSubtitle(tripName: string) {
-  return `Idea on ${tripName}`;
-}
-
-export function continueDraftLabel(title: string) {
-  return `Continue your draft: ${title}`;
-}
-
 export function existingDraftPrompt(title: string) {
   return `You already have a draft on this trip: ${title}`;
-}
-
-export function closedWithoutApplying(reason?: string | null) {
-  return reason ? `Closed — not applied: ${reason}` : 'Closed — not applied';
 }
 
 export function draftAuthorOnly(authorName: string) {

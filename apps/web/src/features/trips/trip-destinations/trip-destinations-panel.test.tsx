@@ -5,8 +5,28 @@ import { page, userEvent } from 'vite-plus/test/browser';
 import type { ItineraryChange } from '@/features/trips/hooks/itinerary-proposal-changes';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { testIds } from '@/lib/test-ids';
-import { plannerActivity } from '@/testing/trip-planner-fixture';
+import type { TripActivity } from '@/types/trips';
 import { TripDestinationsPanel } from './trip-destinations-panel';
+
+function plannerActivity(overrides: Partial<TripActivity> = {}): TripActivity {
+  return {
+    id: 'museum',
+    sourceId: null,
+    title: 'Explore the tile museum',
+    dayNumber: 1,
+    endDayNumber: 1,
+    startTime: '10:00',
+    endTime: '12:00',
+    timeBlock: 'morning',
+    address: 'Lisbon, Portugal',
+    notes: 'Leave a little time for the courtyard café.',
+    costAmount: 8,
+    costSplit: 'per_person',
+    attachments: [],
+    transferToNext: null,
+    ...overrides
+  } as TripActivity;
+}
 
 const media = vi.hoisted(() => ({ upload: vi.fn() }));
 

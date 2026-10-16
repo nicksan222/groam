@@ -9,7 +9,7 @@ import {
 } from '@groam/app-actions/vitest';
 import { expect, test } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
-import { openApp } from '@/testing/open-app';
+import { openApp } from '@/journeys/open-app';
 
 test('starts a new idea from workspace Ideas for the selected trip', async () => {
   const suffix = uniqueSuffix();

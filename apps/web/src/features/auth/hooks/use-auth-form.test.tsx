@@ -1,12 +1,58 @@
 import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
-import { auth } from '@/features/auth/auth-client-mock';
 import { useAuthFormStore } from '@/lib/stores/auth-form-store';
 import { useAuthForm } from './use-auth-form';
 
-vi.mock('@groam/auth/client', async () => {
-  const { authClientMock } = await import('@/features/auth/auth-client-mock');
-  return { authClient: authClientMock };
+const doubles = vi.hoisted(() => ({
+  generateRecoveryCodes: vi.fn(),
+  passkey: vi.fn(),
+  resetPasswordWithRecoveryCode: vi.fn(),
+  signInEmail: vi.fn(),
+  signInUsername: vi.fn(),
+  signUp: vi.fn(),
+  verifyBackupCode: vi.fn(),
+  verifyTotp: vi.fn()
+}));
+
+const auth = {
+  passkey: doubles.passkey,
+  recoverAccount: doubles.resetPasswordWithRecoveryCode,
+  signIn: doubles.signInUsername,
+  signInEmail: doubles.signInEmail,
+  signUp: doubles.signUp,
+  verifyBackupCode: doubles.verifyBackupCode,
+  verifyTotp: doubles.verifyTotp
+};
+
+vi.mock('@groam/auth/client', () => ({
+  authClient: {
+    accountRecovery: {
+      generate: doubles.generateRecoveryCodes,
+      resetPassword: doubles.resetPasswordWithRecoveryCode
+    },
+    signIn: {
+      email: doubles.signInEmail,
+      passkey: doubles.passkey,
+      username: doubles.signInUsername
+    },
+    signUp: { email: doubles.signUp },
+    twoFactor: {
+      verifyBackupCode: doubles.verifyBackupCode,
+      verifyTotp: doubles.verifyTotp
+    }
+  }
+}));
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  doubles.passkey.mockResolvedValue({ data: {}, error: null });
+  doubles.generateRecoveryCodes.mockResolvedValue({ data: { codes: [] }, error: null });
+  doubles.resetPasswordWithRecoveryCode.mockResolvedValue({ data: { status: true }, error: null });
+  doubles.signInEmail.mockResolvedValue({ data: {}, error: null });
+  doubles.signInUsername.mockResolvedValue({ data: {}, error: null });
+  doubles.signUp.mockResolvedValue({ data: {}, error: null });
+  doubles.verifyBackupCode.mockResolvedValue({ data: {}, error: null });
+  doubles.verifyTotp.mockResolvedValue({ data: {}, error: null });
 });
 
 describe('useAuthForm', () => {

@@ -8,7 +8,7 @@ import {
   uniqueSuffix
 } from '@groam/app-actions/vitest';
 import { expect, test } from 'vite-plus/test';
-import { openApp } from '@/testing/open-app';
+import { openApp } from '@/journeys/open-app';
 
 // Collapsing and expanding a change card, and the mobile no-overflow check, are component-level
 // and left to view tests.

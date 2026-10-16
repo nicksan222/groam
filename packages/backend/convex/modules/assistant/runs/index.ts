@@ -21,6 +21,7 @@ import type {
 } from '#convex/modules/assistant/runs/schema';
 import { requireWorkspace, type Workspace } from '#convex/modules/auth/workspace';
 import { insertWithShortId } from '#convex/modules/references/index';
+import { isResolved } from '#convex/modules/travel/issues/status';
 
 const MAX_ASSIGNED_ISSUES = 200;
 const MAX_EVENT_PAGE = 50;
@@ -538,7 +539,7 @@ async function roster(ctx: QueryCtx): Promise<AgentRosterItem[]> {
     const assignedIssueCount = isIssueAssignableAgentId(agent.id)
       ? issues.filter(
           (issue) =>
-            issue.status === 'open' &&
+            !isResolved(issue.status) &&
             issue.assignee?.kind === 'agent' &&
             issue.assignee.agentId === agent.id
         ).length
@@ -635,9 +636,9 @@ function presentAssignedIssue(issue: Doc<'tripIssues'>) {
   };
 }
 
-function isAssignedOpenIssue(issue: Doc<'tripIssues'>, agentId: string) {
+function isAssignedActiveIssue(issue: Doc<'tripIssues'>, agentId: string) {
   return (
-    issue.status === 'open' &&
+    !isResolved(issue.status) &&
     issue.assignee?.kind === 'agent' &&
     issue.assignee.agentId === agentId
   );
@@ -668,7 +669,7 @@ async function assignedIssues(ctx: QueryCtx, agentId: string, activity: Assigned
     if (
       !issue ||
       issue.organizationId !== workspace.organizationId ||
-      !isAssignedOpenIssue(issue, agentId)
+      !isAssignedActiveIssue(issue, agentId)
     ) {
       return [];
     }
@@ -683,7 +684,7 @@ async function assignedIssues(ctx: QueryCtx, agentId: string, activity: Assigned
     .order('desc')
     .take(MAX_ASSIGNED_ISSUES);
   return issues.flatMap((issue) =>
-    issue.organizationId === workspace.organizationId && isAssignedOpenIssue(issue, agentId)
+    issue.organizationId === workspace.organizationId && isAssignedActiveIssue(issue, agentId)
       ? [presentAssignedIssue(issue)]
       : []
   );

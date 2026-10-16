@@ -1,5 +1,6 @@
 import type { CreateIssueInput } from '#src/actions/create-issue';
 import type { CreateTripInput } from '#src/actions/create-trip';
+import type { IssueStatus } from '#src/actions/set-issue-status';
 import type { UpdateTripInput } from '#src/actions/update-trip';
 import type { AuthenticatedAppUser } from '#src/backend/ensure-user';
 import {
@@ -82,6 +83,9 @@ export const journeyBackend = {
   }),
   requestIdeaReview: asOwner(({ backend, user }, proposalId: string) =>
     backend.requestIdeaReview(user, { proposalId })
+  ),
+  setIssueStatus: asOwner(({ backend, user }, input: { issueId: string; status: IssueStatus }) =>
+    backend.setIssueStatus(user, input)
   ),
   startIdea: asOwner(({ backend, user }, input: { name: string; tripId: string }) =>
     backend.startIdea(user, input)

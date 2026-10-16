@@ -1,5 +1,6 @@
 export type IssueAssignee =
   | { kind: 'agent' }
+  | { kind: 'me' }
   | { kind: 'user'; name: string; userId: string }
   | null;
 

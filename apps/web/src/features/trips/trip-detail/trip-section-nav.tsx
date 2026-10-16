@@ -1,111 +1,94 @@
+import { isResolved } from '@groam/backend/convex/modules/travel/issues/status';
 import type { Id } from '@groam/backend/data-model';
-import Shell from '@groam/ui/components/shell/client';
+import { matchesIdeaStatus } from '@/features/ideas/hooks/idea-list-filter';
+import { isViewerDraft } from '@/features/ideas/hooks/viewer-pending-idea';
 import { useTripIssues } from '@/features/trips/hooks/use-trip-issues';
 import { useTripVersions } from '@/features/trips/hooks/use-trip-versions';
-import type { TripDetail } from '@/features/trips/hooks/use-trips';
-import type { TripSection } from '@/features/trips/trip-sections';
-import { tripSectionLabels } from '@/features/trips/trip-sections';
+import { tripSectionLabels, tripTabSections } from '@/features/trips/trip-sections';
+import { useOptionalWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
 import { testIds } from '@/lib/test-ids';
+import type { TripSection, TripSectionNavProps } from '@/types/trips';
+import { TripTabs } from './trip-tabs';
 
-const sectionTabs = [
-  { key: 'overview', testId: testIds.tripSectionOverview, title: tripSectionLabels.overview },
-  { key: 'issues', testId: testIds.tripSectionIssues, title: tripSectionLabels.issues },
-  { key: 'ideas', testId: testIds.tripSectionIdeas, title: tripSectionLabels.ideas },
-  { key: 'activity', testId: testIds.tripSectionActivity, title: tripSectionLabels.activity }
-] as const;
-
-// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
-export type TripSectionNavLoadedProps = {
-  isLoading?: false;
-  onOpen: (section: TripSection) => void;
-  section: TripSection;
-  trip: TripDetail;
-  tripId: Id<'trips'>;
+const tabTestIds: Record<(typeof tripTabSections)[number], string> = {
+  activity: testIds.tripSectionActivity,
+  board: testIds.tripSectionBoard,
+  ideas: testIds.tripSectionIdeas,
+  issues: testIds.tripSectionIssues,
+  overview: testIds.tripSectionOverview
 };
 
-// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
-export type TripSectionNavLoadingProps = {
-  isLoading: true;
-  section?: TripSection;
-};
-
-// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
-export type TripSectionNavProps = TripSectionNavLoadedProps | TripSectionNavLoadingProps;
-
-function tabTitle(base: string, count: number | string | undefined) {
-  return count === undefined ? base : `${base} (${count})`;
+/** Issues and ideas show a count; the other tabs are plain. */
+function tabCount(
+  section: TripSection,
+  counts: { ideas: number | string; issues: number | string }
+): number | string | undefined {
+  if (section === 'issues') return counts.issues;
+  if (section === 'ideas') return counts.ideas;
+  return undefined;
 }
 
+/** The tab strip under the cover: Board, Overview, Issues, Ideas, Activity. */
 export function TripSectionNav(props: TripSectionNavProps) {
   if (props.isLoading) {
-    const active = props.section ?? 'overview';
     return (
-      <Shell.UnderlineNav aria-label="Trip sections">
-        {sectionTabs.map((tab) => (
-          <Shell.Tab
-            data-testid={tab.testId}
-            disabled
-            isActive={tab.key === active || (tab.key === 'overview' && active === 'itinerary')}
-            key={tab.key}
-            position="top"
-            title={tab.key === 'overview' ? 'Trip' : tabTitle(tab.title, '…')}
-          />
-        ))}
-      </Shell.UnderlineNav>
+      <TripSectionTabs counts={{ ideas: '…', issues: '…' }} disabled section={props.section} />
     );
   }
-
   return <TripSectionNavLoaded {...props} />;
 }
 
-function TripSectionNavLoaded({ onOpen, section, trip, tripId }: TripSectionNavLoadedProps) {
-  const sourceTripId = trip.proposal?.sourceTripId ?? tripId;
-  const { issues } = useTripIssues(sourceTripId);
-  const { proposals } = useTripVersions(sourceTripId);
-  const openIssueCount = issues?.filter((issue) => issue.status === 'open').length;
-  const pendingProposalCount = proposals?.filter((proposal) =>
-    ['draft', 'in_review', 'conflicted'].includes(proposal.status)
+function TripSectionNavLoaded({
+  onOpen,
+  section,
+  tripId
+}: {
+  onOpen: (section: TripSection) => void;
+  section: TripSection;
+  tripId: Id<'trips'>;
+}) {
+  const viewerUserId = useOptionalWorkspace()?.session.user.id;
+  const { issues } = useTripIssues(tripId);
+  const { proposals } = useTripVersions(tripId);
+  const activeIssues = issues?.filter((issue) => !isResolved(issue.status)).length;
+  const openIdeas = proposals?.filter(
+    (proposal) =>
+      matchesIdeaStatus(proposal.status, 'pending') &&
+      (proposal.status !== 'draft' || isViewerDraft(proposal, viewerUserId))
   ).length;
 
   return (
-    <Shell.UnderlineNav aria-label="Trip sections">
-      <Shell.Tab
-        data-testid={testIds.tripSectionOverview}
-        isActive={section === 'overview' || (!trip.permissions.canEdit && section === 'itinerary')}
-        onClick={() => onOpen('overview')}
-        position="top"
-        title={trip.permissions.canEdit ? tripSectionLabels.overview : 'Trip'}
-      />
-      {trip.permissions.canEdit ? (
-        <Shell.Tab
-          data-testid={testIds.tripSectionItinerary}
-          isActive={section === 'itinerary'}
-          onClick={() => onOpen('itinerary')}
-          position="top"
-          title={tabTitle(tripSectionLabels.itinerary, trip.destinations.length)}
-        />
-      ) : null}
-      <Shell.Tab
-        data-testid={testIds.tripSectionIssues}
-        isActive={section === 'issues'}
-        onClick={() => onOpen('issues')}
-        position="top"
-        title={tabTitle(tripSectionLabels.issues, openIssueCount ?? '…')}
-      />
-      <Shell.Tab
-        data-testid={testIds.tripSectionIdeas}
-        isActive={section === 'ideas'}
-        onClick={() => onOpen('ideas')}
-        position="top"
-        title={tabTitle(tripSectionLabels.ideas, pendingProposalCount ?? '…')}
-      />
-      <Shell.Tab
-        data-testid={testIds.tripSectionActivity}
-        isActive={section === 'activity'}
-        onClick={() => onOpen('activity')}
-        position="top"
-        title={tabTitle(tripSectionLabels.activity, trip.activity.length)}
-      />
-    </Shell.UnderlineNav>
+    <TripSectionTabs
+      counts={{ ideas: openIdeas ?? '…', issues: activeIssues ?? '…' }}
+      onOpen={onOpen}
+      section={section}
+    />
+  );
+}
+
+function TripSectionTabs({
+  counts,
+  disabled = false,
+  onOpen,
+  section
+}: {
+  counts: { ideas: number | string; issues: number | string };
+  disabled?: boolean;
+  onOpen?: (section: TripSection) => void;
+  section: TripSection;
+}) {
+  return (
+    <TripTabs
+      activeKey={section}
+      ariaLabel="Trip sections"
+      disabled={disabled}
+      onOpen={onOpen}
+      tabs={tripTabSections.map((tab) => ({
+        count: tabCount(tab, counts),
+        key: tab,
+        label: tripSectionLabels[tab],
+        testId: tabTestIds[tab]
+      }))}
+    />
   );
 }

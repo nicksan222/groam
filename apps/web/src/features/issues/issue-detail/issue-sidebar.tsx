@@ -1,98 +1,50 @@
-import { assistantAgents } from '@groam/ai/agents';
-import { Avatar } from '@groam/ui/components/avatar';
-import { AvatarFallback } from '@groam/ui/components/avatar-fallback';
+import { isResolved } from '@groam/backend/convex/modules/travel/issues/status';
+import { Button } from '@groam/ui/components/button';
 import { DatePicker } from '@groam/ui/components/date-picker';
 import { DetailSection } from '@groam/ui/components/detail-section';
 import { GearPopover } from '@groam/ui/components/gear-popover';
 import { MenuRow } from '@groam/ui/components/menu-row';
 import { PopoverDescription, PopoverHeader, PopoverTitle } from '@groam/ui/components/popover';
-import { initials } from '@groam/ui/lib/avatar';
+import { dateFromString, displayDate, stringFromDate } from '@groam/ui/lib/calendar-date';
 import { shellCardHeaderVariants } from '@groam/ui/lib/shell-card';
-import { Bot, Check, FileDiff } from 'lucide-react';
+import { FileDiff, Settings2 } from 'lucide-react';
 import { ideaCloneHref } from '@/features/ideas/idea-href';
 import { startIdeaCta } from '@/features/ideas/idea-list/idea-page-copy';
+import { IssueAssigneeAvatar } from '@/features/issues/shared/issue-assignee-avatar';
+import { IssueAssigneePicker } from '@/features/issues/shared/issue-assignee-picker';
 import { Link } from '@/features/workspace/navigation/router';
-import { useWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
 import { testIds } from '@/lib/test-ids';
+import type { IssueAssigneeInput } from '@/types/issues';
+import { IssueConditionSection } from './issue-condition-section';
 import type { IssueDetailData } from './issue-detail-data';
 
-function dueAtToValue(dueAt: number): string {
-  const date = new Date(dueAt);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-function valueToDueAt(value: string): number {
-  return new Date(`${value}T12:00:00`).getTime();
+function dueAtFromValue(value: string | null): number | null {
+  const date = value ? dateFromString(value) : undefined;
+  return date ? date.setHours(12) : null;
 }
 
 function AssigneeSection({
   issue,
-  members,
-  onAssignIssueAgent,
-  onAssignUser,
-  onUnassign,
+  onAssign,
   pending
 }: {
   issue: IssueDetailData;
-  members: ReturnType<typeof useWorkspace>['activeOrganization']['members'];
-  onAssignIssueAgent: () => void;
-  onAssignUser: (userId: string, name: string) => void;
-  onUnassign: () => void;
+  onAssign: (assignee: IssueAssigneeInput | null) => void;
   pending: boolean;
 }) {
-  const issueAgent = assistantAgents.issue;
-  const issueAgentAssigned =
-    issue.assignee?.kind === 'agent' && issue.assignee.agentId === issueAgent.id;
-  const action = issue.canManage ? (
-    <GearPopover disabled={pending} label="Edit assignees" testId={testIds.issueEditAssignees}>
-      <PopoverHeader className={shellCardHeaderVariants()}>
-        <PopoverTitle>Assignees</PopoverTitle>
-        <PopoverDescription>Assign a person or the Issue agent.</PopoverDescription>
-      </PopoverHeader>
-      <MenuRow
-        aria-label={
-          issueAgentAssigned ? `Unassign ${issueAgent.label}` : `Assign ${issueAgent.label}`
-        }
-        aria-pressed={issueAgentAssigned}
-        data-testid={testIds.issueAssignGroam}
+  const action = issue.canAssign ? (
+    <IssueAssigneePicker assignee={issue.assignee} disabled={pending} onAssign={onAssign}>
+      <Button
+        aria-label="Edit assignees"
+        className="-mr-1.5 text-muted-foreground hover:text-foreground"
+        data-testid={testIds.issueEditAssignees}
         disabled={pending}
-        onClick={issueAgentAssigned ? onUnassign : onAssignIssueAgent}
+        size="icon-xs"
+        variant="ghost"
       >
-        <span className="grid size-6 place-items-center rounded-full bg-muted text-muted-foreground">
-          <Bot className="size-3.5" />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate font-medium">{issueAgent.label}</span>
-          <span className="block text-xs text-muted-foreground">
-            {issueAgentAssigned ? 'Assigned' : 'Works this issue'}
-          </span>
-        </span>
-        {issueAgentAssigned ? <Check className="size-4 text-muted-foreground" /> : null}
-      </MenuRow>
-      {members.map((member) => {
-        const assigned = issue.assignee?.kind === 'user' && issue.assignee.userId === member.userId;
-        return (
-          <MenuRow
-            aria-label={assigned ? `Unassign ${member.user.name}` : `Assign ${member.user.name}`}
-            aria-pressed={assigned}
-            disabled={pending}
-            key={member.userId}
-            onClick={() =>
-              assigned ? onUnassign() : onAssignUser(member.userId, member.user.name)
-            }
-          >
-            <Avatar className="size-6">
-              <AvatarFallback className="text-[9px]">{initials(member.user.name)}</AvatarFallback>
-            </Avatar>
-            <span className="min-w-0 flex-1 truncate font-medium">{member.user.name}</span>
-            {assigned ? <Check className="size-4 text-muted-foreground" /> : null}
-          </MenuRow>
-        );
-      })}
-    </GearPopover>
+        <Settings2 />
+      </Button>
+    </IssueAssigneePicker>
   ) : null;
   return (
     <DetailSection action={action} title="Assignees">
@@ -103,18 +55,12 @@ function AssigneeSection({
             params={{ agentId: issue.assignee.agentId }}
             to="/agents/$agentId"
           >
-            <span className="grid size-5 place-items-center rounded-full bg-muted text-muted-foreground">
-              <Bot className="size-3" />
-            </span>
+            <IssueAssigneeAvatar assignee={issue.assignee} className="size-5" />
             <span className="min-w-0 truncate">{issue.assignee.name}</span>
           </Link>
         ) : (
           <div className="flex items-center gap-2 text-sm">
-            <Avatar className="size-5">
-              <AvatarFallback className="text-[8px]">
-                {initials(issue.assignee.name)}
-              </AvatarFallback>
-            </Avatar>
+            <IssueAssigneeAvatar assignee={issue.assignee} className="size-5" />
             <span className="min-w-0 truncate font-medium">{issue.assignee.name}</span>
           </div>
         )
@@ -134,21 +80,20 @@ function DueDateSection({
   onSetDueAt: (dueAt: number | null) => void;
   pending: boolean;
 }) {
-  const dueValue = issue.dueAt == null ? '' : dueAtToValue(issue.dueAt);
   return (
     <DetailSection title="Decide by">
       {issue.canManage ? (
         <DatePicker
           disabled={pending}
           label="Decide by"
-          onChange={(value) => onSetDueAt(value ? valueToDueAt(value) : null)}
+          onChange={(value) => onSetDueAt(dueAtFromValue(value))}
           placeholder="Choose a date"
           testId={testIds.issueDecideBy}
-          value={dueValue}
+          value={issue.dueAt === null ? '' : stringFromDate(new Date(issue.dueAt))}
         />
       ) : (
         <p className="text-xs text-muted-foreground">
-          {issue.dueAt ? new Date(issue.dueAt).toLocaleDateString() : 'No date yet'}
+          {issue.dueAt === null ? 'No date yet' : displayDate.format(issue.dueAt)}
         </p>
       )}
     </DetailSection>
@@ -164,7 +109,7 @@ function IdeaSection({
   onStartIdea: () => void;
   pending: boolean;
 }) {
-  const canStartIdea = issue.canManage && issue.status === 'open' && !issue.idea;
+  const canStartIdea = issue.canManage && !isResolved(issue.status) && !issue.idea;
   const ideaHref = issue.idea
     ? ideaCloneHref(
         { id: issue.idea.id, sourceTripId: issue.tripId },
@@ -228,33 +173,22 @@ function IdeaSection({
 
 export function IssueSidebar({
   issue,
-  onAssignIssueAgent,
-  onAssignUser,
+  onAssign,
   onSetDueAt,
   onStartIdea,
-  onUnassign,
   pending
 }: {
   issue: IssueDetailData;
-  onAssignIssueAgent: () => void;
-  onAssignUser: (userId: string, name: string) => void;
+  onAssign: (assignee: IssueAssigneeInput | null) => void;
   onSetDueAt: (dueAt: number | null) => void;
   onStartIdea: () => void;
-  onUnassign: () => void;
   pending: boolean;
 }) {
-  const { activeOrganization } = useWorkspace();
   return (
     <div>
-      <AssigneeSection
-        issue={issue}
-        members={activeOrganization.members}
-        onAssignIssueAgent={onAssignIssueAgent}
-        onAssignUser={onAssignUser}
-        onUnassign={onUnassign}
-        pending={pending}
-      />
+      <AssigneeSection issue={issue} onAssign={onAssign} pending={pending} />
       <DueDateSection issue={issue} onSetDueAt={onSetDueAt} pending={pending} />
+      <IssueConditionSection condition={issue.condition} />
       <IdeaSection issue={issue} onStartIdea={onStartIdea} pending={pending} />
     </div>
   );

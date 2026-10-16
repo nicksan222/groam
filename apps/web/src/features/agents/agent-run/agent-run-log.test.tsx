@@ -45,22 +45,13 @@ const events: AgentRunEvent[] = [
 ];
 
 describe('AgentRunLog', () => {
-  test('filters tool calls and failures without changing event order', async () => {
+  test('shows every event on one timeline in recorded order', async () => {
     await render(<AgentRunLog events={events} />);
-    expect(page.getByTestId(testIds.agentEvent).elements()).toHaveLength(3);
-    await page.getByRole('button', { name: 'Tool calls' }).click();
-    await expect.element(page.getByText('Started review')).not.toBeInTheDocument();
-    expect(page.getByTestId(testIds.agentEvent).elements()).toHaveLength(2);
-    await page.getByRole('button', { name: 'Errors' }).click();
-    await expect
-      .element(page.getByRole('button', { name: 'Errors' }))
-      .toHaveAttribute('aria-pressed', 'true');
-    expect(page.getByTestId(testIds.agentEvent).elements()).toHaveLength(1);
+    const rows = page.getByTestId(testIds.agentEvent).elements();
+    expect(rows).toHaveLength(3);
+    expect(rows[0].textContent).toContain('Started review');
     await expect.element(page.getByText('Connection unavailable')).toBeInTheDocument();
-    await page.getByRole('button', { name: 'All activity' }).click();
-    expect(page.getByTestId(testIds.agentEvent).elements()[0].textContent).toContain(
-      'Started review'
-    );
+    await expect.element(page.getByRole('button', { name: 'Tool calls' })).not.toBeInTheDocument();
   });
 
   test('distinguishes loading activity from an empty completed run', async () => {
@@ -80,13 +71,12 @@ describe('AgentRunLog', () => {
     await expect.element(page.getByText('Updates automatically')).toBeInTheDocument();
   });
 
-  test('keeps pagination available when a filter has no matches', async () => {
+  test('offers earlier activity above the recorded events', async () => {
     await render(
       <AgentRunLog events={[events[0]]} loadEarlier={<button type="button">Load earlier</button>} />
     );
-    await page.getByRole('button', { name: 'Errors' }).click();
-    await expect.element(page.getByText('No matching activity')).toBeInTheDocument();
     await expect.element(page.getByRole('button', { name: 'Load earlier' })).toBeInTheDocument();
+    await expect.element(page.getByText('Started review')).toBeInTheDocument();
   });
 
   test('labels tool inputs and outputs inside a collapsed disclosure', async () => {

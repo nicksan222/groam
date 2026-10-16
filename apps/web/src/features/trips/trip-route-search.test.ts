@@ -25,3 +25,11 @@ test('discards malformed and empty workflow state', () => {
     })
   ).toEqual({});
 });
+
+test('accepts a positive integer day as number or string and rejects the rest', () => {
+  expect(parseTripRouteSearch({ day: 3 })).toEqual({ day: 3 });
+  expect(parseTripRouteSearch({ day: '4' })).toEqual({ day: 4 });
+  expect(parseTripRouteSearch({ day: 0 })).toEqual({});
+  expect(parseTripRouteSearch({ day: 1.5 })).toEqual({});
+  expect(parseTripRouteSearch({ day: 'x' })).toEqual({});
+});

@@ -1,11 +1,38 @@
+import type { Id } from '@groam/backend/data-model';
 import { SidebarProvider } from '@groam/ui/components/sidebar';
 import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
 import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { resetSidebarChromeStore, useSidebarChromeStore } from '@/lib/stores/sidebar-chrome-store';
-import type { WorkspaceIssue } from './hooks/use-workspace-issues';
+import type { WorkspaceIssue } from '@/types/issues';
+import type { IssueListItem } from '@/types/issues';
 import { IssuesSidebarNav } from './issues-sidebar-nav';
+
+const listItem = {
+  assignee: null,
+  author: { name: 'Alex Morgan', userId: 'user-alex' },
+  canAssign: true,
+  canManage: true,
+  condition: null,
+  dueAt: null,
+  id: 'issue-1' as Id<'tripIssues'>,
+  idea: null,
+  labels: [],
+  rank: 0,
+  status: 'open',
+  title: 'Coast day',
+  updatedAt: Date.UTC(2026, 7, 17)
+} satisfies Omit<IssueListItem, 'tripName'>;
+
+const workspaceIssue = (over: Partial<WorkspaceIssue> = {}): WorkspaceIssue => ({
+  ...listItem,
+  body: 'Add a coast day near Lisbon.',
+  closedAt: null,
+  tripId: 'trip-1' as Id<'trips'>,
+  tripName: 'Atlantic week',
+  ...over
+});
 
 const state = vi.hoisted(() => ({
   isLoading: false,
@@ -42,24 +69,6 @@ vi.mock('@/features/trips/hooks/use-trips', () => ({
   })
 }));
 
-function issue(
-  value: Partial<WorkspaceIssue> & Pick<WorkspaceIssue, 'id' | 'title'>
-): WorkspaceIssue {
-  return {
-    assignee: null,
-    author: { name: 'Alex Morgan', userId: 'user-alex' },
-    body: 'Add a coast day.',
-    closedAt: null,
-    dueAt: null,
-    idea: null,
-    status: 'open',
-    tripId: 'trip-1' as WorkspaceIssue['tripId'],
-    tripName: 'Atlantic week',
-    updatedAt: 1,
-    ...value
-  };
-}
-
 async function renderNav() {
   return render(
     <SidebarProvider>
@@ -92,7 +101,7 @@ test('offers a new issue item when the inbox is empty', async () => {
 
 test('collapses listed issues from the parent action without leaving the index link', async () => {
   state.issues = [
-    issue({
+    workspaceIssue({
       id: 'issue-1' as WorkspaceIssue['id'],
       title: 'Issue 1'
     })
@@ -114,7 +123,7 @@ test('collapses listed issues from the parent action without leaving the index l
 
 test('lists open issues and can reveal more than the first page', async () => {
   state.issues = Array.from({ length: 6 }, (_, index) =>
-    issue({
+    workspaceIssue({
       id: `issue-${index}` as WorkspaceIssue['id'],
       title: `Issue ${index + 1}`
     })

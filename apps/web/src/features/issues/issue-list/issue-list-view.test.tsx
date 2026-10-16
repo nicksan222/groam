@@ -1,9 +1,37 @@
+import type { Id } from '@groam/backend/data-model';
 import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
-import type { WorkspaceIssue } from '@/features/issues/hooks/use-workspace-issues';
+import { testIds } from '@/lib/test-ids';
+import type { WorkspaceIssue } from '@/types/issues';
+import type { IssueListItem } from '@/types/issues';
 import { IssueListView } from './issue-list-view';
+
+const listItem = {
+  assignee: null,
+  author: { name: 'Alex Morgan', userId: 'user-alex' },
+  canAssign: true,
+  canManage: true,
+  condition: null,
+  dueAt: null,
+  id: 'issue-1' as Id<'tripIssues'>,
+  idea: null,
+  labels: [],
+  rank: 0,
+  status: 'open',
+  title: 'Coast day',
+  updatedAt: Date.UTC(2026, 7, 17)
+} satisfies Omit<IssueListItem, 'tripName'>;
+
+const workspaceIssue = (over: Partial<WorkspaceIssue> = {}): WorkspaceIssue => ({
+  ...listItem,
+  body: 'Add a coast day near Lisbon.',
+  closedAt: null,
+  tripId: 'trip-1' as Id<'trips'>,
+  tripName: 'Atlantic week',
+  ...over
+});
 
 const state = vi.hoisted(() => ({
   isLoading: false,
@@ -62,7 +90,7 @@ describe('IssueListView', () => {
 
   test('invites the group to create an issue when none exist', async () => {
     await render(<IssueListView />);
-    await expect.element(page.getByTestId('empty-screen')).toBeInTheDocument();
+    await expect.element(page.getByTestId(testIds.emptyScreen)).toBeInTheDocument();
     await expect.element(page.getByText('Nothing is blocking the group yet')).toBeInTheDocument();
     expect(page.getByRole('button', { name: 'New issue' }).elements()).toHaveLength(1);
     await expect.element(page.getByText('Acme Labs')).not.toBeInTheDocument();
@@ -84,22 +112,7 @@ describe('IssueListView', () => {
   });
 
   test('renders workspace issues with their trip names', async () => {
-    state.issues = [
-      {
-        assignee: null,
-        author: { name: 'Alex Morgan', userId: 'user-alex' },
-        body: 'Add a coast day.',
-        closedAt: null,
-        dueAt: null,
-        id: 'issue-1' as WorkspaceIssue['id'],
-        idea: null,
-        status: 'open',
-        title: 'Coast day',
-        tripId: 'trip-1' as WorkspaceIssue['tripId'],
-        tripName: 'Atlantic week',
-        updatedAt: Date.UTC(2026, 7, 17)
-      }
-    ];
+    state.issues = [workspaceIssue()];
     await render(<IssueListView />);
     await expect.element(page.getByText('Coast day')).toBeInTheDocument();
     expect(page.getByText(/Atlantic week/u).elements()).toHaveLength(2);

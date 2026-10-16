@@ -1,9 +1,0 @@
-{
-  "mcpServers": {
-    "convex": {
-      "command": "vp",
-      "args": ["exec", "convex", "mcp", "start"],
-      "env": { "CONVEX_AGENT_MODE": "anonymous" }
-    }
-  }
-}

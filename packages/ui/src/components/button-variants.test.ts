@@ -45,4 +45,14 @@ describe('buttonVariants', () => {
     expect(classes).toContain('bg-primary');
     expect(classes).toContain('h-8');
   });
+
+  test('lets caller classes override conflicting base utilities', () => {
+    const classes = buttonVariants({ className: 'absolute hidden bg-popover' }).split(' ');
+    expect(classes).toContain('absolute');
+    expect(classes).not.toContain('relative');
+    expect(classes).toContain('hidden');
+    expect(classes).not.toContain('inline-flex');
+    expect(classes).toContain('bg-popover');
+    expect(classes).not.toContain('bg-primary');
+  });
 });

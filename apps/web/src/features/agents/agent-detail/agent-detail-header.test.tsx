@@ -1,0 +1,87 @@
+import { render } from '@groam/vitest-config/react';
+import type { ReactNode } from 'react';
+import { describe, expect, test, vi } from 'vite-plus/test';
+import { page } from 'vite-plus/test/browser';
+import { testIds } from '@/lib/test-ids';
+import { AgentDetailHeader, type AgentDetailAgent } from './agent-detail-header';
+
+vi.mock('@tanstack/react-router', async (importOriginal) => {
+  const navigate = vi.fn();
+  return {
+    ...(await importOriginal<typeof import('@tanstack/react-router')>()),
+    Link: ({
+      children,
+      className,
+      params,
+      to
+    }: {
+      children?: ReactNode;
+      className?: string;
+      params?: Record<string, string>;
+      to: string;
+    }) => {
+      let href = to;
+      for (const [key, value] of Object.entries(params ?? {})) {
+        href = href.replace(`$${key}`, value);
+      }
+      return (
+        <a className={className} href={href} onClick={(event) => event.preventDefault()}>
+          {children}
+        </a>
+      );
+    },
+    useNavigate: () => navigate
+  };
+});
+
+function makeAgent(overrides: Partial<AgentDetailAgent> = {}): AgentDetailAgent {
+  return {
+    activeRunCount: 0,
+    assignedIssueCount: 0,
+    description: 'Works assigned issues',
+    id: 'issue',
+    label: 'Issue agent',
+    lastActivityAt: null,
+    status: 'idle',
+    surface: 'standalone',
+    ...overrides
+  } as AgentDetailAgent;
+}
+
+describe('AgentDetailHeader', () => {
+  test('shows a labeled loading state without agent details', async () => {
+    await render(<AgentDetailHeader isLoading />);
+    await expect.element(page.getByText('Loading agent…')).toBeInTheDocument();
+    await expect.element(page.getByRole('link', { name: 'All agents' })).toBeInTheDocument();
+    await expect.element(page.getByText('Worker')).not.toBeInTheDocument();
+    await expect.element(page.getByText('Chat', { exact: true })).not.toBeInTheDocument();
+  });
+
+  test('shows the label, description and a back link', async () => {
+    await render(<AgentDetailHeader agent={makeAgent()} />);
+    await expect
+      .element(page.getByTestId(testIds.agentDetailTitle))
+      .toHaveTextContent('Issue agent');
+    await expect.element(page.getByText('Works assigned issues')).toBeVisible();
+    await expect
+      .element(page.getByRole('link', { name: 'All agents' }))
+      .toHaveAttribute('href', '/agents');
+  });
+
+  test.each([
+    ['standalone', 'Worker'],
+    ['chat', 'Chat']
+  ] as const)('labels a %s agent as %s', async (surface, label) => {
+    await render(<AgentDetailHeader agent={makeAgent({ surface })} />);
+    await expect.element(page.getByText(label, { exact: true })).toBeVisible();
+  });
+
+  test.each([
+    ['failed', 'Needs attention'],
+    ['idle', 'Idle'],
+    ['working', 'Working']
+  ] as const)('shows the %s status', async (status, label) => {
+    await render(<AgentDetailHeader agent={makeAgent({ status })} />);
+    await expect.element(page.getByText(label)).toBeVisible();
+  });
+});

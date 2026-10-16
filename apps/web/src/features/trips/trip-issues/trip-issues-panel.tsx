@@ -1,3 +1,4 @@
+import { isResolved } from '@groam/backend/convex/modules/travel/issues/status';
 import { Button } from '@groam/ui/components/button';
 import { useNavigate } from '@tanstack/react-router';
 import { MessageSquareText, Plus } from 'lucide-react';
@@ -9,17 +10,26 @@ import { TripSectionPanel } from '@/features/trips/trip-detail/trip-section-pane
 import { useOpenState } from '@/features/workspace/hooks/use-open-state';
 import { Link } from '@/features/workspace/navigation/router';
 import { testIds } from '@/lib/test-ids';
+import type { IssueStatusFilter } from '@/types/issues';
+
+const emptyMessages: Record<IssueStatusFilter, string> = {
+  all: 'There are no issues in this trip.',
+  closed: 'There are no closed issues in this trip.',
+  in_progress: 'Nothing is in progress in this trip.',
+  open: 'There are no open issues in this trip.',
+  wont_do: "Nothing is marked won't do in this trip."
+};
 
 export function TripIssuesPanel({ trip }: { trip: TripDetail }) {
   const { issues } = useTripIssues(trip.id);
   const createDialog = useOpenState(false);
   const navigate = useNavigate();
-  const openCount = issues?.filter((issue) => issue.status === 'open').length ?? 0;
+  const openCount = issues?.filter((issue) => !isResolved(issue.status)).length ?? 0;
 
   return (
     <TripSectionPanel
       badge={`${openCount} open`}
-      description="Issues and blockers for this trip."
+      description="Decisions and blockers the group still has to settle."
       icon={MessageSquareText}
       title="Issues"
       trailing={
@@ -45,13 +55,7 @@ export function TripIssuesPanel({ trip }: { trip: TripDetail }) {
       />
 
       <IssueList
-        emptyFilterMessage={(filter) =>
-          filter === 'open'
-            ? 'There are no open issues in this trip.'
-            : filter === 'closed'
-              ? 'There are no closed issues in this trip.'
-              : 'There are no issues in this trip.'
-        }
+        emptyFilterMessage={(filter) => emptyMessages[filter]}
         issues={issues}
         showTripName={false}
       />

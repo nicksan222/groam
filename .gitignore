@@ -19,7 +19,6 @@ graphify-out/
 # Personal Claude Code overrides (models, providers, env, MCP, notes).
 .claude/settings.local.json
 CLAUDE.local.md
-tooling/claude/*.local.json
 .worktrees/
 
 # Editor directories and files

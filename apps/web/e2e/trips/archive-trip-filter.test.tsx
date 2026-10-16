@@ -12,7 +12,7 @@ import {
   uniqueSuffix
 } from '@groam/app-actions/vitest';
 import { expect, test } from 'vite-plus/test';
-import { openApp } from '@/testing/open-app';
+import { openApp } from '@/journeys/open-app';
 
 test('archived trips leave the active list and return after restoring', async () => {
   const tripName = `Archive filter ${uniqueSuffix()}`;

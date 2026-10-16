@@ -2,7 +2,6 @@ import { DataTable, type FilterFn } from '@groam/ui/components/data-table';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@groam/ui/components/select';
 import Shell from '@groam/ui/components/shell/client';
 import { listFilterTriggerClassName } from '@groam/ui/lib/data-table';
-import { History } from 'lucide-react';
 import { useMemo } from 'react';
 import {
   filterTripActivity,
@@ -16,8 +15,6 @@ import {
   useTripActivityFilters
 } from '@/features/trips/hooks/use-trip-activity-filters';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
-import { TripSectionPanel } from '@/features/trips/trip-detail/trip-section-panel';
-import { tripSectionDescriptions, tripSectionLabels } from '@/features/trips/trip-sections';
 import { tripActivityColumns } from './trip-activity-history-columns';
 
 const activityFilter: FilterFn<TripActivityItem> = (row, _columnId, value) =>
@@ -27,6 +24,7 @@ const activityFilter: FilterFn<TripActivityItem> = (row, _columnId, value) =>
     userId: ALL_ACTIVITY_USERS
   }).length > 0;
 
+/** The activity table with its event count; the page around it supplies the title. */
 export function TripActivityHistory({ activity }: { activity: TripDetail['activity'] }) {
   const {
     activityType,
@@ -47,12 +45,8 @@ export function TripActivityHistory({ activity }: { activity: TripDetail['activi
   const columns = useMemo(() => tripActivityColumns(), []);
 
   return (
-    <TripSectionPanel
-      badge={eventCountLabel}
-      description={tripSectionDescriptions.activity}
-      icon={History}
-      title={tripSectionLabels.activity}
-    >
+    <Shell.Stack stack="md">
+      <p className="text-xs text-muted-foreground">{eventCountLabel}</p>
       <Shell.Reveal>
         <DataTable
           columns={columns}
@@ -118,6 +112,6 @@ export function TripActivityHistory({ activity }: { activity: TripDetail['activi
           }
         />
       </Shell.Reveal>
-    </TripSectionPanel>
+    </Shell.Stack>
   );
 }

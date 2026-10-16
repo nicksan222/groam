@@ -1,8 +1,7 @@
+import type { IssueStatusFilter } from '#src/actions/set-issue-status';
 import { ids } from '#src/testing/ids';
 import { type UiTarget, ui } from './interaction';
 import { by, issueStatusOption } from './locators';
-
-export type IssueStatusFilter = 'all' | 'closed' | 'open';
 
 export async function filterIssuesByStatus(
   target: UiTarget,

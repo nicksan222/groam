@@ -9,7 +9,7 @@ import {
   uniqueSuffix
 } from '@groam/app-actions/vitest';
 import { expect, test } from 'vite-plus/test';
-import { openApp } from '@/testing/open-app';
+import { openApp } from '@/journeys/open-app';
 
 test('creates, archives, restores, and lists a destination-optional trip', async () => {
   await openApp();
@@ -19,11 +19,11 @@ test('creates, archives, restores, and lists a destination-optional trip', async
   await expect
     .element(by(ids.tripDestination))
     .toHaveAttribute('data-destination-status', 'undecided');
-  await expect.element(by(ids.tripRole)).toHaveAttribute('data-role', 'organizer');
+  // Only an organizer gets the actions menu with archive.
+  await expect.element(by(ids.tripActions)).toBeVisible();
 
   await archiveTrip();
   await restoreTrip();
-  await expect.element(by(ids.tripArchive)).toBeVisible();
 
   await openTrips();
   await expect.element(tripCard(tripName)).toBeVisible();

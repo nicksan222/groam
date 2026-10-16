@@ -73,26 +73,30 @@ export function CreateIssueDialog({
   const pending = useAsyncPending();
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
+  const [doneWhen, setDoneWhen] = useState('');
   const [selectedTripId, setSelectedTripId] = useState<Id<'trips'> | ''>(tripId ?? '');
   const resolvedTripId = tripId ?? (selectedTripId === '' ? undefined : selectedTripId);
   const needsTrip = tripId === undefined;
 
-  const close = () => {
-    if (pending.isPending) return;
+  const reset = () => {
     setTitle('');
     setBody('');
+    setDoneWhen('');
     setSelectedTripId(tripId ?? '');
+  };
+
+  const close = () => {
+    if (pending.isPending) return;
+    reset();
     onClose();
   };
 
   const submit = async () => {
     if (!resolvedTripId) return;
     await pending.run(async () => {
-      const issueId = await createIssue(resolvedTripId, title, body);
+      const issueId = await createIssue(resolvedTripId, title, body, doneWhen.trim() || undefined);
       if (issueId) {
-        setTitle('');
-        setBody('');
-        setSelectedTripId(tripId ?? '');
+        reset();
         onCreated(issueId);
       }
     });
@@ -145,6 +149,16 @@ export function CreateIssueDialog({
           onChange={(event) => setBody(event.target.value)}
           placeholder="Share the context, desired outcome, and anything reviewers should consider…"
           value={body}
+        />
+      </FormField>
+      <FormField description="Optional. How will the group know it is settled?" label="Done when…">
+        <Input
+          data-testid={testIds.createIssueDoneWhen}
+          disabled={pending.isPending}
+          maxLength={200}
+          onChange={(event) => setDoneWhen(event.target.value)}
+          placeholder="Everyone has confirmed their flights"
+          value={doneWhen}
         />
       </FormField>
     </FormDialog>

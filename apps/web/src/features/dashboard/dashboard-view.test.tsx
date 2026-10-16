@@ -1,35 +1,113 @@
 import { expectConsole } from '@groam/vitest-config/console';
 import { render } from '@groam/vitest-config/react';
+import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import type { TripListItem, WorkspaceTripProposal } from '@/features/trips/hooks/use-trips';
-import {
-  mockTripWorkspace,
-  TRIP_FIXTURE_NOW as now,
-  workspaceTripProposal as proposal,
-  tripListItem as trip
-} from '@/features/trips/test-fixtures';
-import { resetTripWorkspaceView, trips } from '@/features/trips/test-workspace-mocks';
 import { DashboardView } from './dashboard-view';
 
-vi.mock('@groam/ai/ui/context/agent-context', async () => {
-  const { agentContextModule } = await import('@/features/trips/test-workspace-mocks');
-  return agentContextModule;
-});
+// oxlint-disable-next-line groam/no-local-type-definitions -- test double shape
+type RouteTarget = {
+  params?: Record<string, string | number>;
+  search?: Record<string, unknown>;
+  to: string;
+};
 
-vi.mock('@/features/workspace/workspace-shell/workspace-state', async () => {
-  const { workspaceStateModule } = await import('@/features/trips/test-workspace-mocks');
-  return workspaceStateModule;
-});
+const FIXTURE_NOW = Date.UTC(2026, 7, 17);
 
-vi.mock('@/features/trips/hooks/use-trips', async () => {
-  const { useTripsModule } = await import('@/features/trips/test-workspace-mocks');
-  return useTripsModule;
-});
+function trip(overrides: Partial<TripListItem> = {}): TripListItem {
+  return {
+    archivedAt: null,
+    coverUrl: null,
+    dateNotes: 'Late September',
+    destination: 'Lisbon',
+    favorite: false,
+    id: 'trips:trip-1' as TripListItem['id'],
+    lastUpdatedAt: FIXTURE_NOW,
+    name: 'Atlantic week',
+    nextAction: 'Continue planning together',
+    outstandingActionCount: 0,
+    ...overrides
+  };
+}
+
+function proposal(overrides: Partial<WorkspaceTripProposal> = {}): WorkspaceTripProposal {
+  return {
+    author: { name: 'Alex Morgan', userId: 'user-alex' },
+    ideaName: 'coast-day',
+    id: 'tripProposals:idea-1' as WorkspaceTripProposal['id'],
+    reviewRequested: false,
+    sourceTripId: 'trips:trip-1' as WorkspaceTripProposal['sourceTripId'],
+    sourceTripName: 'Atlantic week',
+    status: 'in_review',
+    title: 'Add a coast day',
+    updatedAt: FIXTURE_NOW,
+    workingTripId: 'trips:working-1' as WorkspaceTripProposal['workingTripId'],
+    ...overrides
+  };
+}
+
+const trips = vi.hoisted(() => ({
+  useTrips: vi.fn(),
+  useWorkspaceTripProposals: vi.fn()
+}));
+
+function mockTripWorkspace(
+  _trips: typeof trips,
+  {
+    isLoading = false,
+    proposals = [] as WorkspaceTripProposal[],
+    tripItems = [] as TripListItem[]
+  } = {}
+) {
+  trips.useTrips.mockReturnValue({
+    createTrip: () => Promise.resolve(null),
+    isLoading,
+    loadMore: () => undefined,
+    status: 'Exhausted',
+    trips: tripItems
+  });
+  trips.useWorkspaceTripProposals.mockReturnValue({
+    isLoading,
+    loadMore: () => undefined,
+    proposals,
+    status: 'Exhausted'
+  });
+}
+
+vi.mock('@groam/ai/ui/context/agent-context', () => ({ useSetAgentContext: () => undefined }));
+
+vi.mock('@/features/workspace/workspace-shell/workspace-state', () => ({
+  useWorkspace: () => ({
+    activeOrganization: { id: 'org-acme', name: 'Acme Labs' },
+    session: { user: { id: 'user-alex' } }
+  })
+}));
+
+vi.mock('@/features/trips/hooks/use-trips', () => ({
+  useTrips: (...args: unknown[]) => trips.useTrips(...args),
+  useWorkspaceTripProposals: (...args: unknown[]) => trips.useWorkspaceTripProposals(...args)
+}));
 
 vi.mock('@tanstack/react-router', async () => {
-  const { tripRouterModule } = await import('@/features/trips/test-workspace-mocks');
-  return tripRouterModule();
+  const navigate = vi.fn();
+  const resolveHref = ({ params = {}, search = {}, to }: RouteTarget) => {
+    const path = to.replace(/\$(\w+)/gu, (_, name: string) => String(params[name]));
+    const query = new URLSearchParams(
+      Object.entries(search).map(([key, value]) => [key, String(value)])
+    ).toString();
+    return query ? `${path}?${query}` : path;
+  };
+  return {
+    ...(await vi.importActual<typeof import('@tanstack/react-router')>('@tanstack/react-router')),
+    Link: ({ children, params, search, to, ...rest }: RouteTarget & { children?: ReactNode }) => (
+      <a href={resolveHref({ params, search, to })} {...rest}>
+        {children}
+      </a>
+    ),
+    Navigate: (target: RouteTarget) => <div>navigate:{resolveHref(target)}</div>,
+    useNavigate: () => navigate
+  };
 });
 
 const tripsUi = vi.hoisted(() => ({
@@ -41,7 +119,8 @@ vi.mock('@/features/trips/hooks/use-trips-sidebar-ui', () => ({
 }));
 
 beforeEach(() => {
-  resetTripWorkspaceView();
+  vi.clearAllMocks();
+  mockTripWorkspace(trips);
   tripsUi.openCreate.mockClear();
 });
 
@@ -58,7 +137,7 @@ describe('DashboardView', () => {
   });
 
   test('invites the group to start a trip when home is empty', async () => {
-    mockTripWorkspace(trips, { tripItems: [trip({ archivedAt: now, name: 'Last year' })] });
+    mockTripWorkspace(trips, { tripItems: [trip({ archivedAt: FIXTURE_NOW, name: 'Last year' })] });
     await render(<DashboardView />);
 
     await expect.element(page.getByTestId('empty-screen')).toBeInTheDocument();

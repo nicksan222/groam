@@ -1,4 +1,5 @@
 import { render } from '@groam/vitest-config/react';
+import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import type { AgentRun } from '@/features/agents/hooks/use-agent';
@@ -47,10 +48,31 @@ vi.mock('@/features/agents/hooks/use-agent-run', () => ({
 }));
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const { createAgentTestRouterMock } = await import('@/features/agents/agent-test-router-mock');
+  const navigate = vi.fn();
   return {
     ...(await importOriginal<typeof import('@tanstack/react-router')>()),
-    ...createAgentTestRouterMock(vi.fn(), { preventDefault: true })
+    Link: ({
+      children,
+      className,
+      params,
+      to
+    }: {
+      children?: ReactNode;
+      className?: string;
+      params?: Record<string, string>;
+      to: string;
+    }) => {
+      let href = to;
+      for (const [key, value] of Object.entries(params ?? {})) {
+        href = href.replace(`$${key}`, value);
+      }
+      return (
+        <a className={className} href={href} onClick={(event) => event.preventDefault()}>
+          {children}
+        </a>
+      );
+    },
+    useNavigate: () => navigate
   };
 });
 

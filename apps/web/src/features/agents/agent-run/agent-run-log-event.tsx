@@ -21,8 +21,8 @@ const kindIcon = {
 function ToolPayload({ input, output }: Pick<AgentRunEvent, 'input' | 'output'>) {
   if (!input && !output) return null;
   return (
-    <details className="mt-3 rounded-lg border border-border text-xs">
-      <summary className="cursor-pointer rounded-lg px-3 py-2.5 font-medium text-muted-foreground hover:bg-muted/50 focus-visible:outline-2 focus-visible:outline-ring">
+    <details className="mt-1.5 rounded-md border border-border/70 bg-background text-xs">
+      <summary className="cursor-pointer rounded-md px-2.5 py-1.5 font-medium text-muted-foreground hover:bg-muted/50 focus-visible:outline-2 focus-visible:outline-ring">
         Tool payload
       </summary>
       <div className="space-y-3 border-t border-border p-3">
@@ -57,7 +57,7 @@ function EventTitle({
 }) {
   if (issueStarted && issue && issueTitle) {
     return (
-      <p className="min-w-0 break-words text-sm">
+      <p className="min-w-0 break-words text-xs leading-5 text-foreground/80">
         Started working on{' '}
         <Link
           className="font-medium hover:underline"
@@ -70,7 +70,7 @@ function EventTitle({
     );
   }
   return (
-    <p className="min-w-0 break-words text-sm font-medium [overflow-wrap:anywhere]">
+    <p className="min-w-0 break-words text-xs leading-5 font-medium text-foreground/80 [overflow-wrap:anywhere]">
       {event.label}
     </p>
   );
@@ -87,30 +87,37 @@ export function AgentRunLogEvent({
 }) {
   const Icon = kindIcon[event.kind] ?? Info;
   const failed = event.kind === 'error' || event.ok === false;
+  const toolFailed = event.kind !== 'error' && event.ok === false;
   const issueStarted = issue && event.label === agentRunEventLabels.issueStarted;
   const issueTitle = issueStarted ? (event.detail ?? issue.issueTitle ?? 'Open issue') : null;
   return (
-    <Timeline.Item data-testid={testIds.agentEvent}>
-      <Timeline.Badge className={failed ? 'border-destructive/40 text-destructive' : undefined}>
-        <Icon aria-hidden className="size-3" />
+    <Timeline.Item condensed data-testid={testIds.agentEvent}>
+      <Timeline.Badge
+        className={
+          failed
+            ? 'border-destructive/40 bg-destructive/10 text-destructive'
+            : 'border-border/50 bg-muted/40 text-muted-foreground'
+        }
+      >
+        <Icon aria-hidden />
       </Timeline.Badge>
-      <Timeline.Body>
-        <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+      <Timeline.Body className="block min-w-0 pt-0.5">
+        <div className="flex min-w-0 items-baseline gap-x-2">
           <EventTitle
             event={event}
             issue={issue}
             issueStarted={Boolean(issueStarted)}
             issueTitle={issueTitle}
           />
+          <EventMeta event={event} failed={toolFailed} />
           <time
-            className="text-xs tabular-nums text-muted-foreground"
+            className="ml-auto shrink-0 text-xs tabular-nums text-muted-foreground"
             dateTime={new Date(event.at).toISOString()}
             title={new Date(event.at).toLocaleString()}
           >
             {agentRunTime(event.at)}
           </time>
         </div>
-        <EventMeta event={event} failed={failed} />
         <EventDetail error={error} event={event} issueStarted={Boolean(issueStarted)} />
         {event.kind === 'tool' ? <ToolPayload input={event.input} output={event.output} /> : null}
       </Timeline.Body>
@@ -121,10 +128,12 @@ export function AgentRunLogEvent({
 function EventMeta({ event, failed }: { event: AgentRunEvent; failed: boolean }) {
   if (!event.toolName && !failed) return null;
   return (
-    <p className="mt-1 break-words text-xs text-muted-foreground">
+    <span
+      className={`min-w-0 truncate font-mono text-xs ${failed ? 'text-destructive' : 'text-muted-foreground'}`}
+    >
       {event.toolName}
-      {failed ? `${event.toolName ? ' · ' : ''}Failed` : null}
-    </p>
+      {failed ? `${event.toolName ? ' · ' : ''}failed` : null}
+    </span>
   );
 }
 
@@ -143,7 +152,7 @@ function EventDetail({
   const thoughtStyle = event.kind === 'thought' ? ' italic' : '';
   return (
     <p
-      className={`mt-2 break-words whitespace-pre-wrap text-sm leading-6 text-muted-foreground${thoughtStyle} [overflow-wrap:anywhere]`}
+      className={`mt-0.5 line-clamp-6 break-words whitespace-pre-wrap text-xs leading-5 text-muted-foreground${thoughtStyle} [overflow-wrap:anywhere]`}
     >
       {event.detail}
     </p>

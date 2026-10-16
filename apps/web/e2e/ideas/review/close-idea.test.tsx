@@ -10,7 +10,7 @@ import {
   uniqueSuffix
 } from '@groam/app-actions/vitest';
 import { expect, test } from 'vite-plus/test';
-import { openApp } from '@/testing/open-app';
+import { openApp } from '@/journeys/open-app';
 
 test('deletes a draft idea without leaving an editable working copy', async () => {
   const suffix = uniqueSuffix();

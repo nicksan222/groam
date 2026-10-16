@@ -8,7 +8,7 @@ import { PageLoading } from '@groam/ui/components/page-loading';
 import Shell from '@groam/ui/components/shell/client';
 import { useNavigate } from '@tanstack/react-router';
 import { Bot } from 'lucide-react';
-import { useAgentRecord } from '@/features/agents/hooks/use-agent';
+import { type AgentRun, useAgentRecord } from '@/features/agents/hooks/use-agent';
 import {
   useAgentRun,
   useAgentRunControls,
@@ -85,49 +85,50 @@ export function AgentRunView({ agentId, runId }: { agentId: string; runId: strin
     );
   }
 
+  const onRetry = async (id: AgentRun['id']) => {
+    const nextRunId = await retry({ runId: id });
+    if (!nextRunId) return;
+    await navigate(agentRunHref(agent.id, nextRunId));
+  };
+
   return (
     <Shell>
-      <Shell.Header>
-        <div className="mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-4">
-          <PageCrumbNav
-            crumbs={[
-              {
+      <Shell.BannerLayout>
+        <Shell.Banner className="border-b border-border/40">
+          <Shell.BannerInset className="flex min-w-0 flex-col gap-1.5 py-2.5 sm:py-3">
+            <PageCrumbNav
+              crumbs={[
+                {
+                  asChild: true,
+                  children: <Link {...agentHref(agent.id)} />,
+                  label: agent.label
+                }
+              ]}
+              inset={false}
+              parent={{
                 asChild: true,
-                children: <Link {...agentHref(agent.id)} />,
-                label: agent.label
-              }
-            ]}
-            inset={false}
-            parent={{
-              asChild: true,
-              children: <Link to="/agents" />,
-              label: 'All agents'
-            }}
-          />
-          <AgentRunHeader
-            onRetry={async (id) => {
-              const nextRunId = await retry({ runId: id });
-              if (!nextRunId) return;
-              await navigate(agentRunHref(agent.id, nextRunId));
-            }}
-            onStop={(id) => stop({ runId: id })}
-            run={matched}
-          />
-        </div>
-      </Shell.Header>
-      <Shell.Content>
-        <Shell.PageStack>
-          <div className="mx-auto w-full max-w-7xl" data-testid={testIds.agentDetailWorkspace}>
+                children: <Link to="/agents" />,
+                label: 'All agents'
+              }}
+            />
+            <AgentRunHeader run={matched} />
+          </Shell.BannerInset>
+        </Shell.Banner>
+        <Shell.PageBody maxWidthClassName="max-w-[1600px]" variant="detail">
+          <div className="min-w-0" data-testid={testIds.agentDetailWorkspace}>
             <AgentRunDetail
               key={matched.id}
+              agentLabel={agent.label}
               events={events}
               eventsStatus={eventsStatus}
               onLoadEarlier={() => loadMore(40)}
+              onRetry={onRetry}
+              onStop={(id) => stop({ runId: id })}
               run={matched}
             />
           </div>
-        </Shell.PageStack>
-      </Shell.Content>
+        </Shell.PageBody>
+      </Shell.BannerLayout>
     </Shell>
   );
 }

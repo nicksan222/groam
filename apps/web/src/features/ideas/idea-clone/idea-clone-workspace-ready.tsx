@@ -1,14 +1,13 @@
 import type { Id } from '@groam/backend/data-model';
-import { PageCrumbNav } from '@groam/ui/components/page-crumb-nav';
 import { needsSharedTripUpdate } from '@/features/ideas/hooks/idea-needs-update';
 import { useIdeaCloneWorkspace } from '@/features/ideas/hooks/use-idea-clone-workspace';
 import { TripDetailsEditor } from '@/features/trips/trip-detail/trip-details-editor';
 import { TripNotFound } from '@/features/trips/trip-detail/trip-not-found';
 import { TripPageShell } from '@/features/trips/trip-detail/trip-page-shell';
+import { TripToolbarSkeleton } from '@/features/trips/trip-detail/trip-toolbar-skeleton';
 import { TripIdeaNotice } from '@/features/trips/trip-ideas/trip-idea-notice';
-import { Link } from '@/features/workspace/navigation/router';
 import { IdeaCloneBody } from './idea-clone-body';
-import { IdeaCloneHero } from './idea-clone-hero';
+import { IdeaCloneHeader } from './idea-clone-header';
 import { IdeaCloneLifecycleDialogs } from './idea-clone-lifecycle-dialogs';
 import { IdeaCloneNav } from './idea-clone-nav';
 import { IdeaCloneUpdateBanner } from './idea-clone-update-banner';
@@ -17,66 +16,23 @@ import type { IdeaCloneView as CloneView } from './idea-sections';
 // oxlint-disable-next-line groam/no-local-type-definitions -- local composition shape
 type IdeaClonePage = ReturnType<typeof useIdeaCloneWorkspace>;
 
-function IdeaCloneCrumb({
-  current,
-  isLoading,
-  parentLabel,
-  sharedTripId
-}: {
-  current?: string;
-  isLoading: boolean;
-  parentLabel: string;
-  sharedTripId: Id<'trips'>;
-}) {
-  return (
-    <PageCrumbNav
-      crumbs={[
-        {
-          asChild: true,
-          children: (
-            <Link
-              params={{ section: 'ideas', tripId: sharedTripId }}
-              to="/trips/$tripId/$section"
-            />
-          ),
-          label: 'Ideas'
-        }
-      ]}
-      current={current}
-      inset={false}
-      isLoading={isLoading}
-      parent={{
-        asChild: true,
-        children: (
-          <Link
-            params={{ section: 'overview', tripId: sharedTripId }}
-            to="/trips/$tripId/$section"
-          />
-        ),
-        label: parentLabel
-      }}
-    />
-  );
-}
-
 function IdeaClonePageHero({
   page,
   proposalId,
   sharedTripId,
   updatePrompted,
-  view,
-  workingTripId
+  view
 }: {
   page: IdeaClonePage;
   proposalId: Id<'tripProposals'>;
   sharedTripId: Id<'trips'>;
   updatePrompted: boolean;
   view: CloneView;
-  workingTripId: Id<'trips'>;
 }) {
   const { proposal, showLoading, trip, version, workingState } = page;
+  if (showLoading || !trip || !proposal?.status) return <TripToolbarSkeleton />;
   return (
-    <IdeaCloneHero
+    <IdeaCloneHeader
       ideaName={proposal?.ideaName}
       onCloseIdea={version.proposal?.canClose ? page.closingIdea.openPanel : undefined}
       onEdit={page.editDetails}
@@ -89,11 +45,9 @@ function IdeaClonePageHero({
       primary={updatePrompted && page.primary?.intent === 'rebase' ? null : page.primary}
       proposalId={proposalId}
       sharedTripId={sharedTripId}
-      showLoading={showLoading}
       sourceTripName={page.idea.sharedTrip?.name}
       status={proposal?.status}
       trip={trip}
-      tripId={workingTripId}
       tripState={workingState}
       view={view}
     />
@@ -145,14 +99,6 @@ export function IdeaCloneWorkspaceReady({
           view={view}
         />
       }
-      crumb={
-        <IdeaCloneCrumb
-          current={showLoading ? undefined : (proposal?.title ?? trip?.name)}
-          isLoading={showLoading}
-          parentLabel={page.parentLabel}
-          sharedTripId={sharedTripId}
-        />
-      }
       hero={
         <IdeaClonePageHero
           page={page}
@@ -160,7 +106,6 @@ export function IdeaCloneWorkspaceReady({
           sharedTripId={sharedTripId}
           updatePrompted={updatePrompted}
           view={view}
-          workingTripId={workingTripId}
         />
       }
       isLoading={showLoading}

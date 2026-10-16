@@ -1,4 +1,5 @@
-export type IssueStatus = 'closed' | 'open';
+export type IssueStatus = 'closed' | 'in_progress' | 'open' | 'wont_do';
+export type IssueStatusFilter = 'all' | IssueStatus;
 
 export type SetIssueStatusInput = {
   issueId?: string;

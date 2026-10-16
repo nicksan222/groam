@@ -1,7 +1,13 @@
 import { isActiveAgentRun } from '@groam/ai/backend/runs/roster';
 import { agentRunDuration, agentRunTime } from '@groam/ai/backend/runs/time';
+import { Avatar } from '@groam/ui/components/avatar';
+import { AvatarFallback } from '@groam/ui/components/avatar-fallback';
+import { Button } from '@groam/ui/components/button';
+import { DetailSection } from '@groam/ui/components/detail-section';
 import { Skeleton } from '@groam/ui/components/skeleton';
-import { Clock3, UserRound } from 'lucide-react';
+import { toast } from '@groam/ui/components/toast';
+import { initials } from '@groam/ui/lib/avatar';
+import { Copy } from 'lucide-react';
 import type { AgentRun } from '@/features/agents/hooks/use-agent';
 import { Link } from '@/features/workspace/navigation/router';
 import { testIds } from '@/lib/test-ids';
@@ -27,91 +33,96 @@ function RunTimestamp({
   );
 }
 
+function CopyRunId({ value }: { value: string }) {
+  return (
+    <Button
+      aria-label="Copy run ID"
+      className="-mr-1.5 text-muted-foreground hover:text-foreground"
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(value);
+          toast.success('Run ID copied');
+        } catch {
+          toast.error('Could not copy the run ID. Select it instead.');
+        }
+      }}
+      size="icon-xs"
+      variant="ghost"
+    >
+      <Copy />
+    </Button>
+  );
+}
+
 function RunDetails({ run }: { run: AgentRun }) {
   const active = isActiveAgentRun(run);
+  const runId = run.shortId ?? run.id;
   return (
-    <dl className="mt-5 space-y-5 text-sm">
-      <div className="space-y-2">
-        <dt className="text-xs text-muted-foreground">Called by</dt>
-        <dd className="flex min-w-0 items-center gap-2.5">
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted">
-            <UserRound aria-hidden className="size-4 text-muted-foreground" />
+    <>
+      <DetailSection title="Called by">
+        <p className="flex min-w-0 items-center gap-2 text-sm font-medium">
+          <Avatar className="size-5">
+            <AvatarFallback className="text-[8px] font-semibold">
+              {initials(run.createdBy.name)}
+            </AvatarFallback>
+          </Avatar>
+          <span className="min-w-0 truncate">{run.createdBy.name}</span>
+          <span className="text-xs font-normal text-muted-foreground">
+            {run.kickoff === 'queue' ? 'Queued' : 'Assigned'}
           </span>
-          <span className="min-w-0">
-            <span className="block break-words font-medium">{run.createdBy.name}</span>
-            <span className="block text-xs text-muted-foreground">
-              {run.kickoff === 'queue' ? 'Queued' : 'Assigned'}
-            </span>
-          </span>
-        </dd>
-      </div>
-      <div className="space-y-1.5 border-t border-border pt-4">
-        <dt className="text-xs text-muted-foreground">Started</dt>
-        <dd>
+        </p>
+      </DetailSection>
+      <DetailSection title="Started">
+        <p className="text-sm">
           <RunTimestamp
             activeLabel={run.status === 'queued' ? 'Waiting to start' : undefined}
             emptyLabel="Not recorded"
             value={run.startedAt}
           />
-        </dd>
-      </div>
+        </p>
+      </DetailSection>
       {run.status !== 'queued' ? (
-        <div className="space-y-1.5">
-          <dt className="text-xs text-muted-foreground">{active ? 'Progress' : 'Finished'}</dt>
-          <dd>
+        <DetailSection title={active ? 'Progress' : 'Finished'}>
+          <p className="text-sm">
             <RunTimestamp
               activeLabel={active ? 'In progress' : undefined}
               emptyLabel="Not recorded"
               value={run.completedAt}
             />
-          </dd>
-        </div>
-      ) : null}
-      {run.startedAt !== null && run.completedAt !== null ? (
-        <div className="space-y-1.5">
-          <dt className="text-xs text-muted-foreground">Duration</dt>
-          <dd className="font-medium tabular-nums">
-            {agentRunDuration(run.startedAt, run.completedAt)}
-          </dd>
-        </div>
+            {run.startedAt !== null && run.completedAt !== null ? (
+              <span className="text-muted-foreground">
+                {' · '}
+                <span className="tabular-nums">
+                  {agentRunDuration(run.startedAt, run.completedAt)}
+                </span>
+              </span>
+            ) : null}
+          </p>
+        </DetailSection>
       ) : null}
       {run.discussionId ? (
-        <div className="space-y-1.5 border-t border-border pt-4">
-          <dt className="text-xs text-muted-foreground">Chat</dt>
-          <dd>
-            <Link
-              className="break-words font-medium underline-offset-4 hover:underline"
-              params={{ discussionId: run.discussionId }}
-              to="/chat/$discussionId"
-            >
-              {run.related.chatTitle ?? run.title}
-            </Link>
-          </dd>
-        </div>
+        <DetailSection title="Chat">
+          <Link
+            className="block break-words text-sm font-medium hover:underline"
+            params={{ discussionId: run.discussionId }}
+            to="/chat/$discussionId"
+          >
+            {run.related.chatTitle ?? run.title}
+          </Link>
+        </DetailSection>
       ) : null}
-      <div className="space-y-1.5 border-t border-border pt-4">
-        <dt className="text-xs text-muted-foreground">Run ID</dt>
-        <dd className="break-all font-mono text-xs leading-5 text-muted-foreground">
-          {run.shortId ?? run.id}
-        </dd>
-      </div>
-    </dl>
+      <DetailSection action={<CopyRunId value={runId} />} title="Run ID">
+        <p className="break-all font-mono text-xs leading-5 text-muted-foreground">{runId}</p>
+      </DetailSection>
+    </>
   );
 }
 
 export function AgentRunContext({ isLoading, run }: AgentRunContextProps) {
   return (
-    <section
-      aria-label="Run details"
-      className="rounded-xl border border-border bg-card p-5"
-      data-testid={testIds.agentRunContext}
-    >
-      <h2 className="flex items-center gap-2 text-sm font-semibold">
-        <Clock3 aria-hidden className="size-4 text-muted-foreground" />
-        Run details
-      </h2>
+    <div aria-label="Run details" data-testid={testIds.agentRunContext} role="group">
       {isLoading || !run ? (
-        <div className="mt-5 space-y-5">
+        <div className="space-y-4">
           {['caller', 'start', 'end'].map((key) => (
             <Skeleton className="h-10 w-full" key={key} />
           ))}
@@ -119,6 +130,6 @@ export function AgentRunContext({ isLoading, run }: AgentRunContextProps) {
       ) : (
         <RunDetails run={run} />
       )}
-    </section>
+    </div>
   );
 }

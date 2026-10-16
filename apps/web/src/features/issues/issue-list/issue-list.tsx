@@ -2,20 +2,15 @@ import { DataTable } from '@groam/ui/components/data-table';
 import { PageLoading } from '@groam/ui/components/page-loading';
 import { useNavigate } from '@tanstack/react-router';
 import { type ReactNode, useMemo } from 'react';
-import {
-  type IssueListItem,
-  type IssueStatusFilter,
-  issueStatusFilterLabels
-} from '@/features/issues/hooks/issue-list-filter';
+import { issueStatusFilterLabels } from '@/features/issues/hooks/issue-list-filter';
 import {
   issueStatusOptions,
   useIssueListFilters
 } from '@/features/issues/hooks/use-issue-list-filters';
 import { ListStatusFilterSelect } from '@/features/workspace/workspace-list/list-status-filter-select';
 import { testIds } from '@/lib/test-ids';
+import type { IssueListItem, IssueStatusFilter } from '@/types/issues';
 import { issueColumns } from './issue-list-columns';
-
-export type { IssueListItem };
 
 const ISSUE_LIST_RESOURCE = { plural: 'issues', singular: 'issue' } as const;
 

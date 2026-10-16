@@ -56,7 +56,7 @@ export function DiscussionDetailsSheet({
               <dd className="mt-1 text-sm">
                 <Link
                   className="text-foreground underline-offset-4 hover:underline"
-                  params={{ section: 'overview', tripId: discussion.tripId }}
+                  params={{ section: 'board', tripId: discussion.tripId }}
                   to="/trips/$tripId/$section"
                 >
                   {discussion.tripName}

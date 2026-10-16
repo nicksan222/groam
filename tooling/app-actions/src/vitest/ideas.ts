@@ -3,7 +3,6 @@ import { page } from 'vite-plus/test/browser';
 import { ids } from '#src/testing/ids';
 import { openAppPath } from './app-host';
 import { by, dialogSubmit, ideaRow } from './locators';
-import { openTripSection } from './open-trips';
 import { expectGone, expectPath, idFromPath, inOrder, tap, enter } from './queries';
 
 export type OpenIdeaInput = { proposalId: string; tripId: string };
@@ -51,9 +50,8 @@ export async function filterWorkspaceIdeas(
   });
 }
 
-/** Starts an idea from the trip's Ideas tab and returns the short idea id from the URL. */
+/** Starts an idea from the trip toolbar and returns the short idea id from the URL. */
 export async function addIdea(input: { name: string }): Promise<string> {
-  await openTripSection('ideas');
   await tap(by(ids.sharedTripNewIdea));
   await expect.element(by(ids.startIdeaDialog)).toBeVisible();
   await enter(by(ids.startIdeaName), input.name);

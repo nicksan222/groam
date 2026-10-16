@@ -37,6 +37,7 @@ const backendCommands: { [Name in keyof JourneyBackend]: BrowserCommand<BackendA
   createTrip: backendCommand('createTrip'),
   redeemInvitation: backendCommand('redeemInvitation'),
   requestIdeaReview: backendCommand('requestIdeaReview'),
+  setIssueStatus: backendCommand('setIssueStatus'),
   startIdea: backendCommand('startIdea'),
   updateTrip: backendCommand('updateTrip')
 };

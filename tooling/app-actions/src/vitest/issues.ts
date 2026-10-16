@@ -1,13 +1,19 @@
 import { expect } from 'vite-plus/test';
-import { page } from 'vite-plus/test/browser';
+import { page, userEvent } from 'vite-plus/test/browser';
+import type { IssueStatus, IssueStatusFilter } from '#src/actions/set-issue-status';
 import { ids } from '#src/testing/ids';
 import { openAppPath } from './app-host';
-import { by, dialogSubmit, issueRow, issueStatusOption } from './locators';
-import { openTripSection } from './open-trips';
+import {
+  by,
+  dialogSubmit,
+  issueCard,
+  issueRow,
+  issueStatusOption,
+  issueStatusSelectOption
+} from './locators';
 import { expectGone, expectPath, idFromPath, presentAttribute, tap, enter } from './queries';
 
-export type IssueStatus = 'closed' | 'open';
-export type IssueStatusFilter = 'all' | 'closed' | 'open';
+export type { IssueStatus, IssueStatusFilter };
 
 /** Opens an issue page directly and returns the short id the app canonicalizes its URL to. */
 export async function openIssue(issueId: string): Promise<string> {
@@ -40,10 +46,10 @@ export async function openIssueFromInbox(
 }
 
 export async function openIssueFromTrip(tripId: string, title: string): Promise<void> {
-  await openAppPath(`trips/${tripId}/issues`);
-  const row = issueRow(title);
-  await expect.element(row).toBeVisible();
-  await tap(row);
+  await openAppPath(`trips/${tripId}/board`);
+  const card = issueCard(title);
+  await expect.element(card).toBeVisible();
+  await tap(card.getByRole('link', { name: title, exact: true }));
   await expect.element(by(ids.issueHeading)).toMatchTextContent(title);
 }
 
@@ -51,13 +57,13 @@ export async function setIssueStatus(status: IssueStatus): Promise<void> {
   const current = by(ids.issueStatus);
   await expect.element(current).toBeInTheDocument();
   if (current.element().getAttribute('data-status') === status) return;
-  await tap(by(ids.issueToggleStatus));
+  await tap(current);
+  await tap(issueStatusSelectOption(status));
   await expect.element(current).toHaveAttribute('data-status', status);
 }
 
-/** Creates an issue from the trip's Issues tab and returns the id from the URL. */
+/** Creates an issue from the trip board's "To decide" lane (`newIssue` button) and returns the id from the URL. */
 export async function createIssue(input: { body: string; title: string }): Promise<string> {
-  await openTripSection('issues');
   await tap(by(ids.newIssue));
   await expect.element(by(ids.createIssueDialog)).toBeVisible();
   await enter(by(ids.createIssueTitle), input.title);
@@ -74,13 +80,18 @@ export async function addIssueComment(content: string): Promise<void> {
   await expect.element(page.getByText(content)).toBeVisible();
 }
 
-export type IssueAssignee = { kind: 'agent' } | { kind: 'user'; name: string };
+export type IssueAssignee = { kind: 'agent' } | { kind: 'me' } | { kind: 'user'; name: string };
 
 export async function assignIssue(assignee: IssueAssignee): Promise<void> {
   await tap(by(ids.issueEditAssignees));
+  await expect.element(by(ids.issueAssigneePicker)).toBeVisible();
   if (assignee.kind === 'agent') {
     await tap(by(ids.issueAssignGroam));
     await expect.element(page.getByText('Issue agent').first()).toBeVisible();
+    return;
+  }
+  if (assignee.kind === 'me') {
+    await tap(by(ids.issueAssignMe));
     return;
   }
   await tap(page.getByRole('button', { name: `Assign ${assignee.name}` }));
@@ -93,4 +104,12 @@ export async function startIdeaFromIssue(): Promise<string> {
   await tap(by(ids.issueStartIdea));
   const workspace = by(ids.ideaWorkspace);
   return presentAttribute(workspace, 'data-idea-name');
+}
+
+/** Opens the assignees control on the open issue, checks "Assign me" is on, and closes it again. */
+export async function expectIssueAssignedToMe(): Promise<void> {
+  await tap(by(ids.issueEditAssignees));
+  await expect.element(by(ids.issueAssignMe)).toHaveAttribute('aria-pressed', 'true');
+  await userEvent.keyboard('{Escape}');
+  await expectGone(by(ids.issueAssigneePicker));
 }

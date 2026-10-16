@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Launch Claude Code with the repository harness: project settings (plugins),
-# MCP servers, and the Headroom compression proxy.
+# Launch Claude Code through the Headroom compression proxy. Everything else
+# (plugins, MCP servers) is standard project config: .claude/settings.json and
+# .mcp.json.
 #
 #   claude.sh [args...]               terminal (`claude` alias, `just claude`)
 #   claude.sh /path/to/claude [args]  VS Code `claudeCode.claudeProcessWrapper`
@@ -12,8 +13,6 @@
 # Env: CLAUDE_HEADROOM=off skips the proxy; HEADROOM_PORT (default 8787) picks
 # its port; HEADROOM_WRAP_PROXY_TIMEOUT (default 60s) bounds a cold start.
 set -euo pipefail
-
-harness_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 warn() { printf 'claude harness: %s\n' "$*" >&2; }
 
@@ -34,14 +33,6 @@ case "${1:-}" in
     exec "$claude_bin" "$@"
     ;;
 esac
-
-# `--mcp-config` is variadic and would swallow a leading prompt (`claude "fix
-# it"`), so the single-valued `--settings` always goes last.
-mcp_configs=("$harness_dir/mcp.json")
-# Personal, git-ignored MCP servers.
-if [[ -f "$harness_dir/mcp.local.json" ]]; then
-  mcp_configs+=("$harness_dir/mcp.local.json")
-fi
 
 # Headroom's anonymous upload beacon is opt-out; keep it off unless asked.
 export HEADROOM_BEACON="${HEADROOM_BEACON:-off}"
@@ -150,10 +141,9 @@ if [[ -z $skip_reason ]] && ensure_proxy; then
   [[ -n ${tool_search//[[:space:]]/} ]] || export ENABLE_TOOL_SEARCH=true
   add_header X-Headroom-Project "${PWD##*/}"
   add_header X-Headroom-Cwd "$PWD"
-  mcp_configs+=("$harness_dir/mcp.headroom.json")
 elif [[ $skip_reason != CLAUDE_HEADROOM=* ]]; then
   warn "${skip_reason:-Headroom proxy unavailable}; starting Claude without compression"
 fi
 exec 9>&-
 
-exec "$claude_bin" --mcp-config "${mcp_configs[@]}" --settings "$harness_dir/settings.json" "$@"
+exec "$claude_bin" "$@"

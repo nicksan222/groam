@@ -8,7 +8,6 @@ import { TripDurationPlanner } from '@/features/trips/trip-overview/trip-duratio
 import { OverviewProperties } from './overview-properties';
 import { PlanningReadiness } from './planning-readiness';
 import { RouteBoard } from './route-board';
-import { TripCover } from './trip-cover';
 import { TripPackingList } from './trip-packing-list';
 
 function durationPlannerStartVersion({
@@ -28,15 +27,12 @@ function durationPlannerStartVersion({
 
 // oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type TripOverviewLoadedProps = {
-  hidePageCover?: boolean;
   isLoading?: false;
   onAddDestination: () => void;
   onEditDetails: () => void;
   onOpenItinerary: () => void;
   onStartVersion?: () => void;
   onUpdateDuration: (days: number, startDate: string | undefined) => Promise<boolean>;
-  replaceCover: (cover: File) => Promise<boolean>;
-  retryCover: () => Promise<boolean>;
   trip: TripDetail;
   tripState?: TripState;
 };
@@ -53,14 +49,11 @@ export function TripOverview(props: TripOverviewProps) {
   if (props.isLoading) return <PageLoading label="Loading trip…" />;
 
   const {
-    hidePageCover = false,
     onAddDestination,
     onEditDetails,
     onOpenItinerary,
     onStartVersion,
     onUpdateDuration,
-    replaceCover,
-    retryCover,
     trip,
     tripState
   } = props;
@@ -88,15 +81,6 @@ export function TripOverview(props: TripOverviewProps) {
 
   return (
     <Shell.Stack stack="page">
-      {hidePageCover ? null : (
-        <TripCover
-          onAddDestination={onAddDestination}
-          replaceCover={replaceCover}
-          retryCover={retryCover}
-          trip={trip}
-        />
-      )}
-
       <Shell.TwoColumns>
         <Shell.LeftColumn>
           <Shell.Stack stack="sm">

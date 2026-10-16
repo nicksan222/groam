@@ -7,6 +7,7 @@ import { ItineraryActivity } from '#convex/modules/travel/activities/index';
 import { DestinationCover } from '#convex/modules/travel/covers/destination/index';
 import { TripCover } from '#convex/modules/travel/covers/index';
 import { TripDestination } from '#convex/modules/travel/destinations/index';
+import { TripIssues } from '#convex/modules/travel/issues/index';
 import { TripLocations } from '#convex/modules/travel/locations/index';
 import { TripPacking } from '#convex/modules/travel/packing/index';
 import { TripPreferences } from '#convex/modules/travel/preferences/index';
@@ -405,6 +406,7 @@ async function create(
     }
   }
   await TripTravelers.seed(ctx, trip);
+  await TripIssues.createStarterIssues(trip);
   await recordActivity(trip, 'trip_created', `${workspace.viewerName} created the trip`);
   return trip;
 }

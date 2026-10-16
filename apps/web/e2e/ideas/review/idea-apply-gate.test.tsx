@@ -8,7 +8,7 @@ import {
   uniqueSuffix
 } from '@groam/app-actions/vitest';
 import { expect, test } from 'vite-plus/test';
-import { openApp } from '@/testing/open-app';
+import { openApp } from '@/journeys/open-app';
 
 test('submitting an idea for review does not allow applying it without approval', async () => {
   const suffix = uniqueSuffix();

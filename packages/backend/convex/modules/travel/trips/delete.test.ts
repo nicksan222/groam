@@ -94,15 +94,31 @@ test('deleting an organization removes its trips, discussions, media, and stored
     text: 'This should be removed.'
   });
 
+  const [starter] = await owner.client.query(api.routes.trips.issues.list.run, {
+    tripId: sharedTripId
+  });
+  if (!starter) throw new Error('Expected a starter issue');
+  await owner.client.mutation(api.routes.trips.issues.comment.run, {
+    content: 'This should be removed.',
+    issueId: starter.id
+  });
+
   const deletion = await owner.authClient.organization.delete({
     organizationId: owner.organizationId!
   });
   if (deletion.error) throw new Error(deletion.error.message ?? 'Unable to delete organization');
-  for (let index = 0; index < 16; index += 1) {
+  const hasRemainingData = () =>
+    owner.client.run(
+      async (ctx) =>
+        (await ctx.db.query('trips').first()) !== null ||
+        (await ctx.db.query('discussions').first()) !== null ||
+        (await ctx.db.query('media').first()) !== null
+    );
+  do {
     await owner.client.mutation(internal.modules.organizations.cleanup.removeOrganizationData, {
       organizationId: owner.organizationId!
     });
-  }
+  } while (await hasRemainingData());
 
   await expect(
     owner.client.run(async (ctx) => ({
@@ -154,6 +170,8 @@ test('deleting an organization removes its trips, discussions, media, and stored
         .query('tripDestinations')
         .withIndex('by_tripId_and_position', (query) => query.eq('tripId', tripId))
         .take(1),
+      issueComments: await ctx.db.query('tripIssueComments').take(1),
+      issues: await ctx.db.query('tripIssues').take(1),
       itinerary: await ctx.db
         .query('tripDestinationActivities')
         .withIndex('by_tripId_and_position', (query) => query.eq('tripId', tripId))
@@ -174,6 +192,8 @@ test('deleting an organization removes its trips, discussions, media, and stored
     discussionMessages: [],
     discussions: [],
     destinations: [],
+    issueComments: [],
+    issues: [],
     itinerary: [],
     storage: null,
     transferMedia: null,

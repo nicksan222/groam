@@ -64,7 +64,7 @@ export function TripWorkspaceSection({
         data-testid={testIds.tripCard}
         data-trip-id={trip.id}
         data-trip-name={trip.name}
-        params={{ section: 'overview', tripId: trip.id }}
+        params={{ section: 'board', tripId: trip.id }}
         to="/trips/$tripId/$section"
       >
         <div className="space-y-5 p-5 pb-4">

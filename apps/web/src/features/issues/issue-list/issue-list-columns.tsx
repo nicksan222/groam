@@ -1,4 +1,3 @@
-import { Badge } from '@groam/ui/components/badge';
 import { Button } from '@groam/ui/components/button';
 import type { ColumnDef } from '@groam/ui/components/data-table';
 import {
@@ -7,9 +6,11 @@ import {
   dataTableSortHeaderClassName
 } from '@groam/ui/lib/data-table';
 import { ArrowUpDown, Sparkles } from 'lucide-react';
-import type { IssueListItem } from '@/features/issues/hooks/issue-list-item';
 import { relativeIssueDate } from '@/features/issues/hooks/issue-relative-date';
+import { IssueLabelBadges } from '@/features/issues/shared/issue-label-badges';
+import { IssueStatusBadge } from '@/features/issues/shared/issue-status-badge';
 import { Link } from '@/features/workspace/navigation/router';
+import type { IssueListItem } from '@/types/issues';
 import { IssueAssignee } from './issue-assignee';
 
 const personClass = `hidden md:table-cell md:w-[13%] ${dataTableColumnFillClassName}`;
@@ -27,14 +28,17 @@ export function issueColumns({
         const subtitle = issue.idea ? `Idea · ${issue.idea.title}` : 'No linked idea';
         return (
           <span className="block min-w-0">
-            <Link
-              className="block break-words whitespace-normal font-medium hover:underline md:truncate"
-              params={{ issueId: issue.id }}
-              title={issue.title}
-              to="/issues/$issueId"
-            >
-              {issue.title}
-            </Link>
+            <span className="flex min-w-0 items-center gap-2">
+              <Link
+                className="block min-w-0 break-words whitespace-normal font-medium hover:underline md:truncate"
+                params={{ issueId: issue.id }}
+                title={issue.title}
+                to="/issues/$issueId"
+              >
+                {issue.title}
+              </Link>
+              <IssueLabelBadges labels={issue.labels} />
+            </span>
             {showTripName ? (
               <span className="mt-1 block truncate text-xs text-muted-foreground md:hidden">
                 {issue.tripName}
@@ -106,18 +110,11 @@ export function issueColumns({
     },
     {
       accessorKey: 'status',
-      cell: ({ row }) => (
-        <Badge
-          className="capitalize"
-          variant={row.original.status === 'open' ? 'outline' : 'secondary'}
-        >
-          {row.original.status}
-        </Badge>
-      ),
+      cell: ({ row }) => <IssueStatusBadge status={row.original.status} />,
       header: 'Status',
       id: 'status',
       enableHiding: false,
-      meta: { className: 'w-24' }
+      meta: { className: 'w-32' }
     },
     {
       accessorKey: 'updatedAt',

@@ -1,5 +1,6 @@
 import { v } from 'convex/values';
 import { workspaceQuery } from '#convex/modules/auth/workspace';
+import { TripIssueValidators } from '#convex/modules/travel/issues/schema';
 import { TripVersions } from '#convex/modules/travel/versions/index';
 import { TripVersionValidators } from '#convex/modules/travel/versions/schema';
 import { versionConflictValidator } from '#convex/modules/travel/versions/validators';
@@ -82,7 +83,7 @@ export const run = workspaceQuery({
     issue: v.union(
       v.object({
         id: v.id('tripIssues'),
-        status: v.union(v.literal('open'), v.literal('closed')),
+        status: TripIssueValidators.status,
         title: v.string()
       }),
       v.null()

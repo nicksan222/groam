@@ -1,28 +1,38 @@
 import type { Id } from '@groam/backend/data-model';
 import { describe, expect, test } from 'vite-plus/test';
+import type { IssueStatusFilter } from '@/types/issues';
+import type { IssueListItem } from '@/types/issues';
 import { DEFAULT_ISSUE_STATUS_FILTER, filterWorkspaceIssues } from './issue-list-filter';
-import type { IssueListItem } from './issue-list-item';
 
-function issue(
-  value: Partial<IssueListItem> & Pick<IssueListItem, 'id' | 'status' | 'title'>
-): IssueListItem {
-  return {
-    assignee: null,
-    author: { name: 'Alex Morgan', userId: 'user-alex' },
-    idea: null,
-    tripName: 'Atlantic week',
-    updatedAt: 1,
-    ...value
-  };
-}
+const listItem = {
+  assignee: null,
+  author: { name: 'Alex Morgan', userId: 'user-alex' },
+  canAssign: true,
+  canManage: true,
+  condition: null,
+  dueAt: null,
+  id: 'issue-1' as Id<'tripIssues'>,
+  idea: null,
+  labels: [],
+  rank: 0,
+  status: 'open',
+  title: 'Coast day',
+  updatedAt: Date.UTC(2026, 7, 17)
+} satisfies Omit<IssueListItem, 'tripName'>;
+
+const issueListItem = (over: Partial<IssueListItem> = {}): IssueListItem => ({
+  ...listItem,
+  tripName: 'Atlantic week',
+  ...over
+});
 
 const issues = [
-  issue({
+  issueListItem({
     id: 'issue-open' as Id<'tripIssues'>,
     status: 'open',
     title: 'Coast day'
   }),
-  issue({
+  issueListItem({
     assignee: { kind: 'user', name: 'Sam Planner', userId: 'user-sam' },
     author: { name: 'Sam Planner', userId: 'user-sam' },
     id: 'issue-closed' as Id<'tripIssues'>,
@@ -70,5 +80,22 @@ describe('filterWorkspaceIssues', () => {
     expect(
       filterWorkspaceIssues(issues, { query: 'museum', status: 'closed' }).map(({ id }) => id)
     ).toEqual(['issue-closed']);
+  });
+
+  test('groups active and resolved statuses under Open and Closed', () => {
+    const lifecycle = [
+      issueListItem({ id: 'a' as Id<'tripIssues'>, status: 'open', title: 'Decide' }),
+      issueListItem({ id: 'b' as Id<'tripIssues'>, status: 'in_progress', title: 'Working' }),
+      issueListItem({ id: 'c' as Id<'tripIssues'>, status: 'closed', title: 'Done' }),
+      issueListItem({ id: 'd' as Id<'tripIssues'>, status: 'wont_do', title: 'Dropped' })
+    ];
+    const ids = (status: IssueStatusFilter) =>
+      filterWorkspaceIssues(lifecycle, { query: '', status }).map(({ id }) => id);
+
+    expect(ids('open')).toEqual(['a', 'b']);
+    expect(ids('closed')).toEqual(['c', 'd']);
+    expect(ids('in_progress')).toEqual(['b']);
+    expect(ids('wont_do')).toEqual(['d']);
+    expect(ids('all')).toEqual(['a', 'b', 'c', 'd']);
   });
 });

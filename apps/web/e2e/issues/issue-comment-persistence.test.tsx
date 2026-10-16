@@ -10,7 +10,7 @@ import {
 } from '@groam/app-actions/vitest';
 import { expect, test } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
-import { openApp } from '@/testing/open-app';
+import { openApp } from '@/journeys/open-app';
 
 test('issue comments persist across trip and workspace views', async () => {
   const suffix = uniqueSuffix();

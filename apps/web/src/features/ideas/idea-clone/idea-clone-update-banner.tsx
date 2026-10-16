@@ -1,6 +1,8 @@
 import { Button } from '@groam/ui/components/button';
+import { ArrowLeftRight } from 'lucide-react';
 import { needsSharedTripUpdate } from '@/features/ideas/hooks/idea-needs-update';
 import { IdeaUpdateFlow } from '@/features/ideas/idea-update/idea-update-flow';
+import { TripInlineNotice } from '@/features/trips/trip-detail/trip-inline-notice';
 import type { IdeaRebaseChoice, IdeaRebaseResult, ProposalDetail } from '@/types/trips';
 
 /** Shown only while an idea is behind the shared trip or conflicted. */
@@ -21,26 +23,27 @@ export function IdeaCloneUpdateBanner({
   if (proposal.conflicts.some((conflict) => conflict.entity === 'details')) {
     if (!onReviewConflicts) return null;
     return (
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-6">
-        <p className="text-sm">
-          The shared trip has changed. Review the overlapping details before applying this idea.
-        </p>
-        <Button variant="outline" size="sm" onClick={onReviewConflicts}>
-          Review conflicts
-        </Button>
-      </div>
+      <TripInlineNotice
+        action={
+          <Button variant="outline" size="sm" onClick={onReviewConflicts}>
+            Review conflicts
+          </Button>
+        }
+        icon={ArrowLeftRight}
+        title="The shared trip has changed"
+      >
+        Review the overlapping details before applying this idea.
+      </TripInlineNotice>
     );
   }
   return (
-    <div className="px-4 pt-3 sm:px-6">
-      <IdeaUpdateFlow
-        canRebase={proposal.canRebase}
-        disabled={pendingAction !== null}
-        onRebase={onRebase}
-        pending={pendingAction === 'rebase'}
-        sourceChanged={proposal.sourceChanged}
-        status={proposal.status}
-      />
-    </div>
+    <IdeaUpdateFlow
+      canRebase={proposal.canRebase}
+      disabled={pendingAction !== null}
+      onRebase={onRebase}
+      pending={pendingAction === 'rebase'}
+      sourceChanged={proposal.sourceChanged}
+      status={proposal.status}
+    />
   );
 }

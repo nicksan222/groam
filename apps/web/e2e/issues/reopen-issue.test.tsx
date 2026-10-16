@@ -12,7 +12,7 @@ import {
   uniqueSuffix
 } from '@groam/app-actions/vitest';
 import { expect, test } from 'vite-plus/test';
-import { openApp } from '@/testing/open-app';
+import { openApp } from '@/journeys/open-app';
 
 test('reopening a closed issue moves it back into the open workspace filter', async () => {
   const suffix = uniqueSuffix();

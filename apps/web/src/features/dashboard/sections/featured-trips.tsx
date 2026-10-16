@@ -37,7 +37,7 @@ export function FeaturedTrips({ trips }: { trips: TripListItem[] }) {
             <Link
               className="group grid min-w-0 grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-3 border-b border-border p-2.5 last:border-b-0 hover:bg-muted/60 sm:grid-cols-[5.5rem_minmax(0,1fr)_auto] sm:gap-4"
               key={trip.id}
-              params={{ section: 'overview', tripId: trip.id }}
+              params={{ section: 'board', tripId: trip.id }}
               to="/trips/$tripId/$section"
             >
               <CoverFrame

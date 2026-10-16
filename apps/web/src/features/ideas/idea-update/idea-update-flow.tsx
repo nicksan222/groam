@@ -17,6 +17,7 @@ import {
   rebaseExplanation,
   useIdeaRebaseReconciliation
 } from '@/features/trips/hooks/use-idea-rebase-reconciliation';
+import { TripInlineNotice } from '@/features/trips/trip-detail/trip-inline-notice';
 import { testIds } from '@/lib/test-ids';
 
 export function IdeaUpdateFlow({
@@ -96,25 +97,25 @@ function IdeaUpdateEntry({
 }) {
   const blockedReason = rebaseBlockedReason(canRebase);
   return (
-    <section className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold">The shared trip has changed since you started</p>
-        <p className="mt-1 text-xs leading-5 text-muted-foreground">
-          Update your idea before applying it. Changes that do not overlap combine automatically.
-        </p>
-        {blockedReason && <p className="mt-1 text-xs text-muted-foreground">{blockedReason}</p>}
-      </div>
-      <Button
-        data-testid={testIds.ideaUpdateFromShared}
-        disabled={disabled || !canRebase}
-        onClick={onStart}
-        size="sm"
-        variant={conflicted ? 'default' : 'outline'}
-      >
-        {pending ? <Spinner /> : <ArrowLeftRight />}
-        {ideaUpdateFromSharedTrip}
-      </Button>
-    </section>
+    <TripInlineNotice
+      action={
+        <Button
+          data-testid={testIds.ideaUpdateFromShared}
+          disabled={disabled || !canRebase}
+          onClick={onStart}
+          size="sm"
+          variant={conflicted ? 'default' : 'outline'}
+        >
+          {pending ? <Spinner /> : <ArrowLeftRight />}
+          {ideaUpdateFromSharedTrip}
+        </Button>
+      }
+      icon={ArrowLeftRight}
+      title="The shared trip has changed since you started"
+    >
+      <p>Update your idea before applying it. Changes that do not overlap combine automatically.</p>
+      {blockedReason && <p className="mt-1">{blockedReason}</p>}
+    </TripInlineNotice>
   );
 }
 
@@ -139,7 +140,7 @@ function IdeaUpdateScreen({
   return (
     <section
       aria-labelledby="idea-update-heading"
-      className="space-y-4 border-b border-border pb-5"
+      className="mx-6 mt-4 space-y-4 rounded-lg bg-muted/40 p-4"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>

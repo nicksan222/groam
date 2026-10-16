@@ -2,6 +2,7 @@ import { ConvexError } from 'convex/values';
 import type { Doc } from '#convex-generated/dataModel';
 import { isOrganizationManager } from '#convex/modules/auth/workspace';
 import type { TripCtx, TripRole } from '#convex/modules/travel/trips/ctx';
+import { tripDurationDays } from '#convex/modules/travel/trips/duration';
 
 export function roleFor(trip: Doc<'trips'>, userId: string, organizationRole?: string): TripRole {
   return trip.creator.userId === userId || isOrganizationManager(organizationRole)
@@ -52,9 +53,7 @@ export function assertMutable(ctx: TripCtx): void {
 }
 
 export function totalDays(ctx: TripCtx): number | undefined {
-  return (
-    ctx.trip.duration?.totalDays ?? ctx.trip.duration?.idealDays ?? ctx.trip.duration?.minimumDays
-  );
+  return tripDurationDays(ctx.trip);
 }
 
 export function assertDayWithinTrip(ctx: TripCtx, day: number | undefined, label: string): void {

@@ -5,7 +5,6 @@ import { page } from 'vite-plus/test/browser';
 import { expectRouteStopPhotos } from '@/features/trips/expect-route-stop-photos';
 import { nextStepFor } from '@/features/trips/hooks/trip-overview-next-step';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
-import type { TripState } from '@/features/trips/trip-detail/trip-detail-types';
 import { TripOverview } from './trip-overview';
 import { TripReadingOverview } from './trip-reading-overview';
 
@@ -87,9 +86,7 @@ const handlers = {
   onEditDetails: vi.fn(),
   onOpenItinerary: vi.fn(),
   onStartVersion: vi.fn(),
-  onUpdateDuration: vi.fn().mockResolvedValue(true),
-  replaceCover: vi.fn().mockResolvedValue(true),
-  retryCover: vi.fn().mockResolvedValue(true)
+  onUpdateDuration: vi.fn().mockResolvedValue(true)
 };
 
 describe('nextStepFor', () => {
@@ -131,7 +128,7 @@ describe('nextStepFor', () => {
 
 describe('TripOverview', () => {
   test('shows the empty-route prompt when a trip has no destinations', async () => {
-    await render(<TripOverview hidePageCover trip={tripDetail()} {...handlers} />);
+    await render(<TripOverview trip={tripDetail()} {...handlers} />);
 
     await expect.element(page.getByText('No route yet')).toBeInTheDocument();
     await expect
@@ -148,7 +145,6 @@ describe('TripOverview', () => {
   test('lists all route stops vertically when destinations exist', async () => {
     await render(
       <TripOverview
-        hidePageCover
         trip={tripDetail({
           destination: { countryCode: 'PT', name: 'Portugal', status: 'known' },
           destinations: [
@@ -187,7 +183,6 @@ describe('TripOverview', () => {
     const onOpenItinerary = vi.fn();
     await render(
       <TripOverview
-        hidePageCover
         trip={tripDetail({
           dateNotes: 'May 2027',
           destination: { countryCode: 'PT', name: 'Portugal', status: 'known' },
@@ -207,7 +202,6 @@ describe('TripOverview', () => {
     const onStartVersion = vi.fn();
     await render(
       <TripOverview
-        hidePageCover
         trip={tripDetail({
           permissions: {
             canArchive: false,
@@ -244,7 +238,6 @@ describe('TripOverview', () => {
     const onStartVersion = vi.fn();
     await render(
       <TripOverview
-        hidePageCover
         trip={tripDetail({
           permissions: {
             canArchive: false,
@@ -275,7 +268,6 @@ describe('TripOverview', () => {
   test('does not duplicate Issues or Ideas lists on overview', async () => {
     await render(
       <TripOverview
-        hidePageCover
         trip={tripDetail({
           destination: { countryCode: 'PT', name: 'Portugal', status: 'known' },
           destinations: [destination()]
@@ -291,7 +283,6 @@ describe('TripOverview', () => {
   test('shows packing in the planning overview, including idea copies', async () => {
     const shared = await render(
       <TripOverview
-        hidePageCover
         trip={tripDetail({
           destination: { countryCode: 'PT', name: 'Portugal', status: 'known' },
           destinations: [destination()]
@@ -304,7 +295,6 @@ describe('TripOverview', () => {
 
     const idea = await render(
       <TripOverview
-        hidePageCover
         trip={tripDetail({
           destination: { countryCode: 'PT', name: 'Portugal', status: 'known' },
           destinations: [destination()],
@@ -318,7 +308,6 @@ describe('TripOverview', () => {
 
     await render(
       <TripOverview
-        hidePageCover
         trip={tripDetail({
           archivedAt: Date.now(),
           destination: { countryCode: 'PT', name: 'Portugal', status: 'known' },
@@ -340,7 +329,9 @@ describe('TripReadingOverview', () => {
           itinerary={<section aria-label="Full itinerary">Lisbon itinerary</section>}
           trip={tripDetail({
             destinations: [destination()],
+            initialBudget: 1500,
             totalDurationDays: 7,
+            totalPlannedCost: 400,
             permissions: {
               canArchive: false,
               canEdit: false,
@@ -350,10 +341,12 @@ describe('TripReadingOverview', () => {
               isReadOnly: true
             }
           })}
-          tripState={{} as TripState}
         />
       );
-      await expect.element(page.getByText('7 days')).toBeInTheDocument();
+      await expect.element(page.getByText(/ budget$/)).toBeInTheDocument();
+      await expect.element(page.getByText('Stops', { exact: true })).not.toBeInTheDocument();
+      await expect.element(page.getByText('Window', { exact: true })).not.toBeInTheDocument();
+      await expect.element(page.getByText('Length', { exact: true })).not.toBeInTheDocument();
       await expect.element(page.getByRole('spinbutton')).not.toBeInTheDocument();
       await expect.element(page.getByText('Trip basics')).not.toBeInTheDocument();
       await expect
@@ -369,12 +362,14 @@ describe('TripReadingOverview', () => {
     }
   );
 
-  test('shows a neutral empty state instead of an edit prompt', async () => {
+  test('shows a neutral empty state instead of an edit prompt, and no budget line without a number', async () => {
     await render(
       <TripReadingOverview
         itinerary={<p>No destinations planned yet</p>}
         trip={tripDetail({
+          initialBudget: null,
           proposal: { status: 'in_review' } as TripDetail['proposal'],
+          totalPlannedCost: 0,
           permissions: {
             canArchive: false,
             canEdit: false,
@@ -384,10 +379,9 @@ describe('TripReadingOverview', () => {
             isReadOnly: true
           }
         })}
-        tripState={{} as TripState}
       />
     );
-    await expect.element(page.getByText('Idea preview')).toBeInTheDocument();
+    await expect.element(page.getByText('Planned / budget')).not.toBeInTheDocument();
     await expect.element(page.getByText('No destinations planned yet')).toBeInTheDocument();
     await expect.element(page.getByRole('button')).not.toBeInTheDocument();
     await expect.element(page.getByRole('heading', { name: 'Packing' })).toBeInTheDocument();

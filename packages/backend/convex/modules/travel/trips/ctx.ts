@@ -11,6 +11,7 @@ import {
   query
 } from '#convex-generated/server';
 import { type AuthContext, requireWorkspace, type Workspace } from '#convex/modules/auth/workspace';
+import { affectsConditions, syncTripConditions } from '#convex/modules/travel/issues/sync';
 import {
   assertMutable,
   assertPlanner,
@@ -172,6 +173,7 @@ async function invalidateIdeaReviewAfterEdit(ctx: MutableTripCtx): Promise<void>
     })
   ]);
 }
+/** Writes the trip row; a patch to destination, dates, or duration re-checks issue conditions. */
 export async function patchTrip(
   ctx: MutableTripCtx,
   value: Partial<Omit<Doc<'trips'>, '_creationTime' | '_id'>>
@@ -184,6 +186,7 @@ export async function patchTrip(
   });
   ctx.trip = { ...ctx.trip, ...value, ...(updatedAt === undefined ? {} : { updatedAt }) };
   await invalidateIdeaReviewAfterEdit(ctx);
+  if (affectsConditions(value)) await syncTripConditions(ctx);
   if (ctx.trip.proposal?.status === 'draft' && !isSeedWrite()) {
     await scheduleDraftTitleGeneration(ctx, ctx.trip._id);
   }

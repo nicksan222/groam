@@ -8,7 +8,7 @@ import {
   registerPasskeyAndSignIn
 } from '@groam/app-actions/vitest';
 import { expect, test } from 'vite-plus/test';
-import { openSignedOutApp } from '@/testing/open-app';
+import { openSignedOutApp } from '@/journeys/open-app';
 
 const recoveredPassword = 'Recovered-password-1234';
 

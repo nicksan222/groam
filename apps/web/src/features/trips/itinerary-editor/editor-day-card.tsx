@@ -1,11 +1,12 @@
 import { Button } from '@groam/ui/components/button';
-import Shell from '@groam/ui/components/shell/client';
 import { MapPin, Plus } from 'lucide-react';
 import {
   destinationsForDay,
   editorDayDestinations
 } from '@/features/trips/hooks/editor-day-destinations';
+import { plannerDate } from '@/features/trips/hooks/trip-day-planner';
 import { useItineraryProposalChangeList } from '@/features/trips/hooks/use-itinerary-proposal-changes';
+import { PlannerDayFrame } from '@/features/trips/trip-planner/planner-day-frame';
 import type {
   EditorActivitySelection,
   EditorDayCardProps,
@@ -13,7 +14,7 @@ import type {
 } from '@/types/itinerary-editor';
 import type { PlannerDay } from '@/types/trip-planner';
 import { EditorDayCanvas } from './editor-day-canvas';
-import { EditorDayHeader } from './editor-day-header';
+import { EditorDayPlaces } from './editor-day-places';
 import { EditorInlineDetails } from './editor-inline-details';
 import { EditorRouteStop } from './editor-route-stop';
 
@@ -54,18 +55,26 @@ export function EditorDayCard(cardProps: EditorDayCardProps) {
   const entryKey = activeEntryKey(day, active, selectedDetail);
   const hasInlineEditor =
     active !== null || (selectedDetail !== null && selectedDetail.kind !== 'route');
+  const primary = editorDayDestinations(day, trip.destinations);
+  const date = plannerDate(trip.startDate, day.day);
   return (
-    <Shell.Card as="section" aria-label={`Day ${day.day} schedule`} className="overflow-hidden">
-      <EditorDayHeader
-        day={day.day}
-        startDate={trip.startDate}
-        destinations={editorDayDestinations(day, trip.destinations)}
-        changes={changes}
-        onManageDestination={(id) => {
-          setSelection(null);
-          setDetail({ kind: 'route', day: day.day, destinationId: id });
-        }}
-      />
+    <PlannerDayFrame
+      ariaLabel={`Day ${day.day} schedule`}
+      date={date}
+      day={day.day}
+      photo={primary[0] ? { name: primary[0].name, src: primary[0].coverUrl } : undefined}
+      subtitle={
+        <EditorDayPlaces
+          changes={changes}
+          day={day.day}
+          destinations={primary}
+          onManageDestination={(id) => {
+            setSelection(null);
+            setDetail({ kind: 'route', day: day.day, destinationId: id });
+          }}
+        />
+      }
+    >
       {routeDestination ? (
         <div className="border-b border-border p-4 sm:p-6">
           <EditorRouteStop {...props} destination={routeDestination} />
@@ -73,6 +82,7 @@ export function EditorDayCard(cardProps: EditorDayCardProps) {
       ) : null}
       {trip.destinations.length ? (
         <EditorDayCanvas
+          currency={trip.currency}
           day={day}
           canAdd={available.length > 0}
           editorLocked={uploading}
@@ -97,6 +107,6 @@ export function EditorDayCard(cardProps: EditorDayCardProps) {
           </Button>
         </div>
       ) : null}
-    </Shell.Card>
+    </PlannerDayFrame>
   );
 }

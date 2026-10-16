@@ -183,7 +183,7 @@ export function TripListView() {
           onCreated={(tripId) => {
             createDialog.closePanel();
             void navigate({
-              params: { section: 'overview', tripId },
+              params: { section: 'board', tripId },
               to: '/trips/$tripId/$section'
             });
           }}

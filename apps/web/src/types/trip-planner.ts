@@ -30,3 +30,13 @@ export type PlannerTrip = Pick<
   TripDetail,
   'destinations' | 'totalDurationDays' | 'arrivalTransfer' | 'departureTransfer'
 >;
+
+/** The shared day card surface; the read-only planner and the idea editor both fill it. */
+export type PlannerDayFrameProps = {
+  ariaLabel: string;
+  children: import('react').ReactNode;
+  date: string | null;
+  day: number;
+  photo?: { name: string; src: string | null };
+  subtitle: import('react').ReactNode;
+};

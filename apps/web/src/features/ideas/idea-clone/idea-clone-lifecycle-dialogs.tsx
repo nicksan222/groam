@@ -1,6 +1,6 @@
 import type { Id } from '@groam/backend/data-model';
 import { useNavigate } from '@tanstack/react-router';
-import { ideaListHref } from '@/features/ideas/idea-href';
+import { ideaSharedTripHref } from '@/features/ideas/idea-href';
 import type { useTripVersion } from '@/features/trips/hooks/use-trip-versions';
 import { ApplyIdeaDialog } from '@/features/trips/trip-versions/apply-idea-dialog';
 import { PassOnIdea } from '@/features/trips/trip-versions/pass-on-idea';
@@ -35,7 +35,7 @@ export function IdeaCloneLifecycleDialogs({
           close={version.close}
           hideTrigger
           onClosed={() => {
-            void navigate(ideaListHref(sharedTripId));
+            void navigate(ideaSharedTripHref(sharedTripId));
           }}
           onOpenChange={setClosingOpen}
           open={closingOpen}
@@ -51,7 +51,7 @@ export function IdeaCloneLifecycleDialogs({
               const ok = await version.merge();
               if (ok) {
                 void navigate({
-                  params: { section: 'overview', tripId: sharedTripId },
+                  params: { section: 'board', tripId: sharedTripId },
                   search: {},
                   to: '/trips/$tripId/$section'
                 });

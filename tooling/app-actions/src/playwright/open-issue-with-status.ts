@@ -1,9 +1,10 @@
+import type { IssueStatus } from '#src/actions/set-issue-status';
 import { expectIssueStatus } from './expect-issue-status';
 import type { UiTarget } from './interaction';
 import { openIssueFromInbox } from './open-issue-from-inbox';
 
 export type OpenIssueWithStatusInput = {
-  status: 'closed' | 'open';
+  status: IssueStatus;
   title: string;
 };
 

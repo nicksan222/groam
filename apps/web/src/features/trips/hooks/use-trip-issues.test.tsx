@@ -22,6 +22,7 @@ const issueId = 'issue-1' as Id<'tripIssues'>;
 const openIssue = {
   author: { name: 'Alex Morgan', userId: 'user-alex' },
   body: 'Add a coast day near Lisbon.',
+  canAssign: true,
   canManage: true,
   comments: [],
   id: issueId,
@@ -39,63 +40,33 @@ beforeEach(() => {
 });
 
 describe('useTripIssues', () => {
-  test('creates an issue and exposes the issue query result', async () => {
-    const create = vi.fn().mockResolvedValue(issueId);
+  test('exposes the issue query result, or skips when disabled', async () => {
     convex.useQuery.mockReturnValue([{ id: issueId }]);
-    convex.useMutation.mockReturnValue(create);
     const { result } = await renderHook(() => useTripIssues(tripId));
-
-    await act(async () => {
-      expect(await result.current.createIssue('Coast day', 'Body')).toBe(issueId);
-    });
     expect(result.current.issues).toEqual([{ id: issueId }]);
-  });
+    expect(convex.useQuery).toHaveBeenCalledWith(expect.anything(), { tripId });
 
-  test('returns null and toasts when issue creation fails', async () => {
-    const create = vi.fn().mockRejectedValue(new Error('Trip is archived'));
-    convex.useMutation.mockReturnValue(create);
-    const { result } = await renderHook(() => useTripIssues(tripId));
-
-    let created: Id<'tripIssues'> | null = null;
-    await act(async () => {
-      created = await result.current.createIssue('Coast day', 'Add a coast day near Lisbon.');
-    });
-
-    expect(create).toHaveBeenCalledWith({
-      body: 'Add a coast day near Lisbon.',
-      title: 'Coast day',
-      tripId
-    });
-    expect(created).toBeNull();
-    expect(notifications.error).toHaveBeenCalledWith('Trip is archived');
+    await renderHook(() => useTripIssues(tripId, false));
+    expect(convex.useQuery).toHaveBeenLastCalledWith(expect.anything(), 'skip');
   });
 });
 
 describe('useTripIssue', () => {
-  test('runs successful comment, assignment, due-date, and status actions', async () => {
+  test('runs successful comment and due-date actions', async () => {
     const comment = vi.fn().mockResolvedValue(null);
-    const status = vi.fn().mockResolvedValue(null);
     const due = vi.fn().mockResolvedValue(null);
-    const assign = vi.fn().mockResolvedValue(null);
     convex.useQuery.mockReturnValue(openIssue);
     convex.useMutation
       .mockReturnValueOnce(vi.fn())
       .mockReturnValueOnce(comment)
-      .mockReturnValueOnce(status)
-      .mockReturnValueOnce(due)
-      .mockReturnValueOnce(assign);
+      .mockReturnValueOnce(due);
     const { result } = await renderHook(() => useTripIssue(issueId));
 
     await act(async () => {
       expect(await result.current.addComment('A note')).toBe(true);
-      expect(await result.current.assignUser('user-sam', 'Sam')).toBe(true);
       expect(await result.current.setDueAt(null)).toBe(true);
-      expect(await result.current.setStatus('closed')).toBe(true);
     });
-    expect(assign).toHaveBeenCalledWith({
-      assignee: { kind: 'user', name: 'Sam', userId: 'user-sam' },
-      issueId
-    });
+    expect(comment).toHaveBeenCalledWith({ content: 'A note', issueId });
     expect(due).toHaveBeenCalledWith({ dueAt: null, issueId });
   });
 
@@ -120,51 +91,6 @@ describe('useTripIssue', () => {
 
     expect(comment).toHaveBeenCalledWith({ content: 'Can we keep this flexible?', issueId });
     expect(notifications.error).toHaveBeenCalledWith('Issue is closed');
-  });
-
-  test('reports failed status updates without claiming success', async () => {
-    const status = vi.fn().mockRejectedValue(new Error('Only organizers can close issues'));
-    convex.useQuery.mockReturnValue(openIssue);
-    convex.useMutation.mockReturnValue(status);
-    const { result } = await renderHook(() => useTripIssue(issueId));
-
-    await act(async () => {
-      expect(await result.current.setStatus('closed')).toBe(false);
-    });
-
-    expect(status).toHaveBeenCalledWith({ issueId, status: 'closed' });
-    expect(notifications.error).toHaveBeenCalledWith('Only organizers can close issues');
-  });
-
-  test('reports failed Issue agent assignment without claiming success', async () => {
-    const assign = vi.fn().mockRejectedValue(new Error('Issue agent is unavailable'));
-    convex.useQuery.mockReturnValue(openIssue);
-    convex.useMutation.mockReturnValue(assign);
-    const { result } = await renderHook(() => useTripIssue(issueId));
-
-    await act(async () => {
-      expect(await result.current.assignIssueAgent()).toBe(false);
-    });
-
-    expect(assign).toHaveBeenCalledWith({
-      assignee: { agentId: 'issue', kind: 'agent', name: 'Issue agent' },
-      issueId
-    });
-    expect(notifications.error).toHaveBeenCalledWith('Issue agent is unavailable');
-  });
-
-  test('reports failed Issue agent unassignment without claiming success', async () => {
-    const assign = vi.fn().mockRejectedValue(new Error('Only organizers can assign issues'));
-    convex.useQuery.mockReturnValue(openIssue);
-    convex.useMutation.mockReturnValue(assign);
-    const { result } = await renderHook(() => useTripIssue(issueId));
-
-    await act(async () => {
-      expect(await result.current.unassign()).toBe(false);
-    });
-
-    expect(assign).toHaveBeenCalledWith({ assignee: null, issueId });
-    expect(notifications.error).toHaveBeenCalledWith('Only organizers can assign issues');
   });
 
   test('returns null and toasts when starting an idea from an issue fails', async () => {

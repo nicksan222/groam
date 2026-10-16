@@ -136,15 +136,11 @@ for (const name of undocumentedAgents([...agents.keys()], instructions)) {
   });
 }
 
-for (const file of [
-  'tooling/claude/mcp.json',
-  'tooling/claude/mcp.headroom.json',
-  'tooling/claude/settings.json'
-]) {
+for (const file of ['.mcp.json', '.claude/settings.json']) {
   const config = readJson(file);
   if (config === null) continue;
   findings.push(
-    ...(file.includes('/mcp.') ? checkMcpConfig(file, config) : checkSettings(file, config))
+    ...(file === '.mcp.json' ? checkMcpConfig(file, config) : checkSettings(file, config))
   );
 }
 

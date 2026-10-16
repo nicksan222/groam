@@ -83,7 +83,7 @@ export function renderHeaderAction(action: ActionProps, key: number): React.Reac
       disabled={isDisabled}
       className={cn(
         isPrimary &&
-          'border-primary/40 text-primary hover:border-primary hover:bg-primary/5 hover:text-primary dark:hover:bg-primary/10',
+          'border-primary/25 bg-primary/5 font-medium text-primary shadow-none hover:border-primary/50 hover:bg-primary/10 hover:text-primary dark:bg-primary/10 dark:hover:bg-primary/15',
         className,
         isResponsiveCompact && 'max-sm:size-9 max-sm:px-0',
         'rounded-md'

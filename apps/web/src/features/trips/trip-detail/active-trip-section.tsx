@@ -1,5 +1,5 @@
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
-import { TripActivityHistory } from '@/features/trips/trip-activity/trip-activity-history';
+import { TripBoard } from '@/features/trips/trip-board/trip-board';
 import { itineraryActionsFromTripState } from '@/features/trips/trip-destinations/itinerary-actions';
 import { TripDestinationsPanel } from '@/features/trips/trip-destinations/trip-destinations-panel';
 import { TripIdeasPanel } from '@/features/trips/trip-ideas/trip-ideas-panel';
@@ -8,10 +8,18 @@ import { TripOverview } from '@/features/trips/trip-overview/trip-overview';
 import { TripReadingOverview } from '@/features/trips/trip-overview/trip-reading-overview';
 import type { TripSection } from '@/features/trips/trip-sections';
 import type { TripNavigation, TripState } from './trip-detail-types';
+import { TripHistoryPage } from './trip-history-page';
+import { TripPlanPage } from './trip-plan-page';
 import { updateTripDuration } from './update-trip-duration';
 
+/**
+ * A trip's section body. A shared trip shows one of its tabs: board, overview, issues, ideas, or
+ * activity. The idea clone
+ * workspace also renders this for an idea's working trip, which is why the proposal branches stay.
+ */
 export function ActiveTripSection({
   addDestinationOpen,
+  day,
   navigation,
   onEdit,
   onStartVersion,
@@ -21,6 +29,7 @@ export function ActiveTripSection({
   tripState
 }: {
   addDestinationOpen: boolean;
+  day?: number;
   navigation: TripNavigation;
   onEdit: () => void;
   onStartVersion?: () => void;
@@ -29,7 +38,7 @@ export function ActiveTripSection({
   trip: TripDetail;
   tripState: TripState;
 }) {
-  const itinerary = (
+  const itinerary = () => (
     <TripDestinationsPanel
       {...itineraryActionsFromTripState(tripState)}
       addDestinationOpen={addDestinationOpen}
@@ -39,33 +48,30 @@ export function ActiveTripSection({
       trip={trip}
     />
   );
-  if ((section === 'overview' || section === 'itinerary') && !trip.permissions.canEdit) {
-    return <TripReadingOverview itinerary={itinerary} trip={trip} tripState={tripState} />;
+  if (!trip.proposal) {
+    if (section === 'activity') return <TripHistoryPage trip={trip} />;
+    if (section === 'issues') return <TripIssuesPanel trip={trip} />;
+    if (section === 'ideas')
+      return (
+        <TripIdeasPanel onStartIdea={onStartVersion} startingIdea={startingIdea} trip={trip} />
+      );
+    if (section === 'overview' || section === 'itinerary')
+      return <TripPlanPage day={day} itinerary={itinerary()} trip={trip} />;
+    return <TripBoard onStartIdea={onStartVersion} startingIdea={startingIdea} trip={trip} />;
   }
-  if (section === 'overview') {
-    return (
-      <TripOverview
-        hidePageCover
-        onAddDestination={navigation.openAddDestination}
-        onEditDetails={onEdit}
-        onOpenItinerary={() => navigation.openSection('itinerary')}
-        onStartVersion={onStartVersion}
-        onUpdateDuration={(totalDurationDays, startDate) =>
-          updateTripDuration(trip, tripState, totalDurationDays, startDate)
-        }
-        replaceCover={tripState.replaceCover}
-        retryCover={tripState.retryCover}
-        trip={trip}
-        tripState={tripState}
-      />
-    );
-  }
-  if (section === 'issues') {
-    return <TripIssuesPanel trip={trip} />;
-  }
-  if (section === 'ideas') {
-    return <TripIdeasPanel onStartIdea={onStartVersion} startingIdea={startingIdea} trip={trip} />;
-  }
-  if (section === 'itinerary') return itinerary;
-  return <TripActivityHistory activity={trip.activity} />;
+  if (!trip.permissions.canEdit) return <TripReadingOverview itinerary={itinerary()} trip={trip} />;
+  if (section === 'itinerary') return itinerary();
+  return (
+    <TripOverview
+      onAddDestination={navigation.openAddDestination}
+      onEditDetails={onEdit}
+      onOpenItinerary={() => navigation.openSection('itinerary')}
+      onStartVersion={onStartVersion}
+      onUpdateDuration={(totalDurationDays, startDate) =>
+        updateTripDuration(trip, tripState, totalDurationDays, startDate)
+      }
+      trip={trip}
+      tripState={tripState}
+    />
+  );
 }

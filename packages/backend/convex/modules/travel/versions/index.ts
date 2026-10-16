@@ -8,6 +8,7 @@ import { AgentRuns } from '#convex/modules/assistant/runs/index';
 import { requireWorkspace, workspaceRoster } from '#convex/modules/auth/workspace';
 import { Notifications } from '#convex/modules/notifications/index';
 import { insertWithShortId } from '#convex/modules/references/index';
+import { TripIssues } from '#convex/modules/travel/issues/index';
 import {
   isTripAdmin,
   loadTripContext,
@@ -489,31 +490,51 @@ async function create(
   return { ideaName, proposalId, workingTripId };
 }
 
-async function list(ctx: QueryCtx, sourceTripId: Id<'trips'>) {
-  await loadTripContext(ctx, sourceTripId);
+async function list(ctx: TripCtx<QueryCtx>) {
   const proposals = await ctx.db
     .query('tripProposals')
-    .withIndex('by_sourceTripId_and_updatedAt', (query) => query.eq('sourceTripId', sourceTripId))
+    .withIndex('by_sourceTripId_and_updatedAt', (query) => query.eq('sourceTripId', ctx.trip._id))
     .order('desc')
     .take(MAX_PROPOSALS + 1);
   if (proposals.length > MAX_PROPOSALS) {
     throw new ConvexError(`Trips support up to ${MAX_PROPOSALS} ideas`);
   }
-  return proposals.map((proposal) => ({
-    author: proposal.author,
-    baseUpdatedAt: proposal.baseUpdatedAt,
-    ideaName: ideaNameFor(proposal),
-    conflictCount: proposal.conflictPaths?.length ?? 0,
-    feedbackCount: proposal.feedbackCount ?? 0,
-    id: proposal._id,
-    issueId: proposal.issueId ?? null,
-    status: proposal.status,
-    submittedAt: proposal.submittedAt ?? null,
-    title: proposal.title,
-    unresolvedFeedbackCount: proposal.unresolvedFeedbackCount ?? 0,
-    updatedAt: proposal.updatedAt,
-    workingTripId: proposal.workingTripId
-  }));
+  // Only ideas under review can still be approved or merged; the rest need no reads.
+  const reviewing = proposals.filter((proposal) => proposal.status === 'in_review');
+  const voters = reviewing.length > 0 ? await eligibleVoters(ctx) : [];
+  const approvals = new Map(
+    await Promise.all(
+      reviewing.map(
+        async (proposal) => [proposal._id, await approvalsForProposal(ctx, proposal._id)] as const
+      )
+    )
+  );
+  return proposals.map((proposal) => {
+    const { capabilities, hasApproved } = reviewState(
+      proposal,
+      ctx,
+      approvals.get(proposal._id) ?? [],
+      voters
+    );
+    return {
+      author: proposal.author,
+      baseUpdatedAt: proposal.baseUpdatedAt,
+      canApprove: capabilities.canApprove,
+      canMerge: capabilities.canMerge,
+      ideaName: ideaNameFor(proposal),
+      conflictCount: proposal.conflictPaths?.length ?? 0,
+      feedbackCount: proposal.feedbackCount ?? 0,
+      hasApproved,
+      id: proposal._id,
+      issueId: proposal.issueId ?? null,
+      status: proposal.status,
+      submittedAt: proposal.submittedAt ?? null,
+      title: proposal.title,
+      unresolvedFeedbackCount: proposal.unresolvedFeedbackCount ?? 0,
+      updatedAt: proposal.updatedAt,
+      workingTripId: proposal.workingTripId
+    };
+  });
 }
 
 async function presentWorkspaceIdea(
@@ -597,29 +618,18 @@ async function get(ctx: QueryCtx, proposalId: Id<'tripProposals'>) {
     VersionSnapshots.create(ctx, source.trip),
     VersionSnapshots.create(ctx, working)
   ]);
-  const eligibleIds = new Set(eligibleReviewers(proposal, voters).map((voter) => voter.userId));
-  const eligibleApprovals = approvals.filter((approval) =>
-    eligibleIds.has(approval.approver.userId)
+  const { capabilities, eligibleApprovals, hasApproved, quorum, sourceChanged } = reviewState(
+    proposal,
+    source,
+    approvals,
+    voters
   );
-  const quorum = proposal.requiredApprovals ?? 1;
   // Ask-list candidates stay independent-only; self-approval is not "asking yourself".
   const availableReviewers = independentReviewers(proposal, voters).map((voter) => ({
     kind: 'user' as const,
     name: voter.name,
     userId: voter.userId
   }));
-  const sourceChanged = source.trip.updatedAt !== proposal.baseUpdatedAt;
-  const reviewReady =
-    isTripAdmin(source) &&
-    eligibleApprovals.length >= quorum &&
-    (proposal.unresolvedFeedbackCount ?? 0) === 0;
-  const capabilities = proposalCapabilities({
-    eligibleIds,
-    proposal,
-    reviewReady,
-    source,
-    sourceChanged
-  });
   const issue = await linkedIssue(ctx, proposal.issueId);
   return {
     approvalCount: eligibleApprovals.length,
@@ -645,9 +655,7 @@ async function get(ctx: QueryCtx, proposalId: Id<'tripProposals'>) {
     conflicts: VersionChanges.conflicts(base, current, proposed, proposal.conflictPaths ?? []),
     feedbackCount: proposal.feedbackCount ?? 0,
     groamReview: proposal.groamReview ?? null,
-    hasApproved: eligibleApprovals.some(
-      (approval) => approval.approver.userId === source.workspace.userId
-    ),
+    hasApproved,
     id: proposal._id,
     issue,
     mergeCommit: proposal.mergeCommit ?? null,
@@ -662,6 +670,44 @@ async function get(ctx: QueryCtx, proposalId: Id<'tripProposals'>) {
     unresolvedFeedbackCount: proposal.unresolvedFeedbackCount ?? 0,
     updatedAt: proposal.updatedAt,
     workingTripId: proposal.workingTripId
+  };
+}
+
+/**
+ * What the viewer can do with a proposal, derived from its approvals and the trip's voters. The
+ * detail and list queries both use this; the list only loads approvals for ideas in review, so
+ * it reports `hasApproved` only there.
+ */
+function reviewState(
+  proposal: Doc<'tripProposals'>,
+  source: TripCtx<QueryCtx>,
+  approvals: Array<Doc<'tripProposalApprovals'>>,
+  voters: Awaited<ReturnType<typeof eligibleVoters>>
+) {
+  const eligibleIds = new Set(eligibleReviewers(proposal, voters).map((voter) => voter.userId));
+  const eligibleApprovals = approvals.filter((approval) =>
+    eligibleIds.has(approval.approver.userId)
+  );
+  const quorum = proposal.requiredApprovals ?? 1;
+  const sourceChanged = source.trip.updatedAt !== proposal.baseUpdatedAt;
+  const reviewReady =
+    isTripAdmin(source) &&
+    eligibleApprovals.length >= quorum &&
+    (proposal.unresolvedFeedbackCount ?? 0) === 0;
+  return {
+    capabilities: proposalCapabilities({
+      eligibleIds,
+      proposal,
+      reviewReady,
+      source,
+      sourceChanged
+    }),
+    eligibleApprovals,
+    hasApproved: eligibleApprovals.some(
+      (approval) => approval.approver.userId === source.workspace.userId
+    ),
+    quorum,
+    sourceChanged
   };
 }
 
@@ -1238,11 +1284,11 @@ async function finishMerge({
   ]);
   if (proposal.issueId) {
     const issue = await ctx.db.get('tripIssues', proposal.issueId);
-    if (issue?.status === 'open') {
-      await ctx.db.patch('tripIssues', issue._id, {
-        closedAt: timestamp,
-        status: 'closed',
-        updatedAt: timestamp
+    if (issue?.tripId === source.trip._id) {
+      await TripIssues.closeAfterMerge(ctx, issue, {
+        actor: { name: source.workspace.viewerName, userId: source.workspace.userId },
+        ideaTitle: proposal.title,
+        timestamp
       });
     }
   }

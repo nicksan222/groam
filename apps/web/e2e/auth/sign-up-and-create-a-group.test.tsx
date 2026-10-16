@@ -7,7 +7,7 @@ import {
   uniqueTestUser
 } from '@groam/app-actions/vitest';
 import { expect, test } from 'vite-plus/test';
-import { openSignedOutApp } from '@/testing/open-app';
+import { openSignedOutApp } from '@/journeys/open-app';
 
 test('requires a typed group name before create group enables', async () => {
   await openSignedOutApp();

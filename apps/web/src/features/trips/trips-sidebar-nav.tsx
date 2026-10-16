@@ -153,7 +153,7 @@ export function TripsSidebarNav() {
             closeCreate();
             setOpenMobile(false);
             void navigate({
-              params: { section: 'overview', tripId },
+              params: { section: 'board', tripId },
               to: '/trips/$tripId/$section'
             });
           }}
@@ -164,10 +164,7 @@ export function TripsSidebarNav() {
 }
 
 async function copyTripLink(trip: TripListItem) {
-  const url = new URL(
-    `/trips/${trip.shortId ?? trip.id}/overview`,
-    window.location.origin
-  ).toString();
+  const url = new URL(`/trips/${trip.shortId ?? trip.id}/board`, window.location.origin).toString();
   try {
     await navigator.clipboard.writeText(url);
     toast.success('Trip link copied');

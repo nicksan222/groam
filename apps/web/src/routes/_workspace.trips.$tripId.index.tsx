@@ -7,5 +7,5 @@ export const Route = createFileRoute('/_workspace/trips/$tripId/')({
 function TripIndexRoute() {
   // Keep the reference as written; ReferenceProvider canonicalizes it once.
   const { tripId } = Route.useParams();
-  return <Navigate params={{ section: 'overview', tripId }} replace to="/trips/$tripId/$section" />;
+  return <Navigate params={{ section: 'board', tripId }} replace to="/trips/$tripId/$section" />;
 }

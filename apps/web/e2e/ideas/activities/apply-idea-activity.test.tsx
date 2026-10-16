@@ -15,7 +15,7 @@ import {
 } from '@groam/app-actions/vitest';
 import { expect, test } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
-import { openApp } from '@/testing/open-app';
+import { openApp } from '@/journeys/open-app';
 
 test('an approved idea activity appears on the shared itinerary only after applying it', async () => {
   await environment.mockDestinationSearch();
@@ -30,8 +30,8 @@ test('an approved idea activity appears on the shared itinerary only after apply
   await addStop({ first: true, name: 'Porto', notes: 'River', startDay: '4', endDay: '5' });
   await addActivity({ destination: 'Porto, Portugal', title: 'Waterfront walk' });
   await openSharedTrip();
-  await openAppPath(`trips/${tripId}/itinerary`);
-  const planner = page.getByRole('region', { name: 'Day planner' });
+  await openAppPath(`trips/${tripId}/board`);
+  const planner = page.getByRole('region', { name: /^Agreed plan/u });
   await expect.element(planner).toBeVisible();
   await expect.element(planner).not.toMatchTextContent('Waterfront walk');
   await openIdeaFromList({ title: ideaName }, 'continue');
@@ -40,13 +40,13 @@ test('an approved idea activity appears on the shared itinerary only after apply
   // A second person reviews: their own screens are covered by view tests, so they act through the backend.
   await arrange.approveIdea({ ideaName, memberEmail: reviewer.email, tripId: sharedTripId });
 
-  await openAppPath(`trips/${tripId}/itinerary`);
+  await openAppPath(`trips/${tripId}/board`);
   await expect.element(planner).toBeVisible();
   await expect.element(planner).not.toMatchTextContent('Waterfront walk');
   await openIdeaFromList({ title: ideaName }, 'view');
   await applyIdea();
   await openSharedTrip();
-  await openAppPath(`trips/${tripId}/itinerary`);
-  await expectPath(new RegExp(`/trips/${tripId}/itinerary`, 'u'));
+  await openAppPath(`trips/${tripId}/board`);
+  await expectPath(new RegExp(`/trips/${tripId}/board`, 'u'));
   await expect.element(planner).toMatchTextContent('Waterfront walk');
 });

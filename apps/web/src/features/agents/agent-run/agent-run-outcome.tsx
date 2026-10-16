@@ -1,84 +1,95 @@
+import Timeline from '@groam/ui/components/timeline';
 import { AlertCircle, CheckCircle2, CircleDashed, CircleStop, LoaderCircle } from 'lucide-react';
 import type { AgentRun } from '@/features/agents/hooks/use-agent';
+import { AgentRunToolbar } from './agent-run-toolbar';
 
 const presentation = {
   aborted: {
     icon: CircleStop,
-    title: 'This run was stopped',
-    description: 'Any activity recorded before it stopped is available below.',
-    tone: 'border-border bg-muted/30',
-    iconTone: 'bg-muted text-muted-foreground'
+    title: 'Run stopped',
+    description: 'Activity recorded before it stopped is above.',
+    badge: 'text-muted-foreground',
+    card: ''
   },
   complete: {
     icon: CheckCircle2,
     title: 'Run completed',
-    description: 'Review the results and recorded activity below.',
-    tone: 'border-success/25 bg-success/5',
-    iconTone: 'bg-success/10 text-success-foreground'
+    description: 'Results and activity are above.',
+    badge: 'border-success/40 bg-success/10 text-success-foreground',
+    card: 'border-success/30'
   },
   failed: {
     icon: AlertCircle,
-    title: 'This run couldn’t finish',
-    description: 'Review the error below before starting another run.',
-    tone: 'border-destructive/25 bg-destructive/5',
-    iconTone: 'bg-destructive/10 text-destructive'
+    title: 'Run failed',
+    description: 'Check the error before retrying.',
+    badge: 'border-destructive/40 bg-destructive/10 text-destructive',
+    card: 'border-destructive/30'
   },
   queued: {
     icon: CircleDashed,
-    title: 'Ready for the next step',
-    description: 'This run is queued. Activity will appear here when it starts.',
-    tone: 'border-border bg-muted/30',
-    iconTone: 'bg-muted text-muted-foreground'
+    title: 'Queued',
+    description: 'Activity appears when the run starts.',
+    badge: 'text-muted-foreground',
+    card: ''
   },
   running: {
     icon: LoaderCircle,
     title: 'Agent is working',
-    description: 'Activity updates automatically as the run progresses.',
-    tone: 'border-info/25 bg-info/5',
-    iconTone: 'bg-info/10 text-info-foreground'
+    description: 'Activity updates as the run progresses.',
+    badge: 'border-info/40 bg-info/10 text-info-foreground',
+    card: 'border-info/30'
   }
 } as const;
 
-export function AgentRunOutcome({ run }: { run: AgentRun }) {
+const providerErrorPattern =
+  /not authenticated|not configured|api key|unauthori[sz]ed|forbidden|\b40[13]\b|quota|insufficient credits|no (ai )?provider/i;
+
+/** Closing timeline entry: where the run ended up and what you can do next. */
+export function AgentRunOutcome({
+  onRetry,
+  onStop,
+  run
+}: {
+  onRetry?: (runId: AgentRun['id']) => Promise<unknown> | unknown;
+  onStop?: (runId: AgentRun['id']) => Promise<unknown> | unknown;
+  run: AgentRun;
+}) {
   const state = presentation[run.status];
   const Icon = state.icon;
-  const providerAuthError =
-    run.status === 'failed' &&
-    /not authenticated|invalid api key|unauthorized/i.test(run.error ?? '');
+  const providerError = run.status === 'failed' && providerErrorPattern.test(run.error ?? '');
+  const description = providerError
+    ? 'The model provider is not set up for this workspace. Add or fix a key in AI settings.'
+    : run.status === 'failed' && run.agentId === 'reviewer' && run.proposalId
+      ? 'Open the related idea to decide the next step.'
+      : state.description;
   return (
-    <section
-      aria-label="Run outcome"
-      aria-live="polite"
-      className={`rounded-xl border p-5 sm:p-6 ${state.tone}`}
-    >
-      <div className="flex items-start gap-3.5">
-        <span
-          className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${state.iconTone}`}
-        >
-          <Icon
-            aria-hidden
-            className={`size-5 ${run.status === 'running' ? 'motion-safe:animate-spin' : ''}`}
-          />
-        </span>
-        <div className="min-w-0 flex-1">
-          <h2 className="text-base font-semibold tracking-tight">{state.title}</h2>
-          <p className="mt-1 text-sm leading-6 text-muted-foreground">
-            {providerAuthError
-              ? 'The model provider could not authenticate this run. Reconnect a personal key in AI settings, or ask your organization or deployment admin to update the shared provider.'
-              : state.description}
-          </p>
-          {run.error ? (
-            <p className="mt-4 break-words whitespace-pre-wrap rounded-lg border border-destructive/15 bg-background/70 px-3.5 py-3 text-sm leading-6 text-destructive [overflow-wrap:anywhere]">
-              {run.error}
-            </p>
+    <Timeline.Item>
+      <Timeline.Badge className={state.badge}>
+        <Icon aria-hidden className={run.status === 'running' ? 'motion-safe:animate-spin' : ''} />
+      </Timeline.Badge>
+      <Timeline.Body className="block">
+        <Timeline.Card aria-label="Run outcome" aria-live="polite" className={state.card}>
+          <Timeline.CardBody className="space-y-1 px-3 py-2.5">
+            <p className="text-sm font-medium">{state.title}</p>
+            <p className="text-xs leading-5 text-muted-foreground">{description}</p>
+            {run.error ? (
+              <p className="mt-2 rounded-md bg-destructive/5 px-2.5 py-1.5 font-mono text-xs leading-5 break-words whitespace-pre-wrap text-destructive [overflow-wrap:anywhere]">
+                {run.error}
+              </p>
+            ) : null}
+          </Timeline.CardBody>
+          {onRetry ? (
+            <Timeline.CardActions className="justify-end border-t bg-muted/25 py-2">
+              <AgentRunToolbar
+                onRetry={onRetry}
+                onStop={onStop}
+                providerError={providerError}
+                run={run}
+              />
+            </Timeline.CardActions>
           ) : null}
-          {run.status === 'failed' && run.agentId === 'reviewer' && run.proposalId ? (
-            <p className="mt-3 text-xs leading-5 text-muted-foreground">
-              Open the related idea to review it and decide the next step.
-            </p>
-          ) : null}
-        </div>
-      </div>
-    </section>
+        </Timeline.Card>
+      </Timeline.Body>
+    </Timeline.Item>
   );
 }

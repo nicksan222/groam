@@ -4,8 +4,55 @@ import { useViewport } from '@groam/vitest-config/viewport';
 import type { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
-import { expectPhoneListRow, expectWideListRow } from '@/testing/phone-list';
-import { IssueList, type IssueListItem } from './issue-list';
+import type { Locator } from 'vite-plus/test/browser';
+import type { IssueListItem } from '@/types/issues';
+import { IssueList } from './issue-list';
+
+const listItem = {
+  assignee: null,
+  author: { name: 'Alex Morgan', userId: 'user-alex' },
+  canAssign: true,
+  canManage: true,
+  condition: null,
+  dueAt: null,
+  id: 'issue-1' as Id<'tripIssues'>,
+  idea: null,
+  labels: [],
+  rank: 0,
+  status: 'open',
+  title: 'Coast day',
+  updatedAt: Date.UTC(2026, 7, 17)
+} satisfies Omit<IssueListItem, 'tripName'>;
+
+const issueListItem = (over: Partial<IssueListItem> = {}): IssueListItem => ({
+  ...listItem,
+  tripName: 'Atlantic week',
+  ...over
+});
+
+/** The row's cells the browser currently shows, read fresh because a re-render replaces nodes. */
+function visibleCells(row: Locator): HTMLTableCellElement[] {
+  return [...row.element().querySelectorAll('td')].filter((cell) => cell.checkVisibility());
+}
+
+/** On a phone a list row keeps a readable title and its status, and the page never scrolls sideways. */
+async function expectPhoneListRow(row: Locator): Promise<void> {
+  await expect.element(row).toBeVisible();
+  await expect
+    .poll(() => row.element().querySelector('td')?.getBoundingClientRect().width)
+    .toBeGreaterThan(200);
+  await expect.poll(() => visibleCells(row)).toHaveLength(2);
+  await expect.element(page.getByRole('button', { name: 'Columns' })).not.toBeInTheDocument();
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
+    document.documentElement.clientWidth
+  );
+}
+
+/** On a wide screen a list row shows its secondary columns next to the title and status. */
+async function expectWideListRow(row: Locator): Promise<void> {
+  await expect.element(row).toBeVisible();
+  await expect.poll(() => visibleCells(row).length).toBeGreaterThan(2);
+}
 
 const navigate = vi.hoisted(() => vi.fn());
 
@@ -19,27 +66,15 @@ vi.mock('@tanstack/react-router', async (importOriginal) => ({
   useNavigate: () => navigate
 }));
 
-const issues: IssueListItem[] = [
-  {
-    assignee: null,
-    author: { name: 'Alex Morgan', userId: 'user-alex' },
-    id: 'issue-1' as Id<'tripIssues'>,
-    idea: null,
-    status: 'open',
-    title: 'Coast day',
-    tripName: 'Atlantic week',
-    updatedAt: Date.UTC(2026, 7, 17)
-  },
-  {
-    assignee: null,
+const issues = [
+  issueListItem(),
+  issueListItem({
     author: { name: 'Sam Planner', userId: 'user-sam' },
     id: 'issue-2' as Id<'tripIssues'>,
-    idea: null,
-    status: 'open',
     title: 'Museum morning',
     tripName: 'City break',
     updatedAt: Date.UTC(2026, 7, 10)
-  }
+  })
 ];
 
 async function renderList() {

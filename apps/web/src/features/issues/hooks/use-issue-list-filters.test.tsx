@@ -1,27 +1,36 @@
 import type { Id } from '@groam/backend/data-model';
 import { act, renderHook } from '@groam/vitest-config/react';
 import { describe, expect, test } from 'vite-plus/test';
-import type { IssueListItem } from './issue-list-item';
+import type { IssueListItem } from '@/types/issues';
 import { useIssueListFilters } from './use-issue-list-filters';
 
-function issue(
-  value: Partial<IssueListItem> & Pick<IssueListItem, 'id' | 'status' | 'title'>
-): IssueListItem {
-  return {
-    assignee: null,
-    author: { name: 'Ada', userId: 'user-1' },
-    idea: null,
-    tripName: 'Portugal',
-    updatedAt: 1,
-    ...value
-  };
-}
+const listItem = {
+  assignee: null,
+  author: { name: 'Alex Morgan', userId: 'user-alex' },
+  canAssign: true,
+  canManage: true,
+  condition: null,
+  dueAt: null,
+  id: 'issue-1' as Id<'tripIssues'>,
+  idea: null,
+  labels: [],
+  rank: 0,
+  status: 'open',
+  title: 'Coast day',
+  updatedAt: Date.UTC(2026, 7, 17)
+} satisfies Omit<IssueListItem, 'tripName'>;
+
+const issueListItem = (over: Partial<IssueListItem> = {}): IssueListItem => ({
+  ...listItem,
+  tripName: 'Atlantic week',
+  ...over
+});
 
 describe('useIssueListFilters', () => {
   test('defaults to open issues', async () => {
     const issues = [
-      issue({ id: 'i1' as Id<'tripIssues'>, status: 'open', title: 'Coast' }),
-      issue({ id: 'i2' as Id<'tripIssues'>, status: 'closed', title: 'Done' })
+      issueListItem({ id: 'i1' as Id<'tripIssues'>, status: 'open', title: 'Coast' }),
+      issueListItem({ id: 'i2' as Id<'tripIssues'>, status: 'closed', title: 'Done' })
     ];
     const { result } = await renderHook(() =>
       useIssueListFilters({
@@ -37,8 +46,8 @@ describe('useIssueListFilters', () => {
 
   test('honors an external default status', async () => {
     const issues = [
-      issue({ id: 'i1' as Id<'tripIssues'>, status: 'open', title: 'Coast' }),
-      issue({ id: 'i2' as Id<'tripIssues'>, status: 'closed', title: 'Done' })
+      issueListItem({ id: 'i1' as Id<'tripIssues'>, status: 'open', title: 'Coast' }),
+      issueListItem({ id: 'i2' as Id<'tripIssues'>, status: 'closed', title: 'Done' })
     ];
     const { result } = await renderHook(() =>
       useIssueListFilters({

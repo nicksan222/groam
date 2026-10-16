@@ -2,7 +2,7 @@ import { expect, test } from 'vite-plus/test';
 import { api } from '#convex-generated/api';
 import { insertWithShortId } from '#convex/modules/references/index';
 import { createOutsiderClient } from '#testing/factory';
-import { setupGroup, setupTrip } from '#testing/trips';
+import { isStarterIssue, setupGroup, setupTrip, STARTER_ISSUE_COUNT } from '#testing/trips';
 
 test(
   'stores six-letter IDs and resolves both forms with workspace isolation',
@@ -76,7 +76,9 @@ test(
       owner.test.run((ctx) => insertWithShortId(ctx, 'tripIssues', value, () => 'aaaaaa'))
     ).rejects.toThrow('unique reference');
     const issues = await owner.client.query(api.routes.trips.issues.list.run, { tripId });
-    expect(issues.map((issue) => issue.shortId).sort()).toEqual(['aaaaaa', 'bbbbbb']);
+    const forced = issues.filter((issue) => !isStarterIssue(issue));
+    expect(forced.map((issue) => issue.shortId).sort()).toEqual(['aaaaaa', 'bbbbbb']);
+    expect(issues).toHaveLength(forced.length + STARTER_ISSUE_COUNT);
   }
 );
 

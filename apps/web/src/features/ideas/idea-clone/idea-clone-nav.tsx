@@ -1,7 +1,8 @@
-import Shell from '@groam/ui/components/shell/client';
 import { ideaCompareTabLabel } from '@/features/ideas/idea-glossary';
+import { TripTabs } from '@/features/trips/trip-detail/trip-tabs';
 import { tripSectionLabels } from '@/features/trips/trip-sections';
 import { testIds } from '@/lib/test-ids';
+import type { TripTabItem } from '@/types/trip-tabs';
 import type { IdeaCloneView } from './idea-sections';
 
 // oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
@@ -23,63 +24,59 @@ export type IdeaCloneNavLoadingProps = {
 // oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type IdeaCloneNavProps = IdeaCloneNavLoadedProps | IdeaCloneNavLoadingProps;
 
+const loadingCompareLabel = ideaCompareTabLabel(0).replace(/\d+/u, '…');
+
 export function IdeaCloneNav(props: IdeaCloneNavProps) {
   if (props.isLoading) {
-    const active = props.view ?? 'overview';
     return (
-      <Shell.UnderlineNav aria-label="Idea plan">
-        <Shell.Tab
-          data-testid={testIds.tripSectionOverview}
-          disabled
-          isActive={active === 'overview'}
-          position="top"
-          title={tripSectionLabels.overview}
-        />
-        <Shell.Tab
-          data-testid={testIds.tripSectionItinerary}
-          disabled
-          isActive={active === 'itinerary'}
-          position="top"
-          title={`${tripSectionLabels.itinerary} (…)`}
-        />
-        <Shell.Tab
-          data-testid={testIds.ideaSectionCompare}
-          disabled
-          isActive={active === 'compare'}
-          position="top"
-          title={ideaCompareTabLabel(0).replace(/\d+/u, '…')}
-        />
-      </Shell.UnderlineNav>
+      <TripTabs
+        activeKey={props.view ?? 'overview'}
+        ariaLabel="Idea plan"
+        disabled
+        tabs={[
+          {
+            key: 'overview',
+            label: tripSectionLabels.overview,
+            testId: testIds.tripSectionOverview
+          },
+          {
+            count: '…',
+            key: 'itinerary',
+            label: tripSectionLabels.itinerary,
+            testId: testIds.tripSectionItinerary
+          },
+          { key: 'compare', label: loadingCompareLabel, testId: testIds.ideaSectionCompare }
+        ]}
+      />
     );
   }
 
   const { changeCount, onOpen, stopCount, view, viewOnly = false } = props;
+  const tabs: Array<TripTabItem<IdeaCloneView>> = [
+    {
+      key: 'overview',
+      label: viewOnly ? 'Plan' : tripSectionLabels.overview,
+      testId: testIds.tripSectionOverview
+    },
+    ...(viewOnly
+      ? []
+      : [
+          {
+            count: stopCount,
+            key: 'itinerary' as const,
+            label: tripSectionLabels.itinerary,
+            testId: testIds.tripSectionItinerary
+          }
+        ]),
+    { key: 'compare', label: ideaCompareTabLabel(changeCount), testId: testIds.ideaSectionCompare }
+  ];
 
   return (
-    <Shell.UnderlineNav aria-label="Idea plan">
-      <Shell.Tab
-        data-testid={testIds.tripSectionOverview}
-        isActive={view === 'overview' || (viewOnly && view === 'itinerary')}
-        onClick={() => onOpen('overview')}
-        position="top"
-        title={viewOnly ? 'Plan' : tripSectionLabels.overview}
-      />
-      {!viewOnly ? (
-        <Shell.Tab
-          data-testid={testIds.tripSectionItinerary}
-          isActive={view === 'itinerary'}
-          onClick={() => onOpen('itinerary')}
-          position="top"
-          title={`${tripSectionLabels.itinerary} (${stopCount})`}
-        />
-      ) : null}
-      <Shell.Tab
-        data-testid={testIds.ideaSectionCompare}
-        isActive={view === 'compare'}
-        onClick={() => onOpen('compare')}
-        position="top"
-        title={ideaCompareTabLabel(changeCount)}
-      />
-    </Shell.UnderlineNav>
+    <TripTabs
+      activeKey={viewOnly && view === 'itinerary' ? 'overview' : view}
+      ariaLabel="Idea plan"
+      onOpen={onOpen}
+      tabs={tabs}
+    />
   );
 }

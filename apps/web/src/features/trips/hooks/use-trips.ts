@@ -1,6 +1,5 @@
 import { api } from '@groam/backend/api';
 import type { Id } from '@groam/backend/data-model';
-import { toast } from '@groam/ui/components/toast';
 import { useAction, useMutation, usePaginatedQuery, useQuery } from 'convex/react';
 import { useCallback, useMemo } from 'react';
 import {
@@ -8,7 +7,7 @@ import {
   uploadToConvexStorage
 } from '@/features/media/convex-storage-upload';
 import { useWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
-import { errorMessage } from '@/lib/errors';
+import { attempt, attemptValue } from '@/lib/errors';
 import type {
   CreateTripInput,
   TripBoundary,
@@ -72,22 +71,18 @@ export function useTrips(
   const uploadMutation = useMutation(api.routes.trips.upload.run);
 
   const createTrip = useCallback(
-    async (input: CreateTripInput, cover: File | null) => {
-      try {
+    (input: CreateTripInput, cover: File | null) =>
+      attemptValue(async () => {
         const coverStorageId = cover
           ? await uploadCover(cover, () => uploadMutation({}))
           : undefined;
-        return await createMutation({
+        return createMutation({
           input: {
             ...input,
             ...(coverStorageId ? { coverContentType: cover?.type, coverStorageId } : {})
           }
         });
-      } catch (error: unknown) {
-        toast.error(errorMessage(error, 'Unable to create trip'));
-        return null;
-      }
-    },
+      }, 'Unable to create trip'),
     [createMutation, uploadMutation]
   );
 
@@ -114,23 +109,20 @@ export function useWorkspaceTripProposals(options?: { initialNumItems?: number }
   };
 }
 
-// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
-type RunTripAction = (action: () => Promise<unknown>, fallback: string) => Promise<boolean>;
-
-function useTripCoreActions(tripId: Id<'trips'>, run: RunTripAction) {
+function useTripCoreActions(tripId: Id<'trips'>) {
   const updateMutation = useMutation(api.routes.trips.update.run);
   const archiveMutation = useMutation(api.routes.trips.archive.run);
   const restoreMutation = useMutation(api.routes.trips.restore.run);
 
   return {
-    archive: () => run(() => archiveMutation({ tripId }), 'Unable to archive trip'),
-    restore: () => run(() => restoreMutation({ tripId }), 'Unable to restore trip'),
+    archive: () => attempt(() => archiveMutation({ tripId }), 'Unable to archive trip'),
+    restore: () => attempt(() => restoreMutation({ tripId }), 'Unable to restore trip'),
     update: (input: TripUpdateInput) =>
-      run(() => updateMutation({ input, tripId }), 'Unable to update trip')
+      attempt(() => updateMutation({ input, tripId }), 'Unable to update trip')
   };
 }
 
-function useDestinationActions(tripId: Id<'trips'>, run: RunTripAction) {
+function useDestinationActions(tripId: Id<'trips'>) {
   const addMutation = useMutation(api.routes.trips.destinations.add.run);
   const moveMutation = useMutation(api.routes.trips.destinations.move.run);
   const removeMutation = useMutation(api.routes.trips.destinations.remove.run);
@@ -138,23 +130,23 @@ function useDestinationActions(tripId: Id<'trips'>, run: RunTripAction) {
 
   return {
     addDestination: (input: TripDestinationInput) =>
-      run(() => addMutation({ input, tripId }), 'Unable to add the destination'),
+      attempt(() => addMutation({ input, tripId }), 'Unable to add the destination'),
     moveDestination: (destinationId: Id<'tripDestinations'>, direction: 'earlier' | 'later') =>
-      run(
+      attempt(
         () => moveMutation({ destinationId, direction, tripId }),
         'Unable to move the destination'
       ),
     removeDestination: (destinationId: Id<'tripDestinations'>) =>
-      run(() => removeMutation({ destinationId, tripId }), 'Unable to remove the destination'),
+      attempt(() => removeMutation({ destinationId, tripId }), 'Unable to remove the destination'),
     updateDestination: (destinationId: Id<'tripDestinations'>, schedule: TripDestinationSchedule) =>
-      run(
+      attempt(
         () => updateMutation({ ...schedule, destinationId, tripId }),
         'Unable to update the destination plan'
       )
   };
 }
 
-function useActivityActions(tripId: Id<'trips'>, run: RunTripAction) {
+function useActivityActions(tripId: Id<'trips'>) {
   const addMutation = useMutation(api.routes.trips.destinations.activities.add.run);
   const removeMutation = useMutation(api.routes.trips.destinations.activities.remove.run);
   const reorderMutation = useMutation(api.routes.trips.destinations.activities.reorder.run);
@@ -162,34 +154,35 @@ function useActivityActions(tripId: Id<'trips'>, run: RunTripAction) {
 
   return {
     addActivity: (destinationId: Id<'tripDestinations'>, input: TripDestinationActivityInput) =>
-      run(() => addMutation({ destinationId, input, tripId }), 'Unable to add the activity'),
+      attempt(() => addMutation({ destinationId, input, tripId }), 'Unable to add the activity'),
     removeActivity: (activityId: Id<'tripDestinationActivities'>) =>
-      run(() => removeMutation({ activityId, tripId }), 'Unable to remove the activity'),
+      attempt(() => removeMutation({ activityId, tripId }), 'Unable to remove the activity'),
     reorderActivities: (destinationId: Id<'tripDestinations'>) =>
-      run(() => reorderMutation({ destinationId, tripId }), 'Unable to reorder the activities'),
+      attempt(() => reorderMutation({ destinationId, tripId }), 'Unable to reorder the activities'),
     updateActivity: (
       activityId: Id<'tripDestinationActivities'>,
       input: TripDestinationActivityInput
-    ) => run(() => updateMutation({ activityId, input, tripId }), 'Unable to update the activity')
+    ) =>
+      attempt(() => updateMutation({ activityId, input, tripId }), 'Unable to update the activity')
   };
 }
 
-function useStayActions(tripId: Id<'trips'>, run: RunTripAction) {
+function useStayActions(tripId: Id<'trips'>) {
   const addMutation = useMutation(api.routes.trips.destinations.stays.add.run);
   const removeMutation = useMutation(api.routes.trips.destinations.stays.remove.run);
   const updateMutation = useMutation(api.routes.trips.destinations.stays.update.run);
 
   return {
     addStay: (destinationId: Id<'tripDestinations'>, input: TripStayInput) =>
-      run(() => addMutation({ destinationId, input, tripId }), 'Unable to add the stay'),
+      attempt(() => addMutation({ destinationId, input, tripId }), 'Unable to add the stay'),
     removeStay: (stayId: Id<'tripDestinationStays'>) =>
-      run(() => removeMutation({ stayId, tripId }), 'Unable to remove the stay'),
+      attempt(() => removeMutation({ stayId, tripId }), 'Unable to remove the stay'),
     updateStay: (stayId: Id<'tripDestinationStays'>, input: TripStayInput) =>
-      run(() => updateMutation({ input, stayId, tripId }), 'Unable to update the stay')
+      attempt(() => updateMutation({ input, stayId, tripId }), 'Unable to update the stay')
   };
 }
 
-function useTransferActions(tripId: Id<'trips'>, run: RunTripAction) {
+function useTransferActions(tripId: Id<'trips'>) {
   const setBoundaryMutation = useMutation(api.routes.trips.transfers.set.run);
   const removeBoundaryMutation = useMutation(api.routes.trips.transfers.remove.run);
   const setDestinationMutation = useMutation(api.routes.trips.destinations.transfers.set.run);
@@ -203,17 +196,17 @@ function useTransferActions(tripId: Id<'trips'>, run: RunTripAction) {
 
   return {
     removeActivityTransfer: (transferId: Id<'tripActivityTransfers'>) =>
-      run(
+      attempt(
         () => removeActivityMutation({ transferId, tripId }),
         'Unable to remove activity travel details'
       ),
     removeBoundaryTransfer: (transferId: Id<'tripBoundaryTransfers'>) =>
-      run(
+      attempt(
         () => removeBoundaryMutation({ transferId, tripId }),
         'Unable to remove arrival or return travel details'
       ),
     removeDestinationTransfer: (transferId: Id<'tripDestinationTransfers'>) =>
-      run(
+      attempt(
         () => removeDestinationMutation({ transferId, tripId }),
         'Unable to remove destination travel details'
       ),
@@ -222,12 +215,12 @@ function useTransferActions(tripId: Id<'trips'>, run: RunTripAction) {
       toActivityId: Id<'tripDestinationActivities'>,
       input: TripTransferInput
     ) =>
-      run(
+      attempt(
         () => setActivityMutation({ fromActivityId, input, toActivityId, tripId }),
         'Unable to save activity travel details'
       ),
     setBoundaryTransfer: (boundary: TripBoundary, input: TripTransferInput) =>
-      run(
+      attempt(
         () => setBoundaryMutation({ boundary, input, tripId }),
         'Unable to save arrival or return travel details'
       ),
@@ -236,25 +229,18 @@ function useTransferActions(tripId: Id<'trips'>, run: RunTripAction) {
       toDestinationId: Id<'tripDestinations'>,
       input: TripTransferInput
     ) =>
-      run(
+      attempt(
         () => setDestinationMutation({ fromDestinationId, input, toDestinationId, tripId }),
         'Unable to save destination travel details'
       )
   };
 }
 
-function useCoverActions(tripId: Id<'trips'>, run: RunTripAction) {
-  const coverMutation = useAction(api.routes.trips.cover.run);
+function useCoverActions(tripId: Id<'trips'>) {
   const retryMutation = useMutation(api.routes.trips.cover.retry.run);
-  const uploadMutation = useMutation(api.routes.trips.upload.run);
 
   return {
-    replaceCover: (cover: File) =>
-      run(async () => {
-        const storageId = await uploadCover(cover, () => uploadMutation({}));
-        await coverMutation({ contentType: cover.type, storageId, tripId });
-      }, 'Unable to replace the cover image'),
-    retryCover: () => run(() => retryMutation({ tripId }), 'Unable to find another cover image')
+    retryCover: () => attempt(() => retryMutation({ tripId }), 'Unable to find another cover image')
   };
 }
 
@@ -269,23 +255,14 @@ export function useTrip(tripId: Id<'trips'>) {
   );
   useEnsureDestinationCovers(tripId, trip);
   useEnsureTripCover(tripId, trip);
-  const run = useCallback<RunTripAction>(async (action, fallback) => {
-    try {
-      await action();
-      return true;
-    } catch (error: unknown) {
-      toast.error(errorMessage(error, fallback));
-      return false;
-    }
-  }, []);
 
   return {
-    ...useActivityActions(tripId, run),
-    ...useCoverActions(tripId, run),
-    ...useDestinationActions(tripId, run),
-    ...useStayActions(tripId, run),
-    ...useTransferActions(tripId, run),
-    ...useTripCoreActions(tripId, run),
+    ...useActivityActions(tripId),
+    ...useCoverActions(tripId),
+    ...useDestinationActions(tripId),
+    ...useStayActions(tripId),
+    ...useTransferActions(tripId),
+    ...useTripCoreActions(tripId),
     exists,
     trip
   };

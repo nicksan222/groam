@@ -2,6 +2,7 @@ import { ConvexError, type Infer } from 'convex/values';
 import type { Id } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import { workspaceRoster } from '#convex/modules/auth/workspace';
+import { syncTripConditions } from '#convex/modules/travel/issues/sync';
 import type { TripTravelerValidators } from '#convex/modules/travel/travelers/schema';
 import { isTripAdmin, type TripCtx } from '#convex/modules/travel/trips/ctx';
 
@@ -87,17 +88,19 @@ export async function setTravelerStatus(
   const now = Date.now();
   if (existing) {
     await ctx.db.patch('tripTravelers', existing._id, { status, updatedAt: now });
-    return null;
+  } else {
+    await ctx.db.insert('tripTravelers', {
+      handle: member.handle,
+      name: member.name,
+      organizationId: ctx.workspace.organizationId,
+      status,
+      tripId: ctx.trip._id,
+      updatedAt: now,
+      userId
+    });
   }
-  await ctx.db.insert('tripTravelers', {
-    handle: member.handle,
-    name: member.name,
-    organizationId: ctx.workspace.organizationId,
-    status,
-    tripId: ctx.trip._id,
-    updatedAt: now,
-    userId
-  });
+  // RSVPs change the shared trip directly, so "done when" rules over them re-check here.
+  await syncTripConditions(ctx);
   return null;
 }
 

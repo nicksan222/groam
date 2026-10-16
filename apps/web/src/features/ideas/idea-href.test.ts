@@ -1,6 +1,6 @@
 import type { Id } from '@groam/backend/data-model';
 import { expect, test } from 'vite-plus/test';
-import { ideaCloneHref, ideaDetailHref, ideaListHref, ideaWorkspaceHref } from './idea-href';
+import { ideaCloneHref, ideaDetailHref, ideaSharedTripHref, ideaWorkspaceHref } from './idea-href';
 
 const proposalId = 'idea-review' as Id<'tripProposals'>;
 const sourceTripId = 'trip-source' as Id<'trips'>;
@@ -60,9 +60,9 @@ test('ideaDetailHref always targets the idea page', () => {
   });
 });
 
-test('ideaListHref uses the ideas section', () => {
-  expect(ideaListHref(sourceTripId)).toEqual({
-    params: { section: 'ideas', tripId: sourceTripId },
+test('ideaSharedTripHref opens the shared trip board', () => {
+  expect(ideaSharedTripHref(sourceTripId)).toEqual({
+    params: { section: 'board', tripId: sourceTripId },
     search: {},
     to: '/trips/$tripId/$section'
   });

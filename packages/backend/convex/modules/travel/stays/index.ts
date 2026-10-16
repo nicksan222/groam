@@ -2,7 +2,8 @@ import { ConvexError, type Infer } from 'convex/values';
 import type { Doc, Id } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import { Attachments } from '#convex/modules/media/attachments/index';
-import type { TripStayValidators } from '#convex/modules/travel/stays/schema';
+import { syncTripConditions } from '#convex/modules/travel/issues/sync';
+import { MAX_STAYS_PER_TRIP, type TripStayValidators } from '#convex/modules/travel/stays/schema';
 import { costsMatch } from '#convex/modules/travel/trips/costs';
 import {
   assertDayWithinTrip,
@@ -24,7 +25,7 @@ export type TripStayInput = Infer<typeof TripStayValidators.input>;
 export class TripStay {
   static readonly MAX_ATTACHMENTS = 5;
   static readonly MAX_PER_DESTINATION = 20;
-  static readonly MAX_PER_TRIP = 100;
+  static readonly MAX_PER_TRIP = MAX_STAYS_PER_TRIP;
 
   private constructor(
     private readonly ctx: MutationCtx,
@@ -74,6 +75,7 @@ export class TripStay {
       tripId
     });
     await patchTrip(trip, { updatedAt: Date.now() });
+    await syncTripConditions(trip);
     await recordActivity(
       trip,
       'stay_added',
@@ -113,7 +115,6 @@ export class TripStay {
     });
     const detailsMatch = TripStay.matches(this.data, normalized);
     if (detailsMatch && !attachmentsChanged) return null;
-    await patchTrip(this.trip, { updatedAt: Date.now() });
     if (!detailsMatch)
       await this.ctx.db.patch('tripDestinationStays', this.data._id, {
         ...normalized,
@@ -122,6 +123,7 @@ export class TripStay {
         notes: normalized.notes
       });
     await patchTrip(this.trip, { updatedAt: Date.now() });
+    await syncTripConditions(this.trip);
     await recordActivity(
       this.trip,
       'stay_updated',
@@ -143,6 +145,7 @@ export class TripStay {
       )
     );
     await patchTrip(this.trip, { updatedAt: Date.now() });
+    await syncTripConditions(this.trip);
     await recordActivity(
       this.trip,
       'stay_removed',

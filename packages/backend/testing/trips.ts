@@ -1,5 +1,6 @@
 import { api } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
+import { STARTER_ISSUES } from '#convex/modules/travel/issues/starters';
 import type { TripCurrency } from '#convex/modules/travel/trips/currencies';
 import { createAuthenticatedTest, createTestUser } from '#testing/factory';
 
@@ -179,13 +180,20 @@ export function tripLocationInput(
 export async function openTripDraft(
   owner: Pick<Awaited<ReturnType<typeof createAuthenticatedTest>>, 'client'>,
   tripId: Id<'trips'>,
-  options?: { ideaName?: string; title?: string }
+  options?: { ideaName?: string; issueId?: Id<'tripIssues'>; title?: string }
 ) {
   return await owner.client.mutation(api.routes.trips.versions.create.run, {
     tripId,
     ...options
   });
 }
+
+/** Starter issues a trip with no destination, dates, or length opens with. */
+export const STARTER_ISSUE_COUNT = STARTER_ISSUES.length;
+
+/** Starters are told apart by title: only the mandatory ones carry a label. */
+export const isStarterIssue = (issue: { title: string }) =>
+  STARTER_ISSUES.some(({ title }) => title === issue.title);
 
 export async function setupTrip(additionalMemberCount = 3) {
   const group = await setupGroup();
@@ -198,6 +206,14 @@ export async function setupTrip(additionalMemberCount = 3) {
     input: tripInput()
   });
   return { ...group, tripId, users };
+}
+
+/** A trip with one member who can review ideas. */
+export async function setupReviewedTrip() {
+  const trip = await setupTrip(1);
+  const [reviewer] = trip.users;
+  if (!reviewer) throw new Error('Expected a reviewer');
+  return { ...trip, reviewer };
 }
 
 export async function setupWritableTrip(additionalMemberCount = 3) {

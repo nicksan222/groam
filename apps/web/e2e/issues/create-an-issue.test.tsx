@@ -4,21 +4,22 @@ import {
   assignIssue,
   by,
   createIssue,
+  expectIssueInLane,
   expectPath,
   filterIssuesByStatus,
   ids,
+  issueCard,
   issueRow,
-  openAppPath,
+  openTripBoard,
   openIssueFromInbox,
   openIssuesInbox,
   openTrip,
-  openTripSection,
   presentAttribute,
   setIssueStatus,
   uniqueSuffix
 } from '@groam/app-actions/vitest';
 import { expect, test } from 'vite-plus/test';
-import { openApp } from '@/testing/open-app';
+import { openApp } from '@/journeys/open-app';
 
 test('creates a trip issue and opens it as a first-class page', async () => {
   const suffix = uniqueSuffix();
@@ -26,7 +27,7 @@ test('creates a trip issue and opens it as a first-class page', async () => {
   const issueTitle = `Rainy-day plan ${suffix}`;
   const issueBody = 'Add a backup indoor day if it rains.';
 
-  const { credentials } = await arrange.account();
+  await arrange.account();
   await openApp();
   const tripId = await openTrip(await arrange.createTrip({ name: tripName }));
   const issueId = await createIssue({ body: issueBody, title: issueTitle });
@@ -34,10 +35,10 @@ test('creates a trip issue and opens it as a first-class page', async () => {
 
   await addIssueComment(`Need a museum option (${suffix})`);
 
-  // Assigning a traveler keeps the flow independent of AI keys; Groam assignment is covered by
+  // Assigning me keeps the flow independent of ChatGPT authorization; Groam assignment is covered by
   // the assignee picker's view tests and the backend's agent-run tests.
-  await assignIssue({ kind: 'user', name: credentials.name });
-  await expect.element(by(ids.issueToggleStatus)).toBeEnabled();
+  await assignIssue({ kind: 'me' });
+  await expect.element(by(ids.issueStatus)).toBeEnabled();
 
   await setIssueStatus('closed');
 
@@ -50,11 +51,10 @@ test('creates a trip issue and opens it as a first-class page', async () => {
   await expectPath(new RegExp(`/issues/${issueId}`, 'u'));
   await expect.element(by(ids.issueHeading)).toHaveAttribute('data-issue-id', issueRecordId);
 
-  await openAppPath(`trips/${tripId}/issues`);
-  await expectPath(new RegExp(`/trips/${tripId}/issues`, 'u'));
-  await openTripSection('issues');
-  await filterIssuesByStatus('closed');
+  // The trip board lists the closed issue in its Done lane.
+  await openTripBoard(tripId);
+  await expectIssueInLane(issueTitle, 'closed');
   await expect
-    .element(issueRow(issueTitle).getByRole('link').first())
+    .element(issueCard(issueTitle).getByRole('link').first())
     .toHaveAttribute('href', `/issues/${issueId}`);
 });

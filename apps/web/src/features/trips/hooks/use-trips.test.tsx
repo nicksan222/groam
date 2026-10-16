@@ -117,10 +117,8 @@ test('skips trip pagination on request and exposes workspace proposals', async (
 });
 
 test('exposes trip mutations for planning, travel details, and cover management', async () => {
-  const mutations = Array.from({ length: 22 }, () => vi.fn().mockResolvedValue(null));
-  const cover = vi.fn().mockResolvedValue(null);
+  const mutations = Array.from({ length: 21 }, () => vi.fn().mockResolvedValue(null));
   convex.useMutation.mockImplementation(() => mutations.shift());
-  convex.useAction.mockReturnValue(cover);
   convex.useQuery.mockReturnValue({ id: 'trip-1', name: 'Portugal' });
   storage.uploadToConvexStorage.mockResolvedValue({
     ok: true,
@@ -159,15 +157,9 @@ test('exposes trip mutations for planning, travel details, and cover management'
       {} as never
     );
     await result.current.retryCover();
-    await result.current.replaceCover(new File(['cover'], 'cover.jpg', { type: 'image/jpeg' }));
   });
 
   expect(mutations).toEqual([]);
-  expect(cover).toHaveBeenCalledWith({
-    contentType: 'image/jpeg',
-    storageId: 'cover-storage',
-    tripId: 'trip-1'
-  });
   expect(result.current.exists).toBe(true);
   expect(result.current.trip).toMatchObject({ groupMemberCount: 0, name: 'Portugal' });
 });

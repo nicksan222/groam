@@ -3,15 +3,31 @@ import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
 import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
+import type { TripListItem } from '@/features/trips/hooks/use-trips';
 import { resetSidebarChromeStore, useSidebarChromeStore } from '@/lib/stores/sidebar-chrome-store';
-import { tripListItem } from './test-fixtures';
 import { TripsSidebarNav } from './trips-sidebar-nav';
+
+function trip(overrides: Partial<TripListItem> = {}): TripListItem {
+  return {
+    archivedAt: null,
+    coverUrl: null,
+    dateNotes: 'Late September',
+    destination: 'Lisbon',
+    favorite: false,
+    id: 'trips:trip-1' as TripListItem['id'],
+    lastUpdatedAt: Date.UTC(2026, 7, 17),
+    name: 'Atlantic week',
+    nextAction: 'Continue planning together',
+    outstandingActionCount: 0,
+    ...overrides
+  };
+}
 
 const state = vi.hoisted(() => ({
   isLoading: false,
   pathname: '/trips',
   status: 'Exhausted' as 'CanLoadMore' | 'Done' | 'Exhausted' | 'LoadingFirstPage' | 'LoadingMore',
-  trips: [] as ReturnType<typeof tripListItem>[]
+  trips: [] as TripListItem[]
 }));
 
 vi.mock('@tanstack/react-router', async (importOriginal) => ({
@@ -73,7 +89,7 @@ test('offers a new trip item when the portfolio is empty', async () => {
 });
 
 test('lists trips and collapses them from the parent action without leaving the index link', async () => {
-  state.trips = [tripListItem({ name: 'Atlantic week' })];
+  state.trips = [trip({ name: 'Atlantic week' })];
 
   await renderNav();
   await expect.element(page.getByText('Atlantic week')).toBeInTheDocument();

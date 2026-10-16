@@ -9,7 +9,7 @@ import {
   uniqueSuffix
 } from '@groam/app-actions/vitest';
 import { expect, test } from 'vite-plus/test';
-import { openApp } from '@/testing/open-app';
+import { openApp } from '@/journeys/open-app';
 
 test('a chat reaction remains visible after a page reload', async () => {
   const suffix = uniqueSuffix();

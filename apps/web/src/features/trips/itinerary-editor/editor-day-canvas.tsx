@@ -6,13 +6,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@groam/ui/components/dropdown-menu';
-import Timeline from '@groam/ui/components/timeline';
-import { BedDouble, CalendarDays, ChevronDown, MapPin, Pencil, Plus, Route } from 'lucide-react';
+import { BedDouble, CalendarDays, ChevronDown, MapPin, Plus, Route } from 'lucide-react';
 import { Fragment, type ReactNode } from 'react';
+import { entryPeriod, plannerPeriods } from '@/features/trips/hooks/trip-day-planner';
+import { PlannerPeriodHeading } from '@/features/trips/trip-planner/planner-period-heading';
 import type { PlannerDay, PlannerEntry } from '@/types/trip-planner';
 import { EditorDayRow } from './editor-day-row';
 
 export function EditorDayCanvas({
+  currency,
   day,
   onEdit,
   onAdd,
@@ -20,6 +22,7 @@ export function EditorDayCanvas({
   activeEditor,
   editorLocked = false
 }: {
+  currency: string;
   day: PlannerDay;
   onEdit: (entry: PlannerEntry) => void;
   onAdd: (kind: 'activity' | 'stay' | 'travel' | 'destination') => void;
@@ -46,37 +49,52 @@ export function EditorDayCanvas({
   const entries = [...day.entries, ...continuingStays];
   return (
     <>
-      <div className="px-4 py-4 sm:px-6">
+      <div className="space-y-3 p-4 sm:p-5">
         {entries.length ? (
-          <Timeline aria-label={`Day ${day.day} timeline`}>
-            {entries.map((entry) => (
-              <Fragment key={entry.key}>
-                <EditorDayRow
-                  day={day.day}
-                  disabled={editorLocked}
-                  entry={entry}
-                  continuing={entry.key.startsWith('continuing-')}
-                  onEdit={onEdit}
-                />
-                {activeEditor?.entryKey === entry.key ? (
-                  <Timeline.Item>
-                    <Timeline.Badge>
-                      <Pencil />
-                    </Timeline.Badge>
-                    <Timeline.Body className="block">{activeEditor.content}</Timeline.Body>
-                  </Timeline.Item>
-                ) : null}
-              </Fragment>
-            ))}
-          </Timeline>
+          <div aria-label={`Day ${day.day} timeline`} className="space-y-4" role="group">
+            {plannerPeriods.map((period) => {
+              const inPeriod = entries.filter(
+                (entry) => entryPeriod(entry, day.day) === period.key
+              );
+              if (inPeriod.length === 0) return null;
+              return (
+                <section
+                  aria-label={`${period.label}, Day ${day.day}`}
+                  className="space-y-3"
+                  key={period.key}
+                >
+                  <PlannerPeriodHeading label={period.label} period={period.key} />
+                  <ul className="space-y-3">
+                    {inPeriod.map((entry) => (
+                      <Fragment key={entry.key}>
+                        <li>
+                          <EditorDayRow
+                            continuing={entry.key.startsWith('continuing-')}
+                            currency={currency}
+                            day={day.day}
+                            disabled={editorLocked}
+                            entry={entry}
+                            onEdit={onEdit}
+                          />
+                        </li>
+                        {activeEditor?.entryKey === entry.key ? (
+                          <li>{activeEditor.content}</li>
+                        ) : null}
+                      </Fragment>
+                    ))}
+                  </ul>
+                </section>
+              );
+            })}
+          </div>
         ) : (
-          <p className="py-8 text-center text-sm text-muted-foreground">
+          <p className="py-4 text-center text-sm text-muted-foreground">
             Nothing planned yet. Add the first part of this day.
           </p>
         )}
         {!activeEditor?.entryKey ? activeEditor?.content : null}
       </div>
-      <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-muted/10 px-4 py-4 sm:px-6">
+      <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-2.5 sm:px-5">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button disabled={editorLocked} size="sm" variant="outline">

@@ -1,6 +1,12 @@
+import { agentRunTime } from '@groam/ai/backend/runs/time';
+import { Avatar } from '@groam/ui/components/avatar';
+import { AvatarFallback } from '@groam/ui/components/avatar-fallback';
 import { Button } from '@groam/ui/components/button';
 import Shell from '@groam/ui/components/shell/client';
 import { Spinner } from '@groam/ui/components/spinner';
+import Timeline from '@groam/ui/components/timeline';
+import { initials } from '@groam/ui/lib/avatar';
+import { Bot } from 'lucide-react';
 import type { AgentRun } from '@/features/agents/hooks/use-agent';
 import type { AgentRunEvent } from '@/features/agents/hooks/use-agent-run';
 import { testIds } from '@/lib/test-ids';
@@ -14,8 +20,11 @@ import { AgentRunReport } from './agent-run-report';
 export type AgentRunDetailLoadedProps = {
   events: AgentRunEvent[] | undefined;
   eventsStatus: 'CanLoadMore' | 'Done' | 'Exhausted' | 'LoadingFirstPage' | 'LoadingMore';
+  agentLabel: string;
   isLoading?: false;
   onLoadEarlier: () => void;
+  onRetry?: (runId: AgentRun['id']) => Promise<unknown> | unknown;
+  onStop?: (runId: AgentRun['id']) => Promise<unknown> | unknown;
   run: AgentRun;
 };
 
@@ -23,6 +32,7 @@ export type AgentRunDetailLoadedProps = {
 export type AgentRunDetailLoadingProps = {
   events?: undefined;
   eventsStatus?: undefined;
+  agentLabel?: undefined;
   isLoading: true;
   onLoadEarlier?: undefined;
   run?: undefined;
@@ -47,31 +57,74 @@ function LoadEarlierButton({ props }: { props: AgentRunDetailLoadedProps }) {
   );
 }
 
+function RunKickoff({ run }: { run: AgentRun }) {
+  const at = run.startedAt ?? run.updatedAt;
+  return (
+    <Timeline.Item condensed>
+      <Timeline.Badge className="bg-muted p-0">
+        <Avatar className="size-6">
+          <AvatarFallback className="text-[9px] font-semibold">
+            {initials(run.createdBy.name)}
+          </AvatarFallback>
+        </Avatar>
+      </Timeline.Badge>
+      <Timeline.Body className="block pt-0.5 text-xs leading-5 text-muted-foreground">
+        <span className="font-medium text-foreground/80">{run.createdBy.name}</span>{' '}
+        {run.kickoff === 'queue' ? 'queued' : 'started'} this run{' '}
+        <time dateTime={new Date(at).toISOString()}>{agentRunTime(at)}</time>
+      </Timeline.Body>
+    </Timeline.Item>
+  );
+}
+
+function RunReport({ agentLabel, report }: { agentLabel: string; report: string }) {
+  return (
+    <Timeline.Item>
+      <Timeline.Badge className="text-muted-foreground">
+        <Bot aria-hidden />
+      </Timeline.Badge>
+      <Timeline.Body className="block min-w-0 space-y-2">
+        <p className="pt-0.5 text-xs leading-5 text-muted-foreground">
+          <span className="font-medium text-foreground/80">Report</span> from {agentLabel}
+        </p>
+        <AgentRunReport report={report} />
+      </Timeline.Body>
+    </Timeline.Item>
+  );
+}
+
 function LoadedRunDetail({ props }: { props: AgentRunDetailLoadedProps }) {
   const { run } = props;
   const issue = run.issueId
     ? { issueId: run.issueId, issueTitle: run.related.issueTitle ?? run.title }
     : null;
   return (
-    <>
-      <AgentRunOutcome run={run} />
-      {run.proposalId && run.tripId ? (
-        <AgentRunIdea
-          ideaTitle={run.related.ideaTitle}
-          proposalId={run.proposalId}
-          tripId={run.tripId}
-        />
-      ) : null}
-      {run.report ? <AgentRunReport report={run.report} /> : null}
-      <AgentRunLog
-        error={run.error}
-        events={props.events}
-        isActive={run.status === 'running' || run.status === 'queued'}
-        isLoading={props.eventsStatus === 'LoadingFirstPage' || props.events === undefined}
-        issue={issue}
-        loadEarlier={<LoadEarlierButton props={props} />}
-      />
-    </>
+    <AgentRunLog
+      after={
+        <>
+          {run.proposalId && run.tripId ? (
+            <AgentRunIdea
+              ideaTitle={run.related.ideaTitle}
+              proposalId={run.proposalId}
+              tripId={run.tripId}
+            />
+          ) : null}
+          {run.report ? <RunReport agentLabel={props.agentLabel} report={run.report} /> : null}
+          <AgentRunOutcome onRetry={props.onRetry} onStop={props.onStop} run={run} />
+        </>
+      }
+      before={<RunKickoff run={run} />}
+      error={run.error}
+      events={props.events}
+      isActive={run.status === 'running' || run.status === 'queued'}
+      isLoading={props.eventsStatus === 'LoadingFirstPage' || props.events === undefined}
+      issue={issue}
+      loadEarlier={
+        props.eventsStatus === 'CanLoadMore' || props.eventsStatus === 'LoadingMore' ? (
+          <LoadEarlierButton props={props} />
+        ) : undefined
+      }
+    />
   );
 }
 
@@ -86,9 +139,7 @@ export function AgentRunDetail(props: AgentRunDetailProps) {
       data-testid={testIds.agentRunDetail}
     >
       <Shell.LeftColumn>
-        <div className="min-w-0 space-y-5 xl:pt-6">
-          {run ? <LoadedRunDetail props={props} /> : <AgentRunLog isLoading />}
-        </div>
+        {run ? <LoadedRunDetail props={props} /> : <AgentRunLog isLoading />}
       </Shell.LeftColumn>
       <Shell.RightColumn aria-label="Run metadata">
         {run ? <AgentRunContext run={run} /> : <AgentRunContext isLoading />}

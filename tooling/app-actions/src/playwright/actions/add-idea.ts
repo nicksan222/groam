@@ -2,7 +2,6 @@ import { expect as playwrightExpect } from '@playwright/test';
 import type { AddIdeaAction } from '#src/actions/add-idea';
 import { type UiTarget, ui } from '#src/playwright/interaction';
 import { by } from '#src/playwright/locators';
-import { openTripSection } from '#src/playwright/open-trip-section';
 import { ids } from '#src/testing/ids';
 
 const expect = playwrightExpect.configure({ timeout: 30_000 });
@@ -10,7 +9,6 @@ const expect = playwrightExpect.configure({ timeout: 30_000 });
 export const addIdea: AddIdeaAction<UiTarget> = async (target, input) => {
   const user = ui(target);
   const ideaName = input.name;
-  await openTripSection(user, 'ideas');
   await user.click(by(user.page, ids.sharedTripNewIdea));
   await expect(by(user.page, ids.startIdeaDialog)).toBeVisible();
   await user.type(by(user.page, ids.startIdeaName), ideaName);

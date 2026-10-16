@@ -1,4 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
+import type { IssueStatus, IssueStatusFilter } from '#src/actions/set-issue-status';
 import { ids } from '#src/testing/ids';
 
 const idPathPatterns = {
@@ -46,8 +47,12 @@ export function chatMessage(page: Page, content: string): Locator {
   return named(page, ids.chatMessage, 'data-content', content);
 }
 
-export function issueStatusOption(page: Page, status: 'all' | 'closed' | 'open'): Locator {
+export function issueStatusOption(page: Page, status: IssueStatusFilter): Locator {
   return named(page, ids.issueStatusOption, 'data-status', status);
+}
+
+export function issueStatusSelectOption(page: Page, status: IssueStatus): Locator {
+  return named(page, ids.issueStatusSelectOption, 'data-status', status);
 }
 
 export function idFromPath(page: Page, kind: 'ideas' | 'issues' | 'trips'): string {

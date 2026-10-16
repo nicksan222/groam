@@ -36,7 +36,7 @@ export function TripSidebarRow({
   onCopyLink: () => void;
   onFavorite: () => void;
   onMenuOpenChange: (open: boolean) => void;
-  onOpen: (section: 'overview') => void;
+  onOpen: (section: 'board') => void;
   onOpenMobile: () => void;
   pending: boolean;
   trip: TripListItem;
@@ -54,7 +54,7 @@ export function TripSidebarRow({
       <SidebarMenuSubButton asChild className="pr-7" isActive={active}>
         <CanonicalLink
           onClick={onOpenMobile}
-          params={{ section: 'overview', tripId: trip.shortId ?? trip.id }}
+          params={{ section: 'board', tripId: trip.shortId ?? trip.id }}
           title={trip.favorite ? `Favourite · ${title}` : title}
           to="/trips/$tripId/$section"
         >
@@ -86,7 +86,7 @@ export function TripSidebarRow({
             <Star className={trip.favorite ? 'fill-current' : undefined} />
             {trip.favorite ? 'Remove favourite' : 'Favourite'}
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => onOpen('overview')}>
+          <DropdownMenuItem onSelect={() => onOpen('board')}>
             <ExternalLink />
             Open
           </DropdownMenuItem>

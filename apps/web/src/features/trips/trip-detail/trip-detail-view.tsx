@@ -1,41 +1,40 @@
 import type { Id } from '@groam/backend/data-model';
-import { PageCrumbNav } from '@groam/ui/components/page-crumb-nav';
+import { PageLoading } from '@groam/ui/components/page-loading';
+import Shell from '@groam/ui/components/shell/client';
+import { cn } from '@groam/ui/lib/utils';
 import { useNavigate } from '@tanstack/react-router';
-import { findViewerDrafts } from '@/features/ideas/hooks/viewer-pending-idea';
-import { ideaCloneHref } from '@/features/ideas/idea-href';
 import { useStartIdeaFlow } from '@/features/trips/hooks/use-start-idea-flow';
 import { useTripAgentContext } from '@/features/trips/hooks/use-trip-agent-context';
 import { useTripVersions } from '@/features/trips/hooks/use-trip-versions';
 import { useTrip } from '@/features/trips/hooks/use-trips';
 import { ActiveTripSection } from '@/features/trips/trip-detail/active-trip-section';
-import { SharedTripBanner } from '@/features/trips/trip-detail/shared-trip-banner';
 import { TripDetailsEditor } from '@/features/trips/trip-detail/trip-details-editor';
 import { ContinueDraftDialog } from '@/features/trips/trip-ideas/continue-draft-dialog';
 import { CreateTripIdeaDialog } from '@/features/trips/trip-ideas/create-trip-idea-dialog';
-import { TripOverview } from '@/features/trips/trip-overview/trip-overview';
 import type { TripSection } from '@/features/trips/trip-sections';
 import { useOpenState } from '@/features/workspace/hooks/use-open-state';
-import { Link } from '@/features/workspace/navigation/router';
 import { useConfirm } from '@/features/workspace/workspace-shell/use-confirm-dialog';
-import { useOptionalWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
 import { useReadyValue } from '@/lib/use-ready-value';
 import { createTripNavigation } from './trip-detail-navigation';
-import type { LoadedTrip, TripNavigation, TripState } from './trip-detail-types';
-import { TripNavigationActions } from './trip-navigation-actions';
-import { TripNotFound } from './trip-not-found';
-import { TripPageHero } from './trip-page-hero';
-import { TripPageShell } from './trip-page-shell';
+import { tripDetailRedirect } from './trip-detail-redirect';
+import type { LoadedTrip, TripState } from './trip-detail-types';
 import { TripSectionNav } from './trip-section-nav';
-import { WorkingTripRedirect } from './working-trip-redirect';
+import { TripToolbar } from './trip-toolbar';
+import { TripToolbarSkeleton } from './trip-toolbar-skeleton';
 
 export function TripDetailView({
   addDestinationOpen,
+  day,
   section,
-  tripId
+  tripId,
+  tripReference = tripId
 }: {
   addDestinationOpen: boolean;
+  day?: number;
   section: TripSection;
   tripId: Id<'trips'>;
+  /** The trip as the URL writes it; section switches navigate with it so the page stays mounted. */
+  tripReference?: string;
 }) {
   const tripState = useTrip(tripId);
   const { isLoading: pageLoading, value: trip } = useReadyValue(
@@ -45,10 +44,8 @@ export function TripDetailView({
   const sourceTripId = trip?.proposal?.sourceTripId ?? tripId;
   const { createVersion, proposals } = useTripVersions(sourceTripId, tripState.exists === true);
   const editing = useOpenState(false);
-  const roster = useOpenState(false);
   const confirm = useConfirm();
   const navigate = useNavigate();
-  const viewerUserId = useOptionalWorkspace()?.session.user.id;
   useTripAgentContext(trip, section);
 
   const ideaFlow = useStartIdeaFlow({
@@ -61,235 +58,100 @@ export function TripDetailView({
     trip
   });
 
-  if (tripState.exists === false) return <TripNotFound />;
-
-  if (trip?.proposal && proposals !== undefined) {
-    return (
-      <WorkingTripRedirect
-        addDestinationOpen={addDestinationOpen}
-        proposals={proposals}
-        section={section}
-        trip={trip}
-      />
-    );
-  }
+  const redirect = tripDetailRedirect({
+    addDestinationOpen,
+    day,
+    exists: tripState.exists,
+    proposals,
+    section,
+    trip,
+    tripReference
+  });
+  if (redirect) return redirect;
 
   const waitingOnProposalRedirect = Boolean(trip?.proposal && proposals === undefined);
-  const showLoading = pageLoading || !trip || waitingOnProposalRedirect;
-  const viewerDraft = findViewerDrafts(proposals ?? [], viewerUserId)[0];
+  const loaded = pageLoading || !trip || waitingOnProposalRedirect ? undefined : trip;
 
   const editDetails = () => {
-    if (!trip) return;
-    if (trip.permissions.canEdit) editing.openPanel();
-    else if (trip.permissions.canPropose) ideaFlow.start({ section: 'overview' });
+    if (!loaded) return;
+    if (loaded.permissions.canEdit) editing.openPanel();
+    else if (loaded.permissions.canPropose) ideaFlow.start({ section: 'overview' });
   };
-  const navigation = createTripNavigation({ confirm, ideaFlow, navigate, trip, tripId });
+  const fullBleed = Boolean(loaded) && !loaded?.proposal && section === 'board';
+  const navigation = createTripNavigation({
+    confirm,
+    ideaFlow,
+    navigate,
+    trip,
+    tripId: tripReference
+  });
 
   return (
-    <TripPageShell
-      body={
-        <TripDetailBody
-          addDestinationOpen={addDestinationOpen}
-          navigation={navigation}
-          onEdit={editDetails}
-          section={section}
-          showLoading={showLoading}
-          trip={trip}
-          tripState={tripState}
-        />
-      }
-      crumb={<TripDetailCrumb showLoading={showLoading} trip={trip} />}
-      hero={
-        <TripDetailHero
-          onEdit={editDetails}
-          roster={roster}
-          section={section}
-          showLoading={showLoading}
-          trip={trip}
-          tripId={tripId}
-          tripState={tripState}
-        />
-      }
-      isLoading={showLoading}
-      nav={
-        <TripDetailNav
-          navigation={navigation}
-          section={section}
-          showLoading={showLoading}
-          trip={trip}
-          tripId={tripId}
-        />
-      }
-      banner={
-        <TripDetailBanner
-          ideaFlow={ideaFlow}
-          navigate={navigate}
-          showLoading={showLoading}
-          trip={trip}
-          viewerDraft={viewerDraft}
-        />
-      }
-    >
+    <Shell className="trip-page-shell">
+      <Shell.BannerLayout className={loaded ? 'trip-page-ready' : undefined}>
+        {loaded ? (
+          <TripToolbar
+            onEdit={editDetails}
+            onStartIdea={() => ideaFlow.start()}
+            section={section}
+            startingIdea={ideaFlow.isCreating}
+            trip={loaded}
+            tripState={tripState}
+          />
+        ) : (
+          <TripToolbarSkeleton />
+        )}
+        {loaded ? (
+          <TripSectionNav onOpen={navigation.openSection} section={section} tripId={loaded.id} />
+        ) : (
+          <TripSectionNav isLoading section={section} />
+        )}
+        <div
+          className={cn(
+            'flex min-w-0 flex-1 flex-col md:min-h-0',
+            fullBleed ? 'px-0' : 'px-6 py-5'
+          )}
+          data-slot="trip-board-area"
+        >
+          {loaded ? (
+            <ActiveTripSection
+              addDestinationOpen={addDestinationOpen}
+              day={day}
+              navigation={navigation}
+              onEdit={editDetails}
+              onStartVersion={() => ideaFlow.start()}
+              section={section}
+              startingIdea={ideaFlow.isCreating}
+              trip={loaded}
+              tripState={tripState}
+            />
+          ) : (
+            <PageLoading label="Loading trip…" />
+          )}
+        </div>
+      </Shell.BannerLayout>
       <TripDetailDialogs
         editing={editing}
         ideaFlow={ideaFlow}
-        showLoading={showLoading}
-        trip={trip}
+        trip={loaded}
         update={tripState.update}
       />
-    </TripPageShell>
-  );
-}
-
-function TripDetailBody({
-  addDestinationOpen,
-  navigation,
-  onEdit,
-  section,
-  showLoading,
-  trip,
-  tripState
-}: {
-  addDestinationOpen: boolean;
-  navigation: TripNavigation;
-  onEdit: () => void;
-  section: TripSection;
-  showLoading: boolean;
-  trip: LoadedTrip | undefined;
-  tripState: TripState;
-}) {
-  if (showLoading || !trip) return <TripOverview isLoading />;
-  return (
-    <ActiveTripSection
-      addDestinationOpen={addDestinationOpen}
-      navigation={navigation}
-      onEdit={onEdit}
-      section={section}
-      trip={trip}
-      tripState={tripState}
-    />
-  );
-}
-
-function TripDetailCrumb({
-  showLoading,
-  trip
-}: {
-  showLoading: boolean;
-  trip: LoadedTrip | undefined;
-}) {
-  if (showLoading || !trip)
-    return <PageCrumbNav isLoading inset={false} parent={{ href: '/trips', label: 'All trips' }} />;
-  return (
-    <PageCrumbNav
-      current={trip.name}
-      inset={false}
-      parent={{ asChild: true, children: <Link to="/trips" />, label: 'All trips' }}
-    />
-  );
-}
-
-function TripDetailHero({
-  onEdit,
-  roster,
-  section,
-  showLoading,
-  trip,
-  tripId,
-  tripState
-}: {
-  onEdit: () => void;
-  roster: ReturnType<typeof useOpenState>;
-  section: TripSection;
-  showLoading: boolean;
-  trip: LoadedTrip | undefined;
-  tripId: Id<'trips'>;
-  tripState: TripState;
-}) {
-  if (showLoading || !trip) return <TripPageHero isLoading />;
-  return (
-    <TripPageHero
-      actions={
-        <TripNavigationActions
-          onEdit={onEdit}
-          section={section}
-          trip={trip}
-          tripState={tripState}
-        />
-      }
-      onRosterOpenChange={roster.setOpen}
-      retryCover={tripState.retryCover}
-      rosterOpen={roster.open}
-      trip={trip}
-      tripId={tripId}
-    />
-  );
-}
-
-function TripDetailNav({
-  navigation,
-  section,
-  showLoading,
-  trip,
-  tripId
-}: {
-  navigation: TripNavigation;
-  section: TripSection;
-  showLoading: boolean;
-  trip: LoadedTrip | undefined;
-  tripId: Id<'trips'>;
-}) {
-  if (showLoading || !trip) return <TripSectionNav isLoading section={section} />;
-  return (
-    <TripSectionNav onOpen={navigation.openSection} section={section} trip={trip} tripId={tripId} />
-  );
-}
-
-function TripDetailBanner({
-  ideaFlow,
-  navigate,
-  showLoading,
-  trip,
-  viewerDraft
-}: {
-  ideaFlow: ReturnType<typeof useStartIdeaFlow>;
-  navigate: ReturnType<typeof useNavigate>;
-  showLoading: boolean;
-  trip: LoadedTrip | undefined;
-  viewerDraft: ReturnType<typeof findViewerDrafts>[number] | undefined;
-}) {
-  if (showLoading || !trip || trip.proposal || trip.permissions.canEdit) return undefined;
-  return (
-    <SharedTripBanner
-      archived={trip.archivedAt !== null}
-      continueDraftTitle={viewerDraft?.title}
-      onContinueDraft={
-        viewerDraft
-          ? () =>
-              void navigate(
-                ideaCloneHref({ id: viewerDraft.id as Id<'tripProposals'>, sourceTripId: trip.id })
-              )
-          : undefined
-      }
-      onStartIdea={trip.permissions.canPropose ? () => ideaFlow.start() : undefined}
-    />
+    </Shell>
   );
 }
 
 function TripDetailDialogs({
   editing,
   ideaFlow,
-  showLoading,
   trip,
   update
 }: {
   editing: ReturnType<typeof useOpenState>;
   ideaFlow: ReturnType<typeof useStartIdeaFlow>;
-  showLoading: boolean;
   trip: LoadedTrip | undefined;
   update: TripState['update'];
 }) {
-  if (showLoading || !trip) return null;
+  if (!trip) return null;
   return (
     <>
       <CreateTripIdeaDialog

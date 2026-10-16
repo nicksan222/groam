@@ -17,7 +17,7 @@ export function TripDayPlanner({ trip }: { trip: TripDetail }) {
           <h2 className="text-xl font-semibold tracking-tight">Your days, at a glance</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             {planner.days.length
-              ? 'Follow each day from morning to evening. Open a plan for the details.'
+              ? 'Follow each day from morning to evening, with every plan in full.'
               : 'A little structure for your next adventure.'}
           </p>
         </div>

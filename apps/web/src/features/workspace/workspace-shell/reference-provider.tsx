@@ -1,6 +1,7 @@
 import { useLocation, useNavigate, useParams } from '@tanstack/react-router';
-import { type PropsWithChildren, useEffect } from 'react';
+import { type PropsWithChildren, useEffect, useState } from 'react';
 import {
+  ReferenceCacheContext,
   ReferenceContext,
   ReferenceStatusContext
 } from '@/features/workspace/hooks/reference-context';
@@ -9,6 +10,15 @@ import { useReferenceParams } from '@/features/workspace/hooks/use-reference-par
 
 export function ReferenceProvider({ children }: PropsWithChildren) {
   const params = useParams({ strict: false });
+  const [cache] = useState(() => new Map());
+  return (
+    <ReferenceCacheContext value={cache}>
+      <ReferenceResolution params={params}>{children}</ReferenceResolution>
+    </ReferenceCacheContext>
+  );
+}
+
+function ReferenceResolution({ children, params }: PropsWithChildren<{ params: unknown }>) {
   const { ids, shortIds, loading, missing } = useReferenceParams(params);
   const { pathname } = useLocation();
   const navigate = useNavigate();

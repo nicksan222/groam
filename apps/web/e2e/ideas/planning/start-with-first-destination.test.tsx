@@ -14,7 +14,7 @@ import {
   uniqueSuffix
 } from '@groam/app-actions/vitest';
 import { expect, test } from 'vite-plus/test';
-import { openApp } from '@/testing/open-app';
+import { openApp } from '@/journeys/open-app';
 
 test('starts an idea and adds the first destination through one composer', async () => {
   await environment.mockDestinationSearch();

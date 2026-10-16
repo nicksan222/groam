@@ -604,3 +604,31 @@ test(
     expect(proposals).toHaveLength(1);
   }
 );
+
+test('counts unresolved issues, not closed or discarded ones, as an agent workload', async () => {
+  const { owner, tripId } = await setupTrip(0);
+  const assignAt = async (status: 'closed' | 'in_progress' | 'open' | 'wont_do') => {
+    const issueId = await owner.client.mutation(api.routes.trips.issues.create.run, {
+      body: 'Look into this.',
+      title: `Issue ${status}`,
+      tripId
+    });
+    await owner.client.mutation(api.routes.trips.issues.assign.run, {
+      assignee: issueAgent,
+      issueId
+    });
+    await owner.client.mutation(api.routes.trips.issues.status.run, { issueId, status });
+  };
+  const workload = async () => {
+    const roster = await owner.client.query(api.routes.agents.list.run, {});
+    return roster.find((agent) => agent.id === 'issue')?.assignedIssueCount;
+  };
+
+  await assignAt('open');
+  expect(await workload()).toBe(1);
+  await assignAt('in_progress');
+  expect(await workload()).toBe(2);
+  await assignAt('closed');
+  await assignAt('wont_do');
+  expect(await workload()).toBe(2);
+});

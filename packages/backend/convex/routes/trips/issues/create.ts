@@ -6,5 +6,5 @@ import { tripMutation } from '#convex/modules/travel/trips/ctx';
 export const run = tripMutation({
   args: TripIssueValidators.createInput,
   returns: v.id('tripIssues'),
-  handler: (ctx, { body, title }) => TripIssues.create(ctx, ctx.trip._id, title, body)
+  handler: (ctx, input) => TripIssues.create(ctx, input)
 });

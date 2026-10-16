@@ -1,26 +1,42 @@
 import { expect, test } from 'vite-plus/test';
 import {
+  defaultTripSection,
   isTripSection,
-  tripSectionDescriptions,
+  sharedTripSection,
   tripSectionLabels,
-  tripSections
+  tripSections,
+  tripSectionTitle,
+  tripTabSections
 } from './trip-sections';
 
-test('recognizes every trip subpath and rejects unknown sections', () => {
+test('recognizes every trip subpath and rejects unknown ones', () => {
   for (const section of tripSections) expect(isTripSection(section)).toBe(true);
-  expect(isTripSection('unknown')).toBe(false);
-  expect(isTripSection('')).toBe(false);
-  expect(isTripSection('ideas')).toBe(true);
-  expect(isTripSection('issues')).toBe(true);
-  expect(isTripSection('versions')).toBe(false);
+  for (const unknown of ['', 'unknown', 'versions', 'plan']) {
+    expect(isTripSection(unknown)).toBe(false);
+  }
 });
 
-test('exposes labels and descriptions for every trip section', () => {
-  for (const section of tripSections) {
-    expect(tripSectionLabels[section].length).toBeGreaterThan(0);
-    expect(tripSectionDescriptions[section].length).toBeGreaterThan(0);
-  }
+test('lists the shared trip tabs in reading order with Board first and the default', () => {
+  expect(tripTabSections).toEqual(['board', 'overview', 'issues', 'ideas', 'activity']);
+  expect(defaultTripSection).toBe('board');
+});
+
+test('exposes a label for every trip section', () => {
+  for (const section of tripSections) expect(tripSectionLabels[section]).not.toBe('');
+  expect(tripSectionLabels.board).toBe('Board');
   expect(tripSectionLabels.overview).toBe('Overview');
-  expect(tripSectionLabels.issues).toBe('Issues');
-  expect(tripSectionLabels.ideas).toBe('Ideas');
+});
+
+test('titles each section by its tab label', () => {
+  expect(tripSectionTitle('board')).toBe('Board');
+  expect(tripSectionTitle('overview')).toBe('Overview');
+  expect(tripSectionTitle('issues')).toBe('Issues');
+  expect(tripSectionTitle('ideas')).toBe('Ideas');
+  expect(tripSectionTitle('activity')).toBe('Activity');
+  expect(tripSectionTitle('itinerary')).toBe('Itinerary');
+});
+
+test('sends the planning-only itinerary page to the overview tab of a shared trip', () => {
+  expect(sharedTripSection('itinerary')).toBe('overview');
+  for (const section of tripTabSections) expect(sharedTripSection(section)).toBe(section);
 });

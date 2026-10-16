@@ -62,3 +62,45 @@ test('receives reference updates and follows navigation without a render loop', 
     await client.close();
   }
 });
+
+test('resolves known references synchronously in either id form', async () => {
+  const client = new ConvexReactClient('https://example.convex.cloud');
+  const records = new Map<string, { id: string; shortId: string }>();
+  const listeners = new Set<() => void>();
+  vi.spyOn(client, 'watchQuery').mockImplementation((...watchArgs) => ({
+    localQueryResult: () => records.get(String(watchArgs[1]?.reference)),
+    localQueryLogs: () => undefined,
+    journal: () => undefined,
+    onUpdate: (callback) => {
+      listeners.add(callback);
+      return () => {
+        listeners.delete(callback);
+      };
+    }
+  }));
+  try {
+    const { result, rerender } = await renderHook(({ tripId }) => useReferenceParams({ tripId }), {
+      initialProps: { tripId: 'long-id' },
+      wrapper: ({ children }) => <ConvexProvider client={client}>{children}</ConvexProvider>
+    });
+    expect(result.current.loading).toBe(true);
+    await act(() => {
+      records.set('long-id', { id: 'long-id', shortId: 'abc123' });
+      listeners.forEach((notify) => {
+        notify();
+      });
+    });
+    expect(result.current.loading).toBe(false);
+    // The short id was never fetched, yet it is already known from the long-id result.
+    await rerender({ tripId: 'abc123' });
+    expect(result.current.loading).toBe(false);
+    expect(result.current.ids.tripId).toBe('long-id');
+    expect(result.current.shortIds.tripId).toBe('abc123');
+    await rerender({ tripId: 'long-id' });
+    expect(result.current.loading).toBe(false);
+    await rerender({ tripId: 'never-seen' });
+    expect(result.current.loading).toBe(true);
+  } finally {
+    await client.close();
+  }
+});

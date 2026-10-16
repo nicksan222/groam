@@ -8,13 +8,42 @@ import {
   summarizeDashboard
 } from '@/features/dashboard/hooks/dashboard-model';
 import type { TripListItem, WorkspaceTripProposal } from '@/features/trips/hooks/use-trips';
-import {
-  TRIP_FIXTURE_NOW as now,
-  workspaceTripProposal as proposal,
-  tripListItem as trip
-} from '@/features/trips/test-fixtures';
 
 const DAY_MS = 86_400_000;
+
+const now = Date.UTC(2026, 7, 17);
+
+function trip(overrides: Partial<TripListItem> = {}): TripListItem {
+  return {
+    archivedAt: null,
+    coverUrl: null,
+    dateNotes: 'Late September',
+    destination: 'Lisbon',
+    favorite: false,
+    id: 'trips:trip-1' as TripListItem['id'],
+    lastUpdatedAt: now,
+    name: 'Atlantic week',
+    nextAction: 'Continue planning together',
+    outstandingActionCount: 0,
+    ...overrides
+  };
+}
+
+function proposal(overrides: Partial<WorkspaceTripProposal> = {}): WorkspaceTripProposal {
+  return {
+    author: { name: 'Alex Morgan', userId: 'user-alex' },
+    ideaName: 'coast-day',
+    id: 'tripProposals:idea-1' as WorkspaceTripProposal['id'],
+    reviewRequested: false,
+    sourceTripId: 'trips:trip-1' as WorkspaceTripProposal['sourceTripId'],
+    sourceTripName: 'Atlantic week',
+    status: 'in_review',
+    title: 'Add a coast day',
+    updatedAt: now,
+    workingTripId: 'trips:working-1' as WorkspaceTripProposal['workingTripId'],
+    ...overrides
+  };
+}
 
 describe('greetingForHour', () => {
   test('names the time of day in plain language', () => {

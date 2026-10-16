@@ -23,7 +23,7 @@ Just recipes.
 Claude Code, the only supported agent harness, uses these recipes inside the
 checked-in dev container; there is no separate host or cloud-agent toolchain
 lifecycle to keep synchronized. Personal overrides such as
-`tooling/claude/mcp.local.json` are ignored by Git.
+`.claude/settings.local.json` are ignored by Git.
 
 Configuration implementations belong here, including `fallow.config.jsonc` and
 `syncpack.config.json`. A file stays at the repository root only when its tool

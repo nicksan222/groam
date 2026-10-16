@@ -3,34 +3,46 @@ import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
+import { testIds } from '@/lib/test-ids';
+import type { IssueListItem, WorkspaceIssue } from '@/types/issues';
+import type { IssueDetailData } from './issue-detail-data';
 import { IssueDetailView } from './issue-detail-view';
 
+const listItem = {
+  assignee: null,
+  author: { name: 'Alex Morgan', userId: 'user-alex' },
+  canAssign: true,
+  canManage: true,
+  condition: null,
+  dueAt: null,
+  id: 'issue-1' as Id<'tripIssues'>,
+  idea: null,
+  labels: [],
+  rank: 0,
+  status: 'open',
+  title: 'Coast day',
+  updatedAt: Date.UTC(2026, 7, 17)
+} satisfies Omit<IssueListItem, 'tripName'>;
+
+const workspaceIssue = (over: Partial<WorkspaceIssue> = {}): WorkspaceIssue => ({
+  ...listItem,
+  body: 'Add a coast day near Lisbon.',
+  closedAt: null,
+  tripId: 'trip-1' as Id<'trips'>,
+  tripName: 'Atlantic week',
+  ...over
+});
+
+const issueDetail = (over: Partial<IssueDetailData> = {}): IssueDetailData => ({
+  ...workspaceIssue(),
+  comments: [],
+  ...over
+});
+
+const mutations = vi.hoisted(() => ({ assign: vi.fn(), setStatus: vi.fn() }));
+
 const state = vi.hoisted(() => ({
-  issue: undefined as
-    | {
-        author: { name: string; userId: string };
-        body: string;
-        canManage: boolean;
-        comments: Array<{
-          author: { name: string; userId: string };
-          content: string;
-          createdAt: number;
-          id: string;
-          kind: 'comment' | 'system';
-          updatedAt: number;
-        }>;
-        dueAt: number | null;
-        id: Id<'tripIssues'>;
-        idea: null;
-        status: 'closed' | 'open';
-        title: string;
-        tripId: Id<'trips'>;
-        tripName: string;
-        updatedAt: number;
-        assignee: { agentId: string; kind: 'agent' } | null;
-      }
-    | null
-    | undefined,
+  issue: undefined as IssueDetailData | null | undefined,
   run: null as null | {
     error: string | null;
     headline: string | null;
@@ -57,16 +69,16 @@ vi.mock('@/features/agents/hooks/use-agent-run', () => ({
   useStartQueuedAssignRuns: () => undefined
 }));
 
+vi.mock('@/features/issues/hooks/use-issue-mutations', () => ({
+  useIssueMutations: () => ({ assign: mutations.assign, setStatus: mutations.setStatus })
+}));
+
 vi.mock('@/features/trips/hooks/use-trip-issues', () => ({
   useTripIssue: () => ({
     addComment: vi.fn(),
-    assignIssueAgent: vi.fn(),
-    assignUser: vi.fn(),
     implement: vi.fn(),
     issue: state.issue,
-    setDueAt: vi.fn(),
-    setStatus: vi.fn(),
-    unassign: vi.fn()
+    setDueAt: vi.fn()
   })
 }));
 
@@ -77,30 +89,14 @@ vi.mock('@/features/workspace/workspace-shell/workspace-state', () => ({
   })
 }));
 
-const issueId = 'issue-1' as Id<'tripIssues'>;
-
-function loadedIssue() {
-  return {
-    assignee: null,
-    author: { name: 'Alex Morgan', userId: 'user-alex' },
-    body: 'Add a coast day near Lisbon.',
-    canManage: true,
-    comments: [],
-    dueAt: null,
-    id: issueId,
-    idea: null,
-    status: 'open' as const,
-    title: 'Coast day',
-    tripId: 'trip-1' as Id<'trips'>,
-    tripName: 'Atlantic week',
-    updatedAt: Date.UTC(2026, 7, 17)
-  };
-}
+const { id: issueId } = issueDetail();
 
 beforeEach(() => {
   vi.clearAllMocks();
   state.issue = undefined;
   state.run = null;
+  mutations.assign.mockResolvedValue(true);
+  mutations.setStatus.mockResolvedValue(true);
 });
 
 describe('IssueDetailView', () => {
@@ -117,20 +113,22 @@ describe('IssueDetailView', () => {
   });
 
   test('puts the back link above a title hero and status badge', async () => {
-    state.issue = loadedIssue();
+    state.issue = issueDetail();
     await render(<IssueDetailView issueId={issueId} />);
 
     const back = page.getByRole('link', { name: 'All issues' }).element();
     const title = page.getByRole('heading', { name: /Coast day/u }).element();
     expect(back.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    await expect.element(page.getByText('Open')).toBeInTheDocument();
+    await expect
+      .element(page.getByRole('combobox', { name: 'Issue status' }))
+      .toHaveTextContent('To decide');
     expect(page.getByText(/opened by/u).element().textContent).toMatch(/Alex Morgan/u);
     await expect.element(page.getByRole('link', { name: 'Atlantic week' })).toBeInTheDocument();
     await expect.element(page.getByText(/Open · Atlantic week/u)).not.toBeInTheDocument();
   });
 
   test('renders the issue body as the opening timeline comment', async () => {
-    state.issue = loadedIssue();
+    state.issue = issueDetail();
     await render(<IssueDetailView issueId={issueId} />);
     await expect.element(page.getByText('Add a coast day near Lisbon.')).toBeInTheDocument();
     await expect.element(page.getByText('Author')).toBeInTheDocument();
@@ -139,10 +137,9 @@ describe('IssueDetailView', () => {
   });
 
   test('renders the issue agent banner when Groam is assigned', async () => {
-    state.issue = {
-      ...loadedIssue(),
-      assignee: { agentId: 'issue', kind: 'agent' }
-    };
+    state.issue = issueDetail({
+      assignee: { agentId: 'issue', kind: 'agent', name: 'Issue agent' }
+    });
     state.run = {
       error: null,
       headline: 'Started working',
@@ -151,6 +148,25 @@ describe('IssueDetailView', () => {
       status: 'running'
     };
     await render(<IssueDetailView issueId={issueId} />);
-    await expect.element(page.getByTestId('issue-agent-banner')).toBeInTheDocument();
+    await expect.element(page.getByTestId(testIds.issueAgentBanner)).toBeInTheDocument();
+  });
+
+  test('changes the status through the select', async () => {
+    state.issue = issueDetail();
+    await render(<IssueDetailView issueId={issueId} />);
+
+    await page.getByRole('combobox', { name: 'Issue status' }).click();
+    await page.getByRole('option', { name: "Won't do" }).click();
+    expect(mutations.setStatus).toHaveBeenCalledWith(issueId, 'wont_do');
+  });
+
+  test('shows a read-only status badge when the viewer cannot manage the issue', async () => {
+    state.issue = issueDetail({ canAssign: false, canManage: false, status: 'in_progress' });
+    await render(<IssueDetailView issueId={issueId} />);
+
+    await expect.element(page.getByTestId(testIds.issueStatus)).toHaveTextContent('In progress');
+    await expect
+      .element(page.getByRole('combobox', { name: 'Issue status' }))
+      .not.toBeInTheDocument();
   });
 });

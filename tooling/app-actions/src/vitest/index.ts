@@ -55,6 +55,7 @@ export {
   addIssueComment,
   assignIssue,
   createIssue,
+  expectIssueAssignedToMe,
   filterIssuesByStatus,
   type IssueAssignee,
   type IssueStatus,
@@ -89,8 +90,10 @@ export {
   destinationCard,
   groupSwitcherItem,
   ideaRow,
+  issueCard,
   issueRow,
   issueStatusOption,
+  issueStatusSelectOption,
   tripCard
 } from './locators';
 export {
@@ -101,6 +104,17 @@ export {
   openTripSection,
   type TripSection
 } from './open-trips';
+export {
+  type BoardLane,
+  expectIssueInLane,
+  expectIssueRefusedOnBoard,
+  laneTitles,
+  moveIssueOnBoard,
+  openTripBoard,
+  openTripPage,
+  reorderIssueOnBoard,
+  returnToBoard
+} from './trip-board';
 export { currentPath, expectGone, expectPath, idFromPath, presentAttribute } from './queries';
 export { searchIdeas, searchIssues, searchTrips } from './search-trips';
 export {

@@ -58,18 +58,9 @@ export function ideaWorkspaceHref(
   return ideaOpenHref(proposal, viewerUserId);
 }
 
-export function ideaListHref(tripId: Id<'trips'>) {
+export function ideaSharedTripHref(sharedTripId: Id<'trips'>) {
   return {
-    params: { section: 'ideas' as const, tripId },
-    search: {},
-    to: '/trips/$tripId/$section' as const
-  };
-}
-
-export function ideaSharedTripHref(sharedTripId: Id<'trips'>, view: IdeaCloneView) {
-  const section = view === 'itinerary' ? 'itinerary' : view === 'overview' ? 'overview' : 'ideas';
-  return {
-    params: { section, tripId: sharedTripId },
+    params: { section: 'board' as const, tripId: sharedTripId },
     search: {},
     to: '/trips/$tripId/$section' as const
   };

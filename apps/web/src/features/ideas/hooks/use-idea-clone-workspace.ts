@@ -42,7 +42,7 @@ export function useIdeaCloneWorkspace({
   const { pendingAction, run } = useProposalActionRunner();
   const [confirmingApply, setConfirmingApply] = useState(false);
   const planningSection: TripSection = view === 'itinerary' ? 'itinerary' : 'overview';
-  useTripAgentContext(trip, view === 'compare' ? 'ideas' : planningSection);
+  useTripAgentContext(trip, view === 'compare' ? 'idea-compare' : planningSection);
 
   const missing = workingState.exists === false;
   const showLoading = pageLoading || !trip;
@@ -102,10 +102,9 @@ export function useIdeaCloneWorkspace({
     missing,
     navigation,
     openShared: () => {
-      void navigate(ideaSharedTripHref(sharedTripId, view));
+      void navigate(ideaSharedTripHref(sharedTripId));
     },
     openView,
-    parentLabel: idea.sharedTrip?.name ?? 'Trip',
     pendingAction,
     planningSection,
     primary,

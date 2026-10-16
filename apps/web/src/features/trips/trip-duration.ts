@@ -1,5 +1,10 @@
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+/** "1 day", "7 days". */
+export function dayCountLabel(days: number) {
+  return `${days} day${days === 1 ? '' : 's'}`;
+}
+
 export function addTripDays(date: string, amount: number) {
   const value = new Date(`${date}T00:00:00.000Z`);
   value.setUTCDate(value.getUTCDate() + amount);

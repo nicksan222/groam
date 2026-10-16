@@ -130,3 +130,43 @@ test('renders a known canonical reference without resolving it again', async () 
     .toHaveAttribute('href', '/trips/abcdef');
   expect(mocks.useQueries).not.toHaveBeenCalled();
 });
+
+test('keeps the rendered page mounted when moving between known references', async () => {
+  const defaults = mocks.useQueries.getMockImplementation();
+  const root = createRootRoute({
+    component: () => (
+      <ReferenceProvider>
+        <ReferenceContent>
+          <Outlet />
+        </ReferenceContent>
+      </ReferenceProvider>
+    )
+  });
+  const trip = createRoute({
+    getParentRoute: () => root,
+    path: '/trips/$tripId',
+    component: () => <h1 data-testid="trip-header">Trip header</h1>
+  });
+  const router = createRouter({
+    routeTree: root.addChildren([trip]),
+    history: createMemoryHistory({ initialEntries: ['/trips/long-trip-id'] })
+  });
+  await render(<RouterProvider router={router} />);
+  const header = page.getByTestId('trip-header');
+  await expect.element(header).toBeInTheDocument();
+  const node = header.element();
+  // The short form is known from the long-id result, so it must not need a fresh round trip.
+  mocks.useQueries.mockImplementation((queries: Record<string, { args: { reference: string } }>) =>
+    Object.fromEntries(
+      Object.entries(queries).map(([key, { args }]) => [
+        key,
+        args.reference === 'long-trip-id' ? { id: 'long-trip-id', shortId: 'abcdef' } : undefined
+      ])
+    )
+  );
+  await router.navigate({ to: '/trips/$tripId', params: { tripId: 'abcdef' } });
+  await expect.element(page.getByTestId('trip-header')).toBeInTheDocument();
+  expect(page.getByTestId('trip-header').element()).toBe(node);
+  expect(page.getByRole('status', { name: 'Opening page…' }).query()).toBeNull();
+  if (defaults) mocks.useQueries.mockImplementation(defaults);
+});

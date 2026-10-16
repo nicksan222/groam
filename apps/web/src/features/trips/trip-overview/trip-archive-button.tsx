@@ -1,31 +1,14 @@
 import { Button } from '@groam/ui/components/button';
 import { Spinner } from '@groam/ui/components/spinner';
 import { Archive, RotateCcw } from 'lucide-react';
+import { useArchiveTrip } from '@/features/trips/hooks/use-archive-trip';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import type { TripState } from '@/features/trips/trip-detail/trip-detail-types';
-import { useAsyncPending } from '@/features/workspace/hooks/use-async-pending';
-import { useConfirm } from '@/features/workspace/workspace-shell/use-confirm-dialog';
 import { testIds } from '@/lib/test-ids';
 
 export function TripArchiveButton({ trip, tripState }: { trip: TripDetail; tripState: TripState }) {
-  const pending = useAsyncPending();
-  const confirm = useConfirm();
+  const { archive, isPending, restore } = useArchiveTrip(tripState);
   const isArchived = trip.archivedAt !== null;
-
-  const archive = async () => {
-    if (!(await confirm('Archive this trip?', 'It will become read-only until restored.'))) {
-      return;
-    }
-    await pending.run(async () => {
-      await tripState.archive();
-    });
-  };
-
-  const restore = async () => {
-    await pending.run(async () => {
-      await tripState.restore();
-    });
-  };
 
   if (isArchived) {
     return (
@@ -36,12 +19,12 @@ export function TripArchiveButton({ trip, tripState }: { trip: TripDetail; tripS
         {trip.permissions.canRestore ? (
           <Button
             className="w-full"
-            disabled={pending.isPending}
+            disabled={isPending}
             onClick={() => void restore()}
             size="sm"
             variant="outline"
           >
-            {pending.isPending ? <Spinner /> : <RotateCcw />}
+            {isPending ? <Spinner /> : <RotateCcw />}
             Restore trip
           </Button>
         ) : null}
@@ -56,12 +39,12 @@ export function TripArchiveButton({ trip, tripState }: { trip: TripDetail; tripS
       <Button
         className="w-full text-muted-foreground"
         data-testid={testIds.tripArchive}
-        disabled={pending.isPending}
+        disabled={isPending}
         onClick={() => void archive()}
         size="sm"
         variant="ghost"
       >
-        {pending.isPending ? <Spinner /> : <Archive />}
+        {isPending ? <Spinner /> : <Archive />}
         Archive trip
       </Button>
     </div>

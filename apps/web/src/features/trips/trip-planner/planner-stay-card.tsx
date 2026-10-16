@@ -13,17 +13,17 @@ export function PlannerStayCard({
 }) {
   const timing = 'Staying overnight';
   return (
-    <details className="rounded-md bg-muted/40 p-3">
-      <summary className="flex cursor-pointer list-none items-start gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
+    <div className="rounded-md bg-muted/30 p-3">
+      <div className="flex items-start gap-3">
         <BedDouble className="mt-0.5 size-4 shrink-0 text-primary" />
-        <span className="min-w-0">
-          <span className="block text-sm font-medium">{stay.title}</span>
-          <span className="mt-1 block text-xs text-muted-foreground">
+        <div className="min-w-0">
+          <p className="text-sm font-medium">{stay.title}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
             {timing} · {destinationName}
-          </span>
-        </span>
-      </summary>
-      <div className="mt-3 space-y-2 border-t border-border pt-3 text-xs text-muted-foreground">
+          </p>
+        </div>
+      </div>
+      <div className="mt-3 space-y-2 border-t border-border pt-3 text-xs leading-5 text-muted-foreground">
         <p>
           Check in: Day {stay.checkInDay}
           {stay.checkInTime ? ` · ${stay.checkInTime}` : ''}
@@ -54,6 +54,6 @@ export function PlannerStayCard({
           )
         )}
       </div>
-    </details>
+    </div>
   );
 }

@@ -9,9 +9,12 @@ export const run = tripQuery({
     v.object({
       author: TripVersionValidators.author,
       baseUpdatedAt: v.number(),
+      canApprove: v.boolean(),
+      canMerge: v.boolean(),
       ideaName: v.string(),
       conflictCount: v.number(),
       feedbackCount: v.number(),
+      hasApproved: v.boolean(),
       id: v.id('tripProposals'),
       issueId: v.union(v.id('tripIssues'), v.null()),
       status: TripVersionValidators.status,
@@ -22,5 +25,5 @@ export const run = tripQuery({
       workingTripId: v.id('trips')
     })
   ),
-  handler: (ctx) => TripVersions.list(ctx, ctx.trip._id)
+  handler: (ctx) => TripVersions.list(ctx)
 });

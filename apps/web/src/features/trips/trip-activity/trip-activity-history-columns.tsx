@@ -83,7 +83,7 @@ export function tripActivityColumns(): ColumnDef<TripActivityItem, unknown>[] {
         </Button>
       ),
       id: 'createdAt',
-      meta: { className: 'w-36', label: 'When' }
+      meta: { className: 'w-52', label: 'When' }
     }
   ];
 }

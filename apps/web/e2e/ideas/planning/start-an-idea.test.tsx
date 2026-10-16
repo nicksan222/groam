@@ -8,13 +8,12 @@ import {
   openIdeaFromList,
   openSharedTrip,
   openTrip,
-  openTripSection,
   openWorkspaceIdeas,
   presentAttribute,
   uniqueSuffix
 } from '@groam/app-actions/vitest';
 import { expect, test } from 'vite-plus/test';
-import { openApp } from '@/testing/open-app';
+import { openApp } from '@/journeys/open-app';
 
 test('starts an idea and opens first-class idea routes', async () => {
   const suffix = uniqueSuffix();
@@ -26,7 +25,6 @@ test('starts an idea and opens first-class idea routes', async () => {
   await addIdea({ name: ideaName });
   await openSharedTrip();
   await expect.element(by(ids.tripHeading)).toHaveAttribute('data-trip-name', tripName);
-  await openTripSection('ideas');
 
   const draftRow = ideaRow({ title: ideaName });
   await expect.element(by(ids.ideaContinue, draftRow)).toBeVisible();

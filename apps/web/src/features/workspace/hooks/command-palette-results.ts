@@ -62,7 +62,7 @@ function commandPaletteItems(
         ? [
             {
               href: {
-                params: { section: 'overview', tripId: trip.id },
+                params: { section: 'board', tripId: trip.id },
                 to: '/trips/$tripId/$section'
               },
               icon: MapIcon,

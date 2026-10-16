@@ -52,7 +52,7 @@ RUN UV_TOOL_DIR=/opt/uv/tools \
   && rm -rf /root/.cache/uv
 
 # Headroom compresses context before it reaches the model: `tooling/claude/claude.sh`
-# runs Claude through its proxy and `tooling/claude/mcp.json` starts its MCP
+# runs Claude through its proxy and the root `.mcp.json` starts its MCP
 # server. Proxy, MCP and code extras only; the ml/voice extras pull in torch.
 ARG HEADROOM_VERSION=0.41.0
 ARG HEADROOM_EXCLUDE_NEWER=2026-10-15T00:00:00Z

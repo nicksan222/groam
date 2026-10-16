@@ -4,16 +4,7 @@ import { ArrowUpRight, Map as MapIcon, Route } from 'lucide-react';
 import { useState } from 'react';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { TripDestinationsMap } from '@/features/trips/trip-destinations/trip-destinations-map';
-
-function jumpToStop(id: string, day?: number | null) {
-  const stop = document.getElementById(day ? `trip-day-${day}` : `itinerary-stop-${id}`);
-  if (!stop) return;
-  stop.focus({ preventScroll: true });
-  stop.scrollIntoView({
-    behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
-    block: 'start'
-  });
-}
+import { jumpToStop } from '@/features/trips/trip-destinations/trip-jump-targets';
 
 export function TripRouteSummary({
   destinations,

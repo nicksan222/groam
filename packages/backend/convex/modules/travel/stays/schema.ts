@@ -4,6 +4,8 @@ import { ItineraryFields } from '#convex/modules/travel/trips/itinerary/fields';
 import { TripValidators } from '#convex/modules/travel/trips/schema';
 import { VersionDiff, VersionedModel } from '#convex/modules/travel/versions/fields/index';
 
+export const MAX_STAYS_PER_TRIP = 100;
+
 const schedule = v.object({
   checkInDay: v.number(),
   checkInTime: v.optional(v.string()),

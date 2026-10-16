@@ -1,3 +1,5 @@
+import { cn } from '@groam/ui/lib/utils';
+
 export type ButtonVariant = 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
 export type ButtonSize =
   | 'default'
@@ -45,7 +47,5 @@ export function buttonVariants({
   size = 'default',
   className
 }: ButtonVariantProps & { className?: string } = {}): string {
-  return [BASE, VARIANTS[variant ?? 'default'], SIZES[size ?? 'default'], className]
-    .filter(Boolean)
-    .join(' ');
+  return cn(BASE, VARIANTS[variant ?? 'default'], SIZES[size ?? 'default'], className);
 }

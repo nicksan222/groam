@@ -1,58 +1,42 @@
+import { agentRunTime } from '@groam/ai/backend/runs/time';
 import Shell from '@groam/ui/components/shell/client';
-import { Skeleton } from '@groam/ui/components/skeleton';
 import { Bot } from 'lucide-react';
 import type { AgentRun } from '@/features/agents/hooks/use-agent';
 import { testIds } from '@/lib/test-ids';
 import { AgentRunStatusBadge } from './agent-run-status-badge';
-import { AgentRunToolbar } from './agent-run-toolbar';
 
-// oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
-export type AgentRunHeaderProps = {
-  isLoading?: boolean;
-  onRetry?: (runId: AgentRun['id']) => Promise<unknown> | unknown;
-  onStop?: (runId: AgentRun['id']) => Promise<unknown> | unknown;
-  run?: AgentRun;
-};
+function agentRunSurfaceLabel(run: AgentRun) {
+  if (run.agentId === 'reviewer') return 'Idea review';
+  return run.surface === 'chat' ? 'Conversation' : 'Issue resolution';
+}
 
-export function AgentRunHeader({ isLoading, onRetry, onStop, run }: AgentRunHeaderProps) {
-  if (isLoading || !run) {
-    return (
-      <div className="space-y-3 py-2">
-        <Skeleton className="h-5 w-40" />
-        <Skeleton className="h-8 w-[min(100%,32rem)]" />
-        <Skeleton className="h-4 w-56" />
-      </div>
-    );
-  }
-
+/** Title, status, and the started-by line; mirrors the issue banner. */
+export function AgentRunHeader({ run }: { run: AgentRun }) {
+  const startedAt = run.startedAt ?? run.updatedAt;
   return (
-    <div className="flex min-w-0 flex-col gap-4 pb-2">
-      <div className="flex flex-wrap items-center gap-2.5">
-        <span className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-          <Bot aria-hidden className="size-4" />
-          {run.agentId === 'reviewer'
-            ? 'Idea review'
-            : run.surface === 'chat'
-              ? 'Conversation'
-              : 'Issue resolution'}
-        </span>
-        <span aria-hidden className="h-3 w-px bg-border" />
+    <>
+      <Shell.Title
+        className="min-w-0 break-words [overflow-wrap:anywhere]"
+        data-testid={testIds.agentRunTitle}
+      >
+        {run.title}
+        <span className="ml-2 font-normal text-muted-foreground">#{run.shortId ?? run.id}</span>
+      </Shell.Title>
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
         <span aria-live="polite">
           <AgentRunStatusBadge status={run.status} />
         </span>
+        <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Bot aria-hidden className="size-3.5" />
+          {agentRunSurfaceLabel(run)}
+        </span>
+        <p className="min-w-0 truncate text-xs text-muted-foreground">
+          · {run.kickoff === 'queue' ? 'queued' : 'started'} by{' '}
+          <span className="font-medium text-foreground">{run.createdBy.name}</span>
+          {' · '}
+          <time dateTime={new Date(startedAt).toISOString()}>{agentRunTime(startedAt)}</time>
+        </p>
       </div>
-      <div className="flex min-w-0 flex-col items-start justify-between gap-4 xl:flex-row xl:items-end">
-        <div className="min-w-0 flex-1 space-y-2">
-          <Shell.Title
-            className="break-words text-2xl leading-tight tracking-tight [overflow-wrap:anywhere] md:text-2xl"
-            data-testid={testIds.agentRunTitle}
-          >
-            {run.title}
-          </Shell.Title>
-          <p className="text-sm text-muted-foreground">Run overview, results, and activity.</p>
-        </div>
-        {onRetry ? <AgentRunToolbar onRetry={onRetry} onStop={onStop} run={run} /> : null}
-      </div>
-    </div>
+    </>
   );
 }

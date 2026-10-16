@@ -2,14 +2,12 @@ import { expect as playwrightExpect } from '@playwright/test';
 import type { CreateIssueAction } from '#src/actions/create-issue';
 import { type UiTarget, ui } from '#src/playwright/interaction';
 import { by, dialogSubmit, idFromPath } from '#src/playwright/locators';
-import { openTripSection } from '#src/playwright/open-trip-section';
 import { ids } from '#src/testing/ids';
 
 const expect = playwrightExpect.configure({ timeout: 30_000 });
 
 export const createIssue: CreateIssueAction<UiTarget> = async (target, input) => {
   const user = ui(target);
-  await openTripSection(user, 'issues');
   await user.click(by(user.page, ids.newIssue));
   await expect(by(user.page, ids.createIssueDialog)).toBeVisible();
   await user.type(by(user.page, ids.createIssueTitle), input.title);

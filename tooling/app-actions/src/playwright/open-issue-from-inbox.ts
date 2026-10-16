@@ -1,6 +1,7 @@
 import { expect as playwrightExpect } from '@playwright/test';
+import type { IssueStatusFilter } from '#src/actions/set-issue-status';
 import { ids } from '#src/testing/ids';
-import { filterIssuesByStatus, type IssueStatusFilter } from './filter-issues-by-status';
+import { filterIssuesByStatus } from './filter-issues-by-status';
 import { type UiTarget, ui } from './interaction';
 import { by, issueRow } from './locators';
 import { openIssuesInbox } from './open-issues-inbox';

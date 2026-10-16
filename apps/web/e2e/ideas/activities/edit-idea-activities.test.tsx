@@ -15,7 +15,6 @@ import {
   openIdeaItinerary,
   openIssue,
   openSharedTrip,
-  openTripSection,
   requestIdeaReview,
   returnIdeaToEditing,
   saveSevenDayRange,
@@ -25,7 +24,7 @@ import {
 } from '@groam/app-actions/vitest';
 import { expect, test } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
-import { openApp } from '@/testing/open-app';
+import { openApp } from '@/journeys/open-app';
 
 // Component-level editor states (later-day entry points, add/edit/remove, address round trips) are
 // left to view tests; these journeys keep the flows that cross pages.
@@ -78,10 +77,9 @@ test('adds an activity to an issue-linked idea without changing the shared trip'
   await addStop({ first: true, name: 'Lisbon', notes: 'Walk', startDay: '1', endDay: '3' });
   await addActivity({ destination: 'Lisbon, Portugal', title: 'Walk through Alfama' });
   await openSharedTrip();
-  await openAppPath(`trips/${tripId}/itinerary`);
-  await expect.element(page.getByRole('region', { name: 'Day planner' })).toBeVisible();
+  await openAppPath(`trips/${tripId}/board`);
+  await expect.element(page.getByRole('region', { name: /^Agreed plan/u })).toBeVisible();
   await expectGone(page.getByText('Walk through Alfama'));
-  await openTripSection('ideas');
   await openIdeaFromList({ name: ideaName }, 'continue');
   await openIdeaItinerary();
   await expect

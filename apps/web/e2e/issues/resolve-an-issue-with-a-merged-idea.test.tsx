@@ -13,7 +13,7 @@ import {
   updateTrip
 } from '@groam/app-actions/vitest';
 import { expect, test } from 'vite-plus/test';
-import { openApp } from '@/testing/open-app';
+import { openApp } from '@/journeys/open-app';
 
 test('creates a trip, makes an issue, and resolves it with a merged idea', async () => {
   const suffix = uniqueSuffix();

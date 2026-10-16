@@ -7,7 +7,6 @@ export function TripPageShell({
   banner,
   body,
   children,
-  crumb,
   hero,
   isLoading = false,
   nav,
@@ -16,7 +15,6 @@ export function TripPageShell({
   banner?: ReactNode;
   body: ReactNode;
   children?: ReactNode;
-  crumb: ReactNode;
   hero: ReactNode;
   isLoading?: boolean;
   nav: ReactNode;
@@ -27,14 +25,16 @@ export function TripPageShell({
   return (
     <Shell className="trip-page-shell">
       <Shell.BannerLayout className={cn(!isLoading && 'trip-page-ready')}>
-        <Shell.Banner className="static shrink-0">
-          <Shell.BannerCrumb>{crumb}</Shell.BannerCrumb>
-          {hero}
-        </Shell.Banner>
+        {hero}
         <div className="sticky top-0 z-10 shrink-0 bg-background">{nav}</div>
         {banner}
         {notice}
-        <Shell.PageBody>{body}</Shell.PageBody>
+        <div
+          className="flex min-w-0 flex-1 flex-col px-6 py-5 md:min-h-0"
+          data-slot="trip-board-area"
+        >
+          {body}
+        </div>
       </Shell.BannerLayout>
       {children}
     </Shell>

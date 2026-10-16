@@ -1,3 +1,4 @@
+import { toast } from '@groam/ui/components/toast';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 
 function pad(value: number) {
@@ -112,7 +113,7 @@ export function tripCalendarIcs(
   ].join('\r\n');
 }
 
-export function downloadTripCalendar(
+function downloadTripCalendar(
   trip: Pick<TripDetail, 'destinations' | 'name' | 'startDate'>
 ): boolean {
   const ics = tripCalendarIcs(trip);
@@ -127,4 +128,21 @@ export function downloadTripCalendar(
   link.remove();
   URL.revokeObjectURL(href);
   return true;
+}
+
+/** Why a calendar cannot be exported yet, or null when it can. */
+export function tripCalendarExportBlocker(
+  trip: Pick<TripDetail, 'destinations' | 'startDate'>
+): string | null {
+  if (!trip.startDate) return 'Add an exact start date to export a calendar.';
+  const scheduled = trip.destinations.some(
+    (destination) =>
+      (destination.startDay !== null && destination.endDay !== null) ||
+      destination.activities.length > 0
+  );
+  return scheduled ? null : 'Schedule a stop or activity to export a calendar.';
+}
+
+export function exportTripCalendar(trip: Pick<TripDetail, 'destinations' | 'name' | 'startDate'>) {
+  if (!downloadTripCalendar(trip)) toast.error('The trip calendar could not be created.');
 }

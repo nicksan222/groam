@@ -86,7 +86,7 @@ test('submits a viewer draft and registers the compare screen as ideas context',
   const { result } = await renderWorkspace();
 
   expect(result.current.primary).toMatchObject({ intent: 'submit' });
-  expect(deps.useTripAgentContext).toHaveBeenCalledWith(expect.anything(), 'ideas');
+  expect(deps.useTripAgentContext).toHaveBeenCalledWith(expect.anything(), 'idea-compare');
   await act(() => {
     result.current.runPrimary();
   });
@@ -171,7 +171,7 @@ test('does not open editing or run a primary action when neither is allowed', as
     result.current.runPrimary();
   });
 
-  expect(result.current).toMatchObject({ parentLabel: 'Trip', primary: null, showLoading: false });
+  expect(result.current).toMatchObject({ primary: null, showLoading: false });
   expect(deps.openPanel).not.toHaveBeenCalled();
   expect(deps.run).not.toHaveBeenCalled();
   expect(deps.useTripAgentContext).toHaveBeenCalledWith(expect.anything(), 'overview');
@@ -214,7 +214,7 @@ test('confirms before replacing return travel and handles close and shared navig
       expect.objectContaining({ search: { addDestination: true } }),
       expect.objectContaining({ search: {} }),
       {
-        params: { section: 'itinerary', tripId: sharedTripId },
+        params: { section: 'board', tripId: sharedTripId },
         search: {},
         to: '/trips/$tripId/$section'
       }

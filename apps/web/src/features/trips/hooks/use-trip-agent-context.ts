@@ -1,35 +1,85 @@
 import { type AgentScreenContext, useSetAgentContext } from '@groam/ai/ui/context/agent-context';
+import { isResolved } from '@groam/backend/convex/modules/travel/issues/status';
 import type { Id } from '@groam/backend/data-model';
-import type { TripSection } from '@/features/trips/trip-sections';
+import { type TripSection, tripSectionTitle } from '@/features/trips/trip-sections';
+import type { TripAgentView } from '@/types/trips';
+import { useTripIssues } from './use-trip-issues';
 import { useTripTravelers } from './use-trip-travelers';
 import { useTripVersions } from './use-trip-versions';
 import type { TripDetail } from './use-trips';
 
-export function useTripAgentContext(trip: TripDetail | undefined, section: TripSection): void {
+/** Which live lists a screen's assistant context carries, so the others are not subscribed. */
+function agentContextNeeds(trip: TripDetail | undefined, view: TripAgentView) {
+  const shared = trip !== undefined && !trip.proposal;
+  const onBoard = shared && view === 'board';
+  return {
+    ideas: view === 'idea-compare' || onBoard || (shared && view === 'ideas'),
+    issues: onBoard || (shared && view === 'issues'),
+    travelers: onBoard || (shared && view === 'overview')
+  };
+}
+
+export function useTripAgentContext(trip: TripDetail | undefined, view: TripAgentView): void {
+  const section = view === 'idea-compare' ? undefined : view;
   const sourceTripId = trip?.proposal?.sourceTripId ?? trip?.id;
+  const needs = agentContextNeeds(trip, view);
   const { proposals } = useTripVersions(
     sourceTripId ?? ('' as Id<'trips'>),
-    section === 'ideas' && Boolean(sourceTripId)
+    needs.ideas && Boolean(sourceTripId)
   );
-  const { travelers } = useTripTravelers(
-    section === 'overview' && trip && !trip.proposal ? trip.id : undefined
-  );
+  const { issues } = useTripIssues(sourceTripId ?? ('' as Id<'trips'>), needs.issues);
+  const { travelers } = useTripTravelers(needs.travelers && trip ? trip.id : undefined);
+  const ideas = (proposals ?? []).map((proposal) => ({
+    id: proposal.id,
+    ideaName: proposal.ideaName,
+    status: proposal.status
+  }));
   useSetAgentContext(
-    trip
-      ? tripScreenAgentContext(trip, section, {
-          ideas: (proposals ?? []).map((proposal) => ({
-            id: proposal.id,
-            ideaName: proposal.ideaName,
-            status: proposal.status
-          })),
-          travelers: travelers.map((traveler) => ({
-            name: traveler.name,
-            status: traveler.status,
-            userId: traveler.userId
-          }))
-        })
-      : null
+    !trip
+      ? null
+      : section === undefined
+        ? ideaCompareAgentContext(trip, ideas)
+        : tripScreenAgentContext(trip, section, {
+            ideas,
+            openIssues: (issues ?? [])
+              .filter((issue) => !isResolved(issue.status))
+              .map((issue) => ({ id: issue.id, title: issue.title })),
+            travelers: travelers.map((traveler) => ({
+              name: traveler.name,
+              status: traveler.status,
+              userId: traveler.userId
+            }))
+          })
   );
+}
+
+export function ideaCompareAgentContext(
+  trip: TripDetail,
+  ideas: Array<{ id: string; ideaName: string; status: string }>
+): AgentScreenContext {
+  return {
+    capabilities: [
+      'trip.status.read',
+      'trip.itinerary.read',
+      'trip.version.approve',
+      'trip.version.apply'
+    ],
+    data: {
+      archived: trip.archivedAt !== null,
+      currency: trip.currency,
+      groupMemberCount: trip.groupMemberCount,
+      ideas,
+      initialBudget: trip.initialBudget,
+      role: trip.role,
+      totalPlannedCost: trip.totalPlannedCost,
+      tripName: trip.name
+    },
+    description:
+      'Help with the trip idea workflow: draft changes, review feedback, approvals, conflicts, and application status.',
+    key: `trip:${trip.id}:ideas`,
+    target: { kind: 'trip', section: 'ideas', tripId: trip.id },
+    title: `${trip.name} · Ideas`
+  };
 }
 
 export function tripScreenAgentContext(
@@ -37,6 +87,7 @@ export function tripScreenAgentContext(
   section: TripSection,
   extras: {
     ideas?: Array<{ id: string; ideaName: string; status: string }>;
+    openIssues?: Array<{ id: string; title: string }>;
     travelers?: Array<{ name: string; status: string; userId: string }>;
   } = {}
 ): AgentScreenContext {
@@ -49,9 +100,17 @@ export function tripScreenAgentContext(
     totalPlannedCost: trip.totalPlannedCost,
     tripName: trip.name
   };
+  const overviewData = {
+    ...base,
+    destination: trip.destination.status === 'known' ? trip.destination.name : 'Undecided',
+    destinationCount: trip.destinations.length,
+    startDate: trip.startDate,
+    totalDurationDays: trip.totalDurationDays,
+    travelers: extras.travelers ?? []
+  };
   const sectionContext: Record<
     TripSection,
-    Pick<AgentScreenContext, 'capabilities' | 'data' | 'description' | 'title'>
+    Pick<AgentScreenContext, 'capabilities' | 'data' | 'description'>
   > = {
     activity: {
       capabilities: ['trip.status.read', 'trip.itinerary.read'],
@@ -63,20 +122,13 @@ export function tripScreenAgentContext(
           type: item.type
         }))
       },
-      description: 'Use the visible audit trail to explain what recently changed in this trip.',
-      title: `${trip.name} · Activity`
-    },
-    issues: {
-      capabilities: ['trip.status.read', 'trip.itinerary.read'],
-      data: base,
-      description:
-        'Help turn planning concerns into scoped trip issues, clarify acceptance criteria, and prepare work for a trip idea.',
-      title: `${trip.name} · Issues`
+      description: 'Use the visible audit trail to explain what recently changed in this trip.'
     },
     itinerary: {
       capabilities: [
         'trip.status.read',
         'trip.itinerary.read',
+        ...(trip.proposal ? [] : (['trip.packing.read'] as const)),
         'web.search',
         ...(trip.permissions.canEdit
           ? ([
@@ -124,28 +176,24 @@ export function tripScreenAgentContext(
         totalDurationDays: trip.totalDurationDays
       },
       description:
-        'Plan the visible route and activities. Only make itinerary changes after explicit confirmation.',
-      title: `${trip.name} · Itinerary`
+        'Plan the visible route and activities. Only make itinerary changes after explicit confirmation.'
     },
-    overview: {
+    board: {
       capabilities: [
         'trip.status.read',
         'trip.itinerary.read',
         'trip.packing.read',
-        ...(trip.permissions.canEdit ? (['trip.packing.manage'] as const) : []),
-        ...(trip.proposal || trip.archivedAt ? [] : (['trip.traveler.set'] as const))
+        ...(trip.archivedAt ? [] : (['trip.traveler.set'] as const)),
+        'trip.version.approve',
+        'trip.version.apply'
       ],
       data: {
-        ...base,
-        destination: trip.destination.status === 'known' ? trip.destination.name : 'Undecided',
-        destinationCount: trip.destinations.length,
-        startDate: trip.startDate,
-        totalDurationDays: trip.totalDurationDays,
-        travelers: extras.travelers ?? []
+        ...overviewData,
+        ideas: extras.ideas ?? [],
+        openIssues: extras.openIssues ?? []
       },
       description:
-        'Read the day-by-day plan, exact times, travel, and packing. Make plan changes through an idea.',
-      title: `${trip.name} · Overview`
+        'The trip board: the agreed plan, ideas, and what is still open (issues and gaps). Help the group settle open items; plan changes go through an idea.'
     },
     ideas: {
       capabilities: [
@@ -154,18 +202,38 @@ export function tripScreenAgentContext(
         'trip.version.approve',
         'trip.version.apply'
       ],
-      data: {
-        ...base,
-        ideas: extras.ideas ?? []
-      },
+      data: { ...base, ideas: extras.ideas ?? [] },
       description:
-        'Help with the trip idea workflow: draft changes, review feedback, approvals, conflicts, and application status.',
-      title: `${trip.name} · Ideas`
+        'Help with the trip idea workflow: draft changes, review feedback, approvals, conflicts, and application status.'
+    },
+    issues: {
+      capabilities: ['trip.status.read', 'trip.itinerary.read'],
+      data: { ...base, openIssues: extras.openIssues ?? [] },
+      description:
+        'Help turn planning concerns into scoped trip issues, clarify acceptance criteria, and prepare work for a trip idea.'
+    },
+    overview: {
+      capabilities: [
+        'trip.status.read',
+        'trip.itinerary.read',
+        'trip.packing.read',
+        ...(trip.permissions.canEdit ? (['trip.packing.manage'] as const) : [])
+      ],
+      data: overviewData,
+      description: trip.proposal
+        ? 'Read the day-by-day plan, exact times, travel, and packing. Make plan changes through an idea.'
+        : 'The overview of the agreed plan: at a glance, route, day-by-day itinerary, and packing. Read it to answer questions; plan changes go through an idea.'
     }
   };
   return {
     ...sectionContext[section],
+    title: `${trip.name} · ${tripSectionTitle(section)}`,
     key: `trip:${trip.id}:${section}`,
-    target: { kind: 'trip', section, tripId: trip.id }
+    target: { kind: 'trip', section: assistantSection(section), tripId: trip.id }
   };
+}
+
+/** The assistant backend names the board's section "overview"; it has no "board" literal yet. */
+function assistantSection(section: TripSection) {
+  return section === 'board' ? 'overview' : section;
 }

@@ -1,6 +1,7 @@
 import { agentRunEventLabels } from '@groam/ai/backend/runs/events';
 import { agentRunDuration, agentRunTime } from '@groam/ai/backend/runs/time';
 import { render } from '@groam/vitest-config/react';
+import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import type { AgentRun } from '@/features/agents/hooks/use-agent';
@@ -69,10 +70,30 @@ vi.mock('@/features/agents/hooks/use-agent-run', () => ({
 }));
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const { createAgentTestRouterMock } = await import('@/features/agents/agent-test-router-mock');
   return {
     ...(await importOriginal<typeof import('@tanstack/react-router')>()),
-    ...createAgentTestRouterMock(navigate, { preventDefault: true })
+    Link: ({
+      children,
+      className,
+      params,
+      to
+    }: {
+      children?: ReactNode;
+      className?: string;
+      params?: Record<string, string>;
+      to: string;
+    }) => {
+      let href = to;
+      for (const [key, value] of Object.entries(params ?? {})) {
+        href = href.replace(`$${key}`, value);
+      }
+      return (
+        <a className={className} href={href} onClick={(event) => event.preventDefault()}>
+          {children}
+        </a>
+      );
+    },
+    useNavigate: () => navigate
   };
 });
 
@@ -374,11 +395,7 @@ describe('AgentRunView', () => {
     expect(events.some((event) => event.textContent?.includes('Check whether day 3'))).toBe(true);
     expect(events.some((event) => event.textContent?.includes('Read itinerary'))).toBe(true);
     expect(events.some((event) => event.textContent?.includes('Started review'))).toBe(true);
-    await expect.element(page.getByRole('button', { name: 'Thoughts' })).toBeInTheDocument();
-    await page.getByRole('button', { name: 'Thoughts' }).click();
-    const thoughts = page.getByTestId(testIds.agentEvent).elements();
-    expect(thoughts).toHaveLength(1);
-    expect(thoughts[0]?.textContent).toContain('Check whether day 3');
+    await expect.element(page.getByRole('button', { name: 'Thoughts' })).not.toBeInTheDocument();
     expect(idea.textContent).not.toContain('generated');
     expect(page.getByTestId(testIds.agentRunTitle).element().textContent).toContain(
       'Kyoto food crawl'
@@ -445,7 +462,9 @@ describe('AgentRunView', () => {
     await render(<AgentRunView agentId="issue" runId="run-done" />);
     expect(page.getByText('Done').elements().length).toBe(1);
     await expect.element(page.getByText('Called by')).toBeInTheDocument();
-    await expect.element(page.getByText('Lea')).toBeInTheDocument();
+    await expect
+      .element(page.getByTestId(testIds.agentRunContext).getByText('Lea'))
+      .toBeInTheDocument();
     await expect.element(page.getByText('Timeline')).toBeInTheDocument();
     await expect
       .element(page.getByText(new RegExp(`${agentRunDuration(startedAt, completedAt)}`, 'u')))
@@ -617,7 +636,10 @@ test('explains provider authentication failures without offering an unsupported 
     title: 'Review the draft'
   });
   await render(<AgentRunView agentId="reviewer" runId="review-failed" />);
-  await expect.element(page.getByText(/organization or deployment admin/u)).toBeInTheDocument();
+  await expect.element(page.getByText(/Add or fix a key in AI settings/u)).toBeInTheDocument();
+  expect(page.getByRole('link', { name: 'AI settings' }).element().getAttribute('href')).toBe(
+    '/settings/ai'
+  );
   await expect
     .element(page.getByRole('button', { name: 'Retry from zero' }))
     .not.toBeInTheDocument();

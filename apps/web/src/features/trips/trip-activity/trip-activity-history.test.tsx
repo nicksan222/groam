@@ -27,16 +27,8 @@ const activity = [
 test('renders activity events in a data table with compact filters', async () => {
   await render(<TripActivityHistory activity={activity} />);
 
-  await expect
-    .element(page.getByRole('heading', { level: 2, name: 'Activity' }))
-    .toBeInTheDocument();
-  await expect
-    .element(page.getByText('Every planning move the group has made on this trip.'))
-    .toBeInTheDocument();
   await expect.element(page.getByText('2 events')).toBeInTheDocument();
-  const toolbar = page.getByLabelText('Filter activity');
-  await expect.element(toolbar).toHaveClass('flex', 'items-center');
-  await expect.element(toolbar).not.toHaveClass('dashboard-panel');
+  await expect.element(page.getByRole('heading', { name: 'Activity' })).not.toBeInTheDocument();
   await expect.element(page.getByRole('table')).toBeInTheDocument();
   await expect.element(page.getByRole('button', { name: 'Event' })).toBeInTheDocument();
   await expect.element(page.getByLabelText('Search activity')).toBeInTheDocument();

@@ -38,8 +38,20 @@ export type TripUpdateInput = FunctionArgs<typeof api.routes.trips.update.run>['
 
 export type TripSection = (typeof tripSections)[number];
 
+/** What the assistant is told a trip screen shows: a trip section, or an idea's change review. */
+export type TripAgentView = TripSection | 'idea-compare';
+
 export type TripState = ReturnType<typeof useTrip>;
 export type LoadedTrip = NonNullable<TripState['trip']>;
+
+export type TripSectionNavProps =
+  | { isLoading: true; section: TripSection }
+  | {
+      isLoading?: false;
+      onOpen: (section: TripSection) => void;
+      section: TripSection;
+      tripId: Id<'trips'>;
+    };
 
 export type TripNavigation = {
   closeAddDestination: () => void;
@@ -116,8 +128,15 @@ export type TransferForm = ReturnType<typeof useTripTransferForm>;
 export type TripRouteSearch = {
   addDestination?: boolean;
   commentTarget?: string;
+  day?: number;
   issue?: string;
   proposal?: string;
+};
+
+export type TripToolbarFacts = {
+  destination: string;
+  length: string | null;
+  window: string;
 };
 
 export type TripLocation = Pick<

@@ -1,4 +1,3 @@
-import type { Id } from '@groam/backend/data-model';
 import type { useNavigate } from '@tanstack/react-router';
 import type { useStartIdeaFlow } from '@/features/trips/hooks/use-start-idea-flow';
 import type { TripSection } from '@/features/trips/trip-sections';
@@ -16,7 +15,8 @@ export function createTripNavigation({
   ideaFlow: ReturnType<typeof useStartIdeaFlow>;
   navigate: ReturnType<typeof useNavigate>;
   trip: LoadedTrip | undefined;
-  tripId: Id<'trips'>;
+  /** The trip as the URL writes it (short or full id); navigating with it keeps the page mounted. */
+  tripId: string;
 }): TripNavigation {
   const openSection = (section: TripSection) =>
     void navigate({ params: { section, tripId }, search: {}, to: '/trips/$tripId/$section' });
@@ -45,7 +45,7 @@ async function continueAddDestination({
   confirm: ReturnType<typeof useConfirm>;
   navigate: ReturnType<typeof useNavigate>;
   trip: LoadedTrip;
-  tripId: Id<'trips'>;
+  tripId: string;
 }) {
   if (
     trip.departureTransfer &&

@@ -12,7 +12,7 @@ import {
   uniqueSuffix
 } from '@groam/app-actions/vitest';
 import { expect, test } from 'vite-plus/test';
-import { openApp } from '@/testing/open-app';
+import { openApp } from '@/journeys/open-app';
 
 test('group switching isolates reactive Convex data', async () => {
   const { groupName: homeGroupName } = await arrange.account();

@@ -11,7 +11,16 @@ import { useOpenState } from '@/features/workspace/hooks/use-open-state';
 import { PaginatedListContent } from '@/features/workspace/workspace-list/paginated-list-content';
 import { useWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
 import { testIds } from '@/lib/test-ids';
+import type { IssueStatusFilter } from '@/types/issues';
 import { IssueList } from './issue-list';
+
+const emptyMessages: Record<IssueStatusFilter, string> = {
+  all: 'There are no issues in this group.',
+  closed: 'There are no closed issues in this group.',
+  in_progress: 'Nothing is in progress in this group.',
+  open: 'There are no open issues in this group.',
+  wont_do: "Nothing is marked won't do in this group."
+};
 
 export function IssueListView() {
   const { isLoading, issues, loadMore, status } = useWorkspaceIssues();
@@ -73,13 +82,7 @@ export function IssueListView() {
           status={status}
         >
           <IssueList
-            emptyFilterMessage={(filter) =>
-              filter === 'open'
-                ? 'There are no open issues in this group.'
-                : filter === 'closed'
-                  ? 'There are no closed issues in this group.'
-                  : 'There are no issues in this group.'
-            }
+            emptyFilterMessage={(filter) => emptyMessages[filter]}
             isLoading={isLoading}
             issues={issues}
             showTripName

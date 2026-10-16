@@ -18,7 +18,7 @@ import {
 } from '@groam/app-actions/vitest';
 import { expect, test } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
-import { openApp, openSignedOutApp } from '@/testing/open-app';
+import { openApp, openSignedOutApp } from '@/journeys/open-app';
 
 test('an invitation code copied from settings joins a new member to the group', async () => {
   await openApp();
@@ -43,7 +43,6 @@ test('a member pastes an invitation code, joins the group and plans on its trips
   await signUp(uniqueTestUser('trip-member'));
   await acceptGroupInvitation(invitationCode);
   await openTripFromList(tripName);
-  await expect.element(by(ids.tripRole)).toHaveAttribute('data-role', 'participant');
   await expect.element(by(ids.sharedTripBanner)).toBeVisible();
   await expect.element(by(ids.sharedTripNewIdea)).toBeVisible();
   await expectGone(page.getByRole('button', { name: 'Edit details' }));

@@ -12,7 +12,7 @@ import {
 } from '@groam/app-actions/vitest';
 import { expect, test } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
-import { openApp } from '@/testing/open-app';
+import { openApp } from '@/journeys/open-app';
 
 test('plans and revisits an activity before trip dates or destination days are set', async () => {
   await environment.mockDestinationSearch();

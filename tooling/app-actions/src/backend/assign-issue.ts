@@ -14,7 +14,9 @@ export const assignIssue: AssignIssueAction<{
   const assignee =
     input.assignee?.kind === 'agent'
       ? { agentId: 'issue' as const, kind: 'agent' as const, name: 'Issue agent' }
-      : input.assignee;
+      : input.assignee?.kind === 'me'
+        ? { kind: 'user' as const, name: user.name, userId: user.userId }
+        : input.assignee;
   await client.mutation(api.routes.trips.issues.assign.run, {
     assignee,
     issueId: input.issueId as Id<'tripIssues'>

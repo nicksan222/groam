@@ -6,7 +6,16 @@ import {
   DropdownMenuTrigger
 } from '@groam/ui/components/dropdown-menu';
 import { Spinner } from '@groam/ui/components/spinner';
-import { MoreHorizontal, Pencil, Plus, RotateCcw, Send, Trash2 } from 'lucide-react';
+import {
+  Archive,
+  Calendar,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  RotateCcw,
+  Send,
+  Trash2
+} from 'lucide-react';
 import type { ReactNode } from 'react';
 import {
   ideaCloseWithoutApplying,
@@ -15,14 +24,19 @@ import {
   ideaEditDetails,
   ideaSendForReview
 } from '@/features/ideas/idea-glossary';
+import { useArchiveTrip } from '@/features/trips/hooks/use-archive-trip';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
+import {
+  exportTripCalendar,
+  tripCalendarExportBlocker
+} from '@/features/trips/trip-calendar-export';
 import type { TripSection } from '@/features/trips/trip-sections';
-import { useAsyncPending } from '@/features/workspace/hooks/use-async-pending';
 import { testIds } from '@/lib/test-ids';
 
 import type { TripState } from './trip-detail-types';
 
 function navigationItems({
+  archive,
   canEditDetails,
   closeIdea,
   edit,
@@ -32,6 +46,7 @@ function navigationItems({
   submit,
   trip
 }: {
+  archive: () => void;
   canEditDetails: boolean;
   closeIdea?: () => void;
   edit: () => void;
@@ -56,6 +71,15 @@ function navigationItems({
     startIdea && trip.permissions.canPropose && !trip.proposal
       ? { icon: <Plus />, label: ideaCreateCta, onClick: startIdea }
       : null,
+    trip.proposal
+      ? null
+      : {
+          disabled: tripCalendarExportBlocker(trip) !== null,
+          icon: <Calendar />,
+          label: 'Export calendar',
+          onClick: () => exportTripCalendar(trip),
+          testId: testIds.tripCalendarExport
+        },
     trip.permissions.canRestore
       ? {
           disabled: isRestoring,
@@ -63,6 +87,15 @@ function navigationItems({
           label: 'Restore trip',
           onClick: restore,
           testId: testIds.tripActionRestore
+        }
+      : null,
+    !trip.proposal && trip.permissions.canArchive && trip.archivedAt === null
+      ? {
+          icon: <Archive />,
+          label: 'Archive trip',
+          onClick: archive,
+          testId: testIds.tripArchive,
+          variant: 'destructive' as const
         }
       : null,
     closeIdea &&
@@ -81,6 +114,7 @@ function navigationItems({
 }
 
 export function TripNavigationActions({
+  leading,
   onCloseIdea,
   onEdit,
   onStartIdea,
@@ -89,6 +123,8 @@ export function TripNavigationActions({
   trip,
   tripState
 }: {
+  /** Icon buttons that sit just before the actions menu. */
+  leading?: ReactNode;
   onCloseIdea?: () => void;
   onEdit: () => void;
   onStartIdea?: () => void;
@@ -97,19 +133,15 @@ export function TripNavigationActions({
   trip: TripDetail;
   tripState: TripState;
 }) {
-  const pending = useAsyncPending();
-  const restore = async () => {
-    await pending.run(async () => {
-      await tripState.restore();
-    });
-  };
+  const { archive, isPending, restore } = useArchiveTrip(tripState);
   const showPlanningActions = section === 'overview' || section === 'itinerary';
   const canEditDetails = trip.permissions.canEdit && showPlanningActions;
   const items = navigationItems({
+    archive: () => void archive(),
     canEditDetails,
     closeIdea: onCloseIdea,
     edit: onEdit,
-    isRestoring: pending.isPending,
+    isRestoring: isPending,
     restore: () => void restore(),
     startIdea: onStartIdea,
     submit: onSubmit,
@@ -124,6 +156,7 @@ export function TripNavigationActions({
           {ideaEditDetails}
         </Button>
       ) : null}
+      {leading}
       {items.length > 0 ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

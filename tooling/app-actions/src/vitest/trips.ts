@@ -31,19 +31,24 @@ export async function createTripFromTrips(
   return idFromPath('trips');
 }
 
+async function expectTripAction(id: string): Promise<void> {
+  await tap(by(ids.tripActions));
+  await expect.element(by(id)).toBeVisible();
+  await userEvent.keyboard('{Escape}');
+  await expectGone(by(id));
+}
+
 export async function archiveTrip(): Promise<void> {
+  await tap(by(ids.tripActions));
   await tap(by(ids.tripArchive));
   await tap(page.getByRole('alertdialog').getByRole('button', { name: 'Continue' }));
-  await tap(by(ids.tripActions));
-  await expect.element(by(ids.tripActionRestore)).toBeVisible();
-  await userEvent.keyboard('{Escape}');
-  await expectGone(by(ids.tripActionRestore));
+  await expectTripAction(ids.tripActionRestore);
 }
 
 export async function restoreTrip(): Promise<void> {
   await tap(by(ids.tripActions));
   await tap(by(ids.tripActionRestore));
-  await expect.element(by(ids.tripArchive)).toBeVisible();
+  await expectTripAction(ids.tripArchive);
 }
 
 export type TripStatusFilter = 'active' | 'all' | 'archived';

@@ -56,9 +56,9 @@ about them. Pipe noisy commands through `tail` or `rg` instead of dumping logs.
 
 `claude` (terminal alias, `just claude`, and the VS Code extension) runs
 `tooling/claude/claude.sh`. It starts or reuses the Headroom proxy, which
-compresses tool output, and loads `tooling/claude/settings.json`, the Convex MCP
-from `tooling/claude/mcp.json`, and the Headroom MCP from
-`tooling/claude/mcp.headroom.json` (only while the proxy is up). Use
+compresses tool output. Everything else is standard project config: plugins in
+`.claude/settings.json` (Claude offers to install missing ones when the folder
+is trusted) and the Convex and Headroom MCP servers in `.mcp.json`. Use
 `headroom_retrieve` when a compressed marker hides detail you need. The Convex
 MCP (local logs, data, function specs) needs a one-time `vp exec convex login`;
 without it, use `rg` and the code. `CLAUDE_HEADROOM=off` skips the proxy (needed
@@ -148,7 +148,7 @@ usable; the "Create group" button stays disabled until a name is typed (the
 
 Personal Claude configuration stays out of Git. Put models, provider routing,
 env, and permissions in `.claude/settings.local.json`, personal notes in
-`CLAUDE.local.md`, and extra MCP servers in `tooling/claude/mcp.local.json`.
+`CLAUDE.local.md`, and extra MCP servers via `claude mcp add --scope local`.
 Subagents ask for the `opus`/`sonnet` aliases, so a different provider (Bedrock,
 Vertex, a gateway) only needs the alias mapping, for example:
 

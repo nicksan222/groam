@@ -19,9 +19,8 @@ VP_GIT_HOOKS=0 vp install --frozen-lockfile
 # Playwright provider; its system libraries come from the Dockerfile.
 vp run test:browsers:install
 
-# Interactive `claude` in bash and zsh uses the repository harness (Headroom,
-# Caveman, MCP). An alias, not a PATH shim, so the harness still finds the real
-# binary. Home is rebuilt with the container, so this reruns on every rebuild;
+# Interactive `claude` in bash and zsh runs through the Headroom proxy wrapper.
+# An alias, not a PATH shim, so the wrapper still finds the real binary. Home is rebuilt with the container, so this reruns on every rebuild;
 # any earlier harness alias (e.g. from another workspace path) is replaced.
 claude_wrapper="${PWD}/tooling/claude/claude.sh"
 claude_alias="alias claude='${claude_wrapper}'"
@@ -40,7 +39,7 @@ printf '  Claude Code: %s\n' "$(claude --version)"
 printf '  Graphify: %s\n' "$(graphify --version)"
 printf '  Headroom: %s\n' "$(headroom --version)"
 printf '  claude (new bash/zsh shells) and the VS Code extension run through\n'
-printf '    tooling/claude/claude.sh: Headroom proxy, Caveman, Convex + Headroom MCP.\n'
+printf '    tooling/claude/claude.sh (Headroom proxy); plugins and MCP come from .claude/ and .mcp.json.\n'
 printf '  Credentials: host ~/.claude, ~/.claude.json and ~/.config/gh are mounted;\n'
 printf '    host CLAUDE_CODE_OAUTH_TOKEN, GH_TOKEN and provider API keys are forwarded when set.\n'
 printf '  macOS keychain login does not carry over: run `claude setup-token` on the host\n'

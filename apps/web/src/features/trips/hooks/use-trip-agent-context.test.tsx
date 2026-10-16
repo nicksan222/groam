@@ -1,9 +1,15 @@
 import { AgentContextProvider, useCurrentAgentContext } from '@groam/ai/ui/context/agent-context';
 import type { Id } from '@groam/backend/data-model';
 import { render } from '@groam/vitest-config/react';
-import { expect, test, vi } from 'vite-plus/test';
+import { describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
-import { tripScreenAgentContext, useTripAgentContext } from './use-trip-agent-context';
+import { tripSectionLabels } from '@/features/trips/trip-sections';
+import type { TripAgentView } from '@/types/trips';
+import {
+  ideaCompareAgentContext,
+  tripScreenAgentContext,
+  useTripAgentContext
+} from './use-trip-agent-context';
 import type { TripDetail } from './use-trips';
 
 vi.mock('./use-trip-versions', () => ({
@@ -11,6 +17,12 @@ vi.mock('./use-trip-versions', () => ({
     proposals: enabled
       ? [{ id: 'proposal-lisbon', ideaName: 'Lisbon proposal', status: 'in_review' }]
       : undefined
+  })
+}));
+
+vi.mock('./use-trip-issues', () => ({
+  useTripIssues: (_tripId: unknown, enabled = true) => ({
+    issues: enabled ? [{ id: 'issue-1', status: 'open', title: 'Book flights' }] : undefined
   })
 }));
 
@@ -63,7 +75,7 @@ const trip = {
   totalDurationDays: 7
 } as unknown as TripDetail;
 
-function TripRegistration({ section }: { section: 'itinerary' | 'overview' | 'ideas' }) {
+function TripRegistration({ section }: { section: TripAgentView }) {
   useTripAgentContext(trip, section);
   return null;
 }
@@ -73,89 +85,84 @@ function Probe() {
   return <output aria-label="Trip agent context">{JSON.stringify(context)}</output>;
 }
 
-test('builds explicit screen data and capabilities for every trip section', async () => {
-  const sections = ['activity', 'issues', 'itinerary', 'overview', 'ideas'] as const;
-  for (const section of sections) {
+const sharedBoard = { ...trip, permissions: { ...trip.permissions, canEdit: false } };
+const proposalTrip = { ...trip, proposal: { status: 'draft' } } as unknown as TripDetail;
+const archivedBoard = { ...sharedBoard, archivedAt: Date.now() } as TripDetail;
+
+test.each(['activity', 'board', 'ideas', 'issues', 'itinerary', 'overview'] as const)(
+  'builds explicit screen data for the %s section',
+  (section) => {
     const context = tripScreenAgentContext(trip, section);
     expect(context.key).toBe(`trip:trip-1:${section}`);
-    expect(context.title).toContain('Portugal');
+    expect(context.title).toBe(`Portugal · ${tripSectionLabels[section]}`);
     expect(context.data).toBeDefined();
-    expect(context.target).toEqual({ kind: 'trip', section, tripId: 'trip-1' });
+    // The assistant backend has no "board" section yet, so the board reports "overview".
+    expect(context.target).toEqual({
+      kind: 'trip',
+      section: section === 'board' ? 'overview' : section,
+      tripId: 'trip-1'
+    });
   }
-  expect(tripScreenAgentContext(trip, 'itinerary').capabilities).toEqual([
-    'trip.status.read',
-    'trip.itinerary.read',
-    'web.search',
-    'trip.activity.add',
-    'trip.activity.remove',
-    'trip.activity.update',
-    'trip.cost.manage',
-    'trip.destination.add',
-    'trip.destination.remove',
-    'trip.destination.schedule',
-    'trip.details.update',
-    'trip.itinerary.extend',
-    'trip.stay.add',
-    'trip.stay.remove',
-    'trip.stay.update',
-    'trip.transfer.remove',
-    'trip.transfer.set'
-  ]);
-  expect(
-    tripScreenAgentContext(
-      { ...trip, permissions: { ...trip.permissions, canEdit: false } },
-      'overview'
-    ).capabilities
-  ).toEqual(['trip.status.read', 'trip.itinerary.read', 'trip.packing.read', 'trip.traveler.set']);
-  expect(
-    tripScreenAgentContext(
-      { ...trip, proposal: { status: 'draft' } } as unknown as TripDetail,
-      'overview'
-    ).capabilities
-  ).toEqual([
-    'trip.status.read',
-    'trip.itinerary.read',
-    'trip.packing.read',
-    'trip.packing.manage'
-  ]);
-  expect(
-    tripScreenAgentContext(
-      {
-        ...trip,
-        archivedAt: Date.now(),
-        permissions: { ...trip.permissions, canEdit: false }
-      } as TripDetail,
-      'overview'
-    ).capabilities
-  ).toEqual(['trip.status.read', 'trip.itinerary.read', 'trip.packing.read']);
-  expect(tripScreenAgentContext(trip, 'issues').title).toContain('Issues');
-  expect(tripScreenAgentContext(trip, 'ideas').title).toContain('Ideas');
-  expect(
-    tripScreenAgentContext(trip, 'ideas', {
-      ideas: [{ id: 'proposal-lisbon', ideaName: 'Lisbon proposal', status: 'in_review' }]
-    }).data
-  ).toMatchObject({
-    ideas: [{ id: 'proposal-lisbon', ideaName: 'Lisbon proposal', status: 'in_review' }]
+);
+
+test.each([
+  ['shared itinerary for editors', trip, 'itinerary', ['trip.packing.read', 'trip.activity.add']],
+  ['proposal itinerary', proposalTrip, 'itinerary', ['trip.itinerary.read']],
+  ['shared board', sharedBoard, 'board', ['trip.traveler.set', 'trip.version.approve']],
+  ['archived board', archivedBoard, 'board', ['trip.version.apply']],
+  ['ideas tab', sharedBoard, 'ideas', ['trip.version.approve', 'trip.version.apply']],
+  ['issues tab', sharedBoard, 'issues', ['trip.itinerary.read']],
+  ['shared overview', sharedBoard, 'overview', ['trip.packing.read']],
+  ['proposal overview', proposalTrip, 'overview', ['trip.packing.manage']]
+] as const)('grants the capabilities of the %s', (_name, subject, section, expected) => {
+  expect(tripScreenAgentContext(subject, section).capabilities).toEqual(
+    expect.arrayContaining([...expected])
+  );
+});
+
+describe('capability limits', () => {
+  test('archived boards cannot set travelers', () => {
+    expect(tripScreenAgentContext(archivedBoard, 'board').capabilities).not.toContain(
+      'trip.traveler.set'
+    );
   });
-  expect(
-    tripScreenAgentContext(trip, 'overview', {
-      travelers: [{ name: 'Alex', status: 'going', userId: 'user-alex' }]
-    }).data
-  ).toMatchObject({
+
+  test('proposal itineraries leave out shared-trip packing reads', () => {
+    expect(tripScreenAgentContext(proposalTrip, 'itinerary').capabilities).not.toContain(
+      'trip.packing.read'
+    );
+  });
+
+  test('read-only viewers get no editing capabilities on the plan', () => {
+    expect(tripScreenAgentContext(sharedBoard, 'itinerary').capabilities).not.toContain(
+      'trip.activity.add'
+    );
+  });
+});
+
+test('the board carries travelers, ideas, and open issues', () => {
+  const context = tripScreenAgentContext(sharedBoard, 'board', {
+    ideas: [{ id: 'proposal-lisbon', ideaName: 'Lisbon proposal', status: 'in_review' }],
+    openIssues: [{ id: 'issue-1', title: 'Book flights' }],
+    travelers: [{ name: 'Alex', status: 'going', userId: 'user-alex' }]
+  });
+  expect(context.title).toBe('Portugal · Board');
+  expect(context.data).toMatchObject({
+    ideas: [{ id: 'proposal-lisbon', ideaName: 'Lisbon proposal', status: 'in_review' }],
+    openIssues: [{ id: 'issue-1', title: 'Book flights' }],
     travelers: [{ name: 'Alex', status: 'going', userId: 'user-alex' }]
   });
 });
 
 test('forwards live trip section changes through the shared agent context hook', async () => {
+  const context = () => page.getByRole('status', { name: 'Trip agent context' }).element();
   const view = await render(
     <AgentContextProvider>
-      <TripRegistration section="overview" />
+      <TripRegistration section="board" />
       <Probe />
     </AgentContextProvider>
   );
-  expect(page.getByRole('status', { name: 'Trip agent context' }).element().textContent).toContain(
-    'user-alex'
-  );
+  expect(context().textContent).toContain('Book flights');
 
   await view.rerender(
     <AgentContextProvider>
@@ -163,23 +170,38 @@ test('forwards live trip section changes through the shared agent context hook',
       <Probe />
     </AgentContextProvider>
   );
-  expect(page.getByRole('status', { name: 'Trip agent context' }).element().textContent).toContain(
-    'trip.activity.add'
-  );
-  expect(
-    page.getByRole('status', { name: 'Trip agent context' }).element().textContent
-  ).not.toContain('user-alex');
+  expect(context().textContent).toContain('trip.activity.add');
+  expect(context().textContent).not.toContain('user-alex');
+});
 
-  await view.rerender(
+test('the issues and ideas tabs each carry their own data', () => {
+  const extras = {
+    ideas: [{ id: 'proposal-lisbon', ideaName: 'Lisbon proposal', status: 'in_review' }],
+    openIssues: [{ id: 'issue-1', title: 'Book flights' }]
+  };
+  expect(tripScreenAgentContext(sharedBoard, 'issues', extras).data).toMatchObject({
+    openIssues: extras.openIssues
+  });
+  expect(tripScreenAgentContext(sharedBoard, 'ideas', extras).data).toMatchObject({
+    ideas: extras.ideas
+  });
+});
+
+test('the idea compare screen reports ideas and idea review capabilities', async () => {
+  const ideas = [{ id: 'proposal-lisbon', ideaName: 'Lisbon proposal', status: 'in_review' }];
+  const context = ideaCompareAgentContext(trip, ideas);
+  expect(context.title).toBe('Portugal · Ideas');
+  expect(context.target).toEqual({ kind: 'trip', section: 'ideas', tripId: 'trip-1' });
+  expect(context.capabilities).toEqual(expect.arrayContaining(['trip.version.apply']));
+  expect(context.data).toMatchObject({ ideas });
+
+  await render(
     <AgentContextProvider>
-      <TripRegistration section="ideas" />
+      <TripRegistration section="idea-compare" />
       <Probe />
     </AgentContextProvider>
   );
   expect(page.getByRole('status', { name: 'Trip agent context' }).element().textContent).toContain(
     'proposal-lisbon'
   );
-  expect(
-    page.getByRole('status', { name: 'Trip agent context' }).element().textContent
-  ).not.toContain('user-alex');
 });

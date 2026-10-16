@@ -201,8 +201,7 @@ export const setContextTags = internalMutation({
 export const createTripIssue = internalTripMutation({
   args: TripIssueValidators.createInput,
   returns: v.id('tripIssues'),
-  handler: (ctx, { body, title }) =>
-    TripIssues.createAssignedToIssueAgent(ctx, ctx.trip._id, title, body)
+  handler: (ctx, { body, title }) => TripIssues.createAssignedToIssueAgent(ctx, title, body)
 });
 
 export const prepareTripVersion = internalTripMutation({

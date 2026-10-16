@@ -26,9 +26,9 @@ export function useWorkspaceIssues(options?: { initialNumItems?: number } | 'ski
 export function useCreateIssue() {
   const createMutation = useMutation(api.routes.trips.issues.create.run);
   return useCallback(
-    async (tripId: Id<'trips'>, title: string, body: string) => {
+    async (tripId: Id<'trips'>, title: string, body: string, doneWhen?: string) => {
       try {
-        return await createMutation({ body, title, tripId });
+        return await createMutation({ body, ...(doneWhen ? { doneWhen } : {}), title, tripId });
       } catch (error: unknown) {
         toast.error(errorMessage(error, 'Unable to create trip issue'));
         return null;

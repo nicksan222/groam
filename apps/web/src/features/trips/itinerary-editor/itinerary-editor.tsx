@@ -122,7 +122,7 @@ export function ItineraryEditor(props: ItineraryEditorProps) {
           </Button>
         }
       />
-      <div className="space-y-6">
+      <div className="space-y-4">
         {days.map((day) => (
           <EditorDayCard
             key={day.day}
