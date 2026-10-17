@@ -94,9 +94,9 @@
     "test:browsers:install": "vp run --fail-if-no-match --filter @groam/vitest-config browsers:install",
     "test:journeys": "vp run --fail-if-no-match --filter @groam/web journeys",
     "test:packages": "vp run test:quality && vp run --fail-if-no-match --filter \"@groam/*\" --filter \"!@groam/web\" --filter \"!@groam/ui\" --filter \"!@groam/ai\" --filter \"!@groam/auth\" --cache --concurrency-limit 2 test",
+    "test:quality": "vp test run --dir tooling/quality",
     "test:ui": "vp run --fail-if-no-match --filter @groam/ui --filter @groam/ai --filter @groam/auth --cache --concurrency-limit 2 test && vp run --fail-if-no-match --filter @groam/showcase test:browser",
     "test:web": "vp run --fail-if-no-match --filter @groam/web --cache test",
-    "test:quality": "vp test run --dir tooling/quality",
     "typecheck": "vp run --fail-if-no-match --filter \"@groam/*\" --cache typecheck && tsc --noEmit -p tooling/tsconfig.json"
   },
   "trustedDependencies": [
