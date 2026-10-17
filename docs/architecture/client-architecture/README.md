@@ -17,19 +17,9 @@ resolves compact resource references and canonical URLs through shared helpers.
 Navigation state identifies what the user is viewing; backend access checks
 determine whether that resource can actually be loaded.
 
-```mermaid
-flowchart TB
-  Root[Application root and authentication] --> Workspace[Workspace and reference providers]
-  Workspace --> Shell[Workspace shell and route outlet]
-  Shell --> View[Feature view]
-  View --> Hooks[Feature data hooks]
-  Hooks --> Backend[Generated Convex API]
-  Backend --> Reactive[Reactive server results]
-  Reactive --> View
-  View <--> UIState[Transient stores and local context]
-  View --> Context[Published screen context]
-  View --> Primitives[Shared presentation components]
-```
+![Client architecture diagram](./client-architecture.svg)
+
+Source: [`client-architecture.excalidraw`](./client-architecture.excalidraw).
 
 ## State ownership
 
@@ -71,11 +61,16 @@ snapshot as appropriate. This makes a screen understandable to an agent without
 coupling agent definitions to every route or component. Screen context is
 informational; the backend still resolves resources and authorization.
 
+## Implementation
+
+[Implementation](implementation.md) walks through how these decisions are
+built, with pseudocode traced from the source and the tests that enforce them.
+
 ## Source anchors
 
-- [Application root](../../apps/web/src/app-root.tsx) and [workspace route](../../apps/web/src/routes/_workspace.tsx)
-- [Workspace scope](../../apps/web/src/features/workspace/workspace-shell/workspace-context.tsx)
-- [Reference resolution](../../apps/web/src/features/workspace/workspace-shell/reference-provider.tsx)
-- [Screen context provider](../../packages/ai/src/ui/context/agent-context.tsx)
+- [Application root](../../../apps/web/src/app-root.tsx) and [workspace route](../../../apps/web/src/routes/_workspace.tsx)
+- [Workspace scope](../../../apps/web/src/features/workspace/workspace-shell/workspace-context.tsx)
+- [Reference resolution](../../../apps/web/src/features/workspace/workspace-shell/reference-provider.tsx)
+- [Screen context provider](../../../packages/ai/src/ui/context/agent-context.tsx)
 
-Related: [Backend and data](backend-and-data.md), [AI contracts](ai-contracts.md).
+Related: [Backend and data](../backend-and-data/README.md), [AI contracts](../ai-contracts/README.md).

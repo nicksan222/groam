@@ -8,6 +8,7 @@ Choose a folder by asking: **what developer or delivery job does this perform?**
 | `claude` | Claude Code launcher (`claude.sh`) that starts the Headroom proxy |
 | `oxc-config` | Shared Oxlint/Oxfmt policy and the Groam lint plugin (not a package) |
 | `devkit` | Reusable local-process, readiness, and local auth/environment helpers |
+| `diagrams` | Render the Excalidraw scenes under `docs/` to the SVG files committed beside them |
 | `graphify` | Exclude patterns for the local Graphify code index (`just graphify-refresh`) |
 | `hooks` | Git hooks (Vite+ dispatcher via `vp config`) |
 | `quality` | Groam-specific architecture and convention checks |

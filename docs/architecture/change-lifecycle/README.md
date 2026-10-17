@@ -22,22 +22,9 @@ active run in the same transaction before recording feedback or approval. Edits,
 rebases and stopped runs cannot commit a result for content that no longer
 matches the review attempt.
 
-```mermaid
-stateDiagram-v2
-  [*] --> Draft: capture base and create working copy
-  Draft --> InReview: submit
-  InReview --> InReview: edit and invalidate review
-  Conflicted --> Conflicted: edit and invalidate review
-  InReview --> Conflicted: overlapping changes found at apply
-  Conflicted --> InReview: rebase and review again
-  Conflicted --> Merged: resolve and apply when eligible
-  InReview --> Merged: apply when eligible
-  Draft --> Closed: close
-  InReview --> Closed: close
-  Conflicted --> Closed: close
-  Merged --> [*]
-  Closed --> [*]
-```
+![Change lifecycle diagram](./change-lifecycle.svg)
+
+Source: [`change-lifecycle.excalidraw`](./change-lifecycle.excalidraw).
 
 The diagram summarizes the main path. Domain operations decide which transitions
 an actor can perform and whether review is still valid at that moment.
@@ -82,13 +69,18 @@ Issues can motivate and link to an idea, but retain a separate resolution
 model. Resolving an issue does not itself merge a proposal; merging must still
 satisfy the shared plan's change contract.
 
+## Implementation
+
+[Implementation](implementation.md) walks through how these decisions are
+built, with pseudocode traced from the source and the tests that enforce them.
+
 ## Source anchors
 
-- [Proposal model and policy](../../packages/backend/convex/modules/travel/versions/index.ts)
-- [Prepared operations](../../packages/backend/convex/modules/travel/versions/workflow.ts)
-- [Snapshot reconciliation](../../packages/backend/convex/modules/travel/versions/apply.ts)
-- [Merge computation](../../packages/backend/convex/modules/travel/versions/git/index.ts)
-- [Lifecycle and concurrency tests](../../packages/backend/convex/modules/travel/versions/versions.test.ts)
-- [Review freshness tests](../../packages/backend/convex/modules/travel/versions/agent/review/review-freshness.test.ts)
+- [Proposal model and policy](../../../packages/backend/convex/modules/travel/versions/index.ts)
+- [Prepared operations](../../../packages/backend/convex/modules/travel/versions/workflow.ts)
+- [Snapshot reconciliation](../../../packages/backend/convex/modules/travel/versions/apply.ts)
+- [Merge computation](../../../packages/backend/convex/modules/travel/versions/git/index.ts)
+- [Lifecycle and concurrency tests](../../../packages/backend/convex/modules/travel/versions/versions.test.ts)
+- [Review freshness tests](../../../packages/backend/convex/modules/travel/versions/agent/review/review-freshness.test.ts)
 
-Related: [Domain and ownership](domain-model.md), [Identity and access](identity-and-access.md).
+Related: [Domain and ownership](../domain-model/README.md), [Identity and access](../identity-and-access/README.md).

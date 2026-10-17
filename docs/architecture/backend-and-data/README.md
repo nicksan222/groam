@@ -18,21 +18,9 @@ centralize domain behavior. Generated API and data-model types expose the
 executable backend contract to consumers. Pure schemas and rule definitions can
 be shared with clients; trusted data access and enforcement remain server-owned.
 
-```mermaid
-flowchart LR
-  Client[Client feature hook] --> Public[Public procedure]
-  Tool[AI tool adapter] --> Internal[Internal actor-aware procedure]
-  Public --> Domain[Domain policy and operations]
-  Internal --> Domain
-  Domain --> Mutation[Transactional writes]
-  Domain --> Query[Authorized reads]
-  Domain --> Action[External or Node action]
-  Action --> Recheck[Internal commit and revalidation]
-  Recheck --> Mutation
-  Mutation --> Records[Owned records and components]
-  Records --> Query
-  Query --> Subscription[Reactive client subscription]
-```
+![Backend and data diagram](./backend-and-data.svg)
+
+Source: [`backend-and-data.excalidraw`](./backend-and-data.excalidraw).
 
 ## Consistency boundaries
 
@@ -83,11 +71,16 @@ Lists use indexed, scoped reads with either explicit bounds or pagination.
 These constraints protect transaction and response size without making a
 particular page size part of the architectural contract.
 
+## Implementation
+
+[Implementation](implementation.md) walks through how these decisions are
+built, with pseudocode traced from the source and the tests that enforce them.
+
 ## Source anchors
 
-- [Schema assembly](../../packages/backend/convex/schema.ts) and [component composition](../../packages/backend/convex/convex.config.ts)
-- [Trip builders and mutation integration](../../packages/backend/convex/modules/travel/trips/ctx.ts)
-- [Upload inspection and commit](../../packages/backend/convex/modules/media/library/commit.ts)
-- [Organization cleanup](../../packages/backend/convex/modules/organizations/cleanup.ts)
+- [Schema assembly](../../../packages/backend/convex/schema.ts) and [component composition](../../../packages/backend/convex/convex.config.ts)
+- [Trip builders and mutation integration](../../../packages/backend/convex/modules/travel/trips/ctx.ts)
+- [Upload inspection and commit](../../../packages/backend/convex/modules/media/library/commit.ts)
+- [Organization cleanup](../../../packages/backend/convex/modules/organizations/cleanup.ts)
 
-Related: [Identity and access](identity-and-access.md), [Client architecture](client-architecture.md).
+Related: [Identity and access](../identity-and-access/README.md), [Client architecture](../client-architecture/README.md).

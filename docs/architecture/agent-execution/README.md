@@ -16,23 +16,9 @@ turn is an active model/tool execution segment between durable suspensions.
 Chat turns continue a thread; standalone turns produce a report or structured
 domain result without requiring a chat history.
 
-```mermaid
-stateDiagram-v2
-  [*] --> Queued
-  Queued --> Running: claim turn
-  Queued --> Aborted: stop
-  Queued --> Failed: unowned work becomes stale
-  Running --> Waiting: suspend on durable event
-  Waiting --> Running: condition outcome or deadline
-  Running --> Complete: successful completion
-  Running --> Failed: error or execution limit
-  Waiting --> Failed: workflow failure
-  Running --> Aborted: stop
-  Waiting --> Aborted: stop
-  Complete --> [*]
-  Failed --> [*]
-  Aborted --> [*]
-```
+![Agent execution diagram](./agent-execution.svg)
+
+Source: [`agent-execution.excalidraw`](./agent-execution.excalidraw).
 
 Normal workflow completion is consolidated through its completion callback,
 which finalizes the run and any outstanding discussion response. Explicit stop
@@ -83,12 +69,17 @@ Preserve the definition's step and event sequence, or introduce a versioned
 workflow. Turn behavior is kept outside that replay sequence. Preserve durable
 workflow state and in-flight runs during rollout and rollback.
 
+## Implementation
+
+[Implementation](implementation.md) walks through how these decisions are
+built, with pseudocode traced from the source and the tests that enforce them.
+
 ## Source anchors
 
-- [Workflow lifecycle](../../packages/backend/convex/modules/assistant/engine/index.ts) and [replay body](../../packages/backend/convex/modules/assistant/engine/workflow.ts)
-- [Turn execution](../../packages/backend/convex/modules/assistant/engine/turns.ts)
-- [Completion and suspension](../../packages/backend/convex/modules/assistant/engine/functions.ts)
-- [Wait protocol](../../packages/backend/convex/modules/assistant/waits/index.ts)
-- [Run lifecycle](../../packages/backend/convex/modules/assistant/runs/index.ts)
+- [Workflow lifecycle](../../../packages/backend/convex/modules/assistant/engine/index.ts) and [replay body](../../../packages/backend/convex/modules/assistant/engine/workflow.ts)
+- [Turn execution](../../../packages/backend/convex/modules/assistant/engine/turns.ts)
+- [Completion and suspension](../../../packages/backend/convex/modules/assistant/engine/functions.ts)
+- [Wait protocol](../../../packages/backend/convex/modules/assistant/waits/index.ts)
+- [Run lifecycle](../../../packages/backend/convex/modules/assistant/runs/index.ts)
 
-Related: [AI contracts](ai-contracts.md), [Runtime and deployment](runtime-and-deployment.md).
+Related: [AI contracts](../ai-contracts/README.md), [Runtime and deployment](../runtime-and-deployment/README.md).

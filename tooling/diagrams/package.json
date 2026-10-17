@@ -1,0 +1,22 @@
+{
+  "name": "@groam/diagrams",
+  "description": "Render the Excalidraw sources under docs/ to committed SVG files.",
+  "version": "0.0.0",
+  "dependencies": {
+    "@excalidraw/utils": "0.1.5",
+    "playwright": "^1.63.0"
+  },
+  "devDependencies": {
+    "@groam/typescript-config": "workspace:*",
+    "@types/node": "^26.6.3",
+    "typescript": "~7.0.2"
+  },
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "lint": "vp check .",
+    "render": "bun src/render.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "type": "module"
+}

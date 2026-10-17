@@ -5,19 +5,9 @@ application can reach a local or hosted Convex backend.
 
 ## Runtime topology
 
-```mermaid
-flowchart TB
-  subgraph Web[Web deployment]
-    Browser[Browser application] --> Remote[Configured Convex backend]
-    Remote --> HostedData[Backend records and file storage]
-  end
-  subgraph Local[Local development]
-    Dev[Browser and Vite dev server] --> LocalBackend[Local Convex backend]
-    LocalBackend --> LocalData[Repository-local backend state]
-  end
-  Remote --> External[External AI and content services]
-  LocalBackend --> External
-```
+![Runtime and deployment diagram](./runtime-and-deployment.svg)
+
+Source: [`runtime-and-deployment.excalidraw`](./runtime-and-deployment.excalidraw).
 
 The web topology can also use a backend on the developer's machine. The diagram
 shows deployment boundaries, not an automatic synchronization connection
@@ -63,10 +53,15 @@ different boundaries and are not interchangeable.
 Operational commands and connection
 setup remain in the linked guides rather than becoming architecture constants.
 
+## Implementation
+
+[Implementation](implementation.md) walks through how these decisions are
+built, with pseudocode traced from the source and the tests that enforce them.
+
 ## Source anchors
 
-- [HTTP and hosting composition](../../packages/backend/convex/http.ts)
-- [Development and verification guide](../../.github/CONTRIBUTING.md)
-- [Runtime helpers](../../tooling/devkit/README.md), [test adapters](../../tooling/app-actions/README.md) and [AI deployment constraints](../../packages/backend/convex/README.md#ai-configuration)
+- [HTTP and hosting composition](../../../packages/backend/convex/http.ts)
+- [Development and verification guide](../../../.github/CONTRIBUTING.md)
+- [Runtime helpers](../../../tooling/devkit/README.md), [test adapters](../../../tooling/app-actions/README.md) and [AI deployment constraints](../../../packages/backend/convex/README.md#ai-configuration)
 
-Related: [Identity and access](identity-and-access.md), [Agent execution](agent-execution.md).
+Related: [Identity and access](../identity-and-access/README.md), [Agent execution](../agent-execution/README.md).

@@ -14,6 +14,8 @@
   // These packages are runtime-loaded by Vitest or the toolchain. vite-plus is the dev
   // toolchain; its only "production" importer is the Oxlint plugin entry below.
   "ignoreDependencies": [
+    // tooling/diagrams serves this bundle to Chromium by resolved path, not import.
+    "@excalidraw/utils",
     "@edge-runtime/vm",
     // The Playwright provider behind vite-plus/test/browser-playwright.
     "@vitest/browser-playwright",
@@ -25,6 +27,7 @@
     "apps/web/src/main.tsx",
     "apps/web/src/routes/**/*.tsx",
     "tooling/devkit/configure-auth.ts",
+    "tooling/diagrams/src/render.ts",
     "packages/backend/scripts/generate-auth-schema.ts",
     "**/*.test.ts",
     "**/*.test.tsx",

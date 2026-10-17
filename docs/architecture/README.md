@@ -5,17 +5,9 @@ ideas isolate proposed changes to their plans; conversations, issues and agents
 help the group reach decisions. The backend owns authorization and persistent
 domain state. The web application is the single client.
 
-```mermaid
-flowchart TB
-  People[Travelers] --> Web[Browser]
-  Web --> SharedUI[Shared React application]
-  SharedUI --> Backend[Convex application backend]
-  Backend --> Domain[Travel and collaboration domains]
-  Backend --> Auth[Identity and organization component]
-  Backend --> Execution[Agent and workflow components]
-  Backend --> Storage[Application records and file storage]
-  Backend --> Providers[External AI and content services]
-```
+![Groam architecture diagram](./architecture.svg)
+
+Source: [`architecture.excalidraw`](./architecture.excalidraw).
 
 The diagram describes logical responsibilities. The
 backend and its persistent data can run locally during development; a hosted
@@ -28,15 +20,15 @@ are working across.
 
 | Document | Architectural question |
 | --- | --- |
-| [Domain and ownership](domain-model.md) | What are the core resources, and who owns them? |
-| [Change lifecycle](change-lifecycle.md) | How does an isolated idea become part of the shared plan? |
-| [Identity and access](identity-and-access.md) | Whose authority does an operation use? |
-| [Backend and data](backend-and-data.md) | Where do reads, writes, external work and persistence belong? |
-| [Client architecture](client-architecture.md) | How are navigation, views and state composed? |
-| [Collaboration](collaboration.md) | How do conversations, issues and decisions relate? |
-| [AI contracts](ai-contracts.md) | How do agents and tools integrate with the application? |
-| [Agent execution](agent-execution.md) | How does work run, wait, resume and terminate? |
-| [Runtime and deployment](runtime-and-deployment.md) | Where does the system run, and what happens to its data? |
+| [Domain and ownership](domain-model/README.md) | What are the core resources, and who owns them? |
+| [Change lifecycle](change-lifecycle/README.md) | How does an isolated idea become part of the shared plan? |
+| [Identity and access](identity-and-access/README.md) | Whose authority does an operation use? |
+| [Backend and data](backend-and-data/README.md) | Where do reads, writes, external work and persistence belong? |
+| [Client architecture](client-architecture/README.md) | How are navigation, views and state composed? |
+| [Collaboration](collaboration/README.md) | How do conversations, issues and decisions relate? |
+| [AI contracts](ai-contracts/README.md) | How do agents and tools integrate with the application? |
+| [Agent execution](agent-execution/README.md) | How does work run, wait, resume and terminate? |
+| [Runtime and deployment](runtime-and-deployment/README.md) | Where does the system run, and what happens to its data? |
 
 ## Package responsibilities
 
@@ -65,8 +57,16 @@ Update architecture documentation when a boundary, authority, persistence owner,
 lifecycle or extension contract changes. An additional agent, tool, screen or
 resource that fits an existing contract normally needs no architecture update.
 Keep catalogs, field lists, prompts, numeric limits and commands with their
-implementation or operational guides. Diagrams are editable Mermaid source in
-the Markdown so the model and its explanation can be reviewed together.
+implementation or operational guides.
+
+Each document lives in its own folder beside its diagram: `<topic>/README.md`
+for the architecture, `<topic>/implementation.md` for how it is built (with
+pseudocode traced from the source), the editable `<topic>/<topic>.excalidraw`
+scene and its committed `<topic>/<topic>.svg` render. This overview follows the
+same shape with `architecture.excalidraw` and `architecture.svg`. Edit a scene
+in [Excalidraw](https://excalidraw.com) or the VS Code Excalidraw extension,
+save the `.excalidraw` file, then run `just diagrams` to refresh every SVG.
+Commit the scene and its render together.
 
 ## Source anchors
 

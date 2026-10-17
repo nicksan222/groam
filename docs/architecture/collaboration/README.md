@@ -22,23 +22,9 @@ trip-scoped research can therefore share infrastructure while retaining
 different audiences. Private conversation access is checked against its owner;
 shared conversation access follows the configured audience.
 
-```mermaid
-flowchart LR
-  Trip[Shared trip] --> Research[Research discussion]
-  Trip --> Issues[Issues and resolution conditions]
-  Trip --> Proposals[Proposals and review]
-  Research --> Thread[Durable thread and messages]
-  Research --> Receipts[Message receipts and reply coordination]
-  Thread --> View[Combined conversation view]
-  Receipts --> View
-  Research --> Links[Typed resource links]
-  Links --> Issues
-  Links --> Proposals
-  Links --> Itinerary[Itinerary resources]
-  Issues --> Proposals
-  Research --> Runs[Assistant runs]
-  Proposals --> Projections[Notifications and recent activity]
-```
+![Collaboration diagram](./collaboration.svg)
+
+Source: [`collaboration.excalidraw`](./collaboration.excalidraw).
 
 ## Research and resource links
 
@@ -83,13 +69,18 @@ Recent trip activity is a bounded presentation history. Neither is an immutable
 audit ledger or the source from which the domain is rebuilt. Their write and
 cleanup paths belong to the originating domain integrations.
 
+## Implementation
+
+[Implementation](implementation.md) walks through how these decisions are
+built, with pseudocode traced from the source and the tests that enforce them.
+
 ## Source anchors
 
-- [Conversation policies](../../packages/backend/convex/modules/discussions/kinds/index.ts)
-- [Discussion and message integration](../../packages/backend/convex/modules/discussions/threads/index.ts)
-- [Message receipt ownership](../../packages/backend/convex/modules/discussions/threads/schema.ts)
-- [Research ownership](../../packages/backend/convex/modules/discussions/research/index.ts) and [resource links](../../packages/backend/convex/modules/discussions/links/index.ts)
-- [Issue condition synchronization](../../packages/backend/convex/modules/travel/issues/sync.ts)
-- [Notification ownership](../../packages/backend/convex/modules/notifications/index.ts)
+- [Conversation policies](../../../packages/backend/convex/modules/discussions/kinds/index.ts)
+- [Discussion and message integration](../../../packages/backend/convex/modules/discussions/threads/index.ts)
+- [Message receipt ownership](../../../packages/backend/convex/modules/discussions/threads/schema.ts)
+- [Research ownership](../../../packages/backend/convex/modules/discussions/research/index.ts) and [resource links](../../../packages/backend/convex/modules/discussions/links/index.ts)
+- [Issue condition synchronization](../../../packages/backend/convex/modules/travel/issues/sync.ts)
+- [Notification ownership](../../../packages/backend/convex/modules/notifications/index.ts)
 
-Related: [Change lifecycle](change-lifecycle.md), [Agent execution](agent-execution.md).
+Related: [Change lifecycle](../change-lifecycle/README.md), [Agent execution](../agent-execution/README.md).

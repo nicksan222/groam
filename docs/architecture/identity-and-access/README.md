@@ -20,17 +20,9 @@ then load an organization-visible trip and derive the actor's role for that
 trip. The organization boundary is checked even when a caller already knows a
 valid resource ID.
 
-```mermaid
-flowchart TB
-  Public[Public client call] --> Session[Validate session and active membership]
-  Session --> Workspace[Server-bound workspace]
-  Internal[Internal agent call] --> Run[Resolve active run creator]
-  Run --> Membership[Recheck organization membership]
-  Membership --> Workspace
-  Workspace --> Resource[Resolve resource within organization]
-  Resource --> Policy[Apply resource and lifecycle policy]
-  Policy --> Operation[Read or write]
-```
+![Identity and access diagram](./identity-and-access.svg)
+
+Source: [`identity-and-access.excalidraw`](./identity-and-access.excalidraw).
 
 ## Resource policy
 
@@ -74,12 +66,17 @@ missing or expired authorization stops AI work rather than granting another
 user's credentials. Tokens remain backend-owned. Local database exports contain
 sensitive application state and must be treated accordingly.
 
+## Implementation
+
+[Implementation](implementation.md) walks through how these decisions are
+built, with pseudocode traced from the source and the tests that enforce them.
+
 ## Source anchors
 
-- [Server identity integration](../../packages/backend/convex/modules/auth/auth.ts)
-- [Workspace and run actor resolution](../../packages/backend/convex/modules/auth/workspace.ts)
-- [Trip access policy](../../packages/backend/convex/modules/travel/trips/access.ts)
-- [Assistant thread access](../../packages/backend/convex/modules/assistant/model/thread/access.ts)
-- [Delegated actor tests](../../packages/backend/convex/modules/auth/actor.test.ts)
+- [Server identity integration](../../../packages/backend/convex/modules/auth/auth.ts)
+- [Workspace and run actor resolution](../../../packages/backend/convex/modules/auth/workspace.ts)
+- [Trip access policy](../../../packages/backend/convex/modules/travel/trips/access.ts)
+- [Assistant thread access](../../../packages/backend/convex/modules/assistant/model/thread/access.ts)
+- [Delegated actor tests](../../../packages/backend/convex/modules/auth/actor.test.ts)
 
-Related: [AI contracts](ai-contracts.md), [Runtime and deployment](runtime-and-deployment.md).
+Related: [AI contracts](../ai-contracts/README.md), [Runtime and deployment](../runtime-and-deployment/README.md).

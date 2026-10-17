@@ -12,20 +12,9 @@ capabilities. Shared tool specifications describe capability identity, model
 guidance, write-intent requirements and presentation. Backend registrations bind
 those declarations to executable tools.
 
-```mermaid
-flowchart TB
-  Agent[Agent definition] --> Allowed[Allowed capability identities]
-  Spec[Shared tool contract] --> Binding[Backend tool registration]
-  Allowed --> Compose[Runtime tool composition]
-  Binding --> Compose
-  Screen[Screen snapshot and attached resources] --> Context[Authorized context resolution]
-  Context --> Model[Model session]
-  Compose --> Model
-  Model --> Tool[Selected tool execution]
-  Tool --> Actor[Actor-aware domain operation]
-  Actor --> Result[Structured result and persisted message parts]
-  Result --> UI[Shared presentation]
-```
+![AI contracts diagram](./ai-contracts.svg)
+
+Source: [`ai-contracts.excalidraw`](./ai-contracts.excalidraw).
 
 The model selects among the invoked agent's allowed tools. Screen capabilities
 describe the current surface; they do not grant permission or act as the tool
@@ -85,13 +74,18 @@ Reuse domain operations and shared result presentation. Update these documents
 only if the extension changes those responsibilities, authority or protocols;
 the current catalog belongs in code.
 
+## Implementation
+
+[Implementation](implementation.md) walks through how these decisions are
+built, with pseudocode traced from the source and the tests that enforce them.
+
 ## Source anchors
 
-- [Agent definitions](../../packages/ai/src/agents/definition.ts) and [tool contracts](../../packages/ai/src/tools/specs.ts)
-- [Runtime composition and intent gate](../../packages/backend/assistant/tools/index.ts)
-- [Session composition](../../packages/backend/convex/modules/assistant/agent/session.ts)
-- [Context and domain adapters](../../packages/backend/convex/modules/assistant/model/index.ts)
-- [Provider boundary](../../packages/backend/convex/modules/ai/provider.ts)
-- [Output catalog](../../packages/ai/src/runtime/output/index.ts) and [generated-form boundary](../../packages/ai/src/ui/form/assistant-generated-form.tsx)
+- [Agent definitions](../../../packages/ai/src/agents/definition.ts) and [tool contracts](../../../packages/ai/src/tools/specs.ts)
+- [Runtime composition and intent gate](../../../packages/backend/assistant/tools/index.ts)
+- [Session composition](../../../packages/backend/convex/modules/assistant/agent/session.ts)
+- [Context and domain adapters](../../../packages/backend/convex/modules/assistant/model/index.ts)
+- [Provider boundary](../../../packages/backend/convex/modules/ai/provider.ts)
+- [Output catalog](../../../packages/ai/src/runtime/output/index.ts) and [generated-form boundary](../../../packages/ai/src/ui/form/assistant-generated-form.tsx)
 
-Related: [Identity and access](identity-and-access.md), [Agent execution](agent-execution.md).
+Related: [Identity and access](../identity-and-access/README.md), [Agent execution](../agent-execution/README.md).

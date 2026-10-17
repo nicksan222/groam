@@ -84,6 +84,11 @@ codegen:
 brand:
     vp run brand:generate
 
+# Render every docs/ Excalidraw scene to the SVG committed beside it.
+[group('generate')]
+diagrams:
+    vp run diagrams:render
+
 # Refresh the Convex-managed guidelines and agent skills.
 [group('generate')]
 update-convex-agent-files:

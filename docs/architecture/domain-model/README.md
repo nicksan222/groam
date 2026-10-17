@@ -14,20 +14,9 @@ and transfers connect activities, destinations or the trip's boundaries. Packing
 and traveler information are trip-scoped adjuncts. Costs and schedules belong to
 the relevant domain resources, while screens derive useful views and totals.
 
-```mermaid
-flowchart TB
-  Organization[Organization] --> Trip[Shared trip]
-  Organization --> Media[Media library]
-  Trip --> Destinations[Ordered destinations]
-  Destinations --> Activities[Activities]
-  Destinations --> Stays[Stays]
-  Trip --> Transfers[Transfers between itinerary nodes and boundaries]
-  Trip --> Adjuncts[Packing and participation]
-  Trip --> Proposal[Proposal]
-  Proposal --> Working[Working trip copy]
-  Proposal --> Base[Base snapshot]
-  Media --> Pins[Attachments to authorized resources]
-```
+![Domain and ownership diagram](./domain-model.svg)
+
+Source: [`domain-model.excalidraw`](./domain-model.excalidraw).
 
 This is a conceptual ownership map, not a database schema. Transfer endpoints,
 ordering and source identity must remain coherent when resources are edited,
@@ -77,12 +66,17 @@ be removed from the library. Proposal snapshots retain library media identities
 and trip-cover references; asset cleanup must account for those retained
 references as well as the live plan.
 
+## Implementation
+
+[Implementation](implementation.md) walks through how these decisions are
+built, with pseudocode traced from the source and the tests that enforce them.
+
 ## Source anchors
 
-- [Trip schema](../../packages/backend/convex/modules/travel/trips/schema.ts) and [trip context](../../packages/backend/convex/modules/travel/trips/ctx.ts)
-- [Target boundary](../../packages/backend/convex/modules/travel/targets/index.ts)
-- [Proposal snapshots](../../packages/backend/convex/modules/travel/versions/snapshot/index.ts)
-- [Media and attachment ownership](../../packages/backend/convex/modules/media/library/schema.ts)
-- [Trip-cover lifecycle](../../packages/backend/convex/modules/travel/covers/index.ts)
+- [Trip schema](../../../packages/backend/convex/modules/travel/trips/schema.ts) and [trip context](../../../packages/backend/convex/modules/travel/trips/ctx.ts)
+- [Target boundary](../../../packages/backend/convex/modules/travel/targets/index.ts)
+- [Proposal snapshots](../../../packages/backend/convex/modules/travel/versions/snapshot/index.ts)
+- [Media and attachment ownership](../../../packages/backend/convex/modules/media/library/schema.ts)
+- [Trip-cover lifecycle](../../../packages/backend/convex/modules/travel/covers/index.ts)
 
-Related: [Change lifecycle](change-lifecycle.md), [Collaboration](collaboration.md).
+Related: [Change lifecycle](../change-lifecycle/README.md), [Collaboration](../collaboration/README.md).
