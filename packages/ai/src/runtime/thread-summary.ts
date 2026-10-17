@@ -10,7 +10,7 @@ export type AssistantThreadSummary = {
   screenContext?: string;
   tags: AssistantContextTag[];
   updatedAt?: number;
-  version: 1 | 2;
+  version: 2;
 };
 
 export function assistantThreadSummary(
@@ -38,6 +38,7 @@ export function parseAssistantThreadSummary(
     if (
       !isRecord(value) ||
       value.kind !== 'workspace-assistant' ||
+      value.version !== 2 ||
       typeof value.organizationId !== 'string'
     ) {
       return null;
@@ -53,7 +54,7 @@ export function parseAssistantThreadSummary(
       tags,
       ...(typeof value.screenContext === 'string' ? { screenContext: value.screenContext } : {}),
       ...(typeof value.updatedAt === 'number' ? { updatedAt: value.updatedAt } : {}),
-      version: value.version === 2 ? 2 : 1
+      version: 2
     };
   } catch {
     return null;

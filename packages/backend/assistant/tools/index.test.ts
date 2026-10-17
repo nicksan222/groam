@@ -26,7 +26,7 @@ function toolsFor(
   options?: {
     agentId?: 'groam' | 'issue' | 'reviewer';
     providerTools?: ToolSet;
-    scope?: 'private' | 'standalone';
+    scope?: 'discussion' | 'private' | 'standalone';
   }
 ) {
   return createRegisteredAssistantTools({
@@ -844,4 +844,11 @@ test('chat-only tools stay off the shared registry when the runtime is standalon
   expect(tools).not.toContain('askUserChoice');
   expect(tools).not.toContain('getChatContext');
   expect(tools).not.toContain('setChatContext');
+});
+
+test('offers askUserChoice in private chats but not in group discussions', () => {
+  expect(Object.keys(toolsFor('Help me pick.', { scope: 'private' }))).toContain('askUserChoice');
+  expect(Object.keys(toolsFor('Help me pick.', { scope: 'discussion' }))).not.toContain(
+    'askUserChoice'
+  );
 });

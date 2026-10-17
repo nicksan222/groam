@@ -1,8 +1,11 @@
 import { Button } from '@groam/ui/components/button';
 import PulsingDot from '@groam/ui/components/pulsing-dot';
+import { Spinner } from '@groam/ui/components/spinner';
+import { toast } from '@groam/ui/components/toast';
+import { errorMessage } from '@groam/ui/lib/errors';
 import { cn } from '@groam/ui/lib/utils';
 import { Bot } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import { agentRunCopy, presentAgentRunMessage } from '#ai/backend/runs/copy';
 import { type AgentRunStatus, RUN_STATUS_LABEL } from '#ai/backend/runs/ids';
 import { canRetryAgentRunFromZero, isActiveAgentRun } from '#ai/backend/runs/roster';
@@ -37,13 +40,14 @@ export function AgentRunBanner({
   events: readonly AgentRunBannerEvent[];
   eventTestId?: string;
   onRetry?: () => Promise<unknown> | unknown;
-  onStop?: () => void;
+  onStop?: () => Promise<unknown>;
   retryTestId?: string;
   run: AgentRunBannerRun;
   stopTestId?: string;
   testId?: string;
   viewAgent: ReactNode;
 }) {
+  const [stopping, setStopping] = useState(false);
   const working = isActiveAgentRun(run);
   const canRetry = onRetry != null && canRetryAgentRunFromZero(run);
   const activity = bannerActivity(run, events);
@@ -93,8 +97,26 @@ export function AgentRunBanner({
       </div>
       <div className="flex shrink-0 items-center gap-1.5">
         {working ? (
-          <Button data-testid={stopTestId} onClick={onStop} size="xs" variant="outline">
-            {agentRunCopy.stop}
+          <Button
+            aria-busy={stopping}
+            data-testid={stopTestId}
+            disabled={stopping || !onStop}
+            onClick={async () => {
+              if (!onStop) return;
+              setStopping(true);
+              try {
+                await onStop();
+              } catch (error: unknown) {
+                toast.error(errorMessage(error, 'Unable to stop this run'));
+              } finally {
+                setStopping(false);
+              }
+            }}
+            size="xs"
+            variant="outline"
+          >
+            {stopping ? <Spinner aria-hidden /> : null}
+            {stopping ? 'Stopping…' : agentRunCopy.stop}
           </Button>
         ) : null}
         {canRetry ? <AgentRetryFromZeroButton onRetry={onRetry} testId={retryTestId} /> : null}

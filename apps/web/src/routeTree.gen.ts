@@ -34,6 +34,7 @@ import { Route as WorkspaceAgentsAgentIdRunIdRouteImport } from './routes/_works
 import { Route as WorkspaceTripsTripIdIndexRouteImport } from './routes/_workspace.trips.$tripId.index'
 import { Route as WorkspaceTripsTripIdSectionRouteImport } from './routes/_workspace.trips.$tripId.$section'
 import { Route as WorkspaceTripsTripIdIdeasProposalIdRouteImport } from './routes/_workspace.trips.$tripId.ideas.$proposalId'
+import { Route as WorkspaceTripsTripIdResearchResearchIdRouteImport } from './routes/_workspace.trips.$tripId.research.$researchId'
 import { Route as WorkspaceTripsTripIdIdeasProposalIdIndexRouteImport } from './routes/_workspace.trips.$tripId.ideas.$proposalId.index'
 import { Route as WorkspaceTripsTripIdIdeasProposalIdViewRouteImport } from './routes/_workspace.trips.$tripId.ideas.$proposalId.$view'
 
@@ -169,6 +170,12 @@ const WorkspaceTripsTripIdIdeasProposalIdRoute =
     path: '/ideas/$proposalId',
     getParentRoute: () => WorkspaceTripsTripIdRoute,
   } as any)
+const WorkspaceTripsTripIdResearchResearchIdRoute =
+  WorkspaceTripsTripIdResearchResearchIdRouteImport.update({
+    id: '/research/$researchId',
+    path: '/research/$researchId',
+    getParentRoute: () => WorkspaceTripsTripIdRoute,
+  } as any)
 const WorkspaceTripsTripIdIdeasProposalIdIndexRoute =
   WorkspaceTripsTripIdIdeasProposalIdIndexRouteImport.update({
     id: '/',
@@ -207,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/agents/$agentId/': typeof WorkspaceAgentsAgentIdIndexRoute
   '/trips/$tripId/': typeof WorkspaceTripsTripIdIndexRoute
   '/trips/$tripId/ideas/$proposalId': typeof WorkspaceTripsTripIdIdeasProposalIdRouteWithChildren
+  '/trips/$tripId/research/$researchId': typeof WorkspaceTripsTripIdResearchResearchIdRoute
   '/trips/$tripId/ideas/$proposalId/$view': typeof WorkspaceTripsTripIdIdeasProposalIdViewRoute
   '/trips/$tripId/ideas/$proposalId/': typeof WorkspaceTripsTripIdIdeasProposalIdIndexRoute
 }
@@ -229,6 +237,7 @@ export interface FileRoutesByTo {
   '/trips/$tripId/$section': typeof WorkspaceTripsTripIdSectionRoute
   '/agents/$agentId': typeof WorkspaceAgentsAgentIdIndexRoute
   '/trips/$tripId': typeof WorkspaceTripsTripIdIndexRoute
+  '/trips/$tripId/research/$researchId': typeof WorkspaceTripsTripIdResearchResearchIdRoute
   '/trips/$tripId/ideas/$proposalId/$view': typeof WorkspaceTripsTripIdIdeasProposalIdViewRoute
   '/trips/$tripId/ideas/$proposalId': typeof WorkspaceTripsTripIdIdeasProposalIdIndexRoute
 }
@@ -259,6 +268,7 @@ export interface FileRoutesById {
   '/_workspace/agents/$agentId/': typeof WorkspaceAgentsAgentIdIndexRoute
   '/_workspace/trips/$tripId/': typeof WorkspaceTripsTripIdIndexRoute
   '/_workspace/trips/$tripId/ideas/$proposalId': typeof WorkspaceTripsTripIdIdeasProposalIdRouteWithChildren
+  '/_workspace/trips/$tripId/research/$researchId': typeof WorkspaceTripsTripIdResearchResearchIdRoute
   '/_workspace/trips/$tripId/ideas/$proposalId/$view': typeof WorkspaceTripsTripIdIdeasProposalIdViewRoute
   '/_workspace/trips/$tripId/ideas/$proposalId/': typeof WorkspaceTripsTripIdIdeasProposalIdIndexRoute
 }
@@ -289,6 +299,7 @@ export interface FileRouteTypes {
     | '/agents/$agentId/'
     | '/trips/$tripId/'
     | '/trips/$tripId/ideas/$proposalId'
+    | '/trips/$tripId/research/$researchId'
     | '/trips/$tripId/ideas/$proposalId/$view'
     | '/trips/$tripId/ideas/$proposalId/'
   fileRoutesByTo: FileRoutesByTo
@@ -311,6 +322,7 @@ export interface FileRouteTypes {
     | '/trips/$tripId/$section'
     | '/agents/$agentId'
     | '/trips/$tripId'
+    | '/trips/$tripId/research/$researchId'
     | '/trips/$tripId/ideas/$proposalId/$view'
     | '/trips/$tripId/ideas/$proposalId'
   id:
@@ -340,6 +352,7 @@ export interface FileRouteTypes {
     | '/_workspace/agents/$agentId/'
     | '/_workspace/trips/$tripId/'
     | '/_workspace/trips/$tripId/ideas/$proposalId'
+    | '/_workspace/trips/$tripId/research/$researchId'
     | '/_workspace/trips/$tripId/ideas/$proposalId/$view'
     | '/_workspace/trips/$tripId/ideas/$proposalId/'
   fileRoutesById: FileRoutesById
@@ -525,6 +538,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorkspaceTripsTripIdIdeasProposalIdRouteImport
       parentRoute: typeof WorkspaceTripsTripIdRoute
     }
+    '/_workspace/trips/$tripId/research/$researchId': {
+      id: '/_workspace/trips/$tripId/research/$researchId'
+      path: '/research/$researchId'
+      fullPath: '/trips/$tripId/research/$researchId'
+      preLoaderRoute: typeof WorkspaceTripsTripIdResearchResearchIdRouteImport
+      parentRoute: typeof WorkspaceTripsTripIdRoute
+    }
     '/_workspace/trips/$tripId/ideas/$proposalId/': {
       id: '/_workspace/trips/$tripId/ideas/$proposalId/'
       path: '/'
@@ -621,6 +641,7 @@ interface WorkspaceTripsTripIdRouteChildren {
   WorkspaceTripsTripIdSectionRoute: typeof WorkspaceTripsTripIdSectionRoute
   WorkspaceTripsTripIdIndexRoute: typeof WorkspaceTripsTripIdIndexRoute
   WorkspaceTripsTripIdIdeasProposalIdRoute: typeof WorkspaceTripsTripIdIdeasProposalIdRouteWithChildren
+  WorkspaceTripsTripIdResearchResearchIdRoute: typeof WorkspaceTripsTripIdResearchResearchIdRoute
 }
 
 const WorkspaceTripsTripIdRouteChildren: WorkspaceTripsTripIdRouteChildren = {
@@ -628,6 +649,8 @@ const WorkspaceTripsTripIdRouteChildren: WorkspaceTripsTripIdRouteChildren = {
   WorkspaceTripsTripIdIndexRoute: WorkspaceTripsTripIdIndexRoute,
   WorkspaceTripsTripIdIdeasProposalIdRoute:
     WorkspaceTripsTripIdIdeasProposalIdRouteWithChildren,
+  WorkspaceTripsTripIdResearchResearchIdRoute:
+    WorkspaceTripsTripIdResearchResearchIdRoute,
 }
 
 const WorkspaceTripsTripIdRouteWithChildren =

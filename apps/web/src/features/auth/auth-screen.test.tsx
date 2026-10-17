@@ -1,59 +1,25 @@
 import { render } from '@groam/vitest-config/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
+import { authHandlers, resolveAuthDoubles } from '@/features/auth/testing/auth-doubles';
 import { useAuthFormStore } from '@/lib/stores/auth-form-store';
 import { AuthScreen } from './auth-screen';
 
-const doubles = vi.hoisted(() => ({
-  generateRecoveryCodes: vi.fn(),
-  passkey: vi.fn(),
-  resetPasswordWithRecoveryCode: vi.fn(),
-  signInEmail: vi.fn(),
-  signInUsername: vi.fn(),
-  signUp: vi.fn(),
-  verifyBackupCode: vi.fn(),
-  verifyTotp: vi.fn()
-}));
+const doubles = await vi.hoisted(async () => {
+  const { createAuthDoubles } = await import('@/features/auth/testing/auth-doubles');
+  return createAuthDoubles();
+});
 
-const auth = {
-  passkey: doubles.passkey,
-  recoverAccount: doubles.resetPasswordWithRecoveryCode,
-  signIn: doubles.signInUsername,
-  signInEmail: doubles.signInEmail,
-  signUp: doubles.signUp,
-  verifyBackupCode: doubles.verifyBackupCode,
-  verifyTotp: doubles.verifyTotp
-};
+const auth = authHandlers(doubles);
 
-vi.mock('@groam/auth/client', () => ({
-  authClient: {
-    accountRecovery: {
-      generate: doubles.generateRecoveryCodes,
-      resetPassword: doubles.resetPasswordWithRecoveryCode
-    },
-    signIn: {
-      email: doubles.signInEmail,
-      passkey: doubles.passkey,
-      username: doubles.signInUsername
-    },
-    signUp: { email: doubles.signUp },
-    twoFactor: {
-      verifyBackupCode: doubles.verifyBackupCode,
-      verifyTotp: doubles.verifyTotp
-    }
-  }
-}));
+vi.mock('@groam/auth/client', async () => {
+  const { authClientMock } = await import('@/features/auth/testing/auth-doubles');
+  return authClientMock(doubles);
+});
 
 beforeEach(() => {
   vi.clearAllMocks();
-  doubles.passkey.mockResolvedValue({ data: {}, error: null });
-  doubles.generateRecoveryCodes.mockResolvedValue({ data: { codes: [] }, error: null });
-  doubles.resetPasswordWithRecoveryCode.mockResolvedValue({ data: { status: true }, error: null });
-  doubles.signInEmail.mockResolvedValue({ data: {}, error: null });
-  doubles.signInUsername.mockResolvedValue({ data: {}, error: null });
-  doubles.signUp.mockResolvedValue({ data: {}, error: null });
-  doubles.verifyBackupCode.mockResolvedValue({ data: {}, error: null });
-  doubles.verifyTotp.mockResolvedValue({ data: {}, error: null });
+  resolveAuthDoubles(doubles);
   useAuthFormStore.getState().reset();
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
 });

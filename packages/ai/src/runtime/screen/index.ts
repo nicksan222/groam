@@ -49,3 +49,9 @@ export function validateAssistantScreen(screen: AssistantScreen): void {
     if (value.length > maximum) throw new Error(`${label} is too long`);
   }
 }
+
+/** Trim text to a screen field limit, ending with an ellipsis when it was cut. */
+export function clampAssistantScreenText(value: string, maximum: number): string {
+  if (value.length <= maximum) return value;
+  return `${value.slice(0, Math.max(0, maximum - 1)).trimEnd()}…`;
+}

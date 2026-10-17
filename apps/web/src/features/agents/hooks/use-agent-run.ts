@@ -61,7 +61,11 @@ export function useStartQueuedAssignRuns(
       }
       if (started.current.has(run.id)) continue;
       started.current.add(run.id);
-      void start({ runId: run.id });
+      const runId = run.id;
+      start({ runId }).catch((error: unknown) => {
+        // Keep the id: a start that fails is not auto-retried on re-render; retry is user-driven.
+        toast.error(errorMessage(error, 'Unable to start this agent run'));
+      });
     }
   }, [runs, start]);
 }

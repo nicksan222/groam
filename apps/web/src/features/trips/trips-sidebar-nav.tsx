@@ -164,7 +164,7 @@ export function TripsSidebarNav() {
 }
 
 async function copyTripLink(trip: TripListItem) {
-  const url = new URL(`/trips/${trip.shortId ?? trip.id}/board`, window.location.origin).toString();
+  const url = new URL(`/trips/${trip.shortId}/board`, window.location.origin).toString();
   try {
     await navigator.clipboard.writeText(url);
     toast.success('Trip link copied');

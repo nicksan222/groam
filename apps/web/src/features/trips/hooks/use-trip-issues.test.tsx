@@ -70,6 +70,25 @@ describe('useTripIssue', () => {
     expect(due).toHaveBeenCalledWith({ dueAt: null, issueId });
   });
 
+  test('sets and clears the done-when condition', async () => {
+    const condition = vi.fn().mockResolvedValue(null);
+    convex.useQuery.mockReturnValue(openIssue);
+    convex.useMutation
+      .mockReturnValueOnce(vi.fn())
+      .mockReturnValueOnce(vi.fn())
+      .mockReturnValueOnce(vi.fn())
+      .mockReturnValueOnce(condition);
+    const { result } = await renderHook(() => useTripIssue(issueId));
+    const rule = { items: [{ kind: 'within_budget' as const }], match: 'all' as const };
+
+    await act(async () => {
+      expect(await result.current.setCondition({ rule })).toBe(true);
+      expect(await result.current.setCondition({})).toBe(true);
+    });
+    expect(condition).toHaveBeenNthCalledWith(1, { issueId, rule });
+    expect(condition).toHaveBeenNthCalledWith(2, { issueId });
+  });
+
   test('does not implement without an issue', async () => {
     const createVersion = vi.fn();
     convex.useQuery.mockReturnValue(undefined);

@@ -19,11 +19,13 @@ function randomShortId(): string {
   );
 }
 
+export type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
+
 /** The collision check and insert share one transaction, including concurrent creates. */
 export async function insertWithShortId<Table extends ReferenceTable>(
   ctx: MutationCtx,
   table: Table,
-  value: WithoutSystemFields<Doc<Table>>,
+  value: DistributiveOmit<WithoutSystemFields<Doc<Table>>, 'shortId'>,
   generate = randomShortId
 ): Promise<Id<Table>> {
   for (let attempt = 0; attempt < 32; attempt++) {
@@ -31,9 +33,11 @@ export async function insertWithShortId<Table extends ReferenceTable>(
     const existing = await ctx.db
       .query(table as ReferenceTable)
       .withIndex('by_shortId', (q) => q.eq('shortId', shortId))
-      .unique();
+      .first();
     if (existing) continue;
-    return ctx.db.insert(table, { ...value, shortId });
+    return ctx.db.insert(table, { ...value, shortId } as unknown as WithoutSystemFields<
+      Doc<Table>
+    >);
   }
   throw new ConvexError('Unable to create a unique reference. Please try again.');
 }

@@ -13,9 +13,10 @@ export type DiscussionListItem = FunctionReturnType<typeof api.routes.discussion
 export type DiscussionMember = FunctionReturnType<typeof api.routes.discussions.roster.run>[number];
 
 export type DiscussionMessage = UIMessage & {
+  assistantError?: string;
+  assistantStatus?: 'requested' | 'responding' | 'complete' | 'failed';
   attachments?: DiscussionMessageMedia[];
   author?: DiscussionListItem['createdBy'];
-  media?: DiscussionMessageMedia[];
   mine?: boolean;
 };
 

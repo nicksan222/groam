@@ -66,9 +66,7 @@ export function IssueDetailView({ issueId }: { issueId: Id<'tripIssues'> }) {
               data-testid={testIds.issueHeading}
             >
               {issue.title}
-              <span className="ml-2 font-normal text-muted-foreground">
-                #{issue.shortId ?? issue.id}
-              </span>
+              <span className="ml-2 font-normal text-muted-foreground">#{issue.shortId}</span>
             </Shell.Title>
             <IssueDetailMeta issue={issue} />
           </Shell.BannerInset>

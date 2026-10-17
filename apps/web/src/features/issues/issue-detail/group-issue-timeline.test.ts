@@ -35,9 +35,35 @@ describe('groupIssueTimeline', () => {
     expect(blocks[0]).toMatchObject({ kind: 'comment', item: { id: 'c1' } });
     expect(blocks[1]).toMatchObject({
       kind: 'system',
-      items: [{ id: 's1' }, { id: 's2' }, { id: 's3' }]
+      items: [{ item: { id: 's1' } }, { item: { id: 's2' } }, { item: { id: 's3' } }]
     });
     expect(blocks[2]).toMatchObject({ kind: 'comment', item: { id: 'c2' } });
-    expect(blocks[3]).toMatchObject({ kind: 'system', items: [{ id: 's4' }] });
+    expect(blocks[3]).toMatchObject({ kind: 'system', items: [{ item: { id: 's4' } }] });
+  });
+
+  test("reads a person's change back into its parts", () => {
+    const [block] = groupIssueTimeline([
+      comment('s1', 'system', 'Alex Morgan assigned this to Sam Planner')
+    ]);
+    expect(block).toMatchObject({
+      items: [{ event: { kind: 'assigned', name: 'Sam Planner' } }],
+      kind: 'system'
+    });
+  });
+
+  test('gives automatic status changes their own block with the reason', () => {
+    const blocks = groupIssueTimeline([
+      comment('s1', 'system', 'assigned A'),
+      comment('s2', 'system', 'Resolved automatically: The trip has a destination'),
+      comment('s3', 'system', 'Reopened automatically: The trip has a destination no longer holds'),
+      comment('s4', 'system', 'assigned B')
+    ]);
+
+    expect(blocks).toMatchObject([
+      { kind: 'system', items: [{ event: null, item: { id: 's1' } }] },
+      { auto: { change: 'resolved', label: 'The trip has a destination' }, kind: 'auto' },
+      { auto: { change: 'reopened', label: 'The trip has a destination' }, kind: 'auto' },
+      { kind: 'system', items: [{ item: { id: 's4' } }] }
+    ]);
   });
 });

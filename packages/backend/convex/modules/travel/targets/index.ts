@@ -113,6 +113,17 @@ async function catalogRows(
  */
 // oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class TripTargets {
+  /** Same check as `assertBelongsToTrip` when only the trip id is at hand. */
+  static async assertInTrip(
+    ctx: MutationCtx | QueryCtx,
+    tripId: Id<'trips'>,
+    target: Target
+  ): Promise<void> {
+    if (!(await targetBelongsToTrip(ctx, tripId, target))) {
+      throw new ConvexError('Trip target not found');
+    }
+  }
+
   static async assertBelongsToTrip(
     ctx: MutationCtx | QueryCtx,
     trip: TripCtx,

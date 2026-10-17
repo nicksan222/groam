@@ -19,6 +19,7 @@ const listItem = {
   idea: null,
   labels: [],
   rank: 0,
+  shortId: 'isuabc',
   status: 'open',
   title: 'Coast day',
   updatedAt: Date.UTC(2026, 7, 17)
@@ -35,6 +36,7 @@ const workspaceIssue = (over: Partial<WorkspaceIssue> = {}): WorkspaceIssue => (
 
 const issueDetail = (over: Partial<IssueDetailData> = {}): IssueDetailData => ({
   ...workspaceIssue(),
+  canComment: true,
   comments: [],
   ...over
 });
@@ -50,6 +52,10 @@ const state = vi.hoisted(() => ({
     issueId: Id<'tripIssues'>;
     status: 'failed' | 'queued' | 'running';
   }
+}));
+
+vi.mock('@/features/research/research-links/linked-researches', () => ({
+  LinkedResearches: () => null
 }));
 
 vi.mock('@groam/ai/ui/context/agent-context', () => ({

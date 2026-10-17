@@ -8,6 +8,7 @@ import { PageLoading } from '@groam/ui/components/page-loading';
 import Shell from '@groam/ui/components/shell/client';
 import { useNavigate } from '@tanstack/react-router';
 import { Bot } from 'lucide-react';
+import { useMemo } from 'react';
 import { type AgentRun, useAgentRecord } from '@/features/agents/hooks/use-agent';
 import {
   useAgentRun,
@@ -30,7 +31,8 @@ export function AgentRunView({ agentId, runId }: { agentId: string; runId: strin
   const { activeOrganization } = useWorkspace();
   const { retry, stop } = useAgentRunControls();
   const matched = run && validId && run.agentId === validId ? run : undefined;
-  useStartQueuedAssignRuns(matched ? [matched] : undefined);
+  const startable = useMemo(() => (matched ? [matched] : undefined), [matched]);
+  useStartQueuedAssignRuns(startable);
   const { events, loadMore, status: eventsStatus } = useAgentRunEvents(matched?.id);
   const showLoading = validId !== undefined && (agent === undefined || run === undefined);
 

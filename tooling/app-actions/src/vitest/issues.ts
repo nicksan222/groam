@@ -3,6 +3,7 @@ import { page, userEvent } from 'vite-plus/test/browser';
 import type { IssueStatus, IssueStatusFilter } from '#src/actions/set-issue-status';
 import { ids } from '#src/testing/ids';
 import { openAppPath } from './app-host';
+import { buildIssueRule, type RuleSpec } from './issue-rules';
 import {
   by,
   dialogSubmit,
@@ -62,12 +63,20 @@ export async function setIssueStatus(status: IssueStatus): Promise<void> {
   await expect.element(current).toHaveAttribute('data-status', status);
 }
 
-/** Creates an issue from the trip board's "To decide" lane (`newIssue` button) and returns the id from the URL. */
-export async function createIssue(input: { body: string; title: string }): Promise<string> {
+/**
+ * Creates an issue from the trip board's "To decide" lane (`newIssue` button), optionally with a
+ * "Done when" rule built in the dialog, and returns the id from the URL.
+ */
+export async function createIssue(input: {
+  body: string;
+  rule?: RuleSpec;
+  title: string;
+}): Promise<string> {
   await tap(by(ids.newIssue));
   await expect.element(by(ids.createIssueDialog)).toBeVisible();
   await enter(by(ids.createIssueTitle), input.title);
   await enter(by(ids.createIssueBody), input.body);
+  if (input.rule) await buildIssueRule(input.rule);
   await tap(dialogSubmit(ids.createIssueDialog));
   await expectGone(by(ids.createIssueDialog));
   await presentAttribute(by(ids.issueHeading), 'data-issue-id');

@@ -1,8 +1,8 @@
 import { ConvexError } from 'convex/values';
-import type { Doc, Id } from '#convex-generated/dataModel';
+import type { Id } from '#convex-generated/dataModel';
 import type { QueryCtx } from '#convex-generated/server';
 import { workspaceRoster } from '#convex/modules/auth/workspace';
-import type { ConditionCheck } from '#convex/modules/travel/issues/checks';
+import type { ConditionedIssue } from '#convex/modules/travel/issues/condition';
 import {
   emptyRuleFacts,
   type FactList,
@@ -23,27 +23,15 @@ const MAX_ACTIVITY_TRANSFERS = 199;
 const MAX_DESTINATION_TRANSFERS = 19;
 const MAX_TRAVELERS = 100;
 
-export type Issue = Pick<Doc<'tripIssues'>, 'condition'>;
+export type Issue = Pick<ConditionedIssue, 'condition'>;
 
-/** Which trip lists each starter check reads; the rest read the trip row alone. */
-const checkNeeds: Record<ConditionCheck, ReadonlyArray<FactList>> = {
-  activities: ['activities', 'destinations'],
-  budget: [],
-  dates: [],
-  destination: [],
-  duration: [],
-  packing: ['packing'],
-  stays: ['stays']
-};
-
-/** Which trip lists the given issues' conditions read. */
+/** Which trip lists the given issues' rules read. */
 function factNeeds(issues: Array<Issue>): Set<FactList> {
-  const needs = new Set<FactList>();
-  for (const { condition } of issues) {
-    if (condition?.kind === 'auto') for (const list of checkNeeds[condition.check]) needs.add(list);
-    if (condition?.kind === 'rule') for (const list of ruleNeeds(condition.rule)) needs.add(list);
-  }
-  return needs;
+  return new Set(
+    issues.flatMap(({ condition }) =>
+      condition?.kind === 'rule' ? [...ruleNeeds(condition.rule)] : []
+    )
+  );
 }
 
 function capped<T>(rows: Array<T>, maximum: number, what: string): Array<T> {
@@ -51,40 +39,45 @@ function capped<T>(rows: Array<T>, maximum: number, what: string): Array<T> {
   return rows;
 }
 
+/** Reads one row past the cap so an over-full list is refused instead of silently truncated. */
+async function takeCapped<T>(
+  query: { take: (count: number) => Promise<Array<T>> },
+  maximum: number,
+  what: string
+): Promise<Array<T>> {
+  return capped(await query.take(maximum + 1), maximum, what);
+}
+
 const loaders = {
   activities: async (ctx: Pick<QueryCtx, 'db'>, tripId: Id<'trips'>) =>
-    capped(
-      await ctx.db
+    takeCapped(
+      ctx.db
         .query('tripDestinationActivities')
-        .withIndex('by_tripId_and_position', (query) => query.eq('tripId', tripId))
-        .take(MAX_ACTIVITIES_PER_TRIP + 1),
+        .withIndex('by_tripId_and_position', (query) => query.eq('tripId', tripId)),
       MAX_ACTIVITIES_PER_TRIP,
       'itinerary activities'
     ),
   destinations: async (ctx: Pick<QueryCtx, 'db'>, tripId: Id<'trips'>) =>
-    capped(
-      await ctx.db
+    takeCapped(
+      ctx.db
         .query('tripDestinations')
-        .withIndex('by_tripId_and_position', (query) => query.eq('tripId', tripId))
-        .take(MAX_DESTINATIONS_PER_TRIP + 1),
+        .withIndex('by_tripId_and_position', (query) => query.eq('tripId', tripId)),
       MAX_DESTINATIONS_PER_TRIP,
       'destinations'
     ),
   packing: async (ctx: Pick<QueryCtx, 'db'>, tripId: Id<'trips'>) =>
-    capped(
-      await ctx.db
+    takeCapped(
+      ctx.db
         .query('tripPackingItems')
-        .withIndex('by_tripId_and_sortOrder', (query) => query.eq('tripId', tripId))
-        .take(MAX_PACKING_ITEMS + 1),
+        .withIndex('by_tripId_and_sortOrder', (query) => query.eq('tripId', tripId)),
       MAX_PACKING_ITEMS,
       'packing items'
     ),
   stays: async (ctx: Pick<QueryCtx, 'db'>, tripId: Id<'trips'>) =>
-    capped(
-      await ctx.db
+    takeCapped(
+      ctx.db
         .query('tripDestinationStays')
-        .withIndex('by_tripId_and_position', (query) => query.eq('tripId', tripId))
-        .take(MAX_STAYS_PER_TRIP + 1),
+        .withIndex('by_tripId_and_position', (query) => query.eq('tripId', tripId)),
       MAX_STAYS_PER_TRIP,
       'stays'
     ),

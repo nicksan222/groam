@@ -46,12 +46,26 @@ async function referencesForTarget(
     .take(maximum + 1);
 }
 
+const settledOrphans = new WeakMap<object, Set<Id<'attachments'>>>();
+
+/** Idempotent under parallel callers: the first caller per mutation claims the row synchronously. */
 async function deleteOrphan(ctx: MutationCtx, attachmentId: Id<'attachments'>): Promise<void> {
+  let claimed = settledOrphans.get(ctx.db);
+  if (!claimed) {
+    claimed = new Set();
+    settledOrphans.set(ctx.db, claimed);
+  }
+  if (claimed.has(attachmentId)) return;
+  claimed.add(attachmentId);
   const reference = await ctx.db
     .query('attachmentReferences')
     .withIndex('by_attachmentId', (query) => query.eq('attachmentId', attachmentId))
     .first();
-  if (!reference) {
+  if (reference) {
+    claimed.delete(attachmentId);
+    return;
+  }
+  if (await ctx.db.get('attachments', attachmentId)) {
     await ctx.db.delete('attachments', attachmentId);
   }
 }
@@ -171,21 +185,25 @@ export class Attachments {
     return rows.filter((row) => row !== null);
   }
 
+  /** Pins on merged or closed idea working copies are read-only and do not block deletion. */
   static async mediaIsAttached(ctx: ReadCtx, mediaId: Id<'media'>): Promise<boolean> {
-    return (
-      (await ctx.db
-        .query('attachments')
-        .withIndex('by_mediaId', (query) => query.eq('mediaId', mediaId))
-        .first()) !== null
-    );
+    for await (const attachment of ctx.db
+      .query('attachments')
+      .withIndex('by_mediaId', (query) => query.eq('mediaId', mediaId))) {
+      const proposal = await ctx.db
+        .query('tripProposals')
+        .withIndex('by_workingTripId', (query) => query.eq('workingTripId', attachment.tripId))
+        .unique();
+      if (!proposal || (proposal.status !== 'merged' && proposal.status !== 'closed')) return true;
+    }
+    return false;
   }
 
   static async removeTarget(ctx: MutationCtx, tripId: Id<'trips'>, target: AttachmentTarget) {
     const references = await referencesForTarget(ctx, tripId, target);
-    for (const reference of references) await ctx.db.delete(reference._id);
-    for (const reference of references) {
-      await deleteOrphan(ctx, reference.attachmentId);
-    }
+    await Promise.all(references.map((reference) => ctx.db.delete(reference._id)));
+    // deleteOrphan claims each attachment before awaiting, so shared attachments settle once.
+    await Promise.all(references.map((reference) => deleteOrphan(ctx, reference.attachmentId)));
   }
 
   /** Replace the ordered pin list. Same ids in the same order is a no-op. */
@@ -230,8 +248,8 @@ export class Attachments {
       return false;
     }
 
-    for (const reference of existing) await ctx.db.delete(reference._id);
-    for (const reference of existing) await deleteOrphan(ctx, reference.attachmentId);
+    await Promise.all(existing.map((reference) => ctx.db.delete(reference._id)));
+    await Promise.all(existing.map((reference) => deleteOrphan(ctx, reference.attachmentId)));
 
     for (const [position, mediaId] of ids.entries()) {
       await ctx.db.insert('attachmentReferences', {

@@ -51,7 +51,7 @@ test('derives chat mentions from agent ids', () => {
   }
 });
 
-test('round-trips recently active chat metadata and reads legacy summaries', () => {
+test('round-trips recently active chat metadata', () => {
   const tag = { id: 'trip-1', kind: 'trip' as const, label: 'Portugal', tripId: 'trip-1' };
   const screenContext = JSON.stringify({ key: 'trip:trip-1:itinerary' });
   expect(
@@ -64,25 +64,9 @@ test('round-trips recently active chat metadata and reads legacy summaries', () 
     updatedAt: 42,
     version: 2
   });
-
-  expect(
-    parseAssistantThreadSummary(
-      JSON.stringify({
-        kind: 'workspace-assistant',
-        organizationId: 'organization-1',
-        tags: [],
-        version: 1
-      })
-    )
-  ).toEqual({
-    kind: 'workspace-assistant',
-    organizationId: 'organization-1',
-    tags: [],
-    version: 1
-  });
 });
 
-test('round-trips current and legacy screen context snapshots', () => {
+test('round-trips screen context snapshots', () => {
   const snapshot = {
     agent: 'groam' as const,
     key: 'trip:trip-1:itinerary',
@@ -91,11 +75,6 @@ test('round-trips current and legacy screen context snapshots', () => {
     title: 'Portugal itinerary'
   };
   expect(parseAssistantContextMessage(assistantContextMessage(snapshot))).toEqual(snapshot);
-  expect(
-    parseAssistantContextMessage(
-      `Groam screen context snapshot (JSON):\n${JSON.stringify(snapshot)}`
-    )
-  ).toEqual(snapshot);
   expect(
     parseAssistantContextMessage(
       `Groam interaction context (JSON):\n${JSON.stringify({ ...snapshot, agent: 'issue' })}`
@@ -137,4 +116,18 @@ test('assignable id lists match standalone agent definitions', () => {
   );
   expect(issueIds).toEqual([...issueAssignableAgentIds]);
   expect(proposalIds).toEqual([...proposalAssignableAgentIds]);
+});
+
+test('registers the researcher chat agent with read-only capabilities', () => {
+  const researcher = assistantAgents.researcher;
+  expect(researcher.surface).toBe('chat');
+  expect(researcher.mention).toBe('@researcher');
+  expect(chatAgentIds).toContain('researcher');
+  expect(mentionedAssistantAgent('hey @researcher find museums')?.id).toBe('researcher');
+  expect(researcher.capabilities).toContain('web.search');
+  expect(
+    researcher.capabilities.filter(
+      (id) => id.startsWith('trip.') && !id.endsWith('.read') && id !== 'trip.status.read'
+    )
+  ).toEqual([]);
 });

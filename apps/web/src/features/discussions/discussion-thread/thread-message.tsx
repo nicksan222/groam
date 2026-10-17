@@ -54,7 +54,8 @@ export function ThreadMessage({
     );
   }
 
-  return (
+  const failed = message.assistantStatus === 'failed';
+  const chat = (
     <ChatMessage
       actions={
         <ThreadMessageToolbar
@@ -78,6 +79,15 @@ export function ThreadMessage({
       testId={testIds.chatMessage}
       text={body.text}
     />
+  );
+  if (!failed) return chat;
+  return (
+    <div className="space-y-1">
+      {chat}
+      <p className={cn('px-1 text-xs text-destructive', mine && 'text-right')} role="status">
+        Groam couldn&apos;t reply: {message.assistantError ?? 'Something went wrong'}
+      </p>
+    </div>
   );
 }
 

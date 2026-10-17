@@ -7,6 +7,10 @@ import { testIds } from '@/lib/test-ids';
 import type { IssueDetailData } from './issue-detail-data';
 import { IssueSidebar } from './issue-sidebar';
 
+vi.mock('@/features/research/research-links/linked-researches', () => ({
+  LinkedResearches: () => null
+}));
+
 vi.mock('@/features/workspace/navigation/router', () => ({
   Link: ({
     children,

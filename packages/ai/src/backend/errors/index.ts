@@ -180,7 +180,16 @@ const FAILURE_MESSAGE_PATTERNS: readonly { matches: readonly string[]; message: 
   {
     message:
       'That conversation is too long for Groam AI right now. Start a new chat or send a shorter message.',
-    matches: ['context length', 'context_length', 'too long', 'maximum context']
+    matches: [
+      'context length',
+      'context_length',
+      'context window',
+      'maximum context',
+      'prompt is too long',
+      'input is too long',
+      'input too long',
+      'request too large'
+    ]
   },
   {
     message: 'Groam AI could not reply to that message because of a provider safety check.',
@@ -196,8 +205,28 @@ function failureMessageForHaystack(haystack: string): string | null {
   );
 }
 
+/** Error thrown by Groam itself; its message is already traveler-safe and skips the provider prefix. */
+export class AssistantAppError extends Error {
+  override name = 'AssistantAppError';
+}
+
+/** Groam-authored failure: AssistantAppError, or a ConvexError carrying a string message. */
+function groamAuthoredMessage(error: unknown): string | null {
+  if (typeof error !== 'object' || error === null) return null;
+  const record = error as { data?: unknown; message?: unknown; name?: unknown };
+  if (record.name === 'AssistantAppError' && typeof record.message === 'string') {
+    return sanitizeFailureMessage(record.message);
+  }
+  if (record.name === 'ConvexError' && typeof record.data === 'string') {
+    return sanitizeFailureMessage(record.data);
+  }
+  return null;
+}
+
 /** Map provider/backend failures to traveler-facing copy, preferring the provider message. */
 export function assistantFailureMessage(error: unknown): string {
+  const own = groamAuthoredMessage(error);
+  if (own) return own;
   const candidates: string[] = [];
   collectCandidates(error, 0, new Set(), candidates);
   let forwarded: string | undefined;

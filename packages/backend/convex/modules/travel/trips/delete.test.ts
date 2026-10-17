@@ -171,12 +171,17 @@ test('deleting an organization removes its trips, discussions, media, and stored
         .withIndex('by_tripId_and_position', (query) => query.eq('tripId', tripId))
         .take(1),
       issueComments: await ctx.db.query('tripIssueComments').take(1),
+      issueConditions: await ctx.db.query('tripIssueConditions').take(1),
       issues: await ctx.db.query('tripIssues').take(1),
       itinerary: await ctx.db
         .query('tripDestinationActivities')
         .withIndex('by_tripId_and_position', (query) => query.eq('tripId', tripId))
         .take(1),
       storage: await ctx.storage.get(storageId),
+      travelers: await ctx.db
+        .query('tripTravelers')
+        .withIndex('by_tripId', (query) => query.eq('tripId', sharedTripId))
+        .take(1),
       transferMedia: await ctx.db.get('media', transferMediaId),
       transferStorage: await ctx.storage.get(transferStorageId),
       trip: await ctx.db.get('trips', tripId)
@@ -192,10 +197,12 @@ test('deleting an organization removes its trips, discussions, media, and stored
     discussionMessages: [],
     discussions: [],
     destinations: [],
+    issueConditions: [],
     issueComments: [],
     issues: [],
     itinerary: [],
     storage: null,
+    travelers: [],
     transferMedia: null,
     transferStorage: null,
     trip: null

@@ -1,39 +1,8 @@
 import { arrayMove } from '@dnd-kit/sortable';
-import type { Id } from '@groam/backend/data-model';
 import { describe, expect, test } from 'vite-plus/test';
+import { boardIssue } from '@/features/trips/testing/trip-board-fixtures';
 import type { IssueStatus } from '@/types/issues';
-import type { IssueListItem, WorkspaceIssue } from '@/types/issues';
-import type { TripBoardIssue } from '@/types/trip-board';
 import { applyIssueMove, issuesByLane, locateDrop } from './trip-board-order';
-
-const listItem = {
-  assignee: null,
-  author: { name: 'Alex Morgan', userId: 'user-alex' },
-  canAssign: true,
-  canManage: true,
-  condition: null,
-  dueAt: null,
-  id: 'issue-1' as Id<'tripIssues'>,
-  idea: null,
-  labels: [],
-  rank: 0,
-  status: 'open',
-  title: 'Coast day',
-  updatedAt: Date.UTC(2026, 7, 17)
-} satisfies Omit<IssueListItem, 'tripName'>;
-
-const workspaceIssue = (over: Partial<WorkspaceIssue> = {}): WorkspaceIssue => ({
-  ...listItem,
-  body: 'Add a coast day near Lisbon.',
-  closedAt: null,
-  tripId: 'trip-1' as Id<'trips'>,
-  tripName: 'Atlantic week',
-  ...over
-});
-
-/** A board issue; `id` doubles as the title so tests can find the card by name. */
-const boardIssue = (id: string, over: Partial<TripBoardIssue> = {}): TripBoardIssue =>
-  workspaceIssue({ id: id as Id<'tripIssues'>, title: id, ...over });
 
 const ids = ['a', 'b', 'c'];
 const drop = (over: Partial<Parameters<typeof locateDrop>[0]>) =>

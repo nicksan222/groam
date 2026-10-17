@@ -1,97 +1,37 @@
 import type { Infer } from 'convex/values';
-import { type ConditionCheck, conditionMet } from '#convex/modules/travel/issues/checks';
+import type { Doc, Id } from '#convex-generated/dataModel';
+import type { MutationCtx, QueryCtx } from '#convex-generated/server';
+import { issuesOf, MAX_ISSUES } from '#convex/modules/travel/issues/board';
 import { presentRule, ruleLabel, type RuleFacts } from '#convex/modules/travel/issues/rules/index';
-import { tripCheckPhrases } from '#convex/modules/travel/issues/rules/kinds/trip';
 import type { TripIssueValidators } from '#convex/modules/travel/issues/schema';
 
-export {
-  type ConditionCheck,
-  type ConditionFacts,
-  conditionMet
-} from '#convex/modules/travel/issues/checks';
+/**
+ * The `tripIssueConditions` table: each issue's "done when", one row at most. Everything that
+ * reads or writes a condition goes through here; the rest of the module works on issues with
+ * their condition joined on.
+ */
+
 export type { RuleFacts } from '#convex/modules/travel/issues/rules/index';
 
 export type IssueCondition = Infer<typeof TripIssueValidators.condition>;
 export type PresentedCondition = Infer<typeof TripIssueValidators.presentedCondition>;
-
-const autoCopy: Record<ConditionCheck, { closesWhen: string; hint: string; label: string }> = {
-  activities: {
-    closesWhen: tripCheckPhrases.activities,
-    hint: 'Start an idea that plans them.',
-    label: 'Every destination has an activity'
-  },
-  budget: {
-    closesWhen: tripCheckPhrases.budget,
-    hint: 'Start an idea that sets it.',
-    label: 'The trip has a group budget'
-  },
-  dates: {
-    closesWhen: tripCheckPhrases.dates,
-    hint: 'Start an idea that adds them.',
-    label: 'The trip has travel dates'
-  },
-  destination: {
-    closesWhen: tripCheckPhrases.destination,
-    hint: 'Start an idea that picks one.',
-    label: 'The trip has a destination'
-  },
-  duration: {
-    closesWhen: tripCheckPhrases.duration,
-    hint: 'Start an idea that sets it.',
-    label: 'The trip has a length'
-  },
-  packing: {
-    closesWhen: tripCheckPhrases.packing,
-    hint: 'Start an idea that adds to it.',
-    label: 'The packing list has items'
-  },
-  stays: {
-    closesWhen: tripCheckPhrases.stays,
-    hint: 'Start an idea that adds your stays.',
-    label: 'Every night of the trip has a place to stay'
-  }
-};
+/** A condition the system decides: a rule, starter or composed. */
+export type CheckedCondition = Extract<IssueCondition, { kind: 'rule' }>;
 
 export function conditionLabel(condition: IssueCondition): string {
-  switch (condition.kind) {
-    case 'auto': {
-      return autoCopy[condition.check].label;
-    }
-    case 'manual': {
-      return condition.text;
-    }
-    case 'rule': {
-      return ruleLabel(condition.rule);
-    }
-  }
+  return condition.kind === 'manual' ? condition.text : ruleLabel(condition.rule);
 }
 
-/** Whether the system decides the issue's status: the starter checks and composed rules. */
+/** Whether the system decides the issue's status. */
 export function isCheckedCondition(
   condition: IssueCondition | undefined
-): condition is Exclude<IssueCondition, { kind: 'manual' }> {
-  return condition !== undefined && condition.kind !== 'manual';
+): condition is CheckedCondition {
+  return condition?.kind === 'rule';
 }
 
 /** Is a checked condition satisfied by the trip as it is now? */
-export function checkedConditionMet(
-  condition: Exclude<IssueCondition, { kind: 'manual' }>,
-  facts: RuleFacts
-): boolean {
-  return condition.kind === 'auto'
-    ? conditionMet(condition.check, facts)
-    : presentRule(condition.rule, facts).met;
-}
-
-/**
- * Why a person cannot change an auto-condition issue's status by hand: while the condition is
- * unmet it cannot be closed, and once met it cannot be reopened.
- */
-export function conditionRefusal(check: ConditionCheck, met: boolean): string {
-  const { closesWhen, hint, label } = autoCopy[check];
-  return met
-    ? `Settled automatically: ${label}. Change the trip through an idea to reopen it.`
-    : `This closes itself once ${closesWhen}. ${hint}`;
+export function checkedConditionMet(condition: CheckedCondition, facts: RuleFacts): boolean {
+  return presentRule(condition.rule, facts).met;
 }
 
 export function presentCondition(
@@ -100,13 +40,89 @@ export function presentCondition(
 ): PresentedCondition {
   if (!condition) return null;
   if (condition.kind === 'manual') return { kind: 'manual', label: condition.text, met: null };
-  if (condition.kind === 'rule') return presentRule(condition.rule, facts);
-  const met = conditionMet(condition.check, facts);
-  return {
-    check: condition.check,
-    kind: 'auto',
-    label: autoCopy[condition.check].label,
-    met,
-    refusal: conditionRefusal(condition.check, met)
-  };
+  return { ...presentRule(condition.rule, facts), starter: condition.starter === true };
+}
+
+export type ConditionedIssue = Omit<Doc<'tripIssues'>, 'condition'> & {
+  condition?: IssueCondition;
+};
+
+function fromRow(row: Doc<'tripIssueConditions'>): IssueCondition {
+  if (row.kind === 'manual') return { kind: 'manual', text: row.text };
+  return { kind: 'rule', rule: row.rule, ...(row.starter ? { starter: true } : {}) };
+}
+
+async function rowOf(ctx: Pick<QueryCtx, 'db'>, issueId: Id<'tripIssues'>) {
+  return await ctx.db
+    .query('tripIssueConditions')
+    .withIndex('by_issueId', (query) => query.eq('issueId', issueId))
+    .unique();
+}
+
+export async function conditionOf(
+  ctx: Pick<QueryCtx, 'db'>,
+  issueId: Id<'tripIssues'>
+): Promise<IssueCondition | undefined> {
+  const row = await rowOf(ctx, issueId);
+  return row ? fromRow(row) : undefined;
+}
+
+/** Every condition on a trip by issue, in one read; a trip has at most one per issue. */
+export async function tripConditions(
+  ctx: Pick<QueryCtx, 'db'>,
+  tripId: Id<'trips'>
+): Promise<Map<Id<'tripIssues'>, IssueCondition>> {
+  const rows = await ctx.db
+    .query('tripIssueConditions')
+    .withIndex('by_tripId', (query) => query.eq('tripId', tripId))
+    .take(MAX_ISSUES);
+  return new Map(rows.map((row) => [row.issueId, fromRow(row)]));
+}
+
+function joined(issue: Doc<'tripIssues'>, condition: IssueCondition | undefined): ConditionedIssue {
+  return condition ? { ...issue, condition } : issue;
+}
+
+/** One issue with its condition. */
+export async function withCondition(
+  ctx: Pick<QueryCtx, 'db'>,
+  issue: Doc<'tripIssues'>
+): Promise<ConditionedIssue> {
+  return joined(issue, await conditionOf(ctx, issue._id));
+}
+
+/** Joins `conditions` (from `tripConditions`) onto issues of the same trip. */
+export function joinConditions(
+  issues: Array<Doc<'tripIssues'>>,
+  conditions: Map<Id<'tripIssues'>, IssueCondition>
+): Array<ConditionedIssue> {
+  return issues.map((issue) => joined(issue, conditions.get(issue._id)));
+}
+
+/** Every issue of a trip with its condition. */
+export async function conditionedIssuesOf(
+  ctx: Pick<QueryCtx, 'db'>,
+  tripId: Id<'trips'>
+): Promise<Array<ConditionedIssue>> {
+  const [issues, conditions] = await Promise.all([
+    issuesOf(ctx, tripId),
+    tripConditions(ctx, tripId)
+  ]);
+  return joinConditions(issues, conditions);
+}
+
+/** Sets, replaces, or (with undefined) removes an issue's condition. */
+export async function writeCondition(
+  ctx: Pick<MutationCtx, 'db'>,
+  issue: Pick<Doc<'tripIssues'>, '_id' | 'tripId'>,
+  condition: IssueCondition | undefined
+): Promise<void> {
+  const existing = await rowOf(ctx, issue._id);
+  if (!condition) {
+    if (existing) await ctx.db.delete('tripIssueConditions', existing._id);
+    return;
+  }
+  const row = { ...condition, issueId: issue._id, tripId: issue.tripId };
+  if (existing) await ctx.db.replace('tripIssueConditions', existing._id, row);
+  else await ctx.db.insert('tripIssueConditions', row);
 }

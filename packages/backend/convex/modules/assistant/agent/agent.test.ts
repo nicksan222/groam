@@ -1,4 +1,5 @@
 import { mockModel } from '@convex-dev/agent';
+import { expectConsole } from '@groam/vitest-config/console';
 import { makeFunctionReference } from 'convex/server';
 import { ConvexError, v } from 'convex/values';
 import { expect, test, vi } from 'vite-plus/test';
@@ -32,6 +33,8 @@ export const openForTest = action({
 
 type MockReply =
   | 'add'
+  | 'empty'
+  | 'fail'
   | 'context'
   | 'create'
   | 'dates'
@@ -62,6 +65,10 @@ function languageModelForReply(
   tripId: Id<'trips'>
 ) {
   switch (reply) {
+    case 'empty':
+      return mockModel({ content: [] });
+    case 'fail':
+      return mockModel({ content: [{ text: 'Partial answer', type: 'text' }], fail: true });
     case 'dates':
       return toolResponse(
         'startTripVersion',
@@ -151,6 +158,8 @@ export const sendWithMockModel = action({
       v.literal('status'),
       v.literal('proposals'),
       v.literal('add'),
+      v.literal('empty'),
+      v.literal('fail'),
       v.literal('context'),
       v.literal('create'),
       v.literal('dates'),
@@ -198,7 +207,17 @@ const sendWithMockModelReference = makeFunctionReference<
   {
     destinationId: Id<'tripDestinations'>;
     prompt: string;
-    reply: 'add' | 'context' | 'create' | 'dates' | 'proposals' | 'screen' | 'status' | 'stay';
+    reply:
+      | 'add'
+      | 'context'
+      | 'create'
+      | 'dates'
+      | 'empty'
+      | 'fail'
+      | 'proposals'
+      | 'screen'
+      | 'status'
+      | 'stay';
     threadId: string;
     tripId: Id<'trips'>;
   },
@@ -299,6 +318,30 @@ test('builds one verified context for the current trip screen', async () => {
     owner.client.query(internal.modules.assistant.model.index.tripContext, { tripId })
   ).resolves.toMatchObject({ totalPlannedCost: 340 });
 });
+
+test.each([
+  ['fail', 'Mock error message'],
+  ['empty', 'The assistant returned nothing']
+] as const)(
+  'reports a %s model stream as a failed turn, not a finished reply',
+  async (reply, message) => {
+    if (reply === 'fail') {
+      expectConsole('error', 'onError');
+      expectConsole('warn', 'abortSignal in mock model not supported');
+    }
+    const { destinationId, owner, threadId, tripId } = await setupAssistantThread();
+
+    await expect(
+      owner.client.action(sendWithMockModelReference, {
+        destinationId,
+        prompt: 'Where should we eat?',
+        reply,
+        threadId,
+        tripId
+      })
+    ).rejects.toThrow(message);
+  }
+);
 
 test('adds a costed stay through the itinerary agent tool', async () => {
   const { destinationId, owner, threadId, tripId } = await setupAssistantThread();

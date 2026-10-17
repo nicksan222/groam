@@ -13,13 +13,12 @@ const MEDIA_PREVIEW_LABELS = new Set([
 
 export function discussionMessageBody(message: {
   attachments?: DiscussionMessageMedia[];
-  media?: DiscussionMessageMedia[];
   text: string;
 }): {
   attachments: DiscussionMessageMedia[];
   text: string;
 } {
-  const attachments = message.attachments ?? message.media ?? [];
+  const attachments = message.attachments ?? [];
   const trimmed = message.text.trim();
   const hidePreviewLabel =
     attachments.length > 0 &&

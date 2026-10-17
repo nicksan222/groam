@@ -48,6 +48,7 @@ const tripId = 'trip-1' as Id<'trips'>;
 
 function trip(overrides: Partial<TripDetail> = {}): TripDetail {
   return {
+    archivedAt: null,
     id: tripId,
     name: 'Atlantic week',
     role: 'organizer',
@@ -86,5 +87,12 @@ describe('TripIssuesPanel', () => {
     await page.getByRole('button', { name: 'New issue' }).click();
 
     await expect.element(page.getByTestId('create-issue-dialog')).toHaveTextContent(tripId);
+  });
+
+  test('offers no New issue on an archived trip', async () => {
+    await render(<TripIssuesPanel trip={trip({ archivedAt: Date.UTC(2026, 0, 1) })} />);
+
+    await expect.element(page.getByRole('link', { name: 'All issues' })).toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'New issue' })).not.toBeInTheDocument();
   });
 });

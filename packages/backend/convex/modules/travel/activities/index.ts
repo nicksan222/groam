@@ -1,6 +1,7 @@
 import { ConvexError, type Infer } from 'convex/values';
 import type { Doc, Id } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
+import { linkTargetKey, removeLinksForTargetKey } from '#convex/modules/discussions/links/cascade';
 import { Attachments } from '#convex/modules/media/attachments/index';
 import type { TripActivityValidators } from '#convex/modules/travel/activities/schema';
 import { TripLocations } from '#convex/modules/travel/locations/index';
@@ -243,6 +244,10 @@ export class ItineraryActivity {
       id: activity._id,
       type: 'activity'
     });
+    await removeLinksForTargetKey(
+      ctx,
+      linkTargetKey({ kind: 'tripTarget', target: { id: activity._id, type: 'activity' } })
+    );
     await TripLocations.removeActivity(ctx, activity._id);
     await ctx.db.delete('tripDestinationActivities', activity._id);
   }

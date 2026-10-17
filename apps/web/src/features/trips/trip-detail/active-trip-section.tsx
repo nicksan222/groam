@@ -1,3 +1,4 @@
+import { ResearchListView } from '@/features/research/research-list/research-list-view';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { TripBoard } from '@/features/trips/trip-board/trip-board';
 import { itineraryActionsFromTripState } from '@/features/trips/trip-destinations/itinerary-actions';
@@ -13,8 +14,8 @@ import { TripPlanPage } from './trip-plan-page';
 import { updateTripDuration } from './update-trip-duration';
 
 /**
- * A trip's section body. A shared trip shows one of its tabs: board, overview, issues, ideas, or
- * activity. The idea clone
+ * A trip's section body. A shared trip shows one of its tabs: board, overview, issues, ideas,
+ * research, or activity. The idea clone
  * workspace also renders this for an idea's working trip, which is why the proposal branches stay.
  */
 export function ActiveTripSection({
@@ -55,6 +56,7 @@ export function ActiveTripSection({
       return (
         <TripIdeasPanel onStartIdea={onStartVersion} startingIdea={startingIdea} trip={trip} />
       );
+    if (section === 'research') return <ResearchListView tripId={trip.id} />;
     if (section === 'overview' || section === 'itinerary')
       return <TripPlanPage day={day} itinerary={itinerary()} trip={trip} />;
     return <TripBoard onStartIdea={onStartVersion} startingIdea={startingIdea} trip={trip} />;

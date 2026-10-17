@@ -54,8 +54,7 @@ Use `aria-busy` and a single loading label for the region.
 
 TypeScript and the Groam lint rules reject layout props, custom styles/classes and spread props
 on named columns. Runtime checks reject missing, duplicate, reversed, wrapped or
-orphan columns. The deprecated `Shell.Split` API remains only for compatibility
-inside UI; the lint rules block it in application code.
+orphan columns.
 
 For trip and idea pages, the lint rules also keep `TripPageShell` as the sole owner of
 `Shell.PageBody` and reject layout overrides on that body. Tab views provide

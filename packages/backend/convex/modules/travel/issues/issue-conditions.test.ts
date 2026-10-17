@@ -1,6 +1,7 @@
 import { expect, test } from 'vite-plus/test';
 import { api } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
+import type { ClauseKind } from '#convex/modules/travel/issues/rules/index';
 import { STARTER_ISSUES } from '#convex/modules/travel/issues/starters';
 import { openTripDraft, setupReviewedTrip, tripLocationInput } from '#testing/trips';
 import { applyIdea, changedTripDetails, mergeIdea } from '#testing/versions';
@@ -12,11 +13,13 @@ async function setup() {
   const issues = await trip.owner.client.query(api.routes.trips.issues.list.run, {
     tripId: trip.tripId
   });
-  const byCheck = (check: string) => {
+  /** The starter issue whose one-clause rule is `kind`. */
+  const byCheck = (kind: ClauseKind) => {
     const issue = issues.find(
-      (entry) => entry.condition?.kind === 'auto' && entry.condition.check === check
+      ({ condition }) =>
+        condition?.kind === 'rule' && condition.starter && condition.rule.items[0]?.kind === kind
     );
-    if (!issue) throw new Error(`Expected a ${check} issue`);
+    if (!issue) throw new Error(`Expected a ${kind} issue`);
     return issue;
   };
   return { ...trip, byCheck };
@@ -32,30 +35,26 @@ const statusOf = async (owner: Owner, tripId: Id<'trips'>, issueId: Id<'tripIssu
 
 const withDates = { ...changedTripDetails, startDate: '2027-06-01' };
 
-test.each(STARTER_ISSUES)(
-  'the $title starter reports its $check condition unmet',
-  async (starter) => {
-    const { owner, tripId } = await setup();
-    const issues = await listIssues(owner, tripId);
+test.each(STARTER_ISSUES)('the $title starter reports its rule unmet', async (starter) => {
+  const { owner, tripId } = await setup();
+  const issues = await listIssues(owner, tripId);
 
-    expect(issues.find((issue) => issue.title === starter.title)?.condition).toEqual({
-      check: starter.check,
-      kind: 'auto',
-      label: expect.any(String),
-      met: false,
-      refusal: expect.any(String)
-    });
-  }
-);
+  expect(issues.find((issue) => issue.title === starter.title)?.condition).toMatchObject({
+    kind: 'rule',
+    met: false,
+    rule: starter.rule,
+    starter: true
+  });
+});
 
-test('an auto condition cannot be closed or discarded by hand', { timeout }, async () => {
+test('a starter rule cannot be closed or discarded by hand', { timeout }, async () => {
   const { byCheck, owner, tripId } = await setup();
-  const { id } = byCheck('dates');
+  const { id } = byCheck('has_dates');
   for (const status of ['closed', 'wont_do'] as const) {
     await expect(
       owner.client.mutation(api.routes.trips.issues.status.run, { issueId: id, status })
     ).rejects.toThrow(
-      'This closes itself once the trip has travel dates. Start an idea that adds them.'
+      'This closes itself once the trip has travel dates. Start an idea that gets it there.'
     );
     await expect(
       owner.client.mutation(api.routes.trips.issues.move.run, { issueId: id, status })
@@ -105,7 +104,7 @@ test(
   { timeout: 60_000 },
   async () => {
     const { byCheck, owner, reviewer, tripId } = await setup();
-    const dates = byCheck('dates');
+    const dates = byCheck('has_dates');
 
     await applyIdea(owner, reviewer, tripId, withDates);
     const closed = await listIssues(owner, tripId);
@@ -115,9 +114,11 @@ test(
       status: 'closed'
     });
     // Destination and duration were set by the same idea; stays were not.
-    expect(closed.find((issue) => issue.id === byCheck('destination').id)?.status).toBe('closed');
-    expect(closed.find((issue) => issue.id === byCheck('duration').id)?.status).toBe('closed');
-    expect(closed.find((issue) => issue.id === byCheck('stays').id)?.status).toBe('open');
+    expect(closed.find((issue) => issue.id === byCheck('has_destination').id)?.status).toBe(
+      'closed'
+    );
+    expect(closed.find((issue) => issue.id === byCheck('has_length').id)?.status).toBe('closed');
+    expect(closed.find((issue) => issue.id === byCheck('nights_covered').id)?.status).toBe('open');
     const detail = await owner.client.query(api.routes.trips.issues.get.run, {
       issueId: dates.id
     });
@@ -147,18 +148,18 @@ test('idea working copies never trigger the sync', { timeout }, async () => {
     input: withDates,
     tripId: version.workingTripId
   });
-  expect(await statusOf(owner, tripId, byCheck('dates').id)).toMatchObject({
+  expect(await statusOf(owner, tripId, byCheck('has_dates').id)).toMatchObject({
     condition: { met: false },
     status: 'open'
   });
 });
 
 test(
-  'an issue that an idea closes keeps an unmet auto condition open',
+  'an issue that an idea closes keeps an unmet checked condition open',
   { timeout: 60_000 },
   async () => {
     const { byCheck, owner, reviewer, tripId } = await setup();
-    const stays = byCheck('stays');
+    const stays = byCheck('nights_covered');
     const version = await openTripDraft(owner, tripId, { issueId: stays.id });
     await owner.client.mutation(api.routes.trips.update.run, {
       input: changedTripDetails,
@@ -174,7 +175,7 @@ test(
   { timeout: 90_000 },
   async () => {
     const { byCheck, owner, reviewer, tripId } = await setup();
-    const stays = byCheck('stays');
+    const stays = byCheck('nights_covered');
     const firstDraft = await openTripDraft(owner, tripId);
     const draftId = firstDraft.workingTripId;
     await owner.client.mutation(api.routes.trips.update.run, {
@@ -237,10 +238,10 @@ test(
   { timeout: 60_000 },
   async () => {
     const { byCheck, owner, reviewer, tripId } = await setup();
-    const dates = byCheck('dates');
-    const duration = byCheck('duration');
+    const dates = byCheck('has_dates');
+    const duration = byCheck('has_length');
     await applyIdea(owner, reviewer, tripId, withDates);
-    for (const status of ['open', 'in_progress'] as const) {
+    for (const status of ['open', 'in_progress', 'wont_do'] as const) {
       await expect(
         owner.client.mutation(api.routes.trips.issues.status.run, { issueId: dates.id, status })
       ).rejects.toThrow('Settled automatically: The trip has travel dates.');

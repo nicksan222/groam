@@ -30,8 +30,11 @@ export function isLocalBackend(): boolean {
 
 /** Seed and local-reset helpers must never run against a hosted Convex deployment. */
 export function assertLocalDevelopment(): void {
-  if (isLocalDevelopmentUrl(env.SITE_URL) || isLocalDevelopmentUrl(env.CONVEX_SITE_URL)) {
-    return;
-  }
+  assertLocalSiteUrl(env.CONVEX_SITE_URL);
+}
+
+/** Only this deployment's own site URL counts; a spoofable web-app SITE_URL never does. */
+export function assertLocalSiteUrl(convexSiteUrl: string | undefined): void {
+  if (isLocalDevelopmentUrl(convexSiteUrl)) return;
   throw new ConvexError('This operation is only available in local development');
 }

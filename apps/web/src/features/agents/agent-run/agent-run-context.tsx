@@ -56,7 +56,7 @@ function CopyRunId({ value }: { value: string }) {
 
 function RunDetails({ run }: { run: AgentRun }) {
   const active = isActiveAgentRun(run);
-  const runId = run.shortId ?? run.id;
+  const runId = run.shortId;
   return (
     <>
       <DetailSection title="Called by">

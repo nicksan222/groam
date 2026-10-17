@@ -79,3 +79,31 @@ test('respects submitDisabled and custom layout class names', async () => {
   await expect.element(page.getByRole('dialog')).toHaveClass('max-w-xl');
   expect(document.querySelector('form')?.className).toContain('space-y-8');
 });
+
+test('tall size anchors the dialog, scrolls it, and pins the footer', async () => {
+  await renderFormDialog({ size: 'tall' });
+
+  await expect.element(page.getByRole('dialog')).toHaveClass('overflow-y-auto');
+  await expect.element(page.getByRole('dialog')).toHaveClass('sm:max-w-2xl');
+  expect(document.querySelector('form')?.className).toContain('min-w-0');
+  const footer = document.querySelector('[data-slot=dialog-footer]');
+  expect(footer?.className).toContain('sticky');
+  expect(footer?.className).toContain('border-t');
+});
+
+test('tall size keeps the pinned footer when the caller overrides form spacing', async () => {
+  await renderFormDialog({ formClassName: 'space-y-8', size: 'tall' });
+
+  const form = document.querySelector('form');
+  expect(form?.className).toContain('space-y-8');
+  expect(form?.className).not.toContain('space-y-5');
+  expect(document.querySelector('[data-slot=dialog-footer]')?.className).toContain('sticky');
+});
+
+test('default size keeps the plain form layout', async () => {
+  await renderFormDialog();
+
+  expect(document.querySelector('form')?.className).not.toContain('min-w-0');
+  expect(document.querySelector('[data-slot=dialog-footer]')?.className).not.toContain('sticky');
+  await expect.element(page.getByRole('dialog')).not.toHaveClass('overflow-y-auto');
+});

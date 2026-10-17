@@ -1,4 +1,8 @@
-import type { AssistantScreen } from '#ai/runtime/screen';
+import {
+  assistantScreenLimits,
+  clampAssistantScreenText,
+  type AssistantScreen
+} from '#ai/runtime/screen';
 
 export type IssueStandaloneContext = {
   body: string;
@@ -26,7 +30,7 @@ export function issueStandaloneScreen(
   return {
     capabilities: [],
     data: JSON.stringify({
-      body: issue.body,
+      body: clampAssistantScreenText(issue.body, 30_000),
       issueId: issue.id,
       title: issue.title,
       tripName: issue.tripName
@@ -34,6 +38,9 @@ export function issueStandaloneScreen(
     description: 'Standalone Issue agent working this assigned trip issue.',
     key: `issue:${issue.id}:run`,
     target: { kind: 'trip', section: 'issues', tripId: issue.tripId },
-    title: `${issue.tripName} · ${issue.title}`
+    title: clampAssistantScreenText(
+      `${issue.tripName} · ${issue.title}`,
+      assistantScreenLimits.title
+    )
   };
 }

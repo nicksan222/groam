@@ -123,6 +123,16 @@ export async function applyIdea(): Promise<void> {
   await expect.element(page.getByText('Applied to the shared trip').first()).toBeVisible();
 }
 
+/** Confirms the apply dialog for an idea the shared trip has moved past; it reports a conflict. */
+export async function applyConflictingIdea(): Promise<void> {
+  await tap(by(ids.applyIdea).first());
+  await tap(by(ids.applyIdeaConfirm));
+  await expectGone(by(ids.applyIdeaConfirm));
+  await expect
+    .element(page.getByText(/This idea conflicts with the shared plan/u).first())
+    .toBeVisible();
+}
+
 export async function approveAndApplyIdea(): Promise<void> {
   await approveIdea();
   await applyIdea();

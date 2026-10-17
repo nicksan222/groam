@@ -3,8 +3,13 @@ import { components } from '#convex-generated/api';
 
 export const MAX_DISCUSSION_MEMBERS = 25;
 export const MAX_DISCUSSIONS_PER_USER = 100;
+export const MAX_LINKS_PER_RESEARCH = 50;
+export const MAX_MEMBERSHIP_ROWS = 500;
 export const MAX_MESSAGE_ATTACHMENT_RECEIPTS = 200;
 export const MAX_MESSAGES_PAGE_SIZE = 50;
+export const MAX_RESEARCHES_PER_TRIP = 100;
+export const MAX_RESEARCH_BRIEF_LENGTH = 2000;
+export const MAX_RESEARCH_TITLE_LENGTH = 120;
 export const MAX_TITLE_LENGTH = 80;
 
 export const discussionRateLimiter = new RateLimiter(components.rateLimiter, {

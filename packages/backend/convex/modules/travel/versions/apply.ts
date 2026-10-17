@@ -1,6 +1,7 @@
 import { ConvexError } from 'convex/values';
 import type { Doc, Id } from '#convex-generated/dataModel';
 import type { MutationCtx } from '#convex-generated/server';
+import { linkTargetKey, removeLinksForTargetKey } from '#convex/modules/discussions/links/cascade';
 import { Attachments } from '#convex/modules/media/attachments/index';
 import { DestinationCover } from '#convex/modules/travel/covers/destination/index';
 import { TripLocations } from '#convex/modules/travel/locations/index';
@@ -36,10 +37,9 @@ function sourceLink<Table extends SourceLinkedTable>(
   table: Table,
   key: string,
   retainSourceKeys: boolean | undefined
-): { sourceId: Id<Table> } | Record<string, never> {
-  if (!retainSourceKeys) return {};
-  const sourceId = ctx.db.normalizeId(table, key);
-  return sourceId ? { sourceId } : {};
+): { sourceId: Id<Table> | undefined } {
+  if (!retainSourceKeys) return { sourceId: undefined };
+  return { sourceId: ctx.db.normalizeId(table, key) ?? undefined };
 }
 
 function sourceKey<T extends string>(sourceId: T | undefined, id: T): string {
@@ -55,6 +55,9 @@ function selectedFieldsMatch(current: object, next: object): boolean {
 
 async function removeTarget(ctx: MutationCtx, tripId: Id<'trips'>, target: Target): Promise<void> {
   await Attachments.removeTarget(ctx, tripId, target);
+  if (target.type === 'activity' || target.type === 'destination' || target.type === 'stay') {
+    await removeLinksForTargetKey(ctx, linkTargetKey({ kind: 'tripTarget', target }));
+  }
 }
 
 async function setAttachments(
@@ -101,8 +104,9 @@ async function reconcileDestinations({
           tripId: source.trip._id
         }));
       const detailsChanged = existing ? !selectedFieldsMatch(existing, fields) : true;
-      if (existing && (detailsChanged || existing.sourceId !== undefined)) {
-        await ctx.db.patch('tripDestinations', id, { ...fields, sourceId: undefined });
+      const nextSourceId = sourceLink(ctx, 'tripDestinations', key, retainSourceKeys).sourceId;
+      if (existing && (detailsChanged || existing.sourceId !== nextSourceId)) {
+        await ctx.db.patch('tripDestinations', id, { ...fields, sourceId: nextSourceId });
       }
       if (!existing || detailsChanged) {
         await TripLocations.setDestination(ctx, {
@@ -154,8 +158,14 @@ async function reconcileActivities({
           tripId: source.trip._id
         }));
       const detailsChanged = existing ? !selectedFieldsMatch(existing, fields) : true;
-      if (existing && (detailsChanged || existing.sourceId !== undefined)) {
-        await ctx.db.patch('tripDestinationActivities', id, { ...fields, sourceId: undefined });
+      const nextSourceId = sourceLink(
+        ctx,
+        'tripDestinationActivities',
+        key,
+        retainSourceKeys
+      ).sourceId;
+      if (existing && (detailsChanged || existing.sourceId !== nextSourceId)) {
+        await ctx.db.patch('tripDestinationActivities', id, { ...fields, sourceId: nextSourceId });
       }
       if (!existing || detailsChanged) {
         await TripLocations.setActivity(ctx, {
@@ -203,8 +213,9 @@ async function reconcileStays({
           tripId: source.trip._id
         }));
       const detailsChanged = existing ? !selectedFieldsMatch(existing, fields) : true;
-      if (existing && (detailsChanged || existing.sourceId !== undefined)) {
-        await ctx.db.patch('tripDestinationStays', id, { ...fields, sourceId: undefined });
+      const nextSourceId = sourceLink(ctx, 'tripDestinationStays', key, retainSourceKeys).sourceId;
+      if (existing && (detailsChanged || existing.sourceId !== nextSourceId)) {
+        await ctx.db.patch('tripDestinationStays', id, { ...fields, sourceId: nextSourceId });
       }
       await setAttachments(ctx, source, { id, type: 'stay' }, attachments);
       retained.add(id);
@@ -281,8 +292,14 @@ async function reconcileDestinationTransfers({
           tripId: source.trip._id
         }));
       const detailsChanged = existing ? !selectedFieldsMatch(existing, fields) : true;
-      if (existing && (detailsChanged || existing.sourceId !== undefined)) {
-        await ctx.db.patch('tripDestinationTransfers', id, { ...fields, sourceId: undefined });
+      const nextSourceId = sourceLink(
+        ctx,
+        'tripDestinationTransfers',
+        key,
+        retainSourceKeys
+      ).sourceId;
+      if (existing && (detailsChanged || existing.sourceId !== nextSourceId)) {
+        await ctx.db.patch('tripDestinationTransfers', id, { ...fields, sourceId: nextSourceId });
       }
       await setAttachments(ctx, source, { id, type: 'destination_transfer' }, attachments);
       retained.add(id);
@@ -335,8 +352,9 @@ async function reconcileActivityTransfers({
           tripId: source.trip._id
         }));
       const detailsChanged = existing ? !selectedFieldsMatch(existing, fields) : true;
-      if (existing && (detailsChanged || existing.sourceId !== undefined)) {
-        await ctx.db.patch('tripActivityTransfers', id, { ...fields, sourceId: undefined });
+      const nextSourceId = sourceLink(ctx, 'tripActivityTransfers', key, retainSourceKeys).sourceId;
+      if (existing && (detailsChanged || existing.sourceId !== nextSourceId)) {
+        await ctx.db.patch('tripActivityTransfers', id, { ...fields, sourceId: nextSourceId });
       }
       await setAttachments(ctx, source, { id, type: 'activity_transfer' }, attachments);
       retained.add(id);

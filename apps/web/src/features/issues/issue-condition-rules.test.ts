@@ -1,24 +1,14 @@
 import { describe, expect, test } from 'vite-plus/test';
+import {
+  manualCondition,
+  ruleCondition,
+  starterCondition
+} from '@/features/issues/issue-condition-fixtures';
 import type { IssueCondition, IssueStatus } from '@/types/issues';
-import { statusChangeRefusal } from './issue-condition-rules';
+import { isStarterCondition, isSystemChecked, statusChangeRefusal } from './issue-condition-rules';
 
-const autoCondition = (
-  met = false,
-  refusal = met ? 'Settled by the trip.' : 'Closes once the trip has a destination.'
-) =>
-  ({
-    check: 'destination',
-    kind: 'auto',
-    label: 'The trip has a destination',
-    met,
-    refusal
-  }) satisfies IssueCondition;
-
-const manualCondition = (label = 'Flights confirmed') =>
-  ({ kind: 'manual', label, met: null }) satisfies IssueCondition;
-
-const unmet = autoCondition(false, 'Closes once the trip has a destination.');
-const met = autoCondition(true, 'Settled by the trip.');
+const unmet = starterCondition(false, 'Closes once the trip has a destination.');
+const met = starterCondition(true, 'Settled by the trip.');
 
 const cases = [
   {
@@ -84,5 +74,46 @@ const cases = [
 describe('statusChangeRefusal', () => {
   test.each(cases)('$name', ({ condition, expected, from, to }) => {
     expect(statusChangeRefusal(condition, from, to)).toBe(expected);
+  });
+});
+
+describe('statusChangeRefusal for composed rules', () => {
+  test.each<{ from: IssueStatus; met: boolean; name: string; refused: boolean; to: IssueStatus }>([
+    { from: 'open', met: false, name: 'closing while unmet', refused: true, to: 'closed' },
+    { from: 'closed', met: true, name: 'reopening while met', refused: true, to: 'open' },
+    {
+      from: 'open',
+      met: false,
+      name: 'working on it while unmet',
+      refused: false,
+      to: 'in_progress'
+    },
+    { from: 'open', met: false, name: "won't do while unmet", refused: false, to: 'wont_do' },
+    { from: 'closed', met: true, name: "won't do while met", refused: false, to: 'wont_do' },
+    {
+      from: 'wont_do',
+      met: false,
+      name: "back from won't do while unmet",
+      refused: false,
+      to: 'open'
+    }
+  ])('$name', ({ from, met, refused, to }) => {
+    const condition = ruleCondition(met);
+    expect(statusChangeRefusal(condition, from, to)).toBe(refused ? condition.refusal : null);
+  });
+});
+
+describe('condition kinds', () => {
+  test('only a starter rule is locked', () => {
+    expect(isStarterCondition(starterCondition())).toBe(true);
+    expect(isStarterCondition(ruleCondition())).toBe(false);
+    expect(isStarterCondition(manualCondition())).toBe(false);
+    expect(isStarterCondition(null)).toBe(false);
+  });
+
+  test('every rule is system-checked, a manual condition is not', () => {
+    expect(isSystemChecked(starterCondition())).toBe(true);
+    expect(isSystemChecked(ruleCondition())).toBe(true);
+    expect(isSystemChecked(manualCondition())).toBe(false);
   });
 });

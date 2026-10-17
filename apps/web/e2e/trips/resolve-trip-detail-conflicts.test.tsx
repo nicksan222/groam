@@ -1,5 +1,7 @@
 import {
   addIdea,
+  applyConflictingIdea,
+  approveIdea,
   approveAndApplyIdea,
   arrange,
   by,
@@ -53,7 +55,8 @@ test('keeps ordinary edits quiet and resolves real competing ideas with mixed ch
   await approveAndApplyIdea();
 
   await openAppPath(firstIdeaUrl);
-  await approveAndApplyIdea();
+  await approveIdea();
+  await applyConflictingIdea();
   await openIdeaComparison();
   await expect
     .element(page.getByRole('heading', { name: 'Trip details differ from the shared trip' }))
@@ -71,5 +74,5 @@ test('keeps ordinary edits quiet and resolves real competing ideas with mixed ch
   await expectGone(by(ids.itineraryDetailsResolve));
   await openIdeaComparison();
   await expectGone(page.getByText('The shared trip has changed since you started'));
-  await expect.element(page.getByText(ideaNotes)).toBeVisible();
+  await expect.element(by(ids.compareSharedTrip).getByText(ideaNotes)).toBeVisible();
 });

@@ -3,6 +3,7 @@ import { render } from '@groam/vitest-config/react';
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { page, userEvent } from 'vite-plus/test/browser';
 import { assistantContextMessage } from '#ai/agents';
+import type { AgentScreenContext } from '#ai/ui/context/agent-context';
 import { AssistantConversation } from './assistant-conversation';
 
 const smoothTextState = vi.hoisted(() => ({ complete: true }));
@@ -609,7 +610,7 @@ test('shows failed responses without exposing internal system messages', async (
     />
   );
 
-  expect(page.getByRole('alert').element().textContent).toContain(
+  expect(page.getByRole('status').element().textContent).toContain(
     'Groam AI could not complete that reply. Try again in a moment.'
   );
   await userEvent.click(page.getByRole('button', { name: 'Resend message' }).elements()[1]!);
@@ -656,4 +657,35 @@ test('shows the durable screen context recorded before a message', async () => {
   expect(page.getByRole('note').elements()).toHaveLength(1);
   expect(marker.textContent).toContain('Portugal · Decisions · Portugal');
   await expect.element(page.getByText('@groam')).toBeInTheDocument();
+});
+
+test('disables welcome suggestions while no thread is available', async () => {
+  const onReply = vi.fn().mockResolvedValue(true);
+  const context: AgentScreenContext = {
+    capabilities: ['trip.status.read'],
+    data: {},
+    description: 'Explain decisions.',
+    key: 'trip:trip-1:decisions',
+    target: { kind: 'trip', section: 'issues', tripId: 'trip-1' },
+    title: 'Portugal · Decisions'
+  };
+  const props = {
+    context,
+    isOpening: false,
+    isSending: false,
+    loadMore: vi.fn(),
+    messages: [] as UIMessage[],
+    onReply,
+    status: 'Exhausted'
+  };
+  const view = await render(<AssistantConversation {...props} unavailable />);
+
+  await expect.element(page.getByRole('heading', { name: 'How can I help?' })).toBeInTheDocument();
+  const suggestions = page.getByRole('button').elements();
+  expect(suggestions.length).toBeGreaterThan(0);
+  for (const suggestion of suggestions) expect(suggestion).toHaveProperty('disabled', true);
+
+  await view.rerender(<AssistantConversation {...props} />);
+  await page.getByRole('button').first().click();
+  expect(onReply).toHaveBeenCalledTimes(1);
 });

@@ -3,7 +3,7 @@ import { api } from '#convex-generated/api';
 import { listTripAttachments, setTripAttachments } from '#testing/attachments';
 import { createOutsiderClient } from '#testing/factory';
 import { pngBlob } from '#testing/media';
-import { setupWritableTrip, tripActivityInput, tripLocationInput } from '#testing/trips';
+import { setupTrip, setupWritableTrip, tripActivityInput, tripLocationInput } from '#testing/trips';
 
 async function insertPngMedia(
   owner: Awaited<ReturnType<typeof setupWritableTrip>>['owner'],
@@ -250,4 +250,67 @@ test('refuses unauthenticated and cross-organization attachment access', async (
       tripId
     })
   ).rejects.toThrow('Trip not found');
+});
+
+test(
+  'deletes a destination whose activities share one attachment',
+  { timeout: 15_000 },
+  async () => {
+    const { owner, tripId } = await setupWritableTrip(0);
+    const [mediaId] = await insertPngMedia(owner, [{ name: 'shared.png' }]);
+    if (!mediaId) throw new Error('Expected media');
+    const destinationId = await owner.client.mutation(api.routes.trips.destinations.add.run, {
+      input: tripLocationInput({ name: 'Porto', placeId: 'p-1' }),
+      tripId
+    });
+    const first = await owner.client.mutation(api.routes.trips.destinations.activities.add.run, {
+      destinationId,
+      input: tripActivityInput(),
+      tripId
+    });
+    const second = await owner.client.mutation(api.routes.trips.destinations.activities.add.run, {
+      destinationId,
+      input: tripActivityInput({ title: 'Dinner' }),
+      tripId
+    });
+    for (const id of [first, second]) {
+      await setTripAttachments(owner.client, {
+        mediaIds: [mediaId],
+        target: { id, type: 'activity' },
+        tripId
+      });
+    }
+    await expect(
+      owner.client.mutation(api.routes.trips.destinations.remove.run, { destinationId, tripId })
+    ).resolves.toBeNull();
+    await expect(
+      owner.client.run((ctx) =>
+        ctx.db
+          .query('attachments')
+          .withIndex('by_mediaId', (query) => query.eq('mediaId', mediaId))
+          .collect()
+      )
+    ).resolves.toEqual([]);
+  }
+);
+
+test('allows deleting media pinned only on a closed idea', { timeout: 15_000 }, async () => {
+  const { owner, tripId } = await setupTrip();
+  const [mediaId] = await insertPngMedia(owner, [{ name: 'idea.png' }]);
+  if (!mediaId) throw new Error('Expected media');
+  const idea = await owner.client.mutation(api.routes.trips.versions.create.run, { tripId });
+  const workingTripId = idea.workingTripId;
+  await setTripAttachments(owner.client, {
+    mediaIds: [mediaId],
+    target: { id: workingTripId, type: 'trip' },
+    tripId: workingTripId
+  });
+  await expect(owner.client.mutation(api.routes.media.remove.run, { mediaId })).rejects.toThrow(
+    'Remove this file from its trip'
+  );
+  await owner.client.mutation(api.routes.trips.versions.close.run, {
+    proposalId: idea.proposalId,
+    reason: 'not needed'
+  });
+  await expect(owner.client.mutation(api.routes.media.remove.run, { mediaId })).resolves.toBeNull();
 });

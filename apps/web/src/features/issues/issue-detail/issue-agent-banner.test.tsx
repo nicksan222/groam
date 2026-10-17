@@ -3,6 +3,7 @@ import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
 import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
+import { testIds } from '@/lib/test-ids';
 import { IssueAgentBanner } from './issue-agent-banner';
 
 const retry = vi.hoisted(() => vi.fn());
@@ -41,7 +42,7 @@ beforeEach(() => {
 
 test('hides when the Issue agent has no run', async () => {
   await render(<IssueAgentBanner issueId={issueId} />);
-  await expect.element(page.getByTestId('issue-agent-banner')).not.toBeInTheDocument();
+  await expect.element(page.getByTestId(testIds.issueAgentBanner)).not.toBeInTheDocument();
 });
 
 test('renders the shared agent run banner for an issue run', async () => {
@@ -54,7 +55,7 @@ test('renders the shared agent run banner for an issue run', async () => {
     surface: 'standalone'
   };
   await render(<IssueAgentBanner issueId={issueId} />);
-  await expect.element(page.getByTestId('issue-agent-banner')).toBeInTheDocument();
+  await expect.element(page.getByTestId(testIds.issueAgentBanner)).toBeInTheDocument();
   await expect.element(page.getByText('Issue agent')).toBeInTheDocument();
   await expect
     .element(page.getByRole('button', { name: 'Retry from zero' }))

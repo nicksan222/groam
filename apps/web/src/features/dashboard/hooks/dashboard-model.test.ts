@@ -21,6 +21,7 @@ function trip(overrides: Partial<TripListItem> = {}): TripListItem {
     destination: 'Lisbon',
     favorite: false,
     id: 'trips:trip-1' as TripListItem['id'],
+    shortId: 'trpabc',
     lastUpdatedAt: now,
     name: 'Atlantic week',
     nextAction: 'Continue planning together',

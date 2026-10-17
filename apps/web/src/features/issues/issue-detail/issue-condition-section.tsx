@@ -1,42 +1,62 @@
+import { Button } from '@groam/ui/components/button';
 import { DetailSection } from '@groam/ui/components/detail-section';
-import { cn } from '@groam/ui/lib/utils';
-import { CircleCheck, Flag, PenLine } from 'lucide-react';
+import { Settings2 } from 'lucide-react';
+import { useState } from 'react';
 import { testIds } from '@/lib/test-ids';
-import type { IssueCondition } from '@/types/issues';
+import type { IssueCondition, IssueConditionInput } from '@/types/issues';
+import { IssueConditionDialog } from './issue-condition-dialog';
+import { IssueConditionSummary } from './issue-condition-summary';
 
 /**
- * The "Done when" panel. A manual condition shows its text; an auto condition shows whether the
- * shared trip meets it yet. Starting an idea lives in the Idea section, so there is one place.
+ * The "Done when" panel. A manual condition shows its text; a rule, starter or composed, shows
+ * whether the shared trip meets it yet, clause by clause. Starting an idea lives in
+ * the Idea section, so there is one place. People who manage the issue can edit any condition with
+ * the same builder as creation; editing a starter makes it their own rule.
  */
-export function IssueConditionSection({ condition }: { condition: IssueCondition | null }) {
-  if (!condition) return null;
-  const auto = condition.kind === 'auto';
-  const Icon = auto ? (condition.met ? CircleCheck : Flag) : PenLine;
+export function IssueConditionSection({
+  canEdit = false,
+  condition,
+  onSave
+}: {
+  canEdit?: boolean;
+  condition: IssueCondition | null;
+  onSave?: (input: IssueConditionInput) => Promise<boolean>;
+}) {
+  const [editing, setEditing] = useState(false);
+  const save = canEdit ? onSave : undefined;
+  if (!condition && !save) return null;
+  const actionLabel = condition?.kind === 'rule' ? 'Edit rule' : 'Build rule';
+  const action = save ? (
+    <Button
+      aria-label={actionLabel}
+      className="-mr-1.5 text-muted-foreground hover:text-foreground"
+      data-testid={testIds.issueEditCondition}
+      onClick={() => setEditing(true)}
+      size="icon-xs"
+      title={actionLabel}
+      type="button"
+      variant="ghost"
+    >
+      <Settings2 />
+    </Button>
+  ) : null;
   return (
-    <DetailSection title="Done when">
-      <div
-        className="space-y-2"
-        data-met={condition.met ?? undefined}
-        data-testid={testIds.issueConditionPanel}
-      >
-        <p className="flex items-start gap-2 text-sm font-medium">
-          <Icon
-            aria-hidden
-            className={cn(
-              'mt-0.5 size-4 shrink-0',
-              condition.met ? 'text-success-foreground' : 'text-muted-foreground'
-            )}
-          />
-          <span className="min-w-0">{condition.label}</span>
+    <DetailSection action={action} title="Done when">
+      {condition ? (
+        <IssueConditionSummary condition={condition} />
+      ) : (
+        <p className="text-xs text-muted-foreground">
+          No rule yet. Build one to move this to Done by itself.
         </p>
-        {auto ? (
-          <p className="text-xs text-muted-foreground">
-            {condition.met
-              ? 'Met. It stays Done until the shared trip changes.'
-              : 'Not met yet. Closes automatically when the trip changes; start an idea to get there.'}
-          </p>
-        ) : null}
-      </div>
+      )}
+      {save && editing ? (
+        <IssueConditionDialog
+          condition={condition}
+          onClose={() => setEditing(false)}
+          onSave={save}
+          open
+        />
+      ) : null}
     </DetailSection>
   );
 }

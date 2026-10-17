@@ -20,6 +20,7 @@ function trip(id: string, lastUpdatedAt: number, archivedAt: number | null = nul
     destination: null,
     favorite: false,
     id: id as Id<'trips'>,
+    shortId: 'trpabc',
     lastUpdatedAt,
     name: id,
     nextAction: 'Continue planning together',

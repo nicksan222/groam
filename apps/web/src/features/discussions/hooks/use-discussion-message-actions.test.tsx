@@ -82,4 +82,18 @@ describe('useDiscussionMessageActions', () => {
     expect(markRead).toHaveBeenNthCalledWith(1, { discussionId });
     expect(markRead).toHaveBeenNthCalledWith(2, { discussionId: nextDiscussionId });
   });
+
+  test('marks the discussion read again when new activity arrives while open', async () => {
+    const markRead = vi.fn().mockResolvedValue(null);
+    convex.useMutation.mockReturnValue(markRead);
+    const { rerender } = await renderHook(
+      ({ key }) => useDiscussionMessageActions(discussionId, key),
+      { initialProps: { key: '1:a' } }
+    );
+
+    await rerender({ key: '1:a' });
+    expect(markRead).toHaveBeenCalledTimes(1);
+    await rerender({ key: '2:b' });
+    expect(markRead).toHaveBeenCalledTimes(2);
+  });
 });

@@ -44,7 +44,7 @@ try {
     ? `, ${result.reset.imported} local tables reset`
     : ', existing local data reused';
   console.info(
-    `Seeded ${result.users.length} users and ${result.tripCount} trips in ${result.workspace.organizationName}${resetSummary}.`
+    `Seeded ${result.users.length} users and ${result.tripCount} trips and ${result.researchCount} researches in ${result.workspace.organizationName}${resetSummary}.`
   );
   console.info(
     `Demo login: ${result.authenticatedOwner.email} / ${result.authenticatedOwner.password}`

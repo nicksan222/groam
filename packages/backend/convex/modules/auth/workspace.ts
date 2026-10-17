@@ -17,7 +17,7 @@ import {
   type QueryCtx,
   query
 } from '#convex-generated/server';
-import { authComponent, createAuth } from './auth';
+import { authComponent, createAuth, ORGANIZATION_MEMBERSHIP_LIMIT } from './auth';
 
 export type AuthContext = MutationCtx | QueryCtx;
 export type WorkspaceFunctionCtx = ActionCtx | MutationCtx | QueryCtx;
@@ -105,10 +105,53 @@ export async function hasOrganizationMembership(
   return membership !== null;
 }
 
+/** Marks a workspace built by the server for a group, with no signed-in viewer behind it. */
+export const SYSTEM_TOKEN_IDENTIFIER = 'system:groam';
+
+export function systemWorkspace(organizationId: string): Workspace {
+  return {
+    organizationId,
+    organizationRole: 'member',
+    tokenIdentifier: SYSTEM_TOKEN_IDENTIFIER,
+    userId: SYSTEM_TOKEN_IDENTIFIER,
+    viewerName: 'Groam'
+  };
+}
+
+/** The roster read straight from the Better Auth component, as scheduled work has no session. */
+async function systemRoster(
+  ctx: WorkspaceFunctionCtx,
+  organizationId: string
+): Promise<OrganizationRoster> {
+  const members = await ctx.runQuery(components.betterAuth.adapter.findMany, {
+    model: 'member',
+    paginationOpts: { cursor: null, numItems: ORGANIZATION_MEMBERSHIP_LIMIT },
+    where: [{ field: 'organizationId', value: organizationId }]
+  });
+  const roster = await Promise.all(
+    members.page.map(async (member: { role: string; userId: string }) => {
+      const user = await authComponent.getAnyUserById(ctx, member.userId);
+      if (!user) return null;
+      return {
+        handle:
+          'username' in user && typeof user.username === 'string' ? `@${user.username}` : user.name,
+        image: user.image ?? null,
+        name: user.name,
+        organizationRole: member.role,
+        userId: member.userId
+      };
+    })
+  );
+  return { members: roster.filter((member) => member !== null) };
+}
+
 export async function workspaceRoster(
   ctx: WorkspaceFunctionCtx,
   workspace: Workspace
 ): Promise<OrganizationRoster> {
+  if (workspace.tokenIdentifier === SYSTEM_TOKEN_IDENTIFIER) {
+    return await systemRoster(ctx, workspace.organizationId);
+  }
   const authAccess = await getBetterAuth(ctx);
   const roster = await authAccess.auth.api.listMembers({
     headers: authAccess.headers,

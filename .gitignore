@@ -31,3 +31,6 @@ CLAUDE.local.md
 *.njsproj
 *.sln
 *.sw?
+
+# TanStack Router generator scratch
+.tanstack/

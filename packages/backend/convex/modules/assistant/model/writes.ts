@@ -1,5 +1,6 @@
 import { ConvexError, type Infer, v } from 'convex/values';
 import type { Doc, Id } from '#convex-generated/dataModel';
+import { Attachments } from '#convex/modules/media/attachments/index';
 import { ItineraryActivity } from '#convex/modules/travel/activities/index';
 import { TripActivityValidators } from '#convex/modules/travel/activities/schema';
 import { ensureTripCoversDay, TripDestination } from '#convex/modules/travel/destinations/index';
@@ -9,6 +10,7 @@ import { TripTransfer } from '#convex/modules/travel/transfers/index';
 import { TripTransferValidators } from '#convex/modules/travel/transfers/schema';
 import { tripCostSplit, tripCostSplitValidator } from '#convex/modules/travel/trips/costs';
 import {
+  assertMutable,
   internalDestinationMutation,
   internalTripMutation,
   type MutableTripCtx
@@ -20,6 +22,8 @@ function assertAgentCanWrite(ctx: MutableTripCtx): void {
   if (ctx.trip.proposal?.status !== 'draft') {
     throw new ConvexError('Only a draft idea can be written to');
   }
+  // Reauthorize the writer on every write, not just the status check.
+  assertMutable(ctx);
 }
 
 const activityPatch = v.object({
@@ -27,7 +31,9 @@ const activityPatch = v.object({
   costAmount: v.optional(v.union(v.number(), v.null())),
   costSplit: v.optional(tripCostSplitValidator),
   day: v.optional(v.number()),
+  endTime: v.optional(v.string()),
   notes: v.optional(v.string()),
+  startTime: v.optional(v.string()),
   timeBlock: v.optional(TripActivityValidators.timeBlock),
   title: v.optional(v.string())
 });
@@ -50,8 +56,15 @@ function patchedCost(
   split: 'per_person' | 'total' | undefined
 ) {
   if (amount === null) return undefined;
-  if (amount === undefined) return current;
-  return { amount: normalizeCost(amount, 'itinerary cost') ?? 0, split: tripCostSplit(split) };
+  if (amount === undefined) {
+    if (split === undefined) return current;
+    if (!current) throw new ConvexError('Set a cost amount before choosing how it is split');
+    return { ...current, split };
+  }
+  return {
+    amount: normalizeCost(amount, 'itinerary cost') ?? 0,
+    split: split ?? tripCostSplit(current?.split)
+  };
 }
 
 function optionalTextField(
@@ -65,32 +78,49 @@ function optionalTextField(
 
 function activityScheduleFrom(
   data: Doc<'tripDestinationActivities'>,
-  patch: Parameters<typeof activityInputFrom>[1]
+  patch: Parameters<typeof activityInputFrom>[2]
 ) {
+  const day = patch.day ?? data.schedule.day;
+  // Moving the start day shifts a multi-day activity's end day by the same delta.
+  const endDay =
+    data.schedule.endDay === undefined
+      ? undefined
+      : data.schedule.endDay + (day - data.schedule.day);
   return {
-    day: patch.day ?? data.schedule.day,
+    day,
     timeBlock: patch.timeBlock ?? data.schedule.timeBlock,
-    ...(data.schedule.endDay === undefined ? {} : { endDay: data.schedule.endDay }),
-    ...(data.schedule.endTime ? { endTime: data.schedule.endTime } : {}),
-    ...(data.schedule.startTime ? { startTime: data.schedule.startTime } : {})
+    ...(endDay === undefined ? {} : { endDay }),
+    ...optionalTextField('endTime', patch.endTime, data.schedule.endTime),
+    ...optionalTextField('startTime', patch.startTime, data.schedule.startTime)
   };
 }
 
-function activityInputFrom(
+async function activityInputFrom(
+  ctx: MutableTripCtx,
   data: Doc<'tripDestinationActivities'>,
   patch: {
     address?: string;
     costAmount?: number | null;
     costSplit?: 'per_person' | 'total';
     day?: number;
+    endTime?: string;
     notes?: string;
+    startTime?: string;
     timeBlock?: Infer<typeof TripActivityValidators.timeBlock>;
     title?: string;
   }
 ) {
   const cost = patchedCost(data.cost, patch.costAmount, patch.costSplit);
+  const attachments = await Attachments.forTarget(
+    ctx,
+    ctx.trip._id,
+    { id: data._id, type: 'activity' },
+    ItineraryActivity.MAX_ATTACHMENTS
+  );
   return {
     ...optionalTextField('address', patch.address, data.address),
+    attachmentIds: attachments.map((attachment) => attachment.mediaId),
+    ...(data.coordinates ? { coordinates: data.coordinates } : {}),
     ...(cost ? { cost } : {}),
     ...optionalTextField('notes', patch.notes, data.notes),
     schedule: activityScheduleFrom(data, patch),
@@ -100,7 +130,7 @@ function activityInputFrom(
 
 function stayScheduleFrom(
   data: Doc<'tripDestinationStays'>,
-  patch: Parameters<typeof stayInputFrom>[1]
+  patch: Parameters<typeof stayInputFrom>[2]
 ) {
   return {
     checkInDay: patch.checkInDay ?? data.schedule.checkInDay,
@@ -110,7 +140,8 @@ function stayScheduleFrom(
   };
 }
 
-function stayInputFrom(
+async function stayInputFrom(
+  ctx: MutableTripCtx,
   data: Doc<'tripDestinationStays'>,
   patch: {
     address?: string;
@@ -125,8 +156,15 @@ function stayInputFrom(
   }
 ) {
   const cost = patchedCost(data.cost, patch.costAmount, patch.costSplit);
+  const attachments = await Attachments.forTarget(
+    ctx,
+    ctx.trip._id,
+    { id: data._id, type: 'stay' },
+    TripStay.MAX_ATTACHMENTS
+  );
   return {
     ...optionalTextField('address', patch.address, data.address),
+    attachmentIds: attachments.map((attachment) => attachment.mediaId),
     ...(cost ? { cost } : {}),
     ...optionalTextField('notes', patch.notes, data.notes),
     schedule: stayScheduleFrom(data, patch),
@@ -158,7 +196,7 @@ export const updateActivity = internalTripMutation({
   handler: async (ctx, { activityId, patch }) => {
     assertAgentCanWrite(ctx);
     const activity = await ItineraryActivity.find(ctx, ctx.trip._id, activityId);
-    return await activity.update(activityInputFrom(activity.data, patch));
+    return await activity.update(await activityInputFrom(ctx, activity.data, patch));
   }
 });
 
@@ -180,7 +218,7 @@ export const updateStay = internalTripMutation({
   handler: async (ctx, { patch, stayId }) => {
     assertAgentCanWrite(ctx);
     const stay = await TripStay.find(ctx, ctx.trip._id, stayId);
-    return await stay.update(stayInputFrom(stay.data, patch));
+    return await stay.update(await stayInputFrom(ctx, stay.data, patch));
   }
 });
 

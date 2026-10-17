@@ -56,9 +56,13 @@ test(
     const { owner, tripId } = await setupTrip(0);
     const value = {
       author: { name: 'Test', userId: owner.userId },
+      boardRank: 1,
       body: 'Test',
+      humanCommentCount: 0,
+      labels: [],
       organizationId: owner.organizationId!,
       status: 'open' as const,
+      systemCommentCount: 0,
       title: 'Test',
       tripId,
       updatedAt: Date.now()

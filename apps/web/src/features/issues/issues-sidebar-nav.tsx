@@ -10,7 +10,7 @@ import { useSidebar } from '@groam/ui/hooks/use-sidebar';
 import { useLocation, useNavigate } from '@tanstack/react-router';
 import { CircleDot } from 'lucide-react';
 import { CreateIssueDialog } from '@/features/issues/issue-list/create-issue-dialog';
-import { useTrips } from '@/features/trips/hooks/use-trips';
+import { useCreatableTrips } from '@/features/trips/hooks/use-creatable-trips';
 import { useSidebarNestedPaging } from '@/features/workspace/hooks/use-sidebar-nested-paging';
 import { useSidebarNestedVisible } from '@/features/workspace/hooks/use-sidebar-nested-visible';
 import { useSidebarSectionOpen } from '@/features/workspace/hooks/use-sidebar-section-open';
@@ -38,11 +38,7 @@ export function IssuesSidebarNav() {
   const { isLoading, issues, loadMore, status } = useWorkspaceIssues(
     sectionOpen ? { initialNumItems: SIDEBAR_NESTED_PAGE_SIZE } : 'skip'
   );
-  const { trips, isLoading: tripsLoading } = useTrips(
-    sectionOpen || isCreateOpen
-      ? { includeArchived: false, initialNumItems: SIDEBAR_NESTED_PAGE_SIZE }
-      : 'skip'
-  );
+  const { trips, isLoading: tripsLoading } = useCreatableTrips(isCreateOpen);
   const openIssues = filterOpenIssues(issues);
   const visibleIssues = openIssues.slice(0, visibleCount);
   const { canFetchMore, canLoadMore, isLoadingMore, onLoadMore } = useSidebarNestedPaging({
@@ -112,7 +108,7 @@ export function IssuesSidebarNav() {
           void navigate({ params: { issueId }, to: '/issues/$issueId' });
         }}
         open={isCreateOpen}
-        trips={trips.map((trip) => ({ id: trip.id, name: trip.name }))}
+        trips={trips}
       />
     </>
   );

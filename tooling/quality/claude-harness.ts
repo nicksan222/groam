@@ -14,7 +14,7 @@ export type ReferenceTargets = HarnessIndex & {
 };
 
 // Built-in tool names from https://code.claude.com/docs/en/tools-reference.
-// `Task` is the legacy name of `Agent` and is still accepted.
+// `Task` is the former name of `Agent`; Claude Code still accepts it.
 const builtInTools: ReadonlySet<string> = new Set([
   'Agent',
   'Artifact',

@@ -71,11 +71,6 @@ export class IdeaNames {
       case 'default':
       case 'issue':
         return true;
-      default:
-        return (
-          proposal.title.endsWith("'s trip idea") ||
-          (proposal.issueId !== undefined && proposal.title.startsWith('Implement: '))
-        );
     }
   }
 

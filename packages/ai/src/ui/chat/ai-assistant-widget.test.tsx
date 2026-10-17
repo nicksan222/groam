@@ -183,6 +183,21 @@ describe('AiAssistantWidget', () => {
     expect(assistant.open).toHaveBeenCalledTimes(1);
   });
 
+  test('shows a retry when opening fails and keeps suggestions disabled', async () => {
+    assistant.threadId = null;
+    assistant.open.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    await renderWidget();
+    await page.getByRole('button', { name: 'Open Groam AI' }).click();
+
+    await expect.element(page.getByText('Groam AI could not start.')).toBeInTheDocument();
+    const suggestion = page.getByRole('button', { name: /status|attention|explain/i }).first();
+    await expect.element(suggestion).toBeDisabled();
+
+    await page.getByRole('button', { name: 'Retry' }).click();
+    await vi.waitFor(() => expect(assistant.open).toHaveBeenCalledTimes(2));
+    await expect.element(page.getByRole('alert')).not.toBeInTheDocument();
+  });
+
   test('toggles from the visible keyboard shortcut', async () => {
     await renderWidget();
 

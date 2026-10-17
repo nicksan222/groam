@@ -11,10 +11,9 @@ vi.mock('@/features/issues/hooks/use-workspace-issues', () => ({ useCreateIssue:
 const tripId = 'trip-1' as Id<'trips'>;
 const issueId = 'issue-1' as Id<'tripIssues'>;
 
-async function fillAndSubmit(doneWhen?: string) {
+async function fillAndSubmit() {
   await page.getByTestId(testIds.createIssueTitle).fill('Book flights');
   await page.getByTestId(testIds.createIssueBody).fill('We need to book them.');
-  if (doneWhen) await page.getByTestId(testIds.createIssueDoneWhen).fill(doneWhen);
   await page.getByRole('button', { name: 'Create issue' }).click();
 }
 
@@ -23,29 +22,52 @@ beforeEach(() => {
   create.mockResolvedValue(issueId);
 });
 
+const generate = vi.hoisted(() => vi.fn());
+vi.mock('@/features/issues/hooks/use-generate-rule', () => ({ useGenerateRule: () => generate }));
+
 describe('CreateIssueDialog', () => {
-  test('offers an optional Done when field and sends it', async () => {
+  test('creates an issue without a rule by default', async () => {
     const onCreated = vi.fn();
     await render(
       <CreateIssueDialog onClose={vi.fn()} onCreated={onCreated} open tripId={tripId} />
     );
-    await expect
-      .element(page.getByPlaceholder('Everyone has confirmed their flights'))
-      .toBeInTheDocument();
-
-    await fillAndSubmit('  Everyone has confirmed their flights ');
-    expect(create).toHaveBeenCalledWith(
-      tripId,
-      'Book flights',
-      'We need to book them.',
-      'Everyone has confirmed their flights'
-    );
+    await expect.element(page.getByText('No rule yet')).toBeVisible();
+    await fillAndSubmit();
+    expect(create).toHaveBeenCalledWith(tripId, 'Book flights', 'We need to book them.', {});
     expect(onCreated).toHaveBeenCalledWith(issueId);
   });
 
-  test('leaves the condition out when the field is empty', async () => {
+  test('builds a rule the system checks and sends it', async () => {
     await render(<CreateIssueDialog onClose={vi.fn()} onCreated={vi.fn()} open tripId={tripId} />);
+    await page.getByTestId(testIds.ruleAddCondition).click();
+    await page.getByTestId(testIds.ruleAddCondition).click();
+    await page.getByTestId(testIds.ruleClauseKind).nth(1).click();
+    await page.getByRole('option', { name: 'Within budget' }).click();
     await fillAndSubmit();
-    expect(create).toHaveBeenCalledWith(tripId, 'Book flights', 'We need to book them.', undefined);
+    expect(create).toHaveBeenCalledWith(tripId, 'Book flights', 'We need to book them.', {
+      rule: {
+        items: [
+          expect.objectContaining({ kind: 'daily_activities' }),
+          expect.objectContaining({ kind: 'within_budget' })
+        ],
+        match: 'all'
+      }
+    });
+  });
+
+  test('drafts the rule from a sentence with the magic button', async () => {
+    generate.mockResolvedValue({
+      items: [{ kind: 'within_budget' }, { kind: 'packing_packed' }],
+      match: 'all'
+    });
+    await render(<CreateIssueDialog onClose={vi.fn()} onCreated={vi.fn()} open tripId={tripId} />);
+    await page.getByTestId(testIds.ruleMagicInput).fill('stay on budget and pack everything');
+    await page.getByTestId(testIds.ruleMagicSubmit).click();
+    await expect.poll(() => page.getByTestId(testIds.ruleClause).all().length).toBe(2);
+    expect(generate).toHaveBeenCalledWith('stay on budget and pack everything');
+    await fillAndSubmit();
+    expect(create).toHaveBeenCalledWith(tripId, 'Book flights', 'We need to book them.', {
+      rule: { items: [{ kind: 'within_budget' }, { kind: 'packing_packed' }], match: 'all' }
+    });
   });
 });

@@ -54,6 +54,10 @@ export async function seedWorkspaceUsers(
   const membershipStatuses = await mapWithConcurrency(members, 1, (member) =>
     app.joinWorkspace(authenticatedOwner, member, workspace, existingMemberIds.has(member.userId))
   );
+  // Like the app does at sign-in, open the group each member joined so their writes act inside it.
+  await mapWithConcurrency(members, input.concurrency, (member) =>
+    app.ensureWorkspace(member, { createIfMissing: false, name: workspace.organizationName })
+  );
   const users = authenticatedUsers.map(({ email, name, password, userId }): AppUser => ({
     email,
     name,

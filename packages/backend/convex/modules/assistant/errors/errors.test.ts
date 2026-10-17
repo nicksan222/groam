@@ -29,3 +29,15 @@ test('preserves actionable ChatGPT usage errors through ConvexError wrapping', (
     data: expect.stringContaining('ChatGPT usage limit reached')
   });
 });
+
+test('turns rate-limit errors into readable copy', () => {
+  const limited = (name: string, retryAfter: number) =>
+    new ConvexError({ kind: 'RateLimited', name, retryAfter });
+  expect(AssistantErrors.message(limited('tripAssistantMessage', 61_234.5))).toBe(
+    'Too many messages. Try again in 2 minutes.'
+  );
+  expect(AssistantErrors.message(limited('assistantThreadCreate', 10))).toBe(
+    'Too many new chats. Try again in 1 minute.'
+  );
+  expect(AssistantErrors.message(limited('tripAssistantMessage', 5000))).not.toMatch(/provider/i);
+});

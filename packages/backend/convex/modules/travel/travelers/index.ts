@@ -6,19 +6,25 @@ import { syncTripConditions } from '#convex/modules/travel/issues/sync';
 import type { TripTravelerValidators } from '#convex/modules/travel/travelers/schema';
 import { isTripAdmin, type TripCtx } from '#convex/modules/travel/trips/ctx';
 
-const MAX_TRAVELERS = 100;
-
 export type TravelerStatus = Infer<typeof TripTravelerValidators.status>;
 
-async function travelersForTrip(ctx: MutationCtx | QueryCtx, tripId: Id<'trips'>) {
-  const rows = await ctx.db
-    .query('tripTravelers')
-    .withIndex('by_tripId', (query) => query.eq('tripId', tripId))
-    .take(MAX_TRAVELERS + 1);
-  if (rows.length > MAX_TRAVELERS) {
-    throw new ConvexError(`Trips support up to ${MAX_TRAVELERS} travelers`);
-  }
-  return rows;
+/** Reads one row per roster member so rows left behind by departed members never count. */
+async function travelersForTrip(
+  ctx: MutationCtx | QueryCtx,
+  tripId: Id<'trips'>,
+  userIds: string[]
+) {
+  const rows = await Promise.all(
+    userIds.map((userId) =>
+      ctx.db
+        .query('tripTravelers')
+        .withIndex('by_tripId_and_userId', (query) =>
+          query.eq('tripId', tripId).eq('userId', userId)
+        )
+        .first()
+    )
+  );
+  return rows.flatMap((row) => (row ? [row] : []));
 }
 
 function rsvpStatus(status: TravelerStatus | undefined): Exclude<TravelerStatus, 'invited'> {
@@ -27,10 +33,12 @@ function rsvpStatus(status: TravelerStatus | undefined): Exclude<TravelerStatus,
 }
 
 export async function listTravelers(ctx: TripCtx) {
-  const [rows, roster] = await Promise.all([
-    travelersForTrip(ctx, ctx.trip._id),
-    workspaceRoster(ctx, ctx.workspace)
-  ]);
+  const roster = await workspaceRoster(ctx, ctx.workspace);
+  const rows = await travelersForTrip(
+    ctx,
+    ctx.trip._id,
+    roster.members.map((member) => member.userId)
+  );
   const byUserId = new Map(rows.flatMap((row) => (row.userId ? [[row.userId, row] as const] : [])));
   return roster.members
     .map((member) => {

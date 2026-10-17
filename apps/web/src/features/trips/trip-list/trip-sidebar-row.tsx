@@ -54,7 +54,7 @@ export function TripSidebarRow({
       <SidebarMenuSubButton asChild className="pr-7" isActive={active}>
         <CanonicalLink
           onClick={onOpenMobile}
-          params={{ section: 'board', tripId: trip.shortId ?? trip.id }}
+          params={{ section: 'board', tripId: trip.shortId }}
           title={trip.favorite ? `Favourite · ${title}` : title}
           to="/trips/$tripId/$section"
         >

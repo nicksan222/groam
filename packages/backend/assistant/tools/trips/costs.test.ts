@@ -29,7 +29,6 @@ test('updates an itinerary cost with mocked trip context and mutation', async ()
   expect(mutations).toEqual([
     {
       amount: 240,
-      split: 'total',
       target: { id: 'stay-1', type: 'stay' },
       tripId: 'trip-1'
     }

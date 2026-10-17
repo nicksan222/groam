@@ -10,7 +10,7 @@ export function assistantSources(parts: UIMessage['parts']): AssistantSource[] {
     try {
       fallbackTitle = new URL(part.url).hostname.replace(/^www\./u, '');
     } catch {
-      // Keep the original URL for malformed legacy source metadata.
+      // Keep the original URL for malformed source metadata.
     }
     sources.set(part.url, {
       title: typeof part.title === 'string' && part.title.trim() ? part.title : fallbackTitle,

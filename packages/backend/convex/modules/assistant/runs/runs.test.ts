@@ -1,6 +1,9 @@
-import { expect, test } from 'vite-plus/test';
+import { expect, test, vi } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
+import type { Id } from '#convex-generated/dataModel';
+import { AgentRuns } from '#convex/modules/assistant/runs/index';
 import { setupTrip } from '#testing/trips';
+import { draftChangedVersion } from '#testing/versions';
 
 const issueAgent = { agentId: 'issue' as const, kind: 'agent' as const, name: 'Issue agent' };
 const paginationOpts = { cursor: null, numItems: 10 };
@@ -631,4 +634,401 @@ test('counts unresolved issues, not closed or discarded ones, as an agent worklo
   await assignAt('closed');
   await assignAt('wont_do');
   expect(await workload()).toBe(2);
+});
+
+test('claims the queued discussion run even after many finished runs', async () => {
+  const { owner, organizationId } = await queuedDiscussionSetup();
+  const result = await owner.test.run(async (ctx) => {
+    const discussionId = await ctx.db.insert('discussions', {
+      shortId: 'fixture1',
+      clientRequestId: 'req-1',
+      createdBy: { name: 'Owner', userId: owner.userId },
+      kind: 'group',
+      members: [],
+      organizationId,
+      title: 'Busy chat',
+      updatedAt: Date.now()
+    });
+    const base = {
+      agentId: 'groam' as const,
+      createdBy: { name: 'Owner', userId: owner.userId },
+      discussionId,
+      kickoff: 'assign' as const,
+      organizationId,
+      surface: 'chat' as const,
+      title: 'Turn'
+    };
+    for (let index = 0; index < 60; index++) {
+      await ctx.db.insert('agentRuns', {
+        shortId: 'fixture2',
+        ...base,
+        status: 'complete',
+        updatedAt: 1000 + index
+      });
+    }
+    const queuedId = await ctx.db.insert('agentRuns', {
+      shortId: 'fixture3',
+      ...base,
+      status: 'queued',
+      updatedAt: 5000
+    });
+    const claimedId = await AgentRuns.claimDiscussionTurn(ctx, {
+      agentId: 'groam',
+      createdBy: base.createdBy,
+      discussionId,
+      organizationId,
+      threadId: 'thread-1',
+      title: 'Turn'
+    });
+    const all = await ctx.db
+      .query('agentRuns')
+      .withIndex('by_discussionId_and_updatedAt', (query) => query.eq('discussionId', discussionId))
+      .collect();
+    return { claimedId, count: all.length, queuedId };
+  });
+  expect(result.claimedId).toBe(result.queuedId);
+  expect(result.count).toBe(61);
+});
+
+test('fails runs stuck running past the stale window and leaves fresh ones', async () => {
+  const { owner, organizationId } = await queuedDiscussionSetup();
+  const base = {
+    agentId: 'issue' as const,
+    createdBy: { name: 'Owner', userId: owner.userId },
+    kickoff: 'assign' as const,
+    organizationId,
+    surface: 'standalone' as const,
+    title: 'Stuck'
+  };
+  const { fresh, stale } = await owner.test.run(async (ctx) => ({
+    fresh: await ctx.db.insert('agentRuns', {
+      shortId: 'fixture4',
+      ...base,
+      status: 'running',
+      updatedAt: Date.now() - 60_000
+    }),
+    stale: await ctx.db.insert('agentRuns', {
+      shortId: 'fixture5',
+      ...base,
+      status: 'running',
+      updatedAt: Date.now() - 30 * 60_000
+    })
+  }));
+  await expect(
+    owner.test.mutation(internal.modules.assistant.runs.functions.sweepStaleRuns, {})
+  ).resolves.toBe(1);
+  await owner.test.run(async (ctx) => {
+    expect(await ctx.db.get('agentRuns', stale)).toMatchObject({
+      error: 'The run stopped responding. Try again.',
+      status: 'failed'
+    });
+    expect(await ctx.db.get('agentRuns', fresh)).toMatchObject({ status: 'running' });
+  });
+});
+
+async function queuedDiscussionSetup() {
+  const { owner } = await setupTrip(0);
+  if (!owner.organizationId) throw new Error('Expected an organization');
+  return { organizationId: owner.organizationId, owner };
+}
+
+test('assigning an issue to the agent schedules its run server-side', async () => {
+  vi.useFakeTimers();
+  try {
+    const { owner, tripId } = await setupTrip(0);
+    const issueId = await owner.client.mutation(api.routes.trips.issues.create.run, {
+      body: 'Board assignment should start work.',
+      title: 'Board assign',
+      tripId
+    });
+    await owner.client.mutation(api.routes.trips.issues.assign.run, {
+      assignee: issueAgent,
+      issueId
+    });
+    const scheduled = await owner.test.run((ctx) =>
+      ctx.db.system.query('_scheduled_functions').collect()
+    );
+    expect(scheduled.some((job) => job.name.includes('standalone/execute'))).toBe(true);
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test('does not reuse another group’s active review run for a proposal', async () => {
+  const a = await setupTrip(0);
+  if (!a.owner.organizationId) throw new Error('Expected organizations');
+  const { proposalId } = await draftChangedVersion(a.owner, a.tripId);
+  const { first, second } = await a.owner.test.run(async (ctx) => {
+    const base = {
+      createdBy: { name: 'A', userId: a.owner.userId },
+      proposalId,
+      title: 'Review',
+      tripId: a.tripId
+    };
+    const first = await AgentRuns.queueReviewRun(ctx, {
+      ...base,
+      organizationId: a.owner.organizationId as string
+    });
+    const second = await AgentRuns.queueReviewRun(ctx, {
+      ...base,
+      organizationId: 'org-of-another-group'
+    });
+    return { first, second };
+  });
+  expect(second).not.toBe(first);
+});
+
+async function privateDiscussionRuns(
+  owner: Awaited<ReturnType<typeof setupTrip>>['owner'],
+  statuses: Array<'queued' | 'running'> = ['running']
+) {
+  const organizationId = owner.organizationId as string;
+  return await owner.test.run(async (ctx) => {
+    const discussionId = await ctx.db.insert('discussions', {
+      shortId: 'priv0001',
+      clientRequestId: 'req-priv',
+      createdBy: { name: 'Owner', userId: owner.userId },
+      kind: 'group',
+      members: [],
+      organizationId,
+      title: 'Secret plans',
+      updatedAt: Date.now()
+    });
+    await ctx.db.insert('discussionMembers', {
+      discussionId,
+      kind: 'group',
+      organizationId,
+      userId: owner.userId
+    });
+    const runIds = [];
+    for (const [index, status] of statuses.entries()) {
+      runIds.push(
+        await ctx.db.insert('agentRuns', {
+          shortId: `privrun${index}`,
+          agentId: 'groam',
+          createdBy: { name: 'Owner', userId: owner.userId },
+          discussionId,
+          kickoff: 'assign',
+          organizationId,
+          report: 'Private reply',
+          startedAt: status === 'running' ? Date.now() : undefined,
+          status,
+          surface: 'chat',
+          threadId: 'thread-priv',
+          title: 'Secret plans',
+          updatedAt: Date.now() + index
+        })
+      );
+    }
+    return { discussionId, runIds };
+  });
+}
+
+test('hides discussion runs from org members outside the discussion', async () => {
+  const { owner, users } = await setupTrip(1);
+  const member = users[0];
+  if (!member) throw new Error('Expected a member');
+  const {
+    runIds: [runId]
+  } = await privateDiscussionRuns(owner);
+  if (!runId) throw new Error('Expected a run');
+
+  await expect(
+    owner.client.query(api.routes.agents.runs.get.run, { runId })
+  ).resolves.toMatchObject({ report: 'Private reply' });
+  await expect(member.client.query(api.routes.agents.runs.get.run, { runId })).rejects.toThrow(
+    'Agent run not found'
+  );
+  await expect(
+    member.client.query(api.routes.agents.runs.events.run, { paginationOpts, runId })
+  ).rejects.toThrow('Agent run not found');
+
+  const feed = await member.client.query(api.routes.agents.runs.workspace.run, { paginationOpts });
+  expect(feed.page.some((run) => run.id === runId)).toBe(false);
+  const byAgent = await member.client.query(api.routes.agents.runs.list.run, {
+    agentId: 'groam',
+    paginationOpts
+  });
+  expect(byAgent.page.some((run) => run.id === runId)).toBe(false);
+  const roster = await member.client.query(api.routes.agents.list.run, {});
+  expect(roster.find((agent) => agent.id === 'groam')).toMatchObject({
+    activeRunCount: 0,
+    latestRun: null
+  });
+  const ownerFeed = await owner.client.query(api.routes.agents.runs.workspace.run, {
+    paginationOpts
+  });
+  expect(ownerFeed.page.some((run) => run.id === runId)).toBe(true);
+});
+
+test('stopping a discussion run requires discussion membership', async () => {
+  const { owner, users } = await setupTrip(1);
+  const member = users[0];
+  if (!member) throw new Error('Expected a member');
+  const {
+    runIds: [runId]
+  } = await privateDiscussionRuns(owner);
+  if (!runId) throw new Error('Expected a run');
+  await expect(member.client.mutation(api.routes.agents.runs.stop.run, { runId })).rejects.toThrow(
+    'Agent run not found'
+  );
+  await owner.client.mutation(api.routes.agents.runs.stop.run, { runId });
+  await expect(
+    owner.client.query(api.routes.agents.runs.get.run, { runId })
+  ).resolves.toMatchObject({ status: 'aborted' });
+});
+
+test('aborting a discussion stops the running turn, not a newer queued one', async () => {
+  const { owner } = await setupTrip(0);
+  const {
+    discussionId,
+    runIds: [runningId, queuedId]
+  } = await privateDiscussionRuns(owner, ['running', 'queued']);
+  if (!runningId || !queuedId) throw new Error('Expected runs');
+  await owner.test.run(async (ctx) => {
+    await AgentRuns.abortActiveForDiscussion(ctx, discussionId);
+    expect((await ctx.db.get('agentRuns', runningId))?.status).toBe('aborted');
+    expect((await ctx.db.get('agentRuns', queuedId))?.status).toBe('queued');
+  });
+});
+
+test('fails queued runs nobody started past the window', async () => {
+  const { owner, organizationId } = await queuedDiscussionSetup();
+  const base = {
+    agentId: 'issue' as const,
+    createdBy: { name: 'Owner', userId: owner.userId },
+    kickoff: 'assign' as const,
+    organizationId,
+    status: 'queued' as const,
+    surface: 'standalone' as const,
+    title: 'Orphan'
+  };
+  const { fresh, stale } = await owner.test.run(async (ctx) => ({
+    fresh: await ctx.db.insert('agentRuns', {
+      shortId: 'qfresh01',
+      ...base,
+      updatedAt: Date.now() - 60_000
+    }),
+    stale: await ctx.db.insert('agentRuns', {
+      shortId: 'qstale01',
+      ...base,
+      updatedAt: Date.now() - 30 * 60_000
+    })
+  }));
+  await expect(
+    owner.test.mutation(internal.modules.assistant.runs.functions.sweepStaleRuns, {})
+  ).resolves.toBe(1);
+  await owner.test.run(async (ctx) => {
+    expect(await ctx.db.get('agentRuns', stale)).toMatchObject({ status: 'failed' });
+    expect(await ctx.db.get('agentRuns', fresh)).toMatchObject({ status: 'queued' });
+  });
+});
+
+async function failedIssueRun(
+  setup: Awaited<ReturnType<typeof setupTrip>>,
+  title: string
+): Promise<{ issueId: Id<'tripIssues'>; runId: Id<'agentRuns'> }> {
+  const { owner, tripId } = setup;
+  const issueId = await owner.client.mutation(api.routes.trips.issues.create.run, {
+    body: 'Authz fixture.',
+    title,
+    tripId
+  });
+  const runId = await owner.client.mutation(api.routes.trips.issues.assign.run, {
+    assignee: issueAgent,
+    issueId
+  });
+  if (!runId) throw new Error('Expected a queued run');
+  await owner.client.mutation(internal.modules.assistant.runs.functions.finishRun, {
+    error: 'boom',
+    runId,
+    status: 'failed'
+  });
+  return { issueId, runId };
+}
+
+test('retry queues a fresh run for the client to start with its identity', async () => {
+  const setup = await setupTrip(0);
+  const { runId } = await failedIssueRun(setup, 'Retry queues');
+  const nextRunId = await setup.owner.client.mutation(api.routes.agents.runs.retry.run, {
+    runId
+  });
+  expect(nextRunId).not.toBe(runId);
+  const next = await setup.owner.test.run((ctx) => ctx.db.get('agentRuns', nextRunId));
+  expect(next?.status).toBe('queued');
+});
+
+test('refuses retry and stop from a non-admin who did not start the run', async () => {
+  const setup = await setupTrip(1);
+  const member = setup.users[0];
+  if (!member) throw new Error('Expected a member');
+  const { runId } = await failedIssueRun(setup, 'Admin only retry');
+  await expect(member.client.mutation(api.routes.agents.runs.retry.run, { runId })).rejects.toThrow(
+    'Only the trip creator or a group admin'
+  );
+  const active = await setup.owner.test.run(async (ctx) => {
+    const run = await ctx.db.get('agentRuns', runId);
+    if (!run) throw new Error('Expected a run');
+    return await ctx.db.insert('agentRuns', {
+      shortId: 'activerun',
+      agentId: run.agentId,
+      createdBy: run.createdBy,
+      issueId: run.issueId as Id<'tripIssues'>,
+      kickoff: 'assign',
+      organizationId: run.organizationId,
+      status: 'running',
+      surface: 'standalone',
+      title: 'Active',
+      tripId: run.tripId as Id<'trips'>,
+      updatedAt: Date.now()
+    });
+  });
+  await expect(
+    member.client.mutation(api.routes.agents.runs.stop.run, { runId: active })
+  ).rejects.toThrow('Only the trip creator or a group admin');
+  await setup.owner.client.mutation(api.routes.agents.runs.stop.run, { runId: active });
+});
+
+test('refuses retrying a run whose issue is resolved', async () => {
+  const setup = await setupTrip(0);
+  const { issueId, runId } = await failedIssueRun(setup, 'Resolved retry');
+  await setup.owner.test.run(async (ctx) => {
+    await ctx.db.patch('tripIssues', issueId, { status: 'closed' as never });
+  });
+  await expect(
+    setup.owner.client.mutation(api.routes.agents.runs.retry.run, { runId })
+  ).rejects.toThrow('Resolved issues cannot be re-run');
+});
+
+test('roster finds the Issue agent run behind many newer runs of other agents', async () => {
+  const { owner, organizationId } = await queuedDiscussionSetup();
+  await owner.test.run(async (ctx) => {
+    const base = {
+      createdBy: { name: 'Owner', userId: owner.userId },
+      kickoff: 'assign' as const,
+      organizationId,
+      status: 'complete' as const,
+      title: 'Run'
+    };
+    await ctx.db.insert('agentRuns', {
+      shortId: 'oldissue',
+      ...base,
+      agentId: 'issue',
+      surface: 'standalone',
+      updatedAt: 1000
+    });
+    for (let index = 0; index < 230; index++) {
+      await ctx.db.insert('agentRuns', {
+        shortId: `noise${index}`,
+        ...base,
+        agentId: 'reviewer',
+        surface: 'standalone',
+        updatedAt: 2000 + index
+      });
+    }
+  });
+  const roster = await owner.client.query(api.routes.agents.list.run, {});
+  expect(roster.find((agent) => agent.id === 'issue')?.latestRun).toMatchObject({
+    updatedAt: 1000
+  });
 });

@@ -1,4 +1,5 @@
 import { expect, test } from 'vite-plus/test';
+import { assistantScreenLimits, validateAssistantScreen } from '#ai/runtime/screen';
 import { reviewStandalonePrompt, reviewStandaloneScreen } from './review';
 
 const review = {
@@ -24,4 +25,16 @@ test('builds a versions screen snapshot for tools', () => {
     target: { kind: 'trip', section: 'ideas', tripId: 'trip-working' },
     title: 'Kyoto food crawl · review'
   });
+});
+
+test('review screen clamps long titles so validation passes', () => {
+  const screen = reviewStandaloneScreen({
+    changes: [],
+    id: 'p1',
+    sourceTripId: 's',
+    title: 't'.repeat(200),
+    workingTripId: 'w'
+  });
+  expect(screen.title.length).toBeLessThanOrEqual(assistantScreenLimits.title);
+  expect(() => validateAssistantScreen(screen)).not.toThrow();
 });

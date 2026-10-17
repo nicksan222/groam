@@ -26,6 +26,7 @@ async function collectResponse(response: Response): Promise<Response> {
   // AI SDK doGenerate expects JSON; consume the upstream stream to completion.
   if (!response.body) throw new Error('ChatGPT response stream was interrupted.');
   const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+  const items: Array<{ index: number; item: unknown }> = [];
   let pending = '';
   try {
     while (true) {
@@ -38,7 +39,7 @@ async function collectResponse(response: Response): Promise<Response> {
       while ((boundary = /\r?\n\r?\n/.exec(pending))) {
         const event = pending.slice(0, boundary.index);
         pending = pending.slice(boundary.index + boundary[0].length);
-        const completed = completedEvent(event);
+        const completed = completedEvent(event, items);
         if (completed) return completed;
       }
       if (done) throw new Error('ChatGPT response stream was interrupted.');
@@ -48,7 +49,15 @@ async function collectResponse(response: Response): Promise<Response> {
   }
 }
 
-function completedEvent(event: string): Response | undefined {
+/**
+ * The completed response for `doGenerate`, or undefined before it arrives. ChatGPT plan
+ * inference sends `output: []` on `response.completed` and delivers each item earlier as
+ * `response.output_item.done`, so `items` collects those and fills an empty output.
+ */
+function completedEvent(
+  event: string,
+  items?: Array<{ index: number; item: unknown }>
+): Response | undefined {
   const data = event
     .split(/\r?\n/)
     .filter((line) => line.startsWith('data:'))
@@ -61,12 +70,23 @@ function completedEvent(event: string): Response | undefined {
   } catch {
     throw new Error('Invalid ChatGPT response event.');
   }
+  if (message.type === 'response.output_item.done' && message.item && items) {
+    items.push({ index: Number(message.output_index ?? items.length), item: message.item });
+    return;
+  }
   if (
     message.type === 'response.completed' &&
     message.response &&
     typeof message.response === 'object'
-  )
-    return Response.json(message.response);
+  ) {
+    const completed = message.response as Record<string, unknown>;
+    const empty = !Array.isArray(completed.output) || completed.output.length === 0;
+    if (!empty || !items?.length) return Response.json(completed);
+    const output = items
+      .toSorted((left, right) => left.index - right.index)
+      .map(({ item }) => item);
+    return Response.json({ ...completed, output });
+  }
   if (
     message.type === 'response.failed' ||
     message.type === 'response.incomplete' ||

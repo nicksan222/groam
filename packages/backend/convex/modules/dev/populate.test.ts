@@ -176,3 +176,41 @@ test(
     });
   }
 );
+
+test(
+  're-checks done-when rules after seeding an itinerary',
+  {
+    timeout: 15_000
+  },
+  async () => {
+    const { owner } = await setupGroup();
+    const tripId = await owner.client.action(api.routes.trips.create.run, {
+      input: tripInput({
+        destination: tripLocationInput(),
+        name: 'Lisbon escape',
+        totalDurationDays: 4
+      })
+    });
+    const issueId = await owner.client.mutation(api.routes.trips.issues.create.run, {
+      body: 'Plan something everywhere.',
+      rule: { items: [{ kind: 'destination_activities' }], match: 'all' },
+      title: 'Something everywhere',
+      tripId
+    });
+    await expect(
+      owner.client.query(api.routes.trips.issues.get.run, { issueId })
+    ).resolves.toMatchObject({ status: 'open' });
+
+    await owner.client.mutation(internal.modules.dev.populate.write, {
+      activities: [
+        { destinationIndex: 0, input: tripActivityInput({ title: 'Neighborhood walk' }) }
+      ],
+      additionalDestinations: [],
+      tripId
+    });
+
+    await expect(
+      owner.client.query(api.routes.trips.issues.get.run, { issueId })
+    ).resolves.toMatchObject({ status: 'closed' });
+  }
+);

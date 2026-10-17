@@ -63,4 +63,5 @@ export const tripDestinationTables = {
   })
     .index('by_tripId_and_position', ['tripId', 'position'])
     .index('by_tripId_and_placeId', ['tripId', 'placeId'])
+    .index('by_cover_asset_storageId', ['cover.asset.storageId'])
 };

@@ -106,6 +106,26 @@ test('starts each eligible queued assignment once and ignores other runs', async
   expect(convex.start).toHaveBeenCalledTimes(1);
 });
 
+test('toasts a failed queued start and does not retry or re-toast on re-render', async () => {
+  convex.start.mockRejectedValueOnce(new Error('Rate limited'));
+  const runs = [
+    {
+      id: 'queued' as Id<'agentRuns'>,
+      kickoff: 'assign',
+      status: 'queued',
+      surface: 'standalone'
+    }
+  ];
+  const { rerender } = await renderHook(({ list }) => useStartQueuedAssignRuns(list), {
+    initialProps: { list: runs }
+  });
+  await vi.waitFor(() => expect(toast.error).toHaveBeenCalledWith('Rate limited'));
+  await rerender({ list: [...runs] });
+  await rerender({ list: [...runs] });
+  expect(convex.start).toHaveBeenCalledTimes(1);
+  expect(toast.error).toHaveBeenCalledTimes(1);
+});
+
 test('retries from zero by queueing a new run then starting it', async () => {
   const { result } = await renderHook(() => useAgentRunControls());
   let nextId: string | undefined;

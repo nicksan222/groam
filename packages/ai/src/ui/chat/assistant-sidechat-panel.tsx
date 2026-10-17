@@ -25,7 +25,10 @@ export type AssistantSidechatPanelProps = {
   isDocked: boolean;
   onClose: () => void;
   onDraftChange: (draft: string) => void;
+  onRetryOpen: () => void;
   onStartNew: () => Promise<void>;
+  /** Starting the thread failed; show an inline retry instead of a dead composer. */
+  openFailed: boolean;
 };
 
 export function AssistantSidechatPanel(props: AssistantSidechatPanelProps) {
@@ -85,8 +88,10 @@ function PanelContent({
   isWide,
   onClose,
   onDraftChange,
+  onRetryOpen,
   onStartNew,
-  onToggleWidth
+  onToggleWidth,
+  openFailed
 }: AssistantSidechatPanelProps & {
   isWide: boolean;
   onToggleWidth: () => void;
@@ -163,7 +168,19 @@ function PanelContent({
           onReply={assistant.send}
           onResend={assistant.resend}
           status={assistant.status}
+          unavailable={!assistant.threadId}
         />
+        {openFailed ? (
+          <div
+            className="flex items-center justify-between gap-2 border-t border-border px-3 py-2 text-sm text-destructive"
+            role="alert"
+          >
+            <span>Groam AI could not start.</span>
+            <Button onClick={onRetryOpen} size="sm" type="button" variant="outline">
+              Retry
+            </Button>
+          </div>
+        ) : null}
         <AssistantContextBar
           attachments={chats.chats.find((chat) => chat.id === assistant.threadId)?.tags ?? []}
           pageTitle={context?.title ?? null}

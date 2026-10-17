@@ -64,6 +64,7 @@ function ContextualAssistantWidget({
   const chats = useAssistantChats(api, isOpen);
   const hasInteracted = useRef(false);
   const openAttempted = useRef(false);
+  const [openFailed, setOpenFailed] = useState(false);
   const wasOpen = useRef(false);
   const launcherRef = useRef<HTMLButtonElement>(null);
   const externalLauncherRef = useRef<HTMLElement>(null);
@@ -112,14 +113,22 @@ function ContextualAssistantWidget({
     wasOpen.current = isOpen;
   }, [isOpen]);
 
+  const attemptOpen = () => {
+    setOpenFailed(false);
+    return assistant.open().then((opened) => {
+      if (opened === false) setOpenFailed(true);
+    });
+  };
+
   useEffect(() => {
     if (!isOpen) {
       openAttempted.current = false;
+      setOpenFailed(false);
       return;
     }
     if (!context || assistant.threadId || openAttempted.current) return;
     openAttempted.current = true;
-    void assistant.open();
+    void attemptOpen();
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- depends on the members it reads, not the whole assistant object
   }, [assistant.open, assistant.threadId, context, isOpen]);
 
@@ -181,7 +190,9 @@ function ContextualAssistantWidget({
       isDocked={isDocked}
       onClose={() => setOpen(false)}
       onDraftChange={setDraft}
+      onRetryOpen={() => void attemptOpen()}
       onStartNew={startNewChat}
+      openFailed={openFailed && !assistant.threadId}
     />
   );
 }

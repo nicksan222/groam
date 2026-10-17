@@ -124,3 +124,34 @@ test('deletes a message after confirmation', async () => {
 
   await vi.waitFor(() => expect(onRemove).toHaveBeenCalled());
 });
+
+test('shows why Groam could not reply under the failed request', async () => {
+  await render(
+    <ThreadMessage
+      message={message({
+        assistantError: 'Too many requests',
+        assistantStatus: 'failed',
+        mine: true
+      })}
+      onReact={vi.fn()}
+      reactions={[]}
+    />
+  );
+  await expect.element(page.getByText('Hi!')).toBeInTheDocument();
+  await expect
+    .element(page.getByRole('status').filter({ hasText: "Groam couldn't reply" }))
+    .toHaveTextContent("Groam couldn't reply: Too many requests");
+});
+
+test('shows no failure notice for a completed request', async () => {
+  await render(
+    <ThreadMessage
+      message={message({ assistantStatus: 'complete', mine: true })}
+      onReact={vi.fn()}
+      reactions={[]}
+    />
+  );
+  await expect
+    .element(page.getByRole('status').filter({ hasText: "Groam couldn't reply" }))
+    .not.toBeInTheDocument();
+});

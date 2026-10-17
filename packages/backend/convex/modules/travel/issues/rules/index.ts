@@ -1,6 +1,7 @@
 import { ConvexError } from 'convex/values';
-import { clauseKinds } from '#convex/modules/travel/issues/rules/kinds/index';
+import { clauseKindList } from '#convex/modules/travel/issues/rules/kinds/index';
 import {
+  type ClauseField,
   type ClauseKind,
   type ClauseKindDefinition,
   type ClauseOf,
@@ -19,16 +20,14 @@ import {
 
 /**
  * Composed "done when" rules: a person picks clauses from `clauseKinds`, joins them with all,
- * any, or none, and may group a few. The system checks them against the shared trip like the
- * starter conditions, so the issue closes when the rule holds and reopens when it stops holding.
+ * any, or none, and may group a few. The system checks them against the shared trip, so the issue closes when the rule holds and reopens when it stops holding.
  * Pure, so the web rule builder shares the same wording and defaults.
  */
 
-export { clauseKinds } from '#convex/modules/travel/issues/rules/kinds/index';
 export type {
+  ClauseField,
   ClauseKind,
   ClauseKindDefinition,
-  ClauseKindDefinitions,
   ClauseOf,
   ClauseResult,
   FactList,
@@ -36,7 +35,6 @@ export type {
   PresentedRule,
   RuleCategory,
   RuleClause,
-  RuleComparator,
   RuleFacts,
   RuleGroup,
   RuleItem,
@@ -46,6 +44,13 @@ export { ruleCategories };
 
 export const MAX_RULE_ITEMS = 8;
 export const MAX_GROUP_CLAUSES = 8;
+/** The longest sentence the AI drafter turns into a rule; shared with the builder's input. */
+export const MAX_RULE_PROMPT_LENGTH = 500;
+
+/** Every kind by name. The rule validator is built from the same list, so none is missing. */
+export const clauseKinds = Object.fromEntries(
+  clauseKindList.map((definition) => [definition.kind, definition])
+) as unknown as { [K in ClauseKind]: ClauseKindDefinition<K> };
 
 /** One kind's definition, typed to that kind; the one place the registry is indexed. */
 export function clauseKind<K extends ClauseKind>(kind: K): ClauseKindDefinition<K> {
@@ -64,6 +69,11 @@ function normalizeClause(clause: RuleClause): RuleClause {
   return clauseKind(clause.kind).normalize(clause);
 }
 
+/** The settings a person tunes for `kind`, in sentence order. */
+export function clauseFields(kind: ClauseKind): ReadonlyArray<ClauseField> {
+  return clauseKind(kind).fields;
+}
+
 /** A fresh clause of `kind`, as the builder adds it. */
 export function createClause<K extends ClauseKind>(kind: K): ClauseOf<K> {
   return clauseKind(kind).create();
@@ -75,7 +85,7 @@ export function clauseKindsByCategory(): Array<{
   kinds: Array<{ description: string; kind: ClauseKind; title: string }>;
   title: string;
 }> {
-  const kinds = Object.keys(clauseKinds) as Array<ClauseKind>;
+  const kinds = clauseKindList.map(({ kind }) => kind);
   return (Object.keys(ruleCategories) as Array<RuleCategory>).map((category) => ({
     category,
     kinds: kinds
@@ -152,7 +162,7 @@ export function normalizeRule(rule: IssueRule): IssueRule {
 export function ruleRefusal(label: string, met: boolean): string {
   return met
     ? `Settled automatically: ${label}. Change the trip through an idea to reopen it.`
-    : 'This closes itself once the trip meets its rule. Start an idea that gets it there.';
+    : `This closes itself once ${lowerFirst(label)}. Start an idea that gets it there.`;
 }
 
 /** The rule with every clause checked, for the issue card and the "Done when" panel. */

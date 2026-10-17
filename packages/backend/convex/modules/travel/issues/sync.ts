@@ -4,8 +4,11 @@ import { appendSystemComment } from '#convex/modules/travel/issues/comments';
 import {
   checkedConditionMet,
   conditionLabel,
-  isCheckedCondition
+  isCheckedCondition,
+  joinConditions,
+  tripConditions
 } from '#convex/modules/travel/issues/condition';
+import { issueEventMessage } from '#convex/modules/travel/issues/events';
 import { loadConditionFacts } from '#convex/modules/travel/issues/facts';
 import { isResolved, type TripIssueStatus } from '#convex/modules/travel/issues/status';
 import type { MutableTripCtx } from '#convex/modules/travel/trips/ctx';
@@ -28,15 +31,17 @@ function reconciledStatus(status: TripIssueStatus, met: boolean): 'closed' | 'op
 }
 
 /**
- * Brings every checked-condition issue (starter checks and composed rules) of the shared trip in
- * line with the trip's facts: active issues whose condition now holds close, and closed ones whose condition no longer holds
- * reopen. Idea working copies never sync. Issues the team discarded (`wont_do`) stay discarded.
+ * Brings every checked-condition issue (starter or composed rule) of the shared trip in line
+ * with the trip's facts: active issues whose condition now holds close, and closed ones whose
+ * condition no longer holds reopen. Idea working copies never sync. Issues the team discarded (`wont_do`) stay discarded.
  * Moved cards land at the bottom of their new lane.
  */
 export async function syncTripConditions(ctx: MutableTripCtx): Promise<void> {
   if (ctx.trip.proposal) return;
-  const issues = await issuesOf(ctx, ctx.trip._id);
-  if (!issues.some(({ condition }) => isCheckedCondition(condition))) return;
+  // Most trip writes touch a trip with no checked condition, so the small table is read first.
+  const conditions = await tripConditions(ctx, ctx.trip._id);
+  if (![...conditions.values()].some(isCheckedCondition)) return;
+  const issues = joinConditions(await issuesOf(ctx, ctx.trip._id), conditions);
   const facts = await loadConditionFacts(ctx, issues);
   const actor = { name: ctx.workspace.viewerName, userId: ctx.workspace.userId };
   const now = Date.now();
@@ -63,9 +68,11 @@ export async function syncTripConditions(ctx: MutableTripCtx): Promise<void> {
         ctx,
         issue._id,
         actor,
-        status === 'closed'
-          ? `Resolved automatically: ${label}`
-          : `Reopened automatically: ${label} no longer holds`
+        issueEventMessage(actor.name, {
+          change: status === 'closed' ? 'resolved' : 'reopened',
+          kind: 'auto',
+          label
+        })
       );
     })
   );

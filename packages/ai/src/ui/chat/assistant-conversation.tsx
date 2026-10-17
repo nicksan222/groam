@@ -23,7 +23,8 @@ export function AssistantConversation({
   messages,
   onReply,
   onResend,
-  status
+  status,
+  unavailable = false
 }: {
   context: AgentScreenContext | null;
   isOpening: boolean;
@@ -33,6 +34,8 @@ export function AssistantConversation({
   onReply?: (prompt: string) => Promise<boolean>;
   onResend?: (message: UIMessage) => Promise<boolean>;
   status: string;
+  /** No thread is open yet (still starting or failed), so suggestions cannot be sent. */
+  unavailable?: boolean;
 }) {
   const hasStreamingMessage = messages.some((message) => message.status === 'streaming');
   const isThinking = isOpening || (isSending && !hasStreamingMessage);
@@ -71,7 +74,9 @@ export function AssistantConversation({
 
   return (
     <ConversationTimeline
-      empty={<AssistantWelcome context={context} disabled={isSending} onReply={onReply} />}
+      empty={
+        <AssistantWelcome context={context} disabled={isSending || unavailable} onReply={onReply} />
+      }
       isLoading={status === 'LoadingFirstPage'}
       items={items}
       loadMore={loadMore}

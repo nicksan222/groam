@@ -23,14 +23,6 @@ export class DiscussionAssistant {
   ): Promise<null> {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new ConvexError('Not authenticated');
-    try {
-      await aiRateLimiter.limit(ctx, 'tripAssistantMessage', {
-        key: identity.tokenIdentifier,
-        throws: true
-      });
-    } catch (error: unknown) {
-      throw new ConvexError(AssistantErrors.message(error));
-    }
     const claim = await ctx.runMutation(
       internal.modules.discussions.assistant.index.claimResponse,
       {
@@ -41,6 +33,24 @@ export class DiscussionAssistant {
     // Already claimed or finished by another client — treat as a no-op.
     if (!claim) return null;
     try {
+      // After the claim, so a rate-limit refusal fails the request instead of leaving it queued.
+      try {
+        await aiRateLimiter.limit(ctx, 'tripAssistantMessage', {
+          key: identity.tokenIdentifier,
+          throws: true
+        });
+      } catch (error: unknown) {
+        const message = AssistantErrors.message(error);
+        await ctx.runMutation(internal.modules.discussions.assistant.index.finishResponse, {
+          discussionId: args.discussionId,
+          error: message,
+          expectedUpdatedAt: claim.expectedUpdatedAt,
+          promptMessageId: args.promptMessageId,
+          responseText: null,
+          runId: claim.runId
+        });
+        return null;
+      }
       const responseText = await AssistantSession.continueDiscussion(
         ctx,
         {

@@ -95,8 +95,9 @@ function useAssistantThread(
   // Keep the durable thread and its Convex subscription alive while the panel is closed.
   // This lets Convex retain the last messages and reactively reconcile them before reopen.
 
-  const open = useCallback(async () => {
-    if (!enabled || isControlled || !context || threadId || isOpening) return;
+  /** Resolves false when starting the thread failed, so callers can offer a retry. */
+  const open = useCallback(async (): Promise<boolean> => {
+    if (!enabled || isControlled || !context || threadId || isOpening) return true;
     setOpening(true);
     try {
       const openingFor = contextKey;
@@ -104,8 +105,10 @@ function useAssistantThread(
       if (openingFor) {
         setOpenedThreads((current) => ({ ...current, [openingFor]: selected }));
       }
+      return true;
     } catch (error: unknown) {
       toast.error(errorMessage(error, 'Unable to start Groam AI'));
+      return false;
     } finally {
       setOpening(false);
     }

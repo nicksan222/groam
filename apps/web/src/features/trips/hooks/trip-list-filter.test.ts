@@ -10,6 +10,7 @@ function trip(value: Partial<TripListItem> & Pick<TripListItem, 'id' | 'name'>):
     dateNotes: 'Late September',
     destination: 'Lisbon',
     favorite: false,
+    shortId: 'trpabc',
     lastUpdatedAt: 1,
     nextAction: 'Continue planning together',
     outstandingActionCount: 0,

@@ -204,32 +204,6 @@ test('presents labels as an empty list for ordinary issues', { timeout }, async 
   ).resolves.toMatchObject({ labels: [] });
 });
 
-test('presents legacy issues without a labels field as unlabelled', async () => {
-  const { owner, tripId } = await setupTrip(0);
-  const legacyId = await owner.client.run(async (ctx) => {
-    const starter = await ctx.db.query('tripIssues').first();
-    if (!starter) throw new Error('Expected a starter issue');
-    const { _creationTime, _id, labels: _labels, ...fields } = starter;
-    return await ctx.db.insert('tripIssues', { ...fields, title: 'Legacy issue' });
-  });
-
-  await expect(
-    owner.client.run((ctx) => ctx.db.get('tripIssues', legacyId))
-  ).resolves.not.toHaveProperty('labels');
-  const list = await owner.client.query(api.routes.trips.issues.list.run, { tripId });
-  expect(list.find((issue) => issue.id === legacyId)).toMatchObject({
-    labels: [],
-    title: 'Legacy issue'
-  });
-  const workspace = await owner.client.query(api.routes.trips.issues.workspace.list.run, {
-    ...paginationArgs
-  });
-  expect(workspace.page.find((issue) => issue.id === legacyId)).toMatchObject({ labels: [] });
-  await expect(
-    owner.client.query(api.routes.trips.issues.get.run, { issueId: legacyId })
-  ).resolves.toMatchObject({ labels: [] });
-});
-
 test('applying an idea started from a starter issue closes that issue', { timeout }, async () => {
   const { owner, reviewer, tripId } = await setupReviewedTrip();
   const issues = await owner.client.query(api.routes.trips.issues.list.run, { tripId });

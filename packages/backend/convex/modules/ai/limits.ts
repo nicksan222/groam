@@ -8,6 +8,13 @@ export const aiRateLimiter = new RateLimiter(components.rateLimiter, {
     period: HOUR,
     rate: 30
   },
+  /** Turning a sentence into an issue's "done when" rule. */
+  issueRuleDraft: {
+    capacity: 5,
+    kind: 'token bucket',
+    period: HOUR,
+    rate: 30
+  },
   assistantThreadCreate: {
     capacity: 3,
     kind: 'token bucket',

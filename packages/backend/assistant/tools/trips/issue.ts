@@ -5,13 +5,19 @@ import { internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
 
 export function createTripIssueTool(activeTripId: Id<'trips'> | null) {
-  let created: { issueId: Id<'tripIssues'>; status: 'open'; tripId: Id<'trips'> } | undefined;
+  // Idempotent per identical input; a different issue is created anew.
+  const created = new Map<
+    string,
+    { issueId: Id<'tripIssues'>; status: 'open'; tripId: Id<'trips'> }
+  >();
   return createTool({
     description:
       'Create a scoped issue on an existing shared trip and assign it to the Issue agent. Use issues for planning questions, bugs, requests, and work that is not yet an implementation. Creating an issue queues the Issue agent; it does not start a chat or change the trip.',
     execute: async (toolCtx, input) => {
-      if (created) return created;
       const tripId = requestedTripId(input.tripId, activeTripId);
+      const key = JSON.stringify([tripId, input.title, input.body]);
+      const previous = created.get(key);
+      if (previous) return previous;
       const issueId = await toolCtx.runMutation(
         internal.modules.assistant.model.index.createTripIssue,
         {
@@ -20,8 +26,9 @@ export function createTripIssueTool(activeTripId: Id<'trips'> | null) {
           tripId
         }
       );
-      created = { issueId, status: 'open' as const, tripId };
-      return created;
+      const result = { issueId, status: 'open' as const, tripId };
+      created.set(key, result);
+      return result;
     },
     inputSchema: z.object({
       body: z.string().min(1).max(5000).describe('Context and a clear expected outcome.'),

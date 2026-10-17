@@ -1,7 +1,7 @@
 import { createTool } from '@convex-dev/agent';
 import { ConvexError } from 'convex/values';
 import * as z from 'zod/v3';
-import { requestedTripId } from '#backend/assistant/tools/trips/shared';
+import { loadDraftTripContext, requestedTripId } from '#backend/assistant/tools/trips/shared';
 import { internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
 
@@ -26,7 +26,8 @@ export function createManagePackingTool(activeTripId: Id<'trips'> | null) {
     description:
       'Add, check off, rename, or remove a packing item in an editable idea. Use startTripVersion first, pass its workingTripId, and use listPacking on that idea for item ids. Requires review and applying the idea to change the shared trip.',
     execute: async (toolCtx, input) => {
-      const tripId = requestedTripId(input.tripId, activeTripId);
+      // Packing edits on an in-review idea would clear its approvals; draft only.
+      const { tripId } = await loadDraftTripContext(toolCtx, input.tripId, activeTripId);
       if (input.action === 'add') {
         if (!input.label) throw new ConvexError('Provide a packing item name');
         const item = await toolCtx.runMutation(internal.modules.travel.packing.writes.add, {

@@ -18,6 +18,7 @@ import { TripStayValidators } from '#convex/modules/travel/stays/schema';
 import { TripTargets } from '#convex/modules/travel/targets/index';
 import { tripCostSplit, tripCostSplitValidator } from '#convex/modules/travel/trips/costs';
 import {
+  assertMutable,
   internalDestinationMutation,
   internalTripMutation,
   internalTripQuery,
@@ -174,7 +175,8 @@ export const setContextTags = internalMutation({
     if (tags.length > MAX_CONTEXT_TAGS) {
       throw new ConvexError(`An AI chat can have at most ${MAX_CONTEXT_TAGS} context tags`);
     }
-    const { thread, workspace } = await AssistantThreads.require(ctx, threadId, scope);
+    const { access, thread, workspace } = await AssistantThreads.require(ctx, threadId, scope);
+    access?.assertWritable();
     const unique = tags.filter(
       (tag, index) =>
         tags.findIndex((candidate) => candidate.kind === tag.kind && candidate.id === tag.id) ===
@@ -231,6 +233,8 @@ function assertAgentCanWrite(ctx: MutableTripCtx): void {
   if (ctx.trip.proposal?.status !== 'draft') {
     throw new ConvexError('Only a draft idea can be written to');
   }
+  // Reauthorize the writer on every write, not just the status check.
+  assertMutable(ctx);
 }
 
 export const setTripVersionDates = internalTripMutation({
@@ -287,14 +291,21 @@ export const setItineraryCost = internalTripMutation({
     const cost =
       normalizedAmount === undefined
         ? undefined
-        : { amount: normalizedAmount, split: tripCostSplit(split) };
+        : {
+            amount: normalizedAmount,
+            split: split === undefined ? undefined : tripCostSplit(split)
+          };
     const { currentAmount, currentSplit, eventType } = await TripTargets.setCost(
       ctx,
       ctx.trip._id,
       target,
       cost
     );
-    if (currentAmount === normalizedAmount && currentSplit === (cost?.split ?? currentSplit)) {
+    // An omitted split keeps the current one (setCost would otherwise drop it to the default).
+    if (cost && split === undefined) {
+      await TripTargets.setCost(ctx, ctx.trip._id, target, { ...cost, split: currentSplit });
+    }
+    if (currentAmount === normalizedAmount && currentSplit === (split ?? currentSplit)) {
       return null;
     }
     await patchTrip(ctx, { updatedAt: Date.now() });

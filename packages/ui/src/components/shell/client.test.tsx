@@ -183,43 +183,17 @@ test('registers layout primitives on the shell root', async () => {
   expect(typeof Shell.Eyebrow).toBe('function');
   expect(typeof Shell.Reveal).toBe('function');
   expect(typeof Shell.Stack).toBe('function');
-  expect(typeof Shell.Split).toBe('function');
-  expect(typeof Shell.Split.Main).toBe('function');
-  expect(typeof Shell.Split.Aside).toBe('function');
   expect(typeof Shell.UnderlineNav).toBe('function');
 });
 
-test('renders stack densitites and split layout', async () => {
+test('renders stack densities', async () => {
   await render(
     <Shell.Stack data-testid="page-stack" stack="page">
-      <Shell.Split data-testid="page-split">
-        <Shell.Split.Main>Main</Shell.Split.Main>
-        <Shell.Split.Aside sticky="near">Aside</Shell.Split.Aside>
-      </Shell.Split>
+      Content
     </Shell.Stack>
   );
 
   await expect.element(page.getByTestId('page-stack')).toHaveClass('space-y-6');
-  expect(page.getByTestId('page-split').element().className).toContain(
-    'xl:grid-cols-[minmax(0,1fr)_22rem]'
-  );
-  await expect.element(page.getByText('Aside')).toHaveClass('xl:sticky');
-});
-
-test('split aside inherits a lower breakpoint from the parent grid', async () => {
-  await render(
-    <Shell.Split breakpoint="md" data-testid="md-split">
-      <Shell.Split.Aside mobileDivider sticky="far">
-        Aside
-      </Shell.Split.Aside>
-    </Shell.Split>
-  );
-
-  expect(page.getByTestId('md-split').element().className).toContain(
-    'md:grid-cols-[minmax(0,1fr)_22rem]'
-  );
-  await expect.element(page.getByText('Aside')).toHaveClass('md:sticky');
-  await expect.element(page.getByText('Aside')).toHaveClass('md:border-t-0');
 });
 
 test('renders underline nav chrome around tabs', async () => {

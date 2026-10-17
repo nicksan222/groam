@@ -50,6 +50,7 @@ vi.mock('@/features/discussions/hooks/use-discussions', async () => {
 const discussion = {
   createdBy: { name: 'Ada', userId: 'user-a' },
   id: 'discussion-1',
+  shortId: 'disabc',
   lastMessage: null,
   members: [
     { image: null, name: 'Ada', userId: 'user-a' },
@@ -94,7 +95,7 @@ test('opens rename, details, participants, and copy link from the overflow menu'
   await page.getByTestId('chat-action-copy-link').click();
   await vi.waitFor(() =>
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-      `${window.location.origin}/chat/discussion-1`
+      `${window.location.origin}/chat/disabc`
     )
   );
   await vi.waitFor(() => expect(toast.success).toHaveBeenCalledWith('Chat link copied'));

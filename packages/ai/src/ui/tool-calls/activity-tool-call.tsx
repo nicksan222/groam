@@ -4,7 +4,14 @@ export function ActivityToolCall({ presentation }: ToolCallComponentProps) {
   if (presentation.kind !== 'activity') return null;
   const isError = presentation.status === 'error';
   const isRunning = presentation.status === 'running';
-  const status = isError ? 'Failed' : isRunning ? 'In progress' : 'Completed';
+  const isStopped = presentation.status === 'stopped';
+  const status = isError
+    ? 'Failed'
+    : isRunning
+      ? 'In progress'
+      : isStopped
+        ? 'Stopped'
+        : 'Completed';
   return (
     <div
       className={`min-w-0 rounded-lg px-3 py-2.5 text-xs ${
@@ -29,7 +36,7 @@ export function ActivityToolCall({ presentation }: ToolCallComponentProps) {
       </div>
       <p className="mt-1 break-words text-[11px] leading-4 text-muted-foreground [overflow-wrap:anywhere]">
         {presentation.detail ??
-          (isError
+          (isError || isStopped
             ? 'The action did not finish. You can ask Groam to try again.'
             : isRunning
               ? 'Groam is working with the current trip context.'

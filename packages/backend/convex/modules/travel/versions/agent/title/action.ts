@@ -50,13 +50,16 @@ export const run = internalAction({
           'Name this trip planning idea from its changes. The title should help someone scanning a sidebar understand what changed at a glance. Prefer specific trip details such as destinations, dates, activities, or budget when they appear in the diff. Keep it short, sentence case, and under 80 characters when possible. Do not include quotes or trailing punctuation.'
       });
 
+      const title = result.output.title.trim();
+      if (!title) throw new Error('The model returned an empty title');
       await ctx.runMutation(internal.modules.travel.versions.agent.title.index.finish, {
         generation,
         proposalId,
-        title: result.output.title
+        title
       });
-      return { title: result.output.title };
-    } catch {
+      return { title };
+    } catch (error: unknown) {
+      console.error('idea title generation failed:', error);
       return null;
     }
   }

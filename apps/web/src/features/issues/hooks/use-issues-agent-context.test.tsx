@@ -3,6 +3,7 @@ import type { Id } from '@groam/backend/data-model';
 import { render } from '@groam/vitest-config/react';
 import { expect, test } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
+import { manualCondition, starterCondition } from '@/features/issues/issue-condition-fixtures';
 import {
   issueDetailScreenAgentContext,
   issueListScreenAgentContext,
@@ -58,6 +59,7 @@ test('builds explicit list and detail screen context', async () => {
   expect(issueDetailScreenAgentContext(issue)).toMatchObject({
     capabilities: ['trip.status.read', 'trip.itinerary.read'],
     data: {
+      doneWhen: null,
       issueId,
       status: 'open',
       title: 'Choose a coast day',
@@ -66,6 +68,22 @@ test('builds explicit list and detail screen context', async () => {
     key: `issue:${issueId}`,
     target: { kind: 'trip', section: 'issues', tripId },
     title: 'Portugal · Choose a coast day'
+  });
+});
+
+test('tells the assistant what closes the issue and whether it holds', () => {
+  expect(
+    issueDetailScreenAgentContext({ ...issue, condition: starterCondition(true) }).data
+  ).toMatchObject({
+    doneWhen: { kind: 'rule', label: 'The trip has a destination', met: true }
+  });
+  expect(
+    issueDetailScreenAgentContext({ ...issue, condition: manualCondition() }).data
+  ).toMatchObject({
+    doneWhen: { kind: 'manual', label: 'Flights confirmed', met: null }
+  });
+  expect(issueDetailScreenAgentContext({ ...issue, condition: null }).data).toMatchObject({
+    doneWhen: null
   });
 });
 

@@ -1,4 +1,5 @@
 import { assistantAgents, isAssistantAgentId } from '@groam/ai/agents';
+import { presentAgentRunMessage } from '@groam/ai/backend/runs/copy';
 import { canRetryAgentRunFromZero } from '@groam/ai/backend/runs/roster';
 import { agentRunTime } from '@groam/ai/backend/runs/time';
 import { AgentRetryFromZeroButton } from '@groam/ai/ui/runs/agent-retry-from-zero';
@@ -36,14 +37,15 @@ const runFilter: FilterFn<AgentRunTableRun> = (row, _columnId, value) => {
 };
 
 function agentRunColumns(
-  onRetry: (runId: AgentRunTableRun['id']) => void
+  onRetry: (runId: AgentRunTableRun['id']) => Promise<unknown> | unknown
 ): ColumnDef<AgentRunTableRun, unknown>[] {
   return [
     {
       accessorKey: 'title',
       cell: ({ row }) => {
         const run = row.original;
-        const detail = run.status === 'failed' ? run.error : run.headline;
+        const detail =
+          run.status === 'failed' && run.error ? presentAgentRunMessage(run) : run.headline;
         return (
           <span className="block min-w-0 max-w-sm" data-testid={testIds.agentRunFeedRunCell}>
             <Link
@@ -151,7 +153,7 @@ export function AgentRunTable({
 }) {
   const navigate = useNavigate();
   const { retry } = useAgentRunControls();
-  const columns = useMemo(() => agentRunColumns((runId) => void retry({ runId })), [retry]);
+  const columns = useMemo(() => agentRunColumns((runId) => retry({ runId })), [retry]);
 
   if (isLoading) {
     return <PageLoading label="Loading agent runs…" />;

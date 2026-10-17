@@ -1,5 +1,5 @@
 import { createTool } from '@convex-dev/agent';
-import type { AssistantCapability } from '@groam/ai/agents';
+import { type AssistantCapability, type ChatAgentId, chatAgentIds } from '@groam/ai/agents';
 import { assistantContextTagInputSchema, referenceForMutation } from '@groam/ai/runtime/tags';
 import { assistantToolSpecs } from '@groam/ai/tools/specs';
 import type { ToolSet } from 'ai';
@@ -9,6 +9,13 @@ import {
   type AssistantToolRuntime,
   defineCapability
 } from '#backend/assistant/tools/factory';
+import {
+  createCreateResearchTool,
+  createLinkResearchTool,
+  createListResearchesTool,
+  createPostToResearchTool,
+  createReadResearchTool
+} from '#backend/assistant/tools/research/research';
 import {
   createAddActivityTool,
   createRemoveActivityTool,
@@ -59,6 +66,10 @@ import type { AssistantScreen } from '#convex/modules/assistant/screen/index';
  * usage from `toolName` / `eventLabel`; do not add a second tool-name or
  * event-kind map.
  */
+function isChatAgentId(id: string): id is ChatAgentId {
+  return (chatAgentIds as readonly string[]).includes(id);
+}
+
 const emptyInputSchema = z.object({});
 
 function screenContextSnapshot(screen: AssistantScreen) {
@@ -161,6 +172,26 @@ const assistantCapabilityBindings = {
           query: z.string().min(1).max(100).describe('A trip, place, or activity name.')
         })
       })
+  }),
+  'research.list': defineCapability({
+    ...assistantToolSpecs['research.list'],
+    create: ({ activeTripId }) => createListResearchesTool(activeTripId)
+  }),
+  'research.read': defineCapability({
+    ...assistantToolSpecs['research.read'],
+    create: () => createReadResearchTool()
+  }),
+  'research.create': defineCapability({
+    ...assistantToolSpecs['research.create'],
+    create: ({ activeTripId }) => createCreateResearchTool(activeTripId)
+  }),
+  'research.post': defineCapability({
+    ...assistantToolSpecs['research.post'],
+    create: ({ agentId }) => (isChatAgentId(agentId) ? createPostToResearchTool(agentId) : null)
+  }),
+  'research.link': defineCapability({
+    ...assistantToolSpecs['research.link'],
+    create: () => createLinkResearchTool()
   }),
   'trip.activity.add': defineCapability({
     ...assistantToolSpecs['trip.activity.add'],
@@ -267,7 +298,7 @@ const assistantCapabilityBindings = {
   'ui.askUserChoice': defineCapability({
     ...assistantToolSpecs['ui.askUserChoice'],
     create: ({ scope }) =>
-      scope === 'standalone'
+      scope === 'standalone' || scope === 'discussion'
         ? null
         : createTool({
             description:

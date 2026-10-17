@@ -20,7 +20,7 @@ export function AgentRunHeader({ run }: { run: AgentRun }) {
         data-testid={testIds.agentRunTitle}
       >
         {run.title}
-        <span className="ml-2 font-normal text-muted-foreground">#{run.shortId ?? run.id}</span>
+        <span className="ml-2 font-normal text-muted-foreground">#{run.shortId}</span>
       </Shell.Title>
       <div className="flex min-w-0 flex-wrap items-center gap-2">
         <span aria-live="polite">

@@ -32,6 +32,9 @@ export function issueDetailScreenAgentContext(
   return {
     capabilities: ['trip.status.read', 'trip.itinerary.read'],
     data: {
+      doneWhen: issue.condition
+        ? { kind: issue.condition.kind, label: issue.condition.label, met: issue.condition.met }
+        : null,
       issueId: issue.id,
       status: issue.status,
       title: issue.title,

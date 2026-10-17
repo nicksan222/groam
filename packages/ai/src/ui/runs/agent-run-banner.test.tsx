@@ -5,8 +5,11 @@ import { agentRunCopy, agentRunEventLabels } from '#ai/backend/runs/events';
 import { RUN_STATUS_LABEL } from '#ai/backend/runs/ids';
 import { AgentRunBanner } from './agent-run-banner';
 
+const toastError = vi.hoisted(() => vi.fn());
+vi.mock('@groam/ui/components/toast', () => ({ toast: { error: toastError } }));
+
 test('shows live status, latest activity once, and a link to the agent', async () => {
-  const onStop = vi.fn();
+  const onStop = vi.fn().mockResolvedValue(undefined);
   await render(
     <AgentRunBanner
       agentLabel="Issue agent"
@@ -110,4 +113,43 @@ test('retries from zero only when the issue run failed', async () => {
   );
   await page.getByRole('button', { name: agentRunCopy.retryFromZero }).click();
   expect(onRetry).toHaveBeenCalledOnce();
+});
+
+const runningRun = { headline: null, id: 'run-1', issueId: 'issue-1', status: 'running' } as const;
+
+test('disables Stop and marks it busy while stopping', async () => {
+  let finish: () => void = () => undefined;
+  const onStop = vi.fn(() => new Promise<void>((resolve) => (finish = resolve)));
+  await render(
+    <AgentRunBanner
+      agentLabel="Issue agent"
+      events={[]}
+      onStop={onStop}
+      run={runningRun}
+      viewAgent={<a href="/x">View</a>}
+    />
+  );
+  await page.getByRole('button', { name: agentRunCopy.stop }).click();
+  const stopping = page.getByRole('button', { name: 'Stopping…' });
+  await expect.element(stopping).toBeDisabled();
+  await expect.element(stopping).toHaveAttribute('aria-busy', 'true');
+  finish();
+  await expect.element(page.getByRole('button', { name: agentRunCopy.stop })).toBeEnabled();
+  expect(onStop).toHaveBeenCalledOnce();
+});
+
+test('toasts when stopping fails and re-enables Stop', async () => {
+  const onStop = vi.fn().mockRejectedValue(new Error('Network down'));
+  await render(
+    <AgentRunBanner
+      agentLabel="Issue agent"
+      events={[]}
+      onStop={onStop}
+      run={runningRun}
+      viewAgent={<a href="/x">View</a>}
+    />
+  );
+  await page.getByRole('button', { name: agentRunCopy.stop }).click();
+  await vi.waitFor(() => expect(toastError).toHaveBeenCalledWith('Network down'));
+  await expect.element(page.getByRole('button', { name: agentRunCopy.stop })).toBeEnabled();
 });

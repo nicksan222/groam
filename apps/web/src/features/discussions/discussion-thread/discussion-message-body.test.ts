@@ -13,9 +13,10 @@ describe('discussionMessageBody', () => {
     const attachments = [
       { contentType: 'image/png', name: 'a.png', url: 'https://example.com/a.png' }
     ];
-    expect(
-      discussionMessageBody({ attachments, media: attachments, text: 'Sent a photo' })
-    ).toEqual({ attachments, text: '' });
+    expect(discussionMessageBody({ attachments, text: 'Sent a photo' })).toEqual({
+      attachments,
+      text: ''
+    });
   });
 
   test('hides counted file labels when attachments resolve', () => {

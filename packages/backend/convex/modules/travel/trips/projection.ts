@@ -12,8 +12,10 @@ import {
   tripCostSplit
 } from '#convex/modules/travel/trips/costs';
 import {
+  loadSharedTripContext,
   MAX_ACTIVITY_ITEMS,
   nextActionFor,
+  sharedTripId,
   type TripQueryCtx,
   tripPermissions,
   totalDays as tripTotalDays
@@ -33,7 +35,7 @@ export async function projectTripListItem(
     destination: data.destination.status === 'known' ? data.destination.name : null,
     favorite: favoriteIds.has(data._id),
     id: data._id,
-    ...(data.shortId ? { shortId: data.shortId } : {}),
+    shortId: data.shortId,
     lastUpdatedAt: data.updatedAt,
     name: data.name,
     ...nextActionFor(data)
@@ -307,6 +309,13 @@ function projectedDuration({
   );
 }
 
+/** RSVPs live on the shared trip, so an idea prices against its source trip's going count. */
+async function goingTravelerCount(ctx: QueryCtx, trip: TripQueryCtx): Promise<number> {
+  const sourceId = sharedTripId(trip.trip);
+  if (sourceId === trip.trip._id) return TripTravelers.goingCount(trip);
+  return TripTravelers.goingCount(await loadSharedTripContext(ctx, trip.trip._id, trip.workspace));
+}
+
 export async function projectTrip(ctx: QueryCtx, trip: TripQueryCtx) {
   const tripId = trip.trip._id;
   const [
@@ -335,7 +344,7 @@ export async function projectTrip(ctx: QueryCtx, trip: TripQueryCtx) {
   const [attachments, cover, travelerCount] = await Promise.all([
     createAttachmentProjection(ctx, attachmentRows, trip.workspace.organizationId),
     projectCover(ctx, trip),
-    TripTravelers.goingCount(trip)
+    goingTravelerCount(ctx, trip)
   ]);
   const totalPlannedCost = [
     ...itineraryActivities,

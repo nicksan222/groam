@@ -8,6 +8,7 @@ import {
   internalQuery
 } from '#convex-generated/server';
 import { Files } from '#convex/modules/media/files/index';
+import { TripCover } from '#convex/modules/travel/covers/index';
 import { TripCoverValidators } from '#convex/modules/travel/covers/schema';
 
 const WIKIPEDIA_API_URL = 'https://en.wikipedia.org/w/api.php';
@@ -572,6 +573,7 @@ export const commit = internalMutation({
       return false;
     }
 
+    const previousStorageId = trip.cover.asset?.storageId;
     await ctx.db.patch('trips', tripId, {
       cover: {
         asset: { attribution, source: 'stock', storageId },
@@ -579,6 +581,9 @@ export const commit = internalMutation({
         status: 'ready'
       }
     });
+    if (previousStorageId && previousStorageId !== storageId) {
+      await TripCover.deleteIfUnreferenced(ctx, tripId, previousStorageId);
+    }
     return true;
   }
 });

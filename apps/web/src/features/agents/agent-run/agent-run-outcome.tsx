@@ -1,3 +1,5 @@
+import { CHATGPT_RECONNECT } from '@groam/ai/backend/errors';
+import { presentAgentRunMessage } from '@groam/ai/backend/runs/copy';
 import Timeline from '@groam/ui/components/timeline';
 import { AlertCircle, CheckCircle2, CircleDashed, CircleStop, LoaderCircle } from 'lucide-react';
 import type { AgentRun } from '@/features/agents/hooks/use-agent';
@@ -42,7 +44,7 @@ const presentation = {
 } as const;
 
 const providerErrorPattern =
-  /not authenticated|not configured|api key|unauthori[sz]ed|forbidden|\b40[13]\b|quota|insufficient credits|no (ai )?provider/i;
+  /(re)?connect chatgpt|chatgpt_(reconnect|unauthorized)|not authenticated|unauthori[sz]ed|invalid_grant|refresh_token/i;
 
 /** Closing timeline entry: where the run ended up and what you can do next. */
 export function AgentRunOutcome({
@@ -56,9 +58,12 @@ export function AgentRunOutcome({
 }) {
   const state = presentation[run.status];
   const Icon = state.icon;
-  const providerError = run.status === 'failed' && providerErrorPattern.test(run.error ?? '');
+  const errorText = run.error?.trim() ? presentAgentRunMessage(run) : null;
+  const providerError =
+    run.status === 'failed' &&
+    (providerErrorPattern.test(run.error ?? '') || errorText === CHATGPT_RECONNECT);
   const description = providerError
-    ? 'The model provider is not set up for this workspace. Add or fix a key in AI settings.'
+    ? 'Connect your ChatGPT account in AI settings.'
     : run.status === 'failed' && run.agentId === 'reviewer' && run.proposalId
       ? 'Open the related idea to decide the next step.'
       : state.description;
@@ -72,9 +77,9 @@ export function AgentRunOutcome({
           <Timeline.CardBody className="space-y-1 px-3 py-2.5">
             <p className="text-sm font-medium">{state.title}</p>
             <p className="text-xs leading-5 text-muted-foreground">{description}</p>
-            {run.error ? (
+            {errorText ? (
               <p className="mt-2 rounded-md bg-destructive/5 px-2.5 py-1.5 font-mono text-xs leading-5 break-words whitespace-pre-wrap text-destructive [overflow-wrap:anywhere]">
-                {run.error}
+                {errorText}
               </p>
             ) : null}
           </Timeline.CardBody>

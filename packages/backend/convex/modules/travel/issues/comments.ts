@@ -21,23 +21,6 @@ export async function commentsOf(ctx: Pick<QueryCtx, 'db'>, issueId: Id<'tripIss
     .take(MAX_COMMENTS + MAX_SYSTEM_COMMENTS + 1);
 }
 
-/** Rows from before the counters have none, so their first write counts the thread once. */
-async function countOf(ctx: Pick<QueryCtx, 'db'>, issueId: Id<'tripIssues'>, kind: CommentKind) {
-  const { maximum } = counters[kind];
-  const kinds = kind === 'comment' ? (['comment', undefined] as const) : (['system'] as const);
-  const found = await Promise.all(
-    kinds.map((stored) =>
-      ctx.db
-        .query('tripIssueComments')
-        .withIndex('by_issueId_and_kind', (query) =>
-          query.eq('issueId', issueId).eq('kind', stored)
-        )
-        .take(maximum)
-    )
-  );
-  return found.reduce((total, rows) => total + rows.length, 0);
-}
-
 /** Adds a comment unless the thread is full for its kind; returns null then. */
 export async function appendComment(
   ctx: Pick<MutationCtx, 'db'>,
@@ -48,7 +31,7 @@ export async function appendComment(
   const issue = await ctx.db.get('tripIssues', issueId);
   if (!issue) return null;
   const { field, maximum } = counters[kind];
-  const count = issue[field] ?? (await countOf(ctx, issueId, kind));
+  const count = issue[field];
   if (count >= maximum) return null;
   await ctx.db.patch('tripIssues', issueId, { [field]: count + 1 });
   return await ctx.db.insert('tripIssueComments', {

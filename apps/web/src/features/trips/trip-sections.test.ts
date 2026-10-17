@@ -17,7 +17,7 @@ test('recognizes every trip subpath and rejects unknown ones', () => {
 });
 
 test('lists the shared trip tabs in reading order with Board first and the default', () => {
-  expect(tripTabSections).toEqual(['board', 'overview', 'issues', 'ideas', 'activity']);
+  expect(tripTabSections).toEqual(['board', 'overview', 'issues', 'ideas', 'research', 'activity']);
   expect(defaultTripSection).toBe('board');
 });
 
@@ -32,6 +32,7 @@ test('titles each section by its tab label', () => {
   expect(tripSectionTitle('overview')).toBe('Overview');
   expect(tripSectionTitle('issues')).toBe('Issues');
   expect(tripSectionTitle('ideas')).toBe('Ideas');
+  expect(tripSectionTitle('research')).toBe('Research');
   expect(tripSectionTitle('activity')).toBe('Activity');
   expect(tripSectionTitle('itinerary')).toBe('Itinerary');
 });

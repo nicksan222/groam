@@ -28,7 +28,6 @@ import PropertyGrid from './components/property-grid';
 import Reveal from './components/reveal';
 import Section from './components/section';
 import ShellSectionHeader from './components/section-header';
-import Split from './components/split';
 import Stack from './components/stack';
 import Steps from './components/steps';
 import SurfaceWell from './components/surface-well';
@@ -71,8 +70,6 @@ export type ShellComponent = React.FC<ShellProps> & {
   LeftColumn: typeof LeftColumn;
   RightColumn: typeof RightColumn;
   DesktopRightColumn: typeof DesktopRightColumn;
-  /** @deprecated Use TwoColumns, LeftColumn, and RightColumn. */
-  Split: typeof Split;
   Stack: typeof Stack;
   Steps: typeof Steps;
   SurfaceWell: typeof SurfaceWell;
@@ -112,7 +109,6 @@ export const shellSubcomponents = {
   LeftColumn,
   RightColumn,
   DesktopRightColumn,
-  Split,
   Stack,
   Steps,
   SurfaceWell,

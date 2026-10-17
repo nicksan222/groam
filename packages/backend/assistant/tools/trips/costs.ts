@@ -6,7 +6,6 @@ import {
   costSplitField,
   loadDraftTripContext,
   TRIP_COST_KINDS,
-  tripCostSplit,
   workingTripIdField
 } from '#backend/assistant/tools/trips/shared';
 import { internal } from '#convex-generated/api';
@@ -50,7 +49,7 @@ export function createSetItineraryCostTool(activeTripId: Id<'trips'> | null) {
       })();
       await toolCtx.runMutation(internal.modules.assistant.model.index.setItineraryCost, {
         amount: input.amount,
-        ...(input.amount === null ? {} : { split: tripCostSplit(input.split) }),
+        ...(input.amount === null || input.split === undefined ? {} : { split: input.split }),
         target: mutationTarget,
         tripId
       });
@@ -66,7 +65,7 @@ export function createSetItineraryCostTool(activeTripId: Id<'trips'> | null) {
         'Cost in the trip currency, or null to clear it. Use split to say whether this is the group total or per person.'
       ),
       split: costSplitField().describe(
-        'Whether amount is the group total or per person. Defaults to total. Per-person amounts are multiplied by group size toward the trip budget.'
+        'Whether amount is the group total or per person. Omit to keep the current split (new costs default to total). Per-person amounts are multiplied by group size toward the trip budget.'
       ),
       targetId: z.string().describe('An exact id from getItinerary costTargets.'),
       targetKind: z.enum(TRIP_COST_KINDS),

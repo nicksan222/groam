@@ -52,3 +52,19 @@ test('offers a new issue and the list of all issues', async () => {
     .element(page.getByRole('link', { name: 'All issues' }))
     .toHaveAttribute('href', '/trips/trip-1/issues');
 });
+
+test('offers no new issue on an archived trip', async () => {
+  await render(
+    <TripBoardContext.Provider
+      value={{
+        rights: { archived: true, canPropose: true },
+        tripId: 'trip-1' as Id<'trips'>,
+        viewerUserId: undefined
+      }}
+    >
+      <TripBoardIssuesFooter onNewIssue={vi.fn()} />
+    </TripBoardContext.Provider>
+  );
+  await expect.element(page.getByRole('link', { name: 'All issues' })).toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'New issue' })).not.toBeInTheDocument();
+});

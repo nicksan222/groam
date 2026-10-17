@@ -1,7 +1,12 @@
 import { expect, test } from 'vite-plus/test';
 import { api } from '#convex-generated/api';
-import { setupTrip, tripLocationInput } from '#testing/trips';
-import { changedTripDetails, draftChangedVersion } from '#testing/versions';
+import {
+  openTripDraft,
+  setupTransferEndpoints,
+  setupTrip,
+  tripLocationInput
+} from '#testing/trips';
+import { changedTripDetails, draftChangedVersion, mergeIdea } from '#testing/versions';
 
 async function reviewReadyIdea() {
   const { owner, tripId, users } = await setupTrip(1);
@@ -399,5 +404,108 @@ test(
     await expect(
       owner.client.query(api.routes.trips.find.run, { tripId: version.workingTripId })
     ).resolves.toMatchObject({ name: idea.name });
+  }
+);
+
+const TRIP_TABLES = [
+  'tripDestinations',
+  'tripDestinationActivities',
+  'tripDestinationStays',
+  'tripDestinationTransfers'
+] as const;
+
+test(
+  'keeps shared row ids through rebase and merge',
+  {
+    timeout: 15_000
+  },
+  async () => {
+    const { owner, tripId, users } = await setupTrip(1);
+    const reviewer = users[0];
+    if (!reviewer) throw new Error('Expected a reviewer');
+    const seed = await openTripDraft(owner, tripId);
+    const { firstDestinationId, secondDestinationId } = await setupTransferEndpoints(
+      owner,
+      seed.workingTripId
+    );
+    await owner.client.mutation(api.routes.trips.destinations.stays.add.run, {
+      destinationId: firstDestinationId,
+      input: {
+        schedule: { checkInDay: 1, checkInTime: '15:00', checkOutDay: 2, checkOutTime: '10:00' },
+        title: 'Riverside Hotel'
+      },
+      tripId: seed.workingTripId
+    });
+    await owner.client.mutation(api.routes.trips.destinations.transfers.set.run, {
+      fromDestinationId: firstDestinationId,
+      input: { mode: 'train' },
+      toDestinationId: secondDestinationId,
+      tripId: seed.workingTripId
+    });
+    await mergeIdea(owner, reviewer, seed.proposalId);
+
+    const idsOf = (target: typeof tripId) =>
+      owner.client.run(async (ctx) =>
+        Promise.all(
+          TRIP_TABLES.map(async (table) =>
+            (
+              await ctx.db
+                .query(table)
+                .filter((q) => q.eq(q.field('tripId'), target))
+                .collect()
+            ).map((row) => row._id as string)
+          )
+        )
+      );
+    const sharedIds = await idsOf(tripId);
+    expect(sharedIds.map((ids) => ids.length)).toEqual([2, 2, 1, 1]);
+
+    const version = await openTripDraft(owner, tripId);
+    await owner.client.run(async (ctx) => {
+      const working = await ctx.db.get('trips', version.workingTripId);
+      if (!working) throw new Error('Expected working trip');
+      await ctx.db.patch('trips', version.workingTripId, {
+        name: 'Renamed idea',
+        updatedAt: working.updatedAt + 1
+      });
+    });
+    await owner.client.action(api.routes.trips.versions.submit.run, {
+      proposalId: version.proposalId
+    });
+    await reviewer.client.mutation(api.routes.trips.versions.approval.run, {
+      approved: true,
+      proposalId: version.proposalId
+    });
+    await owner.client.run(async (ctx) => {
+      const trip = await ctx.db.get('trips', tripId);
+      if (!trip) throw new Error('Expected source trip');
+      await ctx.db.patch('trips', tripId, { updatedAt: trip.updatedAt + 1 });
+    });
+    await expect(
+      owner.client.action(api.routes.trips.versions.rebase.run, {
+        proposalId: version.proposalId,
+        resolutions: []
+      })
+    ).resolves.toEqual({ kind: 'applied' });
+
+    const sourceIds = await owner.client.run(async (ctx) =>
+      Promise.all(
+        TRIP_TABLES.map(async (table) =>
+          (
+            await ctx.db
+              .query(table)
+              .filter((q) => q.eq(q.field('tripId'), version.workingTripId))
+              .collect()
+          ).map((row) => String(row.sourceId))
+        )
+      )
+    );
+    expect(sourceIds.map((ids) => ids.toSorted())).toEqual(sharedIds.map((ids) => ids.toSorted()));
+
+    await expect(
+      owner.client.action(api.routes.trips.versions.merge.run, { proposalId: version.proposalId })
+    ).resolves.toBe('applied');
+    const afterIds = await idsOf(tripId);
+    expect(afterIds.map((ids) => ids.toSorted())).toEqual(sharedIds.map((ids) => ids.toSorted()));
   }
 );

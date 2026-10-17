@@ -1,96 +1,9 @@
-import type { Id } from '@groam/backend/data-model';
 import { describe, expect, test } from 'vite-plus/test';
+import { manualCondition, starterCondition } from '@/features/issues/issue-condition-fixtures';
+import { boardIssue, issueItem, ideaItem } from '@/features/trips/testing/trip-board-fixtures';
 import type { IssueStatus } from '@/types/issues';
-import type { IssueCondition, IssueListItem, WorkspaceIssue } from '@/types/issues';
-import type {
-  TripBoardIdea,
-  TripBoardIdeaItem,
-  TripBoardIssue,
-  TripBoardIssueItem,
-  TripBoardRights
-} from '@/types/trip-board';
 import { tripBoardLaneOrder, tripBoardLanes } from './trip-board-lanes';
 import { decideMove, decideTransfer, isDraggable, itemLane } from './trip-board-moves';
-
-const autoCondition = (
-  met = false,
-  refusal = met ? 'Settled by the trip.' : 'Closes once the trip has a destination.'
-) =>
-  ({
-    check: 'destination',
-    kind: 'auto',
-    label: 'The trip has a destination',
-    met,
-    refusal
-  }) satisfies IssueCondition;
-
-const manualCondition = (label = 'Flights confirmed') =>
-  ({ kind: 'manual', label, met: null }) satisfies IssueCondition;
-
-const listItem = {
-  assignee: null,
-  author: { name: 'Alex Morgan', userId: 'user-alex' },
-  canAssign: true,
-  canManage: true,
-  condition: null,
-  dueAt: null,
-  id: 'issue-1' as Id<'tripIssues'>,
-  idea: null,
-  labels: [],
-  rank: 0,
-  status: 'open',
-  title: 'Coast day',
-  updatedAt: Date.UTC(2026, 7, 17)
-} satisfies Omit<IssueListItem, 'tripName'>;
-
-const workspaceIssue = (over: Partial<WorkspaceIssue> = {}): WorkspaceIssue => ({
-  ...listItem,
-  body: 'Add a coast day near Lisbon.',
-  closedAt: null,
-  tripId: 'trip-1' as Id<'trips'>,
-  tripName: 'Atlantic week',
-  ...over
-});
-
-/** A board issue; `id` doubles as the title so tests can find the card by name. */
-const boardIssue = (id: string, over: Partial<TripBoardIssue> = {}): TripBoardIssue =>
-  workspaceIssue({ id: id as Id<'tripIssues'>, title: id, ...over });
-
-const boardIdea = (id: string, over: Partial<TripBoardIdea> = {}): TripBoardIdea => ({
-  author: { name: 'Sam', userId: 'user-sam' },
-  baseUpdatedAt: 0,
-  canApprove: false,
-  canMerge: false,
-  conflictCount: 0,
-  feedbackCount: 0,
-  hasApproved: false,
-  id: id as Id<'tripProposals'>,
-  ideaName: id,
-  issueId: null,
-  status: 'in_review',
-  submittedAt: null,
-  title: id,
-  unresolvedFeedbackCount: 0,
-  updatedAt: Date.now(),
-  workingTripId: 'trip-work' as Id<'trips'>,
-  ...over
-});
-
-/** A lifted issue card; pass `archived` or `canPropose` to change what the viewer may do. */
-const issueItem = (
-  over: Partial<TripBoardIssue> = {},
-  { archived = false, canPropose = true }: Partial<TripBoardRights> = {}
-): TripBoardIssueItem => ({
-  archived,
-  canPropose,
-  issue: boardIssue('issue-1', over),
-  kind: 'issue'
-});
-
-const ideaItem = (
-  over: Partial<TripBoardIdea> = {},
-  { archived = false, canPropose = true }: Partial<TripBoardRights> = {}
-): TripBoardIdeaItem => ({ archived, canPropose, idea: boardIdea('idea-1', over), kind: 'idea' });
 
 const issueLanes: IssueStatus[] = ['open', 'in_progress', 'closed', 'wont_do'];
 
@@ -150,7 +63,7 @@ describe('decideMove for issues', () => {
   });
 
   test('keeps auto-condition issues out of Done and Won’t do until the condition is met', () => {
-    const condition = autoCondition(false);
+    const condition = starterCondition(false);
     for (const lane of ['closed', 'wont_do'] as const) {
       expect(decideMove(issueItem({ condition }), lane)).toEqual({
         outcome: 'refused',
@@ -166,7 +79,7 @@ describe('decideMove for issues', () => {
   });
 
   test('keeps a settled auto-condition issue in Done, even from Done to Won’t do', () => {
-    const condition = autoCondition(true);
+    const condition = starterCondition(true);
     for (const lane of ['open', 'in_progress', 'wont_do'] as const) {
       expect(decideMove(issueItem({ condition, status: 'closed' }), lane)).toEqual({
         outcome: 'refused',

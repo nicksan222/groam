@@ -4,7 +4,7 @@ import { toast } from '@groam/ui/components/toast';
 import { useMutation, usePaginatedQuery } from 'convex/react';
 import { useCallback } from 'react';
 import { errorMessage } from '@/lib/errors';
-import type { WorkspaceIssue } from '@/types/issues';
+import type { IssueConditionInput, WorkspaceIssue } from '@/types/issues';
 
 export type { WorkspaceIssue };
 
@@ -26,9 +26,14 @@ export function useWorkspaceIssues(options?: { initialNumItems?: number } | 'ski
 export function useCreateIssue() {
   const createMutation = useMutation(api.routes.trips.issues.create.run);
   return useCallback(
-    async (tripId: Id<'trips'>, title: string, body: string, doneWhen?: string) => {
+    async (
+      tripId: Id<'trips'>,
+      title: string,
+      body: string,
+      condition: IssueConditionInput = {}
+    ) => {
       try {
-        return await createMutation({ body, ...(doneWhen ? { doneWhen } : {}), title, tripId });
+        return await createMutation({ body, ...condition, title, tripId });
       } catch (error: unknown) {
         toast.error(errorMessage(error, 'Unable to create trip issue'));
         return null;

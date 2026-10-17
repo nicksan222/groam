@@ -1,37 +1,12 @@
 import { render } from '@groam/vitest-config/react';
-import type { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import type { AgentRun } from '@/features/agents/hooks/use-agent';
 import { AgentRunOutcome } from './agent-run-outcome';
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const navigate = vi.fn();
-  return {
-    ...(await importOriginal<typeof import('@tanstack/react-router')>()),
-    Link: ({
-      children,
-      className,
-      params,
-      to
-    }: {
-      children?: ReactNode;
-      className?: string;
-      params?: Record<string, string>;
-      to: string;
-    }) => {
-      let href = to;
-      for (const [key, value] of Object.entries(params ?? {})) {
-        href = href.replace(`$${key}`, value);
-      }
-      return (
-        <a className={className} href={href} onClick={(event) => event.preventDefault()}>
-          {children}
-        </a>
-      );
-    },
-    useNavigate: () => navigate
-  };
+  const { mockRouter } = await import('@/lib/testing/router-mock');
+  return mockRouter(importOriginal);
 });
 
 function makeRun(overrides: Partial<AgentRun> = {}): AgentRun {
@@ -93,26 +68,30 @@ describe('AgentRunOutcome', () => {
 
   test('shows the run error', async () => {
     await renderOutcome({ run: makeRun({ error: 'Network down', status: 'failed' }) });
-    await expect.element(page.getByText('Network down')).toBeVisible();
+    await expect.element(page.getByText(/Groam AI lost connection/u)).toBeVisible();
     await expect.element(page.getByText('Check the error before retrying.')).toBeVisible();
   });
 
   test.each([
+    'Connect ChatGPT in Settings → AI to use your ChatGPT plan.',
+    'Reconnect ChatGPT in Settings → AI to continue using your plan.',
+    'chatgpt_reconnect',
+    'refresh_token_expired',
     'Not authenticated',
-    'API key missing',
-    'Unauthorized',
-    'HTTP 401',
-    'HTTP 403',
-    'quota exceeded',
-    'No provider configured'
-  ])('treats "%s" as a provider setup problem', async (error) => {
+    'Unauthorized'
+  ])('treats "%s" as a ChatGPT connection problem', async (error) => {
     await renderOutcome({ onRetry: vi.fn(), run: makeRun({ error, status: 'failed' }) });
     await expect
-      .element(page.getByText(/model provider is not set up for this workspace/u))
+      .element(page.getByText('Connect your ChatGPT account in AI settings.'))
       .toBeVisible();
     await expect
       .element(page.getByRole('link', { name: 'AI settings' }))
       .toHaveAttribute('href', '/settings/ai');
+  });
+
+  test('old provider-key errors no longer show the connect copy', async () => {
+    await renderOutcome({ run: makeRun({ error: 'API key missing', status: 'failed' }) });
+    await expect.element(page.getByText('Check the error before retrying.')).toBeVisible();
   });
 
   test('a failed idea review points to the related idea', async () => {

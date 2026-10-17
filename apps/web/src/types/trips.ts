@@ -36,6 +36,13 @@ export type WorkspaceTripProposal = FunctionReturnType<
 >['page'][number];
 export type TripUpdateInput = FunctionArgs<typeof api.routes.trips.update.run>['input'];
 
+/** Badge counts the trip tab strip shows next to Issues, Ideas, and Research. */
+export type TabCounts = {
+  ideas: number | string;
+  issues: number | string;
+  research: number | string;
+};
+
 export type TripSection = (typeof tripSections)[number];
 
 /** What the assistant is told a trip screen shows: a trip section, or an idea's change review. */

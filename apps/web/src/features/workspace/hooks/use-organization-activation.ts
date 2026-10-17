@@ -14,6 +14,19 @@ async function setActiveOrganization(organizationId: string) {
 }
 
 /**
+ * Opens the viewer's first group, listed fresh: the cached list can still hold the groups of
+ * whoever used this tab before signing out, and activating one of those fails.
+ */
+async function activateFirstOrganization() {
+  const result = await authClient.organization.list();
+  if (result.error) throw new Error(result.error.message ?? 'Unable to activate workspace');
+  const [first] = result.data;
+  if (first) await setActiveOrganization(first.id);
+  // The viewer has no group yet, so the stale list must go before onboarding can show.
+  else authClient.$store.notify('$listOrg');
+}
+
+/**
  * Switches the open workspace to another group. The server switches the session's group before
  * the client hears of it, so the workspace pauses first: its queries would otherwise rerun in the
  * new group with the old group's pagination cursors.
@@ -43,7 +56,7 @@ export function useOrganizationActivation({
     if (activeOrganizationId || !firstOrganizationId || isPending) return;
     let isCurrent = true;
     // No workspace is open yet, so there is nothing to pause.
-    void setActiveOrganization(firstOrganizationId).catch((cause: unknown) => {
+    void activateFirstOrganization().catch((cause: unknown) => {
       if (isCurrent) setError(errorMessage(cause, 'Unable to activate workspace'));
     });
     return () => {
@@ -54,7 +67,7 @@ export function useOrganizationActivation({
   const retry = useCallback(() => {
     if (!firstOrganizationId) return;
     setError(null);
-    void setActiveOrganization(firstOrganizationId).catch((cause: unknown) => {
+    void activateFirstOrganization().catch((cause: unknown) => {
       setError(errorMessage(cause, 'Unable to activate workspace'));
     });
   }, [firstOrganizationId]);

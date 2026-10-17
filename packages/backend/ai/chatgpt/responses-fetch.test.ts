@@ -2,6 +2,50 @@ import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { chatGptFetch } from './responses-fetch';
 afterEach(() => vi.unstubAllGlobals());
 const endpoint = 'https://api.openai.com/v1/responses';
+
+/** Real ChatGPT upstream shape: items arrive as output_item.done, `response.completed` has `output: []`. */
+function upstreamStream(
+  items: object[],
+  usage = { input_tokens: 4, output_tokens: 2, total_tokens: 6 }
+) {
+  const events = [
+    ...items.map((item, index) => ({
+      type: 'response.output_item.done',
+      output_index: index,
+      item
+    })),
+    {
+      type: 'response.completed',
+      response: {
+        id: 'resp_test',
+        created_at: 1,
+        model: 'account-model',
+        object: 'response',
+        status: 'completed',
+        output: [],
+        usage
+      }
+    }
+  ];
+  return new Response(events.map((event) => `data: ${JSON.stringify(event)}\n\n`).join(''));
+}
+
+const replyMessage = {
+  type: 'message',
+  id: 'msg_test',
+  role: 'assistant',
+  status: 'completed',
+  content: [{ type: 'output_text', text: 'Visit Rome', annotations: [] }]
+};
+const tripCall = {
+  type: 'function_call',
+  id: 'fc_first',
+  call_id: 'call_trip',
+  name: 'trip',
+  namespace: 'groam',
+  arguments: '{"city":"Rome"}',
+  status: 'completed'
+};
 test('forces stream and disables store while adapting generate calls', async () => {
   const mock = vi.fn(
     async (_input: unknown, _init?: RequestInit) =>
@@ -89,11 +133,8 @@ test('streaming validation preserves chunked CRLF events through response.comple
 
 test('AI SDK generate with system instructions, tools, and output cap emits a preview-compatible request', async () => {
   const { configuredChatGptProvider } = await import('#backend/ai/chatgpt/model');
-  const upstream = vi.fn(
-    async (_input: RequestInfo | URL, _init?: RequestInit) =>
-      new Response(
-        `data: ${JSON.stringify({ type: 'response.completed', response: { id: 'resp_test', created_at: 1, model: 'account-model', object: 'response', status: 'completed', output: [{ type: 'message', id: 'msg_test', role: 'assistant', status: 'completed', content: [{ type: 'output_text', text: 'Visit Rome', annotations: [] }] }], usage: { input_tokens: 4, output_tokens: 2, total_tokens: 6 } } })}\n\n`
-      )
+  const upstream = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
+    upstreamStream([replyMessage])
   );
   vi.stubGlobal('fetch', upstream);
   const { languageModel } = configuredChatGptProvider({
@@ -139,18 +180,15 @@ test('AI SDK generate with system instructions, tools, and output cap emits a pr
 
 test('SDK second turns preserve complete assistant history instead of server item references', async () => {
   const { configuredChatGptProvider } = await import('#backend/ai/chatgpt/model');
-  const upstream = vi.fn(
-    async (_input: RequestInfo | URL, _init?: RequestInit) =>
-      new Response(
-        `data: ${JSON.stringify({ type: 'response.completed', response: { id: 'resp_next', created_at: 1, model: 'account-model', object: 'response', status: 'completed', output: [], usage: { input_tokens: 4, output_tokens: 0, total_tokens: 4 } } })}\n\n`
-      )
+  const upstream = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
+    upstreamStream([replyMessage])
   );
   vi.stubGlobal('fetch', upstream);
   const { languageModel } = configuredChatGptProvider({
     accessToken: 'personal-token',
     model: 'account-model'
   });
-  await languageModel.doGenerate({
+  const secondTurn = await languageModel.doGenerate({
     providerOptions: { openai: { store: true } },
     prompt: [
       { role: 'user', content: [{ type: 'text', text: 'Where should I go?' }] },
@@ -168,6 +206,9 @@ test('SDK second turns preserve complete assistant history instead of server ite
     ]
   });
   const body = JSON.parse(upstream.mock.calls[0]![1]!.body as string);
+  expect(secondTurn.content).toContainEqual(
+    expect.objectContaining({ type: 'text', text: 'Visit Rome' })
+  );
   expect(body.input).toContainEqual({ role: 'assistant', content: 'Visit Rome' });
   expect(body.input.some((item: { type?: string }) => item.type === 'item_reference')).toBe(false);
   expect(body.store).toBe(false);
@@ -176,25 +217,9 @@ test('SDK second turns preserve complete assistant history instead of server ite
 test('SDK function tool loop sends namespace-qualified calls with matching call outputs', async () => {
   const { configuredChatGptProvider } = await import('#backend/ai/chatgpt/model');
   let turn = 0;
-  const upstream = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => {
-    const output =
-      turn++ === 0
-        ? [
-            {
-              type: 'function_call',
-              id: 'fc_first',
-              call_id: 'call_trip',
-              name: 'trip',
-              namespace: 'groam',
-              arguments: '{"city":"Rome"}',
-              status: 'completed'
-            }
-          ]
-        : [];
-    return new Response(
-      `data: ${JSON.stringify({ type: 'response.completed', response: { id: 'resp_loop', created_at: 1, model: 'account-model', object: 'response', status: 'completed', output, usage: { input_tokens: 4, output_tokens: 1, total_tokens: 5 } } })}\n\n`
-    );
-  });
+  const upstream = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
+    upstreamStream(turn++ === 0 ? [tripCall] : [])
+  );
   vi.stubGlobal('fetch', upstream);
   const { languageModel } = configuredChatGptProvider({
     accessToken: 'personal-token',
@@ -275,6 +300,110 @@ test('SDK function tool loop sends namespace-qualified calls with matching call 
   );
 });
 
+test('SDK stream emits text and a namespaced function call from realistic upstream events', async () => {
+  const { configuredChatGptProvider } = await import('#backend/ai/chatgpt/model');
+  const events = [
+    {
+      type: 'response.created',
+      response: { id: 'resp_test', created_at: 1, model: 'account-model' }
+    },
+    {
+      type: 'response.output_item.added',
+      output_index: 0,
+      item: {
+        type: 'message',
+        id: 'msg_test',
+        role: 'assistant',
+        status: 'in_progress',
+        content: []
+      }
+    },
+    {
+      type: 'response.output_text.delta',
+      item_id: 'msg_test',
+      output_index: 0,
+      content_index: 0,
+      delta: 'Visit '
+    },
+    {
+      type: 'response.output_text.delta',
+      item_id: 'msg_test',
+      output_index: 0,
+      content_index: 0,
+      delta: 'Rome'
+    },
+    { type: 'response.output_item.done', output_index: 0, item: replyMessage },
+    {
+      type: 'response.output_item.added',
+      output_index: 1,
+      item: { ...tripCall, arguments: '', status: 'in_progress' }
+    },
+    {
+      type: 'response.function_call_arguments.delta',
+      item_id: 'fc_first',
+      output_index: 1,
+      delta: '{"city":"Rome"}'
+    },
+    { type: 'response.output_item.done', output_index: 1, item: tripCall },
+    {
+      type: 'response.completed',
+      response: {
+        id: 'resp_test',
+        created_at: 1,
+        model: 'account-model',
+        object: 'response',
+        status: 'completed',
+        output: [],
+        usage: { input_tokens: 4, output_tokens: 2, total_tokens: 6 }
+      }
+    }
+  ];
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(
+      async () => new Response(events.map((event) => `data: ${JSON.stringify(event)}\n\n`).join(''))
+    )
+  );
+  const { languageModel } = configuredChatGptProvider({
+    accessToken: 'personal-token',
+    model: 'account-model'
+  });
+  const { stream } = await languageModel.doStream({
+    prompt: [{ role: 'user', content: [{ type: 'text', text: 'Visit Rome' }] }],
+    tools: [
+      {
+        type: 'function',
+        name: 'trip',
+        description: 'Plan trip',
+        inputSchema: {
+          type: 'object' as const,
+          properties: { city: { type: 'string' as const } },
+          additionalProperties: false
+        }
+      }
+    ]
+  });
+  const parts = [];
+  const reader = stream.getReader();
+  for (let read = await reader.read(); !read.done; read = await reader.read())
+    parts.push(read.value);
+  expect(
+    parts
+      .filter((part) => part.type === 'text-delta')
+      .map((part) => part.delta)
+      .join('')
+  ).toBe('Visit Rome');
+  expect(parts).toContainEqual(
+    expect.objectContaining({
+      type: 'tool-call',
+      toolCallId: 'call_trip',
+      toolName: 'trip',
+      input: '{"city":"Rome"}'
+    })
+  );
+  expect(parts.at(-1)).toMatchObject({ type: 'finish', finishReason: { unified: 'tool-calls' } });
+});
+
 test('rejects unsupported allowed_tools selection before sending tokens or requests', async () => {
   const upstream = vi.fn();
   vi.stubGlobal('fetch', upstream);
@@ -345,3 +474,60 @@ test.each(['generate', 'stream'] as const)(
     }
   }
 );
+
+test('generate calls rebuild the output from streamed items when the completed event has none', async () => {
+  // ChatGPT plan inference sends `output: []` on `response.completed`; the items arrive earlier.
+  const message = {
+    type: 'message',
+    id: 'msg_1',
+    role: 'assistant',
+    status: 'completed',
+    content: [{ type: 'output_text', text: 'pineapple', annotations: [] }]
+  };
+  const call = {
+    type: 'function_call',
+    id: 'fc_1',
+    call_id: 'call_1',
+    name: 'trip',
+    namespace: 'groam',
+    arguments: '{}',
+    status: 'completed'
+  };
+  const events = [
+    { type: 'response.output_item.done', output_index: 1, item: call },
+    { type: 'response.output_item.done', output_index: 0, item: message },
+    {
+      type: 'response.completed',
+      response: { id: 'resp_1', status: 'completed', output: [], usage: { input_tokens: 1 } }
+    }
+  ];
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(
+      async () => new Response(events.map((event) => `data: ${JSON.stringify(event)}\n\n`).join(''))
+    )
+  );
+  const response = await chatGptFetch(endpoint, { method: 'POST', body: '{"model":"m"}' });
+  expect(await response.json()).toEqual({
+    id: 'resp_1',
+    status: 'completed',
+    output: [message, call],
+    usage: { input_tokens: 1 }
+  });
+});
+
+test('generate calls keep a completed event output that is already filled', async () => {
+  const item = { type: 'message', id: 'msg_2', role: 'assistant', content: [] };
+  const events = [
+    { type: 'response.output_item.done', output_index: 0, item: { ...item, id: 'stale' } },
+    { type: 'response.completed', response: { id: 'resp_2', output: [item] } }
+  ];
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(
+      async () => new Response(events.map((event) => `data: ${JSON.stringify(event)}\n\n`).join(''))
+    )
+  );
+  const response = await chatGptFetch(endpoint, { method: 'POST', body: '{"model":"m"}' });
+  expect(await response.json()).toEqual({ id: 'resp_2', output: [item] });
+});

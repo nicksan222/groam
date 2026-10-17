@@ -21,11 +21,14 @@ import type {
 } from '#convex/modules/assistant/runs/schema';
 import { requireWorkspace, type Workspace } from '#convex/modules/auth/workspace';
 import { insertWithShortId } from '#convex/modules/references/index';
+import { assertTripWritable, issueWithTrip } from '#convex/modules/travel/issues/guard';
 import { isResolved } from '#convex/modules/travel/issues/status';
+import { isTripAdmin, loadTripContext } from '#convex/modules/travel/trips/ctx';
 
 const MAX_ASSIGNED_ISSUES = 200;
 const MAX_EVENT_PAGE = 50;
 const MAX_RUN_PAGE = 25;
+const ROSTER_RUNS_PER_AGENT = 20;
 
 function requireRunPageSize(paginationOpts: PaginationOptions) {
   if (
@@ -59,7 +62,7 @@ function presentRun(
     error: run.error ?? null,
     headline: run.headline ?? null,
     id: run._id,
-    ...(run.shortId ? { shortId: run.shortId } : {}),
+    shortId: run.shortId,
     issueId: run.issueId ?? null,
     kickoff: run.kickoff,
     proposalId: run.proposalId ?? null,
@@ -88,8 +91,7 @@ async function relatedForRun(
   ]);
   return {
     chatTitle: discussion?.organizationId === organizationId ? discussion.title : null,
-    ideaTitle:
-      proposal?.organizationId === organizationId ? (proposal.branchName ?? proposal.title) : null,
+    ideaTitle: proposal?.organizationId === organizationId ? proposal.branchName : null,
     issueTitle: issue?.organizationId === organizationId ? issue.title : null,
     tripName: trip?.organizationId === organizationId ? trip.name : null
   };
@@ -123,9 +125,38 @@ async function nextSeq(ctx: RunWriter, runId: Id<'agentRuns'>): Promise<number> 
   return (last?.seq ?? 0) + 1;
 }
 
+/** Org match, plus discussion membership for discussion runs (their log carries the chat). */
+async function canViewRun(
+  ctx: RunReader,
+  run: Doc<'agentRuns'>,
+  workspace: Workspace
+): Promise<boolean> {
+  if (run.organizationId !== workspace.organizationId) return false;
+  const discussionId = run.discussionId;
+  if (!discussionId) return true;
+  const membership = await ctx.db
+    .query('discussionMembers')
+    .withIndex('by_discussionId_and_userId', (query) =>
+      query.eq('discussionId', discussionId).eq('userId', workspace.userId)
+    )
+    .unique();
+  return membership !== null;
+}
+
+/** Drops runs the viewer may not see; one bounded index lookup per discussion run. */
+async function visibleRuns(
+  ctx: RunReader,
+  runs: Array<Doc<'agentRuns'>>,
+  workspace: Workspace
+): Promise<Array<Doc<'agentRuns'>>> {
+  const allowed = await Promise.all(runs.map((run) => canViewRun(ctx, run, workspace)));
+  return runs.filter((_, index) => allowed[index]);
+}
+
+/** A run outside the org or in a discussion the viewer is not in reads as missing. */
 async function requireOrgRun(ctx: RunReader, runId: Id<'agentRuns'>, workspace: Workspace) {
   const run = await ctx.db.get('agentRuns', runId);
-  if (!run || run.organizationId !== workspace.organizationId) {
+  if (!run || !(await canViewRun(ctx, run, workspace))) {
     throw new ConvexError('Agent run not found');
   }
   return run;
@@ -149,13 +180,23 @@ async function activeDiscussionRun(ctx: RunReader, discussionId: Id<'discussions
   return runs.find((run) => run.status === 'queued' || run.status === 'running') ?? null;
 }
 
-async function activeProposalRun(ctx: RunReader, proposalId: Id<'tripProposals'>) {
+async function activeProposalRun(
+  ctx: RunReader,
+  proposalId: Id<'tripProposals'>,
+  organizationId: string
+) {
   const runs = await ctx.db
     .query('agentRuns')
     .withIndex('by_proposalId_and_updatedAt', (query) => query.eq('proposalId', proposalId))
     .order('desc')
     .take(20);
-  return runs.find((run) => run.status === 'queued' || run.status === 'running') ?? null;
+  return (
+    runs.find(
+      (run) =>
+        run.organizationId === organizationId &&
+        (run.status === 'queued' || run.status === 'running')
+    ) ?? null
+  );
 }
 
 async function queueIssueRun(
@@ -192,12 +233,13 @@ async function queueIssueRun(
 }
 
 async function oldestQueuedDiscussionRun(ctx: RunReader, discussionId: Id<'discussions'>) {
-  const runs = await ctx.db
+  return await ctx.db
     .query('agentRuns')
-    .withIndex('by_discussionId_and_updatedAt', (query) => query.eq('discussionId', discussionId))
+    .withIndex('by_discussionId_and_status_and_updatedAt', (query) =>
+      query.eq('discussionId', discussionId).eq('status', 'queued')
+    )
     .order('asc')
-    .take(50);
-  return runs.find((run) => run.status === 'queued') ?? null;
+    .first();
 }
 
 async function queueDiscussionTurn(
@@ -277,7 +319,7 @@ async function queueReviewRun(
     tripId: Id<'trips'>;
   }
 ): Promise<Id<'agentRuns'>> {
-  const existing = await activeProposalRun(ctx, args.proposalId);
+  const existing = await activeProposalRun(ctx, args.proposalId, args.organizationId);
   if (existing) return existing._id;
   const agent = assistantAgents.reviewer;
   const now = Date.now();
@@ -354,6 +396,46 @@ async function finish(
   return null;
 }
 
+const STALE_RUN_MS = 15 * 60 * 1000;
+const STALE_RUN_BATCH = 100;
+const STALE_RUN_ERROR = 'The run stopped responding. Try again.';
+
+const STALE_QUEUED_MS = 10 * 60 * 1000;
+
+/**
+ * Fails runs that sit in `running` without progress (action timeout or crash) and `queued`
+ * runs nobody started (closed tab, failed client start).
+ */
+async function failStaleRuns(ctx: RunWriter, now: number = Date.now()): Promise<number> {
+  const [running, queued] = await Promise.all([
+    ctx.db
+      .query('agentRuns')
+      .withIndex('by_status_and_updatedAt', (query) =>
+        query.eq('status', 'running').lt('updatedAt', now - STALE_RUN_MS)
+      )
+      .take(STALE_RUN_BATCH),
+    ctx.db
+      .query('agentRuns')
+      .withIndex('by_status_and_updatedAt', (query) =>
+        query.eq('status', 'queued').lt('updatedAt', now - STALE_QUEUED_MS)
+      )
+      .take(STALE_RUN_BATCH)
+  ]);
+  const stale = [...running, ...queued];
+  await Promise.all(
+    stale.map((run) =>
+      ctx.db.patch('agentRuns', run._id, {
+        completedAt: now,
+        error: STALE_RUN_ERROR,
+        headline: STALE_RUN_ERROR,
+        status: 'failed',
+        updatedAt: now
+      })
+    )
+  );
+  return stale.length;
+}
+
 async function abortActiveRun(ctx: RunWriter, run: Doc<'agentRuns'> | null): Promise<null> {
   if (!run) return null;
   if (run.status !== 'queued' && run.status !== 'running') return null;
@@ -375,7 +457,32 @@ async function abortActiveForDiscussion(
   ctx: RunWriter,
   discussionId: Id<'discussions'>
 ): Promise<null> {
-  return await abortActiveRun(ctx, await activeDiscussionRun(ctx, discussionId));
+  // The streaming turn is the one the participant pressed stop on; a queued one may be behind it.
+  const running = await ctx.db
+    .query('agentRuns')
+    .withIndex('by_discussionId_and_status_and_updatedAt', (query) =>
+      query.eq('discussionId', discussionId).eq('status', 'running')
+    )
+    .order('desc')
+    .first();
+  return await abortActiveRun(ctx, running ?? (await activeDiscussionRun(ctx, discussionId)));
+}
+
+/**
+ * Stops a run. Issue and review runs: the person who started it, or someone who administers its
+ * trip. Discussion runs: any participant (non-participants cannot see the run at all).
+ */
+async function stopRun(ctx: RunWriter, runId: Id<'agentRuns'>): Promise<null> {
+  const workspace = await requireWorkspace(ctx);
+  const run = await requireOrgRun(ctx, runId, workspace);
+  if (!run.discussionId && run.createdBy.userId !== workspace.userId) {
+    const trip = run.tripId
+      ? await loadTripContext(ctx, run.tripId, workspace).catch(() => null)
+      : null;
+    if (!trip || !isTripAdmin(trip))
+      throw new ConvexError('Only the trip creator or a group admin can stop this run');
+  }
+  return await finish(ctx, { runId, status: 'aborted' });
 }
 
 async function appendEvent(
@@ -518,14 +625,22 @@ async function appendStepEvents(
 
 async function roster(ctx: QueryCtx): Promise<AgentRosterItem[]> {
   const workspace = await requireWorkspace(ctx);
-  const [runs, issues] = await Promise.all([
-    ctx.db
-      .query('agentRuns')
-      .withIndex('by_organizationId_and_updatedAt', (query) =>
-        query.eq('organizationId', workspace.organizationId)
+  const [runsByAgent, issues] = await Promise.all([
+    Promise.all(
+      assistantAgentList.map(async (agent) =>
+        visibleRuns(
+          ctx,
+          await ctx.db
+            .query('agentRuns')
+            .withIndex('by_organizationId_and_agentId_and_updatedAt', (query) =>
+              query.eq('organizationId', workspace.organizationId).eq('agentId', agent.id)
+            )
+            .order('desc')
+            .take(ROSTER_RUNS_PER_AGENT),
+          workspace
+        )
       )
-      .order('desc')
-      .take(200),
+    ),
     ctx.db
       .query('tripIssues')
       .withIndex('by_organizationId_and_updatedAt', (query) =>
@@ -534,8 +649,8 @@ async function roster(ctx: QueryCtx): Promise<AgentRosterItem[]> {
       .order('desc')
       .take(500)
   ]);
-  return assistantAgentList.map((agent) => {
-    const agentRuns = runs.filter((run) => run.agentId === agent.id);
+  return assistantAgentList.map((agent, index) => {
+    const agentRuns = runsByAgent[index] ?? [];
     const assignedIssueCount = isIssueAssignableAgentId(agent.id)
       ? issues.filter(
           (issue) =>
@@ -577,7 +692,10 @@ async function listRuns(ctx: QueryCtx, agentId: string, paginationOpts: Paginati
     )
     .order('desc')
     .paginate(paginationOpts);
-  return { ...result, page: result.page.map((run) => presentRun(run)) };
+  return {
+    ...result,
+    page: (await visibleRuns(ctx, result.page, workspace)).map((run) => presentRun(run))
+  };
 }
 
 async function listWorkspaceRuns(ctx: QueryCtx, paginationOpts: PaginationOptions) {
@@ -590,7 +708,10 @@ async function listWorkspaceRuns(ctx: QueryCtx, paginationOpts: PaginationOption
     )
     .order('desc')
     .paginate(paginationOpts);
-  return { ...result, page: result.page.map((run) => presentRun(run)) };
+  return {
+    ...result,
+    page: (await visibleRuns(ctx, result.page, workspace)).map((run) => presentRun(run))
+  };
 }
 
 async function getRun(ctx: QueryCtx, runId: Id<'agentRuns'>): Promise<AgentRunView> {
@@ -714,14 +835,18 @@ async function retryIssueRun(ctx: RunWriter, runId: Id<'agentRuns'>): Promise<Id
   if (!run.issueId || !run.tripId || !isIssueAssignableAgentId(run.agentId)) {
     throw new ConvexError('Only Issue agent runs can be re-run');
   }
-  const issue = await ctx.db.get('tripIssues', run.issueId);
-  if (!issue || issue.organizationId !== workspace.organizationId) {
+  const { issue, trip } = await issueWithTrip(ctx, run.issueId).catch(() => {
     throw new ConvexError('Agent run not found');
+  });
+  assertTripWritable(trip);
+  if (!isTripAdmin(trip)) {
+    throw new ConvexError('Only the trip creator or a group admin can re-run trip issues');
   }
+  if (isResolved(issue.status)) throw new ConvexError('Resolved issues cannot be re-run');
   if (issue.assignee?.kind !== 'agent' || issue.assignee.agentId !== run.agentId) {
     throw new ConvexError('Re-assign the Issue agent before re-running');
   }
-  return await queueIssueRun(ctx, {
+  const nextRunId = await queueIssueRun(ctx, {
     agentId: run.agentId,
     createdBy: { name: workspace.viewerName, userId: workspace.userId },
     issueId: run.issueId,
@@ -730,6 +855,8 @@ async function retryIssueRun(ctx: RunWriter, runId: Id<'agentRuns'>): Promise<Id
     title: issue.title,
     tripId: run.tripId
   });
+  // The client starts the run with the viewer's identity; trip tools need a signed-in user.
+  return nextRunId;
 }
 
 /** Workspace-visible agent roster, runs, and event logs. */
@@ -745,6 +872,7 @@ export class AgentRuns {
   static attachProposal = attachProposal;
   static claim = claim;
   static claimDiscussionTurn = claimDiscussionTurn;
+  static failStaleRuns = failStaleRuns;
   static finish = finish;
   static getAgent = getAgent;
   static getRun = getRun;
@@ -758,4 +886,5 @@ export class AgentRuns {
   static queueReviewRun = queueReviewRun;
   static retryIssueRun = retryIssueRun;
   static roster = roster;
+  static stopRun = stopRun;
 }

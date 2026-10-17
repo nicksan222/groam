@@ -10,9 +10,16 @@ function proposal(
     _id: 'proposal' as Id<'tripProposals'>,
     author: { name: 'Test Owner', userId: 'user' },
     baseUpdatedAt: 0,
+    feedbackCount: 0,
     organizationId: 'org',
+    requiredApprovals: 1,
+    reviewers: [],
+    branchName: 'idea-one',
+    shortId: 'idea01',
     sourceTripId: 'trip' as Id<'trips'>,
     status: 'draft',
+    titleSource: 'user',
+    unresolvedFeedbackCount: 0,
     updatedAt: 0,
     workingTripId: 'working' as Id<'trips'>,
     ...value
@@ -84,16 +91,6 @@ describe('trip idea names', () => {
     expect(
       IdeaNames.allowsAutoTitle(proposal({ title: 'Add a coastal day trip', titleSource: 'user' }))
     ).toBe(false);
-  });
-
-  test('infers legacy default titles without titleSource', () => {
-    expect(IdeaNames.allowsAutoTitle(proposal({ title: "Test Owner's trip idea" }))).toBe(true);
-    expect(
-      IdeaNames.allowsAutoTitle(
-        proposal({ issueId: 'issue' as Id<'tripIssues'>, title: 'Implement: Book flights' })
-      )
-    ).toBe(true);
-    expect(IdeaNames.allowsAutoTitle(proposal({ title: 'Add a coastal day trip' }))).toBe(false);
   });
 
   test('normalizes generated proposal titles', () => {

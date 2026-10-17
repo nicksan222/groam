@@ -3,57 +3,19 @@ import { render } from '@groam/vitest-config/react';
 import type { ComponentProps, ReactNode } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
+import { manualCondition, starterCondition } from '@/features/issues/issue-condition-fixtures';
+import { workspaceIssue } from '@/features/issues/issue-fixtures';
 import {
   WorkspaceContext,
   type WorkspaceContextValue
 } from '@/features/workspace/workspace-shell/workspace-state';
 import { testIds } from '@/lib/test-ids';
-import type { IssueCondition, IssueListItem, WorkspaceIssue } from '@/types/issues';
 import { IssueDetail } from './issue-detail';
 import type { IssueDetailData } from './issue-detail-data';
 
-const autoCondition = (
-  met = false,
-  refusal = met ? 'Settled by the trip.' : 'Closes once the trip has a destination.'
-) =>
-  ({
-    check: 'destination',
-    kind: 'auto',
-    label: 'The trip has a destination',
-    met,
-    refusal
-  }) satisfies IssueCondition;
-
-const manualCondition = (label = 'Flights confirmed') =>
-  ({ kind: 'manual', label, met: null }) satisfies IssueCondition;
-
-const listItem = {
-  assignee: null,
-  author: { name: 'Alex Morgan', userId: 'user-alex' },
-  canAssign: true,
-  canManage: true,
-  condition: null,
-  dueAt: null,
-  id: 'issue-1' as Id<'tripIssues'>,
-  idea: null,
-  labels: [],
-  rank: 0,
-  status: 'open',
-  title: 'Coast day',
-  updatedAt: Date.UTC(2026, 7, 17)
-} satisfies Omit<IssueListItem, 'tripName'>;
-
-const workspaceIssue = (over: Partial<WorkspaceIssue> = {}): WorkspaceIssue => ({
-  ...listItem,
-  body: 'Add a coast day near Lisbon.',
-  closedAt: null,
-  tripId: 'trip-1' as Id<'trips'>,
-  tripName: 'Atlantic week',
-  ...over
-});
-
 const issueDetail = (over: Partial<IssueDetailData> = {}): IssueDetailData => ({
   ...workspaceIssue(),
+  canComment: true,
   comments: [],
   ...over
 });
@@ -82,6 +44,10 @@ const actions = vi.hoisted(() => ({
 }));
 
 const state = vi.hoisted(() => ({ issue: null as IssueDetailData | null }));
+
+vi.mock('@/features/research/research-links/linked-researches', () => ({
+  LinkedResearches: () => null
+}));
 
 vi.mock('@tanstack/react-router', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@tanstack/react-router')>()),
@@ -217,6 +183,15 @@ describe('IssueDetail', () => {
     await expect.element(page.getByRole('button', { name: 'Decide by' })).not.toBeInTheDocument();
   });
 
+  test('hides the comment box when the viewer cannot comment', async () => {
+    state.issue = issueDetail({ canComment: false });
+    await renderIssue(<IssueDetail {...detail()} />);
+
+    await expect.element(page.getByText('Add a coast day near Lisbon.')).toBeInTheDocument();
+    await expect.element(page.getByTestId(testIds.issueComment)).not.toBeInTheDocument();
+    await expect.element(page.getByTestId(testIds.issueCommentSubmit)).not.toBeInTheDocument();
+  });
+
   test('keeps assign available on a closed issue without starting an idea', async () => {
     state.issue = issueDetail({ status: 'closed' });
     await renderIssue(<IssueDetail {...detail()} />);
@@ -259,8 +234,8 @@ describe('IssueDetail', () => {
     await renderIssue(<IssueDetail {...detail()} />);
 
     await expect
-      .element(page.getByText('Alex Morgan assigned this to Sam Planner'))
-      .toBeInTheDocument();
+      .poll(() => page.getByRole('listitem').element().textContent?.replaceAll(/\s+/gu, ' '))
+      .toContain('Alex Morgan assigned Sam Planner');
     // Opening body is the only comment card; the assign event is a compact system line.
     expect(page.getByText(/commented/u).elements()).toHaveLength(1);
   });
@@ -292,13 +267,16 @@ describe('IssueDetail', () => {
     });
     await renderIssue(<IssueDetail {...detail()} />);
 
+    const events = page.getByRole('listitem');
     await expect
-      .element(page.getByText('Alex Morgan assigned this to Sam Planner'))
-      .toBeInTheDocument();
-    await expect.element(page.getByText('Alex Morgan unassigned Sam Planner')).toBeInTheDocument();
+      .poll(() => events.nth(0).element().textContent?.replaceAll(/\s+/gu, ' '))
+      .toContain('Alex Morgan assigned Sam Planner');
     await expect
-      .element(page.getByText('Alex Morgan assigned this to Issue agent'))
-      .toBeInTheDocument();
+      .poll(() => events.nth(1).element().textContent?.replaceAll(/\s+/gu, ' '))
+      .toContain('Alex Morgan unassigned Sam Planner');
+    await expect
+      .poll(() => events.nth(2).element().textContent?.replaceAll(/\s+/gu, ' '))
+      .toContain('Alex Morgan assigned Issue agent');
 
     const timelineItems = document.querySelectorAll('[data-slot="timeline-item"]');
     // Opening comment + one system cluster + composer.
@@ -346,6 +324,25 @@ describe('IssueDetail', () => {
     expect(actions.addComment).toHaveBeenCalledWith('Can we keep this flexible?');
   });
 
+  test('keeps text typed while a comment is sending', async () => {
+    let finish: (ok: boolean) => void = () => undefined;
+    actions.addComment.mockReturnValue(new Promise<boolean>((resolve) => (finish = resolve)));
+    await renderIssue(<IssueDetail {...detail()} />);
+    const composer = page.getByLabelText('Issue comment');
+    await composer.fill('First thought');
+    await page.getByRole('button', { name: 'Comment' }).click();
+    await composer.fill('First thought and a second one');
+    finish(true);
+    await expect.element(composer).toHaveValue('First thought and a second one');
+  });
+
+  test('clears the composer once the sent comment is unchanged', async () => {
+    await renderIssue(<IssueDetail {...detail()} />);
+    await page.getByLabelText('Issue comment').fill('Done deal');
+    await page.getByRole('button', { name: 'Comment' }).click();
+    await expect.element(page.getByLabelText('Issue comment')).toHaveValue('');
+  });
+
   test('shows a manual Done when panel with its text and no explanation', async () => {
     state.issue = issueDetail({ condition: manualCondition() });
     await renderIssue(<IssueDetail {...detail()} />);
@@ -359,7 +356,7 @@ describe('IssueDetail', () => {
 
   test('explains an unmet auto condition and starts an idea from the one Idea control', async () => {
     state.issue = issueDetail({
-      condition: autoCondition(false)
+      condition: starterCondition(false)
     });
     await renderIssue(<IssueDetail {...detail()} />);
 
@@ -379,7 +376,7 @@ describe('IssueDetail', () => {
 
   test('shows a met auto condition without the start action', async () => {
     state.issue = issueDetail({
-      condition: autoCondition(true)
+      condition: starterCondition(true)
     });
     await renderIssue(<IssueDetail {...detail()} />);
 

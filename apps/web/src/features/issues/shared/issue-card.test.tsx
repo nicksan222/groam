@@ -3,22 +3,11 @@ import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
+import { starterCondition } from '@/features/issues/issue-condition-fixtures';
 import { testIds } from '@/lib/test-ids';
 import type { IssueCardData } from '@/types/issues';
-import type { IssueCondition, IssueListItem } from '@/types/issues';
+import type { IssueListItem } from '@/types/issues';
 import { IssueCard } from './issue-card';
-
-const autoCondition = (
-  met = false,
-  refusal = met ? 'Settled by the trip.' : 'Closes once the trip has a destination.'
-) =>
-  ({
-    check: 'destination',
-    kind: 'auto',
-    label: 'The trip has a destination',
-    met,
-    refusal
-  }) satisfies IssueCondition;
 
 const listItem = {
   assignee: null,
@@ -31,6 +20,7 @@ const listItem = {
   idea: null,
   labels: [],
   rank: 0,
+  shortId: 'isuabc',
   status: 'open',
   title: 'Coast day',
   updatedAt: Date.UTC(2026, 7, 17)
@@ -154,11 +144,13 @@ describe('IssueCard', () => {
   test('says what is still needed while a condition is pending, and the label once met', async () => {
     await render(
       <>
-        <IssueCard issue={issue({ condition: autoCondition(false) })} />
-        <IssueCard issue={issue({ condition: autoCondition(true), id: 'b' as Id<'tripIssues'> })} />
+        <IssueCard issue={issue({ condition: starterCondition(false) })} />
+        <IssueCard
+          issue={issue({ condition: starterCondition(true), id: 'b' as Id<'tripIssues'> })}
+        />
       </>
     );
-    await expect.element(page.getByText('Needs a destination')).toBeInTheDocument();
+    await expect.element(page.getByText('No destination yet')).toBeInTheDocument();
     await expect.element(page.getByText('The trip has a destination')).toBeInTheDocument();
   });
 });

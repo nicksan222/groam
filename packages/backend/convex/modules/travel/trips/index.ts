@@ -2,11 +2,14 @@ import { ConvexError, type Infer } from 'convex/values';
 import type { Doc, Id, TableNames } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import { requireWorkspace, workspaceRoster } from '#convex/modules/auth/workspace';
+import { linkTargetKey, removeLinksForTargetKey } from '#convex/modules/discussions/links/cascade';
+import { Discussions } from '#convex/modules/discussions/threads/index';
 import { insertWithShortId } from '#convex/modules/references/index';
 import { ItineraryActivity } from '#convex/modules/travel/activities/index';
 import { DestinationCover } from '#convex/modules/travel/covers/destination/index';
 import { TripCover } from '#convex/modules/travel/covers/index';
 import { TripDestination } from '#convex/modules/travel/destinations/index';
+import { writeCondition } from '#convex/modules/travel/issues/condition';
 import { TripIssues } from '#convex/modules/travel/issues/index';
 import { TripLocations } from '#convex/modules/travel/locations/index';
 import { TripPacking } from '#convex/modules/travel/packing/index';
@@ -91,6 +94,7 @@ async function deleteProposalBatch(
     await ctx.db.delete('tripProposalSnapshots', snapshot._id);
     return true;
   }
+  await removeLinksForTargetKey(ctx, linkTargetKey({ kind: 'idea', proposalId }));
   await ctx.db.delete('tripProposals', proposalId);
   return false;
 }
@@ -112,6 +116,8 @@ async function deleteIssueBatch(ctx: MutationCtx, tripId: Id<'trips'>): Promise<
   ) {
     return true;
   }
+  await writeCondition(ctx, issue, undefined);
+  await removeLinksForTargetKey(ctx, linkTargetKey({ issueId: issue._id, kind: 'issue' }));
   await ctx.db.delete('tripIssues', issue._id);
   return true;
 }
@@ -171,6 +177,39 @@ async function deleteTransferRows(ctx: MutationCtx, tripId: Id<'trips'>): Promis
   );
 }
 
+async function deleteHistoryRows(ctx: MutationCtx, tripId: Id<'trips'>): Promise<boolean> {
+  if (
+    await deleteRows(
+      ctx,
+      ctx.db
+        .query('tripAuditEvents')
+        .withIndex('by_tripId', (query) => query.eq('tripId', tripId))
+        .take(DELETE_BATCH_SIZE)
+    )
+  ) {
+    return true;
+  }
+  return await deleteRows(
+    ctx,
+    ctx.db
+      .query('tripTravelers')
+      .withIndex('by_tripId', (query) => query.eq('tripId', tripId))
+      .take(DELETE_BATCH_SIZE)
+  );
+}
+
+/** Research conversations (with their links), issues, then attachment pins. */
+async function deleteConversationAndIssueRows(
+  ctx: MutationCtx,
+  tripId: Id<'trips'>
+): Promise<boolean> {
+  return (
+    (await Discussions.purgeForTrip(ctx, tripId, DELETE_BATCH_SIZE)) ||
+    (await deleteIssueBatch(ctx, tripId)) ||
+    (await deleteAttachmentRows(ctx, tripId))
+  );
+}
+
 async function deleteBatch(ctx: MutationCtx, trip: Doc<'trips'>): Promise<void> {
   const sourceProposal = await ctx.db
     .query('tripProposals')
@@ -180,8 +219,7 @@ async function deleteBatch(ctx: MutationCtx, trip: Doc<'trips'>): Promise<void> 
     await deleteProposalBatch(ctx, sourceProposal._id);
     return;
   }
-  if (await deleteIssueBatch(ctx, trip._id)) return;
-  if (await deleteAttachmentRows(ctx, trip._id)) return;
+  if (await deleteConversationAndIssueRows(ctx, trip._id)) return;
   const proposal = await ctx.db
     .query('tripProposals')
     .withIndex('by_workingTripId', (query) => query.eq('workingTripId', trip._id))
@@ -238,17 +276,7 @@ async function deleteBatch(ctx: MutationCtx, trip: Doc<'trips'>): Promise<void> 
   if (await TripPreferences.deleteForTrip(ctx, trip._id, DELETE_BATCH_SIZE)) {
     return;
   }
-  if (
-    await deleteRows(
-      ctx,
-      ctx.db
-        .query('tripAuditEvents')
-        .withIndex('by_tripId', (query) => query.eq('tripId', trip._id))
-        .take(DELETE_BATCH_SIZE)
-    )
-  ) {
-    return;
-  }
+  if (await deleteHistoryRows(ctx, trip._id)) return;
 
   await TripLocations.removeTrip(ctx, trip._id);
   const coverStorageId =

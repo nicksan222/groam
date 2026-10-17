@@ -336,3 +336,16 @@ test('returns false and reports provider failures', async () => {
   expect(sent).toBe(false);
   expect(mocks.error).toHaveBeenCalledWith('Provider unavailable');
 });
+
+test('open resolves false and toasts when starting the thread fails', async () => {
+  mocks.open.mockRejectedValueOnce(new Error('Provider unavailable'));
+  const { result } = await renderHook(() => useAssistant(context, api));
+
+  const opened = await act(() => result.current.open());
+  expect(opened).toBe(false);
+  expect(mocks.error).toHaveBeenCalledWith('Provider unavailable');
+  expect(result.current.threadId).toBeNull();
+
+  await expect(act(() => result.current.open())).resolves.toBe(true);
+  expect(result.current.threadId).toBe('thread-1');
+});

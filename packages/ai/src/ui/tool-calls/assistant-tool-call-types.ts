@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import type { AssistantChoice } from '#ai/ui/tool-calls/assistant-choice-receipt';
 
 export type ToolPart = UIMessage['parts'][number];
-export type ToolStatus = 'complete' | 'error' | 'running';
+export type ToolStatus = 'complete' | 'error' | 'running' | 'stopped';
 
 export type ActivityPresentation = {
   detail?: string;
@@ -30,5 +30,5 @@ export type ToolCallComponentProps = {
 
 export type ToolCallStrategy = {
   Component: (props: ToolCallComponentProps) => ReactNode;
-  present: (part: ToolPart, toolName: string) => ToolPresentation | null;
+  present: (part: ToolPart, toolName: string, settled?: boolean) => ToolPresentation | null;
 };

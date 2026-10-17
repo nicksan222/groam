@@ -42,7 +42,8 @@ const sectionTabs = {
   ideas: ids.tripSectionIdeas,
   issues: ids.tripSectionIssues,
   itinerary: ids.tripSectionItinerary,
-  overview: ids.tripSectionOverview
+  overview: ids.tripSectionOverview,
+  research: ids.tripSectionResearch
 } as const;
 
 /** Clicks a trip tab and, for the shared trip's tabs, waits for that tab's page. */

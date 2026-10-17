@@ -1,6 +1,7 @@
 import { ConvexError, type Infer } from 'convex/values';
 import type { Doc, Id } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
+import { linkTargetKey, removeLinksForTargetKey } from '#convex/modules/discussions/links/cascade';
 import { Attachments } from '#convex/modules/media/attachments/index';
 import { syncTripConditions } from '#convex/modules/travel/issues/sync';
 import { MAX_STAYS_PER_TRIP, type TripStayValidators } from '#convex/modules/travel/stays/schema';
@@ -167,6 +168,10 @@ export class TripStay {
     stay: Doc<'tripDestinationStays'>
   ): Promise<void> {
     await Attachments.removeTarget(ctx, stay.tripId, { id: stay._id, type: 'stay' });
+    await removeLinksForTargetKey(
+      ctx,
+      linkTargetKey({ kind: 'tripTarget', target: { id: stay._id, type: 'stay' } })
+    );
     await ctx.db.delete('tripDestinationStays', stay._id);
   }
 

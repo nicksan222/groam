@@ -1,5 +1,9 @@
 import { ideaReviewSystemPrompt } from '#ai/backend/review/schema';
-import type { AssistantScreen } from '#ai/runtime/screen';
+import {
+  assistantScreenLimits,
+  clampAssistantScreenText,
+  type AssistantScreen
+} from '#ai/runtime/screen';
 
 export type ReviewStandaloneContext = {
   changes: unknown[];
@@ -37,6 +41,6 @@ export function reviewStandaloneScreen(
     description: 'Standalone Idea reviewer inspecting a submitted trip idea.',
     key: `idea:${review.id}:review`,
     target: { kind: 'trip', section: 'ideas', tripId: review.workingTripId },
-    title: `${review.title} · review`
+    title: clampAssistantScreenText(`${review.title} · review`, assistantScreenLimits.title)
   };
 }

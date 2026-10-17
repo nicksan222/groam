@@ -1,15 +1,13 @@
-import { useSetAgentContext } from '@groam/ai/ui/context/agent-context';
-import { Button } from '@groam/ui/components/button';
 import { EmptyScreen } from '@groam/ui/components/empty-screen';
 import { ListFilterSection, ListFilterToolbar } from '@groam/ui/components/list-filter-toolbar';
 import { PageLoading } from '@groam/ui/components/page-loading';
 import Shell from '@groam/ui/components/shell/client';
-
 import { dataTableFilterLabels } from '@groam/ui/lib/data-table';
 import { useNavigate } from '@tanstack/react-router';
 import { Map as MapIcon, Plus } from 'lucide-react';
 import { useMemo } from 'react';
 
+import { useTripListAgentContext } from '@/features/trips/hooks/use-trip-list-agent-context';
 import {
   tripStatusOptions,
   useTripListFilters
@@ -20,9 +18,11 @@ import {
   groupProposalsByTrip,
   orderTripsByRecentActivity
 } from '@/features/trips/trip-list/trip-list-order';
+import { useLoadWhileFilteredEmpty } from '@/features/workspace/hooks/use-load-while-filtered-empty';
 import { useOpenState } from '@/features/workspace/hooks/use-open-state';
 import { useWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
 import { testIds } from '@/lib/test-ids';
+import { TripListFilteredEmpty } from './trip-list-filtered-empty';
 import { TripListPagination } from './trip-list-pagination';
 import { TripWorkspaceSection } from './trip-workspace-section';
 
@@ -64,23 +64,16 @@ export function TripListView() {
     trips: orderedTrips
   });
 
-  useSetAgentContext({
-    capabilities: ['trip.create'],
-    data: {
-      activeGroup: activeOrganization.name,
-      trips: visibleTrips.map((trip) => ({
-        archived: trip.archivedAt !== null,
-        dateNotes: trip.dateNotes,
-        destination: trip.destination,
-        id: trip.id,
-        name: trip.name,
-        nextAction: trip.nextAction,
-        proposalCount: proposalsByTrip.get(trip.id)?.length ?? 0
-      }))
-    },
-    description: 'Summarize the visible trip portfolio and help choose what to plan next.',
-    key: 'trips:list',
-    title: 'Trips'
+  const searching = useLoadWhileFilteredEmpty({
+    isFilteredEmpty: visibleTrips.length === 0 && trips.length > 0,
+    loadMore,
+    status
+  });
+
+  useTripListAgentContext({
+    activeGroup: activeOrganization.name,
+    proposalCounts: proposalsByTrip,
+    trips: visibleTrips
   });
 
   if (isLoading) return <PageLoading label="Loading trips…" />;
@@ -94,7 +87,7 @@ export function TripListView() {
           <span className="hidden sm:inline">Plan together. Keep every adventure moving.</span>
         </Shell.Description>
       </Shell.Header>
-      {isLoading || trips.length > 0 ? (
+      {trips.length > 0 ? (
         <Shell.Action
           data-testid={testIds.createTrip}
           icon={<Plus />}
@@ -103,7 +96,7 @@ export function TripListView() {
         />
       ) : null}
       <Shell.Content>
-        {trips.length === 0 && !isLoading ? (
+        {trips.length === 0 ? (
           <Shell.PageStack>
             <EmptyScreen
               border
@@ -116,11 +109,7 @@ export function TripListView() {
             />
           </Shell.PageStack>
         ) : (
-          <Shell.PageStack
-            {...(isLoading
-              ? { 'aria-busy': true, 'aria-label': 'Loading trips…', role: 'status' as const }
-              : {})}
-          >
+          <Shell.PageStack>
             <ListFilterSection>
               <ListFilterToolbar
                 ariaLabel={tripListFilterLabels.toolbarAriaLabel}
@@ -142,22 +131,12 @@ export function TripListView() {
                 totalCount={orderedTrips.length}
               />
               <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-2 2xl:grid-cols-3">
-                {isLoading ? (
-                  <>
-                    <TripWorkspaceSection isLoading isLoadingProposals={false} proposals={[]} />
-                    <TripWorkspaceSection isLoading isLoadingProposals={false} proposals={[]} />
-                  </>
-                ) : visibleTrips.length === 0 ? (
-                  <div className="col-span-full rounded-2xl border border-dashed border-border bg-card px-6 py-12 text-center">
-                    <MapIcon className="mx-auto mb-3 size-7 text-muted-foreground" />
-                    <p className="font-medium text-foreground">{empty}</p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Try a different search or change your status filter.
-                    </p>
-                    <Button className="mt-4" onClick={clearFilters} variant="outline">
-                      Reset filters
-                    </Button>
-                  </div>
+                {visibleTrips.length === 0 ? (
+                  <TripListFilteredEmpty
+                    message={empty}
+                    onReset={clearFilters}
+                    searching={searching}
+                  />
                 ) : (
                   visibleTrips.map((trip) => (
                     <TripWorkspaceSection

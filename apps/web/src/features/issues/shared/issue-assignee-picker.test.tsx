@@ -6,6 +6,7 @@ import {
   WorkspaceContext,
   type WorkspaceContextValue
 } from '@/features/workspace/workspace-shell/workspace-state';
+import { testIds } from '@/lib/test-ids';
 import { IssueAssigneePicker } from './issue-assignee-picker';
 
 const workspace = {
@@ -45,7 +46,7 @@ describe('IssueAssigneePicker', () => {
     await page.getByRole('button', { name: 'Trigger' }).click();
 
     const rows = page
-      .getByTestId('issue-assignee-picker')
+      .getByTestId(testIds.issueAssigneePicker)
       .getByRole('button')
       .all()
       .map((row) => row.element().getAttribute('aria-label'));
@@ -53,7 +54,7 @@ describe('IssueAssigneePicker', () => {
 
     await page.getByRole('button', { name: 'Assign me' }).click();
     expect(onAssign).toHaveBeenCalledWith({ kind: 'user', name: 'Lea Demo', userId: 'user-lea' });
-    await expect.element(page.getByTestId('issue-assignee-picker')).not.toBeInTheDocument();
+    await expect.element(page.getByTestId(testIds.issueAssigneePicker)).not.toBeInTheDocument();
   });
 
   test('unassigns when the current assignee is chosen again', async () => {
@@ -79,8 +80,8 @@ describe('IssueAssigneePicker', () => {
         <Controlled onAssign={vi.fn()} />
       </WorkspaceContext.Provider>
     );
-    await expect.element(page.getByTestId('issue-assignee-picker')).not.toBeInTheDocument();
+    await expect.element(page.getByTestId(testIds.issueAssigneePicker)).not.toBeInTheDocument();
     await page.getByRole('button', { name: 'External open' }).click();
-    await expect.element(page.getByTestId('issue-assignee-picker')).toBeInTheDocument();
+    await expect.element(page.getByTestId(testIds.issueAssigneePicker)).toBeInTheDocument();
   });
 });

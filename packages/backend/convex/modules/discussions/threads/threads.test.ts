@@ -6,9 +6,11 @@ import { api, internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
 import { action } from '#convex-generated/server';
 import { AssistantSession } from '#convex/modules/assistant/agent/index';
+import { isStaleClaim } from '#convex/modules/discussions/threads/index';
 import { createOutsiderClient } from '#testing/factory';
+import { createTestUser } from '#testing/factory';
 import { pngBlob } from '#testing/media';
-import { setupGroup } from '#testing/trips';
+import { setupGroup, setupTrip } from '#testing/trips';
 
 // Agent replies stream through scheduled functions, so these tests need real timers.
 vi.useRealTimers();
@@ -589,4 +591,189 @@ test('rejects invalid discussion titles, membership, request ids, and media', as
       threadId: discussion.threadId
     })
   ).rejects.toThrow('Message page size must be between 1 and 50');
+});
+
+async function setupAssistantRequest() {
+  const { addUser, owner } = await setupGroup();
+  const selected = await addUser('Selected Traveler');
+  const discussionId = await owner.client.mutation(api.routes.discussions.create.run, {
+    clientRequestId: 'discussion-edge-create',
+    memberUserIds: [selected.userId],
+    title: 'Edge cases'
+  });
+  const [discussion] = await owner.client.query(api.routes.discussions.list.run, {});
+  if (!discussion?.threadId) throw new Error('Expected an Agent-backed discussion');
+  const threadId = discussion.threadId;
+  const sent = await owner.client.mutation(api.routes.discussions.messages.send.run, {
+    clientRequestId: 'discussion-edge-message',
+    discussionId,
+    text: '@groam secret plan'
+  });
+  const listUserMessage = async () => {
+    const result = await selected.client.query(api.routes.discussions.messages.list.run, {
+      discussionId,
+      paginationOpts,
+      threadId
+    });
+    return result.page.find((message) => message.id === sent.messageId);
+  };
+  return { discussionId, listUserMessage, owner, selected, sent, threadId };
+}
+
+test('deleting a message removes its text, parts, and attachments for everyone', async () => {
+  const { addUser, owner } = await setupGroup();
+  const selected = await addUser('Selected Traveler');
+  const discussionId = await owner.client.mutation(api.routes.discussions.create.run, {
+    clientRequestId: 'discussion-delete-create',
+    memberUserIds: [selected.userId],
+    title: 'Delete me'
+  });
+  const [discussion] = await owner.client.query(api.routes.discussions.list.run, {});
+  if (!discussion?.threadId) throw new Error('Expected an Agent-backed discussion');
+  const mediaId = await owner.client.run(async (ctx) => {
+    const storageId = await ctx.storage.store(pngBlob());
+    return await ctx.db.insert('media', {
+      contentType: 'image/png',
+      createdBy: owner.userId,
+      name: 'secret.png',
+      organizationId: owner.organizationId!,
+      size: 12,
+      storageId
+    });
+  });
+  const sent = await owner.client.mutation(api.routes.discussions.messages.send.run, {
+    clientRequestId: 'discussion-delete-message',
+    discussionId,
+    mediaIds: [mediaId],
+    text: 'the secret hotel is the Grand Budapest'
+  });
+  await owner.client.mutation(api.routes.discussions.messages.remove.run, {
+    discussionId,
+    messageId: sent.messageId
+  });
+
+  const listed = await selected.client.query(api.routes.discussions.messages.list.run, {
+    discussionId,
+    paginationOpts,
+    threadId: discussion.threadId
+  });
+  const message = listed.page.find((item) => item.id === sent.messageId);
+  expect(message).toMatchObject({ attachments: [], deleted: true, media: [], parts: [] });
+  expect(message?.text).toBe('This message was deleted');
+  expect(JSON.stringify(listed)).not.toContain('Grand Budapest');
+  await expect(
+    selected.client.query(api.routes.discussions.messages.attachments.run, { discussionId })
+  ).resolves.toEqual({});
+  const refs = await owner.client.run((ctx) => ctx.db.query('discussionMessageMedia').collect());
+  expect(refs).toEqual([]);
+});
+
+test('a failed or blank assistant reply surfaces as a failed request with a reason', async () => {
+  const { discussionId, listUserMessage, owner, sent } = await setupAssistantRequest();
+  const claim = await owner.client.mutation(
+    internal.modules.discussions.assistant.index.claimResponse,
+    { discussionId, promptMessageId: sent.messageId }
+  );
+  if (!claim) throw new Error('Expected a claim');
+  await owner.client.mutation(internal.modules.discussions.assistant.index.finishResponse, {
+    discussionId,
+    expectedUpdatedAt: claim.expectedUpdatedAt,
+    promptMessageId: sent.messageId,
+    responseText: '   ',
+    runId: claim.runId
+  });
+  await expect(listUserMessage()).resolves.toMatchObject({
+    assistantError: 'Groam returned an empty reply',
+    assistantStatus: 'failed'
+  });
+});
+
+test('an explicit failure keeps its reason and a rate-limited request does not stay queued', async () => {
+  const { discussionId, listUserMessage, owner, sent } = await setupAssistantRequest();
+  const claim = await owner.client.mutation(
+    internal.modules.discussions.assistant.index.claimResponse,
+    { discussionId, promptMessageId: sent.messageId }
+  );
+  if (!claim) throw new Error('Expected a claim');
+  await owner.client.mutation(internal.modules.discussions.assistant.index.finishResponse, {
+    discussionId,
+    error: 'Too many requests',
+    expectedUpdatedAt: claim.expectedUpdatedAt,
+    promptMessageId: sent.messageId,
+    responseText: null,
+    runId: claim.runId
+  });
+  await expect(listUserMessage()).resolves.toMatchObject({
+    assistantError: 'Too many requests',
+    assistantStatus: 'failed'
+  });
+  // A failed request can be retried.
+  await expect(
+    owner.client.mutation(internal.modules.discussions.assistant.index.claimResponse, {
+      discussionId,
+      promptMessageId: sent.messageId
+    })
+  ).resolves.not.toBeNull();
+});
+
+test('a crashed responding claim can be reclaimed once stale', async () => {
+  expect(isStaleClaim(1_000, 1_000 + 9 * 60_000)).toBe(false);
+  expect(isStaleClaim(1_000, 1_000 + 10 * 60_000)).toBe(true);
+
+  const { discussionId, owner, sent } = await setupAssistantRequest();
+  const first = await owner.client.mutation(
+    internal.modules.discussions.assistant.index.claimResponse,
+    { discussionId, promptMessageId: sent.messageId }
+  );
+  expect(first).not.toBeNull();
+  await expect(
+    owner.client.mutation(internal.modules.discussions.assistant.index.claimResponse, {
+      discussionId,
+      promptMessageId: sent.messageId
+    })
+  ).resolves.toBeNull();
+  await owner.client.run(async (ctx) => {
+    const receipt = await ctx.db
+      .query('discussionMessages')
+      .withIndex('by_discussionId_and_agentMessageId', (query) =>
+        query.eq('discussionId', discussionId).eq('agentMessageId', sent.messageId)
+      )
+      .unique();
+    if (receipt) await ctx.db.patch(receipt._id, { assistantClaimedAt: Date.now() - 11 * 60_000 });
+  });
+  await expect(
+    owner.client.mutation(internal.modules.discussions.assistant.index.claimResponse, {
+      discussionId,
+      promptMessageId: sent.messageId
+    })
+  ).resolves.not.toBeNull();
+});
+
+test('sending a message does not mark the chat unread for the sender', async () => {
+  const { owner } = await setupAssistantRequest();
+  const [listed] = await owner.client.query(api.routes.discussions.list.run, {});
+  expect(listed?.unread).toBe(false);
+});
+
+test('refuses to attach a discussion to another group trip', async () => {
+  const { owner: groupA, tripId } = await setupTrip(1);
+  const other = await createOutsiderClient(groupA.test);
+  const otherMember = await createTestUser(groupA.test, {
+    email: `other-member-${crypto.randomUUID()}@example.com`,
+    name: 'Other Member'
+  });
+  const invitation = await other.client.mutation(api.routes.organizations.invitations.create.run, {
+    role: 'member'
+  });
+  await otherMember.client.mutation(api.routes.organizations.invitations.redeem.run, {
+    code: invitation.code
+  });
+  await expect(
+    other.client.mutation(api.routes.discussions.create.run, {
+      clientRequestId: 'discussion-trip-leak',
+      memberUserIds: [otherMember.userId],
+      title: 'Leaky',
+      tripId
+    })
+  ).rejects.toThrow('Trip not found');
 });

@@ -4,6 +4,7 @@ import { useWorkspaceData } from './use-workspace-data';
 
 const auth = vi.hoisted(() => ({
   getSession: vi.fn(),
+  list: vi.fn(),
   setActive: vi.fn(),
   useActiveOrganization: vi.fn(),
   useListOrganizations: vi.fn(),
@@ -14,6 +15,7 @@ vi.mock('@groam/auth/client', () => ({
   authClient: {
     getSession: auth.getSession,
     organization: {
+      list: auth.list,
       setActive: auth.setActive
     },
     useActiveOrganization: auth.useActiveOrganization,
@@ -41,6 +43,7 @@ beforeEach(() => {
   });
   auth.useListOrganizations.mockReturnValue({ data: [organization], isPending: false });
   auth.useActiveOrganization.mockReturnValue({ data: organization, isPending: false });
+  auth.list.mockResolvedValue({ data: [organization], error: null });
   auth.setActive.mockResolvedValue({ data: null, error: null });
   auth.getSession.mockResolvedValue({ data: null, error: null });
 });

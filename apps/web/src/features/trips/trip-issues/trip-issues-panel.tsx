@@ -37,10 +37,12 @@ export function TripIssuesPanel({ trip }: { trip: TripDetail }) {
           <Button asChild data-testid={testIds.issuesAll} size="sm" variant="outline">
             <Link to="/issues">All issues</Link>
           </Button>
-          <Button data-testid={testIds.newIssue} onClick={createDialog.openPanel} size="sm">
-            <Plus />
-            New issue
-          </Button>
+          {trip.archivedAt !== null ? null : (
+            <Button data-testid={testIds.newIssue} onClick={createDialog.openPanel} size="sm">
+              <Plus />
+              New issue
+            </Button>
+          )}
         </div>
       }
     >

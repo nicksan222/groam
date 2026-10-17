@@ -67,7 +67,7 @@ export const TripValidators = {
 
 export const tripTables = {
   trips: defineTable({
-    shortId: v.optional(v.string()),
+    shortId: v.string(),
     archive: v.optional(v.object({ at: v.number() })),
     budget: v.optional(budget),
     clientRequestId: v.string(),

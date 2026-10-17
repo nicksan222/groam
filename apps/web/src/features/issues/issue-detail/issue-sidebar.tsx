@@ -12,9 +12,10 @@ import { ideaCloneHref } from '@/features/ideas/idea-href';
 import { startIdeaCta } from '@/features/ideas/idea-list/idea-page-copy';
 import { IssueAssigneeAvatar } from '@/features/issues/shared/issue-assignee-avatar';
 import { IssueAssigneePicker } from '@/features/issues/shared/issue-assignee-picker';
+import { LinkedResearches } from '@/features/research/research-links/linked-researches';
 import { Link } from '@/features/workspace/navigation/router';
 import { testIds } from '@/lib/test-ids';
-import type { IssueAssigneeInput } from '@/types/issues';
+import type { IssueAssigneeInput, IssueConditionInput } from '@/types/issues';
 import { IssueConditionSection } from './issue-condition-section';
 import type { IssueDetailData } from './issue-detail-data';
 
@@ -174,12 +175,14 @@ function IdeaSection({
 export function IssueSidebar({
   issue,
   onAssign,
+  onSetCondition,
   onSetDueAt,
   onStartIdea,
   pending
 }: {
   issue: IssueDetailData;
   onAssign: (assignee: IssueAssigneeInput | null) => void;
+  onSetCondition?: (input: IssueConditionInput) => Promise<boolean>;
   onSetDueAt: (dueAt: number | null) => void;
   onStartIdea: () => void;
   pending: boolean;
@@ -188,8 +191,13 @@ export function IssueSidebar({
     <div>
       <AssigneeSection issue={issue} onAssign={onAssign} pending={pending} />
       <DueDateSection issue={issue} onSetDueAt={onSetDueAt} pending={pending} />
-      <IssueConditionSection condition={issue.condition} />
+      <IssueConditionSection
+        canEdit={issue.canManage}
+        condition={issue.condition}
+        onSave={onSetCondition}
+      />
       <IdeaSection issue={issue} onStartIdea={onStartIdea} pending={pending} />
+      <LinkedResearches target={{ id: issue.id, kind: 'issue' }} tripId={issue.tripId} />
     </div>
   );
 }

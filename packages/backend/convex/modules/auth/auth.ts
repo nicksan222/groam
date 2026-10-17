@@ -26,6 +26,9 @@ const passkeyOrigins = authTrustedOrigins.filter(
 // same transaction as changes to the local Better Auth component.
 const authFunctions: AuthFunctions = internal.modules.auth.auth;
 
+/** Better Auth caps each group at this many members; server-side roster reads rely on it. */
+export const ORGANIZATION_MEMBERSHIP_LIMIT = 100;
+
 export const authComponent = createClient<DataModel, typeof authSchema>(components.betterAuth, {
   authFunctions,
   local: { schema: authSchema },
@@ -38,7 +41,15 @@ export const authComponent = createClient<DataModel, typeof authSchema>(componen
       }
     },
     member: {
+      onCreate: async (ctx, member) => {
+        await ctx.runMutation(internal.modules.travel.issues.resync.organization, {
+          organizationId: member.organizationId
+        });
+      },
       onDelete: async (ctx, member) => {
+        await ctx.runMutation(internal.modules.travel.issues.resync.organization, {
+          organizationId: member.organizationId
+        });
         await ctx.runMutation(
           internal.modules.discussions.threads.cleanup.removeOrganizationMember,
           {
@@ -58,7 +69,7 @@ export const authComponent = createClient<DataModel, typeof authSchema>(componen
   }
 });
 
-export const { onDelete } = authComponent.triggersApi();
+export const { onCreate, onDelete } = authComponent.triggersApi();
 
 export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
   ({
@@ -83,7 +94,7 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
         issuer: 'Groam'
       }),
       organization({
-        membershipLimit: 100,
+        membershipLimit: ORGANIZATION_MEMBERSHIP_LIMIT,
         organizationLimit: 10
       }),
       crossDomain({ siteUrl: authSiteUrl }),

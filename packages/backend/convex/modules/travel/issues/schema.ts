@@ -8,17 +8,7 @@ const assignee = v.union(
   issueAgentActorValidator,
   v.object({ kind: v.literal('user'), name: v.string(), userId: v.string() })
 );
-/** Stored rows may still say Groam from before the Issue agent split. */
-const storedIssueAgentActor = v.object({
-  agentId: v.union(v.literal('groam'), v.literal('issue')),
-  kind: v.literal('agent'),
-  name: v.string()
-});
-const storedAssignee = v.union(
-  storedIssueAgentActor,
-  v.object({ kind: v.literal('user'), name: v.string(), userId: v.string() })
-);
-const commentAuthor = v.union(actor, storedIssueAgentActor);
+const commentAuthor = v.union(actor, issueAgentActorValidator);
 const commentKind = v.union(v.literal('comment'), v.literal('system'));
 /** See `status.ts` for what each state means. */
 const status = v.union(
@@ -27,32 +17,25 @@ const status = v.union(
   v.literal('closed'),
   v.literal('wont_do')
 );
-/** See `checks.ts`. */
-const conditionCheck = RuleValidators.tripCheck;
 /** See `rules/`. */
 const rule = RuleValidators.rule;
 /**
- * When an issue counts as solved: checked by the system (`auto`, the starter decisions), written
- * by a person (`manual`), or composed by a person and checked by the system (`rule`).
+ * When an issue counts as solved: written by a person (`manual`), or a rule the system checks
+ * against the shared trip (`rule`). `starter` marks the decisions every trip opens with; those
+ * cannot be edited or set aside.
  */
-const condition = v.union(
-  v.object({ check: conditionCheck, kind: v.literal('auto') }),
-  v.object({ kind: v.literal('manual'), text: v.string() }),
-  v.object({ kind: v.literal('rule'), rule })
-);
+const conditionKinds = {
+  manual: { kind: v.literal('manual'), text: v.string() },
+  rule: { kind: v.literal('rule'), rule, starter: v.optional(v.boolean()) }
+};
+const condition = v.union(v.object(conditionKinds.manual), v.object(conditionKinds.rule));
+/** A condition row belongs to one issue; `tripId` lets a trip change re-check them in one read. */
+const conditionOwner = { issueId: v.id('tripIssues'), tripId: v.id('trips') };
 /** What clients see; `met` is null for a manual condition. */
 const presentedCondition = v.union(
   v.null(),
   v.object({ kind: v.literal('manual'), label: v.string(), met: v.null() }),
-  v.object({
-    check: conditionCheck,
-    kind: v.literal('auto'),
-    label: v.string(),
-    met: v.boolean(),
-    /** What a person gets told when they try to close it unmet or reopen it met. */
-    refusal: v.string()
-  }),
-  RuleValidators.presentedRule
+  RuleValidators.presentedRule.extend({ starter: v.boolean() })
 );
 /** Issue labels; `mandatory` marks the starter decisions every new trip gets. */
 const label = v.literal('mandatory');
@@ -83,7 +66,7 @@ const listItem = v.object({
   condition: presentedCondition,
   dueAt: v.union(v.number(), v.null()),
   id: v.id('tripIssues'),
-  shortId: v.optional(v.string()),
+  shortId: v.string(),
   idea,
   labels: v.array(label),
   /** Board order within a status lane, ascending. Always defined; fractional. */
@@ -97,7 +80,6 @@ export const TripIssueValidators = {
   actor,
   assignee,
   condition,
-  conditionCheck,
   createInput: {
     body: v.string(),
     /** A "Done when…" criterion; the issue then has a manual condition. */
@@ -107,6 +89,8 @@ export const TripIssueValidators = {
     title: v.string()
   },
   detail: listItem.extend({
+    /** Whether the viewer may comment: any trip member, never on an archived trip. */
+    canComment: v.boolean(),
     comments: v.array(
       v.object({
         author: commentAuthor,
@@ -137,32 +121,37 @@ export const tripIssueTables = {
     author: commentAuthor,
     content: v.string(),
     issueId: v.id('tripIssues'),
-    /** Omitted on legacy rows; presented as `comment`. */
-    kind: v.optional(commentKind),
+    kind: commentKind,
     organizationId: v.string(),
     tripId: v.id('trips'),
     updatedAt: v.number()
   })
     .index('by_issueId', ['issueId'])
     .index('by_issueId_and_kind', ['issueId', 'kind']),
+  /** At most one per issue; an issue without a row has no "done when". */
+  tripIssueConditions: defineTable(
+    v.union(
+      v.object({ ...conditionOwner, ...conditionKinds.manual }),
+      v.object({ ...conditionOwner, ...conditionKinds.rule })
+    )
+  )
+    .index('by_issueId', ['issueId'])
+    .index('by_tripId', ['tripId']),
   tripIssues: defineTable({
-    shortId: v.optional(v.string()),
-    assignee: v.optional(storedAssignee),
+    shortId: v.string(),
+    assignee: v.optional(assignee),
     author: actor,
-    /** Omitted on rows created before the board; presented via `_creationTime`. */
-    boardRank: v.optional(v.number()),
+    /** Board order within a status lane, ascending; fractional. */
+    boardRank: v.number(),
     body: v.string(),
     closedAt: v.optional(v.number()),
-    /** Omitted on rows created before conditions. */
-    condition: v.optional(condition),
     dueAt: v.optional(v.number()),
-    /** Comments by kind, kept in step with the thread; omitted on rows from before the counters. */
-    humanCommentCount: v.optional(v.number()),
-    /** Omitted on rows created before labels. */
-    labels: v.optional(v.array(label)),
+    /** Comments by kind, kept in step with the thread. */
+    humanCommentCount: v.number(),
+    labels: v.array(label),
     organizationId: v.string(),
     status,
-    systemCommentCount: v.optional(v.number()),
+    systemCommentCount: v.number(),
     title: v.string(),
     tripId: v.id('trips'),
     updatedAt: v.number()

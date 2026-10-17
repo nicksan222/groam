@@ -248,7 +248,6 @@ function withPendingUserMessage(
       author: { name: 'You', userId: 'pending' },
       id: pending.key,
       key: pending.key,
-      media: pending.media,
       mine: true,
       order: Number.MAX_SAFE_INTEGER,
       parts: [{ text: pending.prompt, type: 'text' }],
@@ -267,12 +266,10 @@ function mergeMessageAttachments(
   if (!attachmentsByMessageId) return messages;
   return messages.map((message) => {
     const fromQuery = attachmentsByMessageId[message.id];
-    const attachments =
-      fromQuery && fromQuery.length > 0 ? fromQuery : (message.attachments ?? message.media ?? []);
+    const attachments = fromQuery && fromQuery.length > 0 ? fromQuery : (message.attachments ?? []);
     return {
       ...message,
-      attachments,
-      media: attachments
+      attachments
     };
   });
 }

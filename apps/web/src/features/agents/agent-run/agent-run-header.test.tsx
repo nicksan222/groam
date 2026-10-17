@@ -25,7 +25,7 @@ function makeRun(overrides: Partial<AgentRun> = {}): AgentRun {
       tripName: 'Lisbon'
     },
     report: null,
-    shortId: null,
+    shortId: 'runabc',
     startedAt: 1_700_000_000_000,
     status: 'running',
     surface: 'standalone',
@@ -51,10 +51,10 @@ describe('AgentRunHeader surface label', () => {
 
 describe('AgentRunHeader', () => {
   test('shows the title with the run id, status, surface and starter', async () => {
-    await render(<AgentRunHeader run={makeRun({ id: 'run-xyz' as AgentRun['id'] })} />);
+    await render(<AgentRunHeader run={makeRun({ shortId: 'runxyz' })} />);
     await expect
       .element(page.getByTestId(testIds.agentRunTitle))
-      .toHaveTextContent('Rainy-day option#run-xyz');
+      .toHaveTextContent('Rainy-day option#runxyz');
     await expect.element(page.getByText('Running')).toBeVisible();
     await expect.element(page.getByText('Issue resolution')).toBeVisible();
     await expect.element(page.getByText('Lea Ford')).toBeVisible();

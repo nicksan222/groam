@@ -1,81 +1,9 @@
 import type { Id } from '@groam/backend/data-model';
 import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
-import type { IssueListItem, WorkspaceIssue } from '@/types/issues';
+import { boardIssue, issueItem, ideaItem } from '@/features/trips/testing/trip-board-fixtures';
 import type { TripBoardDropTarget } from '@/types/trip-board';
-import type {
-  TripBoardIdea,
-  TripBoardIdeaItem,
-  TripBoardIssue,
-  TripBoardIssueItem,
-  TripBoardRights
-} from '@/types/trip-board';
 import { useTripBoardMoves } from './use-trip-board-moves';
-
-const listItem = {
-  assignee: null,
-  author: { name: 'Alex Morgan', userId: 'user-alex' },
-  canAssign: true,
-  canManage: true,
-  condition: null,
-  dueAt: null,
-  id: 'issue-1' as Id<'tripIssues'>,
-  idea: null,
-  labels: [],
-  rank: 0,
-  status: 'open',
-  title: 'Coast day',
-  updatedAt: Date.UTC(2026, 7, 17)
-} satisfies Omit<IssueListItem, 'tripName'>;
-
-const workspaceIssue = (over: Partial<WorkspaceIssue> = {}): WorkspaceIssue => ({
-  ...listItem,
-  body: 'Add a coast day near Lisbon.',
-  closedAt: null,
-  tripId: 'trip-1' as Id<'trips'>,
-  tripName: 'Atlantic week',
-  ...over
-});
-
-/** A board issue; `id` doubles as the title so tests can find the card by name. */
-const boardIssue = (id: string, over: Partial<TripBoardIssue> = {}): TripBoardIssue =>
-  workspaceIssue({ id: id as Id<'tripIssues'>, title: id, ...over });
-
-const boardIdea = (id: string, over: Partial<TripBoardIdea> = {}): TripBoardIdea => ({
-  author: { name: 'Sam', userId: 'user-sam' },
-  baseUpdatedAt: 0,
-  canApprove: false,
-  canMerge: false,
-  conflictCount: 0,
-  feedbackCount: 0,
-  hasApproved: false,
-  id: id as Id<'tripProposals'>,
-  ideaName: id,
-  issueId: null,
-  status: 'in_review',
-  submittedAt: null,
-  title: id,
-  unresolvedFeedbackCount: 0,
-  updatedAt: Date.now(),
-  workingTripId: 'trip-work' as Id<'trips'>,
-  ...over
-});
-
-/** A lifted issue card; pass `archived` or `canPropose` to change what the viewer may do. */
-const issueItem = (
-  over: Partial<TripBoardIssue> = {},
-  { archived = false, canPropose = true }: Partial<TripBoardRights> = {}
-): TripBoardIssueItem => ({
-  archived,
-  canPropose,
-  issue: boardIssue('issue-1', over),
-  kind: 'issue'
-});
-
-const ideaItem = (
-  over: Partial<TripBoardIdea> = {},
-  { archived = false, canPropose = true }: Partial<TripBoardRights> = {}
-): TripBoardIdeaItem => ({ archived, canPropose, idea: boardIdea('idea-1', over), kind: 'idea' });
 
 type Optimistic = (
   store: { getQuery: (...args: unknown[]) => unknown; setQuery: (...args: unknown[]) => void },

@@ -1,4 +1,4 @@
-import { expect, test } from 'vite-plus/test';
+import { expect, test, vi } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
 import { pngBlob } from '#testing/media';
 import { openTripDraft, setupGroup, tripInput, tripLocationInput } from '#testing/trips';
@@ -292,7 +292,7 @@ test('allows a group member upload to replace a stock cover and invalidates stal
   expect(detail.activity.filter(({ type }) => type === 'cover_updated')).toHaveLength(1);
   await expect(
     owner.client.run((ctx) => ctx.db.system.get('_storage', stockStorageId))
-  ).resolves.not.toBeNull();
+  ).resolves.toBeNull();
 
   const staleStorageId = await owner.client.run((ctx) =>
     ctx.storage.store(new Blob(['stale'], { type: 'image/jpeg' }))
@@ -342,4 +342,144 @@ test('rejects invalid, archived, and cross-group cover changes', async () => {
       tripId
     })
   ).rejects.toThrow('Archived trips are read-only');
+});
+
+test(
+  'deletes a replaced upload cover and discards rejected uploads',
+  { timeout: 15_000 },
+  async () => {
+    const { owner } = await setupGroup();
+    const tripId = await owner.client.action(api.routes.trips.create.run, { input: tripInput() });
+    const { workingTripId } = await openTripDraft(owner, tripId);
+    const first = await owner.client.run((ctx) => ctx.storage.store(pngBlob()));
+    const second = await owner.client.run((ctx) => ctx.storage.store(pngBlob()));
+    const bad = await owner.client.run((ctx) =>
+      ctx.storage.store(new Blob(['text'], { type: 'text/plain' }))
+    );
+    const stored = (id: typeof first) =>
+      owner.client.run((ctx) => ctx.db.system.get('_storage', id));
+    for (const storageId of [first, second]) {
+      await owner.client.action(api.routes.trips.cover.run, {
+        contentType: 'image/png',
+        storageId,
+        tripId: workingTripId
+      });
+    }
+    await expect(stored(first)).resolves.toBeNull();
+    await expect(stored(second)).resolves.not.toBeNull();
+
+    await expect(
+      owner.client.action(api.routes.trips.cover.run, {
+        contentType: 'text/plain',
+        storageId: bad,
+        tripId: workingTripId
+      })
+    ).rejects.toThrow('cover must be a JPEG, PNG, WebP, or AVIF image');
+    await expect(stored(bad)).resolves.toBeNull();
+
+    const badCreate = await owner.client.run((ctx) =>
+      ctx.storage.store(new Blob(['text'], { type: 'text/plain' }))
+    );
+    await expect(
+      owner.client.action(api.routes.trips.create.run, {
+        input: { ...tripInput(), coverContentType: 'text/plain', coverStorageId: badCreate }
+      })
+    ).rejects.toThrow('cover must be a JPEG, PNG, WebP, or AVIF image');
+    await expect(stored(badCreate)).resolves.toBeNull();
+  }
+);
+
+test('keeps a replaced cover that a trip idea still shares', { timeout: 15_000 }, async () => {
+  const { owner } = await setupGroup();
+  const tripId = await owner.client.action(api.routes.trips.create.run, { input: tripInput() });
+  const first = await owner.client.run((ctx) => ctx.storage.store(pngBlob()));
+  const second = await owner.client.run((ctx) => ctx.storage.store(pngBlob()));
+  const { workingTripId } = await openTripDraft(owner, tripId);
+  await owner.client.run((ctx) =>
+    ctx.db.patch('trips', tripId, {
+      cover: { asset: { source: 'upload', storageId: first }, generation: 1, status: 'ready' }
+    })
+  );
+  await owner.client.run((ctx) =>
+    ctx.db.patch('trips', workingTripId, {
+      cover: { asset: { source: 'upload', storageId: first }, generation: 1, status: 'ready' }
+    })
+  );
+  await owner.client.action(api.routes.trips.cover.run, {
+    contentType: 'image/png',
+    storageId: second,
+    tripId: workingTripId
+  });
+  await expect(
+    owner.client.run((ctx) => ctx.db.system.get('_storage', first))
+  ).resolves.not.toBeNull();
+});
+
+test(
+  "refuses a destination's cover file and never discards files others own",
+  { timeout: 15_000 },
+  async () => {
+    const { owner } = await setupGroup();
+    const tripId = await owner.client.action(api.routes.trips.create.run, { input: tripInput() });
+    const { workingTripId } = await openTripDraft(owner, tripId);
+    const destinationId = await owner.client.mutation(api.routes.trips.destinations.add.run, {
+      input: tripLocationInput({ name: 'Porto', placeId: 'porto' }),
+      tripId: workingTripId
+    });
+    const destinationCover = await owner.client.run((ctx) => ctx.storage.store(pngBlob()));
+    await owner.client.run((ctx) =>
+      ctx.db.patch('tripDestinations', destinationId, {
+        cover: {
+          asset: {
+            attribution: {
+              license: 'CC BY 4.0',
+              licenseUrl: 'https://example.com/license',
+              sourceName: 'Wikimedia Commons',
+              sourceUrl: 'https://example.com/porto',
+              title: 'Porto'
+            },
+            source: 'stock',
+            storageId: destinationCover
+          },
+          generation: 1,
+          status: 'ready'
+        }
+      })
+    );
+
+    await expect(
+      owner.client.action(api.routes.trips.cover.run, {
+        contentType: 'image/png',
+        storageId: destinationCover,
+        tripId: workingTripId
+      })
+    ).rejects.toThrow('cover image is already in use');
+    await expect(
+      owner.client.run((ctx) => ctx.db.system.get('_storage', destinationCover))
+    ).resolves.not.toBeNull();
+  }
+);
+
+test('leaves older unreferenced files alone when a cover is rejected', async () => {
+  const { owner } = await setupGroup();
+  const tripId = await owner.client.action(api.routes.trips.create.run, { input: tripInput() });
+  const { workingTripId } = await openTripDraft(owner, tripId);
+  const old = await owner.client.run((ctx) =>
+    ctx.storage.store(new Blob(['text'], { type: 'text/plain' }))
+  );
+  vi.useFakeTimers({ now: Date.now() + 2 * 60 * 60 * 1000, toFake: ['Date'] });
+  try {
+    await expect(
+      owner.client.action(api.routes.trips.cover.run, {
+        contentType: 'text/plain',
+        storageId: old,
+        tripId: workingTripId
+      })
+    ).rejects.toThrow('cover must be a JPEG, PNG, WebP, or AVIF image');
+  } finally {
+    vi.useRealTimers();
+  }
+  await expect(
+    owner.client.run((ctx) => ctx.db.system.get('_storage', old))
+  ).resolves.not.toBeNull();
 });

@@ -11,6 +11,7 @@ function trip(value: Partial<TripListItem> & Pick<TripListItem, 'id' | 'name'>):
     dateNotes: null,
     destination: null,
     favorite: false,
+    shortId: 'trpabc',
     lastUpdatedAt: 1,
     nextAction: 'Continue planning together',
     outstandingActionCount: 0,

@@ -10,8 +10,11 @@ import {
   SelectValue
 } from '@groam/ui/components/select';
 import { Textarea } from '@groam/ui/components/textarea';
-import { useState } from 'react';
+import { useId, useState } from 'react';
+import { useGenerateRule } from '@/features/issues/hooks/use-generate-rule';
+import { useRuleDraft } from '@/features/issues/hooks/use-rule-draft';
 import { useCreateIssue } from '@/features/issues/hooks/use-workspace-issues';
+import { IssueRuleBuilder } from '@/features/issues/rule-builder/issue-rule-builder';
 import { TripRequiredDialog } from '@/features/trips/trip-create/trip-required-dialog';
 import { useAsyncPending } from '@/features/workspace/hooks/use-async-pending';
 import { testIds } from '@/lib/test-ids';
@@ -71,9 +74,11 @@ export function CreateIssueDialog({
 }) {
   const createIssue = useCreateIssue();
   const pending = useAsyncPending();
+  const generate = useGenerateRule();
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
-  const [doneWhen, setDoneWhen] = useState('');
+  const rule = useRuleDraft(null, 'empty');
+  const ruleHeadingId = useId();
   const [selectedTripId, setSelectedTripId] = useState<Id<'trips'> | ''>(tripId ?? '');
   const resolvedTripId = tripId ?? (selectedTripId === '' ? undefined : selectedTripId);
   const needsTrip = tripId === undefined;
@@ -81,7 +86,7 @@ export function CreateIssueDialog({
   const reset = () => {
     setTitle('');
     setBody('');
-    setDoneWhen('');
+    rule.reset();
     setSelectedTripId(tripId ?? '');
   };
 
@@ -94,7 +99,7 @@ export function CreateIssueDialog({
   const submit = async () => {
     if (!resolvedTripId) return;
     await pending.run(async () => {
-      const issueId = await createIssue(resolvedTripId, title, body, doneWhen.trim() || undefined);
+      const issueId = await createIssue(resolvedTripId, title, body, rule.input);
       if (issueId) {
         reset();
         onCreated(issueId);
@@ -107,7 +112,7 @@ export function CreateIssueDialog({
 
   return (
     <FormDialog
-      contentClassName="sm:max-w-lg"
+      size="tall"
       description="Describe a question, decision, or problem for the group to resolve."
       isPending={pending.isPending}
       onClose={close}
@@ -142,7 +147,7 @@ export function CreateIssueDialog({
       </FormField>
       <FormField description={`${body.length}/5000 characters`} label="Description" required>
         <Textarea
-          className="min-h-36 resize-none"
+          className="max-h-48 min-h-24 field-sizing-content resize-none sm:max-h-72"
           data-testid={testIds.createIssueBody}
           disabled={pending.isPending}
           maxLength={5000}
@@ -151,16 +156,20 @@ export function CreateIssueDialog({
           value={body}
         />
       </FormField>
-      <FormField description="Optional. How will the group know it is settled?" label="Done when…">
-        <Input
-          data-testid={testIds.createIssueDoneWhen}
+      <section aria-labelledby={ruleHeadingId} className="space-y-3 border-t border-border pt-5">
+        <div className="flex items-baseline justify-between gap-3">
+          <h3 className="text-sm font-semibold" id={ruleHeadingId}>
+            Done when
+          </h3>
+          <span className="text-xs text-muted-foreground">Optional</span>
+        </div>
+        <IssueRuleBuilder
           disabled={pending.isPending}
-          maxLength={200}
-          onChange={(event) => setDoneWhen(event.target.value)}
-          placeholder="Everyone has confirmed their flights"
-          value={doneWhen}
+          draft={rule.draft}
+          generate={generate}
+          onChange={rule.setDraft}
         />
-      </FormField>
+      </section>
     </FormDialog>
   );
 }

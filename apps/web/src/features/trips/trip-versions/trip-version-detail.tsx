@@ -9,6 +9,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { ArrowRight, CircleDot, Pencil, Users } from 'lucide-react';
 import { ideaOpenHref } from '@/features/ideas/idea-href';
 import { ideaDetailNotice } from '@/features/ideas/idea-list/idea-page-copy';
+import { LinkedResearches } from '@/features/research/research-links/linked-researches';
 import { useProposalActionRunner } from '@/features/trips/hooks/use-proposal-action-runner';
 import { useTripVersion } from '@/features/trips/hooks/use-trip-versions';
 import { IdeaRebaseReconciliation } from '@/features/trips/trip-ideas/idea-rebase-reconciliation';
@@ -142,6 +143,12 @@ export function TripVersionDetail({
             setReviewers={setReviewers}
           />
           {proposal.issue ? <LinkedTripIssue issue={proposal.issue} /> : null}
+          {proposal.sourceTripId ? (
+            <LinkedResearches
+              target={{ id: proposal.id, kind: 'idea' }}
+              tripId={proposal.sourceTripId}
+            />
+          ) : null}
         </Shell.RightColumn>
       </Shell.TwoColumns>
     </Shell.PageStack>

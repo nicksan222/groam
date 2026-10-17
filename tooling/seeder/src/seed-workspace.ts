@@ -1,6 +1,11 @@
 import type { AppUserProfile, BackendAppActions } from '@groam/app-actions/backend';
 import type { SeedScenario } from './seed-scenario';
 import {
+  type SeedWorkspaceResearchActions,
+  type SeedWorkspaceResearchesResult,
+  seedWorkspaceResearches
+} from './seed-workspace-researches';
+import {
   type SeedWorkspaceTripActions,
   type SeedWorkspaceTripsResult,
   seedWorkspaceTrips
@@ -18,10 +23,12 @@ export type SeedWorkspaceInput = {
 };
 
 export type SeedWorkspaceActions = Pick<BackendAppActions, 'resetLocalDevelopmentData'> &
+  SeedWorkspaceResearchActions &
   SeedWorkspaceTripActions &
   SeedWorkspaceUserActions;
 
-export type SeedWorkspaceResult = SeedWorkspaceTripsResult &
+export type SeedWorkspaceResult = SeedWorkspaceResearchesResult &
+  SeedWorkspaceTripsResult &
   SeedWorkspaceUsersResult & {
     reset?: Awaited<ReturnType<SeedWorkspaceActions['resetLocalDevelopmentData']>>;
   };
@@ -43,5 +50,13 @@ export async function seedWorkspace(
     tripCount: input.scenario.tripCount
   });
 
-  return { ...users, ...trips, ...(reset ? { reset } : {}) };
+  const researches = await seedWorkspaceResearches(app, {
+    concurrency: input.scenario.concurrency,
+    owner: users.authenticatedOwner,
+    tripCount: input.scenario.tripCount,
+    tripIds: trips.tripIds,
+    users: users.authenticatedUsers
+  });
+
+  return { ...users, ...trips, ...researches, ...(reset ? { reset } : {}) };
 }

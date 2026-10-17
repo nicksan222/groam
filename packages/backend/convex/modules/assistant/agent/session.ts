@@ -1,5 +1,6 @@
 import { Agent, updateThreadMetadata } from '@convex-dev/agent';
 import { type AssistantAgentId, isDefaultAssistantChatTitle } from '@groam/ai/agents';
+import type { ResearchInstructionContext } from '@groam/ai/backend/instructions';
 import { type AssistantScreen, assistantConversationContextKey } from '@groam/ai/runtime/screen';
 import {
   assistantThreadSummary,
@@ -27,6 +28,12 @@ import {
 
 const MAX_PROMPT_LENGTH = 5_000;
 
+class EmptyReplyError extends Error {
+  constructor() {
+    super('The assistant returned nothing. Try again, or check your ChatGPT connection.');
+  }
+}
+
 function chatScreenContext(screenContext: string) {
   try {
     const parsed = JSON.parse(screenContext) as Partial<AssistantScreen>;
@@ -47,6 +54,7 @@ type CreateAssistantOptions = {
   agentId: AssistantAgentId;
   configuration: AssistantConfiguration;
   prompt: string;
+  research?: ResearchInstructionContext | null;
   scope: AssistantConversationScope;
   screen: AssistantTarget['screen'];
   threadId: string;
@@ -57,6 +65,7 @@ function createAssistant({
   agentId,
   configuration,
   prompt,
+  research,
   scope,
   screen,
   threadId,
@@ -73,7 +82,12 @@ function createAssistant({
   });
   return new Agent(components.agent, {
     contextOptions: { excludeToolMessages: false, recentMessages: 100 },
-    instructions: AssistantInstructions.for(agentId, scope, registered.guidance),
+    instructions: AssistantInstructions.for(
+      agentId,
+      scope,
+      registered.guidance,
+      research ?? undefined
+    ),
     languageModel: configuration.languageModel,
     name: agentId,
     stopWhen: stepCountIs(8),
@@ -89,6 +103,17 @@ async function workspaceAccess(
   return await ctx.runQuery(internal.modules.assistant.model.index.access, {
     scope,
     ...(threadId ? { threadId } : {})
+  });
+}
+
+async function researchContext(
+  ctx: ActionCtx,
+  threadId: string,
+  scope: Exclude<AssistantConversationScope, 'standalone'>
+) {
+  if (scope !== 'discussion') return null;
+  return await ctx.runQuery(internal.modules.discussions.research.tools.instructionContext, {
+    threadId
   });
 }
 
@@ -109,10 +134,12 @@ async function continueAssistantWithConfiguration(
   AssistantScreens.validate(target.screen);
   const access = await workspaceAccess(ctx, target.threadId, options.scope);
   const activeTripId = AssistantTargets.activeTripId(access.tags, target.screen);
+  const research = await researchContext(ctx, target.threadId, options.scope);
   const assistant = createAssistant({
     agentId: target.agent,
     configuration,
     prompt,
+    research,
     scope: options.scope,
     screen: target.screen,
     threadId: target.threadId,
@@ -161,7 +188,9 @@ async function continueAssistantWithConfiguration(
   try {
     await result.consumeStream();
     if (runId && (await AgentRunTracking.isAborted(ctx, runId))) return null;
-    const responseText = await result.text;
+    // AI SDK 7 reports a mid-stream error chunk only through onError; the result still resolves.
+    if (streamFailure !== undefined) throw streamFailure;
+    const responseText = await completedReplyText(result);
     if (runId) {
       const report = responseText.trim() || 'Finished this discussion turn.';
       await AgentRunTracking.record(ctx, runId, {
@@ -173,8 +202,19 @@ async function continueAssistantWithConfiguration(
     return responseText;
   } catch (error: unknown) {
     if (isAbortError(error)) return null;
+    if (error instanceof EmptyReplyError) throw new ConvexError(error.message);
     throw AssistantErrors.from(streamFailure ?? error);
   }
+}
+
+async function completedReplyText(result: {
+  steps: PromiseLike<ReadonlyArray<{ toolCalls: ReadonlyArray<unknown> }>>;
+  text: PromiseLike<string>;
+}): Promise<string> {
+  const responseText = await result.text;
+  const madeToolCalls = (await result.steps).some((step) => step.toolCalls.length > 0);
+  if (responseText.trim().length === 0 && !madeToolCalls) throw new EmptyReplyError();
+  return responseText;
 }
 
 async function savedPromptMessageId({

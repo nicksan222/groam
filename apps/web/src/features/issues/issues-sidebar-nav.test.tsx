@@ -1,38 +1,12 @@
-import type { Id } from '@groam/backend/data-model';
 import { SidebarProvider } from '@groam/ui/components/sidebar';
 import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
 import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
+import { workspaceIssue } from '@/features/issues/issue-fixtures';
 import { resetSidebarChromeStore, useSidebarChromeStore } from '@/lib/stores/sidebar-chrome-store';
 import type { WorkspaceIssue } from '@/types/issues';
-import type { IssueListItem } from '@/types/issues';
 import { IssuesSidebarNav } from './issues-sidebar-nav';
-
-const listItem = {
-  assignee: null,
-  author: { name: 'Alex Morgan', userId: 'user-alex' },
-  canAssign: true,
-  canManage: true,
-  condition: null,
-  dueAt: null,
-  id: 'issue-1' as Id<'tripIssues'>,
-  idea: null,
-  labels: [],
-  rank: 0,
-  status: 'open',
-  title: 'Coast day',
-  updatedAt: Date.UTC(2026, 7, 17)
-} satisfies Omit<IssueListItem, 'tripName'>;
-
-const workspaceIssue = (over: Partial<WorkspaceIssue> = {}): WorkspaceIssue => ({
-  ...listItem,
-  body: 'Add a coast day near Lisbon.',
-  closedAt: null,
-  tripId: 'trip-1' as Id<'trips'>,
-  tripName: 'Atlantic week',
-  ...over
-});
 
 const state = vi.hoisted(() => ({
   isLoading: false,
@@ -44,6 +18,7 @@ const state = vi.hoisted(() => ({
   trips: [] as Array<{ archivedAt: null; id: string; name: string }>
 }));
 
+vi.mock('@/features/issues/hooks/use-generate-rule', () => ({ useGenerateRule: () => vi.fn() }));
 vi.mock('@tanstack/react-router', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@tanstack/react-router')>()),
   Link: ({ children, to }: { children?: ReactNode; to: string }) => <a href={to}>{children}</a>,

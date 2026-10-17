@@ -12,6 +12,10 @@ import {
 } from './use-trip-agent-context';
 import type { TripDetail } from './use-trips';
 
+vi.mock('@/features/research/hooks/use-trip-researches', () => ({
+  useTripResearches: () => ({ isLoading: false, researches: [] })
+}));
+
 vi.mock('./use-trip-versions', () => ({
   useTripVersions: (_tripId: unknown, enabled = true) => ({
     proposals: enabled

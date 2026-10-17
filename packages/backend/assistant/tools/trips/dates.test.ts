@@ -32,3 +32,21 @@ test('sets dates once with a mocked mutation', async () => {
     }
   ]);
 });
+
+test('writes again when the dates change', async () => {
+  const mutations: unknown[] = [];
+  const tool = createSetTripDatesTool('working-trip-1' as never) as unknown as {
+    execute: (ctx: unknown, input: unknown) => Promise<unknown>;
+  };
+  const context = {
+    runMutation: async (_reference: unknown, args: unknown) => {
+      mutations.push(args);
+    }
+  };
+
+  await tool.execute(context, { endDate: '2027-01-10', startDate: '2027-01-01' });
+  await expect(
+    tool.execute(context, { endDate: '2027-01-12', startDate: '2027-01-03' })
+  ).resolves.toMatchObject({ endDate: '2027-01-12', startDate: '2027-01-03', status: 'saved' });
+  expect(mutations).toHaveLength(2);
+});

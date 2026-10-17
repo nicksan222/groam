@@ -3,10 +3,19 @@ import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { useGroupActivationStore } from '@/lib/stores/group-activation-store';
 import { activateOrganization, useOrganizationActivation } from './use-organization-activation';
 
-const auth = vi.hoisted(() => ({ getSession: vi.fn(), setActive: vi.fn() }));
+const auth = vi.hoisted(() => ({
+  getSession: vi.fn(),
+  list: vi.fn(),
+  notify: vi.fn(),
+  setActive: vi.fn()
+}));
 
 vi.mock('@groam/auth/client', () => ({
-  authClient: { getSession: auth.getSession, organization: { setActive: auth.setActive } }
+  authClient: {
+    $store: { notify: auth.notify },
+    getSession: auth.getSession,
+    organization: { list: auth.list, setActive: auth.setActive }
+  }
 }));
 
 beforeEach(() => {
@@ -14,6 +23,7 @@ beforeEach(() => {
   useGroupActivationStore.setState({ organizationId: null });
   auth.setActive.mockResolvedValue({ data: {}, error: null });
   auth.getSession.mockResolvedValue({ data: {}, error: null });
+  auth.list.mockResolvedValue({ data: [{ id: 'organization-1' }], error: null });
 });
 
 describe('organization activation', () => {
@@ -47,6 +57,28 @@ describe('organization activation', () => {
     await vi.waitFor(() => expect(result.current.error).toBe('Denied'));
     await act(async () => result.current.retry());
     await vi.waitFor(() => expect(auth.setActive).toHaveBeenCalledTimes(2));
+    expect(result.current.error).toBeNull();
+  });
+
+  test('activates the freshly listed group, not one cached for a previous viewer', async () => {
+    auth.list.mockResolvedValue({ data: [{ id: 'organization-2' }], error: null });
+    await renderHook(() =>
+      useOrganizationActivation({ firstOrganizationId: 'organization-1', isPending: false })
+    );
+
+    await vi.waitFor(() =>
+      expect(auth.setActive).toHaveBeenCalledWith({ organizationId: 'organization-2' })
+    );
+  });
+
+  test('refreshes a stale group list instead of activating when the viewer has no group', async () => {
+    auth.list.mockResolvedValue({ data: [], error: null });
+    const { result } = await renderHook(() =>
+      useOrganizationActivation({ firstOrganizationId: 'organization-1', isPending: false })
+    );
+
+    await vi.waitFor(() => expect(auth.notify).toHaveBeenCalledWith('$listOrg'));
+    expect(auth.setActive).not.toHaveBeenCalled();
     expect(result.current.error).toBeNull();
   });
 });

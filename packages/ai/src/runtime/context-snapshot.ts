@@ -15,7 +15,6 @@ export type AssistantContextSnapshot = {
 };
 
 const CONTEXT_MESSAGE_PREFIX = 'Groam interaction context (JSON):\n';
-const LEGACY_CONTEXT_MESSAGE_PREFIX = 'Groam screen context snapshot (JSON):\n';
 
 export function assistantContextMessage(snapshot: AssistantContextSnapshot): string {
   return `${CONTEXT_MESSAGE_PREFIX}${JSON.stringify(snapshot)}`;
@@ -23,7 +22,6 @@ export function assistantContextMessage(snapshot: AssistantContextSnapshot): str
 
 function contextPrefix(message: string): string | null {
   if (message.startsWith(CONTEXT_MESSAGE_PREFIX)) return CONTEXT_MESSAGE_PREFIX;
-  if (message.startsWith(LEGACY_CONTEXT_MESSAGE_PREFIX)) return LEGACY_CONTEXT_MESSAGE_PREFIX;
   return null;
 }
 

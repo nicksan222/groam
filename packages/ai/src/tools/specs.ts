@@ -84,11 +84,57 @@ export const assistantToolSpecs = {
   },
   'context.workspace.find': {
     ui: { card: 'activity' },
-    agents: ['groam', 'issue', 'reviewer'],
+    agents: ['groam', 'issue', 'reviewer', 'researcher'],
     guidance:
       'Use findWorkspaceContext only when neither the screen nor current AI chat attachments identify the required entity. Never invent entity ids.',
     id: 'context.workspace.find',
     toolName: 'findWorkspaceContext'
+  },
+  'research.list': {
+    ui: { card: 'activity' },
+    agents: ['groam', 'researcher'],
+    guidance:
+      'Call listResearches to find a trip’s researches (id, title, brief, last activity) before reading, posting to, or linking one.',
+    id: 'research.list',
+    toolName: 'listResearches'
+  },
+  'research.read': {
+    ui: { card: 'activity' },
+    agents: ['groam', 'researcher'],
+    guidance:
+      'Call readResearch for a research’s brief, linked trip items, and recent messages. Use it before summarizing or adding to one.',
+    id: 'research.read',
+    toolName: 'readResearch'
+  },
+  'research.create': {
+    ui: { card: 'activity' },
+    agents: ['groam'],
+    eventLabel: { complete: 'Created research', running: 'Creating research' },
+    guidance:
+      'Call createResearch to start a trip research on one subject, with an optional brief. Never claim it exists unless the tool succeeds.',
+    id: 'research.create',
+    toolName: 'createResearch',
+    writeIntent: ['create ... research', 'new research', 'open ... research', 'start ... research']
+  },
+  'research.post': {
+    ui: { card: 'activity' },
+    agents: ['groam'],
+    eventLabel: { complete: 'Posted to research', running: 'Posting to research' },
+    guidance:
+      'Call postToResearch to save findings or a summary as a message in an existing research thread. Read the research first and post only what the traveler asked for.',
+    id: 'research.post',
+    toolName: 'postToResearch',
+    writeIntent: ['add ... to ... research', 'post ... research', 'save ... research']
+  },
+  'research.link': {
+    ui: { card: 'activity' },
+    agents: ['groam', 'researcher'],
+    eventLabel: { complete: 'Updated research links', running: 'Updating research links' },
+    guidance:
+      'Call linkResearch to link or unlink a research to an issue, idea, destination, activity, or stay of its trip. Use exact ids from the research or trip tools.',
+    id: 'research.link',
+    toolName: 'linkResearch',
+    writeIntent: ['attach ... research', 'link ... research', 'unlink ... research']
   },
   'trip.activity.add': {
     ui: { card: 'activity' },
@@ -149,21 +195,16 @@ export const assistantToolSpecs = {
     id: 'trip.dates.set',
     toolName: 'setTripDates',
     writeIntent: [
-      'change dates',
-      'change the dates',
-      'change trip dates',
-      'save dates',
-      'save the dates',
-      'save trip dates',
-      'set dates',
-      'set the dates',
-      'set these dates',
+      'change ... dates',
+      'move ... trip',
+      'move ... dates',
+      'reschedule ... trip',
+      'save ... dates',
+      'set ... dates',
       'set this trip',
-      'set trip dates',
-      'use these dates',
-      'update dates',
-      'update the dates',
-      'update trip dates'
+      'shift ... dates',
+      'update ... dates',
+      'use these dates'
     ]
   },
   'trip.destination.add': {
@@ -174,7 +215,13 @@ export const assistantToolSpecs = {
     eventLabel: { complete: 'Added destination', running: 'Adding destination' },
     id: 'trip.destination.add',
     toolName: 'addDestination',
-    writeIntent: ['add a city', 'add a stop', 'add destination', 'another city', 'another stop']
+    writeIntent: [
+      'add ... city',
+      'add ... destination',
+      'add ... stop',
+      'another city',
+      'another stop'
+    ]
   },
   'trip.destination.remove': {
     ui: { card: 'activity' },
@@ -184,7 +231,9 @@ export const assistantToolSpecs = {
       'Call removeDestination to drop a stop from a draft idea. This also removes that stop’s activities and stays. Never claim a removal unless the tool succeeds.',
     id: 'trip.destination.remove',
     toolName: 'removeDestination',
-    writeIntent: ['drop a stop', 'remove a city', 'remove a stop', 'remove destination']
+    // Bare verbs: "Remove Porto" names no keyword. The model confirms before
+    // this cascading delete, and a short "yes" completes it.
+    writeIntent: ['delete', 'drop', 'remove']
   },
   'trip.destination.schedule': {
     ui: { card: 'activity' },
@@ -217,7 +266,7 @@ export const assistantToolSpecs = {
     eventLabel: { complete: 'Created trip issue', running: 'Creating trip issue' },
     id: 'trip.issue.create',
     toolName: 'createTripIssue',
-    writeIntent: ['assign', 'create issue', 'file issue', 'open issue', 'track']
+    writeIntent: ['assign', 'create ... issue', 'file ... issue', 'open ... issue', 'track']
   },
   'trip.itinerary.extend': {
     ui: { card: 'activity' },
@@ -228,8 +277,10 @@ export const assistantToolSpecs = {
     id: 'trip.itinerary.extend',
     toolName: 'extendItinerary',
     writeIntent: [
+      'add ... days',
+      'add ... extra day',
+      'add ... more day',
       'add a day',
-      'add days',
       'add one day',
       'another day',
       'extend',
@@ -240,7 +291,7 @@ export const assistantToolSpecs = {
   },
   'trip.itinerary.read': {
     ui: { card: 'activity' },
-    agents: ['groam', 'issue', 'reviewer'],
+    agents: ['groam', 'issue', 'reviewer', 'researcher'],
     guidance:
       'Use getItinerary before discussing a route, schedule, stops, stays, activities, transport, budget, or itemized costs.',
     id: 'trip.itinerary.read',
@@ -287,7 +338,16 @@ export const assistantToolSpecs = {
     eventLabel: { complete: 'Added stay', running: 'Adding stay' },
     id: 'trip.stay.add',
     toolName: 'addStay',
-    writeIntent: ['accommodation', 'add', 'book', 'hotel', 'stay']
+    writeIntent: [
+      'add ... accommodation',
+      'add ... hotel',
+      'add ... stay',
+      'book ... accommodation',
+      'book ... hotel',
+      'book ... stay',
+      'stay at',
+      'stay in'
+    ]
   },
   'trip.stay.remove': {
     ui: { card: 'activity' },
@@ -297,7 +357,16 @@ export const assistantToolSpecs = {
     eventLabel: { complete: 'Removed stay', running: 'Removing stay' },
     id: 'trip.stay.remove',
     toolName: 'removeStay',
-    writeIntent: ['cancel hotel', 'cancel stay', 'remove hotel', 'remove stay']
+    writeIntent: [
+      'cancel ... hotel',
+      'cancel ... stay',
+      'delete ... hotel',
+      'delete ... stay',
+      'drop ... hotel',
+      'drop ... stay',
+      'remove ... hotel',
+      'remove ... stay'
+    ]
   },
   'trip.stay.update': {
     ui: { card: 'activity' },
@@ -307,11 +376,18 @@ export const assistantToolSpecs = {
     eventLabel: { complete: 'Updated stay', running: 'Updating stay' },
     id: 'trip.stay.update',
     toolName: 'updateStay',
-    writeIntent: ['change hotel', 'change stay', 'update hotel', 'update stay']
+    writeIntent: [
+      'change ... hotel',
+      'change ... stay',
+      'switch ... hotel',
+      'swap ... hotel',
+      'update ... hotel',
+      'update ... stay'
+    ]
   },
   'trip.status.read': {
     ui: { card: 'activity' },
-    agents: ['groam', 'issue', 'reviewer'],
+    agents: ['groam', 'issue', 'reviewer', 'researcher'],
     guidance:
       'Use getTripStatus for readiness, dates, decisions, approvals, travelers, or next steps.',
     id: 'trip.status.read',
@@ -356,7 +432,15 @@ export const assistantToolSpecs = {
     eventLabel: { complete: 'Removed transfer', running: 'Removing transfer' },
     id: 'trip.transfer.remove',
     toolName: 'removeTransfer',
-    writeIntent: ['remove flight', 'remove transfer', 'remove travel']
+    writeIntent: [
+      'cancel ... flight',
+      'cancel ... train',
+      'delete ... flight',
+      'remove ... flight',
+      'remove ... train',
+      'remove ... transfer',
+      'remove ... travel'
+    ]
   },
   'trip.transfer.set': {
     ui: { card: 'activity' },
@@ -412,7 +496,48 @@ export const assistantToolSpecs = {
     eventLabel: { complete: 'Started trip idea', running: 'Starting trip idea' },
     id: 'trip.version.start',
     toolName: 'startTripVersion',
-    writeIntent: ['add', 'change', 'choose', 'edit', 'plan', 'save', 'schedule', 'set', 'update']
+    // Prerequisite of every idea write, so it must cover every write verb the
+    // tools above gate on.
+    writeIntent: [
+      'add',
+      'another',
+      'arrival',
+      'book',
+      'budget',
+      'cancel',
+      'change',
+      'check off',
+      'choose',
+      'cost',
+      'delete',
+      'departure',
+      'drop',
+      'edit',
+      'extend',
+      'extra day',
+      'flight',
+      'longer trip',
+      'mark',
+      'move',
+      'one more day',
+      'pack',
+      'plan',
+      'price',
+      'remove',
+      'rename',
+      'reschedule',
+      'save',
+      'schedule',
+      'set',
+      'shift',
+      'spend',
+      'swap',
+      'switch',
+      'train',
+      'transfer',
+      'unpack',
+      'update'
+    ]
   },
   'ui.askUserChoice': {
     agents: ['groam'],
@@ -424,7 +549,7 @@ export const assistantToolSpecs = {
   },
   'web.search': {
     ui: { card: 'activity' },
-    agents: ['groam', 'issue', 'reviewer'],
+    agents: ['groam', 'issue', 'reviewer', 'researcher'],
     guidance:
       'For planning questions, use web search when current external information would improve the answer.',
     id: 'web.search',

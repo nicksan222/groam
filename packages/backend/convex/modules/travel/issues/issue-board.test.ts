@@ -66,11 +66,6 @@ const orderOf = async (client: Client, tripId: Id<'trips'>, status: string) =>
     .filter((issue) => issue.status === status)
     .map((issue) => issue.id);
 
-const rankOfIssue = async (client: Client, tripId: Id<'trips'>, issueId: Id<'tripIssues'>) =>
-  (await client.query(api.routes.trips.issues.list.run, { tripId })).find(
-    (issue) => issue.id === issueId
-  )?.rank ?? Number.NaN;
-
 test('move reorders inside a lane without a comment or updatedAt bump', { timeout }, async () => {
   const { issueId, owner, tripId } = await setup();
   const before = await detail(owner.client, issueId);
@@ -220,6 +215,8 @@ test.each([
     expect(pick(listed.find((issue) => issue.id === issueId))).toEqual(flags);
     expect(pick(workspace.page.find((issue) => issue.id === issueId))).toEqual(flags);
     expect(pick(fromDetail)).toEqual(flags);
+    // Any member may comment until the trip is archived, whatever their other flags.
+    expect(fromDetail?.canComment).toBe(!archived);
   }
 );
 
@@ -245,6 +242,27 @@ test.each<[string, (context: Awaited<ReturnType<typeof setup>>) => Promise<unkno
     'changing status',
     ({ issueId, owner }) =>
       owner.client.mutation(api.routes.trips.issues.status.run, { issueId, status: 'closed' })
+  ],
+  [
+    'commenting',
+    ({ issueId, member }) =>
+      member.client.mutation(api.routes.trips.issues.comment.run, { content: 'Late', issueId })
+  ],
+  [
+    'setting a decide-by date',
+    ({ issueId, owner }) =>
+      owner.client.mutation(api.routes.trips.issues.due.run, {
+        dueAt: Date.UTC(2027, 0, 1),
+        issueId
+      })
+  ],
+  [
+    'setting a done-when condition',
+    ({ issueId, member }) =>
+      member.client.mutation(api.routes.trips.issues.condition.run, {
+        doneWhen: 'Booked',
+        issueId
+      })
   ],
   [
     'moving',
@@ -348,22 +366,6 @@ test('appends new issues to the bottom of the open lane', { timeout }, async () 
   expect((await orderOf(owner.client, tripId, 'open')).at(-1)).toBe(third);
 });
 
-test('falls back to creation time for legacy rows without boardRank', { timeout }, async () => {
-  const { issueId, owner, tripId } = await setup();
-  const legacy = await owner.client.run(async (ctx) => {
-    await ctx.db.patch('tripIssues', issueId, { boardRank: undefined });
-    const row = await ctx.db.get('tripIssues', issueId);
-    return row?._creationTime ?? 0;
-  });
-  await expect(detail(owner.client, issueId)).resolves.toMatchObject({ rank: legacy });
-  const next = await owner.client.mutation(api.routes.trips.issues.create.run, {
-    body: 'Lands after the legacy row.',
-    title: 'After legacy',
-    tripId
-  });
-  expect(await rankOfIssue(owner.client, tripId, next)).toBeGreaterThan(legacy);
-});
-
 test('system comments do not use the human comment budget', { timeout }, async () => {
   const { issueId, owner } = await setup();
   const seed = (kind: 'comment' | 'system', count: number) =>
@@ -381,6 +383,8 @@ test('system comments do not use the human comment budget', { timeout }, async (
           updatedAt: Date.now()
         });
       }
+      const field = kind === 'comment' ? 'humanCommentCount' : 'systemCommentCount';
+      await ctx.db.patch('tripIssues', issueId, { [field]: issue[field] + count });
     });
   const add = () =>
     owner.client.mutation(api.routes.trips.issues.comment.run, { content: 'Hello', issueId });

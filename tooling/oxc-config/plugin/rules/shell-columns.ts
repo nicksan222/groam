@@ -1,9 +1,6 @@
 import { defineRule } from 'vite-plus/lint/plugins';
 import { containsAttribute, sourceMatches, whole } from './source-text.ts';
 
-const legacySplit = whole(
-  String.raw`<Shell\.(?:Split(?:\.(?:Main|Aside))?|SplitMain|SplitAside)(?:\s|/|>).*`
-);
 const column = whole(
   String.raw`<Shell\.(?:TwoColumns|LeftColumn|RightColumn|DesktopRightColumn)(?:\s|/|>).*`
 );
@@ -26,13 +23,7 @@ export default defineRule({
         }
       },
       JSXOpeningElement(node) {
-        if (sourceMatches(context, node, legacySplit)) {
-          context.report({
-            node,
-            message:
-              'Use Shell.TwoColumns, Shell.LeftColumn and Shell.RightColumn. The legacy split API is reserved for compatibility inside packages/ui.'
-          });
-        } else if (
+        if (
           sourceMatches(context, node, column) &&
           containsAttribute(
             node,

@@ -119,3 +119,23 @@ test('rejects more than the maximum number of context tags', async () => {
     owner.client.mutation(api.routes.assistant.chats.tags.run, { tags, threadId })
   ).rejects.toThrow('An AI chat can have at most 12 context tags');
 });
+
+test('rejects oversized screen context before saving it', async () => {
+  const { owner } = await setupTrip(0);
+  const threadId = await owner.client.action(api.routes.assistant.chats.create.run, {
+    screen: workspaceScreen
+  });
+
+  await expect(
+    owner.client.mutation(api.routes.assistant.context.screen.run, {
+      screen: { ...workspaceScreen, data: 'x'.repeat(500_000) },
+      threadId
+    })
+  ).rejects.toThrow();
+  await expect(
+    owner.client.mutation(api.routes.assistant.context.screen.run, {
+      screen: workspaceScreen,
+      threadId
+    })
+  ).resolves.toBeNull();
+});

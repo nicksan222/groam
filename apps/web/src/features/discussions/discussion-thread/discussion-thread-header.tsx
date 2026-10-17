@@ -72,10 +72,7 @@ function DiscussionThreadHeaderReady({ discussion }: { discussion: DiscussionLis
   const memberNames = discussion.members.map((member) => member.name).join(', ');
 
   const copyLink = async () => {
-    const url = new URL(
-      `/chat/${discussion.shortId ?? discussion.id}`,
-      window.location.origin
-    ).toString();
+    const url = new URL(`/chat/${discussion.shortId}`, window.location.origin).toString();
     try {
       await navigator.clipboard.writeText(url);
       toast.success('Chat link copied');

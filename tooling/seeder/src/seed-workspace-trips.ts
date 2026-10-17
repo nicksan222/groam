@@ -16,6 +16,7 @@ export type SeedWorkspaceTripsResult = {
   archivedCount: number;
   openProposalCount: number;
   tripCount: number;
+  tripIds: string[];
 };
 
 function batches<Item>(items: readonly Item[], size: number): Item[][] {
@@ -29,13 +30,16 @@ export async function seedWorkspaceTrips(
   input: SeedWorkspaceTripsInput
 ): Promise<SeedWorkspaceTripsResult> {
   const plans = buildWorkspaceSeedPlans(input.tripCount);
-  await mapWithConcurrency(batches(plans, TRIPS_PER_MUTATION), input.concurrency, (batch) =>
-    app.createTrips(input.owner, batch)
+  const created = await mapWithConcurrency(
+    batches(plans, TRIPS_PER_MUTATION),
+    input.concurrency,
+    (batch) => app.createTrips(input.owner, batch)
   );
 
   return {
     archivedCount: plans.filter(({ archived }) => archived).length,
     openProposalCount: plans.filter(({ proposal }) => proposal !== undefined).length,
-    tripCount: plans.length
+    tripCount: plans.length,
+    tripIds: created.flat()
   };
 }

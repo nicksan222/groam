@@ -8,7 +8,7 @@ const convex = vi.hoisted(() => ({
   useMutation: vi.fn(),
   useQuery: vi.fn()
 }));
-const notifications = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
+const notifications = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn(), warning: vi.fn() }));
 
 vi.mock('convex/react', async (importOriginal) => ({
   ...(await importOriginal<typeof import('convex/react')>()),
@@ -71,7 +71,7 @@ test('uses skip while versions are disabled and announces a titled idea', async 
 
 test('uses Convex actions for submit, apply, and rebase workflows', async () => {
   const submit = vi.fn().mockResolvedValue(null);
-  const merge = vi.fn().mockResolvedValue(null);
+  const merge = vi.fn().mockResolvedValue('applied');
   const rebase = vi.fn().mockResolvedValue({ kind: 'applied' });
   convex.useAction
     .mockReturnValueOnce(submit)
@@ -88,6 +88,19 @@ test('uses Convex actions for submit, apply, and rebase workflows', async () => 
   expect(submit).toHaveBeenCalledWith({ proposalId });
   expect(merge).toHaveBeenCalledWith({ proposalId });
   expect(rebase).toHaveBeenCalledWith({ proposalId, resolutions: [] });
+});
+
+test('warns instead of confirming when applying an idea conflicts', async () => {
+  const merge = vi.fn().mockResolvedValue('conflicted');
+  convex.useAction.mockReturnValueOnce(vi.fn()).mockReturnValueOnce(merge);
+  const { result } = await renderHook(() => useTripVersion(proposalId));
+
+  await act(async () => {
+    expect(await result.current.merge()).toBe(false);
+  });
+
+  expect(notifications.success).not.toHaveBeenCalled();
+  expect(notifications.warning).toHaveBeenCalledWith(expect.stringContaining('conflicts'));
 });
 
 test('reports a clean idea review clearly', async () => {

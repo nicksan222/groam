@@ -14,7 +14,7 @@ export function FailedResponse({
   return (
     <span
       className="mt-2 flex items-center gap-2 rounded-xl border border-destructive/20 bg-destructive/5 px-2.5 py-2 text-xs text-destructive"
-      role="alert"
+      role="status"
     >
       <span className="grid size-6 shrink-0 place-items-center rounded-full bg-destructive/10">
         <CircleAlert className="size-3.5" />

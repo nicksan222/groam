@@ -40,6 +40,7 @@ export function MessageExtras({
         onReply={onReply}
         parts={message.parts}
         selectedChoices={choiceResponses}
+        settled={message.status !== 'streaming' && message.status !== 'pending'}
         suppressChoices={suppressChoices}
       />
     </>

@@ -7,12 +7,16 @@ import {
   issueStatusOptions,
   useIssueListFilters
 } from '@/features/issues/hooks/use-issue-list-filters';
+import { useLoadWhileFilteredEmpty } from '@/features/workspace/hooks/use-load-while-filtered-empty';
 import { ListStatusFilterSelect } from '@/features/workspace/workspace-list/list-status-filter-select';
 import { testIds } from '@/lib/test-ids';
 import type { IssueListItem, IssueStatusFilter } from '@/types/issues';
+import type { PaginatedListStatus } from '@/types/workspace';
 import { issueColumns } from './issue-list-columns';
 
 const ISSUE_LIST_RESOURCE = { plural: 'issues', singular: 'issue' } as const;
+
+function noop() {}
 
 export function IssueList({
   defaultStatus,
@@ -21,6 +25,7 @@ export function IssueList({
   isLoading = false,
   issues,
   onRowActivate,
+  pagination,
   showTripName = true,
   toolbarExtra
 }: {
@@ -30,6 +35,8 @@ export function IssueList({
   isLoading?: boolean;
   issues: IssueListItem[] | undefined;
   onRowActivate?: (issue: IssueListItem) => void;
+  /** Paged sources: keep loading while the filter hides every loaded issue. */
+  pagination?: { loadMore: (count: number) => void; status: PaginatedListStatus };
   showTripName?: boolean;
   toolbarExtra?: ReactNode;
 }) {
@@ -46,6 +53,11 @@ export function IssueList({
     statusFilter,
     visibleIssues
   } = useIssueListFilters({ defaultStatus, emptyFilterMessage, issues: listIssues });
+  const searching = useLoadWhileFilteredEmpty({
+    isFilteredEmpty: Boolean(pagination) && visibleIssues.length === 0,
+    loadMore: pagination?.loadMore ?? noop,
+    status: pagination?.status
+  });
   const columns = useMemo(() => issueColumns({ showTripName }), [showTripName]);
 
   const activate =
@@ -62,7 +74,7 @@ export function IssueList({
     <DataTable
       columns={columns}
       data={visibleIssues}
-      empty={empty}
+      empty={searching ? 'Looking through more issues…' : empty}
       externalFilter
       filterPlaceholder={filterPlaceholder}
       filterValue={query}

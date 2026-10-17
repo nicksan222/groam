@@ -95,13 +95,21 @@ async function executeIssue(ctx: ActionCtx, run: AgentRunView): Promise<string> 
 async function issueReportFromResult(
   ctx: ActionCtx,
   run: AgentRunView,
-  result: { text: string }
+  result: { steps: ReadonlyArray<{ toolCalls: ReadonlyArray<unknown> }>; text: string }
 ): Promise<string> {
   const attached = await ctx.runQuery(internal.modules.assistant.runs.functions.getInternal, {
     runId: run.id
   });
+  const text = result.text.trim();
+  const calledTools = result.steps.some((step) => step.toolCalls.length > 0);
+  // An empty reply with no tool work means the provider returned nothing: fail, don't report success.
+  if (!text && !calledTools && !attached?.proposalId) {
+    throw new ConvexError(
+      'The agent returned nothing. Try again, or check your ChatGPT connection.'
+    );
+  }
   const report =
-    result.text.trim() ||
+    text ||
     (attached?.proposalId
       ? 'Started a draft idea for this issue. Review and apply it when you are ready.'
       : 'Finished working on this issue.');

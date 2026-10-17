@@ -21,7 +21,7 @@ const choiceStrategy: ToolCallStrategy = {
 
 const activityStrategy: ToolCallStrategy = {
   Component: ActivityToolCall,
-  present: (part, toolName) => activityPresentation(part, toolName)
+  present: (part, toolName, settled) => activityPresentation(part, toolName, settled)
 };
 
 export function AssistantToolCalls({
@@ -29,12 +29,15 @@ export function AssistantToolCalls({
   onReply,
   parts,
   selectedChoices,
+  settled = false,
   suppressChoices = false
 }: {
   disabled: boolean;
   onReply?: (prompt: string) => Promise<boolean>;
   parts: UIMessage['parts'];
   selectedChoices?: Record<string, string>;
+  /** True once the message is no longer streaming; unfinished tool calls then read as stopped. */
+  settled?: boolean;
   suppressChoices?: boolean;
 }) {
   const calls = deduplicatePresentations(
@@ -45,7 +48,7 @@ export function AssistantToolCalls({
         return [];
       }
       const strategy = card === 'choice' ? choiceStrategy : activityStrategy;
-      const presentation = strategy.present(part, toolName);
+      const presentation = strategy.present(part, toolName, settled);
       return presentation ? [{ presentation, strategy }] : [];
     })
   );
@@ -129,8 +132,12 @@ function toolNameFromPart(part: ToolPart): string | null {
   return null;
 }
 
-function activityPresentation(part: ToolPart, toolIdOrName: string): ActivityPresentation {
-  const status = toolStatus(part);
+function activityPresentation(
+  part: ToolPart,
+  toolIdOrName: string,
+  settled = false
+): ActivityPresentation {
+  const status = toolStatus(part, settled);
   const receipt = parseAssistantToolActivity('output' in part ? part.output : undefined);
   const labels = catalogToolLabel(toolIdOrName);
   return {
@@ -143,10 +150,12 @@ function activityPresentation(part: ToolPart, toolIdOrName: string): ActivityPre
   };
 }
 
-function toolStatus(part: ToolPart): ToolStatus {
+function toolStatus(part: ToolPart, settled: boolean): ToolStatus {
   const state = 'state' in part && typeof part.state === 'string' ? part.state : '';
   if (state === 'output-error') return 'error';
-  return state.startsWith('input-') ? 'running' : 'complete';
+  if (!state.startsWith('input-')) return 'complete';
+  // A call with no result on a finished message never will get one (provider error, timeout, Stop).
+  return settled ? 'stopped' : 'running';
 }
 
 function toolCallKey(part: ToolPart, fallback: string): string {
@@ -158,6 +167,7 @@ function activityLabel(
   labels: { complete: string; running: string },
   receiptLabel?: string
 ): string {
+  if (status === 'stopped') return `Didn’t finish ${labels.running.toLocaleLowerCase()}`;
   if (status === 'error') return `Failed while ${labels.running.toLocaleLowerCase()}`;
   if (status === 'running') return labels.running;
   return receiptLabel ?? labels.complete;

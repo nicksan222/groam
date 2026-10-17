@@ -1,6 +1,5 @@
 import { agentRunDuration, agentRunTime } from '@groam/ai/backend/runs/time';
 import { render } from '@groam/vitest-config/react';
-import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import type { AgentRun } from '@/features/agents/hooks/use-agent';
@@ -8,32 +7,8 @@ import { testIds } from '@/lib/test-ids';
 import { AgentRunContext } from './agent-run-context';
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const navigate = vi.fn();
-  return {
-    ...(await importOriginal<typeof import('@tanstack/react-router')>()),
-    Link: ({
-      children,
-      className,
-      params,
-      to
-    }: {
-      children?: ReactNode;
-      className?: string;
-      params?: Record<string, string>;
-      to: string;
-    }) => {
-      let href = to;
-      for (const [key, value] of Object.entries(params ?? {})) {
-        href = href.replace(`$${key}`, value);
-      }
-      return (
-        <a className={className} href={href} onClick={(event) => event.preventDefault()}>
-          {children}
-        </a>
-      );
-    },
-    useNavigate: () => navigate
-  };
+  const { mockRouter } = await import('@/lib/testing/router-mock');
+  return mockRouter(importOriginal);
 });
 
 const toast = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
@@ -58,7 +33,7 @@ function makeRun(overrides: Partial<AgentRun> = {}): AgentRun {
       tripName: 'Lisbon'
     },
     report: null,
-    shortId: null,
+    shortId: 'runabc',
     startedAt: 1_700_000_000_000,
     status: 'running',
     surface: 'standalone',
@@ -158,12 +133,9 @@ describe('AgentRunContext', () => {
     await expect.element(page.getByRole('link')).not.toBeInTheDocument();
   });
 
-  test.each([
-    ['the id', null, 'run-1'],
-    ['the short id', 'R-7', 'R-7']
-  ])('shows %s as the run id', async (_, shortId, shown) => {
-    await render(<AgentRunContext run={makeRun({ shortId: shortId ?? undefined })} />);
-    await expect.element(page.getByText(shown, { exact: true })).toBeVisible();
+  test('shows the short id as the run id', async () => {
+    await render(<AgentRunContext run={makeRun({ shortId: 'R-7' })} />);
+    await expect.element(page.getByText('R-7', { exact: true })).toBeVisible();
   });
 
   test('copies the run id and confirms', async () => {

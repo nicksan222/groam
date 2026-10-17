@@ -19,6 +19,7 @@ const listItem = {
   idea: null,
   labels: [],
   rank: 0,
+  shortId: 'isuabc',
   status: 'open',
   title: 'Coast day',
   updatedAt: Date.UTC(2026, 7, 17)

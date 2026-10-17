@@ -335,7 +335,8 @@ test('denies outsiders every issue read and write', async () => {
     () => client.mutation(api.routes.trips.issues.status.run, { issueId, status: 'closed' }),
     () => client.mutation(api.routes.trips.issues.move.run, { issueId, status: 'closed' }),
     () => client.mutation(api.routes.trips.issues.due.run, { dueAt: 1, issueId }),
-    () => client.mutation(api.routes.trips.issues.assign.run, { assignee: null, issueId })
+    () => client.mutation(api.routes.trips.issues.assign.run, { assignee: null, issueId }),
+    () => client.mutation(api.routes.trips.issues.condition.run, { doneWhen: 'Done', issueId })
   ]) {
     await expect(write()).rejects.toThrow('Trip not found');
   }

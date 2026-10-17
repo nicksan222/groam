@@ -74,12 +74,22 @@ export function useTripVersion(proposalId: Id<'tripProposals'>) {
         reason ? 'Idea closed' : 'Draft deleted'
       ),
     feedback,
-    merge: () =>
-      attempt(
+    merge: async () => {
+      const result = await attemptValue(
         () => mergeAction({ proposalId }),
-        'Unable to apply this idea',
-        'Applied to the shared trip'
-      ),
+        'Unable to apply this idea'
+      );
+      if (result === 'applied') {
+        toast.success('Applied to the shared trip');
+        return true;
+      }
+      if (result !== null) {
+        toast.warning(
+          'This idea conflicts with the shared plan. Open it to update it before applying.'
+        );
+      }
+      return false;
+    },
     proposal,
     rebase: async (resolutions: Array<{ choice: IdeaRebaseChoice; path: string }> = []) => {
       const result = await attemptValue(
@@ -101,6 +111,10 @@ export function useTripVersion(proposalId: Id<'tripProposals'>) {
         'Unable to run the idea review'
       );
       if (!result) return false;
+      if (result.inProgress) {
+        toast.info('The idea reviewer is already reviewing this idea.');
+        return true;
+      }
       toast.success(
         result.commentCount === 0
           ? 'Idea review passed with no blocking concerns.'

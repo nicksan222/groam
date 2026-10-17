@@ -216,14 +216,56 @@ function isLeadingAdviceWord(word: string | undefined): boolean {
   );
 }
 
+// Whole-message go-aheads only: "yes", "go ahead", "yes, go with option 2".
+const goAheadStart =
+  /^(?:yes|yeah|yep|yup|sure|ok|okay|confirm|confirmed|proceed|go ahead|go with|do it|let's do it|sounds good)\b/iu;
+const goAheadTrailers = new Set(['please', 'thanks', 'thank', 'you']);
+const maxGoAheadWords = 5;
+// "Yes, go ahead and add it": a closing "and <verb> it/that/them" restates the go-ahead.
+const goAheadClosingObjects = new Set(['it', 'that', 'them', 'this']);
+// "Yes, but not the hotel" is a partial answer, not a go-ahead.
+const goAheadQualifiers = new Set(['but', 'except', 'not', 'only', 'instead']);
+const goAheadQuestionWords = new Set([
+  'how',
+  'if',
+  'what',
+  "what's",
+  'when',
+  'where',
+  'whether',
+  'which',
+  'who'
+]);
+
+function isShortGoAhead(prompt: string): boolean {
+  const words = intentWords(prompt);
+  const start = leadingContentIndex(words);
+  let end = words.length;
+  while (end > start && goAheadTrailers.has(words[end - 1] ?? '')) end -= 1;
+  if (
+    end - start >= 3 &&
+    words[end - 3] === 'and' &&
+    goAheadClosingObjects.has(words[end - 1] ?? '')
+  ) {
+    end -= 3;
+  }
+  const body = words.slice(start, end);
+  if (body.length === 0 || body.length > maxGoAheadWords) return false;
+  if (body.some((word) => goAheadQuestionWords.has(word) || goAheadQualifiers.has(word))) {
+    return false;
+  }
+  return goAheadStart.test(body.join(' '));
+}
+
 function hasExplicitGoAhead(prompt: string, advice: boolean) {
   // Advice questions are not confirmation, even with "go ahead" / "proceed".
   if (advice) return false;
-  if (prompt.includes('?') || /\byes\s+or\s+no\b/iu.test(prompt)) {
-    return /\b(?:confirm|proceed|go ahead)\b/iu.test(prompt);
-  }
-  return /\b(?:confirm|proceed|go ahead|yes)\b/iu.test(prompt);
+  return isShortGoAhead(prompt);
 }
+
+// Longest run of filler words a `...` gap may swallow, so "remove ... hotel"
+// matches "Remove the hotel" but not an unrelated clause far away.
+const maxGapWords = 9;
 
 function matchIntentRange(
   words: readonly string[],
@@ -249,7 +291,8 @@ function matchIntentParts(
   for (const part of parts) {
     if (part.length === 0) continue;
     let found: number | null = null;
-    for (let index = cursor; index <= words.length - part.length; index += 1) {
+    const lastStart = Math.min(words.length - part.length, cursor + maxGapWords);
+    for (let index = cursor; index <= lastStart; index += 1) {
       if (wordsMatchAt(words, part, index)) {
         found = index;
         break;
@@ -281,8 +324,9 @@ function matchesExactWriteIntent(prompt: string, intents: readonly string[]) {
  * `...` inside an intent is a gap ("update ... packing" matches "update
  * Passport … on the packing list"). `exactIntents` are whole-message
  * confirmations ("Maybe", "Not going") accepted after politeness prefixes.
- * A bare follow-up confirmation ("yes", "do it", "go ahead") also counts,
- * so the model can confirm and act across two turns.
+ * A short whole-message confirmation ("yes", "do it", "go ahead", "yes, go
+ * with option 2") also counts, so the model can confirm and act across two
+ * turns; the same words inside a longer message do not.
  */
 export function requestsWriteIntent(
   prompt: string,
@@ -304,5 +348,5 @@ export function requestsWriteIntent(
     }
   }
   if (/\b(?:cancel|no|do not|don't|not ready to|no need to)\b/iu.test(prompt)) return false;
-  return /\b(?:confirm|proceed|yes)\b|\b(?:do it|go with)\b/iu.test(prompt);
+  return isShortGoAhead(prompt);
 }

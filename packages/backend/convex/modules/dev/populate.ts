@@ -12,6 +12,7 @@ import {
   type TripDestinationStopInput
 } from '#convex/modules/travel/destinations/index';
 import { TripDestinationValidators } from '#convex/modules/travel/destinations/schema';
+import { syncTripConditions } from '#convex/modules/travel/issues/sync';
 import { assertPlanner, loadTripContext, withSeedWrites } from '#convex/modules/travel/trips/ctx';
 import { assertLocalDevelopment } from './local';
 
@@ -81,7 +82,7 @@ export async function writeSeedItinerary(
   if (trip.trip.proposal) throw new ConvexError('Start from the shared trip');
   if (trip.trip.archive !== undefined) throw new ConvexError('Archived trips are read-only');
 
-  return await withSeedWrites(async () => {
+  await withSeedWrites(async () => {
     const existing = await TripDestination.forTrip(ctx, input.tripId);
     const primary = existing[0];
     if (input.primary && primary) {
@@ -116,8 +117,10 @@ export async function writeSeedItinerary(
       titles.add(activity.input.title);
       titlesByDestination.set(destination._id, titles);
     });
-    return null;
   });
+  // Seed writes skip the per-write sync, so rules over the itinerary are re-checked once here.
+  await syncTripConditions(await loadTripContext(ctx, input.tripId, workspace));
+  return null;
 }
 
 export const write = internalWorkspaceMutation({

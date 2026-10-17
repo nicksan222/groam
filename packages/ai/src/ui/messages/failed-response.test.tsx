@@ -6,7 +6,7 @@ import { FailedResponse } from './failed-response';
 
 test('shows the default failure copy when no provider error is available', async () => {
   await render(<FailedResponse disabled={false} />);
-  await expect.element(page.getByRole('alert')).toHaveTextContent(DEFAULT_ASSISTANT_FAILURE);
+  await expect.element(page.getByRole('status')).toHaveTextContent(DEFAULT_ASSISTANT_FAILURE);
 });
 
 test('explains ChatGPT app usage limits in the failed bubble', async () => {
@@ -24,7 +24,7 @@ test('explains ChatGPT app usage limits in the failed bubble', async () => {
     />
   );
   await expect
-    .element(page.getByRole('alert'))
+    .element(page.getByRole('status'))
     .toHaveTextContent(
       'ChatGPT usage limit reached for this app. Review your limits in ChatGPT Settings → Usage before trying again.'
     );

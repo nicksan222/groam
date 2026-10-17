@@ -10,6 +10,10 @@ const data = vi.hoisted(() => ({
   proposals: undefined as Array<{ author: { userId: string }; status: string }> | undefined
 }));
 
+vi.mock('@/features/research/hooks/use-trip-researches', () => ({
+  useTripResearches: () => ({ isLoading: false, researches: [] })
+}));
+
 vi.mock('@/features/trips/hooks/use-trip-issues', () => ({
   useTripIssues: () => ({ issues: data.issues })
 }));
@@ -41,6 +45,7 @@ test('lists the tabs in order with Board first', async () => {
     testIds.tripSectionOverview,
     testIds.tripSectionIssues,
     testIds.tripSectionIdeas,
+    testIds.tripSectionResearch,
     testIds.tripSectionActivity
   ]);
   expect(tabs.elements().map((tab) => tab.textContent?.replace(/\s+/gu, ' ').trim())).toEqual([
@@ -48,6 +53,7 @@ test('lists the tabs in order with Board first', async () => {
     'Overview',
     'Issues(0)',
     'Ideas(0)',
+    'Research(0)',
     'Activity'
   ]);
 });

@@ -1,5 +1,10 @@
 import { describe, expect, test } from 'vite-plus/test';
-import { assistantFailureMessage, CHATGPT_RECONNECT, DEFAULT_ASSISTANT_FAILURE } from './index';
+import {
+  AssistantAppError,
+  assistantFailureMessage,
+  CHATGPT_RECONNECT,
+  DEFAULT_ASSISTANT_FAILURE
+} from './index';
 
 describe('assistantFailureMessage', () => {
   test('keeps opaque SDK failures safe', () => {
@@ -83,5 +88,38 @@ describe('assistantFailureMessage', () => {
     ])
       expect(result).not.toContain(secret);
     expect(result).toContain('[redacted]');
+  });
+});
+
+describe('Groam-authored errors', () => {
+  test('ConvexError string data passes through without provider prefix', () => {
+    const error = Object.assign(new Error('Trip issue not found'), {
+      name: 'ConvexError',
+      data: 'Trip issue not found'
+    });
+    expect(assistantFailureMessage(error)).toBe('Trip issue not found');
+  });
+  test('AssistantAppError passes through', () => {
+    expect(
+      assistantFailureMessage(new AssistantAppError('Idea reviewer did not return a review'))
+    ).toBe('Idea reviewer did not return a review');
+  });
+  test('Groam validation "too long" is not the conversation copy', () => {
+    const error = Object.assign(new Error('Screen context title is too long'), {
+      name: 'ConvexError',
+      data: 'Screen context title is too long'
+    });
+    expect(assistantFailureMessage(error)).toBe('Screen context title is too long');
+    expect(assistantFailureMessage(new Error('Title is too long'))).toBe(
+      'The model provider said: Title is too long'
+    );
+  });
+  test('provider errors keep prefix and context errors keep mapping', () => {
+    expect(assistantFailureMessage(new Error('Weird upstream failure'))).toBe(
+      'The model provider said: Weird upstream failure'
+    );
+    expect(assistantFailureMessage(new Error('maximum context length exceeded'))).toContain(
+      'too long'
+    );
   });
 });

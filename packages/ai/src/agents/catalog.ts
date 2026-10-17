@@ -2,6 +2,7 @@ import { type AssistantAgentDefinition, agentAssignableTo } from '#ai/agents/def
 import { groamAgent } from '#ai/agents/groam/definition';
 import type { AgentAssignableTarget, AssistantAgentId } from '#ai/agents/ids';
 import { issueAgent } from '#ai/agents/issue/definition';
+import { researcherAgent } from '#ai/agents/researcher/definition';
 import { reviewerAgent } from '#ai/agents/reviewer/definition';
 import { assistantToolSpecs, type AssistantCapability as SpecCapability } from '#ai/tools/specs';
 
@@ -19,6 +20,7 @@ import { assistantToolSpecs, type AssistantCapability as SpecCapability } from '
 export const assistantAgents = {
   groam: groamAgent,
   issue: issueAgent,
+  researcher: researcherAgent,
   reviewer: reviewerAgent
 } as const satisfies Record<AssistantAgentId, AssistantAgentDefinition>;
 
@@ -139,9 +141,9 @@ export function mentionedAssistantAgent(
   return null;
 }
 
-/** Default title for a fresh assistant chat, and the legacy title it replaced. */
+/** Default title for a fresh assistant chat. */
 export const assistantChatDefaultTitle = 'New AI chat';
 
 export function isDefaultAssistantChatTitle(title: string | null): boolean {
-  return title === assistantChatDefaultTitle || title === 'New chat';
+  return title === assistantChatDefaultTitle;
 }

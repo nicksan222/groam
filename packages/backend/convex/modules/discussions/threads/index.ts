@@ -7,15 +7,25 @@ import {
   updateThreadMetadata,
   type vStreamArgs
 } from '@convex-dev/agent';
-import { assistantAgents, type ChatAgentId, mentionedAssistantAgent } from '@groam/ai/agents';
+import {
+  assistantAgents,
+  type ChatAgentId,
+  isAssistantAgentId,
+  mentionedAssistantAgent
+} from '@groam/ai/agents';
 import { assistantThreadSummary } from '@groam/ai/runtime/thread-summary';
 import type { PaginationOptions } from 'convex/server';
 import { ConvexError, type Infer } from 'convex/values';
 import { components } from '#convex-generated/api';
-import type { Id } from '#convex-generated/dataModel';
+import type { Doc, Id } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import { AgentRuns } from '#convex/modules/assistant/runs/index';
 import { requireWorkspace, type Workspace, workspaceRoster } from '#convex/modules/auth/workspace';
+import { kindPolicy, kindsForHome } from '#convex/modules/discussions/kinds/index';
+import {
+  removeLinksForDiscussion,
+  removeLinksForTrip
+} from '#convex/modules/discussions/links/cascade';
 import {
   DiscussionMedia,
   type DiscussionMessageMedia
@@ -26,16 +36,48 @@ import {
   discussionRateLimiter,
   MAX_DISCUSSION_MEMBERS,
   MAX_DISCUSSIONS_PER_USER,
+  MAX_MEMBERSHIP_ROWS,
   MAX_MESSAGE_ATTACHMENT_RECEIPTS,
+  MAX_RESEARCH_TITLE_LENGTH,
   MAX_TITLE_LENGTH
 } from '#convex/modules/discussions/threads/limits';
 import type { DiscussionMember } from '#convex/modules/discussions/threads/schema';
 import { insertWithShortId } from '#convex/modules/references/index';
+import { loadTripContext } from '#convex/modules/travel/trips/ctx';
 
 export type { DiscussionMessageMedia } from '#convex/modules/discussions/media/index';
 export type { DiscussionAccess } from '#convex/modules/discussions/threads/entity';
 
+const DEFAULT_DISCUSSION_AGENT: ChatAgentId = 'groam';
+const DELETED_MESSAGE_TEXT = 'This message was deleted';
+const ASSISTANT_FAILED_FALLBACK = 'Assistant response failed';
+const EMPTY_REPLY_ERROR = 'Groam returned an empty reply';
+/** A `responding` claim older than this is treated as a crashed action and can be reclaimed. */
+export const ASSISTANT_CLAIM_STALE_MS = 10 * 60 * 1000;
+
+export function isStaleClaim(claimedAt: number, now: number): boolean {
+  return now - claimedAt >= ASSISTANT_CLAIM_STALE_MS;
+}
+
+/** Receipt-derived fields. A deleted message must never leak its original parts to members. */
+function receiptFields(receipt: Doc<'discussionMessages'> | null) {
+  return {
+    ...(receipt?.deletedAt === undefined ? {} : { parts: [] }),
+    ...(receipt?.assistantStatus ? { assistantStatus: receipt.assistantStatus } : {}),
+    ...(receipt?.assistantStatus === 'failed'
+      ? { assistantError: receipt.assistantError ?? ASSISTANT_FAILED_FALLBACK }
+      : {})
+  };
+}
+
 const assistantAuthor = { name: 'Groam', userId: 'groam-ai' };
+
+/** Agent messages are saved under the agent id; show that agent's label, Groam when unknown. */
+function assistantAuthorFor(agentName: string | undefined) {
+  return agentName !== undefined && isAssistantAgentId(agentName)
+    ? { ...assistantAuthor, name: assistantAgents[agentName].label }
+    : assistantAuthor;
+}
 
 function messageContentForMedia(
   content: ReturnType<typeof Messages.normalizeContent>,
@@ -57,6 +99,20 @@ export type DiscussionAssistantClaim = {
   threadId: string;
 };
 
+/** Groam answers in `always` kinds; otherwise a request or an @mention picks the agent. */
+function selectAssistantAgent(
+  kind: Doc<'discussions'>['kind'],
+  text: string,
+  requested: ChatAgentId | undefined
+): ChatAgentId | null {
+  if (kindPolicy(kind).agentTrigger === 'always') return requested ?? DEFAULT_DISCUSSION_AGENT;
+  return requested ?? mentionedAssistantAgent(text)?.id ?? null;
+}
+
+function titleLimitFor(kind: Doc<'discussions'>['kind']): number {
+  return kindPolicy(kind).trip === 'required' ? MAX_RESEARCH_TITLE_LENGTH : MAX_TITLE_LENGTH;
+}
+
 export type DiscussionSendResult = {
   assistantAgent: ChatAgentId | null;
   messageId: string;
@@ -68,10 +124,10 @@ function sameMembers(left: DiscussionMember[], right: DiscussionMember[]): boole
   return left.every((member) => rightIds.has(member.userId));
 }
 
-function normalizeTitle(value: string): string {
+export function normalizeTitle(value: string, maximum = MAX_TITLE_LENGTH): string {
   const normalized = value.trim();
-  if (normalized.length === 0 || normalized.length > MAX_TITLE_LENGTH) {
-    throw new ConvexError(`Discussion titles must contain 1 to ${MAX_TITLE_LENGTH} characters`);
+  if (normalized.length === 0 || normalized.length > maximum) {
+    throw new ConvexError(`Discussion titles must contain 1 to ${maximum} characters`);
   }
   return normalized;
 }
@@ -163,7 +219,9 @@ export class Discussions {
       listUIMessages(ctx, components.agent, args),
       syncStreams(ctx, components.agent, args)
     ]);
-    const membersById = new Map(discussion.members.map((member) => [member.userId, member]));
+    const membersById = new Map(
+      ('members' in discussion ? discussion.members : []).map((member) => [member.userId, member])
+    );
     const receiptForMessage = async (message: (typeof messages.page)[number]) =>
       message.role === 'user'
         ? await ctx.db
@@ -186,7 +244,7 @@ export class Discussions {
       receipt: Awaited<ReturnType<typeof receiptForMessage>>,
       attachments: Awaited<ReturnType<typeof attachmentsForReceipt>>
     ) => {
-      if (receipt?.deletedAt) return 'This message was deleted';
+      if (receipt?.deletedAt) return DELETED_MESSAGE_TEXT;
       const receiptText = receipt?.content.text?.trim() ?? '';
       return message.role === 'user' && receipt
         ? displayUserMessageText(receiptText, message.text, attachments)
@@ -194,20 +252,22 @@ export class Discussions {
     };
     const presentMessage = async (message: (typeof messages.page)[number]) => {
       const receipt = await receiptForMessage(message);
-      const attachments = await attachmentsForReceipt(receipt);
+      const deleted = receipt?.deletedAt !== undefined;
+      const attachments = deleted ? [] : await attachmentsForReceipt(receipt);
       const participant =
         (message.userId ? membersById.get(message.userId) : null) ?? receipt?.author;
       return {
         ...message,
+        ...receiptFields(receipt),
         attachments,
         author:
           message.role === 'assistant'
-            ? assistantAuthor
+            ? assistantAuthorFor(message.agentName)
             : (participant ?? {
                 name: 'Former participant',
                 userId: message.userId ?? 'former-participant'
               }),
-        deleted: receipt?.deletedAt !== undefined,
+        deleted,
         edited: receipt?.editedAt !== undefined,
         media: attachments,
         mine: message.role === 'user' && message.userId === workspace.userId,
@@ -235,6 +295,8 @@ export class Discussions {
     const workspace = await requireWorkspace(ctx);
     const normalizedTitle = normalizeTitle(title);
     const normalizedRequestId = Messages.normalizeRequestId(clientRequestId, 'Discussion');
+    // A client-supplied trip id must belong to the caller's group.
+    if (tripId) await loadTripContext(ctx, tripId, workspace);
     const requestedUserIds = new Set(memberUserIds);
     requestedUserIds.add(workspace.userId);
     if (requestedUserIds.size < 2 || requestedUserIds.size > MAX_DISCUSSION_MEMBERS) {
@@ -260,7 +322,11 @@ export class Discussions {
       )
       .unique();
     if (existing) {
-      if (existing.title !== normalizedTitle || !sameMembers(existing.members, members)) {
+      if (
+        existing.kind !== 'group' ||
+        existing.title !== normalizedTitle ||
+        !sameMembers(existing.members, members)
+      ) {
         throw new ConvexError('Discussion request id was already used');
       }
       return existing._id;
@@ -269,12 +335,16 @@ export class Discussions {
       key: workspace.tokenIdentifier,
       throws: true
     });
+    // Only group rows count toward the limit; research participation is unbounded by it.
     const membershipLists = await Promise.all(
       members.map((member) =>
         ctx.db
           .query('discussionMembers')
-          .withIndex('by_organizationId_and_userId', (query) =>
-            query.eq('organizationId', workspace.organizationId).eq('userId', member.userId)
+          .withIndex('by_organizationId_and_userId_and_kind', (query) =>
+            query
+              .eq('organizationId', workspace.organizationId)
+              .eq('userId', member.userId)
+              .eq('kind', 'group')
           )
           .take(MAX_DISCUSSIONS_PER_USER)
       )
@@ -288,6 +358,7 @@ export class Discussions {
       insertWithShortId(ctx, 'discussions', {
         clientRequestId: normalizedRequestId,
         createdBy: { name: workspace.viewerName, userId: workspace.userId },
+        kind: 'group' as const,
         members,
         organizationId: workspace.organizationId,
         title: normalizedTitle,
@@ -304,6 +375,7 @@ export class Discussions {
       members.map((member) =>
         ctx.db.insert('discussionMembers', {
           discussionId,
+          kind: 'group',
           organizationId: workspace.organizationId,
           userId: member.userId
         })
@@ -314,24 +386,36 @@ export class Discussions {
 
   static async list(ctx: QueryCtx) {
     const workspace = await requireWorkspace(ctx);
-    const memberships = await ctx.db
-      .query('discussionMembers')
-      .withIndex('by_organizationId_and_userId', (query) =>
-        query.eq('organizationId', workspace.organizationId).eq('userId', workspace.userId)
+    // Read only the kinds listed in Chats; research participation rows never count here.
+    const membershipLists = await Promise.all(
+      kindsForHome('chats').map((kind) =>
+        ctx.db
+          .query('discussionMembers')
+          .withIndex('by_organizationId_and_userId_and_kind', (query) =>
+            query
+              .eq('organizationId', workspace.organizationId)
+              .eq('userId', workspace.userId)
+              .eq('kind', kind)
+          )
+          .take(MAX_MEMBERSHIP_ROWS + 1)
       )
-      .take(MAX_DISCUSSIONS_PER_USER + 1);
-    if (memberships.length > MAX_DISCUSSIONS_PER_USER) {
-      throw new ConvexError(`Discussion limit of ${MAX_DISCUSSIONS_PER_USER} exceeded`);
+    );
+    const memberships = membershipLists.flat();
+    if (memberships.length > MAX_MEMBERSHIP_ROWS) {
+      throw new ConvexError(`Discussion limit of ${MAX_MEMBERSHIP_ROWS} exceeded`);
     }
     const discussions = await Promise.all(
       memberships.map(async (membership) => {
         const discussion = await ctx.db.get('discussions', membership.discussionId);
         if (!discussion || discussion.organizationId !== workspace.organizationId) return null;
-        const trip = discussion.tripId ? await ctx.db.get('trips', discussion.tripId) : null;
+        // The literal narrows to the variant that carries members and an optional trip.
+        if (discussion.kind !== 'group') return null;
+        const tripDoc = discussion.tripId ? await ctx.db.get('trips', discussion.tripId) : null;
+        const trip = tripDoc?.organizationId === workspace.organizationId ? tripDoc : null;
         return {
           createdBy: discussion.createdBy,
           id: discussion._id,
-          ...(discussion.shortId ? { shortId: discussion.shortId } : {}),
+          shortId: discussion.shortId,
           lastMessage: discussion.lastMessage ?? null,
           members: discussion.members,
           threadId: discussion.threadId ?? null,
@@ -364,14 +448,17 @@ export class Discussions {
     return others.sort((left, right) => left.name.localeCompare(right.name));
   }
 
-  /** Any current participant can rename. Title changes do not bump unread. */
+  /** Group: any participant. Research: creator or trip organizer. Title changes do not bump unread. */
   static async rename(
     ctx: MutationCtx,
     discussionId: Id<'discussions'>,
     title: string
   ): Promise<null> {
-    const { discussion } = await DiscussionAccess.require(ctx, discussionId);
-    const normalizedTitle = normalizeTitle(title);
+    const access = await DiscussionAccess.require(ctx, discussionId);
+    const { discussion } = access;
+    access.assertCanManage();
+    access.assertWritable();
+    const normalizedTitle = normalizeTitle(title, titleLimitFor(discussion.kind));
     if (normalizedTitle === discussion.title) return null;
     await ctx.db.patch('discussions', discussion._id, { title: normalizedTitle });
     if (discussion.threadId) {
@@ -403,7 +490,9 @@ export class Discussions {
       mediaIds?: Id<'media'>[];
     }
   ): Promise<DiscussionSendResult> {
-    const { discussion, workspace } = await DiscussionAccess.require(ctx, discussionId);
+    const access = await DiscussionAccess.require(ctx, discussionId);
+    const { discussion, workspace } = access;
+    access.assertWritable();
     if (!discussion.threadId) {
       throw new ConvexError('This discussion must be upgraded before sending new messages');
     }
@@ -420,8 +509,11 @@ export class Discussions {
     }
     const { agentPrompt, storedContent } = messageContentForMedia(normalizedContent, media);
     const normalizedRequestId = Messages.normalizeRequestId(clientRequestId, 'Message');
-    const assistantAgent =
-      requestedAssistantAgent ?? mentionedAssistantAgent(normalizedContent.text)?.id ?? null;
+    const assistantAgent = selectAssistantAgent(
+      discussion.kind,
+      normalizedContent.text,
+      requestedAssistantAgent
+    );
     const existing = await ctx.db
       .query('discussionMessages')
       .withIndex('by_discussionId_and_author_userId_and_clientRequestId', (query) =>
@@ -472,13 +564,16 @@ export class Discussions {
         })
       )
     );
+    const sentAt = Date.now();
     await ctx.db.patch('discussions', discussion._id, {
       lastMessage: {
         authorName: workspace.viewerName,
         text: storedContent.text.slice(0, 160)
       },
-      updatedAt: Date.now()
+      updatedAt: sentAt
     });
+    // The sender has seen their own message; do not flag the chat unread for them.
+    await access.markSeen(ctx, sentAt);
     if (assistantAgent && discussion.threadId) {
       await AgentRuns.queueDiscussionTurn(ctx, {
         agentId: assistantAgent,
@@ -531,7 +626,9 @@ export class Discussions {
     discussionId: Id<'discussions'>,
     promptMessageId: string
   ): Promise<DiscussionAssistantClaim | null> {
-    const { discussion, workspace } = await DiscussionAccess.require(ctx, discussionId);
+    const access = await DiscussionAccess.require(ctx, discussionId);
+    access.assertWritable();
+    const { discussion, workspace } = access;
     if (!discussion.threadId) throw new ConvexError('Discussion AI is unavailable');
     const request = await ctx.db
       .query('discussionMessages')
@@ -542,10 +639,19 @@ export class Discussions {
     if (!request || request.author.userId !== workspace.userId || !request.assistantAgent) {
       throw new ConvexError('AI request not found');
     }
-    if (request.assistantStatus === 'complete' || request.assistantStatus === 'responding') {
+    if (
+      request.assistantStatus === 'complete' ||
+      (request.assistantStatus === 'responding' &&
+        request.assistantClaimedAt !== undefined &&
+        !isStaleClaim(request.assistantClaimedAt, Date.now()))
+    ) {
       return null;
     }
-    await ctx.db.patch('discussionMessages', request._id, { assistantStatus: 'responding' });
+    await ctx.db.patch('discussionMessages', request._id, {
+      assistantClaimedAt: Date.now(),
+      assistantError: undefined,
+      assistantStatus: 'responding'
+    });
     const runId = await AgentRuns.claimDiscussionTurn(ctx, {
       agentId: request.assistantAgent,
       createdBy: { name: workspace.viewerName, userId: workspace.userId },
@@ -590,17 +696,19 @@ export class Discussions {
       )
       .unique();
     if (!request?.assistantAgent || request.assistantStatus !== 'responding') return;
+    const blank = responseText?.trim().length === 0;
+    const failed = responseText === null || blank;
+    const failure = error ?? (blank ? EMPTY_REPLY_ERROR : ASSISTANT_FAILED_FALLBACK);
     await ctx.db.patch('discussionMessages', request._id, {
-      assistantStatus: responseText === null ? 'failed' : 'complete'
+      assistantError: failed ? failure.slice(0, 300) : undefined,
+      assistantStatus: failed ? 'failed' : 'complete'
     });
     await AgentRuns.finish(ctx, {
       runId,
-      status: responseText === null ? 'failed' : 'complete',
-      ...(responseText === null
-        ? { error: error ?? 'Assistant response failed' }
-        : { report: responseText.trim() || 'Finished this discussion turn.' })
+      status: failed ? 'failed' : 'complete',
+      ...(failed ? { error: failure } : { report: responseText.trim() })
     });
-    if (responseText === null || discussion.updatedAt !== expectedUpdatedAt) return;
+    if (failed || discussion.updatedAt !== expectedUpdatedAt) return;
     await ctx.db.patch('discussions', discussion._id, {
       lastMessage: {
         authorName: assistantAgents[request.assistantAgent].label,
@@ -652,6 +760,83 @@ export class Discussions {
     return discussions.length > 0;
   }
 
+  /**
+   * Remove one batch of a discussion's dependents (messages, reactions, participation, links),
+   * then its Agent thread and row once nothing is left. True while more work remains.
+   */
+  static async purge(
+    ctx: MutationCtx,
+    discussion: Doc<'discussions'>,
+    batchSize: number
+  ): Promise<boolean> {
+    const messages = await ctx.db
+      .query('discussionMessages')
+      .withIndex('by_discussionId', (query) => query.eq('discussionId', discussion._id))
+      .take(batchSize);
+    if (messages.length > 0) {
+      await Promise.all(
+        messages.map(async (message) => {
+          await DiscussionMedia.deleteRefs(ctx, message._id);
+          await ctx.db.delete('discussionMessages', message._id);
+        })
+      );
+      return true;
+    }
+    const reactions = await ctx.db
+      .query('discussionMessageReactions')
+      .withIndex('by_discussionId_and_messageId', (query) =>
+        query.eq('discussionId', discussion._id)
+      )
+      .take(batchSize);
+    if (reactions.length > 0) {
+      await Promise.all(
+        reactions.map((row) => ctx.db.delete('discussionMessageReactions', row._id))
+      );
+      return true;
+    }
+    const members = await ctx.db
+      .query('discussionMembers')
+      .withIndex('by_discussionId', (query) => query.eq('discussionId', discussion._id))
+      .take(batchSize);
+    if (members.length > 0) {
+      await Promise.all(members.map((row) => ctx.db.delete('discussionMembers', row._id)));
+      return true;
+    }
+    if (await removeLinksForDiscussion(ctx, discussion._id, batchSize)) return true;
+    if (discussion.threadId) {
+      await ctx.runMutation(components.agent.threads.deleteAllForThreadIdAsync, {
+        limit: batchSize,
+        threadId: discussion.threadId
+      });
+    }
+    await ctx.db.delete('discussions', discussion._id);
+    return false;
+  }
+
+  /** One step of removing a trip's research conversations and links. True while work remains. */
+  static async purgeForTrip(
+    ctx: MutationCtx,
+    tripId: Id<'trips'>,
+    batchSize: number
+  ): Promise<boolean> {
+    for (const kind of kindsForHome('trip')) {
+      const conversation = await ctx.db
+        .query('discussions')
+        .withIndex('by_tripId_and_kind_and_updatedAt', (query) =>
+          query.eq('tripId', tripId).eq('kind', kind)
+        )
+        .first();
+      if (!conversation) continue;
+      // The literal narrows to the variant that can be marked as being removed.
+      if (conversation.kind === 'research' && conversation.deletingAt === undefined) {
+        await ctx.db.patch('discussions', conversation._id, { deletingAt: Date.now() });
+      }
+      await Discussions.purge(ctx, conversation, batchSize);
+      return true;
+    }
+    return await removeLinksForTrip(ctx, tripId, batchSize);
+  }
+
   static async removeOrganizationMemberBatch(
     ctx: MutationCtx,
     organizationId: string,
@@ -667,9 +852,14 @@ export class Discussions {
     await Promise.all(
       memberships.map(async (membership) => {
         const discussion = await ctx.db.get('discussions', membership.discussionId);
-        if (discussion?.organizationId === organizationId) {
+        if (discussion?.organizationId === organizationId && discussion.kind === 'group') {
           await ctx.db.patch('discussions', discussion._id, {
             members: discussion.members.filter((member) => member.userId !== userId)
+          });
+        }
+        if (discussion?.organizationId === organizationId && discussion.kind === 'research') {
+          await ctx.db.patch('discussions', discussion._id, {
+            participantCount: Math.max(0, discussion.participantCount - 1)
           });
         }
         await ctx.db.delete(membership._id);
@@ -679,16 +869,8 @@ export class Discussions {
   }
 
   static async markRead(ctx: MutationCtx, discussionId: Id<'discussions'>): Promise<null> {
-    const { discussion, workspace } = await DiscussionAccess.require(ctx, discussionId);
-    const membership = await ctx.db
-      .query('discussionMembers')
-      .withIndex('by_discussionId_and_userId', (query) =>
-        query.eq('discussionId', discussion._id).eq('userId', workspace.userId)
-      )
-      .unique();
-    if (membership) {
-      await ctx.db.patch('discussionMembers', membership._id, { lastReadAt: Date.now() });
-    }
+    const access = await DiscussionAccess.require(ctx, discussionId);
+    await access.markSeen(ctx, Date.now());
     return null;
   }
 
@@ -698,7 +880,9 @@ export class Discussions {
     messageId: string,
     emoji: string
   ): Promise<null> {
-    const { discussion, workspace } = await DiscussionAccess.require(ctx, discussionId);
+    const access = await DiscussionAccess.require(ctx, discussionId);
+    const { discussion, workspace } = access;
+    access.assertWritable();
     const normalized = emoji.trim();
     if (normalized.length === 0 || normalized.length > 8) {
       throw new ConvexError('Reaction must be a short emoji');
@@ -746,7 +930,9 @@ export class Discussions {
     agentMessageId: string,
     text: string
   ): Promise<null> {
-    const { workspace } = await DiscussionAccess.require(ctx, discussionId);
+    const access = await DiscussionAccess.require(ctx, discussionId);
+    const { workspace } = access;
+    access.assertWritable();
     const receipt = await ctx.db
       .query('discussionMessages')
       .withIndex('by_discussionId_and_agentMessageId', (query) =>
@@ -769,7 +955,9 @@ export class Discussions {
     discussionId: Id<'discussions'>,
     agentMessageId: string
   ): Promise<null> {
-    const { workspace } = await DiscussionAccess.require(ctx, discussionId);
+    const access = await DiscussionAccess.require(ctx, discussionId);
+    const { workspace } = access;
+    access.assertWritable();
     const receipt = await ctx.db
       .query('discussionMessages')
       .withIndex('by_discussionId_and_agentMessageId', (query) =>
@@ -779,9 +967,17 @@ export class Discussions {
     if (!receipt || receipt.author.userId !== workspace.userId) {
       throw new ConvexError('You can only delete your own messages');
     }
+    if (receipt.deletedAt !== undefined) return null;
     await ctx.db.patch('discussionMessages', receipt._id, {
       content: { format: 'plain_text', text: '' },
-      deletedAt: Date.now()
+      deletedAt: Date.now(),
+      mediaIds: undefined
+    });
+    await DiscussionMedia.deleteRefs(ctx, receipt._id);
+    // Scrub the stored Agent message so the original text never reaches later AI turns.
+    await ctx.runMutation(components.agent.messages.updateMessage, {
+      messageId: agentMessageId as never,
+      patch: { message: { content: DELETED_MESSAGE_TEXT, role: 'user' } }
     });
     return null;
   }

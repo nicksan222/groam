@@ -1,19 +1,11 @@
 import type { Id } from '@groam/backend/data-model';
 import { render } from '@groam/vitest-config/react';
-import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import type { TripSection } from '@/features/trips/trip-sections';
 import { testIds } from '@/lib/test-ids';
 import { TripDetailView } from './trip-detail-view';
-
-// oxlint-disable-next-line groam/no-local-type-definitions -- test double shape
-type RouteTarget = {
-  params?: Record<string, string | number>;
-  search?: Record<string, unknown>;
-  to: string;
-};
 
 const state = vi.hoisted(() => ({
   agentContext: vi.fn(),
@@ -23,25 +15,13 @@ const state = vi.hoisted(() => ({
   trip: undefined as TripDetail | undefined
 }));
 
+vi.mock('@/features/research/hooks/use-trip-researches', () => ({
+  useTripResearches: () => ({ isLoading: false, researches: [] })
+}));
+
 vi.mock('@tanstack/react-router', async () => {
-  const navigate = vi.fn();
-  const resolveHref = ({ params = {}, search = {}, to }: RouteTarget) => {
-    const path = to.replace(/\$(\w+)/gu, (_, name: string) => String(params[name]));
-    const query = new URLSearchParams(
-      Object.entries(search).map(([key, value]) => [key, String(value)])
-    ).toString();
-    return query ? `${path}?${query}` : path;
-  };
-  return {
-    ...(await vi.importActual<typeof import('@tanstack/react-router')>('@tanstack/react-router')),
-    Link: ({ children, params, search, to, ...rest }: RouteTarget & { children?: ReactNode }) => (
-      <a href={resolveHref({ params, search, to })} {...rest}>
-        {children}
-      </a>
-    ),
-    Navigate: (target: RouteTarget) => <div>navigate:{resolveHref(target)}</div>,
-    useNavigate: () => navigate
-  };
+  const { mockRouterTargets } = await import('@/lib/testing/router-mock');
+  return mockRouterTargets();
 });
 
 vi.mock('@/features/trips/hooks/use-trips', () => ({

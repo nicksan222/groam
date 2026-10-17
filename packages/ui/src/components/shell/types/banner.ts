@@ -10,15 +10,7 @@ import type {
   ShellCardVariant,
   ShellEyebrowTone
 } from '#src/lib/shell-card';
-import type {
-  ShellPageBodyVariant,
-  ShellSectionStack,
-  ShellSplitAsideWidth,
-  ShellSplitBreakpoint,
-  ShellSplitGap,
-  ShellSplitSticky,
-  ShellStackDensity
-} from '#src/lib/shell-layout';
+import type { ShellPageBodyVariant, ShellStackDensity } from '#src/lib/shell-layout';
 
 export interface BannerLayoutProps {
   children: ReactNode;
@@ -87,7 +79,7 @@ export interface SectionHeaderProps {
 export interface SectionProps extends React.HTMLAttributes<HTMLElement> {
   children: ReactNode;
   className?: string;
-  stack?: ShellSectionStack;
+  stack?: ShellStackDensity;
 }
 
 export interface RevealProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -108,32 +100,6 @@ export interface UnderlineNavProps extends Omit<React.HTMLAttributes<HTMLElement
   children: ReactNode;
   className?: string;
   pageInset?: boolean;
-}
-
-export interface SplitProps extends React.HTMLAttributes<HTMLDivElement> {
-  asideWidth?: ShellSplitAsideWidth;
-  breakpoint?: ShellSplitBreakpoint;
-  children: ReactNode;
-  className?: string;
-  gap?: ShellSplitGap;
-}
-
-export interface SplitMainProps extends React.HTMLAttributes<HTMLElement> {
-  as?: ElementType;
-  children: ReactNode;
-  className?: string;
-  stack?: ShellStackDensity;
-}
-
-export interface SplitAsideProps extends React.HTMLAttributes<HTMLElement> {
-  as?: ElementType;
-  children: ReactNode;
-  breakpoint?: ShellSplitBreakpoint;
-  className?: string;
-  mobileDivider?: boolean;
-  order?: 'first' | 'none';
-  stack?: ShellStackDensity;
-  sticky?: ShellSplitSticky;
 }
 
 export type PropertyGridItem = {

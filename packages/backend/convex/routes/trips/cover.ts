@@ -11,12 +11,22 @@ export const run = workspaceAction({
   },
   returns: v.null(),
   handler: async (ctx, { contentType, storageId, tripId }): Promise<null> => {
-    const file = await Files.inspect(ctx, storageId, contentType);
-    return await ctx.runMutation(internal.modules.travel.trips.commit.setCover, {
-      contentType: file.contentType,
-      signatureValid: file.signatureValid,
-      storageId,
-      tripId
-    });
+    try {
+      const file = await Files.inspect(ctx, storageId, contentType);
+      return await ctx.runMutation(internal.modules.travel.trips.commit.setCover, {
+        contentType: file.contentType,
+        signatureValid: file.signatureValid,
+        storageId,
+        tripId
+      });
+    } catch (error) {
+      await ctx
+        .runMutation(internal.modules.travel.covers.discard.discardTripUpload, {
+          storageId,
+          tripId
+        })
+        .catch(() => null);
+      throw error;
+    }
   }
 });

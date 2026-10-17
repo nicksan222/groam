@@ -1,10 +1,9 @@
 import type { Id } from '@groam/backend/data-model';
 import { render } from '@groam/vitest-config/react';
 import { useViewport } from '@groam/vitest-config/viewport';
-import type { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
-import type { Locator } from 'vite-plus/test/browser';
+import { expectPhoneListRow, expectWideListRow } from '@/lib/testing/list-row-assertions';
 import type { IssueListItem } from '@/types/issues';
 import { IssueList } from './issue-list';
 
@@ -19,6 +18,7 @@ const listItem = {
   idea: null,
   labels: [],
   rank: 0,
+  shortId: 'isuabc',
   status: 'open',
   title: 'Coast day',
   updatedAt: Date.UTC(2026, 7, 17)
@@ -30,41 +30,12 @@ const issueListItem = (over: Partial<IssueListItem> = {}): IssueListItem => ({
   ...over
 });
 
-/** The row's cells the browser currently shows, read fresh because a re-render replaces nodes. */
-function visibleCells(row: Locator): HTMLTableCellElement[] {
-  return [...row.element().querySelectorAll('td')].filter((cell) => cell.checkVisibility());
-}
-
-/** On a phone a list row keeps a readable title and its status, and the page never scrolls sideways. */
-async function expectPhoneListRow(row: Locator): Promise<void> {
-  await expect.element(row).toBeVisible();
-  await expect
-    .poll(() => row.element().querySelector('td')?.getBoundingClientRect().width)
-    .toBeGreaterThan(200);
-  await expect.poll(() => visibleCells(row)).toHaveLength(2);
-  await expect.element(page.getByRole('button', { name: 'Columns' })).not.toBeInTheDocument();
-  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
-    document.documentElement.clientWidth
-  );
-}
-
-/** On a wide screen a list row shows its secondary columns next to the title and status. */
-async function expectWideListRow(row: Locator): Promise<void> {
-  await expect.element(row).toBeVisible();
-  await expect.poll(() => visibleCells(row).length).toBeGreaterThan(2);
-}
-
 const navigate = vi.hoisted(() => vi.fn());
 
-vi.mock('@tanstack/react-router', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
-  Link: ({ children, className, to }: { children?: ReactNode; className?: string; to: string }) => (
-    <a className={className} href={to}>
-      {children}
-    </a>
-  ),
-  useNavigate: () => navigate
-}));
+vi.mock('@tanstack/react-router', async (importOriginal) => {
+  const { mockRouter } = await import('@/lib/testing/router-mock');
+  return mockRouter(importOriginal, navigate);
+});
 
 const issues = [
   issueListItem(),
@@ -135,7 +106,7 @@ describe('on a phone', () => {
     await expect.element(page.getByText('Opened by')).not.toBeVisible();
 
     // The title is a real link, so a tap navigates without needing row activation.
-    await expect.element(firstRow().getByRole('link')).toHaveAttribute('href', '/issues/$issueId');
+    await expect.element(firstRow().getByRole('link')).toHaveAttribute('href', '/issues/issue-1');
   });
 
   test('shows the author and assignee columns again on a wide screen', async () => {

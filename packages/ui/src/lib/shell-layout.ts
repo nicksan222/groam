@@ -64,9 +64,6 @@ export const SHELL_SECTION_BASE = 'dashboard-reveal min-w-0 max-w-full';
 
 export type ShellStackDensity = 'lg' | 'loose' | 'md' | 'none' | 'page' | 'sm';
 
-/** @deprecated Prefer `ShellStackDensity`. */
-export type ShellSectionStack = ShellStackDensity;
-
 const stackDensityTokens: Record<ShellStackDensity, string> = {
   lg: 'space-y-5',
   loose: 'space-y-8 sm:space-y-10',
@@ -76,7 +73,7 @@ const stackDensityTokens: Record<ShellStackDensity, string> = {
   sm: 'space-y-3'
 };
 
-/** Vertical rhythm for `Shell.Stack` / `Shell.Section` / split panes. */
+/** Vertical rhythm for `Shell.Stack`, `Shell.Section`, and column panes. */
 export function shellStackClassName({
   className,
   stack = 'md'

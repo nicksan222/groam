@@ -9,6 +9,6 @@
  * `assistantAgents`. The catalog map must satisfy this roster or compilation
  * fails.
  */
-export type AssistantAgentId = 'groam' | 'issue' | 'reviewer';
+export type AssistantAgentId = 'groam' | 'issue' | 'researcher' | 'reviewer';
 
 export type AgentAssignableTarget = 'issue' | 'proposal';

@@ -9,32 +9,32 @@ import { internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
 
 export function createSetTripDatesTool(activeTripId: Id<'trips'> | null) {
-  let saved:
-    | {
-        endDate: string;
-        startDate: string;
-        status: 'saved';
-        tripId: Id<'trips'>;
-      }
-    | undefined;
+  // Idempotent per identical input; different dates perform a new write.
+  const saved = new Map<
+    string,
+    { endDate: string; startDate: string; status: 'saved'; tripId: Id<'trips'> }
+  >();
   return createTool({
     description:
       'Set exact start and end dates on an existing DRAFT trip idea. Call startTripVersion first, read its workingTripId, and pass that workingTripId here. Never pass the protected shared trip id. The end date is exclusive, so 2027-01-01 through 2027-01-10 is 9 days.',
     execute: async (toolCtx, input) => {
-      if (saved) return saved;
       const tripId = requestedTripId(input.tripId, activeTripId);
+      const key = JSON.stringify([tripId, input.startDate, input.endDate]);
+      const previous = saved.get(key);
+      if (previous) return previous;
       await toolCtx.runMutation(internal.modules.assistant.model.index.setTripVersionDates, {
         endDate: input.endDate,
         startDate: input.startDate,
         tripId
       });
-      saved = {
+      const result = {
         endDate: input.endDate,
         startDate: input.startDate,
         status: 'saved' as const,
         tripId
       };
-      return saved;
+      saved.set(key, result);
+      return result;
     },
     inputSchema: z.object({
       endDate: z

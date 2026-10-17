@@ -58,3 +58,22 @@ test('links the assigned issue and agent run when starting an idea', async () =>
   });
   expect(mutations).toEqual([{ issueId: 'issue-1', runId: 'run-1', tripId: 'shared-trip' }]);
 });
+
+test('reuses the started idea for the same trip and starts one for another trip', async () => {
+  const mutations: unknown[] = [];
+  const tool = createStartTripVersionTool('shared-trip' as never) as unknown as {
+    execute: (ctx: unknown, input: unknown) => Promise<unknown>;
+  };
+  const context = {
+    runMutation: async (_reference: unknown, args: unknown) => {
+      mutations.push(args);
+      return { ideaName: 'idea', proposalId: 'proposal', workingTripId: 'working-trip' };
+    }
+  };
+
+  await tool.execute(context, {});
+  await tool.execute(context, { tripId: 'shared-trip' });
+  expect(mutations).toHaveLength(1);
+  await tool.execute(context, { tripId: 'other-trip' });
+  expect(mutations).toEqual([{ tripId: 'shared-trip' }, { tripId: 'other-trip' }]);
+});

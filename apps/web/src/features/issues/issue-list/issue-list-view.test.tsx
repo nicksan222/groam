@@ -1,37 +1,11 @@
-import type { Id } from '@groam/backend/data-model';
 import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
+import { workspaceIssue } from '@/features/issues/issue-fixtures';
 import { testIds } from '@/lib/test-ids';
 import type { WorkspaceIssue } from '@/types/issues';
-import type { IssueListItem } from '@/types/issues';
 import { IssueListView } from './issue-list-view';
-
-const listItem = {
-  assignee: null,
-  author: { name: 'Alex Morgan', userId: 'user-alex' },
-  canAssign: true,
-  canManage: true,
-  condition: null,
-  dueAt: null,
-  id: 'issue-1' as Id<'tripIssues'>,
-  idea: null,
-  labels: [],
-  rank: 0,
-  status: 'open',
-  title: 'Coast day',
-  updatedAt: Date.UTC(2026, 7, 17)
-} satisfies Omit<IssueListItem, 'tripName'>;
-
-const workspaceIssue = (over: Partial<WorkspaceIssue> = {}): WorkspaceIssue => ({
-  ...listItem,
-  body: 'Add a coast day near Lisbon.',
-  closedAt: null,
-  tripId: 'trip-1' as Id<'trips'>,
-  tripName: 'Atlantic week',
-  ...over
-});
 
 const state = vi.hoisted(() => ({
   isLoading: false,
@@ -40,6 +14,7 @@ const state = vi.hoisted(() => ({
   status: 'Exhausted' as 'CanLoadMore' | 'Done' | 'Exhausted' | 'LoadingFirstPage' | 'LoadingMore'
 }));
 
+vi.mock('@/features/issues/hooks/use-generate-rule', () => ({ useGenerateRule: () => vi.fn() }));
 vi.mock('@groam/ai/ui/context/agent-context', () => ({
   useSetAgentContext: () => undefined
 }));
@@ -120,5 +95,25 @@ describe('IssueListView', () => {
     await expect.element(page.getByRole('heading', { name: 'Issues' })).toBeInTheDocument();
     await expect.element(page.getByLabelText('Search issues')).toBeInTheDocument();
     await expect.element(page.getByRole('button', { name: 'New issue' })).toBeInTheDocument();
+  });
+
+  test('keeps loading while the Open filter hides every loaded issue', async () => {
+    state.issues = [workspaceIssue({ status: 'closed', title: 'Old decision' })];
+    state.status = 'CanLoadMore';
+    await render(<IssueListView />);
+    await expect.element(page.getByText('Looking through more issues…')).toBeInTheDocument();
+    await expect
+      .element(page.getByText('There are no open issues in this group.'))
+      .not.toBeInTheDocument();
+    await expect.poll(() => state.loadMore.mock.calls.length).toBeGreaterThan(0);
+  });
+
+  test('says there are no open issues once every page is loaded', async () => {
+    state.issues = [workspaceIssue({ status: 'closed', title: 'Old decision' })];
+    await render(<IssueListView />);
+    await expect
+      .element(page.getByText('There are no open issues in this group.'))
+      .toBeInTheDocument();
+    expect(state.loadMore).not.toHaveBeenCalled();
   });
 });

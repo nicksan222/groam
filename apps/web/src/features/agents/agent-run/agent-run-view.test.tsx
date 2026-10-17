@@ -1,7 +1,6 @@
 import { agentRunEventLabels } from '@groam/ai/backend/runs/events';
 import { agentRunDuration, agentRunTime } from '@groam/ai/backend/runs/time';
 import { render } from '@groam/vitest-config/react';
-import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import type { AgentRun } from '@/features/agents/hooks/use-agent';
@@ -70,31 +69,8 @@ vi.mock('@/features/agents/hooks/use-agent-run', () => ({
 }));
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
-  return {
-    ...(await importOriginal<typeof import('@tanstack/react-router')>()),
-    Link: ({
-      children,
-      className,
-      params,
-      to
-    }: {
-      children?: ReactNode;
-      className?: string;
-      params?: Record<string, string>;
-      to: string;
-    }) => {
-      let href = to;
-      for (const [key, value] of Object.entries(params ?? {})) {
-        href = href.replace(`$${key}`, value);
-      }
-      return (
-        <a className={className} href={href} onClick={(event) => event.preventDefault()}>
-          {children}
-        </a>
-      );
-    },
-    useNavigate: () => navigate
-  };
+  const { mockRouter } = await import('@/lib/testing/router-mock');
+  return mockRouter(importOriginal, navigate);
 });
 
 function issueAgent() {
@@ -125,6 +101,7 @@ function run(overrides: Partial<AgentRun> & Pick<AgentRun, 'id' | 'title'>): Age
     issueId: 'issue-1' as AgentRun['issueId'],
     kickoff: 'assign',
     proposalId: null,
+    shortId: 'runabc',
     related: { ...emptyRelated(), issueTitle: 'Rainy-day option', tripName: 'Lisbon' },
     report: 'Opened a draft idea.',
     startedAt: 1,
@@ -583,6 +560,7 @@ describe('AgentRunView', () => {
 
   test('shows the run title and full error without truncating in the destination', async () => {
     const firstError = 'The model timed out while writing the rainy-day option.';
+    const presentedError = 'Groam AI lost connection while replying. Try again in a moment.';
     state.agent = { ...issueAgent(), activeRunCount: 0, lastActivityAt: 2, status: 'failed' };
     state.run = run({
       completedAt: 2,
@@ -614,8 +592,8 @@ describe('AgentRunView', () => {
     expect(page.getByTestId(testIds.agentRunTitle).element().textContent).toContain(
       'Rainy-day option'
     );
-    await expect.element(detail.getByText(firstError)).toHaveClass('whitespace-pre-wrap');
-    expect(detail.getByText(firstError).elements()).toHaveLength(1);
+    await expect.element(detail.getByText(presentedError)).toHaveClass('whitespace-pre-wrap');
+    expect(detail.getByText(presentedError).elements()).toHaveLength(1);
     await expect
       .element(page.getByTestId(testIds.agentEvent).getByText('Run failed'))
       .toBeInTheDocument();
@@ -636,7 +614,9 @@ test('explains provider authentication failures without offering an unsupported 
     title: 'Review the draft'
   });
   await render(<AgentRunView agentId="reviewer" runId="review-failed" />);
-  await expect.element(page.getByText(/Add or fix a key in AI settings/u)).toBeInTheDocument();
+  await expect
+    .element(page.getByText(/Connect your ChatGPT account in AI settings/u))
+    .toBeInTheDocument();
   expect(page.getByRole('link', { name: 'AI settings' }).element().getAttribute('href')).toBe(
     '/settings/ai'
   );
@@ -664,10 +644,14 @@ test('does not present a last update as an unrecorded start or finish', async ()
 test('copies the run identifier for support and investigation', async () => {
   const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined);
   state.agent = issueAgent();
-  state.run = run({ id: 'copy-this-run' as AgentRun['id'], title: 'Review the draft' });
+  state.run = run({
+    id: 'copy-this-run' as AgentRun['id'],
+    shortId: 'copyrn',
+    title: 'Review the draft'
+  });
   await render(<AgentRunView agentId="issue" runId="copy-this-run" />);
   await page.getByRole('button', { name: 'Copy run ID' }).click();
-  await vi.waitFor(() => expect(writeText).toHaveBeenCalledWith('copy-this-run'));
+  await vi.waitFor(() => expect(writeText).toHaveBeenCalledWith('copyrn'));
 });
 
 test('prevents duplicate stop requests and shows pending feedback', async () => {

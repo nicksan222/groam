@@ -100,7 +100,12 @@ export function DecisionActions({
         </p>
       )}
       <ApplyIdeaDialog
-        onApply={() => run('merge', merge)}
+        onApply={async () => {
+          const applied = await run('merge', merge);
+          // A conflicted or failed apply is already reported by a toast; keep the dialog from sticking.
+          if (!applied) setConfirmingApply(false);
+          return applied;
+        }}
         onOpenChange={setConfirmingApply}
         open={confirmingApply}
         pending={pendingAction === 'merge'}

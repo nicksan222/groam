@@ -9,6 +9,7 @@ import {
   MAX_TITLE_LENGTH,
   requireSchedulableDestination,
   TIME_BLOCKS,
+  TIME_PATTERN,
   type TRIP_COST_SPLITS,
   tripCostSplit,
   tripDayField,
@@ -90,7 +91,9 @@ function activityPatchFromTool(input: {
   costAmount?: number | null;
   costSplit?: (typeof TRIP_COST_SPLITS)[number];
   day?: number;
+  endTime?: string;
   notes?: string;
+  startTime?: string;
   timeBlock?: (typeof TIME_BLOCKS)[number];
   title?: string;
 }) {
@@ -99,7 +102,9 @@ function activityPatchFromTool(input: {
     ...(input.costAmount === undefined ? {} : { costAmount: input.costAmount }),
     ...(input.costSplit === undefined ? {} : { costSplit: input.costSplit }),
     ...(input.day === undefined ? {} : { day: input.day }),
+    ...(input.endTime === undefined ? {} : { endTime: input.endTime }),
     ...(input.notes === undefined ? {} : { notes: input.notes }),
+    ...(input.startTime === undefined ? {} : { startTime: input.startTime }),
     ...(input.timeBlock === undefined ? {} : { timeBlock: input.timeBlock }),
     ...(input.title === undefined ? {} : { title: input.title })
   };
@@ -147,11 +152,21 @@ export function createUpdateActivityTool(activeTripId: Id<'trips'> | null) {
       ),
       costSplit: costSplitField(),
       day: tripDayField().optional(),
+      endTime: z
+        .string()
+        .regex(TIME_PATTERN)
+        .optional()
+        .describe('End time as HH:MM (24h). Omit to keep.'),
       notes: z
         .string()
         .max(240)
         .optional()
         .describe('A concise practical or booking note. Pass an empty string to clear it.'),
+      startTime: z
+        .string()
+        .regex(TIME_PATTERN)
+        .optional()
+        .describe('Start time as HH:MM (24h), e.g. 20:00 to move dinner to 8pm. Omit to keep.'),
       timeBlock: z.enum(TIME_BLOCKS).optional(),
       title: z.string().min(1).max(MAX_TITLE_LENGTH).optional(),
       tripId: workingTripIdField()

@@ -6,7 +6,7 @@ import { CircleDot, Plus } from 'lucide-react';
 import { useIssueListAgentContext } from '@/features/issues/hooks/use-issues-agent-context';
 import { useWorkspaceIssues } from '@/features/issues/hooks/use-workspace-issues';
 import { CreateIssueDialog } from '@/features/issues/issue-list/create-issue-dialog';
-import { useTrips } from '@/features/trips/hooks/use-trips';
+import { useCreatableTrips } from '@/features/trips/hooks/use-creatable-trips';
 import { useOpenState } from '@/features/workspace/hooks/use-open-state';
 import { PaginatedListContent } from '@/features/workspace/workspace-list/paginated-list-content';
 import { useWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
@@ -24,11 +24,10 @@ const emptyMessages: Record<IssueStatusFilter, string> = {
 
 export function IssueListView() {
   const { isLoading, issues, loadMore, status } = useWorkspaceIssues();
-  const { trips, isLoading: tripsLoading } = useTrips({ includeArchived: false });
   const { activeOrganization } = useWorkspace();
   const createDialog = useOpenState(false);
   const navigate = useNavigate();
-  const creatableTrips = trips.filter((trip) => trip.archivedAt === null);
+  const { trips: creatableTrips, isLoading: tripsLoading } = useCreatableTrips(createDialog.open);
 
   useIssueListAgentContext(activeOrganization.name, issues);
 
@@ -62,7 +61,7 @@ export function IssueListView() {
             void navigate({ params: { issueId }, to: '/issues/$issueId' });
           }}
           open={createDialog.open}
-          trips={creatableTrips.map((trip) => ({ id: trip.id, name: trip.name }))}
+          trips={creatableTrips}
         />
         <PaginatedListContent
           empty={
@@ -85,6 +84,7 @@ export function IssueListView() {
             emptyFilterMessage={(filter) => emptyMessages[filter]}
             isLoading={isLoading}
             issues={issues}
+            pagination={{ loadMore, status }}
             showTripName
           />
         </PaginatedListContent>

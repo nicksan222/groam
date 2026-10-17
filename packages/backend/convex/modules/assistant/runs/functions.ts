@@ -110,3 +110,9 @@ export const queueReviewForViewer = internalMutation({
     });
   }
 });
+
+export const sweepStaleRuns = internalMutation({
+  args: {},
+  returns: v.number(),
+  handler: (ctx) => AgentRuns.failStaleRuns(ctx)
+});

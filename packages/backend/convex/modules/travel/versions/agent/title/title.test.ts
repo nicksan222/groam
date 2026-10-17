@@ -1,5 +1,8 @@
-import { expect, test } from 'vite-plus/test';
+import { mockModel } from '@convex-dev/agent';
+import { expectConsole } from '@groam/vitest-config/console';
+import { expect, test, vi } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
+import { AssistantProvider } from '#convex/modules/ai/provider';
 import { setupTrip, tripLocationInput } from '#testing/trips';
 import { changedTripDetails, createTitledVersion, draftChangedVersion } from '#testing/versions';
 
@@ -268,3 +271,30 @@ test('ignores title generation for submitted ideas', { timeout: 10_000 }, async 
     owner.client.query(api.routes.trips.versions.list.run, { tripId })
   ).resolves.toMatchObject([{ status: 'in_review', title: expect.stringMatching(/trip idea$/u) }]);
 });
+
+test(
+  'logs and keeps the default title when the model returns nothing',
+  { timeout: 15_000 },
+  async () => {
+    const { owner, tripId } = await setupTrip();
+    const version = await draftChangedVersion(owner, tripId);
+    const before = await owner.client.query(api.routes.trips.versions.list.run, { tripId });
+    vi.spyOn(AssistantProvider, 'configured').mockResolvedValue({
+      languageModel: mockModel({ content: [] }),
+      modelId: 'test-model'
+    } as never);
+    expectConsole('error', 'idea title generation failed');
+
+    await expect(
+      owner.client.action(internal.modules.travel.versions.agent.title.action.run, {
+        generation: 1,
+        proposalId: version.proposalId
+      })
+    ).resolves.toBeNull();
+
+    await expect(
+      owner.client.query(api.routes.trips.versions.list.run, { tripId })
+    ).resolves.toMatchObject([{ title: before[0]?.title }]);
+    vi.restoreAllMocks();
+  }
+);

@@ -72,3 +72,24 @@ export async function updateTrip(input: UpdateTripInput): Promise<void> {
   await tap(by(ids.editTripSave));
   await expectGone(by(ids.editTripDialog));
 }
+
+export type TravelerRsvp = 'going' | 'maybe' | 'not_going';
+
+const rsvpLabels: Record<TravelerRsvp, string> = {
+  going: 'Going',
+  maybe: 'Maybe',
+  not_going: 'Not going'
+};
+
+/** Sets the viewer's own RSVP from the open trip's traveler chip, then closes the roster again. */
+export async function setMyTripRsvp(status: TravelerRsvp): Promise<void> {
+  await tap(page.getByRole('button', { name: /^\d+ travelers?$/u }));
+  const roster = by(ids.tripTravelers);
+  await expect.element(roster).toBeVisible();
+  const rsvp = roster.getByRole('combobox', { name: 'Your RSVP' });
+  await tap(rsvp);
+  await tap(page.getByRole('option', { name: rsvpLabels[status], exact: true }));
+  await expect.element(rsvp).toHaveTextContent(rsvpLabels[status]);
+  await userEvent.keyboard('{Escape}');
+  await expectGone(roster);
+}

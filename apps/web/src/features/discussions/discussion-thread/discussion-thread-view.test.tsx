@@ -7,6 +7,7 @@ import type { DiscussionListItem } from '@/features/discussions/hooks/use-discus
 import { DiscussionThreadView } from './discussion-thread-view';
 
 const state = vi.hoisted(() => ({
+  actionsArgs: [] as unknown[][],
   discussions: [] as DiscussionListItem[],
   isListLoading: false,
   send: vi.fn().mockResolvedValue(true),
@@ -48,12 +49,15 @@ vi.mock('@/features/discussions/hooks/use-discussions', () => ({
 }));
 
 vi.mock('@/features/discussions/hooks/use-discussion-message-actions', () => ({
-  useDiscussionMessageActions: () => ({
-    editMessage: vi.fn().mockResolvedValue(null),
-    react: vi.fn().mockResolvedValue(null),
-    reactions: [],
-    removeMessage: vi.fn().mockResolvedValue(null)
-  })
+  useDiscussionMessageActions: (...args: unknown[]) => {
+    state.actionsArgs.push(args);
+    return {
+      editMessage: vi.fn().mockResolvedValue(null),
+      react: vi.fn().mockResolvedValue(null),
+      reactions: [],
+      removeMessage: vi.fn().mockResolvedValue(null)
+    };
+  }
 }));
 
 vi.mock('@/features/discussions/hooks/use-discussion-thread', () => ({
@@ -119,6 +123,7 @@ function message(partial: Partial<DiscussionMessage>): DiscussionMessage {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  state.actionsArgs = [];
   state.discussions = [discussion];
   state.isListLoading = false;
   state.thread = {
@@ -181,4 +186,25 @@ test('forwards composer send and stop to the thread hook', async () => {
 
   expect(state.stop).toHaveBeenCalled();
   expect(state.send).toHaveBeenCalledWith({ text: 'Hello from composer' });
+});
+
+test('keys read tracking on the newest message so an open chat stays read', async () => {
+  state.thread.messages = [message({ key: 'k-1', status: 'streaming', text: 'Hel' })];
+  const view = await render(<DiscussionThreadView discussionId={'discussion-1' as never} />);
+  const streamingKey = state.actionsArgs.at(-1)?.[1];
+  expect(state.actionsArgs.at(-1)?.[0]).toBe('discussion-1');
+
+  state.thread = {
+    ...state.thread,
+    messages: [message({ key: 'k-1', status: 'streaming', text: 'Hello there' })]
+  };
+  await view.rerender(<DiscussionThreadView discussionId={'discussion-1' as never} />);
+  expect(state.actionsArgs.at(-1)?.[1]).toBe(streamingKey);
+
+  state.thread = {
+    ...state.thread,
+    messages: [message({ key: 'k-1', status: 'success', text: 'Hello there' })]
+  };
+  await view.rerender(<DiscussionThreadView discussionId={'discussion-1' as never} />);
+  expect(state.actionsArgs.at(-1)?.[1]).not.toBe(streamingKey);
 });

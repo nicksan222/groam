@@ -385,6 +385,7 @@ test('validates adjacency, limits, organization scope, and editing access', asyn
 
   const outsiderDestinationId = await owner.client.run(async (ctx) => {
     const outsiderTripId = await ctx.db.insert('trips', {
+      shortId: 'outsider',
       clientRequestId: crypto.randomUUID(),
       creationFingerprint: 'foreign-test-trip',
       creator: { userId: 'foreign-user' },

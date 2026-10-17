@@ -1,28 +1,17 @@
 import { render } from '@groam/vitest-config/react';
 import { describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
+import { starterCondition } from '@/features/issues/issue-condition-fixtures';
 import { ISSUE_STATUSES, issueStatusMeta } from '@/features/issues/issue-status';
 import { testIds } from '@/lib/test-ids';
 import type { IssueCondition, IssueStatus } from '@/types/issues';
 import { IssueStatusSelect } from './issue-status-select';
 
-const autoCondition = (
-  met = false,
-  refusal = met ? 'Settled by the trip.' : 'Closes once the trip has a destination.'
-) =>
-  ({
-    check: 'destination',
-    kind: 'auto',
-    label: 'The trip has a destination',
-    met,
-    refusal
-  }) satisfies IssueCondition;
-
 const manualCondition = (label = 'Flights confirmed') =>
   ({ kind: 'manual', label, met: null }) satisfies IssueCondition;
 
-const unmet = autoCondition(false, 'Closes once the trip has a destination.');
-const met = autoCondition(true, 'Settled by the trip.');
+const unmet = starterCondition(false, 'Closes once the trip has a destination.');
+const met = starterCondition(true, 'Settled by the trip.');
 
 const option = (status: IssueStatus) =>
   page
@@ -82,7 +71,7 @@ describe('IssueStatusSelect', () => {
       if (disabled.some((status) => status === candidate)) {
         await expect.element(row).toHaveAttribute('aria-disabled', 'true');
         expect(row.element().textContent).toContain(
-          condition?.kind === 'auto' ? condition.refusal : ''
+          condition?.kind === 'rule' ? condition.refusal : ''
         );
       } else {
         await expect.element(row).not.toHaveAttribute('aria-disabled');

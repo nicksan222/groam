@@ -1,6 +1,7 @@
 import { type AgentScreenContext, useSetAgentContext } from '@groam/ai/ui/context/agent-context';
 import { isResolved } from '@groam/backend/convex/modules/travel/issues/status';
 import type { Id } from '@groam/backend/data-model';
+import { useTripResearches } from '@/features/research/hooks/use-trip-researches';
 import { type TripSection, tripSectionTitle } from '@/features/trips/trip-sections';
 import type { TripAgentView } from '@/types/trips';
 import { useTripIssues } from './use-trip-issues';
@@ -15,6 +16,7 @@ function agentContextNeeds(trip: TripDetail | undefined, view: TripAgentView) {
   return {
     ideas: view === 'idea-compare' || onBoard || (shared && view === 'ideas'),
     issues: onBoard || (shared && view === 'issues'),
+    research: shared && view === 'research',
     travelers: onBoard || (shared && view === 'overview')
   };
 }
@@ -28,6 +30,7 @@ export function useTripAgentContext(trip: TripDetail | undefined, view: TripAgen
     needs.ideas && Boolean(sourceTripId)
   );
   const { issues } = useTripIssues(sourceTripId ?? ('' as Id<'trips'>), needs.issues);
+  const { researches } = useTripResearches(needs.research && trip ? trip.id : undefined);
   const { travelers } = useTripTravelers(needs.travelers && trip ? trip.id : undefined);
   const ideas = (proposals ?? []).map((proposal) => ({
     id: proposal.id,
@@ -44,6 +47,12 @@ export function useTripAgentContext(trip: TripDetail | undefined, view: TripAgen
             openIssues: (issues ?? [])
               .filter((issue) => !isResolved(issue.status))
               .map((issue) => ({ id: issue.id, title: issue.title })),
+            researches: researches.map((research) => ({
+              brief: research.brief,
+              id: research.id,
+              linkCount: research.linkCount,
+              title: research.title
+            })),
             travelers: travelers.map((traveler) => ({
               name: traveler.name,
               status: traveler.status,
@@ -88,6 +97,7 @@ export function tripScreenAgentContext(
   extras: {
     ideas?: Array<{ id: string; ideaName: string; status: string }>;
     openIssues?: Array<{ id: string; title: string }>;
+    researches?: Array<{ brief: null | string; id: string; linkCount: number; title: string }>;
     travelers?: Array<{ name: string; status: string; userId: string }>;
   } = {}
 ): AgentScreenContext {
@@ -212,6 +222,12 @@ export function tripScreenAgentContext(
       description:
         'Help turn planning concerns into scoped trip issues, clarify acceptance criteria, and prepare work for a trip idea.'
     },
+    research: {
+      capabilities: ['trip.status.read', 'research.list', 'research.read', 'research.create'],
+      data: { ...base, researches: extras.researches ?? [] },
+      description:
+        'The trip’s researches: subjects the group is collecting links and notes about. Help start one, find one, or summarize what a research found.'
+    },
     overview: {
       capabilities: [
         'trip.status.read',
@@ -233,7 +249,7 @@ export function tripScreenAgentContext(
   };
 }
 
-/** The assistant backend names the board's section "overview"; it has no "board" literal yet. */
+/** The assistant backend names the board's section "overview"; it has no "board" or "research" literal yet. */
 function assistantSection(section: TripSection) {
-  return section === 'board' ? 'overview' : section;
+  return section === 'board' || section === 'research' ? 'overview' : section;
 }

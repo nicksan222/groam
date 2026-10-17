@@ -7,6 +7,7 @@ import { useIssueMutations } from '@/features/issues/hooks/use-issue-mutations';
 import type { useTripIssue } from '@/features/trips/hooks/use-trip-issues';
 import { useAsyncPending } from '@/features/workspace/hooks/use-async-pending';
 import { groupIssueTimeline } from './group-issue-timeline';
+import { IssueAutoStatusEvent } from './issue-auto-status-event';
 import { IssueComment } from './issue-comment';
 import { IssueComposer } from './issue-composer';
 import type { IssueDetailData } from './issue-detail-data';
@@ -18,6 +19,7 @@ export function IssueDetail({
   addComment,
   implement,
   issue,
+  setCondition,
   setDueAt
 }: Omit<ReturnType<typeof useTripIssue>, 'issue'> & { issue: IssueDetailData }) {
   const { assign } = useIssueMutations();
@@ -28,7 +30,10 @@ export function IssueDetail({
   const comment = async () => {
     const value = content.trim();
     if (!value) return;
-    if (await pending.run(() => addComment(value))) setContent('');
+    if (await pending.run(() => addComment(value))) {
+      // Keep anything typed while the comment was sending.
+      setContent((current) => (current.trim() === value ? '' : current));
+    }
   };
   const startIdea = async () => {
     const version = await pending.run(async () => implement());
@@ -46,14 +51,23 @@ export function IssueDetail({
         timestamp={issue.updatedAt}
       />
       {groupIssueTimeline(issue.comments).map((block) =>
-        block.kind === 'system' ? (
+        block.kind === 'auto' ? (
+          <IssueAutoStatusEvent
+            change={block.auto.change}
+            key={block.item.id}
+            label={block.auto.label}
+            timestamp={block.item.createdAt}
+          />
+        ) : block.kind === 'system' ? (
           <IssueSystemEvent
-            events={block.items.map((item) => ({
+            events={block.items.map(({ event, item }) => ({
+              actorName: item.author.name,
+              event,
               id: item.id,
               message: item.content,
               timestamp: item.createdAt
             }))}
-            key={block.items[0]?.id}
+            key={block.items[0]?.item.id}
           />
         ) : (
           <IssueComment
@@ -64,18 +78,21 @@ export function IssueDetail({
           />
         )
       )}
-      <IssueComposer
-        content={content}
-        onChange={setContent}
-        onComment={() => void comment()}
-        pending={pending.isPending}
-      />
+      {issue.canComment ? (
+        <IssueComposer
+          content={content}
+          onChange={setContent}
+          onComment={() => void comment()}
+          pending={pending.isPending}
+        />
+      ) : null}
     </Timeline>
   );
   const sidebar = (
     <IssueSidebar
       issue={issue}
       onAssign={(assignee) => void pending.run(() => assign(issue.id, assignee))}
+      onSetCondition={setCondition}
       onSetDueAt={(dueAt) => void pending.run(() => setDueAt(dueAt))}
       onStartIdea={() => void startIdea()}
       pending={pending.isPending}

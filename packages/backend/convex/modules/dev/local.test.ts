@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vite-plus/test';
-import { isLocalConvexSiteUrl, isLocalDevelopmentUrl } from './local';
+import { assertLocalSiteUrl, isLocalConvexSiteUrl, isLocalDevelopmentUrl } from './local';
 
 describe('local development URL guard', () => {
   test('accepts loopback HTTP URLs without credentials', () => {
@@ -21,5 +21,13 @@ describe('local development URL guard', () => {
     expect(isLocalConvexSiteUrl(undefined)).toBe(true);
     expect(isLocalConvexSiteUrl('http://127.0.0.1:3211')).toBe(true);
     expect(isLocalConvexSiteUrl('https://happy-animal-123.convex.site')).toBe(false);
+  });
+
+  test('guards only on the deployment site URL', () => {
+    expect(() => assertLocalSiteUrl('http://127.0.0.1:3211')).not.toThrow();
+    expect(() => assertLocalSiteUrl('https://happy-animal-123.convex.site')).toThrow(
+      'only available in local development'
+    );
+    expect(() => assertLocalSiteUrl(undefined)).toThrow();
   });
 });

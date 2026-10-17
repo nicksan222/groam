@@ -16,10 +16,20 @@ export const run = workspaceAction({
       });
     }
 
-    const file = await Files.inspect(ctx, input.coverStorageId, input.coverContentType);
-    return await ctx.runMutation(internal.modules.travel.trips.commit.create, {
-      input: { ...input, coverContentType: file.contentType },
-      signatureValid: file.signatureValid
-    });
+    const { coverStorageId } = input;
+    try {
+      const file = await Files.inspect(ctx, coverStorageId, input.coverContentType);
+      return await ctx.runMutation(internal.modules.travel.trips.commit.create, {
+        input: { ...input, coverContentType: file.contentType },
+        signatureValid: file.signatureValid
+      });
+    } catch (error) {
+      await ctx
+        .runMutation(internal.modules.travel.covers.discard.discardUpload, {
+          storageId: coverStorageId
+        })
+        .catch(() => null);
+      throw error;
+    }
   }
 });

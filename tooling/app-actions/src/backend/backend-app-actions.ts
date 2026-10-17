@@ -34,6 +34,14 @@ import { createInvitation, redeemInvitation } from './invitations';
 import { joinWorkspace } from './join-workspace';
 import { listWorkspaceMemberIds } from './list-workspace-member-ids';
 import { requestIdeaReview } from './request-idea-review';
+import {
+  type CreateResearchInput,
+  createResearch,
+  findTripResearchTargets,
+  linkResearch,
+  postResearchMessage,
+  type ResearchLinkTarget
+} from './research';
 import { resetLocalDevelopmentData } from './reset-local-development-data';
 import { restoreTrip } from './restore-trip';
 import { sendMessage } from './send-message';
@@ -83,6 +91,24 @@ export class BackendAppActions extends AppActions<AuthenticatedAppUser> {
   readonly updateTrip = (user: AuthenticatedAppUser, input: UpdateTripInput) =>
     updateTrip({ backend: this.backend, user }, input);
 
+  createResearch(user: AuthenticatedAppUser, input: CreateResearchInput) {
+    return createResearch({ backend: this.backend, user }, input);
+  }
+  linkResearch(
+    user: AuthenticatedAppUser,
+    input: { discussionId: string; target: ResearchLinkTarget }
+  ) {
+    return linkResearch({ backend: this.backend, user }, input);
+  }
+  postResearchMessage(
+    user: AuthenticatedAppUser,
+    input: { clientRequestId: string; discussionId: string; text: string }
+  ) {
+    return postResearchMessage({ backend: this.backend, user }, input);
+  }
+  findTripResearchTargets(user: AuthenticatedAppUser, input: { tripId: string }) {
+    return findTripResearchTargets({ backend: this.backend, user }, input);
+  }
   resetLocalDevelopmentData() {
     return resetLocalDevelopmentData(this.backend.config.convexUrl);
   }

@@ -46,8 +46,8 @@ async function queueIdeaReviewerRun(
   ctx: MutationCtx,
   proposal: Doc<'tripProposals'>
 ): Promise<void> {
-  const reviewers = withIdeaReviewer(proposal.reviewers ?? []);
-  if (!(proposal.reviewers ?? []).some((reviewer) => reviewer.kind === 'agent')) {
+  const reviewers = withIdeaReviewer(proposal.reviewers);
+  if (!proposal.reviewers.some((reviewer) => reviewer.kind === 'agent')) {
     await ctx.db.patch('tripProposals', proposal._id, {
       reviewers,
       updatedAt: Date.now()
@@ -69,7 +69,7 @@ const MAX_PROPOSAL_FEEDBACK = 200;
 const MAX_PROPOSAL_FEEDBACK_LENGTH = 2_000;
 
 function ideaNameFor(proposal: Doc<'tripProposals'>): string {
-  return proposal.branchName ?? IdeaNames.friendly(proposal._id);
+  return proposal.branchName;
 }
 
 async function baseSnapshotFor(
@@ -227,7 +227,7 @@ async function feedbackForProposal(ctx: QueryCtx, proposalId: Id<'tripProposals'
     createdAt: comment._creationTime,
     id: comment._id,
     // Feedback created before kinds were introduced blocked review, so preserve that behavior.
-    kind: comment.kind ?? 'change_request',
+    kind: comment.kind,
     parentCommentId: comment.parentCommentId ?? null,
     resolvedAt: comment.resolvedAt ?? null,
     updatedAt: comment.updatedAt
@@ -249,7 +249,7 @@ function independentReviewers(
 
 /** Human reviewers were explicitly asked — author must wait for an independent yes. */
 function requiresIndependentReview(proposal: Doc<'tripProposals'>) {
-  return (proposal.reviewers ?? []).some((reviewer) => reviewer.kind === 'user');
+  return proposal.reviewers.some((reviewer) => reviewer.kind === 'user');
 }
 
 /**
@@ -279,7 +279,7 @@ async function notifyIdeaAudience(
 ) {
   const voters = await eligibleVoters(source);
   const reviewerIds = [];
-  for (const reviewer of proposal.reviewers ?? []) {
+  for (const reviewer of proposal.reviewers) {
     if (reviewer.kind === 'user') reviewerIds.push(reviewer.userId);
   }
   const audience =
@@ -304,7 +304,7 @@ function proposalTripData(
   source: TripCtx,
   now: number,
   ideaName: string
-): Omit<Doc<'trips'>, '_creationTime' | '_id'> {
+): Omit<Doc<'trips'>, '_creationTime' | '_id' | 'shortId'> {
   return {
     budget: source.trip.budget,
     clientRequestId: `proposal:${source.trip._id}:${source.workspace.userId}:${now}`,
@@ -465,6 +465,7 @@ async function create(
     branchName: ideaName,
     ...(options?.issueId ? { issueId: options.issueId } : {}),
     organizationId: source.workspace.organizationId,
+    feedbackCount: 0,
     requiredApprovals: settings.requiredApprovals,
     reviewers: [ideaReviewer()],
     sourceTripId: source.trip._id,
@@ -473,6 +474,7 @@ async function create(
       options?.title?.trim() ||
       (issue ? `Implement: ${issue.title}` : `${source.workspace.viewerName}'s trip idea`),
     titleSource: options?.title?.trim() ? 'user' : issue ? 'issue' : 'default',
+    unresolvedFeedbackCount: 0,
     updatedAt: now,
     workingTripId
   });
@@ -523,14 +525,14 @@ async function list(ctx: TripCtx<QueryCtx>) {
       canMerge: capabilities.canMerge,
       ideaName: ideaNameFor(proposal),
       conflictCount: proposal.conflictPaths?.length ?? 0,
-      feedbackCount: proposal.feedbackCount ?? 0,
+      feedbackCount: proposal.feedbackCount,
       hasApproved,
       id: proposal._id,
       issueId: proposal.issueId ?? null,
       status: proposal.status,
       submittedAt: proposal.submittedAt ?? null,
       title: proposal.title,
-      unresolvedFeedbackCount: proposal.unresolvedFeedbackCount ?? 0,
+      unresolvedFeedbackCount: proposal.unresolvedFeedbackCount,
       updatedAt: proposal.updatedAt,
       workingTripId: proposal.workingTripId
     };
@@ -653,21 +655,21 @@ async function get(ctx: QueryCtx, proposalId: Id<'tripProposals'>) {
     ),
     closeReason: proposal.closeReason ?? null,
     conflicts: VersionChanges.conflicts(base, current, proposed, proposal.conflictPaths ?? []),
-    feedbackCount: proposal.feedbackCount ?? 0,
+    feedbackCount: proposal.feedbackCount,
     groamReview: proposal.groamReview ?? null,
     hasApproved,
     id: proposal._id,
     issue,
     mergeCommit: proposal.mergeCommit ?? null,
     requiredApprovals: quorum,
-    reviewers: proposal.reviewers ?? [],
+    reviewers: proposal.reviewers,
     sourceChanged,
     sourceTripId: proposal.sourceTripId,
     status: proposal.status,
     submittedAt: proposal.submittedAt ?? null,
     tipCommit: proposal.tipCommit ?? null,
     title: proposal.title,
-    unresolvedFeedbackCount: proposal.unresolvedFeedbackCount ?? 0,
+    unresolvedFeedbackCount: proposal.unresolvedFeedbackCount,
     updatedAt: proposal.updatedAt,
     workingTripId: proposal.workingTripId
   };
@@ -688,12 +690,12 @@ function reviewState(
   const eligibleApprovals = approvals.filter((approval) =>
     eligibleIds.has(approval.approver.userId)
   );
-  const quorum = proposal.requiredApprovals ?? 1;
+  const quorum = proposal.requiredApprovals;
   const sourceChanged = source.trip.updatedAt !== proposal.baseUpdatedAt;
   const reviewReady =
     isTripAdmin(source) &&
     eligibleApprovals.length >= quorum &&
-    (proposal.unresolvedFeedbackCount ?? 0) === 0;
+    proposal.unresolvedFeedbackCount === 0;
   return {
     capabilities: proposalCapabilities({
       eligibleIds,
@@ -757,7 +759,7 @@ async function finishAgentReview(
 ): Promise<null> {
   const proposal = await ctx.db.get('tripProposals', proposalId);
   if (!proposal) throw new ConvexError('Idea trip not found');
-  if (!(proposal.reviewers ?? []).some((reviewer) => reviewer.kind === 'agent')) {
+  if (!proposal.reviewers.some((reviewer) => reviewer.kind === 'agent')) {
     throw new ConvexError('Idea reviewer is not assigned to review this idea');
   }
   if (proposal.status !== 'in_review' && proposal.status !== 'conflicted') {
@@ -778,7 +780,7 @@ async function finishAgentReview(
       `Groam review comments must contain 1 to ${MAX_PROPOSAL_FEEDBACK_LENGTH} characters`
     );
   }
-  const feedbackCount = proposal.feedbackCount ?? 0;
+  const feedbackCount = proposal.feedbackCount;
   if (feedbackCount + cleanedComments.length > MAX_PROPOSAL_FEEDBACK) {
     throw new ConvexError(`Ideas support up to ${MAX_PROPOSAL_FEEDBACK} feedback items`);
   }
@@ -804,7 +806,7 @@ async function finishAgentReview(
       status: cleanedComments.length > 0 ? 'changes_requested' : 'passed',
       summary: cleanSummary
     },
-    unresolvedFeedbackCount: (proposal.unresolvedFeedbackCount ?? 0) + cleanedComments.length,
+    unresolvedFeedbackCount: proposal.unresolvedFeedbackCount + cleanedComments.length,
     updatedAt: now
   });
   return null;
@@ -855,7 +857,7 @@ function assertFeedbackContent(proposal: Doc<'tripProposals'>, rawContent: strin
   if (content.length === 0 || content.length > MAX_PROPOSAL_FEEDBACK_LENGTH) {
     throw new ConvexError(`Feedback must contain 1 to ${MAX_PROPOSAL_FEEDBACK_LENGTH} characters`);
   }
-  if ((proposal.feedbackCount ?? 0) >= MAX_PROPOSAL_FEEDBACK) {
+  if (proposal.feedbackCount >= MAX_PROPOSAL_FEEDBACK) {
     throw new ConvexError(`Ideas support up to ${MAX_PROPOSAL_FEEDBACK} feedback items`);
   }
   return content;
@@ -928,10 +930,9 @@ async function addFeedback({
     updatedAt: now
   });
   await ctx.db.patch('tripProposals', proposalId, {
-    feedbackCount: (proposal.feedbackCount ?? 0) + 1,
+    feedbackCount: proposal.feedbackCount + 1,
     unresolvedFeedbackCount:
-      (proposal.unresolvedFeedbackCount ?? 0) +
-      (parentCommentId || kind !== 'change_request' ? 0 : 1),
+      proposal.unresolvedFeedbackCount + (parentCommentId || kind !== 'change_request' ? 0 : 1),
     updatedAt: now
   });
   return commentId;
@@ -957,7 +958,7 @@ async function resolveFeedback(
   if (comment.parentCommentId) {
     throw new ConvexError('Resolve the top-level conversation instead of an individual reply');
   }
-  if ((comment.kind ?? 'change_request') !== 'change_request') {
+  if (comment.kind !== 'change_request') {
     throw new ConvexError('Only change requests can be resolved');
   }
   if (proposal.author.userId !== source.workspace.userId && source.role !== 'organizer') {
@@ -974,10 +975,7 @@ async function resolveFeedback(
       updatedAt: now
     }),
     ctx.db.patch('tripProposals', proposalId, {
-      unresolvedFeedbackCount: Math.max(
-        0,
-        (proposal.unresolvedFeedbackCount ?? 0) + (resolved ? -1 : 1)
-      ),
+      unresolvedFeedbackCount: Math.max(0, proposal.unresolvedFeedbackCount + (resolved ? -1 : 1)),
       updatedAt: now
     })
   ]);
@@ -1087,7 +1085,7 @@ async function finishSubmit({
   });
   await queueIdeaReviewerRun(ctx, {
     ...proposal,
-    reviewers: withIdeaReviewer(proposal.reviewers ?? []),
+    reviewers: withIdeaReviewer(proposal.reviewers),
     status: 'in_review',
     submittedAt: timestamp,
     tipCommit,
@@ -1152,8 +1150,8 @@ async function assertMergeReady(
   const approvalCount = approvals.filter((approval) =>
     eligibleIds.has(approval.approver.userId)
   ).length;
-  const quorum = proposal.requiredApprovals ?? 1;
-  if ((proposal.unresolvedFeedbackCount ?? 0) > 0) {
+  const quorum = proposal.requiredApprovals;
+  if (proposal.unresolvedFeedbackCount > 0) {
     throw new ConvexError('Resolve all idea feedback before applying');
   }
   if (approvalCount < quorum) {
@@ -1696,7 +1694,7 @@ async function presentProposalChanges(
 async function reviewContext(ctx: QueryCtx, proposalId: Id<'tripProposals'>) {
   const proposal = await ctx.db.get('tripProposals', proposalId);
   if (!proposal) throw new Error('Proposal not found');
-  if (!(proposal.reviewers ?? []).some((reviewer) => reviewer.kind === 'agent')) {
+  if (!proposal.reviewers.some((reviewer) => reviewer.kind === 'agent')) {
     throw new Error('Idea reviewer is not assigned to review this proposal');
   }
   if (proposal.status !== 'in_review' && proposal.status !== 'conflicted') {

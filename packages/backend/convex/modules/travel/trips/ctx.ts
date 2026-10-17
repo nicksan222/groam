@@ -69,16 +69,27 @@ export function attachTrip<Ctx extends TripReadCtx>(
   return { ...ctx, role, trip, workspace };
 }
 
+/**
+ * The visibility rule every trip reader shares: a trip is visible to members of its
+ * organization. Returns null when the trip is missing or belongs to another group.
+ */
+export async function findVisibleTrip(
+  ctx: TripReadCtx,
+  tripId: Id<'trips'>,
+  workspace: Workspace
+): Promise<Doc<'trips'> | null> {
+  const data = await ctx.db.get('trips', tripId);
+  return data && data.organizationId === workspace.organizationId ? data : null;
+}
+
 export async function loadTripContext<Ctx extends AuthContext & TripReadCtx>(
   ctx: Ctx,
   tripId: Id<'trips'>,
   workspace?: Workspace
 ): Promise<TripCtx<Ctx>> {
   const resolvedWorkspace = workspace ?? (await requireWorkspace(ctx));
-  const data = await ctx.db.get('trips', tripId);
-  if (!data || data.organizationId !== resolvedWorkspace.organizationId) {
-    throw new ConvexError('Trip not found');
-  }
+  const data = await findVisibleTrip(ctx, tripId, resolvedWorkspace);
+  if (!data) throw new ConvexError('Trip not found');
   const role = roleFor(data, resolvedWorkspace.userId, resolvedWorkspace.organizationRole);
   return attachTrip(ctx, data, resolvedWorkspace, role);
 }

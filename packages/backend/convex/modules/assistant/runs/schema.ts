@@ -25,7 +25,7 @@ const run = v.object({
   error: v.union(v.string(), v.null()),
   headline: v.union(v.string(), v.null()),
   id: v.id('agentRuns'),
-  shortId: v.optional(v.string()),
+  shortId: v.string(),
   issueId: v.union(v.id('tripIssues'), v.null()),
   kickoff: agentRunKickoffValidator,
   proposalId: v.union(v.id('tripProposals'), v.null()),
@@ -110,7 +110,7 @@ export const assistantRunTables = {
     toolName: v.optional(v.string())
   }).index('by_runId_and_seq', ['runId', 'seq']),
   agentRuns: defineTable({
-    shortId: v.optional(v.string()),
+    shortId: v.string(),
     agentId: assistantAgentValidator,
     completedAt: v.optional(v.number()),
     createdBy: actor,
@@ -140,5 +140,7 @@ export const assistantRunTables = {
     .index('by_organizationId_and_status', ['organizationId', 'status'])
     .index('by_issueId_and_updatedAt', ['issueId', 'updatedAt'])
     .index('by_discussionId_and_updatedAt', ['discussionId', 'updatedAt'])
+    .index('by_discussionId_and_status_and_updatedAt', ['discussionId', 'status', 'updatedAt'])
     .index('by_proposalId_and_updatedAt', ['proposalId', 'updatedAt'])
+    .index('by_status_and_updatedAt', ['status', 'updatedAt'])
 };

@@ -12,7 +12,7 @@ import {
   toolSpecsFor
 } from './specs';
 
-const agentOrder = ['groam', 'issue', 'reviewer'] as const;
+const agentOrder = ['groam', 'issue', 'reviewer', 'researcher'] as const;
 
 test('every spec key matches its entry id', () => {
   for (const id of assistantCapabilityIds) {

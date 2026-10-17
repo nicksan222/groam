@@ -29,6 +29,7 @@ test('adds a packing item to the explicitly selected working idea', async () => 
     execute: (ctx: unknown, input: unknown) => Promise<unknown>;
   };
   const context = {
+    runQuery: async () => ({ canEdit: true, proposalStatus: 'draft' }),
     runMutation: async (_reference: unknown, args: unknown) => {
       mutations.push(args);
       return { id: 'item-1', label: 'Sunscreen', packed: false };
@@ -43,4 +44,22 @@ test('adds a packing item to the explicitly selected working idea', async () => 
     tripId: 'working-idea'
   });
   expect(mutations).toEqual([{ label: 'Sunscreen', tripId: 'working-idea' }]);
+});
+
+test('refuses packing edits on an idea that is in review', async () => {
+  const mutations: unknown[] = [];
+  const tool = createManagePackingTool('shared-trip' as never) as unknown as {
+    execute: (ctx: unknown, input: unknown) => Promise<unknown>;
+  };
+  const context = {
+    runQuery: async () => ({ canEdit: true, proposalStatus: 'in_review' }),
+    runMutation: async (_reference: unknown, args: unknown) => {
+      mutations.push(args);
+    }
+  };
+
+  await expect(
+    tool.execute(context, { action: 'update', itemId: 'item-1', packed: true, tripId: 'idea' })
+  ).rejects.toThrow('Only a draft idea can be written to');
+  expect(mutations).toEqual([]);
 });

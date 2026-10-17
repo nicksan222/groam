@@ -25,7 +25,7 @@ export function IssueAgentBanner({ issueId }: { issueId: Id<'tripIssues'> }) {
       eventTestId={testIds.agentEvent}
       events={events}
       onRetry={() => retry({ runId: run.id })}
-      onStop={() => void stop({ runId: run.id })}
+      onStop={() => stop({ runId: run.id })}
       retryTestId={testIds.agentRetryFromZero}
       run={run}
       stopTestId={testIds.agentStop}

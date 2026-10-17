@@ -86,18 +86,18 @@ export const tripVersionTables = {
     value: v.string()
   }).index('by_proposalId', ['proposalId']),
   tripProposals: defineTable({
-    shortId: v.optional(v.string()),
+    shortId: v.string(),
     author,
     baseCommit: v.optional(v.string()),
     baseUpdatedAt: v.number(),
-    branchName: v.optional(v.string()),
+    branchName: v.string(),
     closedAt: v.optional(v.number()),
     closeReason: v.optional(v.string()),
     conflictDetectedAt: v.optional(v.number()),
     conflictPaths: v.optional(v.array(v.string())),
     conflictSourceUpdatedAt: v.optional(v.number()),
     conflictWorkingUpdatedAt: v.optional(v.number()),
-    feedbackCount: v.optional(v.number()),
+    feedbackCount: v.number(),
     groamReview: v.optional(
       v.object({
         commentCount: v.number(),
@@ -110,18 +110,21 @@ export const tripVersionTables = {
     mergeCommit: v.optional(v.string()),
     mergedAt: v.optional(v.number()),
     organizationId: v.string(),
-    requiredApprovals: v.optional(v.number()),
-    reviewers: v.optional(v.array(reviewer)),
+    requiredApprovals: v.number(),
+    reviewers: v.array(reviewer),
     sourceTripId: v.id('trips'),
     status,
     submittedAt: v.optional(v.number()),
     tipCommit: v.optional(v.string()),
     title: v.string(),
     titleGeneration: v.optional(v.number()),
-    titleSource: v.optional(
-      v.union(v.literal('auto'), v.literal('default'), v.literal('issue'), v.literal('user'))
+    titleSource: v.union(
+      v.literal('auto'),
+      v.literal('default'),
+      v.literal('issue'),
+      v.literal('user')
     ),
-    unresolvedFeedbackCount: v.optional(v.number()),
+    unresolvedFeedbackCount: v.number(),
     updatedAt: v.number(),
     workingTripId: v.id('trips')
   })
@@ -144,7 +147,7 @@ export const tripVersionTables = {
     author: commentAuthor,
     changeKey: v.optional(v.string()),
     content: v.string(),
-    kind: v.optional(commentKind),
+    kind: commentKind,
     organizationId: v.string(),
     parentCommentId: v.optional(v.id('tripProposalComments')),
     proposalId: v.id('tripProposals'),

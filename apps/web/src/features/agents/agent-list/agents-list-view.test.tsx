@@ -1,6 +1,5 @@
 import { render } from '@groam/vitest-config/react';
 import { useViewport } from '@groam/vitest-config/viewport';
-import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import type { WorkspaceAgentRun } from '@/features/agents/hooks/use-workspace-agent-runs';
@@ -40,31 +39,8 @@ vi.mock('@/features/agents/hooks/use-agent-run', () => ({
 const navigate = vi.hoisted(() => vi.fn());
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
-  return {
-    ...(await importOriginal<typeof import('@tanstack/react-router')>()),
-    Link: ({
-      children,
-      className,
-      params,
-      to
-    }: {
-      children?: ReactNode;
-      className?: string;
-      params?: Record<string, string>;
-      to: string;
-    }) => {
-      let href = to;
-      for (const [key, value] of Object.entries(params ?? {})) {
-        href = href.replace(`$${key}`, value);
-      }
-      return (
-        <a className={className} href={href}>
-          {children}
-        </a>
-      );
-    },
-    useNavigate: () => navigate
-  };
+  const { mockRouter } = await import('@/lib/testing/router-mock');
+  return mockRouter(importOriginal, navigate);
 });
 
 function run(
@@ -80,6 +56,7 @@ function run(
     issueId: null,
     kickoff: 'assign',
     proposalId: null,
+    shortId: 'runabc',
     related: {
       chatTitle: null,
       ideaTitle: null,
@@ -204,7 +181,7 @@ describe('AgentsListView', () => {
     expect(page.getByText('Running').elements()).toHaveLength(2);
     await expect.element(page.getByText('Failed')).toBeInTheDocument();
     await expect.element(page.getByText('Done')).toBeInTheDocument();
-    await expect.element(page.getByText(/The model timed out/u)).toBeInTheDocument();
+    await expect.element(page.getByText(/Groam AI lost connection/u)).toBeInTheDocument();
     const runCells = page.getByTestId(testIds.agentRunFeedRunCell).elements();
     expect(runCells).toHaveLength(4);
     for (const cell of runCells) {

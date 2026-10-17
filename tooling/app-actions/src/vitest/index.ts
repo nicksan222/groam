@@ -34,6 +34,7 @@ export {
   addIdea,
   applyIdea,
   approveAndApplyIdea,
+  applyConflictingIdea,
   approveIdea,
   closeIdea,
   filterWorkspaceIdeas,
@@ -51,6 +52,14 @@ export {
   startWorkspaceIdea,
   type TripDetailConflictChoice
 } from './ideas';
+export {
+  buildIssueRule,
+  expectRuleCondition,
+  expectRuleMet,
+  type RuleGroupSpec,
+  type RuleMatch,
+  type RuleSpec
+} from './issue-rules';
 export {
   addIssueComment,
   assignIssue,
@@ -117,11 +126,14 @@ export {
 } from './trip-board';
 export { currentPath, expectGone, expectPath, idFromPath, presentAttribute } from './queries';
 export { searchIdeas, searchIssues, searchTrips } from './search-trips';
+export { createLinkedResearch, expectLinkedResearch, openLinkedResearch } from './research';
 export {
   archiveTrip,
   createTripFromTrips,
   filterTripsByStatus,
   restoreTrip,
+  setMyTripRsvp,
+  type TravelerRsvp,
   type TripStatusFilter,
   updateTrip
 } from './trips';

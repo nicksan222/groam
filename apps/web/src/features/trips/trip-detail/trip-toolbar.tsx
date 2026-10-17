@@ -86,6 +86,8 @@ export function TripToolbar({
         title={trip.name}
       />
       <TripTravelersSheet
+        archived={archived}
+        canManageOthers={trip.role === 'organizer'}
         onOpenChange={roster.setOpen}
         open={roster.open}
         tripId={trip.id}

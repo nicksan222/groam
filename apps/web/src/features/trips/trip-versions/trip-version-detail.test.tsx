@@ -9,6 +9,10 @@ const state = vi.hoisted(() => ({
   version: {} as Record<string, unknown>
 }));
 
+vi.mock('@/features/research/research-links/linked-researches', () => ({
+  LinkedResearches: () => null
+}));
+
 vi.mock('@tanstack/react-router', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@tanstack/react-router')>()),
   useNavigate: () => state.navigate

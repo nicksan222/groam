@@ -4,204 +4,15 @@ import { render } from '@groam/vitest-config/react';
 import { type ReactNode, useSyncExternalStore } from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page, userEvent } from 'vite-plus/test/browser';
+import { starterCondition } from '@/features/issues/issue-condition-fixtures';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
+import { plannerFixture } from '@/features/trips/testing/planner-fixtures';
+import { boardIssue, boardIdea } from '@/features/trips/testing/trip-board-fixtures';
 import { testIds } from '@/lib/test-ids';
-import type { IssueCondition, IssueListItem, WorkspaceIssue } from '@/types/issues';
 import type { TripBoardIssue } from '@/types/trip-board';
-import type { TripBoardIdea } from '@/types/trip-board';
-import type { Destination, TripActivity } from '@/types/trips';
 import { TripBoard } from './trip-board';
 import { TripBoardFullscreenToggle } from './trip-board-fullscreen-toggle';
 import { applyIssueMove } from './trip-board-order';
-
-const autoCondition = (
-  met = false,
-  refusal = met ? 'Settled by the trip.' : 'Closes once the trip has a destination.'
-) =>
-  ({
-    check: 'destination',
-    kind: 'auto',
-    label: 'The trip has a destination',
-    met,
-    refusal
-  }) satisfies IssueCondition;
-
-const listItem = {
-  assignee: null,
-  author: { name: 'Alex Morgan', userId: 'user-alex' },
-  canAssign: true,
-  canManage: true,
-  condition: null,
-  dueAt: null,
-  id: 'issue-1' as Id<'tripIssues'>,
-  idea: null,
-  labels: [],
-  rank: 0,
-  status: 'open',
-  title: 'Coast day',
-  updatedAt: Date.UTC(2026, 7, 17)
-} satisfies Omit<IssueListItem, 'tripName'>;
-
-const workspaceIssue = (over: Partial<WorkspaceIssue> = {}): WorkspaceIssue => ({
-  ...listItem,
-  body: 'Add a coast day near Lisbon.',
-  closedAt: null,
-  tripId: 'trip-1' as Id<'trips'>,
-  tripName: 'Atlantic week',
-  ...over
-});
-
-/** A board issue; `id` doubles as the title so tests can find the card by name. */
-const boardIssue = (id: string, over: Partial<TripBoardIssue> = {}): TripBoardIssue =>
-  workspaceIssue({ id: id as Id<'tripIssues'>, title: id, ...over });
-
-const boardIdea = (id: string, over: Partial<TripBoardIdea> = {}): TripBoardIdea => ({
-  author: { name: 'Sam', userId: 'user-sam' },
-  baseUpdatedAt: 0,
-  canApprove: false,
-  canMerge: false,
-  conflictCount: 0,
-  feedbackCount: 0,
-  hasApproved: false,
-  id: id as Id<'tripProposals'>,
-  ideaName: id,
-  issueId: null,
-  status: 'in_review',
-  submittedAt: null,
-  title: id,
-  unresolvedFeedbackCount: 0,
-  updatedAt: Date.now(),
-  workingTripId: 'trip-work' as Id<'trips'>,
-  ...over
-});
-
-function plannerActivity(overrides: Partial<TripActivity> = {}): TripActivity {
-  return {
-    id: 'museum',
-    sourceId: null,
-    title: 'Explore the tile museum',
-    dayNumber: 1,
-    endDayNumber: 1,
-    startTime: '10:00',
-    endTime: '12:00',
-    timeBlock: 'morning',
-    address: 'Lisbon, Portugal',
-    notes: 'Leave a little time for the courtyard café.',
-    costAmount: 8,
-    costSplit: 'per_person',
-    attachments: [],
-    transferToNext: null,
-    ...overrides
-  } as TripActivity;
-}
-
-function plannerDestination(overrides: Partial<Destination> = {}): Destination {
-  return {
-    id: 'lisbon',
-    sourceId: null,
-    name: 'Lisbon',
-    startDay: 1,
-    endDay: 2,
-    activities: [],
-    stays: [],
-    transferToNext: null,
-    latitude: 38.72,
-    longitude: -9.14,
-    placeId: 'lisbon',
-    position: 0,
-    coverUrl: null,
-    coverStatus: null,
-    dayNotes: null,
-    ...overrides
-  } as Destination;
-}
-
-function plannerFixture(): TripDetail {
-  const lisbon = plannerDestination({
-    activities: [
-      plannerActivity(),
-      plannerActivity({
-        id: 'alfama' as TripActivity['id'],
-        title: 'Wander through Alfama',
-        startTime: '14:00',
-        endTime: '16:00',
-        timeBlock: 'afternoon',
-        notes: null,
-        costAmount: null
-      }),
-      plannerActivity({
-        id: 'dinner' as TripActivity['id'],
-        title: 'Dinner by the river',
-        startTime: '19:00',
-        endTime: '20:30',
-        timeBlock: 'evening',
-        notes: null,
-        costAmount: null
-      })
-    ],
-    stays: [
-      {
-        id: 'hotel' as Destination['stays'][number]['id'],
-        position: 0,
-        sourceId: null,
-        title: 'Casa do Pátio',
-        address: 'Alfama, Lisbon',
-        checkInDay: 1,
-        checkOutDay: 2,
-        checkInTime: '15:00',
-        checkOutTime: '08:00',
-        notes: 'Bags can be left at reception.',
-        attachments: [],
-        costAmount: 120,
-        costSplit: 'total'
-      } as Destination['stays'][number]
-    ],
-    transferToNext: {
-      id: 'train' as NonNullable<Destination['transferToNext']>['id'],
-      toDestinationId: 'porto' as Destination['id'],
-      sourceId: null,
-      mode: 'train',
-      timing: { startDay: 2, endDay: 2, startTime: '09:00', endTime: '12:00' },
-      durationMinutes: 180,
-      costAmount: 30,
-      costSplit: 'per_person',
-      attachments: [],
-      notes: 'Depart from Santa Apolónia station.'
-    } as Destination['transferToNext']
-  });
-  const porto = plannerDestination({
-    id: 'porto' as Destination['id'],
-    name: 'Porto',
-    startDay: 2,
-    endDay: 3,
-    activities: [
-      plannerActivity({
-        id: 'ribeira' as TripActivity['id'],
-        title: 'Sunset along the Ribeira',
-        dayNumber: 2,
-        endDayNumber: 2,
-        startTime: null,
-        endTime: null,
-        timeBlock: 'evening',
-        address: 'Ribeira, Porto',
-        notes: null,
-        costAmount: null
-      })
-    ]
-  });
-  return {
-    id: 'sample-trip',
-    name: 'A few days in Portugal',
-    currency: 'EUR',
-    startDate: '2026-09-14',
-    totalDurationDays: 3,
-    destinations: [lisbon, porto],
-    arrivalTransfer: null,
-    departureTransfer: null,
-    permissions: { canEdit: false, canPropose: true },
-    proposal: null
-  } as TripDetail;
-}
 
 const state = vi.hoisted(() => ({
   assign: vi.fn(),
@@ -431,14 +242,14 @@ describe('TripBoard layout', () => {
   test('shows mandatory progress and condition lines', async () => {
     state.issues = [
       boardIssue('Visa', {
-        condition: autoCondition(false),
+        condition: starterCondition(false),
         labels: ['mandatory']
       }),
       boardIssue('Flights', { labels: ['mandatory'], status: 'closed' })
     ];
     await render(board());
     await expect.element(lane(/To decide/).getByText('1 of 2 mandatory done')).toBeVisible();
-    await expect.element(page.getByText('Needs a destination')).toBeVisible();
+    await expect.element(page.getByText('No destination yet')).toBeVisible();
   });
 
   test('shows empty states', async () => {
@@ -755,7 +566,7 @@ describe('TripBoard moves', () => {
   test('refuses closing an issue that closes itself', async () => {
     state.issues = [
       boardIssue('Pick a destination', {
-        condition: autoCondition(false)
+        condition: starterCondition(false)
       })
     ];
     await render(board());
@@ -764,13 +575,15 @@ describe('TripBoard moves', () => {
     await userEvent.keyboard('{ArrowRight}');
     await expect
       .element(
-        lane(/Done/).getByTestId(testIds.tripBoardDropHint).getByText(autoCondition(false).refusal)
+        lane(/Done/)
+          .getByTestId(testIds.tripBoardDropHint)
+          .getByText(starterCondition(false).refusal)
       )
       .toBeVisible();
     await userEvent.keyboard(' ');
     await expect
       .poll(() => vi.mocked(toast.info))
-      .toHaveBeenCalledWith(autoCondition(false).refusal);
+      .toHaveBeenCalledWith(starterCondition(false).refusal);
     expect(state.move).not.toHaveBeenCalled();
   });
 

@@ -1,6 +1,7 @@
 import { defineSchema } from 'convex/server';
 import { chatGptTables } from './modules/ai/chatgpt/schema';
 import { assistantRunTables } from './modules/assistant/runs/schema';
+import { discussionLinkTables } from './modules/discussions/links/schema';
 import { discussionTables } from './modules/discussions/threads/schema';
 import { mediaTables } from './modules/media/library/schema';
 import { notificationTables } from './modules/notifications/schema';
@@ -22,6 +23,7 @@ export default defineSchema({
   ...assistantRunTables,
   ...mediaTables,
   ...discussionTables,
+  ...discussionLinkTables,
   ...notificationTables,
   ...organizationInvitationTables,
   ...tripTables,

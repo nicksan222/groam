@@ -5,6 +5,7 @@ const referenceTables = {
   proposalId: 'tripProposals',
   issueId: 'tripIssues',
   discussionId: 'discussions',
+  researchId: 'discussions',
   runId: 'agentRuns'
 } as const;
 

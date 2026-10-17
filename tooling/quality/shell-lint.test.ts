@@ -6,14 +6,6 @@ function lint(source: string, file = 'apps/web/src/features/layout-example.tsx')
 }
 
 describe('Shell layout guardrails', () => {
-  for (const name of ['Split', 'Split.Main', 'Split.Aside', 'SplitMain', 'SplitAside']) {
-    test(`rejects legacy Shell.${name} in feature code`, () => {
-      const result = lint(`export const view = <Shell.${name} />;`);
-      expect(result.status).toBe(1);
-      expect(result.output).toContain('legacy split API');
-    });
-  }
-
   for (const name of ['TwoColumns', 'LeftColumn', 'RightColumn', 'DesktopRightColumn']) {
     test(`protects Shell.${name} geometry`, () => {
       for (const props of [
@@ -64,10 +56,10 @@ describe('Shell layout guardrails', () => {
     ).toBe(0);
   });
 
-  test('keeps geometry implementation and compatibility adapters inside packages/ui', () => {
+  test('keeps the column geometry implementation inside packages/ui', () => {
     expect(
       lint(
-        'export const view = <Shell.Split className="custom" />;',
+        'export const view = <div className="grid xl:grid-cols-[minmax(0,1fr)_22rem]" />;',
         'packages/ui/src/components/example.tsx'
       ).status
     ).toBe(0);
