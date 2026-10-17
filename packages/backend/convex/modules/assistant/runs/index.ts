@@ -14,16 +14,19 @@ import type { PaginationOptions } from 'convex/server';
 import { ConvexError } from 'convex/values';
 import type { Doc, Id } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
+import { AgentEngine } from '#convex/modules/assistant/engine/index';
 import type {
   AgentRosterItem,
   AgentRunEventView,
   AgentRunView
 } from '#convex/modules/assistant/runs/schema';
+import type { AssistantScreen } from '#convex/modules/assistant/validators/index';
 import { requireWorkspace, type Workspace } from '#convex/modules/auth/workspace';
 import { insertWithShortId } from '#convex/modules/references/index';
 import { assertTripWritable, issueWithTrip } from '#convex/modules/travel/issues/guard';
 import { isResolved } from '#convex/modules/travel/issues/status';
 import { isTripAdmin, loadTripContext } from '#convex/modules/travel/trips/ctx';
+import { findVisibleTrip } from '#convex/modules/travel/trips/visibility';
 
 const MAX_ASSIGNED_ISSUES = 200;
 const MAX_EVENT_PAGE = 50;
@@ -162,13 +165,18 @@ async function requireOrgRun(ctx: RunReader, runId: Id<'agentRuns'>, workspace: 
   return run;
 }
 
+/** Queued, running, or suspended on a wait: the run still owns its issue or proposal. */
+function isActiveRunStatus(status: Doc<'agentRuns'>['status']): boolean {
+  return status === 'queued' || status === 'running' || status === 'waiting';
+}
+
 async function activeIssueRun(ctx: RunReader, issueId: Id<'tripIssues'>) {
   const runs = await ctx.db
     .query('agentRuns')
     .withIndex('by_issueId_and_updatedAt', (query) => query.eq('issueId', issueId))
     .order('desc')
     .take(20);
-  return runs.find((run) => run.status === 'queued' || run.status === 'running') ?? null;
+  return runs.find((run) => isActiveRunStatus(run.status)) ?? null;
 }
 
 async function activeDiscussionRun(ctx: RunReader, discussionId: Id<'discussions'>) {
@@ -191,17 +199,15 @@ async function activeProposalRun(
     .order('desc')
     .take(20);
   return (
-    runs.find(
-      (run) =>
-        run.organizationId === organizationId &&
-        (run.status === 'queued' || run.status === 'running')
-    ) ?? null
+    runs.find((run) => run.organizationId === organizationId && isActiveRunStatus(run.status)) ??
+    null
   );
 }
 
 async function queueIssueRun(
   ctx: RunWriter,
   args: {
+    actorTokenIdentifier?: string;
     agentId: Doc<'agentRuns'>['agentId'];
     createdBy: { name: string; userId: string };
     issueId: Id<'tripIssues'>;
@@ -219,6 +225,7 @@ async function queueIssueRun(
   const agent = assistantAgents[args.agentId];
   const now = Date.now();
   return await insertWithShortId(ctx, 'agentRuns', {
+    ...(args.actorTokenIdentifier ? { actorTokenIdentifier: args.actorTokenIdentifier } : {}),
     agentId: agent.id,
     createdBy: args.createdBy,
     issueId: args.issueId,
@@ -273,20 +280,57 @@ async function queueDiscussionTurn(
 async function claimDiscussionTurn(
   ctx: RunWriter,
   args: {
+    actorTokenIdentifier: string;
     agentId: Doc<'agentRuns'>['agentId'];
     createdBy: { name: string; userId: string };
     discussionId: Id<'discussions'>;
+    discussionUpdatedAt: number;
     organizationId: string;
+    promptMessageId: string;
+    screen: AssistantScreen;
     threadId: string;
     title: string;
   }
 ): Promise<Id<'agentRuns'>> {
   const agent = assistantAgents[args.agentId];
   if (!isChatAgent(agent)) throw new ConvexError('Only chat agents can run in discussions');
+  // A stale re-claim replaces the earlier run for this prompt. Stop it and its workflow after
+  // the new run exists, so the cancelled run's completion sees it was superseded.
+  const [runId, running] = await Promise.all([
+    startDiscussionTurn(ctx, agent, args),
+    ctx.db
+      .query('agentRuns')
+      .withIndex('by_discussionId_and_status_and_updatedAt', (query) =>
+        query.eq('discussionId', args.discussionId).eq('status', 'running')
+      )
+      .order('desc')
+      .take(20)
+  ]);
+  await Promise.all(
+    running
+      .filter((run) => run._id !== runId && run.promptMessageId === args.promptMessageId)
+      .map((run) => abortActiveRun(ctx, run))
+  );
+  return runId;
+}
+
+/** The oldest queued turn becomes this claim's run; with none queued, a new running run. */
+async function startDiscussionTurn(
+  ctx: RunWriter,
+  agent: (typeof assistantAgents)[keyof typeof assistantAgents],
+  args: Parameters<typeof claimDiscussionTurn>[1]
+): Promise<Id<'agentRuns'>> {
   const queued = await oldestQueuedDiscussionRun(ctx, args.discussionId);
   const now = Date.now();
+  const turn = {
+    actorTokenIdentifier: args.actorTokenIdentifier,
+    discussionUpdatedAt: args.discussionUpdatedAt,
+    promptMessageId: args.promptMessageId,
+    screen: args.screen
+  };
   if (queued) {
     await ctx.db.patch('agentRuns', queued._id, {
+      ...turn,
       startedAt: queued.startedAt ?? now,
       status: 'running',
       threadId: args.threadId,
@@ -295,6 +339,7 @@ async function claimDiscussionTurn(
     return queued._id;
   }
   return await insertWithShortId(ctx, 'agentRuns', {
+    ...turn,
     agentId: agent.id,
     createdBy: args.createdBy,
     discussionId: args.discussionId,
@@ -312,6 +357,7 @@ async function claimDiscussionTurn(
 async function queueReviewRun(
   ctx: RunWriter,
   args: {
+    actorTokenIdentifier?: string;
     createdBy: { name: string; userId: string };
     organizationId: string;
     proposalId: Id<'tripProposals'>;
@@ -324,6 +370,7 @@ async function queueReviewRun(
   const agent = assistantAgents.reviewer;
   const now = Date.now();
   return await insertWithShortId(ctx, 'agentRuns', {
+    ...(args.actorTokenIdentifier ? { actorTokenIdentifier: args.actorTokenIdentifier } : {}),
     agentId: agent.id,
     createdBy: args.createdBy,
     kickoff: 'assign',
@@ -337,21 +384,32 @@ async function queueReviewRun(
   });
 }
 
-async function claim(ctx: RunWriter, runId: Id<'agentRuns'>): Promise<Doc<'agentRuns'> | null> {
+/**
+ * Starts a workflow turn: `queued` (or a chat turn the respond mutation already marked
+ * `running`) becomes `running`. Turns never retry, so a `running` run is never claimed twice by
+ * the same workflow. Terminal runs return null.
+ */
+async function claimTurn(ctx: RunWriter, runId: Id<'agentRuns'>): Promise<Doc<'agentRuns'> | null> {
   const run = await ctx.db.get('agentRuns', runId);
   if (!run) throw new ConvexError('Agent run not found');
-  if (run.status === 'running' || run.status === 'complete' || run.status === 'failed') {
-    return null;
-  }
-  if (run.status === 'aborted') return null;
+  if (run.status === 'complete' || run.status === 'failed' || run.status === 'aborted') return null;
   const now = Date.now();
-  await ctx.db.patch('agentRuns', runId, {
+  const resumed = run.status === 'waiting';
+  // A resumed chat turn posts its reply later; guard it against messages sent meanwhile.
+  const discussion =
+    resumed && run.discussionId ? await ctx.db.get('discussions', run.discussionId) : null;
+  const patch = {
     headline: 'Working…',
-    startedAt: now,
-    status: 'running',
-    updatedAt: now
-  });
-  return { ...run, headline: 'Working…', startedAt: now, status: 'running', updatedAt: now };
+    startedAt: run.startedAt ?? now,
+    status: 'running' as const,
+    turns: (run.turns ?? 0) + 1,
+    updatedAt: now,
+    // A resumed run's wait is resolved; the next `waitFor` sets a new one.
+    ...(resumed ? { activeWaitId: undefined } : {}),
+    ...(discussion ? { discussionUpdatedAt: discussion.updatedAt } : {})
+  };
+  await ctx.db.patch('agentRuns', runId, patch);
+  return { ...run, ...patch };
 }
 
 async function attachProposal(
@@ -396,30 +454,44 @@ async function finish(
   return null;
 }
 
+async function abortActiveRun(ctx: RunWriter, run: Doc<'agentRuns'> | null): Promise<null> {
+  if (!run) return null;
+  if (!isActiveRunStatus(run.status)) return null;
+  const now = Date.now();
+  await ctx.db.patch('agentRuns', run._id, {
+    completedAt: now,
+    headline: 'Stopped',
+    status: 'aborted',
+    updatedAt: now
+  });
+  await AgentEngine.cancel(ctx, run);
+  return null;
+}
+
 const STALE_RUN_MS = 15 * 60 * 1000;
+const STALE_QUEUED_MS = 10 * 60 * 1000;
 const STALE_RUN_BATCH = 100;
 const STALE_RUN_ERROR = 'The run stopped responding. Try again.';
 
-const STALE_QUEUED_MS = 10 * 60 * 1000;
-
 /**
- * Fails runs that sit in `running` without progress (action timeout or crash) and `queued`
- * runs nobody started (closed tab, failed client start).
+ * Safety net for runs no workflow owns: pre-workflow runs, inline idea reviews that died with
+ * their action, and chat turns queued by `send` that no client ever responded to. Workflow runs
+ * report through `onComplete` and are never swept.
  */
 async function failStaleRuns(ctx: RunWriter, now: number = Date.now()): Promise<number> {
+  const unowned = (status: 'queued' | 'running', idleMs: number) =>
+    ctx.db
+      .query('agentRuns')
+      .withIndex('by_status_and_workflowId_and_updatedAt', (query) =>
+        query
+          .eq('status', status)
+          .eq('workflowId', undefined)
+          .lt('updatedAt', now - idleMs)
+      )
+      .take(STALE_RUN_BATCH);
   const [running, queued] = await Promise.all([
-    ctx.db
-      .query('agentRuns')
-      .withIndex('by_status_and_updatedAt', (query) =>
-        query.eq('status', 'running').lt('updatedAt', now - STALE_RUN_MS)
-      )
-      .take(STALE_RUN_BATCH),
-    ctx.db
-      .query('agentRuns')
-      .withIndex('by_status_and_updatedAt', (query) =>
-        query.eq('status', 'queued').lt('updatedAt', now - STALE_QUEUED_MS)
-      )
-      .take(STALE_RUN_BATCH)
+    unowned('running', STALE_RUN_MS),
+    unowned('queued', STALE_QUEUED_MS)
   ]);
   const stale = [...running, ...queued];
   await Promise.all(
@@ -436,21 +508,29 @@ async function failStaleRuns(ctx: RunWriter, now: number = Date.now()): Promise<
   return stale.length;
 }
 
-async function abortActiveRun(ctx: RunWriter, run: Doc<'agentRuns'> | null): Promise<null> {
-  if (!run) return null;
-  if (run.status !== 'queued' && run.status !== 'running') return null;
-  const now = Date.now();
-  await ctx.db.patch('agentRuns', run._id, {
-    completedAt: now,
-    headline: 'Stopped',
-    status: 'aborted',
-    updatedAt: now
-  });
-  return null;
-}
-
 async function abortActiveForIssue(ctx: RunWriter, issueId: Id<'tripIssues'>): Promise<null> {
   return await abortActiveRun(ctx, await activeIssueRun(ctx, issueId));
+}
+
+const ACTIVE_RUN_STATUSES = ['queued', 'running', 'waiting'] as const;
+
+/** Before a discussion is deleted: stop every run in it, including ones suspended on a wait. */
+async function abortAllForDiscussion(
+  ctx: RunWriter,
+  discussionId: Id<'discussions'>
+): Promise<null> {
+  const byStatus = await Promise.all(
+    ACTIVE_RUN_STATUSES.map((status) =>
+      ctx.db
+        .query('agentRuns')
+        .withIndex('by_discussionId_and_status_and_updatedAt', (query) =>
+          query.eq('discussionId', discussionId).eq('status', status)
+        )
+        .take(STALE_RUN_BATCH)
+    )
+  );
+  await Promise.all(byStatus.flat().map((run) => abortActiveRun(ctx, run)));
+  return null;
 }
 
 async function abortActiveForDiscussion(
@@ -469,20 +549,37 @@ async function abortActiveForDiscussion(
 }
 
 /**
+ * Who may stop a run or cancel its wait. Issue and review runs: the person who started it, or
+ * someone who administers its trip. Discussion runs: any participant (non-participants cannot
+ * see the run at all).
+ */
+async function assertCanControl(
+  ctx: RunReader,
+  run: Doc<'agentRuns'>,
+  workspace: Workspace
+): Promise<void> {
+  if (run.discussionId || run.createdBy.userId === workspace.userId) return;
+  // A trip that is gone or outside the group grants nothing; any other failure surfaces.
+  const trip =
+    run.tripId && (await findVisibleTrip(ctx, run.tripId, workspace))
+      ? await loadTripContext(ctx, run.tripId, workspace)
+      : null;
+  if (!trip || !isTripAdmin(trip)) {
+    throw new ConvexError('Only the trip creator or a group admin can stop this run');
+  }
+}
+
+/**
  * Stops a run. Issue and review runs: the person who started it, or someone who administers its
  * trip. Discussion runs: any participant (non-participants cannot see the run at all).
  */
 async function stopRun(ctx: RunWriter, runId: Id<'agentRuns'>): Promise<null> {
   const workspace = await requireWorkspace(ctx);
   const run = await requireOrgRun(ctx, runId, workspace);
-  if (!run.discussionId && run.createdBy.userId !== workspace.userId) {
-    const trip = run.tripId
-      ? await loadTripContext(ctx, run.tripId, workspace).catch(() => null)
-      : null;
-    if (!trip || !isTripAdmin(trip))
-      throw new ConvexError('Only the trip creator or a group admin can stop this run');
-  }
-  return await finish(ctx, { runId, status: 'aborted' });
+  await assertCanControl(ctx, run, workspace);
+  await finish(ctx, { runId, status: 'aborted' });
+  await AgentEngine.cancel(ctx, run);
+  return null;
 }
 
 async function appendEvent(
@@ -826,10 +923,29 @@ async function latestIssueRun(
   return run ? presentRun(run) : null;
 }
 
+async function latestProposalRun(
+  ctx: QueryCtx,
+  proposalId: Id<'tripProposals'>
+): Promise<AgentRunView | null> {
+  const workspace = await requireWorkspace(ctx);
+  const proposal = await ctx.db.get('tripProposals', proposalId);
+  if (!proposal || proposal.organizationId !== workspace.organizationId) return null;
+  const runs = await ctx.db
+    .query('agentRuns')
+    .withIndex('by_proposalId_and_updatedAt', (query) => query.eq('proposalId', proposalId))
+    .order('desc')
+    .take(20);
+  const run = runs.find(
+    (candidate) =>
+      candidate.agentId === 'reviewer' && candidate.organizationId === workspace.organizationId
+  );
+  return run ? presentRun(run) : null;
+}
+
 async function retryIssueRun(ctx: RunWriter, runId: Id<'agentRuns'>): Promise<Id<'agentRuns'>> {
   const workspace = await requireWorkspace(ctx);
   const run = await requireOrgRun(ctx, runId, workspace);
-  if (run.status === 'queued' || run.status === 'running') {
+  if (isActiveRunStatus(run.status)) {
     throw new ConvexError('Stop this run before re-running');
   }
   if (!run.issueId || !run.tripId || !isIssueAssignableAgentId(run.agentId)) {
@@ -847,6 +963,7 @@ async function retryIssueRun(ctx: RunWriter, runId: Id<'agentRuns'>): Promise<Id
     throw new ConvexError('Re-assign the Issue agent before re-running');
   }
   const nextRunId = await queueIssueRun(ctx, {
+    actorTokenIdentifier: workspace.tokenIdentifier,
     agentId: run.agentId,
     createdBy: { name: workspace.viewerName, userId: workspace.userId },
     issueId: run.issueId,
@@ -855,7 +972,7 @@ async function retryIssueRun(ctx: RunWriter, runId: Id<'agentRuns'>): Promise<Id
     title: issue.title,
     tripId: run.tripId
   });
-  // The client starts the run with the viewer's identity; trip tools need a signed-in user.
+  await AgentEngine.start(ctx, nextRunId);
   return nextRunId;
 }
 
@@ -863,20 +980,23 @@ async function retryIssueRun(ctx: RunWriter, runId: Id<'agentRuns'>): Promise<Id
 // oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class AgentRuns {
   static abortActiveForDiscussion = abortActiveForDiscussion;
+  static abortAllForDiscussion = abortAllForDiscussion;
   static abortActiveForIssue = abortActiveForIssue;
   static activeIssueRun = activeIssueRun;
   static appendEvent = appendEvent;
   static appendStepEvents = appendStepEvents;
   static appendToolEvents = appendToolEvents;
+  static assertCanControl = assertCanControl;
   static assignedIssues = assignedIssues;
   static attachProposal = attachProposal;
-  static claim = claim;
   static claimDiscussionTurn = claimDiscussionTurn;
+  static claimTurn = claimTurn;
   static failStaleRuns = failStaleRuns;
   static finish = finish;
   static getAgent = getAgent;
   static getRun = getRun;
   static latestIssueRun = latestIssueRun;
+  static latestProposalRun = latestProposalRun;
   static listEvents = listEvents;
   static listRuns = listRuns;
   static listWorkspaceRuns = listWorkspaceRuns;
@@ -884,6 +1004,8 @@ export class AgentRuns {
   static queueDiscussionTurn = queueDiscussionTurn;
   static queueIssueRun = queueIssueRun;
   static queueReviewRun = queueReviewRun;
+  /** A run the viewer may see, or "Agent run not found". */
+  static requireVisible = requireOrgRun;
   static retryIssueRun = retryIssueRun;
   static roster = roster;
   static stopRun = stopRun;

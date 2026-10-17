@@ -124,6 +124,7 @@ export {
   reorderIssueOnBoard,
   returnToBoard
 } from './trip-board';
+export { closePoll, createTripPoll, expectPollProgress, voteInPoll } from './polls';
 export { currentPath, expectGone, expectPath, idFromPath, presentAttribute } from './queries';
 export { searchIdeas, searchIssues, searchTrips } from './search-trips';
 export { createLinkedResearch, expectLinkedResearch, openLinkedResearch } from './research';

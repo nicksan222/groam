@@ -2,6 +2,7 @@ import type { Id } from '@groam/backend/data-model';
 import { FormDialog } from '@groam/ui/components/form-dialog';
 import { FormField } from '@groam/ui/components/form-field';
 import { Input } from '@groam/ui/components/input';
+import { RichTextEditor } from '@groam/ui/components/rich-text-editor';
 import {
   Select,
   SelectContent,
@@ -9,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@groam/ui/components/select';
-import { Textarea } from '@groam/ui/components/textarea';
+
 import { useId, useState } from 'react';
 import { useGenerateRule } from '@/features/issues/hooks/use-generate-rule';
 import { useRuleDraft } from '@/features/issues/hooks/use-rule-draft';
@@ -146,13 +147,15 @@ export function CreateIssueDialog({
         />
       </FormField>
       <FormField description={`${body.length}/5000 characters`} label="Description" required>
-        <Textarea
-          className="max-h-48 min-h-24 field-sizing-content resize-none sm:max-h-72"
-          data-testid={testIds.createIssueBody}
-          disabled={pending.isPending}
+        <RichTextEditor
           maxLength={5000}
-          onChange={(event) => setBody(event.target.value)}
+          aria-label="Description"
+          contentClassName="max-h-48 min-h-24 overflow-y-auto sm:max-h-72"
+          disabled={pending.isPending}
+          onChange={setBody}
           placeholder="Share the context, desired outcome, and anything reviewers should consider…"
+          testId={testIds.createIssueBody}
+          toolbar
           value={body}
         />
       </FormField>

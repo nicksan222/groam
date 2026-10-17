@@ -10,7 +10,13 @@ import {
   type QueryCtx,
   query
 } from '#convex-generated/server';
-import { type AuthContext, requireWorkspace, type Workspace } from '#convex/modules/auth/workspace';
+import {
+  type AuthContext,
+  requireActor,
+  requireWorkspace,
+  runActorArgs,
+  type Workspace
+} from '#convex/modules/auth/workspace';
 import { affectsConditions, syncTripConditions } from '#convex/modules/travel/issues/sync';
 import {
   assertMutable,
@@ -19,12 +25,12 @@ import {
   roleFor
 } from '#convex/modules/travel/trips/access';
 import type { TripValidators } from '#convex/modules/travel/trips/schema';
+import { findVisibleTrip, MAX_GROUP_MEMBERS } from '#convex/modules/travel/trips/visibility';
 import { IdeaNames } from '#convex/modules/travel/versions/names';
 
 const TITLE_GENERATION_DELAY_MS = 30_000;
 
 export const MAX_ACTIVITY_ITEMS = 30;
-export const MAX_GROUP_MEMBERS = 100;
 
 export {
   assertDayWithinTrip,
@@ -67,19 +73,6 @@ export function attachTrip<Ctx extends TripReadCtx>(
   role: TripRole
 ): TripCtx<Ctx> {
   return { ...ctx, role, trip, workspace };
-}
-
-/**
- * The visibility rule every trip reader shares: a trip is visible to members of its
- * organization. Returns null when the trip is missing or belongs to another group.
- */
-export async function findVisibleTrip(
-  ctx: TripReadCtx,
-  tripId: Id<'trips'>,
-  workspace: Workspace
-): Promise<Doc<'trips'> | null> {
-  const data = await ctx.db.get('trips', tripId);
-  return data && data.organizationId === workspace.organizationId ? data : null;
 }
 
 export async function loadTripContext<Ctx extends AuthContext & TripReadCtx>(
@@ -283,19 +276,36 @@ export const mutableTripMutation = customMutation(mutation, {
   input: async (ctx, { tripId }) => await mutableTripMutationInput(ctx, tripId)
 });
 
+/** Internal twins also accept `asRun`, so an agent turn without identity acts for its creator. */
+const internalTripIdArgs = { ...tripIdArgs, ...runActorArgs };
+
+async function actorTripInput(
+  ctx: QueryCtx | MutationCtx,
+  tripId: Id<'trips'>,
+  asRun: Id<'agentRuns'> | undefined
+) {
+  return {
+    args: {},
+    ctx: boundTrip(await loadTripContext(ctx, tripId, await requireActor(ctx, asRun)))
+  };
+}
+
 export const internalTripQuery = customQuery(internalQuery, {
-  args: tripIdArgs,
-  input: async (ctx, { tripId }) => await tripQueryInput(ctx, tripId)
+  args: internalTripIdArgs,
+  input: async (ctx, { asRun, tripId }) => await actorTripInput(ctx, tripId, asRun)
 });
 
 export const internalTripMutation = customMutation(internalMutation, {
-  args: tripIdArgs,
-  input: async (ctx, { tripId }) => await tripMutationInput(ctx, tripId)
+  args: internalTripIdArgs,
+  input: async (ctx, { asRun, tripId }) => await actorTripInput(ctx, tripId, asRun)
 });
 
 export const internalMutableTripMutation = customMutation(internalMutation, {
-  args: tripIdArgs,
-  input: async (ctx, { tripId }) => await mutableTripMutationInput(ctx, tripId)
+  args: internalTripIdArgs,
+  input: async (ctx, { asRun, tripId }) => ({
+    args: {},
+    ctx: boundTrip(await loadMutableTrip(ctx, tripId, await requireActor(ctx, asRun)))
+  })
 });
 
 export const sharedTripQuery = customQuery(query, {
@@ -309,21 +319,28 @@ export const sharedTripMutation = customMutation(mutation, {
 });
 
 export const internalSharedTripQuery = customQuery(internalQuery, {
-  args: tripIdArgs,
-  input: async (ctx, { tripId }) => await sharedTripQueryInput(ctx, tripId)
+  args: internalTripIdArgs,
+  input: async (ctx, { asRun, tripId }) => ({
+    args: {},
+    ctx: boundTrip(await loadSharedTripContext(ctx, tripId, await requireActor(ctx, asRun)))
+  })
 });
 
 export const internalSharedTripMutation = customMutation(internalMutation, {
-  args: tripIdArgs,
-  input: async (ctx, { tripId }) => await sharedTripMutationInput(ctx, tripId)
+  args: internalTripIdArgs,
+  input: async (ctx, { asRun, tripId }) => ({
+    args: {},
+    ctx: boundTrip(await loadSharedTripContext(ctx, tripId, await requireActor(ctx, asRun)))
+  })
 });
 
 async function destinationArgsInput(
   ctx: MutationCtx,
   tripId: Id<'trips'>,
-  destinationId: Id<'tripDestinations'>
+  destinationId: Id<'tripDestinations'>,
+  workspace?: Workspace
 ) {
-  const loaded = await loadMutableTrip(ctx, tripId);
+  const loaded = await loadMutableTrip(ctx, tripId, workspace);
   const destination = await loaded.db.get('tripDestinations', destinationId);
   if (!destination || destination.tripId !== tripId) {
     throw new ConvexError('Trip destination not found');
@@ -343,7 +360,7 @@ export const destinationMutation = customMutation(mutation, {
 });
 
 export const internalDestinationMutation = customMutation(internalMutation, {
-  args: destinationArgs,
-  input: async (ctx, { destinationId, tripId }) =>
-    await destinationArgsInput(ctx, tripId, destinationId)
+  args: { ...destinationArgs, ...runActorArgs },
+  input: async (ctx, { asRun, destinationId, tripId }) =>
+    await destinationArgsInput(ctx, tripId, destinationId, await requireActor(ctx, asRun))
 });

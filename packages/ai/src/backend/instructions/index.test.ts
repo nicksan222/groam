@@ -23,7 +23,7 @@ test('keeps standalone prompts specific to the assigned worker kind', () => {
   expect(issue).not.toContain('File blocking comments');
   const reviewer = assistantInstructions('reviewer', 'standalone', []);
   expect(reviewer).toContain('You are Idea reviewer');
-  expect(reviewer).toContain('File blocking comments only when something should block applying');
+  expect(reviewer).toContain('file change requests only for blocking problems');
   expect(reviewer).not.toContain('Do not create additional issues assigned to yourself');
 });
 

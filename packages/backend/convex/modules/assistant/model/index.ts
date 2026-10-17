@@ -5,9 +5,8 @@ import {
 } from '@groam/ai/runtime/thread-summary';
 import { ConvexError, v } from 'convex/values';
 import { components } from '#convex-generated/api';
-import { internalMutation, internalQuery } from '#convex-generated/server';
 import { AgentRuns } from '#convex/modules/assistant/runs/index';
-import { internalWorkspaceQuery, requireWorkspace } from '#convex/modules/auth/workspace';
+import { internalWorkspaceMutation, internalWorkspaceQuery } from '#convex/modules/auth/workspace';
 import { ItineraryActivity } from '#convex/modules/travel/activities/index';
 import { TripActivityValidators } from '#convex/modules/travel/activities/schema';
 import { TripDestination } from '#convex/modules/travel/destinations/index';
@@ -61,7 +60,7 @@ export {
   tripAssistantContextValidator
 } from './schema';
 
-export const access = internalQuery({
+export const access = internalWorkspaceQuery({
   args: {
     scope: v.optional(conversationScopeValidator),
     threadId: v.optional(v.string())
@@ -84,7 +83,7 @@ export const access = internalQuery({
         userId: workspace.tokenIdentifier
       };
     }
-    const workspace = await requireWorkspace(ctx);
+    const { workspace } = ctx;
     return {
       credentialOwnerUserId: workspace.userId,
       organizationId: workspace.organizationId,
@@ -116,7 +115,7 @@ export const contextCatalog = internalWorkspaceQuery({
   }
 });
 
-export const taggedContext = internalQuery({
+export const taggedContext = internalWorkspaceQuery({
   args: {
     scope: v.optional(conversationScopeValidator),
     threadId: v.string()
@@ -146,7 +145,7 @@ export const taggedContext = internalQuery({
   }
 });
 
-export const setScreenContext = internalMutation({
+export const setScreenContext = internalWorkspaceMutation({
   args: {
     screenContext: v.string(),
     threadId: v.string()
@@ -164,7 +163,7 @@ export const setScreenContext = internalMutation({
   }
 });
 
-export const setContextTags = internalMutation({
+export const setContextTags = internalWorkspaceMutation({
   args: {
     scope: v.optional(conversationScopeValidator),
     tags: v.array(assistantContextTagReferenceValidator),

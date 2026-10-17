@@ -5,7 +5,9 @@ import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import { requireWorkspace, type Workspace } from '#convex/modules/auth/workspace';
 import { kindPolicy } from '#convex/modules/discussions/kinds/index';
 import { MAX_MESSAGES_PAGE_SIZE } from '#convex/modules/discussions/threads/limits';
-import { findVisibleTrip, roleFor, type TripRole } from '#convex/modules/travel/trips/ctx';
+import { roleFor } from '#convex/modules/travel/trips/access';
+import type { TripRole } from '#convex/modules/travel/trips/ctx';
+import { findVisibleTrip } from '#convex/modules/travel/trips/visibility';
 
 export type DiscussionCtx = MutationCtx | QueryCtx;
 

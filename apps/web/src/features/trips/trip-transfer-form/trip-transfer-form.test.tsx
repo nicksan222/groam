@@ -63,7 +63,7 @@ describe('TripTransferForm', () => {
     await expect
       .element(page.getByRole('button', { name: 'Remove route' }))
       .not.toBeInTheDocument();
-    await expect.element(page.getByLabelText('Travel notes')).toHaveValue('');
+    await expect.element(page.getByRole('textbox', { name: 'Travel notes' })).toHaveTextContent('');
     await expect.element(page.getByRole('button', { name: 'Save travel' })).toBeEnabled();
   });
 
@@ -79,12 +79,14 @@ describe('TripTransferForm', () => {
 
   test('an existing transfer fills the form and is saved but disabled until changed', async () => {
     await render(<TripTransferForm {...setup({ initial: makeTransfer() })} />);
-    await expect.element(page.getByLabelText('Travel notes')).toHaveValue('Platform 4');
+    await expect
+      .element(page.getByRole('textbox', { name: 'Travel notes' }))
+      .toHaveTextContent('Platform 4');
     await expect.element(page.getByLabelText('Estimated minutes')).toHaveValue(90);
     await expect.element(page.getByText('ticket.pdf')).toBeVisible();
     await expect.element(page.getByText('Everything is saved.')).toBeVisible();
     await expect.element(page.getByRole('button', { name: 'Save travel' })).toBeDisabled();
-    await page.getByLabelText('Travel notes').fill('Platform 5');
+    await page.getByRole('textbox', { name: 'Travel notes' }).fill('Platform 5');
     await expect.element(page.getByRole('button', { name: 'Save travel' })).toBeEnabled();
     await expect.element(page.getByText('Everything is saved.')).not.toBeInTheDocument();
   });
@@ -93,7 +95,7 @@ describe('TripTransferForm', () => {
     const props = setup();
     await render(<TripTransferForm {...props} />);
     await page.getByLabelText('Estimated minutes').fill('45');
-    await page.getByLabelText('Travel notes').fill('  Meet at the gate  ');
+    await page.getByRole('textbox', { name: 'Travel notes' }).fill('  Meet at the gate  ');
     await page.getByRole('button', { name: 'Save travel' }).click();
     await expect.poll(() => (props.onSave as ReturnType<typeof vi.fn>).mock.calls.length).toBe(1);
     expect(props.onSave).toHaveBeenCalledWith(
@@ -137,7 +139,7 @@ describe('TripTransferForm', () => {
     deps.confirm.mockResolvedValue(answer);
     const props = setup({ initial: makeTransfer() });
     await render(<TripTransferForm {...props} />);
-    await page.getByLabelText('Travel notes').fill('changed');
+    await page.getByRole('textbox', { name: 'Travel notes' }).fill('changed');
     await page.getByRole('button', { name: 'Close travel editor' }).click();
     await expect.poll(() => deps.confirm.mock.calls.length).toBe(1);
     expect(deps.confirm.mock.calls[0]?.[0]).toBe('Discard unsaved travel?');

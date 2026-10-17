@@ -20,9 +20,8 @@ describe('useThreadMessageEditing', () => {
 describe('useThreadMessageEdit', () => {
   test('blocks empty saves and submits trimmed text', async () => {
     const onSave = vi.fn();
-    const onCancel = vi.fn();
     const { result } = await renderHook(() =>
-      useThreadMessageEdit({ initialText: 'hello', onCancel, onSave })
+      useThreadMessageEdit({ initialText: 'hello', onSave })
     );
 
     await act(() => {
@@ -39,31 +38,5 @@ describe('useThreadMessageEdit', () => {
       result.current.submit();
     });
     expect(onSave).toHaveBeenCalledWith('updated');
-  });
-
-  test('Escape cancels and Cmd+Enter saves', async () => {
-    const onSave = vi.fn();
-    const onCancel = vi.fn();
-    const { result } = await renderHook(() =>
-      useThreadMessageEdit({ initialText: 'hello', onCancel, onSave })
-    );
-
-    await act(() => {
-      result.current.onKeyDown({
-        key: 'Escape',
-        preventDefault: vi.fn()
-      } as never);
-    });
-    expect(onCancel).toHaveBeenCalled();
-
-    await act(() => {
-      result.current.setDraft('next');
-      result.current.onKeyDown({
-        key: 'Enter',
-        metaKey: true,
-        preventDefault: vi.fn()
-      } as never);
-    });
-    expect(onSave).toHaveBeenCalledWith('next');
   });
 });

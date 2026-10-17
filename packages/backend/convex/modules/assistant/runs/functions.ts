@@ -19,26 +19,6 @@ export const getInternal = internalQuery({
   }
 });
 
-export const claimRun = internalMutation({
-  args: { runId: v.id('agentRuns') },
-  returns: v.union(AgentRunValidators.run, v.null()),
-  handler: async (ctx, { runId }) => {
-    const claimed = await AgentRuns.claim(ctx, runId);
-    return claimed ? AgentRuns.presentRun(claimed) : null;
-  }
-});
-
-export const finishRun = internalMutation({
-  args: {
-    error: v.optional(v.string()),
-    report: v.optional(v.string()),
-    runId: v.id('agentRuns'),
-    status: v.union(v.literal('complete'), v.literal('failed'), v.literal('aborted'))
-  },
-  returns: v.null(),
-  handler: (ctx, args) => AgentRuns.finish(ctx, args)
-});
-
 export const recordEvent = internalMutation({
   args: {
     detail: v.optional(v.string()),
@@ -102,6 +82,7 @@ export const queueReviewForViewer = internalMutation({
   handler: async (ctx, args) => {
     const workspace = await requireWorkspace(ctx);
     return await AgentRuns.queueReviewRun(ctx, {
+      actorTokenIdentifier: workspace.tokenIdentifier,
       createdBy: { name: workspace.viewerName, userId: workspace.userId },
       organizationId: workspace.organizationId,
       proposalId: args.proposalId,

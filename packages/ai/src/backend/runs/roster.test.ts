@@ -1,8 +1,10 @@
 import { expect, test } from 'vite-plus/test';
+import { RUN_STATUS_LABEL } from '#ai/backend/runs/ids';
 import {
   canRerunIssueAgent,
   canRetryAgentRunFromZero,
   countActiveAgentRuns,
+  isActiveAgentRun,
   rosterStatusFromRuns
 } from './roster';
 
@@ -31,4 +33,10 @@ test('re-runs a finished issue agent, not a failed or active one', () => {
   expect(canRerunIssueAgent({ issueId: 'issue-1', status: 'failed' })).toBe(false);
   expect(canRerunIssueAgent({ issueId: 'issue-1', status: 'running' })).toBe(false);
   expect(canRerunIssueAgent({ issueId: null, status: 'complete' })).toBe(false);
+});
+
+test('a waiting run is active and keeps the agent working', () => {
+  expect(isActiveAgentRun({ status: 'waiting' })).toBe(true);
+  expect(rosterStatusFromRuns([{ status: 'waiting' }])).toBe('working');
+  expect(RUN_STATUS_LABEL.waiting).toBe('Waiting');
 });

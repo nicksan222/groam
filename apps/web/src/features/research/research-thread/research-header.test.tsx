@@ -22,6 +22,11 @@ test('renders title and brief without actions', async () => {
   await expect.element(page.getByRole('button')).not.toBeInTheDocument();
 });
 
+test('renders the brief as Markdown', async () => {
+  await render(<ResearchHeader research={detail({ brief: 'Compare **hotels**' })} />);
+  expect(page.getByText('hotels').element().getAttribute('data-streamdown')).toBe('strong');
+});
+
 test('omits the brief line when there is none', async () => {
   await render(<ResearchHeader research={detail({ brief: null })} />);
   await expect.element(page.getByRole('paragraph')).not.toBeInTheDocument();

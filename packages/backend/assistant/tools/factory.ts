@@ -18,6 +18,8 @@ export type AssistantToolRuntime = {
   issueId?: Id<'tripIssues'>;
   providerTools?: ToolSet;
   runId?: Id<'agentRuns'>;
+  /** Run whose creator the tools act for when there is no signed-in caller. */
+  actorRunId?: Id<'agentRuns'>;
   threadId?: string;
 };
 

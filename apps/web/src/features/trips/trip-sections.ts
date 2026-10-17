@@ -6,6 +6,7 @@ export const tripSections = [
   'overview',
   'issues',
   'ideas',
+  'polls',
   'research',
   'activity',
   'itinerary'
@@ -17,6 +18,7 @@ export const tripTabSections = [
   'overview',
   'issues',
   'ideas',
+  'polls',
   'research',
   'activity'
 ] as const;
@@ -32,6 +34,7 @@ export const tripSectionLabels: Record<TripSection, string> = {
   issues: 'Issues',
   itinerary: 'Itinerary',
   overview: 'Overview',
+  polls: 'Polls',
   research: 'Research'
 };
 

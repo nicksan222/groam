@@ -1,7 +1,14 @@
 export const agentSurfaceIds = ['chat', 'standalone'] as const;
 export type AgentSurface = (typeof agentSurfaceIds)[number];
 
-export const agentRunStatusIds = ['queued', 'running', 'complete', 'failed', 'aborted'] as const;
+export const agentRunStatusIds = [
+  'queued',
+  'running',
+  'waiting',
+  'complete',
+  'failed',
+  'aborted'
+] as const;
 export type AgentRunStatus = (typeof agentRunStatusIds)[number];
 
 export const agentRunKickoffIds = ['assign', 'queue'] as const;
@@ -17,7 +24,8 @@ export const RUN_STATUS_LABEL = {
   complete: 'Done',
   failed: 'Failed',
   queued: 'Queued',
-  running: 'Running'
+  running: 'Running',
+  waiting: 'Waiting'
 } as const satisfies Record<AgentRunStatus, string>;
 
 export const ROSTER_STATUS_LABEL = {

@@ -13,6 +13,7 @@ export const run = workspaceQuery({
       createdAt: v.number(),
       id: v.id('tripProposalComments'),
       kind: TripVersionValidators.commentKind,
+      reviewVerdict: v.union(TripVersionValidators.reviewVerdict, v.null()),
       parentCommentId: v.union(v.id('tripProposalComments'), v.null()),
       resolvedAt: v.union(v.number(), v.null()),
       updatedAt: v.number()

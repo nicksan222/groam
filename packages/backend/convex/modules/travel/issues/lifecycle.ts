@@ -1,6 +1,7 @@
 import { ConvexError } from 'convex/values';
 import type { Doc, Id } from '#convex-generated/dataModel';
 import type { MutationCtx } from '#convex-generated/server';
+import { AgentWaits } from '#convex/modules/assistant/waits/index';
 import {
   assertNeighborsOnTrip,
   bottomRank,
@@ -102,6 +103,7 @@ export async function move(
     actor,
     issueEventMessage(actor.name, { kind: 'status', status })
   );
+  await AgentWaits.signal(ctx, { kind: 'issue', refId: issueId });
   return null;
 }
 
@@ -127,4 +129,5 @@ export async function closeAfterMerge(
     actor,
     issueEventMessage(actor.name, { idea: ideaTitle, kind: 'closed_by_idea' })
   );
+  await AgentWaits.signal(ctx, { kind: 'issue', refId: issue._id });
 }

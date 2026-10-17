@@ -1,7 +1,14 @@
 import { CHATGPT_RECONNECT } from '@groam/ai/backend/errors';
 import { presentAgentRunMessage } from '@groam/ai/backend/runs/copy';
 import Timeline from '@groam/ui/components/timeline';
-import { AlertCircle, CheckCircle2, CircleDashed, CircleStop, LoaderCircle } from 'lucide-react';
+import {
+  AlertCircle,
+  CheckCircle2,
+  CircleDashed,
+  CircleStop,
+  Hourglass,
+  LoaderCircle
+} from 'lucide-react';
 import type { AgentRun } from '@/features/agents/hooks/use-agent';
 import { AgentRunToolbar } from './agent-run-toolbar';
 
@@ -38,6 +45,13 @@ const presentation = {
     icon: LoaderCircle,
     title: 'Agent is working',
     description: 'Activity updates as the run progresses.',
+    badge: 'border-info/40 bg-info/10 text-info-foreground',
+    card: 'border-info/30'
+  },
+  waiting: {
+    icon: Hourglass,
+    title: 'Agent is waiting',
+    description: 'The run resumes when its wait is met, cancelled, or reaches its deadline.',
     badge: 'border-info/40 bg-info/10 text-info-foreground',
     card: 'border-info/30'
   }

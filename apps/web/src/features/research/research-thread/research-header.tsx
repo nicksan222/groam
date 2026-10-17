@@ -1,3 +1,4 @@
+import { Markdown } from '@groam/ui/components/markdown';
 import { testIds } from '@/lib/test-ids';
 import type { ResearchDetail } from '@/types/research';
 
@@ -10,7 +11,7 @@ export function ResearchHeader({ research }: { research: ResearchDetail }) {
     >
       <h1 className="min-w-0 truncate text-base font-semibold">{research.title}</h1>
       {research.brief ? (
-        <p className="line-clamp-2 text-sm text-muted-foreground">{research.brief}</p>
+        <Markdown className="line-clamp-2 text-muted-foreground">{research.brief}</Markdown>
       ) : null}
     </header>
   );

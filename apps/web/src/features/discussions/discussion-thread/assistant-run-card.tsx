@@ -6,7 +6,6 @@ import {
   assistantReplyText,
   assistantRunActivities
 } from '@groam/ai/ui/messages/assistant-run-parts';
-import { LinkifiedText } from '@groam/ui/components/linkified-text';
 import { Markdown } from '@groam/ui/components/markdown';
 import Timeline from '@groam/ui/components/timeline';
 import { cn } from '@groam/ui/lib/utils';
@@ -114,9 +113,7 @@ function PromptEntry({ prompt }: { prompt: AssistantRunPrompt }) {
             {promptTime(prompt.createdAt)}
           </time>
         </p>
-        <p className="mt-0.5 text-sm leading-6 whitespace-pre-wrap text-foreground [overflow-wrap:anywhere]">
-          <LinkifiedText text={prompt.text} />
-        </p>
+        <Markdown className="mt-0.5 [overflow-wrap:anywhere]">{prompt.text}</Markdown>
         {prompt.attachmentCount > 0 ? (
           <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground">
             <Paperclip aria-hidden className="size-3" />

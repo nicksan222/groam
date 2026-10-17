@@ -2,8 +2,8 @@ import { Button } from '@groam/ui/components/button';
 import { DayTimeRangePicker } from '@groam/ui/components/day-time-range-picker';
 import { FormField } from '@groam/ui/components/form-field';
 import { Input } from '@groam/ui/components/input';
+import { RichTextEditor } from '@groam/ui/components/rich-text-editor';
 import { Spinner } from '@groam/ui/components/spinner';
-import { Textarea } from '@groam/ui/components/textarea';
 import { FileText, Paperclip, X } from 'lucide-react';
 import type { RefObject } from 'react';
 import { mediaFileAccept } from '@/features/media/media-validation';
@@ -113,14 +113,16 @@ export function StayForm({
         />
       </FormField>
       <FormField label="Notes">
-        <Textarea
-          disabled={isPending}
+        <RichTextEditor
           maxLength={500}
-          onChange={(event) => onChange({ notes: event.target.value })}
+          aria-label="Notes"
+          disabled={isPending}
+          onChange={(notes) => onChange({ notes })}
           placeholder="Booking reference, room details, check-in instructions…"
-          data-testid={testIds.stayNotes}
-          rows={3}
+          testId={testIds.stayNotes}
+          toolbar
           value={draft.notes}
+          variant="field"
         />
       </FormField>
       <div className="space-y-2">

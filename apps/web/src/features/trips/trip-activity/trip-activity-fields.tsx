@@ -3,9 +3,9 @@ import { DayTimeRangePicker } from '@groam/ui/components/day-time-range-picker';
 import { FormFeedback } from '@groam/ui/components/form-feedback';
 import { FormField } from '@groam/ui/components/form-field';
 import { Input } from '@groam/ui/components/input';
+import { RichTextEditor } from '@groam/ui/components/rich-text-editor';
 import Shell from '@groam/ui/components/shell/client';
 import { Spinner } from '@groam/ui/components/spinner';
-import { Textarea } from '@groam/ui/components/textarea';
 import { CalendarDays, FileText, MoonStar, Paperclip, SunMedium, Sunrise, X } from 'lucide-react';
 import { mediaFileAccept } from '@/features/media/media-validation';
 import type { TripActivityEditor } from '@/features/trips/hooks/use-trip-activity-editor';
@@ -80,7 +80,6 @@ export function TripActivityFields({
             autoComplete="street-address"
             className="h-11 bg-background text-base"
             data-testid={testIds.activityAddress}
-            maxLength={240}
             onChange={(event) => editor.patch({ address: event.target.value })}
             placeholder="Street, number, postal code, city, country"
             value={editor.address}
@@ -133,13 +132,15 @@ export function TripActivityFields({
               split={editor.costSplit}
             />
             <FormField label="Notes">
-              <Textarea
-                data-testid={testIds.activityNotes}
+              <RichTextEditor
                 maxLength={240}
-                onChange={(event) => editor.patch({ notes: event.target.value })}
+                aria-label="Notes"
+                onChange={(notes) => editor.patch({ notes })}
                 placeholder="Reservation, entrance, what to bring…"
-                rows={3}
+                testId={testIds.activityNotes}
+                toolbar
                 value={editor.notes}
+                variant="field"
               />
             </FormField>
             <label

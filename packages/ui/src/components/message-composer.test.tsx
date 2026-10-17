@@ -9,7 +9,7 @@ test('submits and clears a composed message', async () => {
   await page.getByRole('textbox', { name: 'Add comment' }).fill('  Looks good  ');
   await page.getByRole('button', { name: 'Send' }).click();
   await expect.poll(() => onSubmit.mock.calls).toEqual([['Looks good']]);
-  await expect.element(page.getByRole('textbox', { name: 'Add comment' })).toHaveValue('');
+  await expect.element(page.getByRole('textbox', { name: 'Add comment' })).toHaveTextContent('');
 });
 
 test('allows empty submit when attachments are pending', async () => {
@@ -38,9 +38,7 @@ test('exposes composer api slots for inserts and attach', async () => {
     />
   );
   await page.getByRole('button', { name: 'Ask Groam' }).click();
-  await expect
-    .element(page.getByRole('textbox', { name: 'Message' }))
-    .toHaveValue(expect.stringContaining('@groam'));
+  await expect.element(page.getByRole('textbox', { name: 'Message' })).toHaveTextContent('@groam');
   expect(captured.api?.text).toContain('@groam');
 
   const picker = container.querySelector<HTMLInputElement>('input[type="file"]');

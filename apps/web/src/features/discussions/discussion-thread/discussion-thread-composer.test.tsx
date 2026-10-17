@@ -55,7 +55,9 @@ test('restores the draft when send fails', async () => {
   await page.getByRole('button', { name: 'Reply' }).click();
 
   await vi.waitFor(() => expect(onSend).toHaveBeenCalled());
-  await expect.element(page.getByRole('textbox', { name: 'Message' })).toHaveValue('Hold this');
+  await expect
+    .element(page.getByRole('textbox', { name: 'Message' }))
+    .toHaveTextContent('Hold this');
 });
 
 test('attaches a voice recording and allows empty text submit', async () => {
@@ -119,7 +121,7 @@ test('runs a typed command instead of sending it', async () => {
 
   await vi.waitFor(() => expect(summarize).toHaveBeenCalledOnce());
   expect(onSend).not.toHaveBeenCalled();
-  await expect.element(page.getByRole('textbox', { name: 'Message' })).toHaveValue('');
+  await expect.element(page.getByRole('textbox', { name: 'Message' })).toHaveTextContent('');
 });
 
 test('keeps an unknown command and explains it', async () => {
@@ -139,5 +141,5 @@ test('keeps an unknown command and explains it', async () => {
 
   await vi.waitFor(() => expect(toastError).toHaveBeenCalledWith('Unknown command /nope'));
   expect(onSend).not.toHaveBeenCalled();
-  await expect.element(page.getByRole('textbox', { name: 'Message' })).toHaveValue('/nope');
+  await expect.element(page.getByRole('textbox', { name: 'Message' })).toHaveTextContent('/nope');
 });

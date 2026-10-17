@@ -222,8 +222,7 @@ test('offers a multiline custom answer as the fourth choice', async () => {
 
   await expect.element(page.getByRole('button', { name: 'Itinerary' })).not.toBeInTheDocument();
   const customAnswer = page.getByRole('textbox', { name: 'Custom answer' }).element();
-  expect(customAnswer.tagName).toBe('TEXTAREA');
-  expect(customAnswer.getAttribute('rows')).toBe('2');
+  expect(customAnswer.getAttribute('aria-multiline')).toBe('true');
   await userEvent.fill(customAnswer, 'Check whether every reservation has a confirmation number.');
   await page.getByRole('button', { name: 'Send custom answer' }).click();
 

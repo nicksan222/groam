@@ -2,7 +2,8 @@ import type { AgentRosterStatus, AgentRunStatus } from '#ai/backend/runs/ids';
 
 export const activeAgentRunStatusIds = [
   'queued',
-  'running'
+  'running',
+  'waiting'
 ] as const satisfies readonly AgentRunStatus[];
 
 export type RunStatusSlice = {

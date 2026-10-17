@@ -1,12 +1,10 @@
-import { type FormEvent, type KeyboardEvent, useCallback, useRef, useState } from 'react';
+import { type FormEvent, useCallback, useRef, useState } from 'react';
 
 export function useThreadMessageEdit({
   initialText,
-  onCancel,
   onSave
 }: {
   initialText: string;
-  onCancel: () => void;
   onSave: (text: string) => void;
 }) {
   const [draft, setDraftState] = useState(initialText);
@@ -28,26 +26,9 @@ export function useThreadMessageEdit({
     [onSave]
   );
 
-  const onKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLTextAreaElement>) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        onCancel();
-        return;
-      }
-      const content = draftRef.current.trim();
-      if (event.key === 'Enter' && (event.metaKey || event.ctrlKey) && content) {
-        event.preventDefault();
-        onSave(content);
-      }
-    },
-    [onCancel, onSave]
-  );
-
   return {
     canSave,
     draft,
-    onKeyDown,
     setDraft,
     submit,
     trimmed

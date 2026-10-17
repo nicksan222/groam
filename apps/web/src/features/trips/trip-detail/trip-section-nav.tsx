@@ -17,6 +17,7 @@ const tabTestIds: Record<(typeof tripTabSections)[number], string> = {
   ideas: testIds.tripSectionIdeas,
   issues: testIds.tripSectionIssues,
   overview: testIds.tripSectionOverview,
+  polls: testIds.tripSectionPolls,
   research: testIds.tripSectionResearch
 };
 
@@ -28,7 +29,7 @@ function tabCount(section: TripSection, counts: TabCounts): number | string | un
   return undefined;
 }
 
-/** The tab strip under the cover: Board, Overview, Issues, Ideas, Research, Activity. */
+/** The tab strip under the cover: Board, Overview, Issues, Ideas, Polls, Research, Activity. */
 export function TripSectionNav(props: TripSectionNavProps) {
   if (props.isLoading) {
     return (

@@ -2,7 +2,8 @@ import { Avatar } from '@groam/ui/components/avatar';
 import { AvatarFallback } from '@groam/ui/components/avatar-fallback';
 import { Badge } from '@groam/ui/components/badge';
 import { Button } from '@groam/ui/components/button';
-import { Textarea } from '@groam/ui/components/textarea';
+import { Markdown } from '@groam/ui/components/markdown';
+import { RichTextEditor } from '@groam/ui/components/rich-text-editor';
 import Timeline from '@groam/ui/components/timeline';
 import { initials } from '@groam/ui/lib/avatar';
 import { Check, MessageSquareReply, ShieldAlert } from 'lucide-react';
@@ -100,7 +101,7 @@ export function ReviewComment({
             {comment.resolvedAt && <Badge variant="secondary">Resolved</Badge>}
           </Timeline.CardHeader>
           <Timeline.CardBody>
-            <p className="whitespace-pre-wrap text-sm leading-6">{comment.content}</p>
+            <Markdown className="text-sm leading-6">{comment.content}</Markdown>
             {replies.length > 0 && (
               <div className="mt-4 space-y-4 border-l-2 border-muted pl-3">
                 {replies.map((item) => (
@@ -117,7 +118,7 @@ export function ReviewComment({
                         </time>
                       </span>
                     </p>
-                    <p className="mt-1 whitespace-pre-wrap text-sm leading-6">{item.content}</p>
+                    <Markdown className="mt-1 text-sm leading-6">{item.content}</Markdown>
                   </div>
                 ))}
               </div>
@@ -142,12 +143,14 @@ export function ReviewComment({
           </Timeline.CardActions>
           {isReplying && (
             <div className="px-3 pb-3">
-              <Textarea
-                aria-label={`Reply to ${comment.author.name}`}
-                className="min-h-16"
+              <RichTextEditor
                 maxLength={2000}
-                onChange={(event) => setReply(event.target.value)}
+                aria-label={`Reply to ${comment.author.name}`}
+                contentClassName="min-h-16"
+                onChange={setReply}
+                onSubmit={() => void submitReply()}
                 placeholder="Write a reply…"
+                toolbar
                 value={reply}
               />
               <div className="mt-2 flex justify-end gap-2">

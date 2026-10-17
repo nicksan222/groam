@@ -45,6 +45,7 @@ test('lists the tabs in order with Board first', async () => {
     testIds.tripSectionOverview,
     testIds.tripSectionIssues,
     testIds.tripSectionIdeas,
+    testIds.tripSectionPolls,
     testIds.tripSectionResearch,
     testIds.tripSectionActivity
   ]);
@@ -53,6 +54,7 @@ test('lists the tabs in order with Board first', async () => {
     'Overview',
     'Issues(0)',
     'Ideas(0)',
+    'Polls',
     'Research(0)',
     'Activity'
   ]);

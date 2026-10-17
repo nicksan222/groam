@@ -71,7 +71,7 @@ describe('ProposalFeedback', () => {
     await expect
       .poll(() => vi.mocked(props.addFeedback).mock.calls)
       .toEqual([['Needs more beach', undefined, undefined, kind]]);
-    await expect.element(box).toHaveValue('');
+    await expect.poll(() => box.element().textContent?.trim()).toBe('');
   });
 
   test('keeps the draft when the save fails', async () => {
@@ -81,7 +81,7 @@ describe('ProposalFeedback', () => {
     await box.fill('Keep me');
     await page.getByRole('button', { name: 'Comment' }).click();
     await expect.poll(() => vi.mocked(props.addFeedback).mock.calls.length).toBe(1);
-    await expect.element(box).toHaveValue('Keep me');
+    await expect.element(box).toHaveTextContent('Keep me');
   });
 
   test('pending action disables the composer buttons', async () => {

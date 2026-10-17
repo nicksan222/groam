@@ -67,24 +67,25 @@ describe('StayForm', () => {
       .toHaveValue('Hotel Alfama');
     await expect.element(page.getByPlaceholder('Street, city, country')).toHaveValue('Rua 1');
     await expect
-      .element(page.getByPlaceholder('Booking reference, room details, check-in instructions…'))
-      .toHaveValue('Late arrival');
+      .element(page.getByRole('textbox', { name: 'Notes' }))
+      .toHaveTextContent('Late arrival');
   });
 
   test.each([
     ['name', 'Hotel, apartment, hostel…', 'Pension', { title: 'Pension' }],
-    ['address', 'Street, city, country', 'Rua 2', { address: 'Rua 2' }],
-    [
-      'notes',
-      'Booking reference, room details, check-in instructions…',
-      'Code 42',
-      { notes: 'Code 42' }
-    ]
+    ['address', 'Street, city, country', 'Rua 2', { address: 'Rua 2' }]
   ])('reports edits to the %s', async (_, placeholder, text, patch) => {
     const { onChange, ready } = renderForm();
     await ready;
     await page.getByPlaceholder(placeholder).fill(text);
     expect(onChange).toHaveBeenLastCalledWith(patch);
+  });
+
+  test('reports edits to the notes', async () => {
+    const { onChange, ready } = renderForm();
+    await ready;
+    await page.getByRole('textbox', { name: 'Notes' }).fill('Code 42');
+    expect(onChange).toHaveBeenLastCalledWith({ notes: 'Code 42' });
   });
 
   test('reports a typed cost', async () => {

@@ -29,9 +29,17 @@ export const captureInstructions = action({
   args: { discussionId: v.id('discussions'), promptMessageId: v.string() },
   returns: v.string(),
   handler: async (ctx, { discussionId, promptMessageId }) => {
+    const screen = {
+      capabilities: [],
+      data: '{}',
+      description: 'Research thread',
+      key: `discussion:${discussionId}`,
+      target: { kind: 'workspace' as const },
+      title: 'Research'
+    };
     const claim = await ctx.runMutation(
       internal.modules.discussions.assistant.index.claimResponse,
-      { discussionId, promptMessageId }
+      { discussionId, promptMessageId, screen }
     );
     if (!claim) return '';
     const model = mockModel({ content: [{ text: 'Noted.', type: 'text' }] });
@@ -46,14 +54,7 @@ export const captureInstructions = action({
       {
         agent: claim.agent,
         prompt: claim.prompt,
-        screen: {
-          capabilities: [],
-          data: '{}',
-          description: 'Research thread',
-          key: `discussion:${discussionId}`,
-          target: { kind: 'workspace' },
-          title: 'Research'
-        },
+        screen,
         threadId: claim.threadId
       },
       { languageModel: model, promptMessageId, runId: claim.runId }

@@ -25,6 +25,7 @@ export const context = internalQuery({
         label: v.string()
       })
     ),
+    expectedReviewRevision: v.string(),
     organizationId: v.string(),
     sourceTripId: v.id('trips'),
     title: v.string(),
@@ -35,11 +36,19 @@ export const context = internalQuery({
 
 export const finish = internalMutation({
   args: {
-    comments: v.array(v.string()),
+    comments: v.array(
+      v.object({
+        body: v.string(),
+        kind: v.union(v.literal('comment'), v.literal('change_request'))
+      })
+    ),
     proposalId: v.id('tripProposals'),
-    summary: v.string()
+    expectedReviewRevision: v.string(),
+    runId: v.id('agentRuns'),
+    summary: v.string(),
+    verdict: v.union(v.literal('approve'), v.literal('request_changes'), v.literal('comment'))
   },
   returns: v.null(),
-  handler: (ctx, { comments, proposalId, summary }) =>
-    TripVersions.finishAgentReview(ctx, proposalId, summary, comments)
+  handler: (ctx, { proposalId, ...review }) =>
+    TripVersions.finishAgentReview(ctx, proposalId, review)
 });

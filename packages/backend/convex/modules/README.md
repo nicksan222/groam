@@ -52,19 +52,30 @@ modules/travel/
   trips/  destinations/  activities/  stays/  transfers/  covers/  issues/
   packing/  preferences/  versions/  targets/  locations/  travelers/  audit/
 modules/assistant/
-  agent/  model/  chat/  runs/  standalone/  errors/  screen/  validators/
+  agent/  model/  chat/  engine/  runs/  standalone/  waits/  errors/  screen/  validators/
 modules/discussions/
   threads/  messages/  assistant/  media/
 modules/media/
   library/  files/  attachments/
 modules/organizations/
   invitations/
+modules/polls/               # polls and votes; writes signal poll waits
 routes/<domain>/             # public run — api.routes.<domain>.* stays stable
 ```
 
 Leaf modules with no subdomains (`auth/`, `ai/`, `dev/`, `notifications/`,
 `references/`) stay as a small set of files. Assistant tool implementations live
 outside `convex/` in `packages/backend/assistant/tools/`.
+
+Every agent run is one `@convex-dev/workflow` workflow (`assistant/engine/`):
+`AgentEngine.start` / `cancel` own its lifecycle, the frozen `agentRun` body only
+loops `turn` steps, and `onComplete` is the single writer of a run's terminal
+status. Turns have no signed-in caller; internal builders accept `asRun` so a
+turn's tools act for the run's creator (`requireActor` in `auth/workspace.ts`).
+Runs no workflow owns (legacy runs, inline idea reviews, never-started chat
+turns) are failed by the `sweepStaleRuns` cron. Rollback is forward-only: keep the
+optional `agentRuns` fields and the `workflow` component mount, since unmounting
+it orphans component data and in-flight runs.
 
 ## Rules
 

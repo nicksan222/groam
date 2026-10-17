@@ -1,6 +1,6 @@
 import { Button } from '@groam/ui/components/button';
 import { ChatMessage } from '@groam/ui/components/chat-message';
-import { Textarea } from '@groam/ui/components/textarea';
+import { RichTextEditor } from '@groam/ui/components/rich-text-editor';
 import { cn } from '@groam/ui/lib/utils';
 import type { DiscussionMessage } from '@/features/discussions/hooks/use-discussion-thread';
 import {
@@ -120,9 +120,8 @@ function ThreadMessageEditor({
   onSave: (text: string) => void;
   text: string;
 }) {
-  const { canSave, draft, onKeyDown, setDraft, submit } = useThreadMessageEdit({
+  const { canSave, draft, setDraft, submit } = useThreadMessageEdit({
     initialText: text,
-    onCancel,
     onSave
   });
 
@@ -134,12 +133,12 @@ function ThreadMessageEditor({
             {authorName ?? 'Participant'}
           </p>
         )}
-        <Textarea
+        <RichTextEditor
           aria-label="Edit message"
           autoFocus
-          className="min-h-20 bg-background"
-          onChange={(event) => setDraft(event.target.value)}
-          onKeyDown={onKeyDown}
+          onChange={setDraft}
+          onEscape={onCancel}
+          onSubmit={() => submit()}
           value={draft}
         />
         <div className={cn('flex gap-2', mine && 'justify-end')}>

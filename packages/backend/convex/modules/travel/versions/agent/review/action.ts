@@ -1,7 +1,7 @@
 import { ConvexError, v } from 'convex/values';
 import { internal } from '#convex-generated/api';
 import { internalAction } from '#convex-generated/server';
-import { StandaloneSession } from '#convex/modules/assistant/standalone/index';
+import { AgentTurns } from '#convex/modules/assistant/engine/turns';
 
 /** Run the standalone idea reviewer and persist comments + a workspace-visible agent run. */
 export const run = internalAction({
@@ -27,7 +27,8 @@ export const run = internalAction({
         tripId: context.sourceTripId
       }
     );
-    const result = await StandaloneSession.execute(ctx, runId);
+    // Runs in this action so the caller gets the review back; never through a workflow.
+    const result = await AgentTurns.runInline(ctx, runId);
     if (result) return result;
     // Not claimed: another review of this idea is already queued or running (or just finished).
     const stored = await ctx.runQuery(internal.modules.assistant.runs.functions.getInternal, {

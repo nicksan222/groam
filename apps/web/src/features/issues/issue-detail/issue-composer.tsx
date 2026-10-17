@@ -1,5 +1,5 @@
 import { Button } from '@groam/ui/components/button';
-import { Textarea } from '@groam/ui/components/textarea';
+import { RichTextEditor } from '@groam/ui/components/rich-text-editor';
 import Timeline from '@groam/ui/components/timeline';
 import { ComposerTimelineBadge } from '@/features/workspace/workspace-shell/composer-timeline-badge';
 import { testIds } from '@/lib/test-ids';
@@ -21,14 +21,19 @@ export function IssueComposer({
       <Timeline.Body className="block">
         <Timeline.Card>
           <Timeline.CardBody className="p-0">
-            <Textarea
-              aria-label="Issue comment"
-              className="min-h-24 rounded-none border-0 bg-transparent shadow-none focus-visible:border-0 focus-visible:ring-0"
-              data-testid={testIds.issueComment}
+            <RichTextEditor
               maxLength={2000}
-              onChange={(event) => onChange(event.target.value)}
+              aria-label="Issue comment"
+              contentClassName="min-h-24 px-3 py-2.5"
+              onChange={onChange}
+              onSubmit={() => {
+                if (!pending && content.trim()) onComment();
+              }}
               placeholder="Leave a comment"
+              testId={testIds.issueComment}
+              toolbar
               value={content}
+              variant="bare"
             />
           </Timeline.CardBody>
           <Timeline.CardActions className="justify-end border-t bg-muted/25 py-2">

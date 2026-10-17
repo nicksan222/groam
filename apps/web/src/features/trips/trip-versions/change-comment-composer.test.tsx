@@ -17,7 +17,7 @@ test('locks the composer during posting and only submits once', async () => {
   );
   await page.getByRole('textbox').fill('  Can we go earlier?  ');
   await page.getByRole('button', { name: 'Add comment' }).click();
-  await expect.element(page.getByRole('textbox')).toBeDisabled();
+  await expect.element(page.getByRole('textbox')).toHaveAttribute('contenteditable', 'false');
   await expect.element(page.getByRole('button', { name: 'Cancel' })).toBeDisabled();
   page.getByRole('textbox').element().closest('form')?.requestSubmit();
   expect(onComment).toHaveBeenCalledTimes(1);
@@ -35,7 +35,7 @@ test('keeps the draft after an error and allows a successful retry', async () =>
   await page.getByRole('textbox').fill('Keep the afternoon free.');
   await page.getByRole('button', { name: 'Add comment' }).click();
   await expect.element(page.getByRole('alert')).toBeInTheDocument();
-  await expect.element(page.getByRole('textbox')).toHaveValue('Keep the afternoon free.');
+  await expect.element(page.getByRole('textbox')).toHaveTextContent('Keep the afternoon free.');
   expect(onCancel).not.toHaveBeenCalled();
   await page.getByRole('button', { name: 'Add comment' }).click();
   await vi.waitFor(() => expect(onCancel).toHaveBeenCalledOnce());

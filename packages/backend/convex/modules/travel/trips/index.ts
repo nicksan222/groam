@@ -1,9 +1,12 @@
 import { ConvexError, type Infer } from 'convex/values';
 import type { Doc, Id, TableNames } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
+import { AgentRuns } from '#convex/modules/assistant/runs/index';
+import { AgentWaits } from '#convex/modules/assistant/waits/index';
 import { requireWorkspace, workspaceRoster } from '#convex/modules/auth/workspace';
 import { linkTargetKey, removeLinksForTargetKey } from '#convex/modules/discussions/links/cascade';
 import { Discussions } from '#convex/modules/discussions/threads/index';
+import { PollCleanup } from '#convex/modules/polls/cleanup';
 import { insertWithShortId } from '#convex/modules/references/index';
 import { ItineraryActivity } from '#convex/modules/travel/activities/index';
 import { DestinationCover } from '#convex/modules/travel/covers/destination/index';
@@ -95,6 +98,7 @@ async function deleteProposalBatch(
     return true;
   }
   await removeLinksForTargetKey(ctx, linkTargetKey({ kind: 'idea', proposalId }));
+  await AgentWaits.signal(ctx, { deleted: true, kind: 'proposal', refId: proposalId });
   await ctx.db.delete('tripProposals', proposalId);
   return false;
 }
@@ -116,8 +120,11 @@ async function deleteIssueBatch(ctx: MutationCtx, tripId: Id<'trips'>): Promise<
   ) {
     return true;
   }
+  // An Issue agent run (possibly waiting) must not resume against a deleted issue.
+  await AgentRuns.abortActiveForIssue(ctx, issue._id);
   await writeCondition(ctx, issue, undefined);
   await removeLinksForTargetKey(ctx, linkTargetKey({ issueId: issue._id, kind: 'issue' }));
+  await AgentWaits.signal(ctx, { deleted: true, kind: 'issue', refId: issue._id });
   await ctx.db.delete('tripIssues', issue._id);
   return true;
 }
@@ -198,13 +205,14 @@ async function deleteHistoryRows(ctx: MutationCtx, tripId: Id<'trips'>): Promise
   );
 }
 
-/** Research conversations (with their links), issues, then attachment pins. */
+/** Research conversations (with their links), polls, issues, then attachment pins. */
 async function deleteConversationAndIssueRows(
   ctx: MutationCtx,
   tripId: Id<'trips'>
 ): Promise<boolean> {
   return (
     (await Discussions.purgeForTrip(ctx, tripId, DELETE_BATCH_SIZE)) ||
+    (await PollCleanup.purgeForTrip(ctx, tripId, DELETE_BATCH_SIZE)) ||
     (await deleteIssueBatch(ctx, tripId)) ||
     (await deleteAttachmentRows(ctx, tripId))
   );
@@ -282,6 +290,7 @@ async function deleteBatch(ctx: MutationCtx, trip: Doc<'trips'>): Promise<void> 
   const coverStorageId =
     trip.cover && 'asset' in trip.cover ? trip.cover.asset?.storageId : undefined;
   await TripCover.deleteStorage(ctx, coverStorageId);
+  await AgentWaits.signal(ctx, { deleted: true, kind: 'rsvp', refId: trip._id });
   await ctx.db.delete('trips', trip._id);
 }
 

@@ -5,6 +5,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@groam/ui/components/dropdown-menu';
+import { Markdown } from '@groam/ui/components/markdown';
 import Timeline from '@groam/ui/components/timeline';
 import { mutedMetaLabelClassName, mutedMetaLinkClassName } from '@groam/ui/lib/muted-meta';
 import {
@@ -92,12 +93,9 @@ export function TripActivityCard({
             </a>
           )}
           {activity.notes && (
-            <p
-              className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-muted-foreground"
-              title={activity.notes}
-            >
+            <Markdown className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
               {activity.notes}
-            </p>
+            </Markdown>
           )}
           {activity.attachments.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">

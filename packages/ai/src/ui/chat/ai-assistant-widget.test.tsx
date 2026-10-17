@@ -164,7 +164,7 @@ describe('AiAssistantWidget', () => {
     await expect.element(page.getByRole('dialog', { name: 'Groam AI' })).not.toBeInTheDocument();
     await expect
       .element(page.getByRole('textbox', { name: 'Assistant prompt' }))
-      .toHaveValue('draft resize check');
+      .toHaveTextContent('draft resize check');
   });
 
   test('attempts automatic thread opening only once per panel opening', async () => {
@@ -250,9 +250,8 @@ describe('AiAssistantWidget', () => {
     await page.getByRole('button', { name: 'Open Groam AI' }).click();
 
     await expect.element(page.getByText('No screen context registered')).toBeInTheDocument();
-    expect(
-      (page.getByRole('textbox', { name: 'Assistant prompt' }).element() as HTMLInputElement)
-        .disabled
-    ).toBe(true);
+    await expect
+      .element(page.getByRole('textbox', { name: 'Assistant prompt' }))
+      .toHaveAttribute('contenteditable', 'false');
   });
 });

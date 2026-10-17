@@ -1,3 +1,4 @@
+import { Markdown } from '@groam/ui/components/markdown';
 import { BedDouble, FileText } from 'lucide-react';
 import { formatTripLineCost } from '@/features/trips/trip-forms/trip-cost';
 import type { Stay } from '@/types/trips';
@@ -33,7 +34,7 @@ export function PlannerStayCard({
           {stay.checkOutTime ? ` · ${stay.checkOutTime}` : ''}
         </p>
         {stay.address ? <p>{stay.address}</p> : null}
-        {stay.notes ? <p className="whitespace-pre-wrap">{stay.notes}</p> : null}
+        {stay.notes ? <Markdown>{stay.notes}</Markdown> : null}
         {stay.costAmount !== null ? (
           <p>{formatTripLineCost(stay.costAmount, currency, stay.costSplit)}</p>
         ) : null}

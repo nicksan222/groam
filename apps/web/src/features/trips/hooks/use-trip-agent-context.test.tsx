@@ -12,6 +12,10 @@ import {
 } from './use-trip-agent-context';
 import type { TripDetail } from './use-trips';
 
+vi.mock('@/features/polls/hooks/use-polls', () => ({
+  useTripPolls: () => ({ isLoading: false, polls: [] })
+}));
+
 vi.mock('@/features/research/hooks/use-trip-researches', () => ({
   useTripResearches: () => ({ isLoading: false, researches: [] })
 }));
@@ -108,6 +112,18 @@ test.each(['activity', 'board', 'ideas', 'issues', 'itinerary', 'overview'] as c
     });
   }
 );
+
+test('the polls section lists the trip polls, offers createPoll, and targets overview', () => {
+  const polls = [
+    { eligibleCount: 3, id: 'p1', question: 'Dinner?', status: 'open', votedCount: 1 }
+  ];
+  const context = tripScreenAgentContext(trip, 'polls', { polls });
+  expect(context.capabilities).toEqual(['trip.status.read', 'poll.create']);
+  expect(context.data).toMatchObject({ polls });
+  expect(tripScreenAgentContext(trip, 'polls').data).toMatchObject({ polls: [] });
+  expect(context.target).toEqual({ kind: 'trip', section: 'overview', tripId: 'trip-1' });
+  expect(tripScreenAgentContext(archivedBoard, 'polls').capabilities).toEqual(['trip.status.read']);
+});
 
 test.each([
   ['shared itinerary for editors', trip, 'itinerary', ['trip.packing.read', 'trip.activity.add']],

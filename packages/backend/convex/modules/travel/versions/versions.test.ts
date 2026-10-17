@@ -1,7 +1,12 @@
 import { expect, test } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
 import { setupGroup, setupTrip, tripInput, tripLocationInput } from '#testing/trips';
-import { changedTripDetails, createTitledVersion, draftChangedVersion } from '#testing/versions';
+import {
+  beginAgentReview,
+  changedTripDetails,
+  createTitledVersion,
+  draftChangedVersion
+} from '#testing/versions';
 
 test(
   'stores user title source when creating ideas with a custom title',
@@ -533,9 +538,16 @@ test('assigns Idea reviewer on create and accepts advisory agent feedback withou
     ).toBe(true);
   });
   await owner.client.mutation(internal.modules.travel.versions.agent.review.index.finish, {
-    comments: ['Confirm that the shorter schedule still includes travel time.'],
+    ...(await beginAgentReview(owner, version.proposalId)),
+    comments: [
+      {
+        body: 'Confirm that the shorter schedule still includes travel time.',
+        kind: 'change_request'
+      }
+    ],
     proposalId: version.proposalId,
-    summary: 'The shorter itinerary needs one timing clarification.'
+    summary: 'The shorter itinerary needs one timing clarification.',
+    verdict: 'request_changes'
   });
   await expect(
     owner.client.query(api.routes.trips.versions.get.run, { proposalId: version.proposalId })
@@ -554,6 +566,7 @@ test('assigns Idea reviewer on create and accepts advisory agent feedback withou
       proposalId: version.proposalId
     })
   ).resolves.toMatchObject([
+    { reviewVerdict: 'changes_requested' },
     {
       author: { agentId: 'reviewer', kind: 'agent', name: 'Idea reviewer' },
       content: 'Confirm that the shorter schedule still includes travel time.'
@@ -595,14 +608,16 @@ test('stores a passing Groam review without adding blocking feedback', async () 
     proposalId: version.proposalId
   });
   await owner.client.mutation(internal.modules.travel.versions.agent.review.index.finish, {
+    ...(await beginAgentReview(owner, version.proposalId)),
     comments: [],
     proposalId: version.proposalId,
-    summary: 'Dates, pacing, and budget look consistent.'
+    summary: 'Dates, pacing, and budget look consistent.',
+    verdict: 'comment'
   });
   await expect(
     owner.client.query(api.routes.trips.versions.get.run, { proposalId: version.proposalId })
   ).resolves.toMatchObject({
-    feedbackCount: 0,
+    feedbackCount: 1,
     groamReview: {
       commentCount: 0,
       status: 'passed',

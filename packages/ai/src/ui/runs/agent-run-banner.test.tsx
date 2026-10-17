@@ -153,3 +153,17 @@ test('toasts when stopping fails and re-enables Stop', async () => {
   await vi.waitFor(() => expect(toastError).toHaveBeenCalledWith('Network down'));
   await expect.element(page.getByRole('button', { name: agentRunCopy.stop })).toBeEnabled();
 });
+
+test('hides Stop when the caller cannot stop the run', async () => {
+  await render(
+    <AgentRunBanner
+      agentLabel="Groam"
+      events={[]}
+      run={{ headline: 'Working…', id: 'run-1', status: 'running' }}
+      stopTestId="agent-stop"
+      viewAgent={<a href="/agents/groam">{agentRunCopy.viewAgent}</a>}
+    />
+  );
+  await expect.element(page.getByText(RUN_STATUS_LABEL.running)).toBeInTheDocument();
+  await expect.element(page.getByTestId('agent-stop')).not.toBeInTheDocument();
+});

@@ -75,6 +75,11 @@ vi.mock('@/features/agents/hooks/use-agent-run', () => ({
   useStartQueuedAssignRuns: () => undefined
 }));
 
+vi.mock('@/features/agents/hooks/use-agent-waits', () => ({
+  useCancelWait: () => vi.fn(),
+  useRunWait: () => undefined
+}));
+
 vi.mock('@/features/issues/hooks/use-issue-mutations', () => ({
   useIssueMutations: () => ({ assign: mutations.assign, setStatus: mutations.setStatus })
 }));

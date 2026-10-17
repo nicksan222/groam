@@ -8,7 +8,7 @@ import {
   AttachmentTitle
 } from './attachment';
 import { Bubble, BubbleContent } from './bubble';
-import { LinkifiedText } from './linkified-text';
+import { Markdown } from './markdown';
 import { Message, MessageContent } from './message';
 
 export type ChatMessageAttachment = {
@@ -35,7 +35,7 @@ function PrivateChatMessage({ attachments, status, testId, text }: ChatMessagePr
     <Message align="end" data-content={text} data-testid={testId}>
       <MessageContent className="max-w-[84%]">
         <Bubble className="max-w-full" variant="secondary">
-          <BubbleContent className="space-y-2 whitespace-pre-wrap leading-6 text-pretty">
+          <BubbleContent className="space-y-2 leading-6 text-pretty">
             {attachments && attachments.length > 0 ? (
               <div className="flex flex-col items-end gap-2">
                 {attachments.map((attachment) => (
@@ -49,9 +49,7 @@ function PrivateChatMessage({ attachments, status, testId, text }: ChatMessagePr
               </div>
             ) : null}
             {text.trim().length > 0 ? (
-              <p>
-                <LinkifiedText text={text} />
-              </p>
+              <Markdown className="wrap-break-word whitespace-normal">{text}</Markdown>
             ) : null}
           </BubbleContent>
         </Bubble>
@@ -176,9 +174,9 @@ function DiscussionText({ mine, text }: { mine: boolean; text: string }) {
           : 'rounded-2xl rounded-bl-md bg-transparent px-3 py-2 text-sm leading-5'
       }
     >
-      <p className="whitespace-pre-wrap wrap-break-word">
-        <LinkifiedText text={text} />
-      </p>
+      <Markdown className="wrap-break-word text-left text-sm leading-5 text-inherit">
+        {text}
+      </Markdown>
     </div>
   );
 }

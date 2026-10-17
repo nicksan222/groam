@@ -3,7 +3,8 @@ import { internal } from '#convex-generated/api';
 
 const crons = cronJobs();
 
-// Runs can die mid-action (timeout, crash) and would otherwise show "Working…" forever.
+// Runs no workflow owns (legacy, inline reviews, never-started chat turns) would otherwise
+// show "Working…" forever; workflow runs finish through onComplete.
 crons.interval(
   'fail stale agent runs',
   { minutes: 5 },

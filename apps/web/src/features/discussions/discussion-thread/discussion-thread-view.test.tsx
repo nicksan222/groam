@@ -23,6 +23,12 @@ const state = vi.hoisted(() => ({
   }
 }));
 
+vi.mock('./discussion-wait-banner', () => ({ DiscussionWaitBanner: () => null }));
+vi.mock('@/features/polls/hooks/use-polls', () => ({
+  useDiscussionPolls: () => ({ polls: [] }),
+  usePollActions: () => ({})
+}));
+
 vi.mock('@groam/ai/ui/context/agent-context', () => ({
   useSetAgentContext: vi.fn()
 }));

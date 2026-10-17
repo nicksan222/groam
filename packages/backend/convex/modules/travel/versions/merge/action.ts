@@ -7,9 +7,13 @@ import { IdeaErrors } from '#convex/modules/travel/versions/errors';
 
 export async function runApprovedMerge(
   ctx: ActionCtx,
-  proposalId: Id<'tripProposals'>
+  proposalId: Id<'tripProposals'>,
+  asRun?: Id<'agentRuns'>
 ): Promise<'applied' | 'conflicted'> {
+  // An agent turn has no identity; its steps act for the run's creator.
+  const actor = asRun ? { asRun } : {};
   const prepared = await ctx.runMutation(internal.modules.travel.versions.workflow.prepareMerge, {
+    ...actor,
     proposalId
   });
   try {
@@ -21,6 +25,7 @@ export async function runApprovedMerge(
       throw new Error('Unable to apply this idea to the shared trip');
     }
     await ctx.runMutation(internal.modules.travel.versions.workflow.finishMerge, {
+      ...actor,
       baseCommit: history.baseCommit,
       mergeCommit: history.mergeCommit,
       mergedSnapshot: history.mergedSnapshot,
@@ -41,6 +46,7 @@ export async function runApprovedMerge(
       detail.paths.every((path: unknown): path is string => typeof path === 'string')
     ) {
       await ctx.runMutation(internal.modules.travel.versions.workflow.markConflict, {
+        ...actor,
         paths: detail.paths,
         proposalId,
         token: prepared.token
@@ -48,6 +54,7 @@ export async function runApprovedMerge(
       return 'conflicted';
     }
     await ctx.runMutation(internal.modules.travel.versions.workflow.cancelOperation, {
+      ...actor,
       proposalId,
       token: prepared.token
     });
@@ -58,5 +65,6 @@ export async function runApprovedMerge(
 export const apply = internalWorkspaceAction({
   args: { proposalId: v.id('tripProposals') },
   returns: v.union(v.literal('applied'), v.literal('conflicted')),
-  handler: async (ctx, { proposalId }) => await runApprovedMerge(ctx, proposalId)
+  handler: async (ctx, { proposalId }) =>
+    await runApprovedMerge(ctx, proposalId, ctx.workspace.runId)
 });

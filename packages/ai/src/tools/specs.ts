@@ -57,6 +57,25 @@ export type AgentToolSpec = AgentToolReadSpec | AgentToolWriteSpec;
 export type AssistantCapability = keyof typeof assistantToolSpecs;
 
 export const assistantToolSpecs = {
+  // The wait tools only steer the calling agent's own run, so they declare no write intent.
+  'agent.wait.cancel': {
+    agents: ['groam', 'issue'],
+    eventLabel: { complete: 'Cancelled a wait', running: 'Cancelling a wait' },
+    guidance:
+      'Use cancelWait when a pending wait listed for this chat or run is no longer needed, for example the group already decided in conversation.',
+    id: 'agent.wait.cancel',
+    toolName: 'cancelWait',
+    ui: { card: 'activity' }
+  },
+  'agent.wait.create': {
+    agents: ['groam', 'issue'],
+    eventLabel: { complete: 'Started waiting', running: 'Setting up a wait' },
+    guidance:
+      'Use waitFor when you cannot finish until something happens later: a timer to check back, a poll, a trip issue to be resolved, an idea to be approved or decided, or enough travelers going on the active trip (members who have not RSVPed count as going). Always choose a sensible deadline (at most 14 days). After calling it, stop; you resume automatically with the outcome.',
+    id: 'agent.wait.create',
+    toolName: 'waitFor',
+    ui: { card: 'activity' }
+  },
   'context.chat.read': {
     ui: { card: 'activity' },
     agents: ['groam'],
@@ -89,6 +108,17 @@ export const assistantToolSpecs = {
       'Use findWorkspaceContext only when neither the screen nor current AI chat attachments identify the required entity. Never invent entity ids.',
     id: 'context.workspace.find',
     toolName: 'findWorkspaceContext'
+  },
+  // Exempt from the write-intent gate by design: agents ask the group on their own, and a poll is
+  // harmless and reversible.
+  'poll.create': {
+    agents: ['groam', 'issue'],
+    eventLabel: { complete: 'Asked the group', running: 'Creating a poll' },
+    guidance:
+      'Use createPoll when a decision affects everyone in the group and you need their preferences instead of guessing. Keep options short (2–10). Add waitFor to resume automatically: allVoted for small binding choices, optionVotes majority for quick picks, quorum for large groups, closed when the organizer will close it. Always set a sensible deadline (hours for quick picks, a few days for bigger decisions, at most 14 days). After creating a poll with waitFor, stop; you continue with the result.',
+    id: 'poll.create',
+    toolName: 'createPoll',
+    ui: { card: 'activity' }
   },
   'research.list': {
     ui: { card: 'activity' },

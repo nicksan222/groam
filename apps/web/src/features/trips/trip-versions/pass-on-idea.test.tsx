@@ -53,9 +53,7 @@ test('requires a reason before closing a submitted idea', async () => {
   await expect
     .element(dialog.getByRole('heading', { name: 'Close without applying?' }))
     .toBeInTheDocument();
-  await expect
-    .element(dialog.getByLabelText('Why are you closing this idea?'))
-    .toHaveAttribute('aria-required', 'true');
+  await expect.element(dialog.getByLabelText('Why are you closing this idea?')).toBeInTheDocument();
   await expect
     .element(dialog.getByRole('button', { name: 'Close without applying' }))
     .toBeDisabled();

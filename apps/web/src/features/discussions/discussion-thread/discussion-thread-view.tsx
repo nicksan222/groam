@@ -6,8 +6,9 @@ import { PageLoading } from '@groam/ui/components/page-loading';
 import { MessageSquare } from 'lucide-react';
 import { useDiscussions } from '@/features/discussions/hooks/use-discussions';
 import { Link } from '@/features/workspace/navigation/router';
-import { DiscussionThreadBody } from './discussion-thread-body';
 import { DiscussionThreadHeader } from './discussion-thread-header';
+import { DiscussionThreadWithPolls } from './discussion-thread-with-polls';
+import { DiscussionWaitBanner } from './discussion-wait-banner';
 
 export function DiscussionThreadView({ discussionId }: { discussionId: Id<'discussions'> }) {
   const { discussions, isLoading: isListLoading } = useDiscussions();
@@ -51,8 +52,9 @@ export function DiscussionThreadView({ discussionId }: { discussionId: Id<'discu
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-background">
       <DiscussionThreadHeader discussion={discussion} />
+      <DiscussionWaitBanner discussionId={discussionId} />
 
-      <DiscussionThreadBody discussionId={discussionId} threadId={discussion.threadId} />
+      <DiscussionThreadWithPolls discussionId={discussionId} threadId={discussion.threadId} />
     </div>
   );
 }

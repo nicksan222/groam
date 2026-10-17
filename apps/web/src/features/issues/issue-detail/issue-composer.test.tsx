@@ -25,7 +25,7 @@ describe('IssueComposer', () => {
     );
     await expect
       .element(page.getByRole('textbox', { name: 'Issue comment' }))
-      .toHaveValue('Looks good');
+      .toHaveTextContent('Looks good');
     await page.getByRole('button', { name: 'Comment' }).click();
     expect(onComment).toHaveBeenCalledTimes(1);
   });

@@ -44,8 +44,11 @@ test('worker assignments match the reviewed sets', () => {
   // Deliberate oracle: reassigning a tool means updating its spec entry AND
   // this list in the same change.
   expect(capabilitiesForAgent('issue')).toEqual([
+    'agent.wait.cancel',
+    'agent.wait.create',
     'context.screen.read',
     'context.workspace.find',
+    'poll.create',
     'trip.activity.add',
     'trip.activity.remove',
     'trip.activity.update',

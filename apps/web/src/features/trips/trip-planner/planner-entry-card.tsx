@@ -1,3 +1,4 @@
+import { Markdown } from '@groam/ui/components/markdown';
 import { BedDouble, FileText, MapPin, Route } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { entryTime } from '@/features/trips/hooks/trip-day-planner';
@@ -64,7 +65,7 @@ function EntryDetails({ currency, entry }: { currency: string; entry: PlannerEnt
           {address}
         </a>
       ) : null}
-      {source.notes ? <p className="whitespace-pre-wrap break-words">{source.notes}</p> : null}
+      {source.notes ? <Markdown className="break-words">{source.notes}</Markdown> : null}
       {source.costAmount !== null ? (
         <p>{formatTripLineCost(source.costAmount, currency, source.costSplit)}</p>
       ) : null}

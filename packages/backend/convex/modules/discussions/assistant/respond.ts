@@ -1,113 +1,50 @@
-import { ConvexError } from 'convex/values';
-import { internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
-import type { ActionCtx } from '#convex-generated/server';
+import type { MutationCtx } from '#convex-generated/server';
 import { aiRateLimiter } from '#convex/modules/ai/limits';
-import { type AssistantScreen, AssistantSession } from '#convex/modules/assistant/agent/index';
+import type { AssistantScreen } from '#convex/modules/assistant/agent/index';
+import { AgentEngine } from '#convex/modules/assistant/engine/index';
 import { AssistantErrors } from '#convex/modules/assistant/errors/index';
-import { AgentRunTracking } from '#convex/modules/assistant/runs/tracking';
+import { AssistantScreens } from '#convex/modules/assistant/screen/index';
+import { requireWorkspace } from '#convex/modules/auth/workspace';
+import { Discussions } from '#convex/modules/discussions/threads/index';
 
 /**
- * Action-side assistant reply. Mutations in `assistant/index.ts` claim and finish the
- * request so two clients cannot stream the same prompt twice.
+ * Claims the prompt so two clients cannot answer it twice, then starts the run's workflow; the
+ * reply streams from the workflow's turn action.
  */
 // oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class DiscussionAssistant {
   static async respond(
-    ctx: ActionCtx,
-    args: {
-      discussionId: Id<'discussions'>;
-      promptMessageId: string;
-      screen: AssistantScreen;
-    }
+    ctx: MutationCtx,
+    args: { discussionId: Id<'discussions'>; promptMessageId: string; screen: AssistantScreen }
   ): Promise<null> {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError('Not authenticated');
-    const claim = await ctx.runMutation(
-      internal.modules.discussions.assistant.index.claimResponse,
-      {
-        discussionId: args.discussionId,
-        promptMessageId: args.promptMessageId
-      }
+    const workspace = await requireWorkspace(ctx);
+    AssistantScreens.validate(args.screen);
+    const claim = await Discussions.claimAssistantResponse(
+      ctx,
+      args.discussionId,
+      args.promptMessageId,
+      args.screen
     );
     // Already claimed or finished by another client — treat as a no-op.
     if (!claim) return null;
     try {
       // After the claim, so a rate-limit refusal fails the request instead of leaving it queued.
-      try {
-        await aiRateLimiter.limit(ctx, 'tripAssistantMessage', {
-          key: identity.tokenIdentifier,
-          throws: true
-        });
-      } catch (error: unknown) {
-        const message = AssistantErrors.message(error);
-        await ctx.runMutation(internal.modules.discussions.assistant.index.finishResponse, {
-          discussionId: args.discussionId,
-          error: message,
-          expectedUpdatedAt: claim.expectedUpdatedAt,
-          promptMessageId: args.promptMessageId,
-          responseText: null,
-          runId: claim.runId
-        });
-        return null;
-      }
-      const responseText = await AssistantSession.continueDiscussion(
-        ctx,
-        {
-          agent: claim.agent,
-          prompt: claim.prompt,
-          screen: args.screen,
-          threadId: claim.threadId
-        },
-        args.promptMessageId,
-        claim.runId
-      );
-      if (await AgentRunTracking.isAborted(ctx, claim.runId)) {
-        await ctx.runMutation(internal.modules.discussions.assistant.index.finishResponse, {
-          discussionId: args.discussionId,
-          expectedUpdatedAt: claim.expectedUpdatedAt,
-          promptMessageId: args.promptMessageId,
-          responseText: null,
-          runId: claim.runId
-        });
-        return null;
-      }
-      await ctx.runMutation(internal.modules.discussions.assistant.index.finishResponse, {
-        discussionId: args.discussionId,
-        expectedUpdatedAt: claim.expectedUpdatedAt,
-        promptMessageId: args.promptMessageId,
-        responseText,
-        runId: claim.runId
+      await aiRateLimiter.limit(ctx, 'tripAssistantMessage', {
+        key: workspace.tokenIdentifier,
+        throws: true
       });
     } catch (error: unknown) {
-      if (await AgentRunTracking.isAborted(ctx, claim.runId)) {
-        await ctx.runMutation(internal.modules.discussions.assistant.index.finishResponse, {
-          discussionId: args.discussionId,
-          expectedUpdatedAt: claim.expectedUpdatedAt,
-          promptMessageId: args.promptMessageId,
-          responseText: null,
-          runId: claim.runId
-        });
-        return null;
-      }
-      // Mark the request failed for UI, but do not rethrow — otherwise clients get a redacted
-      // Convex "Server Error / An error occurred" toast on top of the failed assistant bubble.
-      const message = AssistantErrors.message(error);
-      console.error('discussion assistant respond failed:', message, error);
-      await AgentRunTracking.record(ctx, claim.runId, {
-        detail: message,
-        kind: 'error',
-        label: 'Run failed'
-      });
-      await ctx.runMutation(internal.modules.discussions.assistant.index.finishResponse, {
+      await Discussions.finishAssistantResponse(ctx, {
         discussionId: args.discussionId,
-        error: message,
+        error: AssistantErrors.message(error),
         expectedUpdatedAt: claim.expectedUpdatedAt,
         promptMessageId: args.promptMessageId,
         responseText: null,
         runId: claim.runId
       });
+      return null;
     }
-    return null;
+    return await AgentEngine.start(ctx, claim.runId);
   }
 }

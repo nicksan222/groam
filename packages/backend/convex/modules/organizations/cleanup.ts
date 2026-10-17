@@ -4,6 +4,7 @@ import { internalMutation, type MutationCtx } from '#convex-generated/server';
 import { Discussions } from '#convex/modules/discussions/threads/index';
 import { Media } from '#convex/modules/media/library/index';
 import { OrganizationInvitations } from '#convex/modules/organizations/invitations/index';
+import { PollCleanup } from '#convex/modules/polls/cleanup';
 import { deleteTripBatch } from '#convex/modules/travel/trips/index';
 
 const DELETE_BATCH_SIZE = 50;
@@ -19,6 +20,7 @@ class OrganizationCleanup {
   async run(): Promise<null> {
     if (await this.removeNextTrip()) return await this.continueInNextTransaction();
     if (await this.removeDiscussionBatch()) return await this.continueInNextTransaction();
+    if (await this.removePollBatch()) return await this.continueInNextTransaction();
     if (await this.removeMediaBatch()) return await this.continueInNextTransaction();
     if (await this.removeInvitationCodeBatch()) return await this.continueInNextTransaction();
     return null;
@@ -47,6 +49,14 @@ class OrganizationCleanup {
 
   private async removeDiscussionBatch(): Promise<boolean> {
     return await Discussions.deleteOrganizationBatch(
+      this.ctx,
+      this.args.organizationId,
+      DELETE_BATCH_SIZE
+    );
+  }
+
+  private async removePollBatch(): Promise<boolean> {
+    return await PollCleanup.purgeForOrganization(
       this.ctx,
       this.args.organizationId,
       DELETE_BATCH_SIZE

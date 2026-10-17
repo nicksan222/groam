@@ -5,13 +5,21 @@ import { by, tripCard } from './locators';
 import { expectPath, idFromPath, tap } from './queries';
 
 /** The tabs of a shared trip, plus the itinerary tab of an idea's working copy. */
-export type TripSection = 'activity' | 'board' | 'ideas' | 'issues' | 'itinerary' | 'overview';
+export type TripSection =
+  | 'activity'
+  | 'board'
+  | 'ideas'
+  | 'issues'
+  | 'itinerary'
+  | 'overview'
+  | 'polls';
 
 /** A marker only that tab's page renders, so opening it can wait for it. */
 const sectionPages: Partial<Record<TripSection, string>> = {
   activity: ids.tripHistoryPage,
   board: ids.tripBoardScroller,
-  overview: ids.tripPlanPage
+  overview: ids.tripPlanPage,
+  polls: ids.tripPollsPanel
 };
 
 export async function openTrips(): Promise<void> {
@@ -43,6 +51,7 @@ const sectionTabs = {
   issues: ids.tripSectionIssues,
   itinerary: ids.tripSectionItinerary,
   overview: ids.tripSectionOverview,
+  polls: ids.tripSectionPolls,
   research: ids.tripSectionResearch
 } as const;
 

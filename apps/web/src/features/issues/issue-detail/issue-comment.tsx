@@ -1,6 +1,7 @@
 import { Avatar } from '@groam/ui/components/avatar';
 import { AvatarFallback } from '@groam/ui/components/avatar-fallback';
 import { Badge } from '@groam/ui/components/badge';
+import { Markdown } from '@groam/ui/components/markdown';
 import Timeline from '@groam/ui/components/timeline';
 import { initials } from '@groam/ui/lib/avatar';
 import { relativeIssueDate } from '@/features/issues/hooks/issue-relative-date';
@@ -45,9 +46,11 @@ export function IssueComment({
             </p>
           </Timeline.CardHeader>
           <Timeline.CardBody className="px-3 py-2.5">
-            <p className="whitespace-pre-wrap text-sm leading-relaxed">
-              {body.trim() ? body : 'No description provided.'}
-            </p>
+            {body.trim() ? (
+              <Markdown className="text-sm leading-relaxed">{body}</Markdown>
+            ) : (
+              <p className="text-sm leading-relaxed">No description provided.</p>
+            )}
           </Timeline.CardBody>
         </Timeline.Card>
       </Timeline.Body>

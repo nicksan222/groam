@@ -8,11 +8,13 @@ export const agentRunEventLabels = {
 } as const;
 
 export const agentRunCopy = {
+  cancelWait: 'Cancel wait',
   issueQueued: 'Queued to work this issue.',
   rerun: 'Re-run',
   retryFromZero: 'Retry from zero',
   stop: 'Stop',
-  viewAgent: 'View agent'
+  viewAgent: 'View agent',
+  waitingFor: 'Waiting for'
 } as const;
 
 export const agentRunFallbackReport = {

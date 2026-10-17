@@ -12,7 +12,7 @@ import { Discussions } from '#convex/modules/discussions/threads/index';
 | `Messages` | Text, request ids, and message shape |
 | `Discussions` | Threads, members, send/list, and assistant replies |
 | `DiscussionAccess` | Membership gate used by `Discussions` |
-| `DiscussionAssistant` | Action that streams one claimed assistant reply |
+| `DiscussionAssistant` | Claims a prompt and starts its agent run workflow |
 
 `DiscussionMedia` pins library files onto messages and stays inside this folder.
 Public adapters stay under `routes/discussions`.

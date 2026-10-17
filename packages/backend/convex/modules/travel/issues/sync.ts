@@ -1,4 +1,5 @@
 import type { Doc } from '#convex-generated/dataModel';
+import { AgentWaits } from '#convex/modules/assistant/waits/index';
 import { bottomRank, issuesOf, laneIn, RANK_STEP } from '#convex/modules/travel/issues/board';
 import { appendSystemComment } from '#convex/modules/travel/issues/comments';
 import {
@@ -74,6 +75,7 @@ export async function syncTripConditions(ctx: MutableTripCtx): Promise<void> {
           label
         })
       );
+      await AgentWaits.signal(ctx, { kind: 'issue', refId: issue._id });
     })
   );
 }

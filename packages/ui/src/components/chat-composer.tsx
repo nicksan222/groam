@@ -1,7 +1,7 @@
 import { SendHorizontal, Square } from 'lucide-react';
-import { type FormEvent, type ReactNode, type RefObject, useEffect, useRef, useState } from 'react';
+import { type ReactNode, type RefObject, useEffect, useRef, useState } from 'react';
 import { Button } from './button';
-import { Textarea } from './textarea';
+import { RichTextEditor, type RichTextEditorHandle } from './rich-text-editor';
 
 export type ChatComposerProps = {
   beforeInput?: ReactNode;
@@ -33,31 +33,34 @@ export function ChatComposer(props: ChatComposerProps) {
           ? 'assistant-composer relative mx-3 mt-1 mb-[calc(0.75rem+env(safe-area-inset-bottom))] shrink-0 rounded-2xl border border-border bg-card p-1.5 shadow-xs transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/24'
           : 'assistant-composer relative shrink-0 bg-background px-3 pt-1 pb-[calc(0.5rem+env(safe-area-inset-bottom))]'
       }
-      onSubmit={composer.submit}
+      onSubmit={(event) => {
+        event.preventDefault();
+        void composer.submit();
+      }}
     >
       {options.beforeInput}
       <div className="relative">
-        <Textarea
+        <RichTextEditor
+          maxLength={options.maxLength}
           aria-label={options.label}
-          autoComplete="off"
           className={
             options.variant === 'sidechat'
-              ? 'max-h-36 min-h-11 resize-none rounded-xl border-0 bg-transparent px-2.5 pt-2 pb-12 sm:pb-9 text-sm leading-5 shadow-none placeholder:text-muted-foreground focus-visible:ring-0 dark:bg-transparent'
-              : 'max-h-36 min-h-11 resize-none rounded-2xl border-input bg-background px-3 pt-2.5 pb-10 text-sm leading-5 shadow-xs/5 placeholder:text-muted-foreground/72 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/24 dark:bg-background'
+              ? 'rounded-xl'
+              : 'rounded-2xl border border-input bg-background shadow-xs/5 transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/24'
+          }
+          contentClassName={
+            options.variant === 'sidechat'
+              ? 'max-h-36 min-h-11 overflow-y-auto px-2.5 pt-2 pb-12 text-sm leading-5 sm:pb-9'
+              : 'max-h-36 min-h-11 overflow-y-auto px-3 pt-2.5 pb-10 text-sm leading-5'
           }
           disabled={options.disabled}
-          maxLength={options.maxLength}
-          onChange={(event) => composer.changeMessage(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' && !event.shiftKey) {
-              event.preventDefault();
-              event.currentTarget.form?.requestSubmit();
-            }
-          }}
+          onChange={(value) => composer.changeMessage(value.slice(0, options.maxLength))}
+          onSubmit={() => void composer.submit()}
           placeholder={options.placeholder}
           ref={composer.inputRef}
-          rows={1}
+          submitShortcut="enter"
           value={composer.message}
+          variant="bare"
         />
         <ComposerToolbar
           disabled={options.disabled}
@@ -98,10 +101,9 @@ function useChatComposer(options: RequiredComposerOptions) {
   const [uncontrolledMessage, setUncontrolledMessage] = useState('');
   const message = options.message ?? uncontrolledMessage;
   const setMessage = options.onMessageChange ?? setUncontrolledMessage;
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-  useComposerInputEffects(inputRef, message, options.disabled, options.focusOnMount);
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
+  const inputRef = useRef<RichTextEditorHandle>(null);
+  useFocusOnMount(inputRef, options.disabled, options.focusOnMount);
+  const submit = async () => {
     const normalized = message.trim();
     if (!normalized || options.disabled) return;
     setMessage('');
@@ -110,22 +112,14 @@ function useChatComposer(options: RequiredComposerOptions) {
   return { changeMessage: setMessage, inputRef, message, submit };
 }
 
-function useComposerInputEffects(
-  inputRef: RefObject<HTMLTextAreaElement | null>,
-  message: string,
+function useFocusOnMount(
+  inputRef: RefObject<RichTextEditorHandle | null>,
   disabled: boolean,
   focusOnMount: boolean
 ) {
   useEffect(() => {
     if (focusOnMount && !disabled) inputRef.current?.focus();
   }, [disabled, focusOnMount, inputRef]);
-  useEffect(() => {
-    const input = inputRef.current;
-    if (!input || input.value !== message) return;
-    input.style.height = '0px';
-    input.style.height = `${Math.min(input.scrollHeight, 144)}px`;
-    input.style.overflowY = input.scrollHeight > 144 ? 'auto' : 'hidden';
-  }, [inputRef, message]);
 }
 
 function ComposerToolbar({

@@ -7,7 +7,8 @@ const BADGE_VARIANT = {
   complete: 'green',
   failed: 'outline',
   queued: 'secondary',
-  running: 'green'
+  running: 'green',
+  waiting: 'secondary'
 } as const satisfies Record<keyof typeof RUN_STATUS_LABEL, BadgeVariant>;
 
 const DOT_CLASS = {
@@ -15,7 +16,8 @@ const DOT_CLASS = {
   complete: 'bg-current',
   failed: 'bg-current',
   queued: 'bg-muted-foreground',
-  running: 'bg-current motion-safe:animate-pulse'
+  running: 'bg-current motion-safe:animate-pulse',
+  waiting: 'bg-current'
 } as const satisfies Record<keyof typeof RUN_STATUS_LABEL, string>;
 
 export function AgentRunStatusBadge({

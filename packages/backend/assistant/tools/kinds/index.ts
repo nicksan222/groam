@@ -4,6 +4,8 @@ import { assistantContextTagInputSchema, referenceForMutation } from '@groam/ai/
 import { assistantToolSpecs } from '@groam/ai/tools/specs';
 import type { ToolSet } from 'ai';
 import * as z from 'zod/v3';
+import { createPollTool } from '#backend/assistant/tools/agent/polls';
+import { createCancelWaitTool, createWaitForTool } from '#backend/assistant/tools/agent/waits';
 import {
   type AssistantCapabilityRegistration,
   type AssistantToolRuntime,
@@ -90,6 +92,15 @@ function screenContextSnapshot(screen: AssistantScreen) {
 }
 
 const assistantCapabilityBindings = {
+  // Private chats have no run to suspend, so only run turns get the wait tools.
+  'agent.wait.cancel': defineCapability({
+    ...assistantToolSpecs['agent.wait.cancel'],
+    create: ({ actorRunId }) => (actorRunId ? createCancelWaitTool() : null)
+  }),
+  'agent.wait.create': defineCapability({
+    ...assistantToolSpecs['agent.wait.create'],
+    create: ({ activeTripId, actorRunId }) => (actorRunId ? createWaitForTool(activeTripId) : null)
+  }),
   'context.chat.read': defineCapability({
     ...assistantToolSpecs['context.chat.read'],
     create: ({ scope, threadId }) => {
@@ -172,6 +183,10 @@ const assistantCapabilityBindings = {
           query: z.string().min(1).max(100).describe('A trip, place, or activity name.')
         })
       })
+  }),
+  'poll.create': defineCapability({
+    ...assistantToolSpecs['poll.create'],
+    create: ({ activeTripId, actorRunId }) => (actorRunId ? createPollTool(activeTripId) : null)
   }),
   'research.list': defineCapability({
     ...assistantToolSpecs['research.list'],

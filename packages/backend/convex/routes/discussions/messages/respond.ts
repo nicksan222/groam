@@ -1,11 +1,12 @@
-import { v } from 'convex/values';
+import { ConvexError, v } from 'convex/values';
+import { internal } from '#convex-generated/api';
 import { action } from '#convex-generated/server';
 import { assistantScreenValidator } from '#convex/modules/assistant/agent/index';
-import { DiscussionAssistant } from '#convex/modules/discussions/assistant/respond';
 
 /**
- * Run the assistant reply for a claimed prompt message. Auth + AI rate limit enforced;
- * no-ops when another client already claimed or finished the response.
+ * Claim a prompt message and start its assistant run. Auth + AI rate limit enforced;
+ * no-ops when another client already claimed or finished the response. Stays an action so
+ * shipped clients keep calling it; the reply streams from the run's workflow.
  */
 export const run = action({
   args: {
@@ -14,5 +15,8 @@ export const run = action({
     screen: assistantScreenValidator
   },
   returns: v.null(),
-  handler: (ctx, args) => DiscussionAssistant.respond(ctx, args)
+  handler: async (ctx, args): Promise<null> => {
+    if (!(await ctx.auth.getUserIdentity())) throw new ConvexError('Not authenticated');
+    return await ctx.runMutation(internal.modules.discussions.assistant.index.respond, args);
+  }
 });

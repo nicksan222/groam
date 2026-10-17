@@ -52,7 +52,17 @@ export const run = workspaceQuery({
   args: { proposalId: v.id('tripProposals') },
   returns: v.object({
     approvalCount: v.number(),
-    approvals: v.array(v.object({ approvedAt: v.number(), name: v.string(), userId: v.string() })),
+    approvals: v.array(
+      v.union(
+        v.object({ approvedAt: v.number(), name: v.string(), userId: v.string() }),
+        v.object({
+          agentId: v.string(),
+          approvedAt: v.number(),
+          kind: v.literal('agent'),
+          name: v.string()
+        })
+      )
+    ),
     author: TripVersionValidators.author,
     availableReviewers: v.array(
       v.object({ kind: v.literal('user'), name: v.string(), userId: v.string() })

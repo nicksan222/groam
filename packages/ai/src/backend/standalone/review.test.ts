@@ -13,7 +13,7 @@ const review = {
 test('builds the standalone reviewer prompt', () => {
   const prompt = reviewStandalonePrompt(review);
   expect(prompt).toContain('Kyoto food crawl');
-  expect(prompt).toContain('blocking comments');
+  expect(prompt).toContain('request_changes');
   expect(prompt).toContain('trip-working');
   expect(prompt).toContain('trip-shared');
   expect(prompt).toContain('Trip dates');

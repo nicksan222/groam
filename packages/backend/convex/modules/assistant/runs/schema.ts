@@ -5,7 +5,8 @@ import {
   agentRunKickoffValidator,
   agentRunStatusValidator,
   agentSurfaceValidator,
-  assistantAgentValidator
+  assistantAgentValidator,
+  assistantScreenValidator
 } from '#convex/modules/assistant/validators/index';
 
 const actor = v.object({ name: v.string(), userId: v.string() });
@@ -111,24 +112,38 @@ export const assistantRunTables = {
   }).index('by_runId_and_seq', ['runId', 'seq']),
   agentRuns: defineTable({
     shortId: v.string(),
+    /** Better Auth token identifier of `createdBy`; the run actor's agent-thread user id. */
+    actorTokenIdentifier: v.optional(v.string()),
+    /** The wait this run is suspended on (or about to suspend on), until a turn claims it. */
+    activeWaitId: v.optional(v.id('agentWaits')),
     agentId: assistantAgentValidator,
     completedAt: v.optional(v.number()),
     createdBy: actor,
     discussionId: v.optional(v.id('discussions')),
+    /** Discussion `updatedAt` at claim time, so the finish skips a stale last-message preview. */
+    discussionUpdatedAt: v.optional(v.number()),
     error: v.optional(v.string()),
     headline: v.optional(v.string()),
     issueId: v.optional(v.id('tripIssues')),
     kickoff: agentRunKickoffValidator,
     organizationId: v.string(),
+    /** The discussion message the chat turn answers. */
+    promptMessageId: v.optional(v.string()),
     proposalId: v.optional(v.id('tripProposals')),
     report: v.optional(v.string()),
+    /** Screen context the turn runs against (chat only). */
+    screen: v.optional(assistantScreenValidator),
     startedAt: v.optional(v.number()),
     status: agentRunStatusValidator,
     surface: agentSurfaceValidator,
     threadId: v.optional(v.string()),
     title: v.string(),
     tripId: v.optional(v.id('trips')),
-    updatedAt: v.number()
+    /** Turns claimed so far; a run must keep one in reserve to resume from a wait. */
+    turns: v.optional(v.number()),
+    updatedAt: v.number(),
+    /** `@convex-dev/workflow` id; set when the engine starts the run. */
+    workflowId: v.optional(v.string())
   })
     .index('by_shortId', ['shortId'])
     .index('by_organizationId_and_updatedAt', ['organizationId', 'updatedAt'])
@@ -143,4 +158,5 @@ export const assistantRunTables = {
     .index('by_discussionId_and_status_and_updatedAt', ['discussionId', 'status', 'updatedAt'])
     .index('by_proposalId_and_updatedAt', ['proposalId', 'updatedAt'])
     .index('by_status_and_updatedAt', ['status', 'updatedAt'])
+    .index('by_status_and_workflowId_and_updatedAt', ['status', 'workflowId', 'updatedAt'])
 };

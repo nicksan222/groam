@@ -1,9 +1,8 @@
-import { cn } from '@groam/ui/lib/utils';
 import { Paperclip, SendHorizontal, X } from 'lucide-react';
 import { type ReactNode, useRef, useState } from 'react';
 import { Button } from './button';
+import { RichTextEditor, type RichTextEditorHandle } from './rich-text-editor';
 import { Spinner } from './spinner';
-import { Textarea } from './textarea';
 
 const MAX_MESSAGE_LENGTH = 5_000;
 
@@ -61,26 +60,15 @@ export function MessageComposer({
   const [text, setText] = useState('');
   const [isSubmitting, setSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<RichTextEditorHandle>(null);
   const buttonLabel = submitLabel ?? (compact ? 'Reply' : 'Send');
   const canSubmit = text.trim().length > 0 || allowEmptySubmit;
 
   const api: MessageComposerApi = {
     insertText: (value) => {
-      const input = textareaRef.current;
-      if (!input) {
-        setText((current) => `${current}${value}`);
-        return;
-      }
-      const start = input.selectionStart ?? input.value.length;
-      const end = input.selectionEnd ?? start;
-      const next = `${input.value.slice(0, start)}${value}${input.value.slice(end)}`;
-      setText(next.slice(0, MAX_MESSAGE_LENGTH));
-      requestAnimationFrame(() => {
-        const caret = Math.min(start + value.length, MAX_MESSAGE_LENGTH);
-        input.focus();
-        input.setSelectionRange(caret, caret);
-      });
+      const editor = editorRef.current;
+      if (editor) editor.insertText(value);
+      else setText((current) => `${current}${value}`.slice(0, MAX_MESSAGE_LENGTH));
     },
     isSubmitting,
     setText: (value) => setText(value.slice(0, MAX_MESSAGE_LENGTH)),
@@ -160,29 +148,20 @@ export function MessageComposer({
         </div>
 
         <div className="min-w-0 flex-1 rounded-2xl border border-border/80 bg-background px-3.5 py-2 focus-within:border-foreground/25">
-          <Textarea
+          <RichTextEditor
+            maxLength={MAX_MESSAGE_LENGTH}
             aria-label={label}
             autoFocus={autoFocus}
-            className={cn(
-              'max-h-32 w-full field-sizing-content resize-none border-0 bg-transparent p-0 text-[15px] leading-5 shadow-none focus-visible:ring-0 dark:bg-transparent',
-              compact ? 'min-h-5' : 'min-h-5'
-            )}
-            data-testid={testId ? `${testId}-input` : undefined}
+            contentClassName="max-h-32 min-h-5 overflow-y-auto text-[15px] leading-5"
             disabled={isSubmitting}
-            maxLength={MAX_MESSAGE_LENGTH}
-            onChange={(event) => setText(event.target.value)}
-            onKeyDown={(event) => {
-              const shouldSubmit =
-                event.key === 'Enter' &&
-                (submitShortcut === 'enter' ? !event.shiftKey : event.metaKey || event.ctrlKey);
-              if (!shouldSubmit) return;
-              event.preventDefault();
-              event.currentTarget.form?.requestSubmit();
-            }}
+            onChange={(value) => setText(value.slice(0, MAX_MESSAGE_LENGTH))}
+            onSubmit={() => void submit()}
             placeholder={placeholder}
-            ref={textareaRef}
-            rows={1}
+            ref={editorRef}
+            submitShortcut={submitShortcut}
+            testId={testId ? `${testId}-input` : undefined}
             value={text}
+            variant="bare"
           />
           {text.length > 4_500 && (
             <p className="pt-1 text-right text-[10px] text-muted-foreground">

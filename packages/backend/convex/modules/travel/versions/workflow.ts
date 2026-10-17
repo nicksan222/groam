@@ -1,5 +1,6 @@
 import { v } from 'convex/values';
 import { internalMutation } from '#convex-generated/server';
+import { internalOptionalActorMutation } from '#convex/modules/auth/workspace';
 import { detailRebaseValidator } from '#convex/modules/travel/versions/detailrebase';
 import { TripVersions } from '#convex/modules/travel/versions/index';
 import {
@@ -33,7 +34,7 @@ export const finishSubmit = internalMutation({
     })
 });
 
-export const prepareMerge = internalMutation({
+export const prepareMerge = internalOptionalActorMutation({
   args: { proposalId: v.id('tripProposals') },
   returns: versionPrepareMergeResultValidator,
   handler: (ctx, { proposalId }) => TripVersions.prepareMerge(ctx, proposalId)
@@ -91,7 +92,7 @@ export const finishRebase = internalMutation({
     })
 });
 
-export const finishMerge = internalMutation({
+export const finishMerge = internalOptionalActorMutation({
   args: {
     baseCommit: v.string(),
     mergeCommit: v.string(),
@@ -113,7 +114,7 @@ export const finishMerge = internalMutation({
     })
 });
 
-export const markConflict = internalMutation({
+export const markConflict = internalOptionalActorMutation({
   args: {
     paths: v.array(v.string()),
     proposalId: v.id('tripProposals'),
@@ -123,7 +124,7 @@ export const markConflict = internalMutation({
   handler: (ctx, args) => TripVersions.markConflict(ctx, args.proposalId, args.token, args.paths)
 });
 
-export const cancelOperation = internalMutation({
+export const cancelOperation = internalOptionalActorMutation({
   args: { proposalId: v.id('tripProposals'), token: v.string() },
   returns: v.null(),
   handler: (ctx, args) => TripVersions.cancelOperation(ctx, args.proposalId, args.token)

@@ -59,6 +59,13 @@ test('embeds the prompt, the steps, then the reply in one card', async () => {
   await expect.element(page.getByText('Jan 1, 1970')).not.toBeVisible();
 });
 
+test('renders the prompt as Markdown', async () => {
+  await render(
+    <AssistantRunCard prompt={{ ...prompt, text: 'Find **cheap** hotels' }} replies={[reply()]} />
+  );
+  expect(page.getByText('cheap').element().getAttribute('data-streamdown')).toBe('strong');
+});
+
 test('shows Groam working before any text arrives', async () => {
   await render(<AssistantRunCard prompt={prompt} replies={[reply({ status: 'streaming' })]} />);
   await expect.element(page.getByText('Groam is working')).toBeVisible();

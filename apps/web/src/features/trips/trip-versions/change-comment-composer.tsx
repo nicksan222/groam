@@ -1,6 +1,6 @@
 import { Button } from '@groam/ui/components/button';
+import { RichTextEditor } from '@groam/ui/components/rich-text-editor';
 import { Spinner } from '@groam/ui/components/spinner';
-import { Textarea } from '@groam/ui/components/textarea';
 import { useId, useRef, useState } from 'react';
 
 export function ChangeCommentComposer({
@@ -44,12 +44,13 @@ export function ChangeCommentComposer({
       <label className="block text-xs font-medium" htmlFor={id}>
         Comment on {label}
       </label>
-      <Textarea
-        disabled={pending}
+      <RichTextEditor
+        aria-label={`Comment on ${label}`}
         id={id}
-        onChange={(event) => setDraft(event.target.value)}
+        disabled={pending}
+        onChange={setDraft}
+        onSubmit={() => void submit()}
         placeholder="Ask a question or share a thought…"
-        rows={3}
         value={draft}
       />
       {failed && (

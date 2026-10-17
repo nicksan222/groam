@@ -1,4 +1,4 @@
-import { Agent, updateThreadMetadata } from '@convex-dev/agent';
+import { Agent, saveMessage, updateThreadMetadata } from '@convex-dev/agent';
 import { type AssistantAgentId, isDefaultAssistantChatTitle } from '@groam/ai/agents';
 import type { ResearchInstructionContext } from '@groam/ai/backend/instructions';
 import { type AssistantScreen, assistantConversationContextKey } from '@groam/ai/runtime/screen';
@@ -8,6 +8,7 @@ import {
 } from '@groam/ai/runtime/thread-summary';
 import { stepCountIs } from 'ai';
 import { ConvexError } from 'convex/values';
+import { stopAfterWait } from '#backend/assistant/tools/agent/stop';
 import { createRegisteredAssistantTools } from '#backend/assistant/tools/index';
 import { components, internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
@@ -17,6 +18,7 @@ import { AssistantChats } from '#convex/modules/assistant/chat/index';
 import { AssistantErrors } from '#convex/modules/assistant/errors/index';
 import { AgentRunTracking } from '#convex/modules/assistant/runs/tracking';
 import { AssistantScreens } from '#convex/modules/assistant/screen/index';
+import type { AgentWaitView } from '#convex/modules/assistant/waits/schema';
 import { AssistantInstructions } from './instructions';
 import {
   type AssistantConfiguration,
@@ -51,8 +53,12 @@ function chatScreenContext(screenContext: string) {
 }
 
 type CreateAssistantOptions = {
+  /** Run whose creator the tools act for; a workflow turn has no signed-in caller. */
+  actorRunId?: Id<'agentRuns'> | undefined;
   agentId: AssistantAgentId;
   configuration: AssistantConfiguration;
+  /** Other runs in this chat that are suspended on a wait. */
+  pendingWaits?: AgentWaitView[];
   prompt: string;
   research?: ResearchInstructionContext | null;
   scope: AssistantConversationScope;
@@ -61,9 +67,21 @@ type CreateAssistantOptions = {
   tripId: Id<'trips'> | null;
 };
 
+function pendingWaitGuidance(waits: AgentWaitView[]): string {
+  const listed = waits
+    .map(
+      (wait) =>
+        `${wait.id} waits for ${wait.label}${wait.progress ? ` (${wait.progress})` : ''} until ${new Date(wait.deadlineAt).toISOString()}`
+    )
+    .join('; ');
+  return `Pending waits in this chat (another run is waiting; mention them if relevant, cancel with cancelWait if they are no longer needed): ${listed}`;
+}
+
 function createAssistant({
+  actorRunId,
   agentId,
   configuration,
+  pendingWaits = [],
   prompt,
   research,
   scope,
@@ -78,19 +96,19 @@ function createAssistant({
     screen,
     scope,
     threadId,
+    ...(actorRunId ? { actorRunId } : {}),
     ...(configuration.providerTools ? { providerTools: configuration.providerTools } : {})
   });
+  const guidance =
+    pendingWaits.length > 0
+      ? [...registered.guidance, pendingWaitGuidance(pendingWaits)]
+      : registered.guidance;
   return new Agent(components.agent, {
     contextOptions: { excludeToolMessages: false, recentMessages: 100 },
-    instructions: AssistantInstructions.for(
-      agentId,
-      scope,
-      registered.guidance,
-      research ?? undefined
-    ),
+    instructions: AssistantInstructions.for(agentId, scope, guidance, research ?? undefined),
     languageModel: configuration.languageModel,
     name: agentId,
-    stopWhen: stepCountIs(8),
+    stopWhen: [stepCountIs(8), stopAfterWait],
     tools: registered.tools
   });
 }
@@ -98,21 +116,37 @@ function createAssistant({
 async function workspaceAccess(
   ctx: ActionCtx,
   threadId?: string,
-  scope: Exclude<AssistantConversationScope, 'standalone'> = 'private'
+  scope: Exclude<AssistantConversationScope, 'standalone'> = 'private',
+  asRun?: Id<'agentRuns'>
 ) {
   return await ctx.runQuery(internal.modules.assistant.model.index.access, {
     scope,
-    ...(threadId ? { threadId } : {})
+    ...(threadId ? { threadId } : {}),
+    ...(asRun ? { asRun } : {})
   });
 }
 
 async function researchContext(
   ctx: ActionCtx,
   threadId: string,
-  scope: Exclude<AssistantConversationScope, 'standalone'>
+  scope: Exclude<AssistantConversationScope, 'standalone'>,
+  asRun?: Id<'agentRuns'>
 ) {
   if (scope !== 'discussion') return null;
   return await ctx.runQuery(internal.modules.discussions.research.tools.instructionContext, {
+    threadId,
+    ...(asRun ? { asRun } : {})
+  });
+}
+
+/** Other runs suspended in this discussion, for the prompt; private chats have none. */
+async function pendingWaitsFor(
+  ctx: ActionCtx,
+  threadId: string,
+  scope: Exclude<AssistantConversationScope, 'standalone'>
+): Promise<AgentWaitView[]> {
+  if (scope !== 'discussion') return [];
+  return await ctx.runQuery(internal.modules.assistant.waits.functions.pendingForThread, {
     threadId
   });
 }
@@ -132,12 +166,17 @@ async function continueAssistantWithConfiguration(
     throw new ConvexError(`Messages must contain 1 to ${MAX_PROMPT_LENGTH} characters`);
   }
   AssistantScreens.validate(target.screen);
-  const access = await workspaceAccess(ctx, target.threadId, options.scope);
+  const access = await workspaceAccess(ctx, target.threadId, options.scope, options.runId);
   const activeTripId = AssistantTargets.activeTripId(access.tags, target.screen);
-  const research = await researchContext(ctx, target.threadId, options.scope);
+  const [research, pendingWaits] = await Promise.all([
+    researchContext(ctx, target.threadId, options.scope, options.runId),
+    pendingWaitsFor(ctx, target.threadId, options.scope)
+  ]);
   const assistant = createAssistant({
+    actorRunId: options.runId,
     agentId: target.agent,
     configuration,
+    pendingWaits,
     prompt,
     research,
     scope: options.scope,
@@ -385,13 +424,22 @@ export class AssistantSession {
     return null;
   }
 
+  /** Writes the hidden resume note; returns its message id to use as the prompt. */
+  static async saveResumeNote(ctx: ActionCtx, threadId: string, note: string): Promise<string> {
+    const { messageId } = await saveMessage(ctx, components.agent, {
+      message: { content: note, role: 'system' },
+      threadId
+    });
+    return messageId;
+  }
+
   static async continueDiscussion(
     ctx: ActionCtx,
     target: AssistantTarget,
     promptMessageId: string,
     runId: Id<'agentRuns'>
   ): Promise<string | null> {
-    const access = await workspaceAccess(ctx, target.threadId, 'discussion');
+    const access = await workspaceAccess(ctx, target.threadId, 'discussion', runId);
     return await continueAssistantWithConfiguration(
       ctx,
       target,

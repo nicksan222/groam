@@ -8,8 +8,8 @@ import {
   DialogTitle
 } from '@groam/ui/components/dialog';
 import { Label } from '@groam/ui/components/label';
+import { RichTextEditor } from '@groam/ui/components/rich-text-editor';
 import { Spinner } from '@groam/ui/components/spinner';
-import { Textarea } from '@groam/ui/components/textarea';
 import { useState } from 'react';
 import { ideaCloseWithoutApplying, ideaDeleteDraft } from '@/features/ideas/idea-glossary';
 import { useOpenState } from '@/features/workspace/hooks/use-open-state';
@@ -98,14 +98,14 @@ function PassOnDialog({
           <Label htmlFor={testIds.closeIdeaReason}>
             {needsReason ? 'Why are you closing this idea?' : 'Note (optional)'}
           </Label>
-          <Textarea
+          <RichTextEditor
             aria-required={needsReason}
-            data-testid={testIds.closeIdeaReason}
             id={testIds.closeIdeaReason}
             maxLength={280}
-            onChange={(event) => setReason(event.target.value)}
+            aria-label={needsReason ? 'Why are you closing this idea?' : 'Note (optional)'}
+            onChange={setReason}
             placeholder="We’re keeping the shared trip dates."
-            rows={3}
+            testId={testIds.closeIdeaReason}
             value={reason}
           />
         </div>

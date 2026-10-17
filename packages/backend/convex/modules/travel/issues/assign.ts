@@ -1,8 +1,8 @@
 import { assistantAgents, isIssueAssignableAgentId } from '@groam/ai/agents';
 import { ConvexError } from 'convex/values';
-import { internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
 import type { MutationCtx } from '#convex-generated/server';
+import { AgentEngine } from '#convex/modules/assistant/engine/index';
 import { AgentRuns } from '#convex/modules/assistant/runs/index';
 import { workspaceRoster } from '#convex/modules/auth/workspace';
 import {
@@ -52,6 +52,7 @@ export async function createAssignedToIssueAgent(
     updatedAt: Date.now()
   });
   const runId = await AgentRuns.queueIssueRun(ctx, {
+    actorTokenIdentifier: ctx.workspace.tokenIdentifier,
     agentId: assistantAgents.issue.id,
     createdBy: issue.author,
     issueId,
@@ -60,7 +61,7 @@ export async function createAssignedToIssueAgent(
     title: issue.title,
     tripId: ctx.trip._id
   });
-  await ctx.scheduler.runAfter(0, internal.modules.assistant.standalone.execute.run, { runId });
+  await AgentEngine.start(ctx, runId);
   return issueId;
 }
 
@@ -82,6 +83,7 @@ export async function setAssignee(
   const queueRun = async () => {
     if (agentId === null) return null;
     const runId = await AgentRuns.queueIssueRun(ctx, {
+      actorTokenIdentifier: trip.workspace.tokenIdentifier,
       agentId,
       createdBy: actor,
       issueId,
@@ -90,8 +92,8 @@ export async function setAssignee(
       title: issue.title,
       tripId: issue.tripId
     });
-    // claimRun is idempotent, so a client-side start for the same run is a no-op.
-    await ctx.scheduler.runAfter(0, internal.modules.assistant.standalone.execute.run, { runId });
+    // Starting is idempotent, so a client-side start for the same run is a no-op.
+    await AgentEngine.start(ctx, runId);
     return runId;
   };
   if (assigneeKey(issue.assignee) === assigneeKey(assignee)) return await queueRun();

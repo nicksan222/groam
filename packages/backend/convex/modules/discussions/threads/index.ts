@@ -8,6 +8,7 @@ import {
   type vStreamArgs
 } from '@convex-dev/agent';
 import {
+  type AssistantAgentId,
   assistantAgents,
   type ChatAgentId,
   isAssistantAgentId,
@@ -20,6 +21,7 @@ import { components } from '#convex-generated/api';
 import type { Doc, Id } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import { AgentRuns } from '#convex/modules/assistant/runs/index';
+import type { AssistantScreen } from '#convex/modules/assistant/validators/index';
 import { requireWorkspace, type Workspace, workspaceRoster } from '#convex/modules/auth/workspace';
 import { kindPolicy, kindsForHome } from '#convex/modules/discussions/kinds/index';
 import {
@@ -42,6 +44,7 @@ import {
   MAX_TITLE_LENGTH
 } from '#convex/modules/discussions/threads/limits';
 import type { DiscussionMember } from '#convex/modules/discussions/threads/schema';
+import { PollCleanup } from '#convex/modules/polls/cleanup';
 import { insertWithShortId } from '#convex/modules/references/index';
 import { loadTripContext } from '#convex/modules/travel/trips/ctx';
 
@@ -624,7 +627,8 @@ export class Discussions {
   static async claimAssistantResponse(
     ctx: MutationCtx,
     discussionId: Id<'discussions'>,
-    promptMessageId: string
+    promptMessageId: string,
+    screen: AssistantScreen
   ): Promise<DiscussionAssistantClaim | null> {
     const access = await DiscussionAccess.require(ctx, discussionId);
     access.assertWritable();
@@ -653,10 +657,14 @@ export class Discussions {
       assistantStatus: 'responding'
     });
     const runId = await AgentRuns.claimDiscussionTurn(ctx, {
+      actorTokenIdentifier: workspace.tokenIdentifier,
       agentId: request.assistantAgent,
       createdBy: { name: workspace.viewerName, userId: workspace.userId },
       discussionId,
+      discussionUpdatedAt: discussion.updatedAt,
       organizationId: workspace.organizationId,
+      promptMessageId,
+      screen,
       threadId: discussion.threadId,
       title: discussion.title
     });
@@ -678,7 +686,8 @@ export class Discussions {
       expectedUpdatedAt,
       responseText,
       runId,
-      error
+      error,
+      finishRun = true
     }: {
       discussionId: Id<'discussions'>;
       promptMessageId: string;
@@ -686,9 +695,13 @@ export class Discussions {
       responseText: string | null;
       runId: Id<'agentRuns'>;
       error?: string;
+      /** False when the run suspends on a wait: the request completes, the run lives on. */
+      finishRun?: boolean;
     }
   ): Promise<void> {
-    const { discussion } = await DiscussionAccess.require(ctx, discussionId);
+    // Runs from the workflow's onComplete (no identity); every caller is internal.
+    const discussion = await ctx.db.get('discussions', discussionId);
+    if (!discussion) return;
     const request = await ctx.db
       .query('discussionMessages')
       .withIndex('by_discussionId_and_agentMessageId', (query) =>
@@ -703,17 +716,46 @@ export class Discussions {
       assistantError: failed ? failure.slice(0, 300) : undefined,
       assistantStatus: failed ? 'failed' : 'complete'
     });
-    await AgentRuns.finish(ctx, {
-      runId,
-      status: failed ? 'failed' : 'complete',
-      ...(failed ? { error: failure } : { report: responseText.trim() })
-    });
+    if (finishRun) {
+      await AgentRuns.finish(ctx, {
+        runId,
+        status: failed ? 'failed' : 'complete',
+        ...(failed ? { error: failure } : { report: responseText.trim() })
+      });
+    }
     if (failed || discussion.updatedAt !== expectedUpdatedAt) return;
     await ctx.db.patch('discussions', discussion._id, {
       lastMessage: {
         authorName: assistantAgents[request.assistantAgent].label,
         text: responseText.slice(0, 160)
       },
+      updatedAt: Date.now()
+    });
+  }
+
+  /**
+   * A resumed run's reply has no discussion request to finish; it still becomes the chat's last
+   * message unless someone posted after the turn started.
+   */
+  static async recordAssistantReply(
+    ctx: MutationCtx,
+    {
+      agentId,
+      discussionId,
+      expectedUpdatedAt,
+      text
+    }: {
+      agentId: AssistantAgentId;
+      discussionId: Id<'discussions'>;
+      expectedUpdatedAt: number;
+      text: string;
+    }
+  ): Promise<void> {
+    const discussion = await ctx.db.get('discussions', discussionId);
+    const reply = text.trim();
+    if (!discussion || !reply || discussion.updatedAt !== expectedUpdatedAt) return;
+    await ctx.db.patch('discussions', discussion._id, {
+      lastMessage: { authorName: assistantAgents[agentId].label, text: reply.slice(0, 160) },
       updatedAt: Date.now()
     });
   }
@@ -769,6 +811,9 @@ export class Discussions {
     discussion: Doc<'discussions'>,
     batchSize: number
   ): Promise<boolean> {
+    // Runs still in the chat (a waiting one would resume into a deleted thread) stop first.
+    await AgentRuns.abortAllForDiscussion(ctx, discussion._id);
+    if (await PollCleanup.purgeForDiscussion(ctx, discussion._id, batchSize)) return true;
     const messages = await ctx.db
       .query('discussionMessages')
       .withIndex('by_discussionId', (query) => query.eq('discussionId', discussion._id))

@@ -333,14 +333,16 @@ describe('IssueDetail', () => {
     await page.getByRole('button', { name: 'Comment' }).click();
     await composer.fill('First thought and a second one');
     finish(true);
-    await expect.element(composer).toHaveValue('First thought and a second one');
+    await expect.element(composer).toHaveTextContent('First thought and a second one');
   });
 
   test('clears the composer once the sent comment is unchanged', async () => {
     await renderIssue(<IssueDetail {...detail()} />);
     await page.getByLabelText('Issue comment').fill('Done deal');
     await page.getByRole('button', { name: 'Comment' }).click();
-    await expect.element(page.getByLabelText('Issue comment')).toHaveValue('');
+    await expect
+      .poll(() => page.getByLabelText('Issue comment').element().textContent?.trim())
+      .toBe('');
   });
 
   test('shows a manual Done when panel with its text and no explanation', async () => {

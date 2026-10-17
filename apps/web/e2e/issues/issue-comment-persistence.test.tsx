@@ -21,7 +21,7 @@ test('issue comments persist across trip and workspace views', async () => {
   await openApp();
   await openIssue(issueId);
   await addIssueComment(comment);
-  await expect.element(by(ids.issueComment)).toHaveValue('');
+  await expect.poll(() => by(ids.issueComment).element().textContent?.trim()).toBe('');
 
   await openIssueFromTrip(tripId, title);
   await expect.element(page.getByText(comment)).toBeVisible();

@@ -1,6 +1,5 @@
 import type { UIMessage } from '@convex-dev/agent/react';
 import { Bubble, BubbleContent } from '@groam/ui/components/bubble';
-import { LinkifiedText } from '@groam/ui/components/linkified-text';
 import { Markdown } from '@groam/ui/components/markdown';
 import { AssistantGeneratedForm } from '#ai/ui/form/assistant-generated-form';
 import type { ParsedAssistantForm } from '#ai/ui/form/assistant-generated-form-parser';
@@ -61,7 +60,7 @@ export function MessageBubble({
           <SubmittedFormResponse entries={submittedResponse} />
         ) : displayedText ? (
           isUser ? (
-            <LinkifiedText text={displayedText} />
+            <Markdown className="whitespace-normal">{displayedText}</Markdown>
           ) : (
             <Markdown className="whitespace-normal" streaming={message.status === 'streaming'}>
               {displayedText}

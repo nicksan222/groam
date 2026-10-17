@@ -1,10 +1,11 @@
 import { assistantAgents } from '@groam/ai/agents';
 import type { PaginationOptions } from 'convex/server';
 import { ConvexError } from 'convex/values';
-import { internal } from '#convex-generated/api';
 import type { Doc, Id } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
+import { AgentEngine } from '#convex/modules/assistant/engine/index';
 import { AgentRuns } from '#convex/modules/assistant/runs/index';
+import { AgentWaits } from '#convex/modules/assistant/waits/index';
 import { requireWorkspace, workspaceRoster } from '#convex/modules/auth/workspace';
 import { Notifications } from '#convex/modules/notifications/index';
 import { insertWithShortId } from '#convex/modules/references/index';
@@ -12,18 +13,19 @@ import { TripIssues } from '#convex/modules/travel/issues/index';
 import {
   isTripAdmin,
   loadTripContext,
-  MAX_GROUP_MEMBERS,
   type MutableTripCtx,
   preserveIdeaReview,
   recordActivity,
   type TripCtx
 } from '#convex/modules/travel/trips/ctx';
+import { MAX_GROUP_MEMBERS } from '#convex/modules/travel/trips/visibility';
 import { VersionApply } from './apply';
 import { cloneTripContent } from './clone';
 import { type DetailRebase, withResolvedDetails } from './detailrebase';
 import { VersionChanges } from './diff';
 import { IdeaNames } from './names';
 import { VersionPresentation } from './presentation';
+import { countedApprovals, eligibleReviewers, independentReviewers } from './quorum';
 import { type ConflictResolution, VersionMerge } from './resolution';
 import { ReviewSettings } from './settings';
 import { type VersionSnapshot, VersionSnapshots } from './snapshot/index';
@@ -44,7 +46,9 @@ function withIdeaReviewer(reviewers: ProposalReviewer[]): ProposalReviewer[] {
 
 async function queueIdeaReviewerRun(
   ctx: MutationCtx,
-  proposal: Doc<'tripProposals'>
+  proposal: Doc<'tripProposals'>,
+  /** The author's token (they submit the idea), so the reviewer turn acts as them. */
+  actorTokenIdentifier: string
 ): Promise<void> {
   const reviewers = withIdeaReviewer(proposal.reviewers);
   if (!proposal.reviewers.some((reviewer) => reviewer.kind === 'agent')) {
@@ -54,13 +58,14 @@ async function queueIdeaReviewerRun(
     });
   }
   const runId = await AgentRuns.queueReviewRun(ctx, {
+    actorTokenIdentifier,
     createdBy: { name: proposal.author.name, userId: proposal.author.userId },
     organizationId: proposal.organizationId,
     proposalId: proposal._id,
     title: proposal.title,
     tripId: proposal.sourceTripId
   });
-  await ctx.scheduler.runAfter(0, internal.modules.assistant.standalone.execute.run, { runId });
+  await AgentEngine.start(ctx, runId);
 }
 
 const MAX_PROPOSALS = 50;
@@ -229,6 +234,7 @@ async function feedbackForProposal(ctx: QueryCtx, proposalId: Id<'tripProposals'
     // Feedback created before kinds were introduced blocked review, so preserve that behavior.
     kind: comment.kind,
     parentCommentId: comment.parentCommentId ?? null,
+    reviewVerdict: comment.reviewVerdict ?? null,
     resolvedAt: comment.resolvedAt ?? null,
     updatedAt: comment.updatedAt
   }));
@@ -237,33 +243,6 @@ async function feedbackForProposal(ctx: QueryCtx, proposalId: Id<'tripProposals'
 async function eligibleVoters(source: TripCtx) {
   const roster = await workspaceRoster(source, source.workspace);
   return roster.members;
-}
-
-/** Group members other than the idea author — preferred when independent review is possible. */
-function independentReviewers(
-  proposal: Doc<'tripProposals'>,
-  voters: Awaited<ReturnType<typeof eligibleVoters>>
-) {
-  return voters.filter((voter) => voter.userId !== proposal.author.userId);
-}
-
-/** Human reviewers were explicitly asked — author must wait for an independent yes. */
-function requiresIndependentReview(proposal: Doc<'tripProposals'>) {
-  return proposal.reviewers.some((reviewer) => reviewer.kind === 'user');
-}
-
-/**
- * Who may record an approval. When human reviewers were requested, the author is
- * excluded. Otherwise the author may self-approve and continue.
- */
-function eligibleReviewers(
-  proposal: Doc<'tripProposals'>,
-  voters: Awaited<ReturnType<typeof eligibleVoters>>
-) {
-  if (requiresIndependentReview(proposal)) {
-    return independentReviewers(proposal, voters);
-  }
-  return voters;
 }
 
 async function notifyIdeaAudience(
@@ -636,11 +615,20 @@ async function get(ctx: QueryCtx, proposalId: Id<'tripProposals'>) {
   return {
     approvalCount: eligibleApprovals.length,
     approvals: eligibleApprovals
-      .map((approval) => ({
-        approvedAt: approval._creationTime,
-        name: approval.approver.name,
-        userId: approval.approver.userId
-      }))
+      .map((approval) =>
+        approval.approver.kind === 'agent'
+          ? {
+              agentId: approval.approver.agentId,
+              approvedAt: approval._creationTime,
+              kind: 'agent' as const,
+              name: approval.approver.name
+            }
+          : {
+              approvedAt: approval._creationTime,
+              name: approval.approver.name,
+              userId: approval.approver.userId
+            }
+      )
       .sort((left, right) => left.approvedAt - right.approvedAt),
     author: proposal.author,
     availableReviewers,
@@ -687,9 +675,7 @@ function reviewState(
   voters: Awaited<ReturnType<typeof eligibleVoters>>
 ) {
   const eligibleIds = new Set(eligibleReviewers(proposal, voters).map((voter) => voter.userId));
-  const eligibleApprovals = approvals.filter((approval) =>
-    eligibleIds.has(approval.approver.userId)
-  );
+  const eligibleApprovals = countedApprovals(proposal, approvals, eligibleIds);
   const quorum = proposal.requiredApprovals;
   const sourceChanged = source.trip.updatedAt !== proposal.baseUpdatedAt;
   const reviewReady =
@@ -706,7 +692,8 @@ function reviewState(
     }),
     eligibleApprovals,
     hasApproved: eligibleApprovals.some(
-      (approval) => approval.approver.userId === source.workspace.userId
+      (approval) =>
+        approval.approver.kind !== 'agent' && approval.approver.userId === source.workspace.userId
     ),
     quorum,
     sourceChanged
@@ -751,12 +738,69 @@ async function listFeedback(ctx: QueryCtx, proposalId: Id<'tripProposals'>) {
   return await feedbackForProposal(ctx, proposalId);
 }
 
-async function finishAgentReview(
+type AgentReviewVerdict = 'approve' | 'comment' | 'request_changes';
+type AgentReviewComment = { body: string; kind: 'change_request' | 'comment' };
+type AgentReview = {
+  comments: AgentReviewComment[];
+  expectedReviewRevision: string;
+  runId: Id<'agentRuns'>;
+  summary: string;
+  verdict: AgentReviewVerdict;
+};
+
+const AGENT_REVIEWER = { agentId: 'reviewer', kind: 'agent', name: 'Idea reviewer' } as const;
+const MAX_AGENT_REVIEW_COMMENTS = 6;
+const AGENT_REVIEW_VERDICTS = {
+  approve: 'approved',
+  comment: 'commented',
+  request_changes: 'changes_requested'
+} as const;
+
+async function syncAgentApproval(
+  ctx: MutationCtx,
+  proposal: Doc<'tripProposals'>,
+  approve: boolean
+): Promise<void> {
+  const existing = (await approvalsForProposal(ctx, proposal._id)).filter(
+    (approval) => approval.approver.kind === 'agent'
+  );
+  if (!approve) {
+    await Promise.all(existing.map((approval) => ctx.db.delete(approval._id)));
+    return;
+  }
+  if (existing.length > 0) return;
+  await ctx.db.insert('tripProposalApprovals', {
+    approver: AGENT_REVIEWER,
+    organizationId: proposal.organizationId,
+    proposalId: proposal._id,
+    sourceTripId: proposal.sourceTripId
+  });
+}
+
+async function agentReviewSnapshot(
+  ctx: MutationCtx | QueryCtx,
+  proposal: Doc<'tripProposals'>,
+  working: Doc<'trips'>
+) {
+  const [base, proposed] = await Promise.all([
+    baseSnapshotFor(ctx, proposal),
+    VersionSnapshots.create(ctx, working)
+  ]);
+  const digest = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(JSON.stringify([proposal.title, base.files, proposed.files]))
+  );
+  const revision = Array.from(new Uint8Array(digest), (byte) =>
+    byte.toString(16).padStart(2, '0')
+  ).join('');
+  return { base, proposed, revision };
+}
+
+async function requireCurrentAgentReview(
   ctx: MutationCtx,
   proposalId: Id<'tripProposals'>,
-  summary: string,
-  comments: string[]
-): Promise<null> {
+  review: AgentReview
+): Promise<Doc<'tripProposals'>> {
   const proposal = await ctx.db.get('tripProposals', proposalId);
   if (!proposal) throw new ConvexError('Idea trip not found');
   if (!proposal.reviewers.some((reviewer) => reviewer.kind === 'agent')) {
@@ -765,15 +809,51 @@ async function finishAgentReview(
   if (proposal.status !== 'in_review' && proposal.status !== 'conflicted') {
     throw new ConvexError('The idea reviewer can only review an open idea');
   }
-  const cleanSummary = summary.trim();
-  if (cleanSummary.length === 0 || cleanSummary.length > 1_000) {
-    throw new ConvexError('Idea review summaries must contain 1 to 1000 characters');
-  }
-  if (comments.length > 5) throw new ConvexError('Idea reviews support up to 5 comments');
-  const cleanedComments = comments.map((comment) => comment.trim());
+  const [working, run] = await Promise.all([
+    ctx.db.get('trips', proposal.workingTripId),
+    ctx.db.get('agentRuns', review.runId)
+  ]);
   if (
-    cleanedComments.some(
-      (comment) => comment.length === 0 || comment.length > MAX_PROPOSAL_FEEDBACK_LENGTH
+    run?.status !== 'running' ||
+    run.agentId !== 'reviewer' ||
+    run.proposalId !== proposalId ||
+    run.organizationId !== proposal.organizationId
+  ) {
+    throw new ConvexError('Idea review is no longer active');
+  }
+  // Check the reviewed content and execution owner in the same transaction as the verdict.
+  if (!working) {
+    throw new ConvexError('This idea changed during review. Request a new review.');
+  }
+  const snapshot = await agentReviewSnapshot(ctx, proposal, working);
+  if (snapshot.revision !== review.expectedReviewRevision) {
+    throw new ConvexError('This idea changed during review. Request a new review.');
+  }
+  return proposal;
+}
+
+async function finishAgentReview(
+  ctx: MutationCtx,
+  proposalId: Id<'tripProposals'>,
+  review: AgentReview
+): Promise<null> {
+  const proposal = await requireCurrentAgentReview(ctx, proposalId, review);
+  const cleanSummary = review.summary.trim();
+  if (cleanSummary.length === 0 || cleanSummary.length > MAX_PROPOSAL_FEEDBACK_LENGTH) {
+    throw new ConvexError(
+      `Idea review summaries must contain 1 to ${MAX_PROPOSAL_FEEDBACK_LENGTH} characters`
+    );
+  }
+  if (review.comments.length > MAX_AGENT_REVIEW_COMMENTS) {
+    throw new ConvexError(`Idea reviews support up to ${MAX_AGENT_REVIEW_COMMENTS} comments`);
+  }
+  const cleaned = review.comments.map((comment) => ({
+    body: comment.body.trim(),
+    kind: comment.kind
+  }));
+  if (
+    cleaned.some(
+      (comment) => comment.body.length === 0 || comment.body.length > MAX_PROPOSAL_FEEDBACK_LENGTH
     )
   ) {
     throw new ConvexError(
@@ -781,34 +861,49 @@ async function finishAgentReview(
     );
   }
   const feedbackCount = proposal.feedbackCount;
-  if (feedbackCount + cleanedComments.length > MAX_PROPOSAL_FEEDBACK) {
+  if (feedbackCount + cleaned.length + 1 > MAX_PROPOSAL_FEEDBACK) {
     throw new ConvexError(`Ideas support up to ${MAX_PROPOSAL_FEEDBACK} feedback items`);
   }
+  const blocking = cleaned.filter((comment) => comment.kind === 'change_request').length;
+  const verdict = review.verdict === 'approve' && blocking > 0 ? 'request_changes' : review.verdict;
   const now = Date.now();
-  await Promise.all(
-    cleanedComments.map((content) =>
-      ctx.db.insert('tripProposalComments', {
-        author: { agentId: 'reviewer', kind: 'agent', name: 'Idea reviewer' },
-        content,
-        kind: 'change_request',
-        organizationId: proposal.organizationId,
-        proposalId,
-        sourceTripId: proposal.sourceTripId,
-        updatedAt: now
-      })
-    )
-  );
+  const base = {
+    author: AGENT_REVIEWER,
+    organizationId: proposal.organizationId,
+    proposalId,
+    sourceTripId: proposal.sourceTripId,
+    updatedAt: now
+  };
+  // The summary is the review body; it goes first so it renders above the individual comments.
+  await ctx.db.insert('tripProposalComments', {
+    ...base,
+    content: cleanSummary,
+    kind: 'comment',
+    reviewVerdict: AGENT_REVIEW_VERDICTS[verdict]
+  });
+  for (const comment of cleaned) {
+    // oxlint-disable-next-line react-doctor/async-await-in-loop -- Comments list by _creationTime; sequential inserts keep them in the reviewer's order.
+    await ctx.db.insert('tripProposalComments', {
+      ...base,
+      content: comment.body,
+      kind: comment.kind
+    });
+  }
+  const approve = verdict === 'approve' && proposal.status === 'in_review';
+  await syncAgentApproval(ctx, proposal, approve);
+  const changesRequested = verdict === 'request_changes' || blocking > 0;
   await ctx.db.patch('tripProposals', proposalId, {
-    feedbackCount: feedbackCount + cleanedComments.length,
+    feedbackCount: feedbackCount + cleaned.length + 1,
     groamReview: {
-      commentCount: cleanedComments.length,
+      commentCount: cleaned.length,
       completedAt: now,
-      status: cleanedComments.length > 0 ? 'changes_requested' : 'passed',
+      status: changesRequested ? 'changes_requested' : 'passed',
       summary: cleanSummary
     },
-    unresolvedFeedbackCount: proposal.unresolvedFeedbackCount + cleanedComments.length,
+    unresolvedFeedbackCount: proposal.unresolvedFeedbackCount + blocking,
     updatedAt: now
   });
+  await AgentWaits.signal(ctx, { kind: 'proposal', refId: proposalId });
   return null;
 }
 
@@ -1083,15 +1178,19 @@ async function finishSubmit({
     kind: 'idea_shared',
     title: 'New idea on the trip'
   });
-  await queueIdeaReviewerRun(ctx, {
-    ...proposal,
-    reviewers: withIdeaReviewer(proposal.reviewers),
-    status: 'in_review',
-    submittedAt: timestamp,
-    tipCommit,
-    baseCommit,
-    updatedAt: timestamp
-  });
+  await queueIdeaReviewerRun(
+    ctx,
+    {
+      ...proposal,
+      reviewers: withIdeaReviewer(proposal.reviewers),
+      status: 'in_review',
+      submittedAt: timestamp,
+      tipCommit,
+      baseCommit,
+      updatedAt: timestamp
+    },
+    source.workspace.tokenIdentifier
+  );
   return null;
 }
 
@@ -1127,6 +1226,7 @@ async function setApproval(
       sourceTripId: source.trip._id
     });
   } else if (existing) await ctx.db.delete(existing._id);
+  await AgentWaits.signal(ctx, { kind: 'proposal', refId: proposalId });
   return null;
 }
 
@@ -1147,9 +1247,7 @@ async function assertMergeReady(
     eligibleVoters(source)
   ]);
   const eligibleIds = new Set(eligibleReviewers(proposal, voters).map((voter) => voter.userId));
-  const approvalCount = approvals.filter((approval) =>
-    eligibleIds.has(approval.approver.userId)
-  ).length;
+  const approvalCount = countedApprovals(proposal, approvals, eligibleIds).length;
   const quorum = proposal.requiredApprovals;
   if (proposal.unresolvedFeedbackCount > 0) {
     throw new ConvexError('Resolve all idea feedback before applying');
@@ -1280,6 +1378,7 @@ async function finishMerge({
       updatedAt: timestamp
     })
   ]);
+  await AgentWaits.signal(ctx, { kind: 'proposal', refId: proposalId });
   if (proposal.issueId) {
     const issue = await ctx.db.get('tripIssues', proposal.issueId);
     if (issue?.tripId === source.trip._id) {
@@ -1654,6 +1753,7 @@ async function close(
       updatedAt: now
     })
   ]);
+  await AgentWaits.signal(ctx, { kind: 'proposal', refId: proposalId });
   await notifyIdeaAudience(ctx, source, proposal, {
     body: closeReason
       ? `${source.workspace.viewerName} passed on “${proposal.title}”: ${closeReason}`
@@ -1702,8 +1802,14 @@ async function reviewContext(ctx: QueryCtx, proposalId: Id<'tripProposals'>) {
   }
   const working = await ctx.db.get('trips', proposal.workingTripId);
   if (!working) throw new Error('Idea trip not found');
+  const snapshot = await agentReviewSnapshot(ctx, proposal, working);
   return {
-    changes: await presentProposalChanges(ctx, proposal, working),
+    changes: await VersionPresentation.present(
+      ctx,
+      VersionChanges.diff(snapshot.base, snapshot.proposed),
+      proposal.organizationId
+    ),
+    expectedReviewRevision: snapshot.revision,
     organizationId: proposal.organizationId,
     sourceTripId: proposal.sourceTripId,
     title: proposal.title,

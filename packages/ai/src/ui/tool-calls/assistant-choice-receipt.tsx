@@ -1,5 +1,5 @@
 import { Button } from '@groam/ui/components/button';
-import { Textarea } from '@groam/ui/components/textarea';
+import { RichTextEditor } from '@groam/ui/components/rich-text-editor';
 import { Check, Send } from 'lucide-react';
 import { useState } from 'react';
 
@@ -70,19 +70,20 @@ export function AssistantChoiceReceipt({
             if (customChoice) void choose(customChoice);
           }}
         >
-          <Textarea
-            aria-label="Custom answer"
-            className="max-h-32 min-h-10 flex-1 resize-none rounded-lg border-border bg-background px-2.5 py-2 text-xs leading-5 shadow-none focus-visible:border-muted-foreground/60 focus-visible:ring-0"
-            disabled={disabled || selected !== null || !onChoose}
+          <RichTextEditor
             maxLength={500}
-            onChange={(event) => setCustomAnswer(event.target.value)}
-            onInput={(event) => {
-              event.currentTarget.style.height = 'auto';
-              event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
+            aria-label="Custom answer"
+            className="min-w-0 flex-1 rounded-lg border border-border bg-background focus-within:border-muted-foreground/60"
+            contentClassName="max-h-32 min-h-10 overflow-y-auto px-2.5 py-2 text-xs leading-5"
+            disabled={disabled || selected !== null || !onChoose}
+            onChange={(value) => setCustomAnswer(value.slice(0, 500))}
+            onSubmit={() => {
+              if (customChoice) void choose(customChoice);
             }}
             placeholder="Or write your own answer…"
-            rows={2}
+            submitShortcut="enter"
             value={customAnswer}
+            variant="bare"
           />
           <Button
             aria-label="Send custom answer"

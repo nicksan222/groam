@@ -55,6 +55,9 @@ The monorepo keeps the web and desktop clients thin while sharing UI, auth,
 AI contracts, and a type-safe Convex backend. The complete stack can run on one
 machine; Convex Cloud deployment is optional.
 
+See the [architecture guide](docs/architecture/README.md) for domain boundaries,
+data flow, access policies, proposal lifecycles, and agent execution.
+
 ## Run Groam
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/nicksan222/groam?quickstart=1)

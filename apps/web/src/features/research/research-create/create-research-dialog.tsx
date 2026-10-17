@@ -1,12 +1,12 @@
 import { FormDialog } from '@groam/ui/components/form-dialog';
 import { FormField } from '@groam/ui/components/form-field';
 import { Input } from '@groam/ui/components/input';
-import { Textarea } from '@groam/ui/components/textarea';
+import { RichTextEditor } from '@groam/ui/components/rich-text-editor';
 import { type FormEvent, useState } from 'react';
 import { testIds } from '@/lib/test-ids';
 
 const researchSubjectMax = 120;
-export const researchBriefMax = 2000;
+const researchBriefMax = 2000;
 
 export function CreateResearchDialog({
   error,
@@ -62,11 +62,11 @@ export function CreateResearchDialog({
         />
       </FormField>
       <FormField description="Optional. What are you trying to decide?" label="Brief">
-        <Textarea
-          data-testid={testIds.createResearchBrief}
-          maxLength={researchBriefMax}
-          onChange={(event) => setBrief(event.target.value)}
-          rows={4}
+        <RichTextEditor
+          aria-label="Brief"
+          contentClassName="min-h-24 max-h-48 overflow-y-auto"
+          onChange={setBrief}
+          testId={testIds.createResearchBrief}
           value={brief}
         />
       </FormField>

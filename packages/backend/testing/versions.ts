@@ -1,4 +1,4 @@
-import { api } from '#convex-generated/api';
+import { api, internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
 import type { setupTrip } from '#testing/trips';
 import { openTripDraft } from '#testing/trips';
@@ -16,6 +16,35 @@ export const changedTripDetails = {
 export type TripOwner = Awaited<ReturnType<typeof setupTrip>>['owner'];
 export type IdeaId = Id<'tripProposals'>;
 export type TripId = Awaited<ReturnType<typeof setupTrip>>['tripId'];
+
+/** Capture reviewed content in an inline run, isolated from scheduled workflow execution. */
+export async function beginAgentReview(owner: TripOwner, proposalId: IdeaId) {
+  const run = await owner.client.query(api.routes.agents.runs.proposal.run, { proposalId });
+  if (!run) throw new Error('Expected an automatic reviewer run');
+  if (run.status === 'queued' || run.status === 'running' || run.status === 'waiting') {
+    await owner.client.mutation(api.routes.agents.runs.stop.run, { runId: run.id });
+  }
+  const context = await owner.client.query(
+    internal.modules.travel.versions.agent.review.index.context,
+    {
+      proposalId
+    }
+  );
+  const runId = await owner.client.mutation(
+    internal.modules.assistant.runs.functions.queueReviewForViewer,
+    {
+      proposalId,
+      title: context.title,
+      tripId: context.sourceTripId
+    }
+  );
+  const claimed = await owner.client.mutation(
+    internal.modules.assistant.engine.functions.claimInline,
+    { runId }
+  );
+  if (!claimed) throw new Error('Expected an active inline reviewer run');
+  return { expectedReviewRevision: context.expectedReviewRevision, runId };
+}
 
 export async function draftChangedVersion(owner: TripOwner, tripId: TripId) {
   const version = await owner.client.mutation(api.routes.trips.versions.create.run, { tripId });

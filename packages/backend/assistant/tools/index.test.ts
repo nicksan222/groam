@@ -852,3 +852,47 @@ test('offers askUserChoice in private chats but not in group discussions', () =>
     'askUserChoice'
   );
 });
+
+test('tools called inside a run pass asRun on every Convex call', async () => {
+  const { tools } = createRegisteredAssistantTools({
+    activeTripId: 'trip-1' as Id<'trips'>,
+    actorRunId: 'run-1' as Id<'agentRuns'>,
+    agentId: 'groam',
+    prompt: 'What is the status?',
+    scope: 'discussion',
+    screen,
+    threadId: 'thread-1'
+  });
+  const calls: unknown[] = [];
+  const ctx = {
+    runQuery: async (_ref: unknown, args: unknown) => {
+      calls.push(args);
+      throw new Error('stop after the call');
+    }
+  };
+  const status = { ...tools.getTripStatus, ctx } as unknown as {
+    execute: (input: unknown, options: unknown) => Promise<unknown>;
+  };
+  await expect(status.execute({}, { messages: [], toolCallId: 'call-1' })).rejects.toThrow(
+    'stop after the call'
+  );
+  expect(calls).toEqual([expect.objectContaining({ asRun: 'run-1', tripId: 'trip-1' })]);
+});
+
+test('tools outside a run call Convex without asRun', async () => {
+  const tools = toolsFor('What is the status?', { scope: 'discussion' });
+  const calls: unknown[] = [];
+  const ctx = {
+    runQuery: async (_ref: unknown, args: unknown) => {
+      calls.push(args);
+      throw new Error('stop after the call');
+    }
+  };
+  const status = { ...tools.getTripStatus, ctx } as unknown as {
+    execute: (input: unknown, options: unknown) => Promise<unknown>;
+  };
+  await expect(status.execute({}, { messages: [], toolCallId: 'call-1' })).rejects.toThrow(
+    'stop after the call'
+  );
+  expect(calls).toEqual([{ tripId: 'trip-1' }]);
+});

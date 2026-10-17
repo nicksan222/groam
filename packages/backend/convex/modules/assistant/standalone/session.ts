@@ -8,13 +8,13 @@ import {
 import type { AssistantScreen } from '@groam/ai/runtime/screen';
 import { Output, stepCountIs } from 'ai';
 import { ConvexError } from 'convex/values';
+import { endedInWait, stopAfterWait } from '#backend/assistant/tools/agent/stop';
 import { createRegisteredAssistantTools } from '#backend/assistant/tools/index';
 import { components, internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
 import type { ActionCtx } from '#convex-generated/server';
 import { AssistantProvider } from '#convex/modules/ai/provider';
 import { AssistantInstructions } from '#convex/modules/assistant/agent/instructions';
-import { AssistantErrors } from '#convex/modules/assistant/errors/index';
 import type { AgentRunView } from '#convex/modules/assistant/runs/schema';
 import { AgentRunTracking } from '#convex/modules/assistant/runs/tracking';
 import { AssistantScreens } from '#convex/modules/assistant/screen/index';
@@ -45,6 +45,7 @@ async function generateStandalone(
     screen: args.screen,
     scope: 'standalone',
     ...(run.issueId ? { issueId: run.issueId } : {}),
+    actorRunId: run.id,
     runId: run.id,
     ...(configuration.providerTools ? { providerTools: configuration.providerTools } : {})
   });
@@ -54,18 +55,34 @@ async function generateStandalone(
     instructions: AssistantInstructions.for(run.agentId, 'standalone', registered.guidance),
     languageModel: configuration.languageModel,
     name: run.agentId,
-    stopWhen: stepCountIs(12),
+    stopWhen: [stepCountIs(12), stopAfterWait],
     tools: registered.tools
   });
   return assistant;
 }
 
-async function executeIssue(ctx: ActionCtx, run: AgentRunView): Promise<string> {
+/**
+ * Standalone runs save no thread messages, so a resumed turn rebuilds its prompt: the original
+ * task, why it woke up, and what it reported before suspending.
+ */
+function resumedPrompt(task: string, run: AgentRunView, resumeNote: string | undefined): string {
+  if (!resumeNote) return task;
+  const reported = run.report?.trim();
+  return reported
+    ? `${task}\n\n${resumeNote}\n\nYour report so far: ${reported}`
+    : `${task}\n\n${resumeNote}`;
+}
+
+async function executeIssue(
+  ctx: ActionCtx,
+  run: AgentRunView,
+  resumeNote: string | undefined
+): Promise<string> {
   if (!run.issueId || !run.tripId) throw new ConvexError('Issue run is missing its target');
   const issue = await ctx.runQuery(internal.modules.assistant.standalone.context.issue, {
     issueId: run.issueId
   });
-  const prompt = issueStandalonePrompt(issue);
+  const prompt = resumedPrompt(issueStandalonePrompt(issue), run, resumeNote);
   const assistant = await generateStandalone(ctx, run, {
     maxOutputTokens: MAX_ISSUE_OUTPUT_TOKENS,
     organizationId: issue.organizationId,
@@ -95,8 +112,16 @@ async function executeIssue(ctx: ActionCtx, run: AgentRunView): Promise<string> 
 async function issueReportFromResult(
   ctx: ActionCtx,
   run: AgentRunView,
-  result: { steps: ReadonlyArray<{ toolCalls: ReadonlyArray<unknown> }>; text: string }
+  result: {
+    steps: ReadonlyArray<{
+      toolCalls: ReadonlyArray<unknown>;
+      toolResults: ReadonlyArray<{ output?: unknown }>;
+    }>;
+    text: string;
+  }
 ): Promise<string> {
+  // Suspending on a wait is not a finished report; the resumed turn writes that.
+  if (endedInWait(result.steps)) return result.text.trim();
   const attached = await ctx.runQuery(internal.modules.assistant.runs.functions.getInternal, {
     runId: run.id
   });
@@ -123,18 +148,23 @@ async function issueReportFromResult(
 
 async function executeReview(
   ctx: ActionCtx,
-  run: AgentRunView
+  run: AgentRunView,
+  resumeNote: string | undefined
 ): Promise<{ commentCount: number; summary: string }> {
   if (!run.proposalId) throw new ConvexError('Review run is missing its idea');
   const context = await ctx.runQuery(internal.modules.travel.versions.agent.review.index.context, {
     proposalId: run.proposalId
   });
-  const prompt = reviewStandalonePrompt({
-    changes: context.changes,
-    sourceTripId: context.sourceTripId,
-    title: context.title,
-    workingTripId: context.workingTripId
-  });
+  const prompt = resumedPrompt(
+    reviewStandalonePrompt({
+      changes: context.changes,
+      sourceTripId: context.sourceTripId,
+      title: context.title,
+      workingTripId: context.workingTripId
+    }),
+    run,
+    resumeNote
+  );
   const assistant = await generateStandalone(ctx, run, {
     maxOutputTokens: MAX_REVIEW_OUTPUT_TOKENS,
     organizationId: context.organizationId,
@@ -172,8 +202,11 @@ async function executeReview(
   if (!output) throw new ConvexError('Idea reviewer did not return a review');
   await ctx.runMutation(internal.modules.travel.versions.agent.review.index.finish, {
     comments: output.comments,
+    expectedReviewRevision: context.expectedReviewRevision,
     proposalId: run.proposalId,
-    summary: output.summary
+    runId: run.id,
+    summary: output.summary,
+    verdict: output.verdict
   });
   await AgentRunTracking.record(ctx, run.id, {
     detail: output.summary,
@@ -183,52 +216,29 @@ async function executeReview(
   return { commentCount: output.comments.length, summary: output.summary };
 }
 
-async function execute(
+export type StandaloneTurn = {
+  report: string;
+  /** Set for idea reviews: what the reviewer stored on the idea. */
+  review: { commentCount: number; summary: string } | null;
+};
+
+/** One standalone turn. The engine claims and finishes the run around it and owns errors. */
+async function turn(
   ctx: ActionCtx,
-  runId: Id<'agentRuns'>
-): Promise<{ commentCount: number; summary: string } | null> {
-  const claimed = await ctx.runMutation(internal.modules.assistant.runs.functions.claimRun, {
-    runId
-  });
-  if (!claimed) return null;
-  try {
-    let report: string;
-    let review: { commentCount: number; summary: string } | null = null;
-    if (claimed.issueId) {
-      report = await executeIssue(ctx, claimed);
-    } else if (claimed.proposalId) {
-      review = await executeReview(ctx, claimed);
-      report = review.summary;
-    } else {
-      throw new ConvexError('Standalone run is missing a target');
-    }
-    if (await AgentRunTracking.isAborted(ctx, runId)) return null;
-    await ctx.runMutation(internal.modules.assistant.runs.functions.finishRun, {
-      report,
-      runId,
-      status: 'complete'
-    });
-    return review;
-  } catch (error: unknown) {
-    if (await AgentRunTracking.isAborted(ctx, runId)) return null;
-    const message = AssistantErrors.message(error);
-    console.error('standalone agent run failed:', message, error);
-    await AgentRunTracking.record(ctx, runId, {
-      detail: message,
-      kind: 'error',
-      label: 'Run failed'
-    });
-    await ctx.runMutation(internal.modules.assistant.runs.functions.finishRun, {
-      error: message,
-      runId,
-      status: 'failed'
-    });
-    return null;
+  run: AgentRunView,
+  resumeNote?: string
+): Promise<StandaloneTurn> {
+  if (run.issueId) return { report: await executeIssue(ctx, run, resumeNote), review: null };
+  if (run.proposalId) {
+    const review = await executeReview(ctx, run, resumeNote);
+    return { report: review.summary, review };
   }
+  throw new ConvexError('Standalone run is missing a target');
 }
 
 /** Standalone workers: live event log + report, no chat or issue-comment dumps. */
 // oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class StandaloneSession {
-  static execute = execute;
+  static resumedPrompt = resumedPrompt;
+  static turn = turn;
 }

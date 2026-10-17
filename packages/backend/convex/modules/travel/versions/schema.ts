@@ -8,6 +8,12 @@ const author = v.object({
   userId: v.string()
 });
 const commentAuthor = v.union(author, proposalAgentActorValidator);
+const reviewVerdict = v.union(
+  v.literal('approved'),
+  v.literal('changes_requested'),
+  v.literal('commented')
+);
+const approver = v.union(author, proposalAgentActorValidator);
 const commentKind = v.union(v.literal('comment'), v.literal('change_request'));
 const reviewer = v.union(
   proposalAgentActorValidator,
@@ -32,8 +38,10 @@ const proposalMetadata = v.object({
 
 export const TripVersionValidators = {
   author,
+  approver,
   commentKind,
   proposalMetadata,
+  reviewVerdict,
   commentAuthor,
   reviewer,
   status
@@ -47,7 +55,7 @@ export const tripVersionTables = {
     updatedBy: author
   }).index('by_organizationId', ['organizationId']),
   tripProposalApprovals: defineTable({
-    approver: author,
+    approver,
     organizationId: v.string(),
     proposalId: v.id('tripProposals'),
     sourceTripId: v.id('trips')
@@ -153,6 +161,7 @@ export const tripVersionTables = {
     proposalId: v.id('tripProposals'),
     resolvedAt: v.optional(v.number()),
     resolvedBy: v.optional(author),
+    reviewVerdict: v.optional(reviewVerdict),
     sourceTripId: v.id('trips'),
     updatedAt: v.number()
   }).index('by_proposalId', ['proposalId'])

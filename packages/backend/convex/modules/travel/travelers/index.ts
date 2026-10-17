@@ -1,36 +1,18 @@
-import { ConvexError, type Infer } from 'convex/values';
+import { ConvexError } from 'convex/values';
 import type { Id } from '#convex-generated/dataModel';
-import type { MutationCtx, QueryCtx } from '#convex-generated/server';
+import type { MutationCtx } from '#convex-generated/server';
 import { workspaceRoster } from '#convex/modules/auth/workspace';
+import { PollSignals } from '#convex/modules/polls/signals';
 import { syncTripConditions } from '#convex/modules/travel/issues/sync';
-import type { TripTravelerValidators } from '#convex/modules/travel/travelers/schema';
+import {
+  rsvpStatus,
+  statusesForTrip,
+  type TravelerStatus,
+  travelersForTrip
+} from '#convex/modules/travel/travelers/statuses';
 import { isTripAdmin, type TripCtx } from '#convex/modules/travel/trips/ctx';
 
-export type TravelerStatus = Infer<typeof TripTravelerValidators.status>;
-
-/** Reads one row per roster member so rows left behind by departed members never count. */
-async function travelersForTrip(
-  ctx: MutationCtx | QueryCtx,
-  tripId: Id<'trips'>,
-  userIds: string[]
-) {
-  const rows = await Promise.all(
-    userIds.map((userId) =>
-      ctx.db
-        .query('tripTravelers')
-        .withIndex('by_tripId_and_userId', (query) =>
-          query.eq('tripId', tripId).eq('userId', userId)
-        )
-        .first()
-    )
-  );
-  return rows.flatMap((row) => (row ? [row] : []));
-}
-
-function rsvpStatus(status: TravelerStatus | undefined): Exclude<TravelerStatus, 'invited'> {
-  if (status === 'maybe' || status === 'not_going') return status;
-  return 'going';
-}
+export type { TravelerStatus };
 
 export async function listTravelers(ctx: TripCtx) {
   const roster = await workspaceRoster(ctx, ctx.workspace);
@@ -109,6 +91,11 @@ export async function setTravelerStatus(
   }
   // RSVPs change the shared trip directly, so "done when" rules over them re-check here.
   await syncTripConditions(ctx);
+  // RSVP waits and trip-poll eligibility (not going travelers cannot vote) re-check after.
+  await PollSignals.scheduleTripTravelers(ctx, {
+    organizationId: ctx.trip.organizationId,
+    tripId: ctx.trip._id
+  });
   return null;
 }
 
@@ -128,6 +115,10 @@ export async function claimInvitation(
     updatedAt: Date.now(),
     userId: workspace.userId
   });
+  await PollSignals.scheduleTripTravelers(ctx, {
+    organizationId: traveler.organizationId,
+    tripId: traveler.tripId
+  });
   return traveler.tripId;
 }
 
@@ -143,4 +134,5 @@ export class TripTravelers {
   static list = listTravelers;
   static seed = seedTravelers;
   static setStatus = setTravelerStatus;
+  static statusesForTrip = statusesForTrip;
 }

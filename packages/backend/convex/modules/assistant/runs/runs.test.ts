@@ -1,4 +1,4 @@
-import { expect, test, vi } from 'vite-plus/test';
+import { expect, test } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
 import { AgentRuns } from '#convex/modules/assistant/runs/index';
@@ -345,11 +345,13 @@ test('retries a failed issue run from zero as a new queued run', async () => {
     label: 'Started working',
     runId: failedRunId
   });
-  await owner.client.mutation(internal.modules.assistant.runs.functions.finishRun, {
-    error: 'The model timed out',
-    runId: failedRunId,
-    status: 'failed'
-  });
+  await owner.test.run((ctx) =>
+    AgentRuns.finish(ctx, {
+      error: 'The model timed out',
+      runId: failedRunId,
+      status: 'failed'
+    })
+  );
 
   const nextRunId = await owner.client.mutation(api.routes.agents.runs.retry.run, {
     runId: failedRunId
@@ -406,10 +408,12 @@ test('re-runs a complete issue run as a new queued run', async () => {
     issueId
   });
   if (!completeRunId) throw new Error('Expected a queued run');
-  await owner.client.mutation(internal.modules.assistant.runs.functions.finishRun, {
-    runId: completeRunId,
-    status: 'complete'
-  });
+  await owner.test.run((ctx) =>
+    AgentRuns.finish(ctx, {
+      runId: completeRunId,
+      status: 'complete'
+    })
+  );
 
   const nextRunId = await owner.client.mutation(api.routes.agents.runs.retry.run, {
     runId: completeRunId
@@ -439,11 +443,13 @@ test('hides another organization’s failed run from retry', async () => {
     issueId
   });
   if (!runId) throw new Error('Expected a queued run');
-  await first.owner.client.mutation(internal.modules.assistant.runs.functions.finishRun, {
-    error: 'The model timed out',
-    runId,
-    status: 'failed'
-  });
+  await first.owner.test.run((ctx) =>
+    AgentRuns.finish(ctx, {
+      error: 'The model timed out',
+      runId,
+      status: 'failed'
+    })
+  );
   await expect(
     second.owner.client.mutation(api.routes.agents.runs.retry.run, { runId })
   ).rejects.toThrow('Agent run not found');
@@ -673,10 +679,21 @@ test('claims the queued discussion run even after many finished runs', async () 
       updatedAt: 5000
     });
     const claimedId = await AgentRuns.claimDiscussionTurn(ctx, {
+      actorTokenIdentifier: 'issuer|owner',
       agentId: 'groam',
       createdBy: base.createdBy,
       discussionId,
+      discussionUpdatedAt: 1,
       organizationId,
+      promptMessageId: 'msg-busy',
+      screen: {
+        capabilities: [],
+        data: '{}',
+        description: 'Chat',
+        key: 'chat:busy',
+        target: { kind: 'workspace' },
+        title: 'Busy chat'
+      },
       threadId: 'thread-1',
       title: 'Turn'
     });
@@ -690,39 +707,81 @@ test('claims the queued discussion run even after many finished runs', async () 
   expect(result.count).toBe(61);
 });
 
-test('fails runs stuck running past the stale window and leaves fresh ones', async () => {
+test('the sweep fails stuck runs no workflow owns and never touches workflow runs', async () => {
   const { owner, organizationId } = await queuedDiscussionSetup();
   const base = {
-    agentId: 'issue' as const,
+    agentId: 'reviewer' as const,
     createdBy: { name: 'Owner', userId: owner.userId },
     kickoff: 'assign' as const,
     organizationId,
     surface: 'standalone' as const,
-    title: 'Stuck'
+    title: 'Sweep'
   };
-  const { fresh, stale } = await owner.test.run(async (ctx) => ({
-    fresh: await ctx.db.insert('agentRuns', {
-      shortId: 'fixture4',
-      ...base,
-      status: 'running',
-      updatedAt: Date.now() - 60_000
-    }),
-    stale: await ctx.db.insert('agentRuns', {
-      shortId: 'fixture5',
-      ...base,
-      status: 'running',
-      updatedAt: Date.now() - 30 * 60_000
-    })
-  }));
+  const old = Date.now() - 30 * 60_000;
+  const ids = await owner.test.run(async (ctx) => {
+    const discussionId = await ctx.db.insert('discussions', {
+      shortId: 'sweep001',
+      clientRequestId: 'req-sweep',
+      createdBy: { name: 'Owner', userId: owner.userId },
+      kind: 'group',
+      members: [],
+      organizationId,
+      threadId: 'thread-sweep',
+      title: 'Sweep',
+      updatedAt: old
+    });
+    const neverResponded = await AgentRuns.queueDiscussionTurn(ctx, {
+      agentId: 'groam',
+      createdBy: base.createdBy,
+      discussionId,
+      organizationId,
+      threadId: 'thread-sweep',
+      title: 'Sweep'
+    });
+    await ctx.db.patch('agentRuns', neverResponded, { updatedAt: old });
+    return {
+      freshInline: await ctx.db.insert('agentRuns', {
+        ...base,
+        shortId: 'sweep002',
+        status: 'running',
+        updatedAt: Date.now() - 60_000
+      }),
+      neverResponded,
+      stuckInline: await ctx.db.insert('agentRuns', {
+        ...base,
+        shortId: 'sweep003',
+        status: 'running',
+        updatedAt: old
+      }),
+      workflowQueued: await ctx.db.insert('agentRuns', {
+        ...base,
+        shortId: 'sweep004',
+        status: 'queued',
+        updatedAt: old,
+        workflowId: 'wf-queued'
+      }),
+      workflowRunning: await ctx.db.insert('agentRuns', {
+        ...base,
+        shortId: 'sweep005',
+        status: 'running',
+        updatedAt: old,
+        workflowId: 'wf-running'
+      })
+    };
+  });
   await expect(
     owner.test.mutation(internal.modules.assistant.runs.functions.sweepStaleRuns, {})
-  ).resolves.toBe(1);
+  ).resolves.toBe(2);
   await owner.test.run(async (ctx) => {
-    expect(await ctx.db.get('agentRuns', stale)).toMatchObject({
+    const status = async (id: Id<'agentRuns'>) => (await ctx.db.get('agentRuns', id))?.status;
+    expect(await ctx.db.get('agentRuns', ids.stuckInline)).toMatchObject({
       error: 'The run stopped responding. Try again.',
       status: 'failed'
     });
-    expect(await ctx.db.get('agentRuns', fresh)).toMatchObject({ status: 'running' });
+    expect(await status(ids.neverResponded)).toBe('failed');
+    expect(await status(ids.freshInline)).toBe('running');
+    expect(await status(ids.workflowQueued)).toBe('queued');
+    expect(await status(ids.workflowRunning)).toBe('running');
   });
 });
 
@@ -732,26 +791,24 @@ async function queuedDiscussionSetup() {
   return { organizationId: owner.organizationId, owner };
 }
 
-test('assigning an issue to the agent schedules its run server-side', async () => {
-  vi.useFakeTimers();
-  try {
-    const { owner, tripId } = await setupTrip(0);
-    const issueId = await owner.client.mutation(api.routes.trips.issues.create.run, {
-      body: 'Board assignment should start work.',
-      title: 'Board assign',
-      tripId
-    });
-    await owner.client.mutation(api.routes.trips.issues.assign.run, {
-      assignee: issueAgent,
-      issueId
-    });
-    const scheduled = await owner.test.run((ctx) =>
-      ctx.db.system.query('_scheduled_functions').collect()
-    );
-    expect(scheduled.some((job) => job.name.includes('standalone/execute'))).toBe(true);
-  } finally {
-    vi.useRealTimers();
-  }
+test('assigning an issue to the agent starts its run workflow server-side', async () => {
+  const { owner, tripId } = await setupTrip(0);
+  const issueId = await owner.client.mutation(api.routes.trips.issues.create.run, {
+    body: 'Board assignment should start work.',
+    title: 'Board assign',
+    tripId
+  });
+  const runId = await owner.client.mutation(api.routes.trips.issues.assign.run, {
+    assignee: issueAgent,
+    issueId
+  });
+  if (!runId) throw new Error('Expected a run');
+  const run = await owner.test.run((ctx) => ctx.db.get('agentRuns', runId));
+  expect(run).toMatchObject({
+    actorTokenIdentifier: expect.any(String),
+    status: 'queued',
+    workflowId: expect.any(String)
+  });
 });
 
 test('does not reuse another group’s active review run for a proposal', async () => {
@@ -892,38 +949,6 @@ test('aborting a discussion stops the running turn, not a newer queued one', asy
   });
 });
 
-test('fails queued runs nobody started past the window', async () => {
-  const { owner, organizationId } = await queuedDiscussionSetup();
-  const base = {
-    agentId: 'issue' as const,
-    createdBy: { name: 'Owner', userId: owner.userId },
-    kickoff: 'assign' as const,
-    organizationId,
-    status: 'queued' as const,
-    surface: 'standalone' as const,
-    title: 'Orphan'
-  };
-  const { fresh, stale } = await owner.test.run(async (ctx) => ({
-    fresh: await ctx.db.insert('agentRuns', {
-      shortId: 'qfresh01',
-      ...base,
-      updatedAt: Date.now() - 60_000
-    }),
-    stale: await ctx.db.insert('agentRuns', {
-      shortId: 'qstale01',
-      ...base,
-      updatedAt: Date.now() - 30 * 60_000
-    })
-  }));
-  await expect(
-    owner.test.mutation(internal.modules.assistant.runs.functions.sweepStaleRuns, {})
-  ).resolves.toBe(1);
-  await owner.test.run(async (ctx) => {
-    expect(await ctx.db.get('agentRuns', stale)).toMatchObject({ status: 'failed' });
-    expect(await ctx.db.get('agentRuns', fresh)).toMatchObject({ status: 'queued' });
-  });
-});
-
 async function failedIssueRun(
   setup: Awaited<ReturnType<typeof setupTrip>>,
   title: string
@@ -939,15 +964,17 @@ async function failedIssueRun(
     issueId
   });
   if (!runId) throw new Error('Expected a queued run');
-  await owner.client.mutation(internal.modules.assistant.runs.functions.finishRun, {
-    error: 'boom',
-    runId,
-    status: 'failed'
-  });
+  await owner.test.run((ctx) =>
+    AgentRuns.finish(ctx, {
+      error: 'boom',
+      runId,
+      status: 'failed'
+    })
+  );
   return { issueId, runId };
 }
 
-test('retry queues a fresh run for the client to start with its identity', async () => {
+test('retry queues a fresh run and starts its workflow as the retrying viewer', async () => {
   const setup = await setupTrip(0);
   const { runId } = await failedIssueRun(setup, 'Retry queues');
   const nextRunId = await setup.owner.client.mutation(api.routes.agents.runs.retry.run, {
@@ -955,7 +982,11 @@ test('retry queues a fresh run for the client to start with its identity', async
   });
   expect(nextRunId).not.toBe(runId);
   const next = await setup.owner.test.run((ctx) => ctx.db.get('agentRuns', nextRunId));
-  expect(next?.status).toBe('queued');
+  expect(next).toMatchObject({
+    actorTokenIdentifier: expect.any(String),
+    status: 'queued',
+    workflowId: expect.any(String)
+  });
 });
 
 test('refuses retry and stop from a non-admin who did not start the run', async () => {
@@ -1030,5 +1061,51 @@ test('roster finds the Issue agent run behind many newer runs of other agents', 
   const roster = await owner.client.query(api.routes.agents.list.run, {});
   expect(roster.find((agent) => agent.id === 'issue')?.latestRun).toMatchObject({
     updatedAt: 1000
+  });
+});
+
+test('a claimed discussion turn stores its actor, screen, and prompt for the workflow', async () => {
+  const { owner } = await setupTrip(0);
+  const organizationId = owner.organizationId as string;
+  const runId = await owner.test.run(async (ctx) => {
+    const discussionId = await ctx.db.insert('discussions', {
+      shortId: 'actr0001',
+      clientRequestId: 'req-actor',
+      createdBy: { name: 'Owner', userId: owner.userId },
+      kind: 'group',
+      members: [],
+      organizationId,
+      threadId: 'thread-actor',
+      title: 'Plans',
+      updatedAt: 1
+    });
+    return await AgentRuns.claimDiscussionTurn(ctx, {
+      actorTokenIdentifier: 'issuer|owner',
+      agentId: 'groam',
+      createdBy: { name: 'Owner', userId: owner.userId },
+      discussionId,
+      discussionUpdatedAt: 1,
+      organizationId,
+      promptMessageId: 'msg-1',
+      screen: {
+        capabilities: [],
+        data: '{}',
+        description: 'Chat',
+        key: 'chat:x',
+        target: { kind: 'workspace' },
+        title: 'Chat'
+      },
+      threadId: 'thread-actor',
+      title: 'Plans'
+    });
+  });
+  await owner.test.run(async (ctx) => {
+    expect(await ctx.db.get('agentRuns', runId)).toMatchObject({
+      actorTokenIdentifier: 'issuer|owner',
+      discussionUpdatedAt: 1,
+      promptMessageId: 'msg-1',
+      screen: { key: 'chat:x' },
+      status: 'running'
+    });
   });
 });

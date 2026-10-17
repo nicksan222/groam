@@ -1,31 +1,14 @@
-import { ConvexError, v } from 'convex/values';
+import { v } from 'convex/values';
 import { internal } from '#convex-generated/api';
-import { aiRateLimiter } from '#convex/modules/ai/limits';
-import { AssistantErrors } from '#convex/modules/assistant/errors/index';
-import { StandaloneSession } from '#convex/modules/assistant/standalone/index';
 import { workspaceAction } from '#convex/modules/auth/workspace';
 
+/**
+ * Starts a queued standalone run's workflow (a run that already has one is left alone). Stays
+ * an action so shipped clients keep calling it; the work is one mutation.
+ */
 export const run = workspaceAction({
   args: { runId: v.id('agentRuns') },
   returns: v.null(),
-  handler: async (ctx, { runId }) => {
-    const stored = await ctx.runQuery(internal.modules.assistant.runs.functions.getInternal, {
-      organizationId: ctx.workspace.organizationId,
-      runId
-    });
-    if (!stored) throw new ConvexError('Agent run not found');
-    if (stored.surface !== 'standalone') {
-      throw new ConvexError('Only standalone runs start from the agent monitor');
-    }
-    try {
-      await aiRateLimiter.limit(ctx, 'tripAssistantMessage', {
-        key: ctx.workspace.tokenIdentifier,
-        throws: true
-      });
-    } catch (error: unknown) {
-      throw new ConvexError(AssistantErrors.message(error));
-    }
-    await StandaloneSession.execute(ctx, runId);
-    return null;
-  }
+  handler: async (ctx, { runId }): Promise<null> =>
+    await ctx.runMutation(internal.modules.assistant.engine.functions.startStandalone, { runId })
 });

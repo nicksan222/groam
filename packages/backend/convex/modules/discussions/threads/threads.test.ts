@@ -17,6 +17,15 @@ vi.useRealTimers();
 
 const paginationOpts = { cursor: null, numItems: 25 };
 
+const workspaceScreen = {
+  capabilities: [],
+  data: '{}',
+  description: 'Home',
+  key: 'workspace:home',
+  target: { kind: 'workspace' as const },
+  title: 'Home'
+};
+
 // oxlint-disable-next-line jest/no-export -- convex-test discovers test-only actions through module exports.
 export const respondWithMockModel = action({
   args: {
@@ -30,7 +39,8 @@ export const respondWithMockModel = action({
       internal.modules.discussions.assistant.index.claimResponse,
       {
         discussionId,
-        promptMessageId
+        promptMessageId,
+        screen: workspaceScreen
       }
     );
     if (!claim) return null;
@@ -672,7 +682,7 @@ test('a failed or blank assistant reply surfaces as a failed request with a reas
   const { discussionId, listUserMessage, owner, sent } = await setupAssistantRequest();
   const claim = await owner.client.mutation(
     internal.modules.discussions.assistant.index.claimResponse,
-    { discussionId, promptMessageId: sent.messageId }
+    { discussionId, promptMessageId: sent.messageId, screen: workspaceScreen }
   );
   if (!claim) throw new Error('Expected a claim');
   await owner.client.mutation(internal.modules.discussions.assistant.index.finishResponse, {
@@ -692,7 +702,7 @@ test('an explicit failure keeps its reason and a rate-limited request does not s
   const { discussionId, listUserMessage, owner, sent } = await setupAssistantRequest();
   const claim = await owner.client.mutation(
     internal.modules.discussions.assistant.index.claimResponse,
-    { discussionId, promptMessageId: sent.messageId }
+    { discussionId, promptMessageId: sent.messageId, screen: workspaceScreen }
   );
   if (!claim) throw new Error('Expected a claim');
   await owner.client.mutation(internal.modules.discussions.assistant.index.finishResponse, {
@@ -711,7 +721,8 @@ test('an explicit failure keeps its reason and a rate-limited request does not s
   await expect(
     owner.client.mutation(internal.modules.discussions.assistant.index.claimResponse, {
       discussionId,
-      promptMessageId: sent.messageId
+      promptMessageId: sent.messageId,
+      screen: workspaceScreen
     })
   ).resolves.not.toBeNull();
 });
@@ -723,13 +734,14 @@ test('a crashed responding claim can be reclaimed once stale', async () => {
   const { discussionId, owner, sent } = await setupAssistantRequest();
   const first = await owner.client.mutation(
     internal.modules.discussions.assistant.index.claimResponse,
-    { discussionId, promptMessageId: sent.messageId }
+    { discussionId, promptMessageId: sent.messageId, screen: workspaceScreen }
   );
   expect(first).not.toBeNull();
   await expect(
     owner.client.mutation(internal.modules.discussions.assistant.index.claimResponse, {
       discussionId,
-      promptMessageId: sent.messageId
+      promptMessageId: sent.messageId,
+      screen: workspaceScreen
     })
   ).resolves.toBeNull();
   await owner.client.run(async (ctx) => {
@@ -744,7 +756,8 @@ test('a crashed responding claim can be reclaimed once stale', async () => {
   await expect(
     owner.client.mutation(internal.modules.discussions.assistant.index.claimResponse, {
       discussionId,
-      promptMessageId: sent.messageId
+      promptMessageId: sent.messageId,
+      screen: workspaceScreen
     })
   ).resolves.not.toBeNull();
 });

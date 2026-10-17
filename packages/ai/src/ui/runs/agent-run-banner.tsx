@@ -4,12 +4,13 @@ import { Spinner } from '@groam/ui/components/spinner';
 import { toast } from '@groam/ui/components/toast';
 import { errorMessage } from '@groam/ui/lib/errors';
 import { cn } from '@groam/ui/lib/utils';
-import { Bot } from 'lucide-react';
+import { Bot, Hourglass } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { agentRunCopy, presentAgentRunMessage } from '#ai/backend/runs/copy';
 import { type AgentRunStatus, RUN_STATUS_LABEL } from '#ai/backend/runs/ids';
 import { canRetryAgentRunFromZero, isActiveAgentRun } from '#ai/backend/runs/roster';
 import { AgentRetryFromZeroButton } from './agent-retry-from-zero';
+import { type AgentRunBannerWait, AgentRunWait } from './agent-run-wait';
 
 export type AgentRunBannerEvent = {
   id: string;
@@ -26,19 +27,25 @@ export type AgentRunBannerRun = {
 
 export function AgentRunBanner({
   agentLabel,
+  cancelWaitTestId,
   events,
   eventTestId,
+  onCancelWait,
   onRetry,
   onStop,
   retryTestId,
   run,
   stopTestId,
   testId,
-  viewAgent
+  viewAgent,
+  wait
 }: {
   agentLabel: string;
+  cancelWaitTestId?: string;
   events: readonly AgentRunBannerEvent[];
   eventTestId?: string;
+  /** Resolves the wait as cancelled; the run resumes and wraps up (Stop ends it instead). */
+  onCancelWait?: () => Promise<unknown>;
   onRetry?: () => Promise<unknown> | unknown;
   onStop?: () => Promise<unknown>;
   retryTestId?: string;
@@ -46,11 +53,14 @@ export function AgentRunBanner({
   stopTestId?: string;
   testId?: string;
   viewAgent: ReactNode;
+  /** What a `waiting` run waits for; ignored for any other status. */
+  wait?: AgentRunBannerWait | null;
 }) {
   const [stopping, setStopping] = useState(false);
   const working = isActiveAgentRun(run);
   const canRetry = onRetry != null && canRetryAgentRunFromZero(run);
-  const activity = bannerActivity(run, events);
+  const waiting = waitingOn(run, wait);
+  const activity = bannerActivity(run, events, waiting);
   const statusTone = statusTextClass(run.status);
 
   return (
@@ -73,7 +83,7 @@ export function AgentRunBanner({
             working ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
           )}
         >
-          {working ? <PulsingDot color="primary" /> : <Bot className="size-3.5" />}
+          {bannerIcon(run.status, working)}
         </span>
         <div className="min-w-0 flex-1">
           <p className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-sm">
@@ -93,16 +103,18 @@ export function AgentRunBanner({
               {activity}
             </p>
           ) : null}
+          {waiting ? (
+            <AgentRunWait cancelTestId={cancelWaitTestId} onCancel={onCancelWait} wait={waiting} />
+          ) : null}
         </div>
       </div>
       <div className="flex shrink-0 items-center gap-1.5">
-        {working ? (
+        {working && onStop ? (
           <Button
             aria-busy={stopping}
             data-testid={stopTestId}
-            disabled={stopping || !onStop}
+            disabled={stopping}
             onClick={async () => {
-              if (!onStop) return;
               setStopping(true);
               try {
                 await onStop();
@@ -130,14 +142,29 @@ export function AgentRunBanner({
 
 function statusTextClass(status: AgentRunStatus): string {
   if (status === 'failed') return 'text-destructive';
-  if (status === 'running' || status === 'queued') return 'text-primary';
+  if (status === 'running' || status === 'queued' || status === 'waiting') return 'text-primary';
   return 'text-muted-foreground';
+}
+
+/** The wait to show: only a `waiting` run has one. */
+function waitingOn(
+  run: AgentRunBannerRun,
+  wait: AgentRunBannerWait | null | undefined
+): AgentRunBannerWait | null {
+  return run.status === 'waiting' && wait ? wait : null;
+}
+
+function bannerIcon(status: AgentRunStatus, working: boolean): ReactNode {
+  if (status === 'waiting') return <Hourglass className="size-3.5" />;
+  return working ? <PulsingDot color="primary" /> : <Bot className="size-3.5" />;
 }
 
 function bannerActivity(
   run: AgentRunBannerRun,
-  events: readonly AgentRunBannerEvent[]
+  events: readonly AgentRunBannerEvent[],
+  wait: AgentRunBannerWait | null
 ): string | null {
+  if (wait) return `${agentRunCopy.waitingFor} ${wait.label}`;
   const presented = presentAgentRunMessage(run);
   const latest = events.at(-1)?.label?.trim();
   if (run.status === 'failed' && run.error?.trim()) return presented;

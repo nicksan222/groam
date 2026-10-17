@@ -3,8 +3,8 @@ import { DayTimeRangePicker } from '@groam/ui/components/day-time-range-picker';
 import { FormFeedback } from '@groam/ui/components/form-feedback';
 import { FormField } from '@groam/ui/components/form-field';
 import { Input } from '@groam/ui/components/input';
+import { RichTextEditor } from '@groam/ui/components/rich-text-editor';
 import Shell from '@groam/ui/components/shell/client';
-import { Textarea } from '@groam/ui/components/textarea';
 import { Clock3, X } from 'lucide-react';
 import { useRef } from 'react';
 import { useMediaUpload } from '@/features/media/hooks/use-media-upload';
@@ -202,14 +202,16 @@ export function TripTransferForm({
       )}
 
       <FormField label="Travel notes">
-        <Textarea
-          data-testid={testIds.travelNotes}
-          disabled={isBusy}
+        <RichTextEditor
           maxLength={500}
-          onChange={(event) => setNotes(event.target.value)}
+          aria-label="Travel notes"
+          disabled={isBusy}
+          onChange={setNotes}
           placeholder="Meeting point, booking reference, platform, directions…"
-          rows={3}
+          testId={testIds.travelNotes}
+          toolbar
           value={notes}
+          variant="field"
         />
       </FormField>
 

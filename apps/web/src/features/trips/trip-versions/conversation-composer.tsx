@@ -1,6 +1,6 @@
 import { Button } from '@groam/ui/components/button';
+import { RichTextEditor } from '@groam/ui/components/rich-text-editor';
 import { Spinner } from '@groam/ui/components/spinner';
-import { Textarea } from '@groam/ui/components/textarea';
 import Timeline from '@groam/ui/components/timeline';
 import { ComposerTimelineBadge } from '@/features/workspace/workspace-shell/composer-timeline-badge';
 
@@ -23,16 +23,15 @@ export function ConversationComposer({
       <Timeline.Body className="block">
         <Timeline.Card>
           <Timeline.CardBody className="p-0">
-            <label className="sr-only" htmlFor="proposal-conversation-comment">
-              Leave a comment
-            </label>
-            <Textarea
-              className="min-h-24 rounded-none border-0 bg-transparent shadow-none focus-visible:border-0 focus-visible:ring-0"
-              id="proposal-conversation-comment"
+            <RichTextEditor
               maxLength={2000}
-              onChange={(event) => onChange(event.target.value)}
+              aria-label="Leave a comment"
+              contentClassName="min-h-24 px-3 py-2.5"
+              onChange={onChange}
               placeholder="Leave a comment"
+              toolbar
               value={content}
+              variant="bare"
             />
           </Timeline.CardBody>
           <Timeline.CardActions className="border-t bg-muted/25 py-2">

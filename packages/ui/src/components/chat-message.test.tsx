@@ -61,6 +61,14 @@ test('auto-links URLs in message text', async () => {
   await expect
     .element(page.getByRole('link', { name: 'https://trip.example/rome' }))
     .toHaveAttribute('href', 'https://trip.example/rome');
+  await expect
+    .element(page.getByRole('link', { name: 'https://trip.example/rome' }))
+    .toHaveAttribute('target', '_blank');
+});
+
+test('renders Markdown formatting in message text', async () => {
+  await render(<ChatMessage mine text="**Bold** plan" variant="private" />);
+  expect(page.getByText('Bold').element().getAttribute('data-streamdown')).toBe('strong');
 });
 
 test('keeps reactions in flow above the sent time', async () => {

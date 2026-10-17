@@ -34,6 +34,13 @@ test('renders traveler messages with pending delivery state', async () => {
   expect(page.getByRole('status').element().textContent).toContain('Sending');
 });
 
+test('renders traveler Markdown', async () => {
+  await render(
+    <UserMessage disabled={false} message={message('user', 'Book **Portugal**', 'success')} />
+  );
+  expect(page.getByText('Portugal').element().getAttribute('data-streamdown')).toBe('strong');
+});
+
 function message(role: 'user', text: string, status: 'pending' | 'success'): UIMessage {
   return {
     _creationTime: 1,
