@@ -1,3 +1,4 @@
+import { PollOpenReads } from '#convex/modules/polls/open';
 import { PollReads } from '#convex/modules/polls/reads';
 import { PollWrites } from '#convex/modules/polls/writes';
 
@@ -8,6 +9,7 @@ export class Polls {
   static closeScheduled = PollWrites.closeScheduled;
   static create = PollWrites.create;
   static get = PollReads.get;
+  static listOpen = PollOpenReads.listOpen;
   static listForDiscussion = PollReads.listForDiscussion;
   static listForTrip = PollReads.listForTrip;
   static listForWorkspace = PollReads.listForWorkspace;

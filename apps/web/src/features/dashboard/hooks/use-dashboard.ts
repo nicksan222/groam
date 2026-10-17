@@ -2,6 +2,7 @@ import { useSetAgentContext } from '@groam/ai/ui/context/agent-context';
 import { useTrips, useWorkspaceTripProposals } from '@/features/trips/hooks/use-trips';
 import { useWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
 import { useReadyValue } from '@/lib/use-ready-value';
+import { buildDashboardContext } from './dashboard-agent-context';
 import {
   type DashboardPresentation,
   dashboardPresentation,
@@ -26,24 +27,12 @@ export function useDashboard() {
   const readyBuckets = presentation.kind === 'ready' ? presentation.buckets : null;
   const greeting = greetingForHour(new Date().getHours());
 
-  useSetAgentContext({
-    capabilities: [],
-    data: {
-      activeTripCount: readyBuckets?.activeTrips.length ?? 0,
-      groupName: activeOrganization.name,
-      pendingProposalCount: readyBuckets?.yourDrafts.length ?? 0,
-      reviewRequestCount: readyBuckets?.waitingOnYou.length ?? 0,
-      tripsNeedingAttention:
-        readyBuckets?.tripsNeedingAttention.map((trip) => ({
-          id: trip.id,
-          name: trip.name,
-          nextAction: trip.nextAction
-        })) ?? []
-    },
-    description: 'Summarize workspace priorities, review requests, and trips needing attention.',
-    key: 'workspace:dashboard',
-    title: `${activeOrganization.name} · Home`
-  });
+  // Once ready, `DashboardAgentContext` registers the richer context including activity.
+  useSetAgentContext(
+    readyBuckets
+      ? null
+      : buildDashboardContext({ buckets: null, groupName: activeOrganization.name })
+  );
 
   return { activeOrganization, greeting, presentation };
 }

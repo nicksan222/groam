@@ -35,7 +35,9 @@ export const bring = internalMutableTripMutation({
   returns: v.null(),
   handler: async (ctx, input) => {
     await TripPacking.bring(ctx, input);
-    if (input.count > 0) await TripVersions.requestBringerReview(ctx, input.userId);
+    if (input.count > 0) {
+      await TripVersions.requestReview(ctx, input.userId, 'asked you to bring something');
+    }
     return null;
   }
 });

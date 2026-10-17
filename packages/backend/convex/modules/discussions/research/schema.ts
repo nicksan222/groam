@@ -30,5 +30,15 @@ export const ResearchValidators = {
     tripId: v.id('trips'),
     unread: v.boolean(),
     updatedAt: v.number()
+  }),
+  workspaceItem: v.object({
+    id: v.id('discussions'),
+    lastActivityAt: v.number(),
+    lastMessage: v.union(DiscussionValidators.lastMessage, v.null()),
+    shortId: v.string(),
+    title: v.string(),
+    tripId: v.id('trips'),
+    tripName: v.string(),
+    unread: v.boolean()
   })
 };

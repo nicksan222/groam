@@ -16,6 +16,19 @@ const trips = vi.hoisted(() => ({
   useWorkspaceTripProposals: vi.fn()
 }));
 
+vi.mock('@/features/dashboard/hooks/use-dashboard-runs', () => ({
+  useDashboardRuns: () => ({ activity: [], isLoading: false, waiting: [] })
+}));
+vi.mock('@/features/dashboard/hooks/use-dashboard-issues', () => ({
+  useDashboardIssues: () => ({ assigned: [], isLoading: false, open: [] })
+}));
+vi.mock('@/features/dashboard/hooks/use-dashboard-polls', () => ({
+  useDashboardPolls: () => ({ isLoading: false, polls: [] })
+}));
+vi.mock('@/features/dashboard/hooks/use-dashboard-research', () => ({
+  useDashboardResearch: () => ({ isLoading: false, research: [] })
+}));
+
 vi.mock('@groam/ai/ui/context/agent-context', () => ({ useSetAgentContext: () => undefined }));
 
 vi.mock('@/features/workspace/workspace-shell/workspace-state', async () => {

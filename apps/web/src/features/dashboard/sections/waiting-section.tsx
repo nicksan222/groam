@@ -4,10 +4,15 @@ import { ArrowRight } from 'lucide-react';
 import { relativeDate } from '@/features/dashboard/hooks/dashboard-model';
 import { IdeaWorkspaceLink } from '@/features/ideas/idea-list/idea-workspace-link';
 import type { WorkspaceTripProposal } from '@/features/trips/hooks/use-trips';
+import { testIds } from '@/lib/test-ids';
 
 export function WaitingSection({ items }: { items: WorkspaceTripProposal[] }) {
   return (
-    <Shell.Section aria-labelledby="dashboard-attention-heading" stack="sm">
+    <Shell.Section
+      aria-labelledby="dashboard-attention-heading"
+      data-testid={testIds.dashboardWaitingIdeas}
+      stack="sm"
+    >
       <div>
         <h2
           className="text-base font-semibold tracking-tight text-foreground"

@@ -26,7 +26,7 @@ function PackedLine({ packed, total }: { packed: number; total: number }) {
   );
 }
 
-/** Title, privacy note, and "N of M packed" with a hairline of progress and an "All packed" moment. */
+/** Title, a quiet privacy note, and "N of M packed" over a full-width progress line. */
 export function PersonalPackingHeader({
   items,
   readOnly
@@ -37,31 +37,30 @@ export function PersonalPackingHeader({
   const packed = items.filter((item) => item.packed).length;
   const allPacked = items.length > 0 && packed === items.length;
   return (
-    <div>
-      <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-col gap-2">
+      <div className="flex items-baseline justify-between gap-3">
         <h3 className="text-sm font-semibold" id="my-packing-heading">
           My list
         </h3>
-        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-          <Lock aria-hidden className="size-3" />
-          Only you can see this
-        </span>
-      </div>
-      <p
-        className={cn('text-xs text-muted-foreground', allPacked && 'text-success-foreground')}
-        data-all-packed={allPacked ? 'true' : undefined}
-      >
         {items.length > 0 ? (
-          <PackedLine packed={packed} total={items.length} />
-        ) : readOnly ? (
-          'Archived, so read-only.'
-        ) : (
-          'Your own checklist, apart from the group.'
-        )}
+          <p
+            className={cn(
+              'text-xs text-muted-foreground tabular-nums',
+              allPacked && 'text-success-foreground'
+            )}
+            data-all-packed={allPacked ? 'true' : undefined}
+          >
+            <PackedLine packed={packed} total={items.length} />
+          </p>
+        ) : null}
+      </div>
+      <p className="-mt-1.5 flex items-center gap-1 text-xs text-muted-foreground">
+        <Lock aria-hidden className="size-3 shrink-0" />
+        {readOnly ? 'Only you can see this. Archived, so read-only.' : 'Only you can see this'}
       </p>
       {items.length > 0 ? (
         <PackingProgress
-          className="mt-1.5 w-56 max-w-full"
+          className="h-1"
           state={allPacked ? 'covered' : 'missing'}
           total={items.length}
           value={packed}

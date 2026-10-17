@@ -994,8 +994,16 @@ async function setReviewers(
   return null;
 }
 
-/** Someone asked to bring a packing item in an idea gets asked to review that idea. */
-async function requestBringerReview(ctx: MutableTripCtx, userId: string): Promise<void> {
+/**
+ * Asks a member to review the idea whose working trip `ctx` is editing, e.g. because a change
+ * assigns them work. A no-op outside ideas, for the author, or for existing reviewers.
+ */
+async function requestReview(
+  ctx: MutableTripCtx,
+  userId: string,
+  /** Completes "{viewer} …", e.g. "asked you to bring something". */
+  reason: string
+): Promise<void> {
   if (!ctx.trip.proposal) return;
   const proposal = await ctx.db
     .query('tripProposals')
@@ -1009,14 +1017,16 @@ async function requestBringerReview(ctx: MutableTripCtx, userId: string): Promis
   if (!member) return;
   const reviewers = withIdeaReviewer([...humans, { kind: 'user', name: member.name, userId }]);
   await ctx.db.patch('tripProposals', proposal._id, { reviewers, updatedAt: Date.now() });
+  // Drafts notify every reviewer on submit; only live ideas need a nudge now.
   if (proposal.status !== 'in_review' && proposal.status !== 'conflicted') return;
+  if (userId === ctx.workspace.userId) return;
   await Notifications.notify(ctx, {
-    body: `${ctx.workspace.viewerName} asked you to bring something in “${proposal.title}”.`,
+    body: `${ctx.workspace.viewerName} ${reason} in “${proposal.title}”.`,
     href: `/ideas/${proposal._id}`,
-    kind: 'idea_shared',
+    kind: 'idea_review_requested',
     organizationId: ctx.workspace.organizationId,
     title: 'Your review is requested',
-    userIds: [userId].filter((id) => id !== ctx.workspace.userId)
+    userIds: [userId]
   });
 }
 
@@ -1922,7 +1932,7 @@ export class TripVersions {
   static prepareRebase = prepareRebase;
   static prepareResolution = prepareResolution;
   static prepareSubmit = prepareSubmit;
-  static requestBringerReview = requestBringerReview;
+  static requestReview = requestReview;
   static resolveFeedback = resolveFeedback;
   static reviewContext = reviewContext;
   static setApproval = setApproval;

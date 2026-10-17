@@ -72,6 +72,7 @@ import type * as modules_discussions_messages_index from "../modules/discussions
 import type * as modules_discussions_research_assistant from "../modules/discussions/research/assistant.js";
 import type * as modules_discussions_research_index from "../modules/discussions/research/index.js";
 import type * as modules_discussions_research_tools from "../modules/discussions/research/tools.js";
+import type * as modules_discussions_research_workspace from "../modules/discussions/research/workspace.js";
 import type * as modules_discussions_threads_cleanup from "../modules/discussions/threads/cleanup.js";
 import type * as modules_discussions_threads_entity from "../modules/discussions/threads/entity.js";
 import type * as modules_discussions_threads_index from "../modules/discussions/threads/index.js";
@@ -89,6 +90,7 @@ import type * as modules_polls_cleanup from "../modules/polls/cleanup.js";
 import type * as modules_polls_eligibility from "../modules/polls/eligibility.js";
 import type * as modules_polls_functions from "../modules/polls/functions.js";
 import type * as modules_polls_index from "../modules/polls/index.js";
+import type * as modules_polls_open from "../modules/polls/open.js";
 import type * as modules_polls_reads from "../modules/polls/reads.js";
 import type * as modules_polls_signals from "../modules/polls/signals.js";
 import type * as modules_polls_tally from "../modules/polls/tally.js";
@@ -255,6 +257,7 @@ import type * as routes_discussions_research_links_unlink from "../routes/discus
 import type * as routes_discussions_research_list from "../routes/discussions/research/list.js";
 import type * as routes_discussions_research_remove from "../routes/discussions/research/remove.js";
 import type * as routes_discussions_research_update from "../routes/discussions/research/update.js";
+import type * as routes_discussions_research_workspace from "../routes/discussions/research/workspace.js";
 import type * as routes_discussions_roster from "../routes/discussions/roster.js";
 import type * as routes_media_list from "../routes/media/list.js";
 import type * as routes_media_logo_clear from "../routes/media/logo/clear.js";
@@ -273,6 +276,7 @@ import type * as routes_polls_close from "../routes/polls/close.js";
 import type * as routes_polls_create from "../routes/polls/create.js";
 import type * as routes_polls_get from "../routes/polls/get.js";
 import type * as routes_polls_list_discussion from "../routes/polls/list/discussion.js";
+import type * as routes_polls_list_open from "../routes/polls/list/open.js";
 import type * as routes_polls_list_trip from "../routes/polls/list/trip.js";
 import type * as routes_polls_list_workspace from "../routes/polls/list/workspace.js";
 import type * as routes_polls_remove from "../routes/polls/remove.js";
@@ -435,6 +439,7 @@ declare const fullApi: ApiFromModules<{
   "modules/discussions/research/assistant": typeof modules_discussions_research_assistant;
   "modules/discussions/research/index": typeof modules_discussions_research_index;
   "modules/discussions/research/tools": typeof modules_discussions_research_tools;
+  "modules/discussions/research/workspace": typeof modules_discussions_research_workspace;
   "modules/discussions/threads/cleanup": typeof modules_discussions_threads_cleanup;
   "modules/discussions/threads/entity": typeof modules_discussions_threads_entity;
   "modules/discussions/threads/index": typeof modules_discussions_threads_index;
@@ -452,6 +457,7 @@ declare const fullApi: ApiFromModules<{
   "modules/polls/eligibility": typeof modules_polls_eligibility;
   "modules/polls/functions": typeof modules_polls_functions;
   "modules/polls/index": typeof modules_polls_index;
+  "modules/polls/open": typeof modules_polls_open;
   "modules/polls/reads": typeof modules_polls_reads;
   "modules/polls/signals": typeof modules_polls_signals;
   "modules/polls/tally": typeof modules_polls_tally;
@@ -618,6 +624,7 @@ declare const fullApi: ApiFromModules<{
   "routes/discussions/research/list": typeof routes_discussions_research_list;
   "routes/discussions/research/remove": typeof routes_discussions_research_remove;
   "routes/discussions/research/update": typeof routes_discussions_research_update;
+  "routes/discussions/research/workspace": typeof routes_discussions_research_workspace;
   "routes/discussions/roster": typeof routes_discussions_roster;
   "routes/media/list": typeof routes_media_list;
   "routes/media/logo/clear": typeof routes_media_logo_clear;
@@ -636,6 +643,7 @@ declare const fullApi: ApiFromModules<{
   "routes/polls/create": typeof routes_polls_create;
   "routes/polls/get": typeof routes_polls_get;
   "routes/polls/list/discussion": typeof routes_polls_list_discussion;
+  "routes/polls/list/open": typeof routes_polls_list_open;
   "routes/polls/list/trip": typeof routes_polls_list_trip;
   "routes/polls/list/workspace": typeof routes_polls_list_workspace;
   "routes/polls/remove": typeof routes_polls_remove;

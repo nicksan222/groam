@@ -4,6 +4,7 @@ import { v } from 'convex/values';
 const kind = v.union(
   v.literal('idea_applied'),
   v.literal('idea_passed'),
+  v.literal('idea_review_requested'),
   v.literal('idea_shared'),
   v.literal('trip_invite')
 );

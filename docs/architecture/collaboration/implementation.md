@@ -273,7 +273,9 @@ Source: [`polls/writes.ts`](../../../packages/backend/convex/modules/polls/write
 
 Notifications are per-user `workspaceNotifications` rows written by the
 originating domain; the only producer today is the versions module
-(`notifyIdeaAudience` for `idea_shared`, `idea_applied`, `idea_passed`). Reads
+(`notifyIdeaAudience` for `idea_shared`, `idea_applied`, `idea_passed`, and
+`requestReview` for `idea_review_requested`, sent when an edit to a live idea
+assigns a member work, such as bringing a packing item). Reads
 return the newest 50, and read state is a `readAt` stamp. Recent activity is
 `tripAuditEvents`: `recordActivity` inserts an event and deletes the oldest
 beyond `MAX_ACTIVITY_ITEMS` (30), and trip deletion removes the rest, so it is

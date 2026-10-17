@@ -66,10 +66,25 @@ const view = v.object({
   voters: v.array(voter)
 });
 
-export const PollValidators = { createInput, creator, option, rule, status, view, voter };
+/** A compact open poll for the dashboard: where it lives, how far along it is, did I vote. */
+const openItem = v.object({
+  closesAt: v.union(v.number(), v.null()),
+  createdAt: v.number(),
+  discussionId: v.union(v.id('discussions'), v.null()),
+  id: v.id('polls'),
+  optionCount: v.number(),
+  question: v.string(),
+  tripId: v.union(v.id('trips'), v.null()),
+  tripName: v.union(v.string(), v.null()),
+  viewerHasVoted: v.boolean(),
+  votedCount: v.number()
+});
+
+export const PollValidators = { createInput, creator, openItem, option, rule, status, view, voter };
 
 export type PollRule = Infer<typeof rule>;
 export type PollView = Infer<typeof view>;
+export type PollOpenItem = Infer<typeof openItem>;
 export type PollCreator = Infer<typeof creator>;
 export type PollCreateInput = {
   closesAt?: number;

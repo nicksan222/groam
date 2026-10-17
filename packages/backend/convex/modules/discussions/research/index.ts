@@ -8,6 +8,7 @@ import { requireWorkspace } from '#convex/modules/auth/workspace';
 import { kindPolicy } from '#convex/modules/discussions/kinds/index';
 import { DiscussionLinks } from '#convex/modules/discussions/links/index';
 import { Messages } from '#convex/modules/discussions/messages/index';
+import { listForWorkspace } from '#convex/modules/discussions/research/workspace';
 import { DiscussionAccess } from '#convex/modules/discussions/threads/entity';
 import { Discussions, normalizeTitle } from '#convex/modules/discussions/threads/index';
 import {
@@ -46,6 +47,8 @@ async function requireResearch(
 /** Trip research: one subject, open to everyone who can see the trip. */
 // oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class Research {
+  static listForWorkspace = listForWorkspace;
+
   static async create(
     ctx: MutationCtx,
     input: { brief?: string; clientRequestId: string; title: string; tripId: Id<'trips'> }

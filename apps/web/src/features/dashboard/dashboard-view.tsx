@@ -6,8 +6,11 @@ import { Map as MapIcon, Plus } from 'lucide-react';
 import { type DashboardPresentation, useDashboard } from '@/features/dashboard/hooks/use-dashboard';
 import { useTripsSidebarUi } from '@/features/trips/hooks/use-trips-sidebar-ui';
 import { testIds } from '@/lib/test-ids';
+import { DashboardAgentContext } from './dashboard-agent-context';
+import { DashboardBaseAgentContext } from './dashboard-base-agent-context';
 import { DashboardErrorBoundary } from './dashboard-error-boundary';
 import { DashboardReady } from './sections/dashboard-ready';
+import { DashboardSectionBoundary } from './sections/dashboard-section-boundary';
 
 export function DashboardView() {
   return (
@@ -34,7 +37,11 @@ function DashboardHome() {
       <Shell.Action icon={<Plus />} onClick={openCreate} text="Create trip" />
       <Shell.Content>
         <Shell.Stack className="dashboard-home" stack="page">
-          <DashboardBody onCreateTrip={openCreate} presentation={presentation} />
+          <DashboardBody
+            groupName={activeOrganization.name}
+            onCreateTrip={openCreate}
+            presentation={presentation}
+          />
         </Shell.Stack>
       </Shell.Content>
     </Shell>
@@ -42,9 +49,11 @@ function DashboardHome() {
 }
 
 function DashboardBody({
+  groupName,
   onCreateTrip,
   presentation
 }: {
+  groupName: string;
   onCreateTrip: () => void;
   presentation: DashboardPresentation;
 }) {
@@ -76,5 +85,15 @@ function DashboardBody({
       />
     );
   }
-  return <DashboardReady buckets={presentation.buckets} />;
+  const { buckets } = presentation;
+  return (
+    <>
+      <DashboardSectionBoundary
+        fallback={<DashboardBaseAgentContext buckets={buckets} groupName={groupName} />}
+      >
+        <DashboardAgentContext buckets={buckets} groupName={groupName} />
+      </DashboardSectionBoundary>
+      <DashboardReady buckets={buckets} />
+    </>
+  );
 }

@@ -1,3 +1,5 @@
+import type { api } from '@groam/backend/api';
+import type { FunctionReturnType } from 'convex/server';
 import type { TripListItem, WorkspaceTripProposal } from '@/types/trips';
 
 export type DashboardBuckets = {
@@ -26,3 +28,11 @@ export type DashboardPresentation =
   | { kind: 'error'; message: string }
   | { kind: 'loading' }
   | { buckets: DashboardBuckets; kind: 'ready' };
+
+export type DashboardPoll = FunctionReturnType<typeof api.routes.polls.list.open.run>[number];
+
+export type DashboardResearch = FunctionReturnType<
+  typeof api.routes.discussions.research.workspace.run
+>[number];
+
+export type DashboardSeeAllTarget = { label: string; to: '/agents' | '/issues' };
