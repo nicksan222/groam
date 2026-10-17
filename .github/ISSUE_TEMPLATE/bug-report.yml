@@ -23,7 +23,6 @@ body:
       label: Where did this happen?
       options:
         - Web app
-        - Desktop app
         - Local development
         - Other
     validations:
@@ -32,13 +31,13 @@ body:
     id: version
     attributes:
       label: Version or commit
-      description: Provide the desktop version, deployed version, or commit SHA when known.
-      placeholder: v0.1.0 or abc1234
+      description: Provide the commit SHA, or the deployed site address when known.
+      placeholder: abc1234
   - type: textarea
     id: environment
     attributes:
       label: Environment
-      description: Include your operating system and, for web issues, browser and browser version.
+      description: Include your operating system, browser, and browser version.
       placeholder: Ubuntu 24.04, Firefox 142
     validations:
       required: true

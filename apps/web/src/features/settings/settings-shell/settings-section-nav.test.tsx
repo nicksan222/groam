@@ -4,12 +4,8 @@ import { page } from 'vite-plus/test/browser';
 import { testIds } from '@/lib/test-ids';
 import { SettingsSectionNav } from './settings-section-nav';
 
-vi.mock('./settings-sections', () => ({
-  visibleSettingsSections: () => ['profile', 'appearance', 'group', 'security', 'ai']
-}));
-
 describe('SettingsSectionNav', () => {
-  test('renders a tab per visible section', async () => {
+  test('renders a tab per section', async () => {
     await render(<SettingsSectionNav activeSection="profile" onSectionChange={vi.fn()} />);
     await expect.element(page.getByRole('navigation', { name: 'Settings sections' })).toBeVisible();
     for (const title of ['Profile', 'Appearance', 'Group', 'Security', 'AI']) {

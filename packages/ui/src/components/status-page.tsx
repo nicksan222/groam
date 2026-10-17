@@ -1,3 +1,4 @@
+import { BrandMark } from '@groam/brand/mark';
 import { cn } from '@groam/ui/lib/utils';
 import type { LucideIcon } from 'lucide-react';
 import type * as React from 'react';
@@ -20,7 +21,11 @@ function StatusPage({
   ...props
 }: StatusPageProps) {
   return (
-    <main className="grid min-h-dvh place-items-center bg-background p-6" data-slot="status-page">
+    <main
+      className="flex min-h-dvh flex-col items-center justify-center gap-6 bg-background p-6"
+      data-slot="status-page"
+    >
+      <BrandMark className="size-8 shrink-0" decorative />
       <section
         className={cn('w-full max-w-md rounded-xl border border-border p-6 text-center', className)}
         {...props}

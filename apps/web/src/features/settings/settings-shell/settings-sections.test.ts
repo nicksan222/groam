@@ -1,19 +1,12 @@
 import { describe, expect, test } from 'vite-plus/test';
-import { isSettingsSection, visibleSettingsSections } from './settings-sections';
+import { isSettingsSection, settingsSections } from './settings-sections';
 
-describe('visibleSettingsSections', () => {
-  test('hides Data on the hosted web shell', () => {
-    expect(visibleSettingsSections(false)).not.toContain('data');
-    expect(isSettingsSection('data', false)).toBe(false);
+describe('isSettingsSection', () => {
+  test('accepts every listed section', () => {
+    for (const section of settingsSections) expect(isSettingsSection(section)).toBe(true);
   });
 
-  test('shows Data in the packaged desktop app', () => {
-    expect(visibleSettingsSections(true, true)).toContain('data');
-    expect(isSettingsSection('data', true, true)).toBe(true);
-  });
-
-  test('hides Data in desktop debug sessions', () => {
-    expect(visibleSettingsSections(true, false)).not.toContain('data');
-    expect(isSettingsSection('data', true, false)).toBe(false);
+  test('rejects unknown sections', () => {
+    expect(isSettingsSection('data')).toBe(false);
   });
 });

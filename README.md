@@ -33,7 +33,7 @@ screen-aware AI into one workspace.
 | **Issues that resolve** | Turn feedback into tracked work and close an issue automatically when its linked fix lands. |
 | **Trip conversations** | Keep group chats, replies, and reactions beside the trip they belong to. |
 | **Context-aware AI** | Ask about the trip and screen in view, review itineraries, and work with specialized issue and idea agents. |
-| **Local-first development** | Run the web app and Convex backend locally without a cloud account, or package the same app for desktop. |
+| **Local-first development** | Run the web app and Convex backend locally without a cloud account. |
 
 Connect a personal ChatGPT account in **Settings → AI** for AI features.
 See [AI configuration](packages/backend/convex/README.md#ai-configuration)
@@ -42,16 +42,16 @@ for setup and supported deployments.
 ## How it fits together
 
 ```text
-TanStack Router + React                    Tauri desktop shell
-             |                                    |
-             +----------- shared Groam UI --------+
-                              |
-                    reactive Convex backend
-                              |
-             auth | trips | ideas | issues | chat | AI
+        TanStack Router + React web app
+                      |
+              shared Groam UI
+                      |
+            reactive Convex backend
+                      |
+    auth | trips | ideas | issues | chat | AI
 ```
 
-The monorepo keeps the web and desktop clients thin while sharing UI, auth,
+The monorepo keeps the web client thin while sharing UI, auth,
 AI contracts, and a type-safe Convex backend. The complete stack can run on one
 machine; Convex Cloud deployment is optional.
 
@@ -104,7 +104,6 @@ Open [localhost:5173](http://localhost:5173) and sign in with
 | `just test` | Run unit and integration tests |
 | `claude` | Start Claude Code with the repository harness (in the dev container) |
 | `just journeys` | Run browser journeys against the local backend |
-| `just desktop` | Start desktop development |
 | `just graphify-explain <symbol>` | Show a symbol, its callers, and its dependencies |
 | `just graphify-affected <symbol>` | List what a change to a symbol would affect |
 | `just graphify-refresh` | Refresh the local code graph after edits |

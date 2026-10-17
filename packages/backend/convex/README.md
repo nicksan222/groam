@@ -1,16 +1,16 @@
 # Convex backend
 
-- `convex.config.ts` mounts Better Auth, Agent, Rate Limiter, the geospatial index, and both Static Hosting instances.
+- `convex.config.ts` mounts Better Auth, Agent, Workflow, Rate Limiter, the geospatial index, and the `web` Static Hosting instance.
 - `components/better-auth/` owns Better Auth's isolated local component.
 - `modules/auth/`, `auth.config.ts`, and `http.ts` provide application auth integration and routing.
 - `routes/` owns public Convex functions for product domains. See `modules/README.md`.
 - `schema.ts` assembles application tables and indexes from schema fragments colocated with their
   domain modules. Uploaded files live in `modules/media` (`Files`, `Media`, `Attachments`).
   Shared chats live in `modules/discussions` (`Messages`, `Discussions`).
-- Local development seeding is orchestrated by `tooling/app-actions/src/backend/seed-workspace.ts`
+- Local development seeding is orchestrated by `tooling/seeder/src/seed-workspace.ts`
   and calls real product procedures.
 
-Both `web` deploys through `@convex-dev/static-hosting`. Better Auth routes are
+The `web` app deploys through `@convex-dev/static-hosting`. Better Auth routes are
 registered first in `http.ts`; the web SPA owns `/`.
 
 ## Procedure convention
@@ -18,7 +18,8 @@ registered first in `http.ts`; the web SPA owns `/`.
 Each public function has one route module under `routes/<domain>/<operation>.ts`
 and exports `run`, for example `routes/trips/create.ts`. Custom builders in
 `modules/` bind workspace and trip onto `ctx` so handlers receive only new
-input. Shared writes are plain `(ctx, input)` helpers, not entity classes.
+input. New shared writes are plain `(ctx, input)` helpers, not entity classes (a few older
+modules still use class-based facades; see `modules/README.md`).
 Keep scheduled and `'use node'` jobs on raw internal functions. See
 `modules/README.md`.
 
@@ -59,9 +60,8 @@ those models.
   tool for it. Write tools remain visible but reject execution unless the
   current traveler message explicitly requests or confirms their registered
   intent, and every write reauthorizes through its underlying domain model.
-  Tools are declared with `defineCapability` and
-  `AssistantToolKind.subscribe`'d from a typed catalog in
-  `packages/backend/assistant/tools/kinds/index.ts`. A declaration owns its capability id,
+  Tools are declared with `defineCapability` and collected into a typed catalog
+  in `packages/backend/assistant/tools/kinds/index.ts`. A declaration owns its capability id,
   tool name, optional write-intent phrases, model guidance, and runtime factory,
   so a new capability does not require editing agent orchestration, prompt
   switches, or frontend tool-name maps. Agents allowlist those capability ids.
@@ -93,10 +93,10 @@ traveler's ChatGPT plan. Missing or expired connections stop AI work; there is
 no developer API-key or shared-credential fallback. Credentials stay in the
 backend, outside environment variables and browser settings queries.
 
-Local web and desktop authorization returns to the running Convex HTTP server at
-`http://127.0.0.1:3211/auth/chatgpt/callback`. Keep the runtime running and ensure
+Local web authorization returns to the running Convex HTTP server at
+`http://127.0.0.1:3211/auth/chatgpt/callback`. Keep the local backend running and ensure
 the authorizing browser can reach that address. Remote development may need an
-SSH tunnel forwarding local port 3211 to the runtime's port 3211; keep it active
+SSH tunnel forwarding local port 3211 to the backend's port 3211; keep it active
 through sign-in. See OpenAI's [self-hosted VM guidance](https://developers.openai.com/siwc/token-sharing-open-source/self-hosted-vms).
 
 Shared hosted AI is unavailable until an OpenAI-approved ChatGPT plan-usage
@@ -105,13 +105,13 @@ inference; the local OAuth flow must not use a shared remote callback. See the
 [official integration documentation](https://developers.openai.com/siwc/token-sharing-open-source).
 
 Better Auth secrets (`BETTER_AUTH_SECRET`, `SITE_URL`) are written by
-`tooling/devkit/configure-auth.ts` during `vp run dev` / desktop runtime
+`tooling/devkit/configure-auth.ts` during `vp run dev`
 startup; they are not listed in `@groam/env`.
 
 ## Testing
 
 `../testing/factory.ts` loads the Convex function graph once and registers the
-local Better Auth, Agent, and Rate Limiter components. Authenticated fixtures
+local Better Auth, Agent, Geospatial, Rate Limiter, and Workflow components. Authenticated fixtures
 use Better Auth's browser client against the real `convex-test` HTTP router, so
 users, sessions, organizations, memberships, JWTs, agent threads, and tool calls
 all pass through production handlers and component adapters. Do not mock

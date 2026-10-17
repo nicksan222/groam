@@ -46,7 +46,7 @@ Treat results as leads. Open the cited lines and confirm before you act on them.
 
 The index is code only. `tooling/graphify/exclude.txt` (gitignore syntax)
 leaves out tests (`*.test.ts(x)`, `apps/web/e2e/`), `*.json` manifests,
-`_generated/` code, `.claude/`, vendored Rust and media. For anything in those
+`_generated/` code, `.claude/` and media. For anything in those
 files, or for exact strings, literals, config keys, CSS and Markdown, use `rg`.
 Use `rg` as well when graphify comes back empty or vague.
 

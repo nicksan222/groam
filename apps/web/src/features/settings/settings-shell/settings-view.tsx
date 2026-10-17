@@ -9,7 +9,6 @@ import { KeyRound } from 'lucide-react';
 import { GroupPeopleSettings } from '@/features/group/group-people/group-people-settings';
 import { AiSettings } from '@/features/settings/settings-panels/ai-settings';
 import { AppearanceSettings } from '@/features/settings/settings-panels/appearance-settings';
-import { DataSettings } from '@/features/settings/settings-panels/data-settings';
 import { OrganizationSettings } from '@/features/settings/settings-panels/organization-settings';
 import { ProfileSettings } from '@/features/settings/settings-panels/profile-settings';
 import { SecuritySettings } from '@/features/settings/settings-panels/security-settings';
@@ -31,10 +30,6 @@ const sectionCopy: Record<SettingsSection, { description: string; title: string 
   appearance: {
     description: 'Choose how Groam looks on this device. Your selection is saved automatically.',
     title: 'Appearance'
-  },
-  data: {
-    description: 'Export or restore the local database this app keeps on this computer.',
-    title: 'Data'
   },
   group: {
     description: 'Manage who belongs here and how this group appears.',
@@ -120,7 +115,6 @@ export function SettingsView({
             )}
             {activeSection === 'security' && <SecuritySettings session={session} />}
             {activeSection === 'ai' && <AiSettings />}
-            {activeSection === 'data' && <DataSettings />}
           </div>
         </Shell.PageBody>
       </Shell.BannerLayout>

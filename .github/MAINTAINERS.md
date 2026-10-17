@@ -1,6 +1,6 @@
 # Maintainers
 
-Maintainers are responsible for the project's technical direction, releases,
+Maintainers are responsible for the project's technical direction,
 community standards, and repository administration.
 
 ## Current maintainers
@@ -19,7 +19,7 @@ Maintainers are expected to:
 
 - review and merge contributions based on technical merit and project fit;
 - triage issues and keep public project documentation accurate;
-- manage releases and respond to private vulnerability reports;
+- respond to private vulnerability reports;
 - apply the [Code of Conduct](CODE_OF_CONDUCT.md) consistently; and
 - disclose conflicts of interest that could affect a project decision.
 

@@ -46,10 +46,36 @@ beforeEach(() => {
 test('command palette jumps to the nested idea clone', async () => {
   await render(<CommandPalette />);
   await userEvent.keyboard('{Meta>}k{/Meta}');
-  await page.getByRole('button', { name: /Coast day/u }).click();
+  await page.getByRole('option', { name: /Coast day/u }).click();
   expect(navigate).toHaveBeenCalledWith({
     params: { proposalId: 'idea-1', tripId: 'trip-coast', view: 'overview' },
     search: {},
     to: '/trips/$tripId/ideas/$proposalId/$view'
   });
+});
+
+test('command palette moves through results with the keyboard and opens with Enter', async () => {
+  await render(<CommandPalette />);
+  await userEvent.keyboard('{Meta>}k{/Meta}');
+  const search = page.getByRole('combobox', { name: 'Search' });
+  await expect
+    .element(page.getByRole('option', { name: /Coast day/u }))
+    .toHaveAttribute('aria-selected', 'true');
+  await userEvent.keyboard('{ArrowDown}');
+  await expect
+    .element(page.getByRole('option', { name: /All agents/u }))
+    .toHaveAttribute('aria-selected', 'true');
+  await userEvent.keyboard('{ArrowDown}{Enter}');
+  expect(navigate).toHaveBeenCalledWith(
+    expect.objectContaining({ to: '/trips/$tripId/ideas/$proposalId/$view' })
+  );
+  await expect.element(search).not.toBeInTheDocument();
+});
+
+test('command palette explains when nothing matches', async () => {
+  await render(<CommandPalette />);
+  await userEvent.keyboard('{Meta>}k{/Meta}');
+  await userEvent.type(page.getByRole('combobox', { name: 'Search' }), 'zzz');
+  await expect.element(page.getByText('No matches for “zzz”')).toBeInTheDocument();
+  await expect.element(page.getByText('0 results')).toBeInTheDocument();
 });

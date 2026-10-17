@@ -26,7 +26,7 @@ export function chatGptAvailability(siteUrl: string | undefined = env.CONVEX_SIT
   return {
     available: false,
     unavailableReason:
-      'ChatGPT plan usage on a shared hosted service requires OpenAI-approved access. Connect from a local or desktop Groam installation until this deployment is supported.',
+      'ChatGPT plan usage on a shared hosted service requires OpenAI-approved access. Connect from a local development backend until this deployment is supported.',
     redirectUri: null
   };
 }

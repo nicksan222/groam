@@ -5,7 +5,7 @@ Choose a folder by asking: **what developer or delivery job does this perform?**
 | Folder | Sole responsibility |
 | --- | --- |
 | `app-actions` | Shared app capability contracts plus backend, Vite+ browser-mode (`src/vitest`) and Playwright adapters |
-| `claude` | Claude Code launcher (`claude.sh`), shared plugin settings, and MCP servers |
+| `claude` | Claude Code launcher (`claude.sh`) that starts the Headroom proxy |
 | `oxc-config` | Shared Oxlint/Oxfmt policy and the Groam lint plugin (not a package) |
 | `devkit` | Reusable local-process, readiness, and local auth/environment helpers |
 | `graphify` | Exclude patterns for the local Graphify code index (`just graphify-refresh`) |

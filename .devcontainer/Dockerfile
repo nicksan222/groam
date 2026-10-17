@@ -11,23 +11,34 @@ FROM mcr.microsoft.com/devcontainers/javascript-node:24-trixie
 COPY --from=uv /uv /uvx /usr/local/bin/
 COPY --from=just /just /usr/local/bin/
 
-# Tauri 2 Linux prerequisites (https://tauri.app/start/prerequisites/) plus the
-# extra packages from tauri-apps/tauri-action's GitHub workflow. libnss3 and
-# libnspr4 are the only libraries Playwright's Chromium needs beyond them.
+# Native build tools plus the shared libraries Playwright's Chromium needs for
+# Vite+ browser-mode tests and journeys.
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
     file \
-    libayatana-appindicator3-dev \
-    libgtk-3-dev \
+    libasound2t64 \
+    libatk-bridge2.0-0t64 \
+    libatk1.0-0t64 \
+    libatspi2.0-0t64 \
+    libcairo2 \
+    libcups2t64 \
+    libdbus-1-3 \
+    libdrm2 \
+    libgbm1 \
+    libglib2.0-0t64 \
     libnspr4 \
     libnss3 \
-    librsvg2-dev \
-    libssl-dev \
-    libwebkit2gtk-4.1-dev \
-    libxdo-dev \
-    patchelf \
+    libpango-1.0-0 \
+    libx11-6 \
+    libxcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    libxkbcommon0 \
+    libxrandr2 \
     python3 \
     ripgrep \
     wget \

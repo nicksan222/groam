@@ -103,6 +103,7 @@
     "./components/inline-notice": "./src/components/inline-notice.tsx",
     "./components/inline-select": "./src/components/inline-select.tsx",
     "./components/input": "./src/components/input.tsx",
+    "./components/kbd": "./src/components/kbd.tsx",
     "./components/label": "./src/components/label.tsx",
     "./components/lift-card": "./src/components/lift-card.tsx",
     "./components/linkified-text": "./src/components/linkified-text.tsx",

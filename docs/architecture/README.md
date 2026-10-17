@@ -3,15 +3,12 @@
 Groam is a collaborative travel planning system. A workspace owns shared trips;
 ideas isolate proposed changes to their plans; conversations, issues and agents
 help the group reach decisions. The backend owns authorization and persistent
-domain state. Web and desktop expose the same application through different
-runtime shells.
+domain state. The web application is the single client.
 
 ```mermaid
 flowchart TB
   People[Travelers] --> Web[Browser]
-  People --> Desktop[Desktop shell]
-  Desktop --> SharedUI[Shared React application]
-  Web --> SharedUI
+  Web --> SharedUI[Shared React application]
   SharedUI --> Backend[Convex application backend]
   Backend --> Domain[Travel and collaboration domains]
   Backend --> Auth[Identity and organization component]
@@ -20,9 +17,9 @@ flowchart TB
   Backend --> Providers[External AI and content services]
 ```
 
-The diagram describes logical responsibilities. In desktop deployments the
-backend and its persistent data run locally; a hosted web client can use a
-remote backend. External services still have their own network boundary.
+The diagram describes logical responsibilities. The
+backend and its persistent data can run locally during development; a hosted
+web client uses a remote backend. External services still have their own network boundary.
 
 ## Reading guide
 
@@ -43,8 +40,7 @@ are working across.
 
 ## Package responsibilities
 
-Application features and navigation live in `apps/web`; `apps/desktop` owns
-native integration and the packaged local runtime. `packages/backend` owns
+Application features and navigation live in `apps/web`. `packages/backend` owns
 server entry points, domain policies and integrations. `packages/ai` shares AI
 contracts and presentation; it does not grant database authority. `packages/ui`
 and `packages/brand` supply presentation foundations. `packages/auth` connects
@@ -56,15 +52,14 @@ backend API and shared presentation packages; backend execution consumes shared
 AI contracts without importing application views. Foundation packages do not
 depend on product feature modules. Test, seed and showcase scenarios depend on
 application operations; production behavior stays independent of their browser
-drivers and scenario orchestration. Desktop wraps the shared application and
-backend instead of defining another domain layer.
+drivers and scenario orchestration.
 
 ## Documentation contract
 
 These documents describe responsibilities, relationships and constraints.
 Source code, generated types and executable tests define exact behavior. Source
 anchors identify useful entry points rather than an exhaustive implementation
-index. Dated design specs record design history and may describe unfinished work.
+index.
 
 Update architecture documentation when a boundary, authority, persistence owner,
 lifecycle or extension contract changes. An additional agent, tool, screen or

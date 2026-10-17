@@ -24,9 +24,6 @@
     "tooling/showcase/src/video/index.tsx",
     "apps/web/src/main.tsx",
     "apps/web/src/routes/**/*.tsx",
-    "apps/desktop/runtime/start.ts",
-    "apps/desktop/scripts/dev-server.ts",
-    "apps/desktop/scripts/prepare-binaries.ts",
     "tooling/devkit/configure-auth.ts",
     "packages/backend/scripts/generate-auth-schema.ts",
     "**/*.test.ts",
@@ -53,12 +50,11 @@
     "enabled": false,
     // Workspace tsconfigs that exist today. Skip reference-only roots
     // (apps/web/tsconfig.json, ./tsconfig.json), convex (covered by
-    // packages/backend), and apps/desktop (no tsconfig yet).
-    // tooling/tsconfig.json covers devkit, runtime, convex, quality, and desktop.
+    // packages/backend).
+    // tooling/tsconfig.json covers devkit, convex, and quality.
     "projects": [
       "apps/web/tsconfig.app.json",
       "apps/web/tsconfig.node.json",
-      "apps/desktop/tsconfig.json",
       "packages/ai/tsconfig.json",
       "packages/auth/tsconfig.json",
       "packages/backend/tsconfig.json",

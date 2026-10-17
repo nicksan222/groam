@@ -1,4 +1,3 @@
-import { env } from '@groam/env/web-client';
 import { AuthCard } from '@groam/ui/components/auth-card';
 import { AuthShell } from '@groam/ui/components/auth-shell';
 import { AuthForm } from '@/features/auth/auth-form';
@@ -15,12 +14,8 @@ export function AuthScreen() {
           isRecovery
             ? 'Use one of the account recovery codes you downloaded from Security settings'
             : isSignIn
-              ? env.isDesktop
-                ? 'Sign in to the group on this computer'
-                : 'Sign in to continue your journey'
-              : env.isDesktop
-                ? 'Create an account stored on this computer'
-                : 'Start building with Groam'
+              ? 'Sign in to continue your journey'
+              : 'Start building with Groam'
         }
         footer={<AuthLegal />}
         headerExtra={
@@ -41,10 +36,6 @@ export function AuthScreen() {
 }
 
 function AuthLegal() {
-  if (env.isDesktop) {
-    return <>Groam keeps this group on this computer. You can export it from Settings → Data.</>;
-  }
-
   return (
     <>
       By continuing, you agree to our{' '}

@@ -40,7 +40,7 @@ Scheduled jobs have no user. Keep those on raw `internalAction` /
 | `destinationMutation` | same, plus `destination` | `tripId`, `destinationId` |
 
 Trip builders live in `modules/travel/trips/ctx.ts`. Stack by composing `input` helpers there, not by inventing
-entity classes or `(ctx, trip, workspace, role)` argument bags.
+new entity classes or `(ctx, trip, workspace, role)` argument bags.
 
 ## Module shape
 
@@ -54,7 +54,7 @@ modules/travel/
 modules/assistant/
   agent/  model/  chat/  engine/  runs/  standalone/  waits/  errors/  screen/  validators/
 modules/discussions/
-  threads/  messages/  assistant/  media/
+  threads/  messages/  assistant/  media/  kinds/  links/  research/
 modules/media/
   library/  files/  attachments/
 modules/organizations/
@@ -63,8 +63,9 @@ modules/polls/               # polls and votes; writes signal poll waits
 routes/<domain>/             # public run — api.routes.<domain>.* stays stable
 ```
 
-Leaf modules with no subdomains (`auth/`, `ai/`, `dev/`, `notifications/`,
-`references/`) stay as a small set of files. Assistant tool implementations live
+`ai/` holds the provider and limits plus `chatgpt/` (the personal ChatGPT
+connection). Leaf modules with no subdomains (`auth/`, `dev/`,
+`notifications/`, `references/`) stay as a small set of files. Assistant tool implementations live
 outside `convex/` in `packages/backend/assistant/tools/`.
 
 Every agent run is one `@convex-dev/workflow` workflow (`assistant/engine/`):
@@ -79,7 +80,11 @@ it orphans component data and in-flight runs.
 
 ## Rules
 
-- No entity classes, service classes, or `trips(ctx)` factories.
+- New code uses plain functions and builders: no entity classes, service
+  classes, or `trips(ctx)` factories. Class-based static facades still exist in
+  `discussions/`, `media/`, `polls/`, `travel/targets/`, and `travel/versions/`
+  (for example `Discussions`, `Messages`, `Media`, `Polls`, `TripTargets`,
+  `TripVersions`); treat them as legacy exceptions and do not add more.
 - `'use node'` files must not use `ctx.db`. Inspect, git, and LLM calls stay in
   actions; writes go through `internalMutation`.
 - Outside a kinds folder, import the facade (`TripTargets`), never the kind map.

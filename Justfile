@@ -25,16 +25,6 @@ dev:
 web:
     vp run dev:web
 
-# Start the packaged desktop development stack.
-[group('dev')]
-desktop:
-    vp run dev:desktop
-
-# Start the installed-app local runtime.
-[group('dev')]
-runtime:
-    GROAM_DATA_DIR=/data GROAM_REPLACE_CONVEX_DIR=1 GROAM_SITE_ORIGIN=http://127.0.0.1:3211 bun apps/desktop/runtime/start.ts
-
 # Open the local Convex dashboard.
 [group('dev')]
 dashboard:
@@ -89,7 +79,7 @@ format-check:
 codegen:
     CONVEX_AGENT_MODE=anonymous vp run codegen
 
-# Regenerate every web, desktop, and document brand asset from @groam/brand.
+# Regenerate every web and document brand asset from @groam/brand.
 [group('generate')]
 brand:
     vp run brand:generate

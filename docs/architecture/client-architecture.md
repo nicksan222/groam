@@ -1,9 +1,8 @@
 # Client architecture
 
-Web and desktop share a React application. Its routes select feature views,
+The web client is a React application. Its routes select feature views,
 features adapt backend operations into interactions, and shared packages supply
-presentation and cross-client contracts. The native shell adds runtime
-capabilities around that application.
+presentation and cross-client contracts.
 
 ## Composition and navigation
 
@@ -56,7 +55,7 @@ workspace then resets local state such as pagination cursors for the new group.
 Writes flow through backend operations; subscribed views observe the resulting
 state. Any optimistic presentation remains provisional until server acceptance.
 Local reactive updates do not establish an offline synchronization protocol
-between independent desktop databases.
+between independent backends.
 
 ## Shared presentation and screen context
 
@@ -72,19 +71,11 @@ snapshot as appropriate. This makes a screen understandable to an agent without
 coupling agent definitions to every route or component. Screen context is
 informational; the backend still resolves resources and authorization.
 
-## Native capabilities
-
-Validated shell configuration selects web or desktop behavior. Small adapters
-bridge native operations such as packaged data export and restore. Tauri owns
-the actual process and filesystem work; a React view does not implement a second
-backend or directly manage the application's data directory.
-
 ## Source anchors
 
 - [Application root](../../apps/web/src/app-root.tsx) and [workspace route](../../apps/web/src/routes/_workspace.tsx)
 - [Workspace scope](../../apps/web/src/features/workspace/workspace-shell/workspace-context.tsx)
 - [Reference resolution](../../apps/web/src/features/workspace/workspace-shell/reference-provider.tsx)
 - [Screen context provider](../../packages/ai/src/ui/context/agent-context.tsx)
-- [Native data adapter](../../apps/web/src/features/settings/hooks/use-desktop-data.ts)
 
 Related: [Backend and data](backend-and-data.md), [AI contracts](ai-contracts.md).

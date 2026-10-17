@@ -2,9 +2,6 @@ name: Test
 
 on:
   workflow_call:
-    secrets:
-      TAURI_SIGNING_PRIVATE_KEY:
-        required: false
 
 permissions:
   contents: read
@@ -213,41 +210,3 @@ jobs:
           if [ -f /tmp/convex.pid ]; then
             kill "$(cat /tmp/convex.pid)" 2>/dev/null || true
           fi
-
-  # Portable Linux bundles build against the oldest supported glibc baseline
-  # instead of following ubuntu-latest image rollouts.
-  desktop-linux:
-    name: 🐧 Desktop
-    needs: [unit, web, ui, journeys]
-    uses: ./.github/workflows/desktop-reusable.yml
-    with:
-      platform: linux
-      runner: ubuntu-22.04
-      target: x86_64-unknown-linux-gnu
-      bundles: deb
-    secrets:
-      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-
-  desktop-macos:
-    name: 🍎 Desktop
-    needs: [unit, web, ui, journeys]
-    uses: ./.github/workflows/desktop-reusable.yml
-    with:
-      platform: macos-arm
-      runner: macos-26
-      target: aarch64-apple-darwin
-      bundles: app,dmg
-    secrets:
-      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-
-  desktop-windows:
-    name: 🪟 Desktop
-    needs: [unit, web, ui, journeys]
-    uses: ./.github/workflows/desktop-reusable.yml
-    with:
-      platform: windows
-      runner: windows-2025
-      target: x86_64-pc-windows-msvc
-      bundles: nsis
-    secrets:
-      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}

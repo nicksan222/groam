@@ -1,51 +1,43 @@
-import { copyFile, mkdir, rm, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { Resvg } from '@resvg/resvg-js';
 import identity from './identity.json';
 
 const packageDir = fileURLToPath(new URL('..', import.meta.url));
 const workspaceDir = fileURLToPath(new URL('../../..', import.meta.url));
 const assetsDir = join(packageDir, 'assets');
-const desktopIconsDir = join(workspaceDir, 'apps/desktop/src-tauri/icons');
 const webPublicDir = join(workspaceDir, 'apps/web/public');
 
+/** Inner mark markup: the agent pin is masked where the human pin overlaps it. */
+function markBody(id: string) {
+  const { colors, geometry, size } = identity;
+  return `  <defs>
+    <mask id="${id}-gap" maskUnits="userSpaceOnUse" x="0" y="0" width="${size}" height="${size}">
+      <rect width="${size}" height="${size}" fill="${colors.maskKeep}"/>
+      <path d="${geometry.humanPin}" fill="${colors.maskCut}" stroke="${colors.maskCut}" stroke-width="${geometry.pinGap * 2}" stroke-linejoin="round"/>
+    </mask>
+  </defs>
+  <rect width="${size}" height="${size}" rx="${geometry.frameRadius}" fill="${colors.frame}"/>
+  <path d="${geometry.agentPin}" fill="${colors.signal}" mask="url(#${id}-gap)"/>
+  <path d="${geometry.humanPin}${geometry.humanHole}" fill="${colors.paper}" fill-rule="evenodd"/>`;
+}
+
 function markSvg(title = identity.name) {
-  const { colors, geometry, size, viewBox } = identity;
-  const routes = geometry.routePaths
-    .map(
-      (path) =>
-        `  <path d="${path}" stroke="${colors.paper}" stroke-width="${geometry.routeWidth}" stroke-linecap="round" stroke-linejoin="round"/>`
-    )
-    .join('\n');
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" fill="none">
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${identity.viewBox}" fill="none">
   <title>${title}</title>
-  <rect width="${size}" height="${size}" rx="${geometry.frameRadius}" fill="${colors.ink}"/>
-${routes}
-  <circle cx="${geometry.waypoint.cx}" cy="${geometry.waypoint.cy}" r="${geometry.waypoint.radius}" fill="${colors.signal}"/>
+${markBody('groam-mark')}
 </svg>
 `;
 }
 
 function lockupSvg(wordColor: string, suffix: string) {
-  const { colors, geometry, name, size, tagline } = identity;
-  const markOffset = 8;
-  const markScale = 2.25;
-  const frameSize = size * markScale;
-  const frameRadius = geometry.frameRadius * markScale;
-  const waypointX = markOffset + geometry.waypoint.cx * markScale;
-  const waypointY = markOffset + geometry.waypoint.cy * markScale;
-  const waypointRadius = geometry.waypoint.radius * markScale;
-  const routes = geometry.routePaths
-    .map(
-      (path) =>
-        `  <path d="${path}" stroke="${colors.paper}" stroke-width="${geometry.routeWidth}" stroke-linecap="round" stroke-linejoin="round" transform="translate(${markOffset} ${markOffset}) scale(${markScale})"/>`
-    )
-    .join('\n');
+  const { name, tagline, viewBox } = identity;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 160" fill="none">
   <title>${name}: ${tagline}</title>
-  <rect x="${markOffset}" y="${markOffset}" width="${frameSize}" height="${frameSize}" rx="${frameRadius}" fill="${colors.ink}"/>
-${routes}
-  <circle cx="${waypointX}" cy="${waypointY}" r="${waypointRadius}" fill="${colors.signal}"/>
+  <svg x="8" y="8" width="144" height="144" viewBox="${viewBox}">
+${markBody(`groam-lockup-${suffix}`)}
+  </svg>
   <text x="188" y="103" fill="${wordColor}" font-family="Google Sans Flex, Inter, ui-sans-serif, system-ui, sans-serif" font-size="78" font-weight="650" letter-spacing="-4">${name.toLowerCase()}</text>
   <text x="191" y="134" fill="${wordColor}" fill-opacity="0.62" font-family="Google Sans Flex, Inter, ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="550" letter-spacing="1.5">${tagline.toUpperCase()}</text>
   <!-- generated:${suffix} -->
@@ -53,10 +45,29 @@ ${routes}
 `;
 }
 
-async function run(command: string[], cwd = workspaceDir) {
-  const process = Bun.spawn(command, { cwd, stdout: 'inherit', stderr: 'inherit' });
-  const exitCode = await process.exited;
-  if (exitCode !== 0) throw new Error(`Asset command failed (${exitCode}): ${command.join(' ')}`);
+const FAVICON_SIZES = [16, 24, 32, 48, 64, 256];
+
+function renderPng(svg: string, size: number): Buffer {
+  return new Resvg(svg, { fitTo: { mode: 'width', value: size } }).render().asPng();
+}
+
+/** Packs PNG images into one ICO file; every modern browser reads PNG entries. */
+function encodeIco(images: { png: Buffer; size: number }[]): Buffer {
+  const header = Buffer.alloc(6 + images.length * 16);
+  header.writeUInt16LE(1, 2);
+  header.writeUInt16LE(images.length, 4);
+  let offset = header.length;
+  images.forEach(({ png, size }, index) => {
+    const entry = 6 + index * 16;
+    header.writeUInt8(size >= 256 ? 0 : size, entry);
+    header.writeUInt8(size >= 256 ? 0 : size, entry + 1);
+    header.writeUInt16LE(1, entry + 4);
+    header.writeUInt16LE(32, entry + 6);
+    header.writeUInt32LE(png.length, entry + 8);
+    header.writeUInt32LE(offset, entry + 12);
+    offset += png.length;
+  });
+  return Buffer.concat([header, ...images.map(({ png }) => png)]);
 }
 
 async function generate() {
@@ -68,49 +79,18 @@ async function generate() {
   await Promise.all([
     writeFile(join(assetsDir, 'mark.svg'), mark),
     writeFile(join(assetsDir, 'lockup-light.svg'), lockupSvg(identity.colors.ink, 'light')),
-    writeFile(join(assetsDir, 'lockup-dark.svg'), lockupSvg(identity.colors.paper, 'dark')),
+    writeFile(join(assetsDir, 'lockup-dark.svg'), lockupSvg(identity.colors.night, 'dark')),
     writeFile(join(webPublicDir, 'groam.svg'), mark)
   ]);
 
-  await run(
-    [
-      'bunx',
-      'tauri',
-      'icon',
-      '../../packages/brand/assets/mark.svg',
-      '--output',
-      'src-tauri/icons'
-    ],
-    join(workspaceDir, 'apps/desktop')
-  );
   await Promise.all([
-    rm(join(desktopIconsDir, '64x64.png'), { force: true }),
-    rm(join(desktopIconsDir, 'android'), { recursive: true, force: true }),
-    rm(join(desktopIconsDir, 'ios'), { recursive: true, force: true })
+    writeFile(join(webPublicDir, 'groam-icon.png'), renderPng(mark, 512)),
+    writeFile(join(webPublicDir, 'apple-touch-icon.png'), renderPng(mark, 180)),
+    writeFile(
+      join(webPublicDir, 'favicon.ico'),
+      encodeIco(FAVICON_SIZES.map((size) => ({ png: renderPng(mark, size), size })))
+    )
   ]);
-
-  const appleDir = join(packageDir, '.generated/apple');
-  await mkdir(appleDir, { recursive: true });
-  await run(
-    [
-      'bunx',
-      'tauri',
-      'icon',
-      '../../packages/brand/assets/mark.svg',
-      '--output',
-      '../../packages/brand/.generated/apple',
-      '--png',
-      '180'
-    ],
-    join(workspaceDir, 'apps/desktop')
-  );
-
-  await Promise.all([
-    copyFile(join(desktopIconsDir, 'icon.png'), join(webPublicDir, 'groam-icon.png')),
-    copyFile(join(desktopIconsDir, 'icon.ico'), join(webPublicDir, 'favicon.ico')),
-    copyFile(join(appleDir, '180x180.png'), join(webPublicDir, 'apple-touch-icon.png'))
-  ]);
-  await rm(dirname(appleDir), { recursive: true, force: true });
   console.info('Generated Groam brand assets from packages/brand/src/identity.json');
 }
 

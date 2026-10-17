@@ -1,14 +1,14 @@
 # Contributing to Groam
 
 Groam is a collaborative group travel planner. You can run it fully locally
-(anonymous Convex + Vite, or the desktop app) without a Convex Cloud account.
+(anonymous Convex + Vite) without a Convex Cloud account.
 
 ## Development environment
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/nicksan222/groam?quickstart=1)
 
 The checked-in [dev container](../.devcontainer/devcontainer.json) is the source of
-truth for Bun, Node.js, Rust, native desktop libraries, editor extensions, and
+truth for Bun, Node.js, editor extensions, and
 forwarded ports. Use GitHub Codespaces, or open the repository locally and choose
 **Dev Containers: Reopen in Container**. Its post-create step installs the locked
 workspace and builds a local Graphify code index automatically.
@@ -48,12 +48,6 @@ Then sign in as the demo owner `demo@groam.example` / `GroamDemo123!`.
 Re-seed anytime with `just seed` (the local backend must be running). Seed
 workflows live in `@groam/app-actions/backend`.
 
-Desktop (Tauri wrapping the same app):
-
-```bash
-just desktop
-```
-
 ## Checks
 
 Run the CI gate before opening a pull request:
@@ -64,8 +58,8 @@ just check
 
 `just check` covers audit, typecheck, lint, unit tests, React Doctor, and
 Fallow. CI also runs the browser journeys (`just journeys`, below) and the
-showcase recording (`bun run --cwd tooling/showcase test:browser`), and builds
-the desktop app on each platform; `just check` runs none of those.
+showcase recording (`bun run --cwd tooling/showcase test:browser`); `just check` runs
+neither of those.
 
 Smaller loops:
 
@@ -113,14 +107,14 @@ Agent-oriented layout notes live in [`CLAUDE.md`](../CLAUDE.md).
 harness; the repository carries no configuration for other coding agents. It
 is preinstalled in the dev container, where `claude` is aliased to
 [`tooling/claude/claude.sh`](../tooling/claude/claude.sh) (`just claude` runs the
-same launcher). The launcher wires up:
+same launcher). The launcher starts or reuses the Headroom proxy, which
+compresses tool output before it reaches the model. Everything else is standard
+project config:
 
-- the Headroom proxy, which compresses tool output before it reaches the model;
-- the Caveman plugin from [`tooling/claude/settings.json`](../tooling/claude/settings.json);
-- the Convex MCP server from [`tooling/claude/mcp.json`](../tooling/claude/mcp.json)
-  (run `vp exec convex login` once to authorize it), and the Headroom MCP server
-  from [`tooling/claude/mcp.headroom.json`](../tooling/claude/mcp.headroom.json)
-  while the proxy is up.
+- plugins (including Caveman) in [`.claude/settings.json`](../.claude/settings.json);
+- the Convex MCP server and the Headroom MCP server in
+  [`.mcp.json`](../.mcp.json) (run `vp exec convex login` once to authorize the
+  Convex one).
 
 Set `CLAUDE_HEADROOM=off` to start Claude without the proxy, for example for
 Remote Control.
@@ -135,7 +129,7 @@ Personal overrides stay out of Git:
 | File | Use it for |
 | --- | --- |
 | `.claude/settings.local.json` | Models, provider routing (Bedrock, Vertex, gateways), env, permissions |
-| `tooling/claude/mcp.local.json` | Extra MCP servers |
+| `claude mcp add --scope local` | Extra MCP servers |
 | `CLAUDE.local.md` | Personal instructions |
 
 `vp run lint:claude` (part of `just lint` and `just check`, so it runs in CI)

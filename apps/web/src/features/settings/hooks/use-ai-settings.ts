@@ -1,5 +1,4 @@
 import { api } from '@groam/backend/api';
-import { env } from '@groam/env/web-client';
 import { useAction, useMutation, useQuery } from 'convex/react';
 import { useEffect, useState } from 'react';
 import { errorMessage } from '@/lib/errors';
@@ -11,10 +10,7 @@ async function openAuthorization(
 ): Promise<null> {
   try {
     const { authorizationUrl } = await authorization;
-    if (env.isDesktop) {
-      const { invoke } = await import('@tauri-apps/api/core');
-      await invoke('open_chatgpt_authorization', { url: authorizationUrl });
-    } else if (popup) popup.location.href = authorizationUrl;
+    if (popup) popup.location.href = authorizationUrl;
     else window.location.assign(authorizationUrl);
     return null;
   } catch (cause) {
@@ -85,7 +81,7 @@ export function useAiSettings() {
     isLoading: remote === undefined,
     connect: (id?: ChatGptConnectionId) => {
       // Open synchronously so browser popup protection does not discard the OAuth window.
-      const popup = env.isDesktop ? null : window.open('about:blank', '_blank');
+      const popup = window.open('about:blank', '_blank');
       if (popup) popup.opener = null;
       return perform(openAuthorization(connectAction(id ? { connectionId: id } : {}), popup));
     },

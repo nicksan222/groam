@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { useCallback, useEffect, useMemo } from 'react';
+import { type KeyboardEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { agentRunHref } from '@/features/agents/agent-run/agent-run-href';
 import { useAgentRoster } from '@/features/agents/hooks/use-agent-roster';
 import { useDiscussions } from '@/features/discussions/hooks/use-discussions';
@@ -12,6 +12,7 @@ import { buildCommandPaletteMatches, type CommandPaletteMatch } from './command-
 
 export function useCommandPalette() {
   const { closeAndClear, onOpenChange, open, query, setQuery, toggle } = useCommandPaletteChrome();
+  const [activeIndex, setActiveIndex] = useState(0);
   const navigate = useNavigate();
   const searchOpts = open ? { initialNumItems: 25 } : 'skip';
   const { trips } = useTrips(open ? { includeArchived: false, initialNumItems: 25 } : 'skip');
@@ -21,9 +22,10 @@ export function useCommandPalette() {
   const { agents } = useAgentRoster();
 
   useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
+        setActiveIndex(0);
         toggle();
       }
     };
@@ -65,12 +67,58 @@ export function useCommandPalette() {
     [closeAndClear, navigate]
   );
 
+  const active = Math.min(activeIndex, Math.max(results.length - 1, 0));
+
+  const search = useCallback(
+    (next: string) => {
+      setActiveIndex(0);
+      setQuery(next);
+    },
+    [setQuery]
+  );
+
+  const onInputKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLInputElement>) => {
+      const next = nextActiveIndex(event, active, results.length);
+      if (next !== null) {
+        event.preventDefault();
+        setActiveIndex(next);
+      } else if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
+        event.preventDefault();
+        const result = results[active];
+        if (result) go(result);
+      }
+    },
+    [active, go, results]
+  );
+
   return {
+    activeIndex: active,
     go,
-    onOpenChange,
+    onInputKeyDown,
+    onOpenChange: (next: boolean) => {
+      setActiveIndex(0);
+      onOpenChange(next);
+    },
     open,
     query,
     results,
-    setQuery
+    setActiveIndex,
+    setQuery: search
   };
+}
+
+/** Arrow keys wrap; Ctrl/⌘ + Home/End jump, leaving plain Home/End to the caret. */
+function nextActiveIndex(
+  event: Pick<KeyboardEvent, 'ctrlKey' | 'key' | 'metaKey'>,
+  active: number,
+  count: number
+) {
+  const last = count - 1;
+  if (last < 0) return null;
+  if (event.key === 'ArrowDown') return active === last ? 0 : active + 1;
+  if (event.key === 'ArrowUp') return active === 0 ? last : active - 1;
+  if (!event.ctrlKey && !event.metaKey) return null;
+  if (event.key === 'Home') return 0;
+  return event.key === 'End' ? last : null;
 }

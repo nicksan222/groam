@@ -41,14 +41,16 @@ import { errorMessage } from '@/lib/errors';
 import { testIds } from '@/lib/test-ids';
 import type { SidebarNavItem } from '@/types/workspace';
 import { AccountMenu } from './account-menu';
+import { SidebarSearchButton } from './sidebar-search-button';
 import { useWorkspaceDialogs } from './workspace-dialog-state';
 import { useWorkspace } from './workspace-state';
 
 export function WorkspaceSidebar() {
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border/70 p-3 group-data-[collapsible=icon]:p-2">
+      <SidebarHeader className="gap-2 border-b border-sidebar-border/70 p-3 group-data-[collapsible=icon]:p-2">
         <OrganizationMenu />
+        <SidebarSearchButton />
       </SidebarHeader>
       <SidebarContent className="py-2">
         <SidebarGroup className="px-2 py-1">

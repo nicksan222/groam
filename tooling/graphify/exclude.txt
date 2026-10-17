@@ -23,9 +23,6 @@ apps/web/src/routeTree.gen.ts
 *.test.tsx
 apps/web/e2e/
 
-# Vendored Rust bindings drown out first-party application relationships.
-apps/desktop/src-tauri/vendor/
-
 # Generated media and captures are not useful to code-only indexing.
 docs/assets/
 tooling/showcase/artifacts/

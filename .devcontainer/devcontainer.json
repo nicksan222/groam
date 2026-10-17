@@ -9,11 +9,7 @@
     "ghcr.io/devcontainers-extra/features/bun:1": {
       "version": "1.3.11"
     },
-    "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/devcontainers/features/rust:1": {
-      "profile": "minimal",
-      "version": "stable"
-    }
+    "ghcr.io/devcontainers/features/github-cli:1": {}
   },
 
   "remoteUser": "node",
@@ -45,7 +41,7 @@
 
   "postCreateCommand": "bash .devcontainer/post-create.sh",
 
-  "forwardPorts": [3210, 3211, 4321, 5173, 6790],
+  "forwardPorts": [3210, 3211, 5173, 6790],
   "portsAttributes": {
     "3210": {
       "label": "Convex API",
@@ -53,10 +49,6 @@
     },
     "3211": {
       "label": "Convex HTTP and hosting",
-      "onAutoForward": "silent"
-    },
-    "4321": {
-      "label": "Landing (Astro)",
       "onAutoForward": "silent"
     },
     "5173": {
@@ -81,7 +73,6 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "astro-build.astro-vscode",
         "bradlc.vscode-tailwindcss",
         "VoidZero.vite-plus-extension-pack",
         "anthropic.claude-code",

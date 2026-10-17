@@ -14,9 +14,7 @@
   "exports": {
     "./auth-client": "./src/apps/auth-client.ts",
     "./convex-tooling": "./src/apps/convex-tooling.ts",
-    "./desktop-tooling": "./src/apps/desktop-tooling.ts",
     "./journeys": "./src/apps/journeys.ts",
-    "./runtime": "./src/apps/runtime.ts",
     "./seeder": "./src/apps/seeder.ts",
     "./showcase": "./src/apps/showcase.ts",
     "./vitest": "./src/apps/vitest.ts",

@@ -1,6 +1,6 @@
 # @groam/showcase
 
-A 3:52 walkthrough of two people planning a trip: create, browse ideas, inspect
+A 3:59 walkthrough of two people planning a trip: create, browse ideas, inspect
 changes, approve proposals, revise dates, merge, chat, and react to messages.
 The output is dark, 16:9, **3840 × 2160 at 60 fps**.
 
@@ -8,7 +8,7 @@ The output is dark, 16:9, **3840 × 2160 at 60 fps**.
 
 **`video.ts` is the source of truth.** It owns the cast, demo data, preparation,
 actions, captions, screen choices, output settings, and duration of every scene.
-Read it top to bottom to read the film. Its 27 scenes total 232 seconds, with at
+Read it top to bottom to read the film. Its 26 scenes total 239 seconds, with at
 least five seconds per scene.
 
 ```ts

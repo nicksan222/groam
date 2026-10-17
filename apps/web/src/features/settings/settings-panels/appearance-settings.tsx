@@ -1,4 +1,3 @@
-import { env } from '@groam/env/web-client';
 import { ThemeSelector } from '@groam/ui/components/theme-selector';
 import { MonitorCog, Sparkles } from 'lucide-react';
 import {
@@ -22,11 +21,7 @@ export function AppearanceSettings() {
     >
       <SettingsPanel>
         <SettingsPanelHeading
-          description={
-            env.isDesktop
-              ? 'Pick a light, dark, or device-matched color scheme for this app.'
-              : 'Pick a light, dark, or device-matched color scheme for this browser.'
-          }
+          description="Pick a light, dark, or device-matched color scheme for this browser"
           icon={MonitorCog}
           title="Color theme"
         />

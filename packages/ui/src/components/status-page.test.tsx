@@ -22,4 +22,5 @@ test('renders a full-page status card with icon, title, copy, and actions', asyn
   await expect.element(page.getByText('Network request failed')).toBeInTheDocument();
   await expect.element(page.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
   await expect.element(page.getByRole('main')).toHaveAttribute('data-slot', 'status-page');
+  expect(page.getByRole('main').element().querySelector(':scope > svg[aria-hidden]')).toBeTruthy();
 });

@@ -23,7 +23,7 @@ export function isLocalConvexSiteUrl(convexSiteUrl: string | undefined): boolean
   return isLocalDevelopmentUrl(convexSiteUrl ?? 'http://127.0.0.1:3211');
 }
 
-/** True for desktop/anonymous Convex, including convex-test where site URLs are unset. */
+/** True for anonymous local Convex, including convex-test where site URLs are unset. */
 export function isLocalBackend(): boolean {
   return isLocalConvexSiteUrl(env.CONVEX_SITE_URL);
 }

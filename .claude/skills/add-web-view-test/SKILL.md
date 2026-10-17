@@ -45,9 +45,9 @@ vi.mock('@/features/agents/hooks/use-workspace-agent-runs', () => ({
 }));
 
 const navigate = vi.hoisted(() => vi.fn());
-vi.mock('@tanstack/react-router', async () => {
-  const { createAgentTestRouterMock } = await import('@/features/agents/agent-test-router-mock');
-  return createAgentTestRouterMock(navigate);
+vi.mock('@tanstack/react-router', async (importOriginal) => {
+  const { mockRouter } = await import('@/lib/testing/router-mock');
+  return mockRouter(importOriginal, navigate);
 });
 
 beforeEach(() => {
@@ -87,9 +87,10 @@ test.each<[string, CreateTripFormInput]>([
 });
 ```
 
-Reuse existing mocks before writing new ones: `@/testing/stub-match-media`,
-`@/testing/trip-planner-fixture`, `features/trips/test-workspace-mocks.tsx`,
-`features/agents/agent-test-router-mock.tsx`. Mock workspace state at
+Reuse existing mocks before writing new ones: `@/lib/testing/router-mock` (`mockRouter`, `mockRouterTargets`),
+`@/lib/testing/list-row-assertions`, and the fixtures in
+`features/trips/testing/` (`trip-workspace-fixtures.ts`, `planner-fixtures.ts`).
+Mock workspace state at
 `@/features/workspace/workspace-shell/workspace-state` (`useWorkspace`).
 
 ## Rules

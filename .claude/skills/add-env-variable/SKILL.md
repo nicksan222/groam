@@ -22,12 +22,10 @@ scripts.
 
 | Target | Used by | Examples |
 | --- | --- | --- |
-| `web-client` | `apps/web` (extends `auth-client`) | `VITE_SITE_URL`, `VITE_GROAM_SHELL`, `VITE_MAP_TILES_URL` |
+| `web-client` | `apps/web` (extends `auth-client`) | `VITE_SITE_URL`, `VITE_MAP_TILES_URL` |
 | `auth-client` | auth client | `VITE_CONVEX_URL`, `VITE_CONVEX_SITE_URL` |
 | `web` | web build | `STATIC_HOSTING_BASE_PATH` |
 | `convex-tooling` | `tooling/devkit` | `GROAM_READY_TIMEOUT_SECONDS` |
-| `runtime` | installed-app runtime | `GROAM_CONVEX_URL`, `GROAM_DATA_DIR` |
-| `desktop-tooling` | `apps/desktop/scripts` | `VITE_PHOTON_URL`, `CI` |
 | `seeder` | `tooling/seeder` | `SEED_CONVEX_URL`, `SEED_USER_EMAIL` |
 | `journeys` | browser journeys (`apps/web/e2e`) | `VITE_CONVEX_URL`, `VITE_CONVEX_SITE_URL` |
 | `showcase` | `tooling/showcase` | `SHOWCASE_*` |

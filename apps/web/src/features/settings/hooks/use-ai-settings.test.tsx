@@ -3,10 +3,6 @@ import { getFunctionName, type FunctionReference } from 'convex/server';
 import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { useAiSettings } from './use-ai-settings';
 
-const desktop = vi.hoisted(() => ({ env: { isDesktop: false }, invoke: vi.fn() }));
-vi.mock('@groam/env/web-client', () => ({ env: desktop.env }));
-vi.mock('@tauri-apps/api/core', () => ({ invoke: desktop.invoke }));
-
 const convex = vi.hoisted(() => ({
   connect: vi.fn(),
   disconnect: vi.fn(),
@@ -47,8 +43,6 @@ const remote = {
 };
 beforeEach(() => {
   vi.clearAllMocks();
-  desktop.env.isDesktop = false;
-  desktop.invoke.mockResolvedValue(undefined);
   convex.useQuery.mockReturnValue(remote);
   convex.models.mockResolvedValue([{ slug: 'gpt-test', displayName: 'Test model' }]);
   convex.select.mockResolvedValue(null);
@@ -124,19 +118,5 @@ test('closes the authorization window and displays connection failures', async (
   await act(() => result.current.connect());
   expect(popup.close).toHaveBeenCalled();
   expect(result.current.error).toBe('ChatGPT plan access is unavailable');
-  open.mockRestore();
-});
-
-test('opens desktop authorization in the system browser through Tauri', async () => {
-  desktop.env.isDesktop = true;
-  const open = vi.spyOn(window, 'open');
-  const originalLocation = window.location.href;
-  const url = 'https://auth.openai.com/api/accounts/authorize?state=opaque';
-  convex.connect.mockResolvedValue({ authorizationUrl: url });
-  const { result } = await renderHook(() => useAiSettings());
-  await act(() => result.current.connect());
-  expect(desktop.invoke).toHaveBeenCalledWith('open_chatgpt_authorization', { url });
-  expect(open).not.toHaveBeenCalled();
-  expect(window.location.href).toBe(originalLocation);
   open.mockRestore();
 });

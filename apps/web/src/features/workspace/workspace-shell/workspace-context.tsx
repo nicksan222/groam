@@ -1,6 +1,5 @@
 import { authClient } from '@groam/auth/client';
 import { BrandMark } from '@groam/brand/mark';
-import { env } from '@groam/env/web-client';
 import { Button } from '@groam/ui/components/button';
 import { FormFeedback } from '@groam/ui/components/form-feedback';
 import { Input } from '@groam/ui/components/input';
@@ -134,9 +133,7 @@ function CreateFirstOrganization({ viewerName }: { viewerName: string }) {
           Welcome, {viewerName}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {env.isDesktop
-            ? 'Create a group on this computer. Trips stay in the local Groam data folder until you export them.'
-            : 'Create your first group. Every member will automatically share the group’s trips.'}
+          Create your first group. Every member will automatically share the group’s trips.
         </p>
         <form
           className="mt-6 space-y-3"

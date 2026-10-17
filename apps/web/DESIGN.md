@@ -37,7 +37,7 @@ components:
 
 **Creative North Star: "The Shared Trip Table"**
 
-Groam is a refined, calm workspace for people and AI agents planning together. The visual language is shadcn-style and all-sans: white and soft neutral light surfaces, a Tokyo Night indigo dark hierarchy, quiet hairlines, restrained actions, and compact rounded controls keep attention on the itinerary and reviewable collaboration. The Groam brand mark remains available for applicable brand and authentication surfaces; the workspace sidebar begins with the group switcher.
+Groam is a refined, calm workspace for people and AI agents planning together. The visual language is shadcn-style and all-sans: white and soft neutral light surfaces, a Tokyo Night indigo dark hierarchy, quiet hairlines, restrained actions, and compact rounded controls keep attention on the itinerary and reviewable collaboration. The Groam brand mark, a person's white pin in front of an agent's cyan pin on a Tokyo blue tile, appears on brand, authentication, onboarding, and full-page status surfaces; the workspace sidebar begins with the group switcher.
 
 The approved trip direction uses a left sidebar, panoramic trip cover, compact navigation, and an assistant dock at the right on wide screens that overlays smaller screens. The approved reference is `apps/web/.impeccable/mocks/approved-trip.png`; it is a direction reference, not proof of visual QA.
 
