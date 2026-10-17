@@ -73,3 +73,9 @@ test('creates a research and opens it', async () => {
     .poll(() => state.navigate.mock.calls[0]?.[0])
     .toEqual({ params: { researchId: 'r2', tripId }, to: '/trips/$tripId/research/$researchId' });
 });
+
+test('hides creation on an archived trip', async () => {
+  await render(<ResearchListView archived tripId={tripId} />);
+  await expect.element(page.getByText('No research yet')).toBeVisible();
+  await expect.element(page.getByTestId(testIds.researchCreate)).not.toBeInTheDocument();
+});

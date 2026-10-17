@@ -56,7 +56,8 @@ export function ActiveTripSection({
       return (
         <TripIdeasPanel onStartIdea={onStartVersion} startingIdea={startingIdea} trip={trip} />
       );
-    if (section === 'research') return <ResearchListView tripId={trip.id} />;
+    if (section === 'research')
+      return <ResearchListView archived={trip.archivedAt !== null} tripId={trip.id} />;
     if (section === 'overview' || section === 'itinerary')
       return <TripPlanPage day={day} itinerary={itinerary()} trip={trip} />;
     return <TripBoard onStartIdea={onStartVersion} startingIdea={startingIdea} trip={trip} />;

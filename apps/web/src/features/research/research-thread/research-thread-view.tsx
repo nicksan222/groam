@@ -6,12 +6,14 @@ import { PageLoading } from '@groam/ui/components/page-loading';
 import { useNavigate } from '@tanstack/react-router';
 import { Search } from 'lucide-react';
 import { DiscussionThreadBody } from '@/features/discussions/discussion-thread/discussion-thread-body';
+import { researchCommands } from '@/features/research/hooks/research-commands';
 import { useResearch } from '@/features/research/hooks/use-research';
 import { useResearchActions } from '@/features/research/hooks/use-research-actions';
 import { useResearchLinkOptions } from '@/features/research/hooks/use-research-links';
 import { Link } from '@/features/workspace/navigation/router';
-import type { LinkTargetOption, ResearchLink } from '@/types/research';
+import type { ResearchDetail, ResearchLink } from '@/types/research';
 import { ResearchHeader } from './research-header';
+import { ResearchLinkEvent } from './research-link-event';
 
 const archivedNotice = 'This trip is archived';
 
@@ -43,23 +45,26 @@ export function ResearchThreadView({ researchId }: { researchId: Id<'discussions
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-background">
-      <ResearchThreadHeader discussionId={researchId} research={research} writable={writable} />
-      <DiscussionThreadBody
+      <ResearchHeader research={research} />
+      <ResearchThread
         discussionId={researchId}
-        readOnlyNotice={writable ? undefined : archivedNotice}
+        research={research}
         threadId={threadId}
+        writable={writable}
       />
     </div>
   );
 }
 
-function ResearchThreadHeader({
+function ResearchThread({
   discussionId,
   research,
+  threadId,
   writable
 }: {
   discussionId: Id<'discussions'>;
-  research: NonNullable<ReturnType<typeof useResearch>['research']>;
+  research: ResearchDetail;
+  threadId: null | string;
   writable: boolean;
 }) {
   const navigate = useNavigate();
@@ -73,17 +78,37 @@ function ResearchThreadHeader({
       void navigate({ params: { proposalId: link.target.id }, to: '/ideas/$proposalId' });
     }
   };
+  const canOpen = (link: ResearchLink) =>
+    link.target.kind === 'issue' || link.target.kind === 'idea';
+
+  const commands = researchCommands({
+    linkOptions: options,
+    onLink: (option) => actions.link(option.target),
+    onSaveBrief: actions.updateBrief,
+    onSummarize: actions.summarize,
+    onUnlink: (link) => actions.unlink(link.target),
+    research
+  });
+
+  const events = research.links.map((link) => ({
+    content: (
+      <ResearchLinkEvent
+        link={link}
+        onOpen={canOpen(link) ? openLink : undefined}
+        onRemove={writable ? (removed) => void actions.unlink(removed.target) : undefined}
+      />
+    ),
+    createdAt: link.createdAt,
+    key: `link:${link.id}`
+  }));
 
   return (
-    <ResearchHeader
-      isSummarizing={actions.isSummarizing || !writable}
-      linkOptions={writable ? options : []}
-      onAddLink={(option: LinkTargetOption) => void actions.link(option.target)}
-      onOpenLink={openLink}
-      onRemoveLink={(link) => void actions.unlink(link.target)}
-      onSaveBrief={(brief) => void actions.updateBrief(brief)}
-      onSummarize={() => void actions.summarize()}
-      research={research}
+    <DiscussionThreadBody
+      commands={writable ? commands : undefined}
+      discussionId={discussionId}
+      events={events}
+      readOnlyNotice={writable ? undefined : archivedNotice}
+      threadId={threadId}
     />
   );
 }

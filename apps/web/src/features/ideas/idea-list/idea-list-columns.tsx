@@ -171,7 +171,7 @@ export function ideaColumns({
       enableSorting: false,
       header: () => <span className="sr-only">Actions</span>,
       id: 'actions',
-      meta: { className: 'hidden md:table-cell w-40 text-right' }
+      meta: { className: 'hidden md:table-cell w-[11.25rem] text-right' }
     }
   ];
 }

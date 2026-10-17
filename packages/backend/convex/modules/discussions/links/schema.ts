@@ -17,6 +17,8 @@ const linkTarget = v.union(
 );
 
 const resolvedLink = v.object({
+  createdAt: v.number(),
+  createdByName: v.string(),
   id: v.id('discussionLinks'),
   kind: v.union(
     v.literal('issue'),

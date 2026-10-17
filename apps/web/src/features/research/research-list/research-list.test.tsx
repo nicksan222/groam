@@ -33,19 +33,37 @@ test('shows the empty state and starts a research', async () => {
   expect(onCreate).toHaveBeenCalledOnce();
 });
 
-test('renders cards and opens one', async () => {
+test('renders a table row per research and opens one', async () => {
   const onOpen = vi.fn();
   const items = [
     research({}),
-    research({ brief: 'Skip the queues', id: 'r-2', title: 'Museums', unread: false })
+    research({ brief: null, id: 'r-2', lastMessage: null, title: 'Museums', unread: false })
   ];
   await render(<ResearchList onCreate={vi.fn()} onOpen={onOpen} researches={items} />);
-  await expect.element(page.getByText('Hotels in Rome').first()).toBeVisible();
+  await expect.element(page.getByRole('table')).toBeVisible();
+  expect(page.getByTestId(testIds.researchCard).elements()).toHaveLength(2);
   await expect.element(page.getByText('Compare central hotels')).toBeVisible();
-  await expect.element(page.getByText('Found a cheap one').first()).toBeInTheDocument();
-  await expect.element(page.getByText('3 people').first()).toBeVisible();
-  await expect.element(page.getByText('2 links').first()).toBeVisible();
+  await expect
+    .element(page.getByTitle('Found a cheap one'))
+    .toHaveTextContent('Ada: Found a cheap one');
+  await expect.element(page.getByText('No brief')).toBeVisible();
   expect(page.getByTestId(testIds.researchUnread).elements()).toHaveLength(1);
   await page.getByText('Museums').click();
   expect(onOpen).toHaveBeenCalledWith(items[1]);
+});
+
+test('filters rows by title or brief', async () => {
+  const items = [research({}), research({ brief: null, id: 'r-2', title: 'Museums' })];
+  await render(<ResearchList onCreate={vi.fn()} onOpen={vi.fn()} researches={items} />);
+  await page.getByRole('searchbox').fill('central');
+  expect(page.getByTestId(testIds.researchCard).elements()).toHaveLength(1);
+  await expect.element(page.getByText('Museums')).not.toBeInTheDocument();
+});
+
+test('hides the start action without onCreate', async () => {
+  await render(<ResearchList onOpen={vi.fn()} researches={[]} />);
+  await expect.element(page.getByText('No research yet')).toBeVisible();
+  await expect
+    .element(page.getByRole('button', { name: 'Start a research' }))
+    .not.toBeInTheDocument();
 });

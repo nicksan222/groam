@@ -21,6 +21,8 @@ export function useResearch(discussionId: Id<'discussions'>) {
         canManage: result.canManage,
         id: result.id,
         links: result.links.map((link) => ({
+          createdAt: link.createdAt,
+          createdByName: link.createdByName,
           href: linkHref(link),
           id: link.id,
           label: link.label,

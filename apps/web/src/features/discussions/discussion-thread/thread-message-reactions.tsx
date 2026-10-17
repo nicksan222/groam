@@ -17,7 +17,7 @@ export function ThreadMessageReactions({
   return (
     <BubbleReactions
       align={mine ? 'end' : 'start'}
-      className="gap-1 bg-transparent p-0 ring-0"
+      className="static translate-y-0 flex-wrap gap-1 bg-transparent p-0 ring-0"
       side="bottom"
     >
       {stamps.map((stamp) => (

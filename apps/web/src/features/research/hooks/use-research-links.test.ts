@@ -42,7 +42,14 @@ test('lists issues, ideas, destinations, activities, and stays', async () => {
 
 test('leaves out targets that are already linked', async () => {
   const linked = [
-    { href: null, id: 'l1', label: 'Flights', target: { id: 'i1', kind: 'issue' as const } }
+    {
+      createdAt: 1,
+      createdByName: 'Ada',
+      href: null,
+      id: 'l1',
+      label: 'Flights',
+      target: { id: 'i1', kind: 'issue' as const }
+    }
   ];
   const { result } = await renderHook(() => useResearchLinkOptions('t1' as Id<'trips'>, linked));
   expect(result.current.options.some((option) => option.label === 'Flights')).toBe(false);

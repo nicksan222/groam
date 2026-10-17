@@ -55,3 +55,24 @@ test('renders video attachments with a player', async () => {
   );
   expect(page.getByLabelText('clip.mp4').element().tagName).toBe('VIDEO');
 });
+
+test('auto-links URLs in message text', async () => {
+  await render(<ChatMessage mine={false} text="Try https://trip.example/rome" />);
+  await expect
+    .element(page.getByRole('link', { name: 'https://trip.example/rome' }))
+    .toHaveAttribute('href', 'https://trip.example/rome');
+});
+
+test('keeps reactions in flow above the sent time', async () => {
+  await render(
+    <ChatMessage
+      createdAt={Date.UTC(2026, 0, 1, 9)}
+      mine={false}
+      reactions={<span data-testid="reactions">❤️</span>}
+      text="Hi!"
+    />
+  );
+  const reactions = page.getByTestId('reactions').element().getBoundingClientRect();
+  const time = page.getByRole('status').element().getBoundingClientRect();
+  expect(reactions.bottom).toBeLessThanOrEqual(time.top);
+});

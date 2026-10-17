@@ -99,6 +99,7 @@
     "./components/input": "./src/components/input.tsx",
     "./components/label": "./src/components/label.tsx",
     "./components/lift-card": "./src/components/lift-card.tsx",
+    "./components/linkified-text": "./src/components/linkified-text.tsx",
     "./components/list-filter-toolbar": "./src/components/list-filter-toolbar.tsx",
     "./components/loading-placeholder": "./src/components/loading-placeholder.tsx",
     "./components/marker": "./src/components/marker.tsx",

@@ -18,6 +18,12 @@ import { useRef, useState } from 'react';
 import { AgentMentionChip } from '@/features/discussions/agent-mention-controls/agent-mention-chip';
 import { AgentMentionSuggest } from '@/features/discussions/agent-mention-controls/agent-mention-suggest';
 import { AskGroamButton } from '@/features/discussions/agent-mention-controls/ask-groam-button';
+import {
+  type ComposerCommand,
+  resolveCommandSubmit
+} from '@/features/discussions/composer-commands/composer-command';
+import { ComposerCommandButton } from '@/features/discussions/composer-commands/composer-command-button';
+import { ComposerCommandMenu } from '@/features/discussions/composer-commands/composer-command-menu';
 import type { DiscussionSendInput } from '@/features/discussions/hooks/use-discussion-thread';
 import { mediaFileAccept } from '@/features/media/media-validation';
 import { testIds } from '@/lib/test-ids';
@@ -29,11 +35,14 @@ import {
 
 export function DiscussionThreadComposer({
   canStop,
+  commands = [],
   isStopping,
   onSend,
   onStop
 }: {
   canStop: boolean;
+  /** "/" actions offered in this thread; typed commands run instead of sending. */
+  commands?: ComposerCommand[];
   isStopping: boolean;
   onSend: (input: DiscussionSendInput) => Promise<boolean>;
   onStop: () => Promise<boolean>;
@@ -58,6 +67,15 @@ export function DiscussionThreadComposer({
   };
 
   const send = async (text: string) => {
+    const command = commands.length > 0 ? resolveCommandSubmit(text, commands) : null;
+    if (command) {
+      if ('error' in command) {
+        toast.error(command.error);
+        return false;
+      }
+      await command.run();
+      return true;
+    }
     const sent = await onSend({
       files: pendingAttachments.map((item) => item.file),
       text
@@ -90,6 +108,7 @@ export function DiscussionThreadComposer({
         autoFocus
         beforeInput={(api) => (
           <>
+            <ComposerCommandMenu api={api} commands={commands} />
             <AgentMentionSuggest api={api} />
             <AgentMentionChip api={api} />
           </>
@@ -100,12 +119,13 @@ export function DiscussionThreadComposer({
         label="Message"
         onAttachFiles={attachFiles}
         onSubmit={send}
-        placeholder="Message…"
+        placeholder={commands.length > 0 ? 'Message, or / for commands…' : 'Message…'}
         submitShortcut="enter"
         testId={testIds.chatComposer}
         toolbarStart={(api) => (
           <>
             <AskGroamButton api={api} />
+            {commands.length > 0 ? <ComposerCommandButton api={api} /> : null}
             <VoiceRecordButton
               disabled={api.isSubmitting}
               onRecorded={(file) => attachFiles([file])}

@@ -6,10 +6,12 @@ import {
 import { EmptyScreen } from '@groam/ui/components/empty-screen';
 import { MessageSquare } from 'lucide-react';
 import type { ReactNode } from 'react';
+import type { ComposerCommand } from '@/features/discussions/composer-commands/composer-command';
 import { useDiscussionMessageActions } from '@/features/discussions/hooks/use-discussion-message-actions';
 import { useDiscussionThread } from '@/features/discussions/hooks/use-discussion-thread';
 import { discussionActivityKey } from './discussion-activity-key';
 import { DiscussionThreadComposer } from './discussion-thread-composer';
+import { type DiscussionTimelineEvent, mergeTimelineEvents } from './discussion-timeline-events';
 import { ThreadMessage } from './thread-message';
 
 const defaultEmpty = (
@@ -23,13 +25,19 @@ const defaultEmpty = (
 
 /** Message list and composer for one discussion thread; callers supply any header. */
 export function DiscussionThreadBody({
+  commands,
   discussionId,
   empty = defaultEmpty,
+  events = [],
   readOnlyNotice,
   threadId
 }: {
+  /** "/" actions the composer offers in this thread. */
+  commands?: ComposerCommand[];
   discussionId: Id<'discussions'>;
   empty?: ReactNode;
+  /** Non-message rows (such as linked items) placed among messages by time. */
+  events?: DiscussionTimelineEvent[];
   /** When set, the composer is replaced by this notice (for example an archived trip). */
   readOnlyNotice?: string;
   threadId: null | string;
@@ -40,7 +48,7 @@ export function DiscussionThreadBody({
     discussionActivityKey(thread.messages)
   );
 
-  const items: ConversationTimelineItem[] = thread.messages.flatMap((message) =>
+  const messageItems = thread.messages.flatMap((message) =>
     message.role === 'user' || message.role === 'assistant'
       ? [
           {
@@ -53,10 +61,16 @@ export function DiscussionThreadBody({
                 reactions={reactions.filter((item) => item.messageId === message.id)}
               />
             ),
+            createdAt: message._creationTime,
             key: message.key
           }
         ]
       : []
+  );
+  const items: ConversationTimelineItem[] = mergeTimelineEvents(
+    messageItems,
+    events,
+    thread.status === 'Exhausted'
   );
 
   return (
@@ -78,6 +92,7 @@ export function DiscussionThreadBody({
       ) : (
         <DiscussionThreadComposer
           canStop={thread.canStop}
+          commands={commands}
           isStopping={thread.isStopping}
           onSend={thread.send}
           onStop={thread.stop}

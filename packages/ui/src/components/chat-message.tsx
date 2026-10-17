@@ -8,6 +8,7 @@ import {
   AttachmentTitle
 } from './attachment';
 import { Bubble, BubbleContent } from './bubble';
+import { LinkifiedText } from './linkified-text';
 import { Message, MessageContent } from './message';
 
 export type ChatMessageAttachment = {
@@ -47,7 +48,11 @@ function PrivateChatMessage({ attachments, status, testId, text }: ChatMessagePr
                 ))}
               </div>
             ) : null}
-            {text.trim().length > 0 ? <p>{text}</p> : null}
+            {text.trim().length > 0 ? (
+              <p>
+                <LinkifiedText text={text} />
+              </p>
+            ) : null}
           </BubbleContent>
         </Bubble>
         {status === 'pending' ? <DeliveryStatus>Sending…</DeliveryStatus> : null}
@@ -122,7 +127,7 @@ function DiscussionMessageBody({
   text: string;
 }) {
   return (
-    <div className={cn('relative', reactions && 'pb-4')}>
+    <div className="relative">
       <div className="space-y-1.5">
         {attachments.length > 0 && (
           <DiscussionAttachments attachments={attachments} mediaOnly={mediaOnly} mine={mine} />
@@ -130,7 +135,11 @@ function DiscussionMessageBody({
         {hasText && <DiscussionText mine={mine} text={text} />}
       </div>
       {actions}
-      {reactions}
+      {reactions ? (
+        <div className={cn('mt-1 flex px-1', mine ? 'justify-end' : 'justify-start')}>
+          {reactions}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -167,7 +176,9 @@ function DiscussionText({ mine, text }: { mine: boolean; text: string }) {
           : 'rounded-2xl rounded-bl-md bg-transparent px-3 py-2 text-sm leading-5'
       }
     >
-      <p className="whitespace-pre-wrap wrap-break-word">{text}</p>
+      <p className="whitespace-pre-wrap wrap-break-word">
+        <LinkifiedText text={text} />
+      </p>
     </div>
   );
 }

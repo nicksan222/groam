@@ -100,3 +100,44 @@ test('stops Groam from the composer chrome', async () => {
   await page.getByRole('button', { name: 'Stop Groam' }).click();
   expect(onStop).toHaveBeenCalled();
 });
+
+test('runs a typed command instead of sending it', async () => {
+  const onSend = vi.fn().mockResolvedValue(true);
+  const summarize = vi.fn();
+  await render(
+    <DiscussionThreadComposer
+      canStop={false}
+      commands={[{ description: 'Summarize', name: 'summarize', run: summarize }]}
+      isStopping={false}
+      onSend={onSend}
+      onStop={vi.fn()}
+    />
+  );
+
+  await page.getByRole('textbox', { name: 'Message' }).fill('/summarize');
+  await page.getByRole('button', { name: 'Reply' }).click();
+
+  await vi.waitFor(() => expect(summarize).toHaveBeenCalledOnce());
+  expect(onSend).not.toHaveBeenCalled();
+  await expect.element(page.getByRole('textbox', { name: 'Message' })).toHaveValue('');
+});
+
+test('keeps an unknown command and explains it', async () => {
+  const onSend = vi.fn().mockResolvedValue(true);
+  await render(
+    <DiscussionThreadComposer
+      canStop={false}
+      commands={[{ description: 'Summarize', name: 'summarize', run: vi.fn() }]}
+      isStopping={false}
+      onSend={onSend}
+      onStop={vi.fn()}
+    />
+  );
+
+  await page.getByRole('textbox', { name: 'Message' }).fill('/nope');
+  await page.getByRole('button', { name: 'Reply' }).click();
+
+  await vi.waitFor(() => expect(toastError).toHaveBeenCalledWith('Unknown command /nope'));
+  expect(onSend).not.toHaveBeenCalled();
+  await expect.element(page.getByRole('textbox', { name: 'Message' })).toHaveValue('/nope');
+});

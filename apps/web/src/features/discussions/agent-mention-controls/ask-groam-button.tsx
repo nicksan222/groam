@@ -18,15 +18,18 @@ export function AskGroamButton({
     <Button
       aria-label={mentioned ? 'Groam already tagged' : 'Ask Groam'}
       aria-pressed={mentioned}
-      className="size-9 touch-manipulation rounded-full"
+      className="h-9 touch-manipulation gap-1.5 rounded-full px-2.5 sm:px-3"
       disabled={disabled || api.isSubmitting || mentioned}
       onClick={() => api.setText(insertAgentMention(api.text))}
-      size="icon"
-      title={mentioned ? 'Groam is tagged' : 'Ask Groam'}
+      size="sm"
+      title={mentioned ? 'Groam is tagged' : 'Tag Groam to ask for help'}
       type="button"
-      variant="ghost"
+      variant="outline"
     >
-      <Sparkles className={mentioned ? 'size-[1.125rem] text-foreground' : 'size-[1.125rem]'} />
+      <Sparkles className={mentioned ? 'size-4 text-foreground' : 'size-4'} />
+      <span aria-hidden className="hidden sm:inline">
+        @Groam
+      </span>
     </Button>
   );
 }

@@ -26,6 +26,8 @@ export type ResearchLinkTarget =
   | { id: string; kind: 'stay' };
 
 export type ResearchLink = {
+  createdAt: number;
+  createdByName: string;
   href: null | string;
   id: string;
   label: string;

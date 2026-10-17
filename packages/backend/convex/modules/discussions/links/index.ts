@@ -150,7 +150,14 @@ export class DiscussionLinks {
       rows.map(async (row) => {
         const label = await resolveLabel(ctx, row.target);
         return label
-          ? { id: row._id, ...label, target: row.target, targetKey: row.targetKey }
+          ? {
+              createdAt: row._creationTime,
+              createdByName: row.createdBy.name,
+              id: row._id,
+              ...label,
+              target: row.target,
+              targetKey: row.targetKey
+            }
           : null;
       })
     );
