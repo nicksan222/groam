@@ -5,6 +5,7 @@ import { render } from '@groam/vitest-config/react';
 import { ConvexReactClient } from 'convex/react';
 import { onTestFinished } from 'vite-plus/test';
 import { AppRoot } from '@/app-root';
+import { settleWrites } from '@/journeys/settle-writes';
 import { useAuthFormStore } from '@/lib/stores/auth-form-store';
 
 let mounted: { app: Awaited<ReturnType<typeof render>>; client: ConvexReactClient } | undefined;
@@ -13,6 +14,8 @@ async function unmountApp(): Promise<void> {
   const current = mounted;
   mounted = undefined;
   if (!current) return;
+  // A real reload sends what the page already wrote; closing the client would drop it instead.
+  await settleWrites(current.client);
   await current.app.unmount();
   await current.client.close();
 }

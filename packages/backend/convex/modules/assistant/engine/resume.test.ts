@@ -13,7 +13,7 @@ import { timerCondition } from '#convex/modules/assistant/waits/conditions/timer
 import { AgentWaits } from '#convex/modules/assistant/waits/index';
 import { setupTrip } from '#testing/trips';
 import { waitingChatTurn } from '#testing/waits';
-import { runUntil } from '#testing/workflows';
+import { isParked, runUntil } from '#testing/workflows';
 
 // Runs advance through workflow steps on scheduled functions.
 vi.useRealTimers();
@@ -53,7 +53,7 @@ async function issueRun() {
 
 async function waitingRun() {
   const trip = await issueRun();
-  await runUntil(trip.owner.test, async () => (await trip.read())?.status === 'waiting');
+  await runUntil(trip.owner.test, async () => await isParked(trip.owner.test, await trip.read()));
   const waiting = await trip.read();
   return { ...trip, waitId: waiting?.activeWaitId as Id<'agentWaits'>, waiting };
 }
@@ -232,17 +232,11 @@ test(
           .withIndex('by_tripId_and_updatedAt', (query) => query.eq('tripId', trip.tripId))
           .first()
       )) === null;
-    // Cancelling the parked workflow still runs its main loop once; it logs the stale generation.
-    expectConsole('error', /Invalid generation number/);
-    const errors = vi.spyOn(console, 'error');
     // Group deletion removes the trip in batches: conversations, then issues.
     await trip.owner.test.mutation(internal.modules.organizations.cleanup.removeOrganizationData, {
       organizationId: trip.owner.organizationId as string
     });
     await runUntil(trip.owner.test, issueGone);
-    await runUntil(trip.owner.test, async () =>
-      errors.mock.calls.some((call) => String(call[0]).includes('Invalid generation number'))
-    );
     // Let the cascade and the cancelled workflow settle before the next test starts.
     await runUntil(
       trip.owner.test,

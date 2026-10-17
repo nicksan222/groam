@@ -3,7 +3,7 @@ import { api } from '#convex-generated/api';
 import type { Id } from '#convex-generated/dataModel';
 import type { WaitCondition } from '#convex/modules/assistant/waits/schema';
 import { type Trip, type WaitRunOptions, waitRun } from '#testing/polls';
-import { runUntil } from '#testing/workflows';
+import { isParked, runUntil } from '#testing/workflows';
 
 /** Wait helpers bound to one test file's exported idle workflow (`<module path>:idle`). */
 export function waitHelpers(idle: string) {
@@ -93,7 +93,8 @@ export async function removeMember(trip: Trip, userId: string) {
 
 /**
  * Asks Groam in a new trip chat with every member, answers the turn, and runs workflows until
- * the chat's agent run is waiting. `run` reads the run again.
+ * the chat's agent run is parked
+ * on its wait. `run` reads the run again.
  */
 export async function waitingChatTurn(trip: Trip, text: string) {
   const { owner, tripId, users } = trip;
@@ -129,6 +130,6 @@ export async function waitingChatTurn(trip: Trip, text: string) {
         )
         .first()
     );
-  await runUntil(owner.test, async () => (await run())?.status === 'waiting');
+  await runUntil(owner.test, async () => await isParked(owner.test, await run()));
   return { discussionId, run, sent };
 }

@@ -5,7 +5,7 @@ import type { Id } from '#convex-generated/dataModel';
 import { AssistantProvider } from '#convex/modules/ai/provider';
 import { createOutsiderClient } from '#testing/factory';
 import { setupTrip } from '#testing/trips';
-import { runUntil } from '#testing/workflows';
+import { isParked, runUntil } from '#testing/workflows';
 
 // Runs advance through workflow steps on scheduled functions.
 vi.useRealTimers();
@@ -43,7 +43,7 @@ async function waitingIssueRun() {
     issueId
   })) as Id<'agentRuns'>;
   const read = () => trip.owner.test.run((ctx) => ctx.db.get('agentRuns', runId));
-  await runUntil(trip.owner.test, async () => (await read())?.status === 'waiting');
+  await runUntil(trip.owner.test, async () => await isParked(trip.owner.test, await read()));
   return { ...trip, read, runId };
 }
 
