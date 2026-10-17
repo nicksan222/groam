@@ -9,6 +9,7 @@ export function TripSectionPanel({
   description,
   icon,
   stack = 'md',
+  testId,
   title,
   trailing
 }: {
@@ -18,11 +19,12 @@ export function TripSectionPanel({
   description: string;
   icon: LucideIcon;
   stack?: 'md' | 'page' | 'sm';
+  testId?: string;
   title: string;
   trailing?: ReactNode;
 }) {
   return (
-    <Shell.Stack as="section" stack={stack}>
+    <Shell.Stack as="section" data-testid={testId} stack={stack}>
       <Shell.SectionHeader
         badge={badge}
         density={density}

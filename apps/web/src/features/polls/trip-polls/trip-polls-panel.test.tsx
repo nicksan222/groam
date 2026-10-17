@@ -76,6 +76,8 @@ test('renders a card per poll and routes votes to that poll', async () => {
   state.polls = [poll('p1' as Id<'polls'>), poll('p2' as Id<'polls'>)];
   state.actions.vote.mockResolvedValue(true);
   await render(<TripPollsPanel trip={trip()} />);
+  await expect.element(page.getByRole('heading', { name: 'Polls' })).toBeVisible();
+  await expect.element(page.getByText('2 open')).toBeVisible();
   expect(page.getByTestId(testIds.pollCard).elements()).toHaveLength(2);
   await page
     .getByRole('article', { name: 'Poll: Question p2' })

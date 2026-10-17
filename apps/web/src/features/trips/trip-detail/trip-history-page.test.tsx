@@ -10,9 +10,10 @@ vi.mock('@tanstack/react-router', async () => {
   return mockRouterTargets();
 });
 
-test('shows the history table without a subpage header or back link', async () => {
+test('shows the history table under the Activity section header', async () => {
   await render(<TripHistoryPage trip={{ activity: [] } as unknown as TripDetail} />);
   await expect.element(page.getByTestId(testIds.tripHistoryPage)).toBeInTheDocument();
+  await expect.element(page.getByRole('heading', { name: 'Activity' })).toBeVisible();
   await expect.element(page.getByRole('heading', { name: 'Trip history' })).not.toBeInTheDocument();
   await expect.element(page.getByText('Back to board')).not.toBeInTheDocument();
 });
