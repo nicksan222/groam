@@ -15,6 +15,28 @@ test('renders an assistant response', async () => {
   await expect.element(page.getByRole('button', { name: 'Copy AI response' })).toBeInTheDocument();
 });
 
+test('shows what Groam did before the reply it wrote', async () => {
+  const parts = [
+    {
+      input: {},
+      output: {},
+      state: 'output-available',
+      toolCallId: 'call-1',
+      type: 'tool-getTripStatus'
+    },
+    { text: 'Here is the summary', type: 'text' }
+  ] as unknown as UIMessage['parts'];
+  await render(
+    <AssistantResponseMessage
+      disabled={false}
+      message={{ ...message('Here is the summary'), parts }}
+    />
+  );
+  const activity = page.getByText('Read trip status').element();
+  const reply = page.getByText('Here is the summary').element();
+  expect(activity.compareDocumentPosition(reply) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+});
+
 function message(text: string): UIMessage {
   return {
     _creationTime: 1,

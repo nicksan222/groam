@@ -9,6 +9,7 @@ import type { ReactNode } from 'react';
 import type { ComposerCommand } from '@/features/discussions/composer-commands/composer-command';
 import { useDiscussionMessageActions } from '@/features/discussions/hooks/use-discussion-message-actions';
 import { useDiscussionThread } from '@/features/discussions/hooks/use-discussion-thread';
+import { groupAssistantReplies } from './assistant-replies';
 import { discussionActivityKey } from './discussion-activity-key';
 import { DiscussionThreadComposer } from './discussion-thread-composer';
 import { type DiscussionTimelineEvent, mergeTimelineEvents } from './discussion-timeline-events';
@@ -48,13 +49,15 @@ export function DiscussionThreadBody({
     discussionActivityKey(thread.messages)
   );
 
+  const { attached, repliesByPrompt } = groupAssistantReplies(thread.messages);
   const messageItems = thread.messages.flatMap((message) =>
-    message.role === 'user' || message.role === 'assistant'
+    (message.role === 'user' || message.role === 'assistant') && !attached.has(message.key)
       ? [
           {
             content: (
               <ThreadMessage
                 message={message}
+                replies={repliesByPrompt.get(message.key)}
                 onEdit={message.mine ? (text) => void editMessage(message.id, text) : undefined}
                 onReact={(emoji) => void react(message.id, emoji)}
                 onRemove={message.mine ? () => void removeMessage(message.id) : undefined}

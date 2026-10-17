@@ -2,6 +2,7 @@ import { type UIMessage, useSmoothText } from '@convex-dev/agent/react';
 import { Message, MessageContent } from '@groam/ui/components/message';
 import { parseAssistantContextMessage } from '#ai/agents';
 import { parseAssistantGeneratedForm } from '#ai/ui/form/assistant-generated-form-parser';
+import { AssistantToolCalls } from '#ai/ui/tool-calls/assistant-tool-calls';
 import { AssistantContextMarker } from './assistant-context-marker';
 import { assistantSources } from './assistant-source';
 import { MessageBubble } from './message-bubble';
@@ -66,6 +67,15 @@ export function MessagePresentation({
       <MessageContent
         className={isUser ? 'max-w-[84%]' : hasChoice ? 'w-full max-w-full' : 'max-w-[92%]'}
       >
+        {isUser ? null : (
+          <AssistantToolCalls
+            className="mb-2"
+            disabled={disabled}
+            kind="activity"
+            parts={message.parts}
+            settled={message.status !== 'streaming' && message.status !== 'pending'}
+          />
+        )}
         <MessageBubble
           disabled={disabled}
           displayedText={displayedText}

@@ -18,10 +18,16 @@ const DOT_CLASS = {
   running: 'bg-current motion-safe:animate-pulse'
 } as const satisfies Record<keyof typeof RUN_STATUS_LABEL, string>;
 
-export function AgentRunStatusBadge({ status }: { status: keyof typeof RUN_STATUS_LABEL | null }) {
+export function AgentRunStatusBadge({
+  className,
+  status
+}: {
+  className?: string;
+  status: keyof typeof RUN_STATUS_LABEL | null;
+}) {
   if (!status) {
     return (
-      <Badge variant="outline">
+      <Badge className={className} variant="outline">
         <span className="size-1.5 shrink-0 rounded-full bg-muted-foreground" />
         Idle
       </Badge>
@@ -30,9 +36,10 @@ export function AgentRunStatusBadge({ status }: { status: keyof typeof RUN_STATU
 
   return (
     <Badge
-      className={
-        status === 'failed' ? 'border-destructive/20 bg-destructive/10 text-destructive' : undefined
-      }
+      className={cn(
+        status === 'failed' && 'border-destructive/20 bg-destructive/10 text-destructive',
+        className
+      )}
       variant={BADGE_VARIANT[status]}
     >
       <span className={cn('size-1.5 shrink-0 rounded-full', DOT_CLASS[status])} />

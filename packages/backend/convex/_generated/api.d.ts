@@ -22,6 +22,13 @@ import type * as modules_assistant_agent_instructions from "../modules/assistant
 import type * as modules_assistant_agent_session from "../modules/assistant/agent/session.js";
 import type * as modules_assistant_agent_types from "../modules/assistant/agent/types.js";
 import type * as modules_assistant_chat_index from "../modules/assistant/chat/index.js";
+import type * as modules_assistant_engine_functions from "../modules/assistant/engine/functions.js";
+import type * as modules_assistant_engine_index from "../modules/assistant/engine/index.js";
+import type * as modules_assistant_engine_manager from "../modules/assistant/engine/manager.js";
+import type * as modules_assistant_engine_migrations from "../modules/assistant/engine/migrations.js";
+import type * as modules_assistant_engine_turn from "../modules/assistant/engine/turn.js";
+import type * as modules_assistant_engine_turns from "../modules/assistant/engine/turns.js";
+import type * as modules_assistant_engine_workflow from "../modules/assistant/engine/workflow.js";
 import type * as modules_assistant_errors_index from "../modules/assistant/errors/index.js";
 import type * as modules_assistant_model_index from "../modules/assistant/model/index.js";
 import type * as modules_assistant_model_proposals from "../modules/assistant/model/proposals.js";
@@ -33,10 +40,10 @@ import type * as modules_assistant_runs_index from "../modules/assistant/runs/in
 import type * as modules_assistant_runs_tracking from "../modules/assistant/runs/tracking.js";
 import type * as modules_assistant_screen_index from "../modules/assistant/screen/index.js";
 import type * as modules_assistant_standalone_context from "../modules/assistant/standalone/context.js";
-import type * as modules_assistant_standalone_execute from "../modules/assistant/standalone/execute.js";
 import type * as modules_assistant_standalone_index from "../modules/assistant/standalone/index.js";
 import type * as modules_assistant_standalone_session from "../modules/assistant/standalone/session.js";
 import type * as modules_assistant_validators_index from "../modules/assistant/validators/index.js";
+import type * as modules_auth_actor from "../modules/auth/actor.js";
 import type * as modules_auth_auth from "../modules/auth/auth.js";
 import type * as modules_auth_origins from "../modules/auth/origins.js";
 import type * as modules_auth_recovery from "../modules/auth/recovery.js";
@@ -184,6 +191,7 @@ import type * as routes_agents_runs_events from "../routes/agents/runs/events.js
 import type * as routes_agents_runs_get from "../routes/agents/runs/get.js";
 import type * as routes_agents_runs_issue from "../routes/agents/runs/issue.js";
 import type * as routes_agents_runs_list from "../routes/agents/runs/list.js";
+import type * as routes_agents_runs_proposal from "../routes/agents/runs/proposal.js";
 import type * as routes_agents_runs_retry from "../routes/agents/runs/retry.js";
 import type * as routes_agents_runs_start from "../routes/agents/runs/start.js";
 import type * as routes_agents_runs_stop from "../routes/agents/runs/stop.js";
@@ -337,6 +345,13 @@ declare const fullApi: ApiFromModules<{
   "modules/assistant/agent/session": typeof modules_assistant_agent_session;
   "modules/assistant/agent/types": typeof modules_assistant_agent_types;
   "modules/assistant/chat/index": typeof modules_assistant_chat_index;
+  "modules/assistant/engine/functions": typeof modules_assistant_engine_functions;
+  "modules/assistant/engine/index": typeof modules_assistant_engine_index;
+  "modules/assistant/engine/manager": typeof modules_assistant_engine_manager;
+  "modules/assistant/engine/migrations": typeof modules_assistant_engine_migrations;
+  "modules/assistant/engine/turn": typeof modules_assistant_engine_turn;
+  "modules/assistant/engine/turns": typeof modules_assistant_engine_turns;
+  "modules/assistant/engine/workflow": typeof modules_assistant_engine_workflow;
   "modules/assistant/errors/index": typeof modules_assistant_errors_index;
   "modules/assistant/model/index": typeof modules_assistant_model_index;
   "modules/assistant/model/proposals": typeof modules_assistant_model_proposals;
@@ -348,10 +363,10 @@ declare const fullApi: ApiFromModules<{
   "modules/assistant/runs/tracking": typeof modules_assistant_runs_tracking;
   "modules/assistant/screen/index": typeof modules_assistant_screen_index;
   "modules/assistant/standalone/context": typeof modules_assistant_standalone_context;
-  "modules/assistant/standalone/execute": typeof modules_assistant_standalone_execute;
   "modules/assistant/standalone/index": typeof modules_assistant_standalone_index;
   "modules/assistant/standalone/session": typeof modules_assistant_standalone_session;
   "modules/assistant/validators/index": typeof modules_assistant_validators_index;
+  "modules/auth/actor": typeof modules_auth_actor;
   "modules/auth/auth": typeof modules_auth_auth;
   "modules/auth/origins": typeof modules_auth_origins;
   "modules/auth/recovery": typeof modules_auth_recovery;
@@ -499,6 +514,7 @@ declare const fullApi: ApiFromModules<{
   "routes/agents/runs/get": typeof routes_agents_runs_get;
   "routes/agents/runs/issue": typeof routes_agents_runs_issue;
   "routes/agents/runs/list": typeof routes_agents_runs_list;
+  "routes/agents/runs/proposal": typeof routes_agents_runs_proposal;
   "routes/agents/runs/retry": typeof routes_agents_runs_retry;
   "routes/agents/runs/start": typeof routes_agents_runs_start;
   "routes/agents/runs/stop": typeof routes_agents_runs_stop;
@@ -663,5 +679,6 @@ export declare const components: {
   agent: import("@convex-dev/agent/_generated/component.js").ComponentApi<"agent">;
   geospatial: import("@convex-dev/geospatial/_generated/component.js").ComponentApi<"geospatial">;
   rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
+  workflow: import("@convex-dev/workflow/_generated/component.js").ComponentApi<"workflow">;
   web: import("@convex-dev/static-hosting/_generated/component.js").ComponentApi<"web">;
 };

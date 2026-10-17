@@ -67,3 +67,11 @@ export type CommandSubmit = { error: string } | { run: () => unknown };
 
 /** A non-message row placed among thread messages by time. */
 export type DiscussionTimelineEvent = { content: ReactNode; createdAt: number; key: string };
+
+/** The thread message a Groam run answers, shown at the top of that run's card. */
+export type AssistantRunPrompt = {
+  attachmentCount: number;
+  authorName: string;
+  createdAt: number;
+  text: string;
+};

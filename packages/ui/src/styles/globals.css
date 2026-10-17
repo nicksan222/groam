@@ -102,6 +102,8 @@
 }
 
 @source '../../..';
+/* Streamdown renders AI markdown with Tailwind classes shipped in its dist. */
+@source '../../node_modules/streamdown/dist/*.js';
 
 @custom-variant dark (&:is(.dark *));
 

@@ -37,6 +37,7 @@ export function MessageExtras({
       {message.status === 'success' && displayedText && <CopyResponseButton text={displayedText} />}
       <AssistantToolCalls
         disabled={disabled}
+        kind="choice"
         onReply={onReply}
         parts={message.parts}
         selectedChoices={choiceResponses}

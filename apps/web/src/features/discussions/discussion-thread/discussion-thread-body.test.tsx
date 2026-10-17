@@ -17,8 +17,21 @@ const state = vi.hoisted(() => ({
   }
 }));
 
-vi.mock('@groam/ai/ui/chat/assistant-chat-message', () => ({
-  AssistantChatMessage: ({ message }: { message: { text: string } }) => <div>{message.text}</div>
+vi.mock('./assistant-run-card', () => ({
+  AssistantRunCard: ({
+    prompt,
+    replies
+  }: {
+    prompt?: { text: string };
+    replies: Array<{ key: string; text: string }>;
+  }) => (
+    <div>
+      {prompt ? <p>{prompt.text}</p> : null}
+      {replies.map((reply) => (
+        <p key={reply.key}>{reply.text}</p>
+      ))}
+    </div>
+  )
 }));
 
 vi.mock('@/features/discussions/hooks/use-discussion-message-actions', () => ({

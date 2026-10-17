@@ -4,8 +4,21 @@ import { page } from 'vite-plus/test/browser';
 import type { DiscussionMessage } from '@/features/discussions/hooks/use-discussion-thread';
 import { ThreadMessage } from './thread-message';
 
-vi.mock('@groam/ai/ui/chat/assistant-chat-message', () => ({
-  AssistantChatMessage: ({ message }: { message: { text: string } }) => <div>{message.text}</div>
+vi.mock('./assistant-run-card', () => ({
+  AssistantRunCard: ({
+    prompt,
+    replies
+  }: {
+    prompt?: { text: string };
+    replies: Array<{ key: string; text: string }>;
+  }) => (
+    <div>
+      {prompt ? <p>{prompt.text}</p> : null}
+      {replies.map((reply) => (
+        <p key={reply.key}>{reply.text}</p>
+      ))}
+    </div>
+  )
 }));
 
 function message(partial: Partial<DiscussionMessage> = {}): DiscussionMessage {
@@ -154,4 +167,18 @@ test('shows no failure notice for a completed request', async () => {
   await expect
     .element(page.getByRole('status').filter({ hasText: "Groam couldn't reply" }))
     .not.toBeInTheDocument();
+});
+
+test('attaches the Groam runs it asked for beneath the message', async () => {
+  await render(
+    <ThreadMessage
+      message={message({ mine: true })}
+      onReact={vi.fn()}
+      reactions={[]}
+      replies={[{ ...message({}), key: 'a1', role: 'assistant', text: 'Groam answer' }]}
+    />
+  );
+  const prompt = page.getByText('Hi!').element();
+  const reply = page.getByText('Groam answer').element();
+  expect(prompt.compareDocumentPosition(reply) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 });

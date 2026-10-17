@@ -1,5 +1,6 @@
 import type { UIMessage } from '@convex-dev/agent/react';
 import Timeline from '@groam/ui/components/timeline';
+import { cn } from '@groam/ui/lib/utils';
 import { parseAssistantToolActivity } from '#ai/agents';
 import { catalogToolLabel } from '#ai/backend/runs';
 import { cardForToolName } from '#ai/tools/specs';
@@ -25,14 +26,19 @@ const activityStrategy: ToolCallStrategy = {
 };
 
 export function AssistantToolCalls({
+  className = 'mt-2',
   disabled,
+  kind,
   onReply,
   parts,
   selectedChoices,
   settled = false,
   suppressChoices = false
 }: {
+  className?: string;
   disabled: boolean;
+  /** Render only activity cards or only choice prompts; both when omitted. */
+  kind?: 'activity' | 'choice';
   onReply?: (prompt: string) => Promise<boolean>;
   parts: UIMessage['parts'];
   selectedChoices?: Record<string, string>;
@@ -40,18 +46,7 @@ export function AssistantToolCalls({
   settled?: boolean;
   suppressChoices?: boolean;
 }) {
-  const calls = deduplicatePresentations(
-    parts.flatMap((part) => {
-      const toolName = toolNameFromPart(part);
-      const card = toolName ? cardForToolName(toolName) : 'hidden';
-      if (!toolName || card === 'hidden' || (suppressChoices && card === 'choice')) {
-        return [];
-      }
-      const strategy = card === 'choice' ? choiceStrategy : activityStrategy;
-      const presentation = strategy.present(part, toolName, settled);
-      return presentation ? [{ presentation, strategy }] : [];
-    })
-  );
+  const calls = toolCallPresentations(parts, { kind, settled, suppressChoices });
   if (calls.length === 0) return null;
   const activities = calls.filter(
     (call): call is (typeof calls)[number] & { presentation: ActivityPresentation } =>
@@ -64,7 +59,7 @@ export function AssistantToolCalls({
   const showActivityLine = activities.length > 1;
 
   return (
-    <div className="mt-2 space-y-1.5">
+    <div className={cn('space-y-1.5', className)}>
       {activities.length > 0 && (
         <Timeline
           aria-label="Groam activity"
@@ -106,6 +101,35 @@ export function AssistantToolCalls({
         );
       })}
     </div>
+  );
+}
+
+/** Visible tool-call cards for a message's parts, deduplicated, in call order. */
+export function toolCallPresentations(
+  parts: UIMessage['parts'],
+  {
+    kind,
+    settled = false,
+    suppressChoices = false
+  }: { kind?: 'activity' | 'choice'; settled?: boolean; suppressChoices?: boolean } = {}
+) {
+  return deduplicatePresentations(
+    parts.flatMap((part) => {
+      const toolName = toolNameFromPart(part);
+      const card = toolName ? cardForToolName(toolName) : 'hidden';
+      const cardKind = card === 'choice' ? 'choice' : 'activity';
+      if (
+        !toolName ||
+        card === 'hidden' ||
+        (suppressChoices && card === 'choice') ||
+        (kind && kind !== cardKind)
+      ) {
+        return [];
+      }
+      const strategy = card === 'choice' ? choiceStrategy : activityStrategy;
+      const presentation = strategy.present(part, toolName, settled);
+      return presentation ? [{ presentation, strategy }] : [];
+    })
   );
 }
 

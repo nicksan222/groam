@@ -48,6 +48,7 @@
     "./ui/context/agent-screen-context": "./src/ui/context/agent-screen-context.ts",
     "./ui/hooks/use-assistant": "./src/ui/hooks/use-assistant.ts",
     "./ui/hooks/use-assistant-chats": "./src/ui/hooks/use-assistant-chats.ts",
+    "./ui/messages/assistant-run-parts": "./src/ui/messages/assistant-run-parts.tsx",
     "./ui/runs/agent-retry-from-zero": "./src/ui/runs/agent-retry-from-zero.tsx",
     "./ui/runs/agent-run-banner": "./src/ui/runs/agent-run-banner.tsx",
     "./ui/shared/assistant-error-boundary": "./src/ui/shared/assistant-error-boundary.tsx",

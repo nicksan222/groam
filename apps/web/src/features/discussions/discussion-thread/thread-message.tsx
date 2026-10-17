@@ -1,4 +1,3 @@
-import { AssistantChatMessage } from '@groam/ai/ui/chat/assistant-chat-message';
 import { Button } from '@groam/ui/components/button';
 import { ChatMessage } from '@groam/ui/components/chat-message';
 import { Textarea } from '@groam/ui/components/textarea';
@@ -10,6 +9,8 @@ import {
 } from '@/features/discussions/hooks/use-thread-message-edit';
 import { useOptionalWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
 import { testIds } from '@/lib/test-ids';
+import { AssistantReplyError } from './assistant-reply-error';
+import { AssistantRunCard } from './assistant-run-card';
 import { discussionMessageBody } from './discussion-message-body';
 import { ThreadMessageReactions } from './thread-message-reactions';
 import { groupThreadReactions } from './thread-message-stamps';
@@ -17,12 +18,15 @@ import { ThreadMessageToolbar } from './thread-message-toolbar';
 
 export function ThreadMessage({
   message,
+  replies = [],
   onEdit,
   onReact,
   onRemove,
   reactions
 }: {
   message: DiscussionMessage;
+  /** Groam replies this message asked for, shown attached beneath it. */
+  replies?: DiscussionMessage[];
   onEdit?: (text: string) => void;
   onReact: (emoji: string) => void;
   onRemove?: () => void;
@@ -33,7 +37,7 @@ export function ThreadMessage({
   const stamps = groupThreadReactions(reactions, viewerUserId);
 
   if (message.role === 'assistant') {
-    return <AssistantChatMessage disabled message={message} />;
+    return <AssistantRunCard replies={[message]} />;
   }
 
   const body = discussionMessageBody(message);
@@ -54,39 +58,51 @@ export function ThreadMessage({
     );
   }
 
-  const failed = message.assistantStatus === 'failed';
-  const chat = (
-    <ChatMessage
-      actions={
-        <ThreadMessageToolbar
-          mine={mine}
-          onEdit={onEdit ? startEditing : undefined}
-          onReact={onReact}
-          onRemove={onRemove}
-          stamps={stamps}
-        />
-      }
-      attachments={body.attachments}
-      authorName={message.author?.name}
-      createdAt={message._creationTime}
+  const toolbar = (
+    <ThreadMessageToolbar
       mine={mine}
-      reactions={
-        stamps.length > 0 ? (
-          <ThreadMessageReactions mine={mine} onReact={onReact} stamps={stamps} />
-        ) : undefined
-      }
-      status={message.status}
-      testId={testIds.chatMessage}
-      text={body.text}
+      onEdit={onEdit ? startEditing : undefined}
+      onReact={onReact}
+      onRemove={onRemove}
+      stamps={stamps}
     />
   );
-  if (!failed) return chat;
+  const stampRow =
+    stamps.length > 0 ? (
+      <ThreadMessageReactions mine={mine} onReact={onReact} stamps={stamps} />
+    ) : undefined;
+  const chat =
+    replies.length > 0 ? (
+      <AssistantRunCard
+        actions={toolbar}
+        mine={mine}
+        prompt={{
+          attachmentCount: body.attachments.length,
+          authorName: mine ? 'You' : (message.author?.name ?? 'Participant'),
+          createdAt: message._creationTime,
+          text: body.text
+        }}
+        reactions={stampRow}
+        replies={replies}
+      />
+    ) : (
+      <ChatMessage
+        actions={toolbar}
+        attachments={body.attachments}
+        authorName={message.author?.name}
+        createdAt={message._creationTime}
+        mine={mine}
+        reactions={stampRow}
+        status={message.status}
+        testId={testIds.chatMessage}
+        text={body.text}
+      />
+    );
+  if (message.assistantStatus !== 'failed') return chat;
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5">
       {chat}
-      <p className={cn('px-1 text-xs text-destructive', mine && 'text-right')} role="status">
-        Groam couldn&apos;t reply: {message.assistantError ?? 'Something went wrong'}
-      </p>
+      <AssistantReplyError error={message.assistantError} mine={mine} />
     </div>
   );
 }

@@ -63,7 +63,8 @@ export function TripVersionDetail({
   const notice = ideaDetailNotice(proposal.status);
 
   return (
-    <Shell.PageStack>
+    // Room under the comment box so long conversations never end flush with the viewport.
+    <Shell.PageStack className="pb-[calc(4rem+env(safe-area-inset-bottom))]">
       <VersionHeader
         close={close}
         embedded={embedded}
