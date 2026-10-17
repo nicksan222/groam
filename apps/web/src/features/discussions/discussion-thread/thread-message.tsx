@@ -16,9 +16,11 @@ import { ThreadMessageReactions } from './thread-message-reactions';
 import { groupThreadReactions } from './thread-message-stamps';
 import { ThreadMessageToolbar } from './thread-message-toolbar';
 
+const NO_REPLIES: DiscussionMessage[] = [];
+
 export function ThreadMessage({
   message,
-  replies = [],
+  replies = NO_REPLIES,
   onEdit,
   onReact,
   onRemove,

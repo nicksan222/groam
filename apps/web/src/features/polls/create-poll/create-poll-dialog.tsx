@@ -4,7 +4,7 @@ import { Input } from '@groam/ui/components/input';
 import { Label } from '@groam/ui/components/label';
 import { Switch } from '@groam/ui/components/switch';
 import { Plus, X } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { testIds } from '@/lib/test-ids';
 import type { CreatePollDraft } from '@/types/polls';
 
@@ -28,7 +28,8 @@ export function CreatePollDialog({
 }) {
   const [question, setQuestion] = useState('');
   const [options, setOptions] = useState(blankRows);
-  const [nextId, setNextId] = useState(2);
+  // Only read when adding a row, so it never needs to trigger a render.
+  const nextId = useRef(2);
   const [multiSelect, setMultiSelect] = useState(false);
   const [pending, setPending] = useState(false);
   const filled = options.map((option) => option.label.trim()).filter(Boolean);
@@ -116,8 +117,8 @@ export function CreatePollDialog({
           data-testid={testIds.createPollAddOption}
           disabled={options.length >= MAX_OPTIONS}
           onClick={() => {
-            setOptions([...options, { id: nextId, label: '' }]);
-            setNextId(nextId + 1);
+            setOptions([...options, { id: nextId.current, label: '' }]);
+            nextId.current += 1;
           }}
           size="sm"
           type="button"

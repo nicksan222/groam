@@ -33,9 +33,11 @@ import {
   revokePendingAttachmentUrls
 } from './discussion-pending-attachments';
 
+const NO_COMMANDS: ComposerCommand[] = [];
+
 export function DiscussionThreadComposer({
   canStop,
-  commands = [],
+  commands = NO_COMMANDS,
   isStopping,
   onSend,
   onStop

@@ -113,9 +113,11 @@ test('edits a message from the actions menu', async () => {
   await page.getByRole('button', { name: 'Message actions' }).click();
   await page.getByRole('menuitem', { name: 'Edit' }).click();
   await page.getByLabelText('Edit message').fill('See you in Rome');
+  // The rich text editor commits its change asynchronously; wait for it before saving.
+  await expect.element(page.getByLabelText('Edit message')).toHaveTextContent('See you in Rome');
   await page.getByRole('button', { name: 'Save' }).click();
 
-  expect(onEdit).toHaveBeenCalledWith('See you in Rome');
+  await expect.poll(() => onEdit).toHaveBeenCalledWith('See you in Rome');
 });
 
 test('deletes a message after confirmation', async () => {

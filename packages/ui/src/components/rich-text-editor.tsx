@@ -4,7 +4,7 @@ import { Markdown } from '@tiptap/markdown';
 import { type Editor, EditorContent, Extension, useEditor, useEditorState } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Bold, Code, Italic, List, ListOrdered, Strikethrough } from 'lucide-react';
-import { type Ref, useEffect, useImperativeHandle, useRef } from 'react';
+import { type Ref, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
 import { Button } from './button';
 
 export type RichTextEditorHandle = {
@@ -70,7 +70,10 @@ export function RichTextEditor({
 }: RichTextEditorProps) {
   // Latest callbacks for the keyboard extension, which is created once.
   const handlers = useRef({ onEscape, onSubmit, submitShortcut });
-  handlers.current = { onEscape, onSubmit, submitShortcut };
+  // Sync after commit; key presses only arrive once the editor is mounted.
+  useLayoutEffect(() => {
+    handlers.current = { onEscape, onSubmit, submitShortcut };
+  }, [onEscape, onSubmit, submitShortcut]);
 
   const editor = useEditor({
     autofocus: autoFocus ? 'end' : false,

@@ -2,10 +2,10 @@ import type { UIMessage } from '@convex-dev/agent/react';
 import { useSmoothText } from '@convex-dev/agent/react';
 import {
   type ActivityPresentation,
-  AssistantReplyExtras,
   assistantReplyText,
   assistantRunActivities
-} from '@groam/ai/ui/messages/assistant-run-parts';
+} from '@groam/ai/ui/messages/assistant-run-activities';
+import { AssistantReplyExtras } from '@groam/ai/ui/messages/assistant-run-parts';
 import { Markdown } from '@groam/ui/components/markdown';
 import Timeline from '@groam/ui/components/timeline';
 import { cn } from '@groam/ui/lib/utils';
