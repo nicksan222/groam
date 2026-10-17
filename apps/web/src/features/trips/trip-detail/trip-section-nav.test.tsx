@@ -43,6 +43,7 @@ test('lists the tabs in order with Board first', async () => {
   expect(tabs.elements().map((tab) => tab.getAttribute('data-testid'))).toEqual([
     testIds.tripSectionBoard,
     testIds.tripSectionOverview,
+    testIds.tripSectionPacking,
     testIds.tripSectionIssues,
     testIds.tripSectionIdeas,
     testIds.tripSectionPolls,
@@ -52,6 +53,7 @@ test('lists the tabs in order with Board first', async () => {
   expect(tabs.elements().map((tab) => tab.textContent?.replace(/\s+/gu, ' ').trim())).toEqual([
     'Board',
     'Overview',
+    'Packing',
     'Issues(0)',
     'Ideas(0)',
     'Polls',

@@ -114,13 +114,16 @@ test('parses packing files without attachment fields and validates their content
   });
   expect(
     VersionSnapshotFormat.parse({
-      files: [tripFile('Packing'), packingFile({ label: 'Passport', packed: true, sortOrder: 0 })]
+      files: [tripFile('Packing'), packingFile({ label: 'Passport', quantity: 2, sortOrder: 0 })]
     }).packingItems
-  ).toEqual([{ key: 'passport', value: { label: 'Passport', packed: true, sortOrder: 0 } }]);
+  ).toEqual([{ key: 'passport', value: { label: 'Passport', quantity: 2, sortOrder: 0 } }]);
   for (const value of [
-    { label: '', packed: false, sortOrder: 0 },
-    { label: 'Passport', packed: 'yes', sortOrder: 0 },
-    { label: 'Passport', packed: true, sortOrder: -1 }
+    { label: '', quantity: 1, sortOrder: 0 },
+    { label: 'Passport', quantity: 'two', sortOrder: 0 },
+    { label: 'Passport', quantity: 0, sortOrder: 0 },
+    { label: 'Passport', quantity: 100, sortOrder: 0 },
+    { label: 'Passport', quantity: 1, sortOrder: -1 },
+    { label: 'Passport', sortOrder: 0 }
   ]) {
     expect(() =>
       VersionSnapshotFormat.parse({ files: [tripFile('Packing'), packingFile(value)] })
@@ -128,10 +131,48 @@ test('parses packing files without attachment fields and validates their content
   }
 });
 
+test('drops legacy checklist files instead of throwing', () => {
+  const parsed = VersionSnapshotFormat.parse({
+    files: [
+      tripFile('Packing'),
+      {
+        path: 'packing/passport.json',
+        value: JSON.stringify({ label: 'Passport', packed: true, sortOrder: 0 })
+      },
+      {
+        path: 'packing/hat.json',
+        value: JSON.stringify({ label: 'Hat', quantity: 1, sortOrder: 1 })
+      }
+    ]
+  });
+  expect(parsed.packingItems.map((item) => item.key)).toEqual(['hat']);
+});
+
+test('parses and validates packing bringer files', () => {
+  const bringerFile = (value: unknown, path = 'packingBringers/hat--ana.json') => ({
+    path,
+    value: JSON.stringify(value)
+  });
+  expect(
+    VersionSnapshotFormat.parse({
+      files: [tripFile('Packing'), bringerFile({ count: 2, itemKey: 'hat', userId: 'ana' })]
+    }).packingBringers
+  ).toEqual([{ key: 'hat--ana', value: { count: 2, itemKey: 'hat', userId: 'ana' } }]);
+  for (const file of [
+    bringerFile({ count: 0, itemKey: 'hat', userId: 'ana' }),
+    bringerFile({ count: 1, itemKey: 'hat' }),
+    bringerFile({ count: 1, itemKey: 'hat', userId: 'bo' })
+  ]) {
+    expect(() => VersionSnapshotFormat.parse({ files: [tripFile('Packing'), file] })).toThrow(
+      'invalid packing assignment data'
+    );
+  }
+});
+
 test('rejects a merged packing list beyond the item limit', () => {
   const files = Array.from({ length: 201 }, (_, index) => ({
     path: `packing/item-${index}.json`,
-    value: JSON.stringify({ label: 'Item', packed: false, sortOrder: index })
+    value: JSON.stringify({ label: 'Item', quantity: 1, sortOrder: index })
   }));
   expect(() => VersionSnapshotFormat.parse({ files: [tripFile('Packing'), ...files] })).toThrow(
     'up to 200 packing items'

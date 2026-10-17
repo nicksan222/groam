@@ -41,7 +41,8 @@ export function useIdeaCloneWorkspace({
   const navigate = useNavigate();
   const { pendingAction, run } = useProposalActionRunner();
   const [confirmingApply, setConfirmingApply] = useState(false);
-  const planningSection: TripSection = view === 'itinerary' ? 'itinerary' : 'overview';
+  const planningSection: TripSection =
+    view === 'itinerary' || view === 'packing' ? view : 'overview';
   useTripAgentContext(trip, view === 'compare' ? 'idea-compare' : planningSection);
 
   const missing = workingState.exists === false;

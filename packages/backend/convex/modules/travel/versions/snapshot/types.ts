@@ -58,8 +58,11 @@ export type ParsedVersionSnapshot = {
       >
     >
   >;
+  packingBringers: Array<
+    SnapshotItem<Pick<Doc<'tripPackingBringers'>, 'count' | 'userId'> & { itemKey: string }>
+  >;
   packingItems: Array<
-    SnapshotItem<Pick<Doc<'tripPackingItems'>, 'label' | 'packed' | 'sortOrder'>>
+    SnapshotItem<Pick<Doc<'tripPackingItems'>, 'label' | 'sortOrder'> & { quantity: number }>
   >;
   stays: Array<
     SnapshotItem<

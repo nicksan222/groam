@@ -11,12 +11,12 @@ test(
   async () => {
     const { owner, tripId, sharedTripId } = await setupWritableTrip(0);
     const item = await owner.client.mutation(writes.add, { label: 'Passport', tripId });
-    expect(item).toMatchObject({ label: 'Passport', packed: false });
+    expect(item).toMatchObject({ label: 'Passport', quantity: 1 });
     await expect(
-      owner.client.mutation(writes.update, { itemId: item.id, packed: true, tripId })
-    ).resolves.toMatchObject({ label: 'Passport', packed: true });
+      owner.client.mutation(writes.update, { itemId: item.id, quantity: 2, tripId })
+    ).resolves.toMatchObject({ label: 'Passport', quantity: 2 });
     await expect(owner.client.query(writes.list, { tripId })).resolves.toEqual(
-      expect.arrayContaining([expect.objectContaining({ id: item.id, packed: true })])
+      expect.arrayContaining([expect.objectContaining({ id: item.id, quantity: 2 })])
     );
     await owner.client.mutation(writes.remove, { itemId: item.id, tripId });
     expect(

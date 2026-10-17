@@ -21,10 +21,8 @@ vi.mock('@/features/trips/trip-versions/trip-version-detail', () => ({
   )
 }));
 
-vi.mock('@/features/trips/trip-overview/trip-overview', () => ({
-  TripOverview: ({ isLoading }: { isLoading?: boolean }) => (
-    <div data-loading={String(Boolean(isLoading))}>trip-overview</div>
-  )
+vi.mock('@groam/ui/components/page-loading', () => ({
+  PageLoading: ({ label }: { label: string }) => <div data-loading="true">{label}</div>
 }));
 
 vi.mock('@/features/trips/trip-destinations/itinerary-details-banner', () => ({
@@ -36,16 +34,14 @@ vi.mock('@/features/trips/trip-destinations/itinerary-details-banner', () => ({
 vi.mock('@/features/trips/trip-detail/active-trip-section', () => ({
   ActiveTripSection: ({
     addDestinationOpen,
-    onEdit,
     section
   }: {
     addDestinationOpen: boolean;
-    onEdit: () => void;
     section: string;
   }) => (
-    <button onClick={onEdit} type="button">
+    <p>
       active-section:{section}:{String(addDestinationOpen)}
-    </button>
+    </p>
   )
 }));
 
@@ -54,7 +50,6 @@ const trip = { id: 'trip-2', name: 'Atlantic week' } as unknown as TripDetail;
 function renderBody(
   overrides: Partial<{
     addDestinationOpen: boolean;
-    onEdit: () => void;
     showLoading: boolean;
     trip: TripDetail | undefined;
     view: IdeaCloneView;
@@ -64,7 +59,6 @@ function renderBody(
     <IdeaCloneBody
       addDestinationOpen={false}
       navigation={{} as TripNavigation}
-      onEdit={vi.fn()}
       planningSection={'itinerary' as never}
       proposalId={'idea-1' as Id<'tripProposals'>}
       showLoading={false}
@@ -91,14 +85,14 @@ describe('IdeaCloneBody', () => {
     {
       loading: true,
       name: 'overview while loading',
-      text: 'trip-overview',
+      text: 'Loading idea…',
       tripValue: trip,
       view: 'overview'
     },
     {
       loading: false,
       name: 'overview without a trip',
-      text: 'trip-overview',
+      text: 'Loading idea…',
       tripValue: undefined,
       view: 'overview'
     },
@@ -142,12 +136,8 @@ describe('IdeaCloneBody', () => {
   test.each<IdeaCloneView>(['overview', 'itinerary'])(
     '%s shows the planning section',
     async (view) => {
-      const onEdit = vi.fn();
-      await renderBody({ addDestinationOpen: true, onEdit, view });
-      const section = page.getByRole('button', { name: 'active-section:itinerary:true' });
-      await expect.element(section).toBeVisible();
-      await section.click();
-      expect(onEdit).toHaveBeenCalledTimes(1);
+      await renderBody({ addDestinationOpen: true, view });
+      await expect.element(page.getByText('active-section:itinerary:true')).toBeVisible();
     }
   );
 });

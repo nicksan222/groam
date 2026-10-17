@@ -1,9 +1,10 @@
 import type { TripSection } from '@/types/trips';
 
-/** Every section a trip URL can name. The idea working copy only uses overview and itinerary. */
+/** Every section a trip URL can name. The idea working copy only uses overview, packing, and itinerary. */
 export const tripSections = [
   'board',
   'overview',
+  'packing',
   'issues',
   'ideas',
   'polls',
@@ -16,6 +17,7 @@ export const tripSections = [
 export const tripTabSections = [
   'board',
   'overview',
+  'packing',
   'issues',
   'ideas',
   'polls',
@@ -34,6 +36,7 @@ export const tripSectionLabels: Record<TripSection, string> = {
   issues: 'Issues',
   itinerary: 'Itinerary',
   overview: 'Overview',
+  packing: 'Packing',
   polls: 'Polls',
   research: 'Research'
 };

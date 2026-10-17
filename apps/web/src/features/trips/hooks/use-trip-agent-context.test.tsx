@@ -34,6 +34,22 @@ vi.mock('./use-trip-issues', () => ({
   })
 }));
 
+vi.mock('./use-trip-packing', () => ({
+  useTripPacking: (tripId: unknown) => ({
+    isLoading: false,
+    items: tripId
+      ? [
+          {
+            bringers: [{ count: 1, image: null, name: 'Alex', userId: 'user-alex' }],
+            brought: 1,
+            id: 'item-1',
+            label: 'Hair dryer',
+            quantity: 3
+          }
+        ]
+      : []
+  })
+}));
 vi.mock('./use-trip-travelers', () => ({
   useTripTravelers: (tripId: unknown) => ({
     travelers: tripId ? [{ name: 'Alex', status: 'going', userId: 'user-alex' }] : []
@@ -97,7 +113,7 @@ const sharedBoard = { ...trip, permissions: { ...trip.permissions, canEdit: fals
 const proposalTrip = { ...trip, proposal: { status: 'draft' } } as unknown as TripDetail;
 const archivedBoard = { ...sharedBoard, archivedAt: Date.now() } as TripDetail;
 
-test.each(['activity', 'board', 'ideas', 'issues', 'itinerary', 'overview'] as const)(
+test.each(['activity', 'board', 'ideas', 'issues', 'itinerary', 'overview', 'packing'] as const)(
   'builds explicit screen data for the %s section',
   (section) => {
     const context = tripScreenAgentContext(trip, section);
@@ -107,7 +123,7 @@ test.each(['activity', 'board', 'ideas', 'issues', 'itinerary', 'overview'] as c
     // The assistant backend has no "board" section yet, so the board reports "overview".
     expect(context.target).toEqual({
       kind: 'trip',
-      section: section === 'board' ? 'overview' : section,
+      section: section === 'board' || section === 'packing' ? 'overview' : section,
       tripId: 'trip-1'
     });
   }
@@ -132,15 +148,47 @@ test.each([
   ['archived board', archivedBoard, 'board', ['trip.version.apply']],
   ['ideas tab', sharedBoard, 'ideas', ['trip.version.approve', 'trip.version.apply']],
   ['issues tab', sharedBoard, 'issues', ['trip.itinerary.read']],
-  ['shared overview', sharedBoard, 'overview', ['trip.packing.read']],
-  ['proposal overview', proposalTrip, 'overview', ['trip.packing.manage']]
+  ['shared packing', sharedBoard, 'packing', ['trip.packing.read']],
+  ['proposal packing', proposalTrip, 'packing', ['trip.packing.manage']]
 ] as const)('grants the capabilities of the %s', (_name, subject, section, expected) => {
   expect(tripScreenAgentContext(subject, section).capabilities).toEqual(
     expect.arrayContaining([...expected])
   );
 });
 
+test('the packing section reports group gear coverage and never a personal list', () => {
+  const packing = [
+    {
+      bringers: [{ count: 1, name: 'Alex', userId: 'user-alex' }],
+      brought: 1,
+      id: 'item-1',
+      label: 'Hair dryer',
+      quantity: 3
+    }
+  ];
+  const travelers = [{ name: 'Alex', status: 'going', userId: 'user-alex' }];
+  const context = tripScreenAgentContext(sharedBoard, 'packing', { packing, travelers });
+  expect(context.data).toMatchObject({ groupGear: [{ label: 'Hair dryer', missing: 2 }] });
+  expect(context.data).toMatchObject({
+    needsIdeaToEdit: true,
+    personalList: { privateToViewer: true },
+    travelers,
+    viewerCanEdit: false
+  });
+  expect(JSON.stringify(context.data)).not.toContain('Charger');
+  expect(
+    tripScreenAgentContext(proposalTrip, 'packing', { packing, travelers }).data
+  ).toMatchObject({ needsIdeaToEdit: false, viewerCanEdit: true });
+  expect(context.capabilities).not.toContain('trip.packing.manage');
+});
+
 describe('capability limits', () => {
+  test('the overview no longer carries packing capabilities', () => {
+    expect(tripScreenAgentContext(proposalTrip, 'overview').capabilities).not.toContain(
+      'trip.packing.manage'
+    );
+  });
+
   test('archived boards cannot set travelers', () => {
     expect(tripScreenAgentContext(archivedBoard, 'board').capabilities).not.toContain(
       'trip.traveler.set'
@@ -192,6 +240,19 @@ test('forwards live trip section changes through the shared agent context hook',
   );
   expect(context().textContent).toContain('trip.activity.add');
   expect(context().textContent).not.toContain('user-alex');
+});
+
+test('the live packing tab forwards group gear with bringers and travelers', async () => {
+  const context = () => page.getByRole('status', { name: 'Trip agent context' }).element();
+  await render(
+    <AgentContextProvider>
+      <TripRegistration section="packing" />
+      <Probe />
+    </AgentContextProvider>
+  );
+  expect(context().textContent).toContain('Hair dryer');
+  expect(context().textContent).toContain('user-alex');
+  expect(context().textContent).toContain('trip.packing.read');
 });
 
 test('the issues and ideas tabs each carry their own data', () => {

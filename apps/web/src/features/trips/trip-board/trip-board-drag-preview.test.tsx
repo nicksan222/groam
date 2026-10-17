@@ -3,6 +3,7 @@ import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
+import { boardLink } from '@/features/trips/testing/trip-board-fixtures';
 import type { TripBoardIdea, TripBoardIssue } from '@/types/trip-board';
 import type { TripBoardDragItem } from '@/types/trip-board';
 import { TripBoardDragPreview } from './trip-board-drag-preview';
@@ -84,6 +85,27 @@ describe('TripBoardDragPreview', () => {
     await render(<TripBoardDragPreview item={item} />);
     await expect.element(page.getByTestId('trip-board-drag-preview')).toBeVisible();
     await expect.element(page.getByRole('link', { name: 'Book flights' })).toBeVisible();
+  });
+
+  test('keeps the idea pairing and its hue on the lifted issue', async () => {
+    const closed = {
+      id: 'idea-new',
+      status: 'closed',
+      title: 'Camping',
+      workingTripId: 'trip-work'
+    };
+    const item: TripBoardDragItem = {
+      archived: false,
+      canPropose: true,
+      issue: makeIssue('Book flights', { idea: closed } as Partial<TripBoardIssue>),
+      kind: 'issue',
+      link: boardLink('Hostel', { tone: 2 })
+    };
+    await render(<TripBoardDragPreview item={item} />);
+    await expect.element(page.getByText('Idea closed')).not.toBeInTheDocument();
+    await expect
+      .element(page.getByText('Idea in review').element().parentElement!)
+      .toHaveClass(/bg-chart-4/);
   });
 
   test('previews an idea as a card with an Idea chip', async () => {

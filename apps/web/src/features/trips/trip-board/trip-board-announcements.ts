@@ -11,7 +11,10 @@ const sentence = (text: string) => (/[.!?]$/u.test(text) ? text : `${text}.`);
 
 function say(decision: TripBoardDropDecision | null) {
   if (decision?.outcome === 'allowed') return sentence(decision.move.label);
-  if (decision?.outcome === 'refused') return sentence(decision.reason);
+  if (decision?.outcome === 'refused') {
+    const reason = sentence(decision.reason);
+    return decision.heading ? `${sentence(decision.heading)} ${reason}` : reason;
+  }
   return null;
 }
 

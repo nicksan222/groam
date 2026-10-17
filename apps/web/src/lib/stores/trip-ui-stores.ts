@@ -47,6 +47,7 @@ export const useCreateTripIdeaDialogStore = create<CreateTripIdeaDialogStore>((s
       dialogOpen: true,
       intent: {
         addDestination: intent?.addDestination ?? false,
+        claimGear: intent?.claimGear,
         section: intent?.section ?? 'overview'
       }
     }),

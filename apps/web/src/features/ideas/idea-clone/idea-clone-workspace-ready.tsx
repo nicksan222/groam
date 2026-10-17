@@ -90,7 +90,6 @@ export function IdeaCloneWorkspaceReady({
         <IdeaCloneBody
           addDestinationOpen={addDestinationOpen}
           navigation={page.navigation}
-          onEdit={page.editDetails}
           planningSection={page.planningSection}
           proposalId={proposalId}
           showLoading={showLoading}

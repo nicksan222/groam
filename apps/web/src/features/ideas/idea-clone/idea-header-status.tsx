@@ -30,7 +30,10 @@ export function IdeaHeaderStatus({
         <Icon aria-hidden className="size-3" />
         {mode}
       </span>
-      <span data-testid={testIds.ideaStatusBadge}>
+      <span
+        className="inline-flex **:data-[slot=badge]:h-6 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:px-2.5"
+        data-testid={testIds.ideaStatusBadge}
+      >
         <IdeaStatusBadge conflictCount={idea?.proposal?.conflicts.length ?? 0} status={status} />
       </span>
       <span className={`${pillClass} hidden min-w-0 truncate font-normal sm:inline-flex`}>

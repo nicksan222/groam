@@ -46,6 +46,11 @@ export function removedDestinationChanges(changes: readonly ItineraryChange[] | 
   );
 }
 
+/** Packing changes live on the Packing tab, so the itinerary views skip them. */
+export function isPackingEntity(entity: string): boolean {
+  return entity === 'packing' || entity === 'packingBringer';
+}
+
 export function unplacedRemovedChanges(
   changes: readonly ItineraryChange[] | null | undefined,
   placedKeys: Iterable<string>
@@ -53,7 +58,7 @@ export function unplacedRemovedChanges(
   const placed = new Set(placedKeys);
   return (changes ?? []).filter(
     (change) =>
-      change.entity !== 'packing' && change.change === 'removed' && !placed.has(change.key)
+      !isPackingEntity(change.entity) && change.change === 'removed' && !placed.has(change.key)
   );
 }
 

@@ -44,7 +44,7 @@ const makeTrip = (over: Record<string, unknown> = {}) =>
 
 const packing = vi.hoisted(() => ({
   isLoading: false,
-  items: [] as { id: string; label: string; packed: boolean }[]
+  items: [] as { brought: number; id: string; label: string; quantity: number }[]
 }));
 
 vi.mock('@/features/trips/hooks/use-trip-packing', () => ({

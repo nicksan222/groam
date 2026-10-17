@@ -113,3 +113,17 @@ test('a long packing item name still reaches the packing list', () => {
     asks('Update the Passport and travel insurance item on the packing list', 'trip.packing.manage')
   ).toBe(true);
 });
+
+test('bring and quantity sentences request a packing write', () => {
+  expect(asks("I'll bring the tent", 'trip.packing.manage')).toBe(true);
+  expect(asks('Ana will bring 2 sleeping bags', 'trip.packing.manage')).toBe(true);
+  expect(asks('We need 4 water bottles on the packing list', 'trip.packing.manage')).toBe(true);
+  expect(asks('What is on the packing checklist?', 'trip.packing.manage')).toBe(false);
+});
+
+test('personal packing phrases', () => {
+  expect(asks('Tick off socks on my packing list', 'trip.packing.personal.manage')).toBe(true);
+  expect(asks('Add sunscreen to my list', 'trip.packing.personal.manage')).toBe(true);
+  expect(asks('Untick the charger', 'trip.packing.personal.manage')).toBe(true);
+  expect(asks('What is on my packing list?', 'trip.packing.personal.manage')).toBe(false);
+});

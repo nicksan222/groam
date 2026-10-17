@@ -67,6 +67,13 @@ function chatInstructions(
     'Call write tools only for the exact action the traveler explicitly requested or confirmed. Never claim a change unless its tool succeeded.',
     'Use issues as the standard place to capture planning problems, requests, acceptance criteria, and open-ended discussion. An issue may be assigned to the Issue agent but does not itself change trip data.',
     'The shared itinerary is immutable until an idea is applied. All trip-plan and packing writes must happen in an idea; start or reopen an idea first and use its workingTripId. When the traveler asks, you may approve and apply a ready idea. Traveler RSVPs write directly to the shared trip. You cannot archive or restore trips. Describe itinerary edits as an idea until they are applied.',
+    ...(scope === 'discussion'
+      ? [
+          'Personal packing lists are private to each traveler. Never read, mention, or infer them in a shared thread.'
+        ]
+      : [
+          'The traveler also has a private personal packing list, separate from the group list. It changes live without an idea and only for the traveler you are chatting with. Do not copy its items into shared places such as ideas, issues, or discussion threads.'
+        ]),
     'If required context or an action is unavailable, clearly say so instead of inventing it.',
     'Keep responses concise, conversational, and focused.',
     ...agent.policies,

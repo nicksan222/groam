@@ -254,22 +254,41 @@ test('schedules title generation after destination edits', { timeout: 10_000 }, 
   });
 });
 
-test('ignores title generation for submitted ideas', { timeout: 10_000 }, async () => {
+test('keeps retitling submitted ideas', { timeout: 10_000 }, async () => {
   const { owner, tripId } = await setupTrip();
   const version = await draftChangedVersion(owner, tripId);
   await owner.client.action(api.routes.trips.versions.submit.run, {
     proposalId: version.proposalId
   });
+  const generation = await owner.client.run(async (ctx) => {
+    const proposal = await ctx.db.get('tripProposals', version.proposalId);
+    return proposal?.titleGeneration ?? 0;
+  });
 
   await owner.client.mutation(internal.modules.travel.versions.agent.title.index.finish, {
-    generation: 1,
+    generation,
     proposalId: version.proposalId,
-    title: 'Should not apply after submit'
+    title: 'Retitled while in review'
   });
 
   await expect(
     owner.client.query(api.routes.trips.versions.list.run, { tripId })
-  ).resolves.toMatchObject([{ status: 'in_review', title: expect.stringMatching(/trip idea$/u) }]);
+  ).resolves.toMatchObject([{ status: 'in_review', title: 'Retitled while in review' }]);
+});
+
+test('clamps long generated titles to the auto-title limit', { timeout: 10_000 }, async () => {
+  const { owner, tripId } = await setupTrip();
+  const version = await draftChangedVersion(owner, tripId);
+
+  await owner.client.mutation(internal.modules.travel.versions.agent.title.index.finish, {
+    generation: 1,
+    proposalId: version.proposalId,
+    title: 'Add a long coastal detour through Sintra, Cascais, and the Arrábida hills'
+  });
+
+  await expect(
+    owner.client.query(api.routes.trips.versions.list.run, { tripId })
+  ).resolves.toMatchObject([{ title: 'Add a long coastal detour through Sintra' }]);
 });
 
 test(

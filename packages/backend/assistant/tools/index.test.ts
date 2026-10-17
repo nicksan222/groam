@@ -261,7 +261,7 @@ test('treats RSVP changes as write intent and ignores status questions', async (
   ).rejects.toThrow('requires an explicit traveler request');
 });
 
-test('treats packing add and check-off phrases as write intent', async () => {
+test('treats packing add and bring phrases as write intent', async () => {
   const questionTools = toolsFor('What is on the packing checklist?');
   await expect(
     Promise.resolve().then(() =>
@@ -276,11 +276,11 @@ test('treats packing add and check-off phrases as write intent', async () => {
     )
   ).rejects.toThrow('To use a Convex tool');
 
-  const checkTools = toolsFor('Check off Passport on the packing list.');
+  const checkTools = toolsFor("I'll bring the tent.");
   await expect(
     Promise.resolve().then(() =>
       checkTools.managePacking?.execute?.(
-        { action: 'update', itemId: 'item-1', packed: true },
+        { action: 'bring', count: 1, itemId: 'item-1', userId: 'u1' },
         {} as never
       )
     )
@@ -293,11 +293,11 @@ test('treats packing add and check-off phrases as write intent', async () => {
     )
   ).rejects.toThrow('To use a Convex tool');
 
-  const packTools = toolsFor('Pack Passport.');
+  const packTools = toolsFor('We need 3 tents on the packing list.');
   await expect(
     Promise.resolve().then(() =>
       packTools.managePacking?.execute?.(
-        { action: 'update', itemId: 'item-1', packed: true },
+        { action: 'update', itemId: 'item-1', quantity: 2 },
         {} as never
       )
     )
@@ -337,7 +337,7 @@ test('treats packing add and check-off phrases as write intent', async () => {
   await expect(
     Promise.resolve().then(() =>
       rsvpTools.managePacking?.execute?.(
-        { action: 'update', itemId: 'item-1', packed: true },
+        { action: 'update', itemId: 'item-1', quantity: 2 },
         {} as never
       )
     )
@@ -895,4 +895,34 @@ test('tools outside a run call Convex without asRun', async () => {
     'stop after the call'
   );
   expect(calls).toEqual([{ tripId: 'trip-1' }]);
+});
+
+test('personal packing tools exist only in private chats', () => {
+  const personal = ['listMyPacking', 'manageMyPacking'];
+  expect(Object.keys(toolsFor('Tick off my socks', { scope: 'private' }))).toEqual(
+    expect.arrayContaining(personal)
+  );
+  for (const scope of ['discussion', 'standalone'] as const) {
+    const names = Object.keys(toolsFor('Tick off my socks', { scope }));
+    for (const name of personal) expect(names).not.toContain(name);
+  }
+  for (const agentId of ['issue', 'reviewer'] as const) {
+    const names = Object.keys(toolsFor('Tick off my socks', { agentId }));
+    for (const name of personal) expect(names).not.toContain(name);
+  }
+});
+
+test('personal packing writes need an explicit request', async () => {
+  const allowed = toolsFor('Tick off socks on my packing list');
+  await expect(
+    Promise.resolve().then(() =>
+      allowed.manageMyPacking?.execute?.({ action: 'tick', itemId: 'p1' }, {} as never)
+    )
+  ).rejects.toThrow('To use a Convex tool');
+  const denied = toolsFor('What is on my packing list?');
+  await expect(
+    Promise.resolve().then(() =>
+      denied.manageMyPacking?.execute?.({ action: 'tick', itemId: 'p1' }, {} as never)
+    )
+  ).rejects.toThrow('requires an explicit traveler request');
 });

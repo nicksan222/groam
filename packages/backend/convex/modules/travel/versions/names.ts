@@ -4,6 +4,8 @@ import type { Doc } from '#convex-generated/dataModel';
 
 const MAX_IDEA_NAME_LENGTH = 64;
 export const MAX_PROPOSAL_TITLE_LENGTH = 100;
+/** Generated titles stay short enough to scan in the sidebar. */
+export const MAX_AUTO_TITLE_LENGTH = 48;
 const MAX_FRIENDLY_NAME_ATTEMPTS = 64;
 const IDEA_NAME_PATTERN = /^[A-Za-z0-9](?:[A-Za-z0-9._/-]*[A-Za-z0-9])?$/u;
 
@@ -63,7 +65,9 @@ export class IdeaNames {
     throw new ConvexError('Could not generate a unique idea name');
   }
 
+  /** Open ideas retitle themselves after each edit until someone names them by hand. */
   static allowsAutoTitle(proposal: Doc<'tripProposals'>): boolean {
+    if (proposal.status === 'merged' || proposal.status === 'closed') return false;
     switch (proposal.titleSource) {
       case 'user':
         return false;
@@ -72,6 +76,20 @@ export class IdeaNames {
       case 'issue':
         return true;
     }
+  }
+
+  /** Cuts a generated title at a word boundary so it fits {@link MAX_AUTO_TITLE_LENGTH}. */
+  static clampAutoTitle(value: string): string {
+    const title = value
+      .replace(/\s+/gu, ' ')
+      .trim()
+      .replace(/^["'“‘]+|["'”’.!?]+$/gu, '');
+    if (title.length <= MAX_AUTO_TITLE_LENGTH) return title;
+    const cut = title.slice(0, MAX_AUTO_TITLE_LENGTH + 1);
+    const lastSpace = cut.lastIndexOf(' ');
+    return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut.slice(0, MAX_AUTO_TITLE_LENGTH))
+      .replace(/[\s,;:–—-]+$/gu, '')
+      .trim();
   }
 
   static normalizeTitle(value: string): string {

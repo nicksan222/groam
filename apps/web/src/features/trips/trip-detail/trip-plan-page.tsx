@@ -6,7 +6,7 @@ import { TripReadingOverview } from '@/features/trips/trip-overview/trip-reading
 import { testIds } from '@/lib/test-ids';
 
 /**
- * The Overview tab of a shared trip: at a glance, itinerary with map, packing.
+ * The Overview tab of a shared trip: at a glance and the itinerary with map.
  * `day` (from `?day=N`) scrolls that day of the itinerary into view.
  */
 export function TripPlanPage({

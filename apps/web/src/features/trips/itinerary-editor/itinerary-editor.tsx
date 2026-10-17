@@ -3,6 +3,7 @@ import Shell from '@groam/ui/components/shell/client';
 import { CalendarDays, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { destinationsForDay } from '@/features/trips/hooks/editor-day-destinations';
+import { isPackingEntity } from '@/features/trips/hooks/itinerary-proposal-changes';
 import { buildTripPlanner, entryPeriod } from '@/features/trips/hooks/trip-day-planner';
 import { useItineraryProposalChangeList } from '@/features/trips/hooks/use-itinerary-proposal-changes';
 import { RemovedItinerarySection } from '@/features/trips/trip-destinations/removed-itinerary-section';
@@ -149,7 +150,7 @@ export function ItineraryEditor(props: ItineraryEditorProps) {
         ) : null}
         <RemovedItinerarySection
           changes={changes.filter(
-            (change) => change.change === 'removed' && change.entity !== 'packing'
+            (change) => change.change === 'removed' && !isPackingEntity(change.entity)
           )}
         />
         <Button variant="outline" size="sm" onClick={onAddDestination}>

@@ -27,7 +27,22 @@ export type TripBoardLane = IssueStatus | 'agreed' | 'review';
 /** What the viewer may do on this trip, copied onto every lifted card for the drop rules. */
 export type TripBoardRights = { archived: boolean; canPropose: boolean };
 
-export type TripBoardIssueItem = TripBoardRights & { issue: TripBoardIssue; kind: 'issue' };
+/**
+ * How an issue and the open ideas that answer it are paired on the board: one soft hue on every
+ * card of the pair. `idea` is the first such idea in the Ideas lane.
+ */
+export type TripBoardIdeaLink = {
+  idea: Pick<TripBoardIdea, 'id' | 'status' | 'title' | 'workingTripId'>;
+  issueTitle: string | undefined;
+  tone: number;
+};
+
+export type TripBoardIssueItem = TripBoardRights & {
+  issue: TripBoardIssue;
+  kind: 'issue';
+  /** The open ideas already answering this issue, if any; a drop on Ideas would only repeat them. */
+  link?: TripBoardIdeaLink;
+};
 
 export type TripBoardIdeaItem = TripBoardRights & { idea: TripBoardIdea; kind: 'idea' };
 
@@ -42,8 +57,18 @@ export type TripBoardMove =
 
 export type TripBoardDropDecision =
   | { move: TripBoardMove; outcome: 'allowed' }
-  | { outcome: 'refused'; reason: string }
+  | {
+      /** A short title over the reason; the overlay says "Can’t drop here" without one. */
+      heading?: string;
+      outcome: 'refused';
+      reason: string;
+      /** `warning` when the drop is not wrong, only redundant: the thing it would make exists. */
+      tone?: 'warning';
+    }
   | { outcome: 'unavailable' };
+
+/** A drop the rulebook turns down, with why. */
+export type TripBoardRefusal = Extract<TripBoardDropDecision, { outcome: 'refused' }>;
 
 /** The cards directly above and below a dropped issue, in the target lane after the drop. */
 export type TripBoardNeighbours = {
@@ -79,6 +104,8 @@ export type TripBoardAssignMode = 'avatar' | 'hover' | 'static';
 
 /** The stable facts every card on the board reads, so lanes do not pass them down. */
 export type TripBoardContextValue = {
+  /** Open ideas' links, by the issue they answer. */
+  links: ReadonlyMap<Id<'tripIssues'>, TripBoardIdeaLink>;
   rights: TripBoardRights;
   tripId: Id<'trips'>;
   viewerUserId: string | undefined;

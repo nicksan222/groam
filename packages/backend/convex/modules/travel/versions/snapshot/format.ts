@@ -1,6 +1,11 @@
 import { ConvexError } from 'convex/values';
 import type { Id } from '#convex-generated/dataModel';
-import { MAX_PACKING_ITEMS, MAX_PACKING_LABEL_LENGTH } from '#convex/modules/travel/packing/schema';
+import {
+  MAX_PACKING_BRINGERS,
+  MAX_PACKING_ITEMS,
+  MAX_PACKING_LABEL_LENGTH,
+  MAX_PACKING_QUANTITY
+} from '#convex/modules/travel/packing/schema';
 import {
   MAX_VERSION_FILES,
   type ParsedVersionSnapshot,
@@ -54,11 +59,16 @@ function appendPackingItem(
   key: string
 ): void {
   const value = parseObject(file.value, file.path);
+  // Checklist files written before groups had a quantity are dropped, not rejected.
+  if (value.quantity === undefined && 'packed' in value) return;
   if (
     typeof value.label !== 'string' ||
     !value.label.trim() ||
     value.label.length > MAX_PACKING_LABEL_LENGTH ||
-    typeof value.packed !== 'boolean' ||
+    typeof value.quantity !== 'number' ||
+    !Number.isSafeInteger(value.quantity) ||
+    value.quantity < 1 ||
+    value.quantity > MAX_PACKING_QUANTITY ||
     typeof value.sortOrder !== 'number' ||
     !Number.isSafeInteger(value.sortOrder) ||
     value.sortOrder < 0
@@ -67,10 +77,38 @@ function appendPackingItem(
   }
   result.packingItems.push({
     key,
-    value: { label: value.label, packed: value.packed, sortOrder: value.sortOrder }
+    value: { label: value.label, quantity: value.quantity, sortOrder: value.sortOrder }
   });
   if (result.packingItems.length > MAX_PACKING_ITEMS) {
     throw new ConvexError(`Trips support up to ${MAX_PACKING_ITEMS} packing items`);
+  }
+}
+
+function appendPackingBringer(
+  result: ParsedSnapshotCollections,
+  file: VersionSnapshotFile,
+  key: string
+): void {
+  const value = parseObject(file.value, file.path);
+  if (
+    typeof value.itemKey !== 'string' ||
+    !value.itemKey ||
+    typeof value.userId !== 'string' ||
+    !value.userId ||
+    key !== `${value.itemKey}--${value.userId}` ||
+    typeof value.count !== 'number' ||
+    !Number.isSafeInteger(value.count) ||
+    value.count < 1 ||
+    value.count > MAX_PACKING_QUANTITY
+  ) {
+    throw new ConvexError('Idea change history produced invalid packing assignment data');
+  }
+  result.packingBringers.push({
+    key,
+    value: { count: value.count, itemKey: value.itemKey, userId: value.userId }
+  });
+  if (result.packingBringers.length > MAX_PACKING_BRINGERS) {
+    throw new ConvexError(`Trips support up to ${MAX_PACKING_BRINGERS} packing assignments`);
   }
 }
 
@@ -105,15 +143,20 @@ function appendSnapshotFile(result: ParsedSnapshotCollections, file: VersionSnap
     } as ParsedVersionSnapshot['trip'];
     return;
   }
-  const match = /^(activities|destinations|packing|stays|transfers)\/([^/]+)\.json$/u.exec(
-    file.path
-  );
+  const match =
+    /^(activities|destinations|packing|packingBringers|stays|transfers)\/([^/]+)\.json$/u.exec(
+      file.path
+    );
   if (!match?.[1] || !match[2]) {
     throw new ConvexError('Idea change history produced an unknown trip file');
   }
   const [, directory, key] = match;
   if (directory === 'packing') {
     appendPackingItem(result, file, key);
+    return;
+  }
+  if (directory === 'packingBringers') {
+    appendPackingBringer(result, file, key);
     return;
   }
   if (directory === 'activities') {
@@ -141,8 +184,9 @@ function parseVersionSnapshot(snapshot: VersionSnapshot): ParsedVersionSnapshot 
     boundaryTransfers: [],
     destinations: [],
     destinationTransfers: [],
-    stays: [],
+    packingBringers: [],
     packingItems: [],
+    stays: [],
     trip: null
   };
   const paths = new Set<string>();

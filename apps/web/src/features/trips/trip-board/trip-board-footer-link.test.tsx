@@ -35,6 +35,7 @@ vi.mock('@/features/workspace/navigation/router', () => ({
 }));
 
 const context: TripBoardContextValue = {
+  links: new Map(),
   rights: { archived: false, canPropose: true },
   tripId: 'trip-1' as Id<'trips'>,
   viewerUserId: 'user-alex'

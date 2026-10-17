@@ -5,7 +5,9 @@ import { useTripPolls } from '@/features/polls/hooks/use-polls';
 import { useTripResearches } from '@/features/research/hooks/use-trip-researches';
 import { type TripSection, tripSectionTitle } from '@/features/trips/trip-sections';
 import type { TripAgentView } from '@/types/trips';
+import { packingAgentContext } from './trip-packing-agent-context';
 import { useTripIssues } from './use-trip-issues';
+import { useTripPacking } from './use-trip-packing';
 import { useTripTravelers } from './use-trip-travelers';
 import { useTripVersions } from './use-trip-versions';
 import type { TripDetail } from './use-trips';
@@ -16,10 +18,11 @@ function agentContextNeeds(trip: TripDetail | undefined, view: TripAgentView) {
   const onBoard = shared && view === 'board';
   return {
     ideas: view === 'idea-compare' || onBoard || (shared && view === 'ideas'),
+    packing: view === 'packing',
     issues: onBoard || (shared && view === 'issues'),
     polls: shared && view === 'polls',
     research: shared && view === 'research',
-    travelers: onBoard || (shared && view === 'overview')
+    travelers: onBoard || (shared && view === 'overview') || view === 'packing'
   };
 }
 
@@ -37,6 +40,7 @@ export function useTripAgentContext(trip: TripDetail | undefined, view: TripAgen
     needs.ideas && Boolean(sourceTripId)
   );
   const { issues } = useTripIssues(sourceTripId ?? ('' as Id<'trips'>), needs.issues);
+  const packingList = useTripPacking(liveTripId(trip, needs.packing));
   const { polls } = useTripPolls(liveTripId(trip, needs.polls));
   const { researches } = useTripResearches(liveTripId(trip, needs.research));
   const { travelers } = useTripTravelers(liveTripId(trip, needs.travelers));
@@ -55,6 +59,17 @@ export function useTripAgentContext(trip: TripDetail | undefined, view: TripAgen
             openIssues: (issues ?? [])
               .filter((issue) => !isResolved(issue.status))
               .map((issue) => ({ id: issue.id, title: issue.title })),
+            packing: packingList.items.map((item) => ({
+              bringers: item.bringers.map((bringer) => ({
+                count: bringer.count,
+                name: bringer.name,
+                userId: bringer.userId
+              })),
+              brought: item.brought,
+              id: item.id,
+              label: item.label,
+              quantity: item.quantity
+            })),
             polls: polls.map((poll) => ({
               eligibleCount: poll.eligibleCount,
               id: poll.id,
@@ -112,6 +127,13 @@ export function tripScreenAgentContext(
   extras: {
     ideas?: Array<{ id: string; ideaName: string; status: string }>;
     openIssues?: Array<{ id: string; title: string }>;
+    packing?: Array<{
+      bringers: Array<{ count: number; name: string; userId: string }>;
+      brought: number;
+      id: string;
+      label: string;
+      quantity: number;
+    }>;
     polls?: Array<{
       eligibleCount: number;
       id: string;
@@ -258,17 +280,13 @@ export function tripScreenAgentContext(
         'The trip’s researches: subjects the group is collecting links and notes about. Help start one, find one, or summarize what a research found.'
     },
     overview: {
-      capabilities: [
-        'trip.status.read',
-        'trip.itinerary.read',
-        'trip.packing.read',
-        ...(trip.permissions.canEdit ? (['trip.packing.manage'] as const) : [])
-      ],
+      capabilities: ['trip.status.read', 'trip.itinerary.read'],
       data: overviewData,
       description: trip.proposal
-        ? 'Read the day-by-day plan, exact times, travel, and packing. Make plan changes through an idea.'
-        : 'The overview of the agreed plan: at a glance, route, day-by-day itinerary, and packing. Read it to answer questions; plan changes go through an idea.'
-    }
+        ? 'Read the day-by-day plan, exact times, and travel. Make plan changes through an idea.'
+        : 'The overview of the agreed plan: at a glance, route, and day-by-day itinerary. Read it to answer questions; plan changes go through an idea.'
+    },
+    packing: packingAgentContext(trip, base, extras.packing ?? [], extras.travelers ?? [])
   };
   return {
     ...sectionContext[section],
@@ -278,9 +296,12 @@ export function tripScreenAgentContext(
   };
 }
 
-/** The assistant backend has no "board", "research", or "polls" section; those read as "overview". */
+/** The assistant backend has no "board", "research", "polls", or "packing" section; those read as "overview". */
 function assistantSection(section: TripSection) {
-  return section === 'board' || section === 'research' || section === 'polls'
+  return section === 'board' ||
+    section === 'research' ||
+    section === 'polls' ||
+    section === 'packing'
     ? 'overview'
     : section;
 }

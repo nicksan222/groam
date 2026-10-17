@@ -1,9 +1,13 @@
 import { ConvexError } from 'convex/values';
 import type { Id } from '#convex-generated/dataModel';
 import type { QueryCtx } from '#convex-generated/server';
+import { authComponent } from '#convex/modules/auth/auth';
 import { TripActivityVersionModel } from '#convex/modules/travel/activities/schema';
 import { TripDestinationVersionModel } from '#convex/modules/travel/destinations/schema';
-import { TripPackingVersionModel } from '#convex/modules/travel/packing/schema';
+import {
+  TripPackingBringerVersionModel,
+  TripPackingVersionModel
+} from '#convex/modules/travel/packing/schema';
 import { TripStayVersionModel } from '#convex/modules/travel/stays/schema';
 import { TripTransferVersionModel } from '#convex/modules/travel/transfers/schema';
 import { TripVersionModel } from '#convex/modules/travel/trips/schema';
@@ -39,6 +43,7 @@ const fieldsByEntity: Record<TripVersionChange['entity'], Record<string, Version
   destination: TripDestinationVersionModel.presentation,
   details: TripVersionModel.presentation,
   packing: TripPackingVersionModel.presentation,
+  packingBringer: TripPackingBringerVersionModel.presentation,
   stay: TripStayVersionModel.presentation,
   transfer: TripTransferVersionModel.presentation
 };
@@ -169,6 +174,50 @@ async function presentField({
   };
 }
 
+/** "Hat · Ana": a bringer file only knows its item and traveler, so names are looked up once. */
+function createBringerLabeler(ctx: QueryCtx, changes: TripVersionChange[], organizationId: string) {
+  const itemLabels = new Map<string, Promise<string | undefined>>();
+  const userNames = new Map<string, Promise<string | undefined>>();
+  const changed = new Map(
+    changes.flatMap((change) => {
+      const label = parse(change.after ?? change.before).label;
+      return change.entity === 'packing' && typeof label === 'string'
+        ? [[change.key, label] as const]
+        : [];
+    })
+  );
+  const itemLabel = (itemKey: string) => {
+    const cached = itemLabels.get(itemKey);
+    if (cached) return cached;
+    const pending = (async () => {
+      const inDiff = changed.get(`packing/${itemKey}.json`);
+      if (inDiff) return inDiff;
+      const itemId = ctx.db.normalizeId('tripPackingItems', itemKey);
+      const row = itemId ? await ctx.db.get('tripPackingItems', itemId) : null;
+      return row?.organizationId === organizationId ? row.label : undefined;
+    })();
+    itemLabels.set(itemKey, pending);
+    return pending;
+  };
+  const userName = (userId: string) => {
+    const cached = userNames.get(userId);
+    if (cached) return cached;
+    const pending = authComponent.getAnyUserById(ctx, userId).then((user) => user?.name);
+    userNames.set(userId, pending);
+    return pending;
+  };
+  return async (change: TripVersionChange) => {
+    const file = parse(change.after ?? change.before);
+    const itemKey = typeof file.itemKey === 'string' ? file.itemKey : '';
+    const userId = typeof file.userId === 'string' ? file.userId : '';
+    const [item, name] = await Promise.all([
+      itemKey ? itemLabel(itemKey) : undefined,
+      userId ? userName(userId) : undefined
+    ]);
+    return `${item ?? 'Packing item'} · ${name ?? 'Traveler'}`;
+  };
+}
+
 async function presentVersionChanges(
   ctx: QueryCtx,
   changes: TripVersionChange[],
@@ -181,6 +230,7 @@ async function presentVersionChanges(
   >
 > {
   const presentMedia = createMediaPresenter(ctx, organizationId);
+  const bringerLabel = createBringerLabeler(ctx, changes, organizationId);
   return await Promise.all(
     changes.map(async (change) => {
       const before = parse(change.before);
@@ -195,7 +245,7 @@ async function presentVersionChanges(
         entity: change.entity,
         fields: fields.filter((field) => field !== null),
         key: change.key,
-        label: change.label
+        label: change.entity === 'packingBringer' ? await bringerLabel(change) : change.label
       };
     })
   );

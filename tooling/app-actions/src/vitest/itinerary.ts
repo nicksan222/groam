@@ -20,10 +20,13 @@ function escapeRegExp(value: string): string {
 }
 
 /**
- * Selects the first seven selectable days on the trip calendar and saves them. The calendar labels
- * its days with the browser locale, which the Vitest browser config pins to en-US.
+ * Opens the itinerary's trip dates dialog, selects the first seven selectable days on its calendar,
+ * and saves them. The calendar labels its days with the browser locale, which the Vitest browser
+ * config pins to en-US.
  */
 export async function saveSevenDayRange(): Promise<void> {
+  await openTripSection('itinerary');
+  await tap(page.getByRole('button', { name: /^(Set trip length|Trip dates)$/u }));
   await expect.element(by(ids.tripDatesStart)).toBeEnabled();
   await tap(by(ids.tripDatesStart));
   await expect.poll(() => calendarDay().elements().length).toBeGreaterThan(10);
@@ -41,7 +44,8 @@ export async function saveSevenDayRange(): Promise<void> {
   await tap(endDay);
   await expect.element(by(ids.tripDatesSave)).toBeEnabled();
   await tap(by(ids.tripDatesSave));
-  await expect.element(by(ids.tripDatesSave)).toMatchTextContent('Saved');
+  // The dialog closes once the dates save.
+  await expectGone(by(ids.tripDatesSave));
 }
 
 /**

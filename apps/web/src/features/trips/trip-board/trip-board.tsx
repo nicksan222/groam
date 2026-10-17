@@ -1,7 +1,6 @@
 import { cn } from '@groam/ui/lib/utils';
 import { useNavigate } from '@tanstack/react-router';
 import { useMemo } from 'react';
-import { matchesIdeaStatus } from '@/features/ideas/hooks/idea-list-filter';
 import { CreateIssueDialog } from '@/features/issues/issue-list/create-issue-dialog';
 import { useTripBoardFullscreen } from '@/features/trips/hooks/use-trip-board-fullscreen';
 import { useTripBoardMoves } from '@/features/trips/hooks/use-trip-board-moves';
@@ -18,7 +17,9 @@ import { TripBoardFullscreenToggle } from './trip-board-fullscreen-toggle';
 import { TripBoardHistoryLink } from './trip-board-history-link';
 import { TripBoardIssueLane } from './trip-board-issue-lane';
 import { TripBoardIssuesFooter } from './trip-board-issues-footer';
+import { tripBoardLinks } from './trip-board-links';
 import { TripBoardMandatoryProgress } from './trip-board-mandatory-progress';
+import { isOpenIdea } from './trip-board-moves';
 import { issuesByLane } from './trip-board-order';
 import { TripBoardReviewLane } from './trip-board-review-lane';
 import { TripBoardScroller } from './trip-board-scroller';
@@ -46,13 +47,17 @@ export function TripBoard({
 
   const archived = Boolean(trip.archivedAt);
   const { canPropose } = trip.permissions;
+  const ideasInReview = useMemo(
+    () => proposals?.filter((idea) => isOpenIdea(idea.status)),
+    [proposals]
+  );
+  const links = useMemo(() => tripBoardLinks(ideasInReview, issues), [ideasInReview, issues]);
   const board = useMemo(
-    () => ({ rights: { archived, canPropose }, tripId: trip.id, viewerUserId }),
-    [archived, canPropose, trip.id, viewerUserId]
+    () => ({ links, rights: { archived, canPropose }, tripId: trip.id, viewerUserId }),
+    [archived, canPropose, links, trip.id, viewerUserId]
   );
   const lanes = useMemo(() => issues && issuesByLane(issues), [issues]);
   const days = useMemo(() => agreedDays(trip), [trip]);
-  const ideasInReview = proposals?.filter((idea) => matchesIdeaStatus(idea.status, 'pending'));
   const counts = {
     agreed: agreedCardCount(days),
     closed: lanes?.issues.closed.length,

@@ -1,10 +1,10 @@
 import type { Id } from '@groam/backend/data-model';
+import { PageLoading } from '@groam/ui/components/page-loading';
 import { useOptionalIdeaContext } from '@/features/ideas/hooks/use-idea-context';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { ItineraryDetailsBanner } from '@/features/trips/trip-destinations/itinerary-details-banner';
 import { ActiveTripSection } from '@/features/trips/trip-detail/active-trip-section';
 import type { TripNavigation, TripState } from '@/features/trips/trip-detail/trip-detail-types';
-import { TripOverview } from '@/features/trips/trip-overview/trip-overview';
 import type { TripSection } from '@/features/trips/trip-sections';
 import { TripVersionDetail } from '@/features/trips/trip-versions/trip-version-detail';
 import type { IdeaCloneView } from './idea-sections';
@@ -12,7 +12,6 @@ import type { IdeaCloneView } from './idea-sections';
 export function IdeaCloneBody({
   addDestinationOpen,
   navigation,
-  onEdit,
   planningSection,
   proposalId,
   showLoading,
@@ -22,7 +21,6 @@ export function IdeaCloneBody({
 }: {
   addDestinationOpen: boolean;
   navigation: TripNavigation;
-  onEdit: () => void;
   planningSection: TripSection;
   proposalId: Id<'tripProposals'>;
   showLoading: boolean;
@@ -35,7 +33,7 @@ export function IdeaCloneBody({
     return view === 'compare' ? (
       <TripVersionDetail embedded isLoading proposalId={proposalId} />
     ) : (
-      <TripOverview isLoading />
+      <PageLoading label="Loading idea…" />
     );
   }
   if (view === 'compare')
@@ -52,7 +50,6 @@ export function IdeaCloneBody({
     <ActiveTripSection
       addDestinationOpen={addDestinationOpen}
       navigation={navigation}
-      onEdit={onEdit}
       section={planningSection}
       trip={trip}
       tripState={tripState}

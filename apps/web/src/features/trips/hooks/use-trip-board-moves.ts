@@ -95,7 +95,11 @@ export function useTripBoardMoves(tripId: Id<'trips'>) {
       const decision = decideMove(item, target.lane);
       if (decision.outcome === 'unavailable') return;
       if (decision.outcome === 'refused') {
-        toast.info(decision.reason);
+        if (decision.tone === 'warning') {
+          toast.warning(decision.heading ?? decision.reason, {
+            description: decision.heading ? decision.reason : undefined
+          });
+        } else toast.info(decision.reason);
         return;
       }
       const { move } = decision;

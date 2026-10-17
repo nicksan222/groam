@@ -94,9 +94,15 @@ export function IdeaCloneHeaderActions({
   ].filter((item): item is NonNullable<typeof item> => item !== null);
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <Button data-testid={testIds.ideaOpenShared} onClick={onOpenShared} size="sm" variant="ghost">
-        <ArrowRight /> {ideaOpenSharedTrip}
+    <div className="flex flex-wrap items-center justify-end gap-2">
+      <Button
+        className="h-6 rounded-full bg-background/80 px-2.5 text-xs font-normal text-muted-foreground backdrop-blur-sm hover:bg-background hover:text-foreground"
+        data-testid={testIds.ideaOpenShared}
+        onClick={onOpenShared}
+        size="sm"
+        variant="ghost"
+      >
+        {ideaOpenSharedTrip} <ArrowRight />
       </Button>
       {canEdit ? (
         <Button
@@ -120,34 +126,36 @@ export function IdeaCloneHeaderActions({
           {primary.label}
         </Button>
       ) : null}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            aria-label="Idea actions"
-            className="touch-manipulation"
-            data-testid={testIds.tripActions}
-            size="icon"
-            type="button"
-            variant="ghost"
-          >
-            <MoreHorizontal />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="min-w-48">
-          {items.map((item) => (
-            <DropdownMenuItem
-              data-testid={'testId' in item ? item.testId : undefined}
-              disabled={'disabled' in item ? item.disabled : undefined}
-              key={item.label}
-              onSelect={item.onClick}
-              variant={'variant' in item ? item.variant : undefined}
+      <div className="rounded-lg bg-background/80 text-foreground backdrop-blur-sm">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              aria-label="Idea actions"
+              className="touch-manipulation"
+              data-testid={testIds.tripActions}
+              size="icon"
+              type="button"
+              variant="ghost"
             >
-              {item.icon}
-              {item.label}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+              <MoreHorizontal />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-48">
+            {items.map((item) => (
+              <DropdownMenuItem
+                data-testid={'testId' in item ? item.testId : undefined}
+                disabled={'disabled' in item ? item.disabled : undefined}
+                key={item.label}
+                onSelect={item.onClick}
+                variant={'variant' in item ? item.variant : undefined}
+              >
+                {item.icon}
+                {item.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 }

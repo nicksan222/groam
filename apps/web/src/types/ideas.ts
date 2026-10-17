@@ -72,7 +72,9 @@ export type IdeaCloneSearch = {
 export type StartIdeaIntent = {
   addDestination?: boolean;
   firstDestination?: boolean;
-  section?: 'itinerary' | 'overview';
+  /** Gear item label to claim for the viewer once the new idea's Packing tab opens. */
+  claimGear?: string;
+  section?: 'itinerary' | 'overview' | 'packing';
   titleHint?: string;
 };
 

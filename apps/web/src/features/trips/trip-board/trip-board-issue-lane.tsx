@@ -36,13 +36,14 @@ export function TripBoardIssueLane({
   meta?: ReactNode;
   status: IssueStatus;
 }) {
-  const { rights } = useTripBoardContext();
+  const { links, rights } = useTripBoardContext();
   const { item, target } = useTripBoardDrag();
   const quiet = status === 'wont_do';
   const lifts = (issues ?? []).map((issue): TripBoardIssueItem => ({
     ...rights,
     issue,
-    kind: 'issue'
+    kind: 'issue',
+    link: links.get(issue.id)
   }));
   const draggableIds = lifts.filter(isDraggable).map(({ issue }) => issue.id);
   const slotIndex =
@@ -51,7 +52,7 @@ export function TripBoardIssueLane({
       : null;
   const cards: ReactNode[] = lifts.map((lift) => (
     <TripBoardCardSlot item={lift} key={lift.issue.id}>
-      <TripBoardIssueCard issue={lift.issue} quiet={quiet} />
+      <TripBoardIssueCard issue={lift.issue} link={lift.link} quiet={quiet} />
     </TripBoardCardSlot>
   ));
   if (slotIndex !== null) cards.splice(slotIndex, 0, <Slot key="slot" />);

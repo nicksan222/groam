@@ -14,6 +14,13 @@ export type VersionChange = NonNullable<
   ReturnType<typeof useTripVersion>['proposal']
 >['changes'][number];
 
+/** What a change's entity is called to a reader; packing entries are gear, not file paths. */
+function changeEntityLabel(entity: VersionChange['entity']): string {
+  if (entity === 'packing') return 'group gear';
+  if (entity === 'packingBringer') return 'gear assignment';
+  return entity;
+}
+
 function ChangeFields({
   change,
   expanded,
@@ -30,7 +37,7 @@ function ChangeFields({
     <div className="border-t border-border" hidden={!expanded} id={id}>
       {fields.length === 0 ? (
         <p className="px-4 py-5 text-sm text-muted-foreground">
-          This {change.entity} was {change.change}.
+          This {changeEntityLabel(change.entity)} was {change.change}.
         </p>
       ) : (
         <>
@@ -144,7 +151,7 @@ export function VisualChange({
           <span className="min-w-0 flex-1">
             <h4 className="break-words text-sm font-semibold leading-5">{change.label}</h4>
             <span className="mt-0.5 block text-xs text-muted-foreground">
-              {verb} {change.entity} · {visibleFieldCount}{' '}
+              {verb} {changeEntityLabel(change.entity)} · {visibleFieldCount}{' '}
               {visibleFieldCount === 1 ? 'detail' : 'details'}
             </span>
           </span>

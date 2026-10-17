@@ -2,9 +2,7 @@ import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { formatTripCost } from '@/features/trips/trip-forms/trip-currencies';
 
 /** Planned cost, with the budget after a slash when the group set one. */
-export function budgetLabel(
-  trip: Pick<TripDetail, 'currency' | 'initialBudget' | 'totalPlannedCost'>
-) {
+function budgetLabel(trip: Pick<TripDetail, 'currency' | 'initialBudget' | 'totalPlannedCost'>) {
   const planned = formatTripCost(trip.totalPlannedCost, trip.currency);
   if (trip.initialBudget === null) return planned;
   return `${planned} / ${formatTripCost(trip.initialBudget, trip.currency)}`;

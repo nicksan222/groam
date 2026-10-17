@@ -28,7 +28,8 @@ import type { TripValidators } from '#convex/modules/travel/trips/schema';
 import { findVisibleTrip, MAX_GROUP_MEMBERS } from '#convex/modules/travel/trips/visibility';
 import { IdeaNames } from '#convex/modules/travel/versions/names';
 
-const TITLE_GENERATION_DELAY_MS = 30_000;
+/** Debounces bursts of edits into one title generation. */
+const TITLE_GENERATION_DELAY_MS = 10_000;
 
 export const MAX_ACTIVITY_ITEMS = 30;
 
@@ -140,8 +141,7 @@ async function scheduleDraftTitleGeneration(
     .query('tripProposals')
     .withIndex('by_workingTripId', (query) => query.eq('workingTripId', workingTripId))
     .unique();
-  if (proposal?.status !== 'draft') return;
-  if (!IdeaNames.allowsAutoTitle(proposal)) return;
+  if (!proposal || !IdeaNames.allowsAutoTitle(proposal)) return;
 
   const generation = (proposal.titleGeneration ?? 0) + 1;
   await ctx.db.patch('tripProposals', proposal._id, { titleGeneration: generation });
@@ -191,7 +191,7 @@ export async function patchTrip(
   ctx.trip = { ...ctx.trip, ...value, ...(updatedAt === undefined ? {} : { updatedAt }) };
   await invalidateIdeaReviewAfterEdit(ctx);
   if (affectsConditions(value)) await syncTripConditions(ctx);
-  if (ctx.trip.proposal?.status === 'draft' && !isSeedWrite()) {
+  if (ctx.trip.proposal && !isSeedWrite()) {
     await scheduleDraftTitleGeneration(ctx, ctx.trip._id);
   }
 }

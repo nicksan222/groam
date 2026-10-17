@@ -4,6 +4,7 @@ import * as z from 'zod/v3';
 import { internal } from '#convex-generated/api';
 import { internalAction } from '#convex-generated/server';
 import { AssistantProvider } from '#convex/modules/ai/provider';
+import { MAX_AUTO_TITLE_LENGTH } from '#convex/modules/travel/versions/names';
 
 const MAX_TITLE_OUTPUT_TOKENS = 256;
 
@@ -11,9 +12,8 @@ const titleOutput = z.object({
   title: z
     .string()
     .min(1)
-    .max(100)
     .describe(
-      'A concise title that summarizes what this trip idea changes. Plain language, no markdown.'
+      `A short title, at most ${MAX_AUTO_TITLE_LENGTH} characters, naming what this trip idea changes. Plain language, no markdown.`
     )
 });
 
@@ -46,8 +46,7 @@ export const run = internalAction({
         ).languageModel,
         output: Output.object({ schema: titleOutput }),
         prompt: JSON.stringify(prompt),
-        system:
-          'Name this trip planning idea from its changes. The title should help someone scanning a sidebar understand what changed at a glance. Prefer specific trip details such as destinations, dates, activities, or budget when they appear in the diff. Keep it short, sentence case, and under 80 characters when possible. Do not include quotes or trailing punctuation.'
+        system: `Name this trip planning idea from its changes. The title should help someone scanning a sidebar understand what changed at a glance. Lead with the most specific detail in the diff: a place added ("Add Kyoto stop"), a stay ("Book Lisbon hostel"), dates ("Move trip to June"), an activity, or a budget change. When the idea makes several changes, name the main one or their shared theme. If the current title still fits the changes, return it unchanged. Use sentence case, at most ${MAX_AUTO_TITLE_LENGTH} characters, no quotes, no trailing punctuation.`
       });
 
       const title = result.output.title.trim();

@@ -1,17 +1,18 @@
 import { defineClauseKind } from '#convex/modules/travel/issues/rules/define';
 import { everyHas } from '#convex/modules/travel/issues/rules/helpers';
 
+/** Kept under its stored id: it used to ask that every item was ticked off. */
 export const packingPacked = defineClauseKind({
   args: {},
   category: 'people',
   check: (_clause, { packing }) =>
-    everyHas(packing, ({ packed }) => packed, {
-      missing: 'still to pack',
+    everyHas(packing, ({ brought, quantity }) => brought >= quantity, {
+      missing: 'still need someone to bring them',
       none: 'No packing list yet'
     }),
-  description: 'Every item on the packing list is ticked.',
+  description: 'Every group item has enough people bringing it.',
   kind: 'packing_packed',
-  label: () => 'Everything on the packing list is packed',
+  label: () => 'Every group item has enough people bringing it',
   needs: ['packing'],
-  title: 'Everything packed'
+  title: 'Group items covered'
 });

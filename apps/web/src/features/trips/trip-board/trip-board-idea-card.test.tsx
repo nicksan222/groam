@@ -3,6 +3,7 @@ import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
+import { boardLink } from '@/features/trips/testing/trip-board-fixtures';
 import type { TripBoardContextValue, TripBoardIdea } from '@/types/trip-board';
 import { TripBoardContext } from './trip-board-context';
 import { TripBoardIdeaCard } from './trip-board-idea-card';
@@ -35,6 +36,7 @@ vi.mock('@/features/workspace/navigation/router', () => ({
 }));
 
 const context = (over: Partial<TripBoardContextValue> = {}): TripBoardContextValue => ({
+  links: new Map(),
   rights: { archived: false, canPropose: true },
   tripId: 'trip-1' as Id<'trips'>,
   viewerUserId: 'user-alex',
@@ -63,15 +65,81 @@ const makeIdea = (id: string, over: Partial<TripBoardIdea> = {}) =>
     ...over
   }) as unknown as TripBoardIdea;
 
-function renderCard(idea: TripBoardIdea, viewerUserId: string | undefined = 'user-alex') {
+function renderCard(
+  idea: TripBoardIdea,
+  viewerUserId: string | undefined = 'user-alex',
+  over: Partial<TripBoardContextValue> = {}
+) {
   return render(
-    <TripBoardContext.Provider value={context({ viewerUserId })}>
+    <TripBoardContext.Provider value={context({ viewerUserId, ...over })}>
       <TripBoardIdeaCard proposal={idea} />
     </TripBoardContext.Provider>
   );
 }
 
 describe('TripBoardIdeaCard', () => {
+  test('names the issue it answers, in the hue the pair shares', async () => {
+    const issueId = 'issue-1' as Id<'tripIssues'>;
+    await renderCard(makeIdea('Hostel', { issueId }), 'user-alex', {
+      links: new Map([
+        [issueId, boardLink('Hostel', { issueTitle: 'Where do we sleep?', tone: 1 })]
+      ])
+    });
+    const chip = page.getByTestId('trip-board-idea-issue');
+    await expect.element(chip).toHaveTextContent('Where do we sleep?');
+    await expect.element(chip).toHaveClass(/bg-chart-2/);
+    await expect.element(page.getByTestId('idea-row')).toHaveAttribute('data-link-tone', '1');
+  });
+
+  test('falls back to a generic name while the issue list loads', async () => {
+    const issueId = 'issue-1' as Id<'tripIssues'>;
+    await renderCard(makeIdea('Hostel', { issueId }), 'user-alex', {
+      links: new Map([[issueId, boardLink('Hostel', { issueTitle: undefined })]])
+    });
+    await expect
+      .element(page.getByTestId('trip-board-idea-issue'))
+      .toHaveTextContent('Linked issue');
+  });
+
+  test.each([true, false])('rings the card when highlighted=%s', async (highlighted) => {
+    await render(
+      <TripBoardContext.Provider value={context()}>
+        <TripBoardIdeaCard highlighted={highlighted} proposal={makeIdea('Hostel')} />
+      </TripBoardContext.Provider>
+    );
+    const card = page.getByTestId('idea-row');
+    if (highlighted) {
+      await expect.element(card).toHaveAttribute('data-highlighted', 'true');
+      await expect.element(card).toHaveClass(/ring-warning/);
+    } else await expect.element(card).not.toHaveAttribute('data-highlighted');
+  });
+
+  test('scrolls only its lane list to the ringed card, never the board', async () => {
+    const ProviderCard = ({ highlighted }: { highlighted: boolean }) => (
+      <TripBoardContext.Provider value={context()}>
+        <div data-testid="board" style={{ overflowX: 'auto', width: 200 }}>
+          <div style={{ width: 600 }}>
+            <div data-lane-cards="" data-testid="list" style={{ height: 80, overflowY: 'auto' }}>
+              <div style={{ height: 400 }} />
+              <TripBoardIdeaCard highlighted={highlighted} proposal={makeIdea('Hostel')} />
+            </div>
+          </div>
+        </div>
+      </TripBoardContext.Provider>
+    );
+    const { rerender } = await render(<ProviderCard highlighted={false} />);
+    const list = page.getByTestId('list').element();
+    expect(list.scrollTop).toBe(0);
+    await rerender(<ProviderCard highlighted />);
+    await expect.poll(() => list.scrollTop).toBeGreaterThan(300);
+    expect(page.getByTestId('board').element().scrollLeft).toBe(0);
+  });
+
+  test('names no issue for an idea started on its own', async () => {
+    await renderCard(makeIdea('Hostel'));
+    await expect.element(page.getByTestId('trip-board-idea-issue')).not.toBeInTheDocument();
+  });
+
   test('shows the title, author and an open link for a plain idea', async () => {
     await renderCard(makeIdea('Beach trip'));
     await expect.element(page.getByRole('heading', { name: 'Beach trip' })).toBeVisible();

@@ -42,7 +42,7 @@ const makeTrip = (over: Record<string, unknown> = {}) =>
 
 const packing = vi.hoisted(() => ({
   isLoading: false,
-  items: [] as { id: string; label: string; packed: boolean }[]
+  items: [] as { brought: number; id: string; label: string; quantity: number }[]
 }));
 
 vi.mock('@/features/trips/hooks/use-trip-packing', () => ({
@@ -81,16 +81,16 @@ describe('TripBoardGlance', () => {
   });
 
   test.each([
-    ['nothing packed', [], 'Nothing packed yet'],
+    ['no gear', [], 'No group gear yet'],
     [
-      'part packed',
+      'part covered',
       [
-        { id: 'a', label: 'Passport', packed: true },
-        { id: 'b', label: 'Charger', packed: false }
+        { brought: 2, id: 'a', label: 'Hair dryer', quantity: 2 },
+        { brought: 0, id: 'b', label: 'Tent', quantity: 1 }
       ],
-      '1/2 packed'
+      '1/2 gear covered'
     ]
-  ])('shows packing progress for %s', async (_, items, text) => {
+  ])('shows gear coverage for %s', async (_, items, text) => {
     packing.items = items;
     await render(<TripBoardGlance trip={makeTrip()} />);
     await expect.element(page.getByText(text)).toBeVisible();
@@ -99,6 +99,14 @@ describe('TripBoardGlance', () => {
   test('hides packing while it loads', async () => {
     packing.isLoading = true;
     await render(<TripBoardGlance trip={makeTrip()} />);
-    await expect.element(page.getByText(/packed/)).not.toBeInTheDocument();
+    await expect.element(page.getByText(/gear/)).not.toBeInTheDocument();
+  });
+
+  test('the gear chip links to the Packing tab', async () => {
+    packing.items = [{ brought: 1, id: 'a', label: 'Tent', quantity: 1 }];
+    await render(<TripBoardGlance trip={makeTrip()} />);
+    await expect
+      .element(page.getByRole('link', { name: '1/1 gear covered' }))
+      .toHaveAttribute('href', '/trips/trip-1/packing');
   });
 });

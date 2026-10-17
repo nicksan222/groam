@@ -97,8 +97,8 @@ vi.mock('@/features/trips/hooks/use-trip-packing', () => ({
   useTripPacking: () => ({
     isLoading: false,
     items: [
-      { id: 'p1', label: 'Passport', packed: true },
-      { id: 'p2', label: 'Charger', packed: false }
+      { bringers: [], brought: 2, id: 'p1', label: 'Hair dryer', quantity: 2 },
+      { bringers: [], brought: 0, id: 'p2', label: 'Tent', quantity: 1 }
     ]
   })
 }));
@@ -122,11 +122,16 @@ function board(over: Record<string, unknown> = {}, onStartIdea?: () => void) {
 
 const lane = (name: RegExp) => page.getByRole('region', { name });
 
-/** The liftable wrapper of the card titled `name`. */
+/**
+ * The liftable wrapper of the card titled `name`: an issue's title link or an idea's heading, so an
+ * idea naming its issue in a chip does not match too.
+ */
 const draggable = (name: string) =>
-  page
-    .getByTestId(testIds.tripBoardDraggable)
-    .filter({ has: page.getByText(name, { exact: true }) });
+  page.getByTestId(testIds.tripBoardDraggable).filter({
+    has: page
+      .getByRole('link', { exact: true, name })
+      .or(page.getByRole('heading', { exact: true, name }))
+  });
 
 async function lift(name: string) {
   await expect.element(draggable(name)).toBeVisible();
@@ -267,6 +272,60 @@ describe('TripBoard layout', () => {
   });
 });
 
+describe('TripBoard idea pairs', () => {
+  test('tints each issue and the open idea answering it in one shared hue', async () => {
+    state.issues = [boardIssue('Book hotel'), boardIssue('Pick a beach'), boardIssue('Flights')];
+    state.proposals = [
+      boardIdea('Hostel', { issueId: 'Book hotel' as Id<'tripIssues'>, status: 'draft' }),
+      boardIdea('Sunny cove', { issueId: 'Pick a beach' as Id<'tripIssues'> }),
+      boardIdea('Road trip')
+    ];
+    state.issues = (state.issues as TripBoardIssue[]).map((issue) => {
+      const idea = (state.proposals as ReturnType<typeof boardIdea>[]).find(
+        (proposal) => proposal.issueId === issue.id
+      );
+      return idea
+        ? {
+            ...issue,
+            idea: {
+              id: idea.id,
+              status: idea.status,
+              title: idea.title,
+              workingTripId: idea.workingTripId
+            }
+          }
+        : issue;
+    });
+    await render(board());
+    const ideaRow = (name: string) => page.getByTestId(testIds.ideaRow).filter({ hasText: name });
+    const issueCard = (name: string) =>
+      page.getByTestId(testIds.issueCard).filter({ hasText: name });
+    for (const [idea, issue] of [
+      ['Hostel', 'Book hotel'],
+      ['Sunny cove', 'Pick a beach']
+    ] as const) {
+      await expect.element(ideaRow(idea).getByText(issue)).toBeVisible();
+      const tone = ideaRow(idea).element().getAttribute('data-link-tone');
+      expect(tone).not.toBeNull();
+      await expect.element(issueCard(issue)).toHaveAttribute('data-link-tone', tone!);
+    }
+    expect(ideaRow('Hostel').element().getAttribute('data-link-tone')).not.toBe(
+      ideaRow('Sunny cove').element().getAttribute('data-link-tone')
+    );
+    await expect.element(ideaRow('Road trip')).not.toHaveAttribute('data-link-tone');
+    await expect.element(issueCard('Flights')).not.toHaveAttribute('data-link-tone');
+  });
+
+  test('drops the pairing once the idea is applied', async () => {
+    state.issues = [boardIssue('Book hotel')];
+    state.proposals = [
+      boardIdea('Hostel', { issueId: 'Book hotel' as Id<'tripIssues'>, status: 'merged' })
+    ];
+    await render(board());
+    await expect.element(page.getByTestId(testIds.issueCard)).not.toHaveAttribute('data-link-tone');
+  });
+});
+
 describe('TripBoard panning and fullscreen', () => {
   const scroller = () => page.getByRole('region', { name: 'Trip board lanes' });
   const dragAcross = (from: ReturnType<typeof scroller>, fromX: number, toX: number) => {
@@ -353,7 +412,7 @@ describe('TripBoard agreed plan', () => {
       .element(agreed.getByRole('link', { name: /2 stops · Lisbon → Porto/u }))
       .toBeVisible();
     await expect.element(agreed.getByText(/1,500/u)).toBeVisible();
-    await expect.element(agreed.getByText('1/2 packed')).toBeVisible();
+    await expect.element(agreed.getByText('1/2 gear covered')).toBeVisible();
     // The page header already says when, how long and with whom.
     await expect.element(agreed.getByText(/travelers?$/u)).not.toBeInTheDocument();
     const day1 = agreed.getByRole('region', { name: 'Day 1' });
@@ -593,6 +652,46 @@ describe('TripBoard moves', () => {
     await dragWithKeyboard('Book hotel', ['ArrowLeft']);
     await expect.poll(() => state.createVersion.mock.calls).toEqual([[{ issueId: 'Book hotel' }]]);
   });
+
+  test('warns, and starts nothing, when an issue with an open idea is dropped on Ideas', async () => {
+    state.issues = [boardIssue('Book hotel')];
+    state.proposals = [
+      boardIdea('Hostel', { issueId: 'Book hotel' as Id<'tripIssues'> }),
+      boardIdea('Camping')
+    ];
+    await render(board());
+    await lift('Book hotel');
+    await userEvent.keyboard('{ArrowLeft}');
+    const hint = lane(/^Ideas/).getByTestId(testIds.tripBoardDropHint);
+    await expect.element(hint).toHaveAttribute('data-tone', 'warning');
+    await expect.element(hint.getByText('This issue already has an idea')).toBeVisible();
+    const row = (name: string) => page.getByTestId(testIds.ideaRow).filter({ hasText: name });
+    await expect.element(row('Hostel')).toHaveAttribute('data-highlighted', 'true');
+    await expect.element(row('Camping')).not.toHaveAttribute('data-highlighted');
+    await userEvent.keyboard(' ');
+    await expect
+      .poll(() => vi.mocked(toast.warning))
+      .toHaveBeenCalledWith('This issue already has an idea', {
+        description: '“Hostel” is still open for it. Continue there instead'
+      });
+    expect(state.createVersion).not.toHaveBeenCalled();
+    await expect.element(row('Hostel')).not.toHaveAttribute('data-highlighted');
+  });
+
+  test.each(['merged', 'closed'] as const)(
+    'starts a fresh idea when the issue only has a %s one',
+    async (status) => {
+      state.issues = [boardIssue('Book hotel')];
+      state.proposals = [
+        boardIdea('Hostel', { issueId: 'Book hotel' as Id<'tripIssues'>, status })
+      ];
+      await render(board());
+      await dragWithKeyboard('Book hotel', ['ArrowLeft']);
+      await expect
+        .poll(() => state.createVersion.mock.calls)
+        .toEqual([[{ issueId: 'Book hotel' }]]);
+    }
+  );
 
   test('applies an approved idea dragged to Agreed plan', async () => {
     state.proposals = [boardIdea('Beach day', { canMerge: true })];

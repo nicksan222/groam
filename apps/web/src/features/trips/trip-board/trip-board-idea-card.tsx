@@ -1,4 +1,6 @@
 import { cn } from '@groam/ui/lib/utils';
+import { CircleDot } from 'lucide-react';
+import { memo, useEffect, useRef } from 'react';
 import {
   isViewerDraft,
   pendingIdeaContinueLabel
@@ -15,9 +17,10 @@ import {
 import { relativeTripDate } from '@/features/trips/trip-list/trip-list-order';
 import { Link } from '@/features/workspace/navigation/router';
 import { testIds } from '@/lib/test-ids';
-import type { TripBoardIdea } from '@/types/trip-board';
+import type { TripBoardIdea, TripBoardIdeaLink } from '@/types/trip-board';
 import { TripBoardCard } from './trip-board-card';
 import { useTripBoardContext } from './trip-board-context';
+import { linkToneClass } from './trip-board-links';
 
 /** Where an idea in review stands for the viewer, in a word or two and a tone. */
 function standing(idea: TripBoardIdea) {
@@ -46,8 +49,49 @@ function StatusChip({ idea }: { idea: TripBoardIdea }) {
   );
 }
 
-export function TripBoardIdeaCard({ proposal }: { proposal: TripBoardIdea }) {
-  const { tripId, viewerUserId } = useTripBoardContext();
+/**
+ * Scrolls the lane's own card list so `card` shows. Unlike `scrollIntoView` it never moves the
+ * board sideways, which mid-drag would shift the lane under the pointer.
+ */
+function revealInLane(card: HTMLElement) {
+  const list = card.closest<HTMLElement>('[data-lane-cards]');
+  if (!list) return;
+  const box = card.getBoundingClientRect();
+  const view = list.getBoundingClientRect();
+  if (box.top < view.top) list.scrollTop -= view.top - box.top;
+  else if (box.bottom > view.bottom) list.scrollTop += box.bottom - view.bottom;
+}
+
+/** Names the issue the idea answers, in the hue its issue card's idea chip shares. */
+function IssueChip({ link }: { link: TripBoardIdeaLink }) {
+  return (
+    <span
+      className={cn(cardChip, linkToneClass(link.tone))}
+      data-testid={testIds.tripBoardIdeaIssue}
+    >
+      <CircleDot aria-hidden />
+      <span className="truncate" title={link.issueTitle}>
+        {link.issueTitle ?? 'Linked issue'}
+      </span>
+    </span>
+  );
+}
+
+/** Memoised like the issue cards, so a drag that only moves a slot never re-renders the ideas. */
+export const TripBoardIdeaCard = memo(function TripBoardIdeaCard({
+  highlighted = false,
+  proposal
+}: {
+  /** Ringed while an issue it already answers is dragged over the Ideas lane. */
+  highlighted?: boolean;
+  proposal: TripBoardIdea;
+}) {
+  const { links, tripId, viewerUserId } = useTripBoardContext();
+  const link = proposal.issueId ? links.get(proposal.issueId) : undefined;
+  const card = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (highlighted && card.current) revealInLane(card.current);
+  }, [highlighted]);
   const draft = isViewerDraft(proposal, viewerUserId);
   const href = ideaOpenHref(
     {
@@ -70,6 +114,7 @@ export function TripBoardIdeaCard({ proposal }: { proposal: TripBoardIdea }) {
       aside={<StatusChip idea={proposal} />}
       chips={
         <>
+          {link ? <IssueChip link={link} /> : null}
           {note ? <span className={cn(cardChip, note.tone)}>{note.text}</span> : null}
           <span className={cardChip}>
             <span className="truncate">
@@ -100,12 +145,16 @@ export function TripBoardIdeaCard({ proposal }: { proposal: TripBoardIdea }) {
           </Link>
         </>
       }
+      className={cn(highlighted && 'ring-2 ring-warning shadow-md')}
+      data-highlighted={highlighted || undefined}
       data-idea-id={proposal.id}
+      data-link-tone={link?.tone}
       data-idea-name={proposal.ideaName}
       data-status={proposal.status}
       data-testid={testIds.ideaRow}
       data-viewer-draft={draft || undefined}
+      ref={card}
       title={proposal.title}
     />
   );
-}
+});

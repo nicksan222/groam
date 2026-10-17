@@ -50,7 +50,7 @@ test.each([
   [
     'Write the packing list',
     'has a packing item',
-    facts({}, { packing: [{ packed: false }] }),
+    facts({}, { packing: [{ brought: 0, quantity: 1 }] }),
     true
   ],
   ['Plan something in every destination', 'has no destinations', facts(), false],

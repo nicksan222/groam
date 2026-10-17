@@ -108,8 +108,10 @@ export function TripDetailView({
         )}
         <div
           className={cn(
-            'flex min-w-0 flex-1 flex-col md:min-h-0',
-            fullBleed ? 'px-0' : 'px-6 py-5'
+            'flex min-w-0 flex-1 flex-col',
+            // The full-bleed board scrolls inside itself; every other tab keeps its full height so
+            // its bottom padding stays below the content.
+            fullBleed ? 'px-0 md:min-h-0' : 'shrink-0 px-6 py-5'
           )}
           data-slot="trip-board-area"
         >
@@ -118,7 +120,7 @@ export function TripDetailView({
               addDestinationOpen={addDestinationOpen}
               day={day}
               navigation={navigation}
-              onEdit={editDetails}
+              onStartPackingIdea={(claimGear) => ideaFlow.start({ claimGear, section: 'packing' })}
               onStartVersion={() => ideaFlow.start()}
               section={section}
               startingIdea={ideaFlow.isCreating}

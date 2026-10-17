@@ -124,6 +124,13 @@ export {
   reorderIssueOnBoard,
   returnToBoard
 } from './trip-board';
+export {
+  addGroupGear,
+  addPersonalPackingItem,
+  bringGearMyself,
+  claimGearFromSharedTrip,
+  packPersonalItem
+} from './packing';
 export { closePoll, createTripPoll, expectPollProgress, voteInPoll } from './polls';
 export { currentPath, expectGone, expectPath, idFromPath, presentAttribute } from './queries';
 export { searchIdeas, searchIssues, searchTrips } from './search-trips';

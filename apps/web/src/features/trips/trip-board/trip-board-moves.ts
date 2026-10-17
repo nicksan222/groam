@@ -1,8 +1,10 @@
 import { isResolved } from '@groam/backend/convex/modules/travel/issues/status';
+import { matchesIdeaStatus } from '@/features/ideas/hooks/idea-list-filter';
 import { statusChangeRefusal } from '@/features/issues/issue-condition-rules';
 import type {
   TripBoardDragItem,
   TripBoardDropDecision,
+  TripBoardIdea,
   TripBoardIdeaItem,
   TripBoardIssueItem,
   TripBoardLane,
@@ -18,6 +20,9 @@ const refuse = (reason: string): TripBoardDropDecision => ({ outcome: 'refused',
 
 const moveLabel = (lane: TripBoardLane) =>
   lane === 'closed' ? 'Mark done' : `Move to ${tripBoardLanes[lane].title}`;
+
+/** Drafts, ideas in review, and ones that need an update: the ideas the Ideas lane shows. */
+export const isOpenIdea = (status: TripBoardIdea['status']) => matchesIdeaStatus(status, 'pending');
 
 export const itemTitle = (item: TripBoardDragItem) =>
   item.kind === 'issue' ? item.issue.title : item.idea.title;
@@ -64,6 +69,14 @@ function decideIssue(item: TripBoardIssueItem, lane: TripBoardLane): TripBoardDr
   if (lane === 'agreed') return unavailable;
   if (lane === 'review') {
     if (isResolved(issue.status)) return unavailable;
+    if (item.link) {
+      return {
+        heading: 'This issue already has an idea',
+        outcome: 'refused',
+        reason: `“${item.link.idea.title}” is still open for it. Continue there instead`,
+        tone: 'warning'
+      };
+    }
     return item.canPropose
       ? allow({ issueId: issue.id, kind: 'startIdea', label: 'Drop to start an idea' })
       : refuse('You can’t start ideas on this trip');

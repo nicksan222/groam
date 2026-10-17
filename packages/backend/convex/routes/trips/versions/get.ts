@@ -20,6 +20,7 @@ const change = v.object({
     v.literal('details'),
     v.literal('destination'),
     v.literal('packing'),
+    v.literal('packingBringer'),
     v.literal('stay'),
     v.literal('transfer')
   ),

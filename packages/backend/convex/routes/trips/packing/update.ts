@@ -4,7 +4,7 @@ import { mutableTripMutation } from '#convex/modules/travel/trips/ctx';
 
 export const run = mutableTripMutation({
   args: TripPackingValidators.updateInput,
-  returns: TripPackingValidators.item,
-  handler: async (ctx, { itemId, label, packed }) =>
-    await TripPacking.update(ctx, itemId, { label, packed })
+  returns: TripPackingValidators.writtenItem,
+  handler: async (ctx, { itemId, label, quantity }) =>
+    await TripPacking.update(ctx, itemId, { label, quantity })
 });

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vite-plus/test';
 import type { Doc, Id } from '#convex-generated/dataModel';
-import { IdeaNames } from './names';
+import { IdeaNames, MAX_AUTO_TITLE_LENGTH } from './names';
 
 function proposal(
   value: Partial<Doc<'tripProposals'>> & Pick<Doc<'tripProposals'>, 'title'>
@@ -91,6 +91,29 @@ describe('trip idea names', () => {
     expect(
       IdeaNames.allowsAutoTitle(proposal({ title: 'Add a coastal day trip', titleSource: 'user' }))
     ).toBe(false);
+  });
+
+  test('stops auto titles once an idea is merged or closed', () => {
+    for (const status of ['merged', 'closed'] as const) {
+      expect(
+        IdeaNames.allowsAutoTitle(proposal({ status, title: 'Add Lisbon', titleSource: 'auto' }))
+      ).toBe(false);
+    }
+    expect(
+      IdeaNames.allowsAutoTitle(
+        proposal({ status: 'in_review', title: 'Add Lisbon', titleSource: 'auto' })
+      )
+    ).toBe(true);
+  });
+
+  test('clamps generated titles at a word boundary', () => {
+    expect(IdeaNames.clampAutoTitle('  "Add Kyoto stop."  ')).toBe('Add Kyoto stop');
+    const clamped = IdeaNames.clampAutoTitle(
+      'Add a long coastal detour through Sintra, Cascais, and the Arrábida hills'
+    );
+    expect(clamped).toBe('Add a long coastal detour through Sintra');
+    expect(clamped.length).toBeLessThanOrEqual(MAX_AUTO_TITLE_LENGTH);
+    expect(IdeaNames.clampAutoTitle('x'.repeat(60))).toHaveLength(MAX_AUTO_TITLE_LENGTH);
   });
 
   test('normalizes generated proposal titles', () => {

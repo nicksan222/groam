@@ -6,9 +6,6 @@ import type { TripSection } from '@/features/trips/trip-sections';
 import { ActiveTripSection } from './active-trip-section';
 import type { TripNavigation, TripState } from './trip-detail-types';
 
-const updateTripDuration = vi.hoisted(() => vi.fn());
-
-vi.mock('./update-trip-duration', () => ({ updateTripDuration }));
 vi.mock('@/features/trips/trip-board/trip-board', () => ({
   TripBoard: () => <p>board panel</p>
 }));
@@ -21,32 +18,11 @@ vi.mock('@/features/trips/trip-ideas/trip-ideas-panel', () => ({
 vi.mock('@/features/trips/trip-issues/trip-issues-panel', () => ({
   TripIssuesPanel: () => <p>issues panel</p>
 }));
-vi.mock('@/features/trips/trip-overview/trip-overview', () => ({
-  TripOverview: (props: {
-    onAddDestination: () => void;
-    onEditDetails: () => void;
-    onOpenItinerary: () => void;
-    onUpdateDuration: (days: number, startDate?: string) => void;
-  }) => (
-    <div>
-      <p>editable overview</p>
-      <button onClick={props.onAddDestination} type="button">
-        add destination
-      </button>
-      <button onClick={props.onEditDetails} type="button">
-        edit details
-      </button>
-      <button onClick={props.onOpenItinerary} type="button">
-        open itinerary
-      </button>
-      <button onClick={() => props.onUpdateDuration(5, '2026-05-01')} type="button">
-        update duration
-      </button>
-    </div>
-  )
+vi.mock('@/features/trips/trip-packing/trip-packing-panel', () => ({
+  TripPackingPanel: () => <p>packing panel</p>
 }));
-vi.mock('@/features/trips/trip-overview/trip-reading-overview', () => ({
-  TripReadingOverview: () => <p>reading overview</p>
+vi.mock('@/features/trips/trip-planner/trip-day-planner', () => ({
+  TripDayPlanner: () => <p>day planner</p>
 }));
 vi.mock('./trip-history-page', () => ({ TripHistoryPage: () => <p>history page</p> }));
 vi.mock('./trip-plan-page', () => ({
@@ -78,7 +54,6 @@ function renderSection(section: TripSection, trip: TripDetail) {
     <ActiveTripSection
       addDestinationOpen={false}
       navigation={navigation}
-      onEdit={onEdit}
       section={section}
       trip={trip}
       tripState={tripState}
@@ -86,14 +61,13 @@ function renderSection(section: TripSection, trip: TripDetail) {
   );
 }
 
-const onEdit = vi.fn();
-
 beforeEach(() => vi.clearAllMocks());
 
 describe('ActiveTripSection for a shared trip', () => {
   test.each([
     ['activity', 'history page'],
     ['issues', 'issues panel'],
+    ['packing', 'packing panel'],
     ['ideas', 'ideas panel'],
     ['board', 'board panel']
   ] as const)('%s renders the %s', async (section, text) => {
@@ -112,32 +86,30 @@ describe('ActiveTripSection for a shared trip', () => {
 });
 
 describe('ActiveTripSection for an idea working copy', () => {
-  test('non-editors get the reading overview', async () => {
-    await renderSection('overview', makeTrip(true, false));
-    await expect.element(page.getByText('reading overview')).toBeVisible();
+  test.each([
+    ['editors', true],
+    ['non-editors', false]
+  ] as const)('%s get the shared plan page on the overview', async (_, canEdit) => {
+    await renderSection('overview', makeTrip(true, canEdit));
+    await expect.element(page.getByText('plan page')).toBeVisible();
+    await expect.element(page.getByText('day planner')).toBeVisible();
+    await expect.element(page.getByText('destinations panel')).not.toBeInTheDocument();
+  });
+
+  test.each([true, false])('the packing tab renders for an idea (canEdit %s)', async (canEdit) => {
+    await renderSection('packing', makeTrip(true, canEdit));
+    await expect.element(page.getByText('packing panel')).toBeVisible();
+    await expect.element(page.getByText('plan page')).not.toBeInTheDocument();
   });
 
   test('editors on the itinerary get the destinations panel only', async () => {
     await renderSection('itinerary', makeTrip(true));
     await expect.element(page.getByText('destinations panel')).toBeVisible();
-    await expect.element(page.getByText('editable overview')).not.toBeInTheDocument();
+    await expect.element(page.getByText('plan page')).not.toBeInTheDocument();
   });
 
-  test('editors on the overview get the editable overview wired to navigation', async () => {
-    await renderSection('overview', makeTrip(true));
-    await expect.element(page.getByText('editable overview')).toBeVisible();
-    await page.getByRole('button', { name: 'add destination' }).click();
-    expect(navigation.openAddDestination).toHaveBeenCalledTimes(1);
-    await page.getByRole('button', { name: 'edit details' }).click();
-    expect(onEdit).toHaveBeenCalledTimes(1);
-    await page.getByRole('button', { name: 'open itinerary' }).click();
-    expect(navigation.openSection).toHaveBeenCalledWith('itinerary');
-    await page.getByRole('button', { name: 'update duration' }).click();
-    expect(updateTripDuration).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'trip-1' }),
-      tripState,
-      5,
-      '2026-05-01'
-    );
+  test('non-editors on the itinerary get the plan page', async () => {
+    await renderSection('itinerary', makeTrip(true, false));
+    await expect.element(page.getByText('plan page')).toBeVisible();
   });
 });

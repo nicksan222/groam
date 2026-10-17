@@ -44,6 +44,9 @@ export const ideaStartAnother = 'Start another idea';
 export const ideaResolveAndApply = 'Resolve and apply';
 export const groamReviewLabel = 'Groam review';
 export const ideaCompareHeader = 'Shared trip → This idea';
+export const ideaOverviewTitle = 'The trip with this idea';
+export const ideaOverviewDescription =
+  'What the whole shared trip becomes once this idea is applied: every day and the route.';
 
 export const ideasListDescription =
   'Make changes in an idea, review them together, then apply the approved result to the shared trip.';
@@ -63,3 +66,25 @@ export function existingDraftPrompt(title: string) {
 export function draftAuthorOnly(authorName: string) {
   return `Draft — only ${authorName} can edit`;
 }
+
+const ideaPackingDraftNotice = 'Draft: the group sees these changes once this idea is applied';
+export const ideaPackingSeeChanges = 'See changes';
+
+/** The line above an idea's gear list: what state the draft is in and whether it can still be edited. */
+export function ideaPackingNotice(status: string, canEdit: boolean): string {
+  if (status === 'merged') return 'Applied to the shared trip. This copy is read-only.';
+  if (status === 'closed') return 'Closed without applying. This gear list is read-only.';
+  if (status === 'conflicted') {
+    return 'This idea conflicts with the shared plan, so its gear cannot be applied yet.';
+  }
+  if (status === 'in_review') {
+    return canEdit
+      ? 'In review: you can keep editing, and the group sees these changes once this idea is applied.'
+      : 'In review: the group sees these changes once this idea is applied.';
+  }
+  return canEdit
+    ? ideaPackingDraftNotice
+    : 'Draft: you can read this gear list, but only its author can edit it.';
+}
+export const ideaChangesViaIdea =
+  'Gear changes go through an idea, so everyone can weigh in. You can approve your own.';

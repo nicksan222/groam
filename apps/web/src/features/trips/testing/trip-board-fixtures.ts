@@ -3,6 +3,7 @@ import { workspaceIssue } from '@/features/issues/issue-fixtures';
 import type {
   TripBoardIdea,
   TripBoardIdeaItem,
+  TripBoardIdeaLink,
   TripBoardIssue,
   TripBoardIssueItem,
   TripBoardRights
@@ -32,15 +33,39 @@ export const boardIdea = (id: string, over: Partial<TripBoardIdea> = {}): TripBo
   ...over
 });
 
-/** A lifted issue card; pass `archived` or `canPropose` to change what the viewer may do. */
+/** An issue's pairing with an open idea titled `ideaTitle` in the Ideas lane. */
+export const boardLink = (
+  ideaTitle = 'Hostel',
+  over: Partial<TripBoardIdeaLink> = {}
+): TripBoardIdeaLink => ({
+  idea: {
+    id: ideaTitle as Id<'tripProposals'>,
+    status: 'in_review',
+    title: ideaTitle,
+    workingTripId: 'trip-work' as Id<'trips'>
+  },
+  issueTitle: 'issue-1',
+  tone: 0,
+  ...over
+});
+
+/**
+ * A lifted issue card; pass `archived` or `canPropose` to change what the viewer may do, and
+ * `link` when open ideas already answer it.
+ */
 export const issueItem = (
   over: Partial<TripBoardIssue> = {},
-  { archived = false, canPropose = true }: Partial<TripBoardRights> = {}
+  {
+    archived = false,
+    canPropose = true,
+    link
+  }: Partial<TripBoardRights> & { link?: TripBoardIdeaLink } = {}
 ): TripBoardIssueItem => ({
   archived,
   canPropose,
   issue: boardIssue('issue-1', over),
-  kind: 'issue'
+  kind: 'issue',
+  ...(link ? { link } : {})
 });
 
 export const ideaItem = (

@@ -4,8 +4,15 @@ import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
-import type { TripBoardContextValue, TripBoardIdea } from '@/types/trip-board';
+import { boardLink, ideaItem, issueItem } from '@/features/trips/testing/trip-board-fixtures';
+import type {
+  TripBoardContextValue,
+  TripBoardDragState,
+  TripBoardIdea,
+  TripBoardLane
+} from '@/types/trip-board';
 import { TripBoardContext } from './trip-board-context';
+import { idleDrag, TripBoardDragContext } from './trip-board-drag-state';
 import { TripBoardReviewLane } from './trip-board-review-lane';
 vi.mock('@/features/workspace/navigation/router', () => ({
   Link: ({
@@ -34,6 +41,7 @@ vi.mock('@/features/workspace/navigation/router', () => ({
   )
 }));
 const context = (over: Partial<TripBoardContextValue> = {}): TripBoardContextValue => ({
+  links: new Map(),
   rights: { archived: false, canPropose: true },
   tripId: 'trip-1' as Id<'trips'>,
   viewerUserId: 'user-alex',
@@ -66,9 +74,11 @@ function renderLane({
   appliedCount = 0,
   ideas,
   onStartIdea,
+  drag = idleDrag,
   rights = { archived: false, canPropose: true },
   startingIdea = false
 }: {
+  drag?: TripBoardDragState;
   appliedCount?: number;
   ideas: TripBoardIdea[] | undefined;
   onStartIdea?: () => void;
@@ -78,12 +88,14 @@ function renderLane({
   return render(
     <DndContext>
       <TripBoardContext.Provider value={context({ rights })}>
-        <TripBoardReviewLane
-          appliedCount={appliedCount}
-          ideas={ideas}
-          onStartIdea={onStartIdea}
-          startingIdea={startingIdea}
-        />
+        <TripBoardDragContext.Provider value={drag}>
+          <TripBoardReviewLane
+            appliedCount={appliedCount}
+            ideas={ideas}
+            onStartIdea={onStartIdea}
+            startingIdea={startingIdea}
+          />
+        </TripBoardDragContext.Provider>
       </TripBoardContext.Provider>
     </DndContext>
   );
@@ -98,6 +110,48 @@ describe('TripBoardReviewLane', () => {
     await expect
       .element(page.getByRole('link', { name: 'All ideas' }))
       .toHaveAttribute('href', '/trips/trip-1/ideas');
+  });
+
+  test.each<[string, TripBoardLane, boolean]>([
+    ['over the Ideas lane', 'review', true],
+    ['over another lane', 'open', false]
+  ])('rings the ideas an issue already has while that issue is %s', async (_, lane, ringed) => {
+    const issueId = 'issue-1' as Id<'tripIssues'>;
+    await renderLane({
+      drag: {
+        item: issueItem({}, { link: boardLink('Hostel') }),
+        target: { index: 0, lane, unchanged: false }
+      },
+      ideas: [makeIdea('Hostel', { issueId }), makeIdea('Airbnb', { issueId }), makeIdea('Camping')]
+    });
+    const row = (name: string) => page.getByTestId('idea-row').filter({ hasText: name });
+    for (const name of ['Hostel', 'Airbnb']) {
+      if (ringed) await expect.element(row(name)).toHaveAttribute('data-highlighted', 'true');
+      else await expect.element(row(name)).not.toHaveAttribute('data-highlighted');
+    }
+    await expect.element(row('Camping')).not.toHaveAttribute('data-highlighted');
+  });
+
+  test('rings nothing for a resolved issue, which cannot enter the lane at all', async () => {
+    await renderLane({
+      drag: {
+        item: issueItem({ status: 'closed' }, { link: boardLink('Hostel') }),
+        target: { index: 0, lane: 'review', unchanged: false }
+      },
+      ideas: [makeIdea('Hostel', { issueId: 'issue-1' as Id<'tripIssues'> })]
+    });
+    await expect.element(page.getByTestId('idea-row')).not.toHaveAttribute('data-highlighted');
+  });
+
+  test('rings nothing while an idea, not an issue, is lifted', async () => {
+    await renderLane({
+      drag: {
+        item: ideaItem({ issueId: 'issue-1' as Id<'tripIssues'> }),
+        target: { index: 0, lane: 'review', unchanged: false }
+      },
+      ideas: [makeIdea('Hostel', { issueId: 'issue-1' as Id<'tripIssues'> })]
+    });
+    await expect.element(page.getByTestId('idea-row')).not.toHaveAttribute('data-highlighted');
   });
 
   test('explains an empty lane', async () => {

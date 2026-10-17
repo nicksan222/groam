@@ -2,7 +2,6 @@ import type { GenericId, Infer } from 'convex/values';
 import type { tripActivityTables } from '#convex/modules/travel/activities/schema';
 import type { tripDestinationTables } from '#convex/modules/travel/destinations/schema';
 import type { RuleValidators } from '#convex/modules/travel/issues/rules/schema';
-import type { tripPackingTables } from '#convex/modules/travel/packing/schema';
 import type { tripStayTables } from '#convex/modules/travel/stays/schema';
 import type { tripTransferTables } from '#convex/modules/travel/transfers/schema';
 import type { tripTables } from '#convex/modules/travel/trips/schema';
@@ -37,9 +36,8 @@ export type RuleFacts = {
       'name' | 'position' | 'schedule'
     > & { _id: GenericId<'tripDestinations'> }
   >;
-  packing: Array<
-    Pick<(typeof tripPackingTables)['tripPackingItems']['validator']['type'], 'packed'>
-  >;
+  /** One entry per group item: how many are needed and how many travelers are bringing. */
+  packing: Array<{ brought: number; quantity: number }>;
   stays: Array<
     Pick<
       (typeof tripStayTables)['tripDestinationStays']['validator']['type'],

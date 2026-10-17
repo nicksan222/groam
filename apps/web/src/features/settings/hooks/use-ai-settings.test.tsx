@@ -120,3 +120,40 @@ test('closes the authorization window and displays connection failures', async (
   expect(result.current.error).toBe('ChatGPT plan access is unavailable');
   open.mockRestore();
 });
+test('reports a model catalog failure', async () => {
+  convex.models.mockRejectedValue(new Error('Catalog offline'));
+  const { result } = await renderHook(() => useAiSettings());
+  await vi.waitFor(() => expect(result.current.error).toBe('Catalog offline'));
+  expect(result.current.modelsLoading).toBe(false);
+});
+test('skips saving a model without a usable connection', async () => {
+  convex.useQuery.mockReturnValue({ ...remote, connections: [{ ...account, connected: false }] });
+  const { result } = await renderHook(() => useAiSettings());
+  await act(() => result.current.selectModel('gpt-test'));
+  expect(convex.select).not.toHaveBeenCalled();
+});
+test('selects a connection and reports full revocation', async () => {
+  const { result } = await renderHook(() => useAiSettings());
+  const id = account.id as Parameters<typeof result.current.selectConnection>[0];
+  await act(() => result.current.selectConnection(id));
+  expect(convex.select).toHaveBeenCalledWith({ connectionId: account.id });
+  await act(() => result.current.disconnect(id));
+  expect(result.current.message).toBe('ChatGPT disconnected.');
+});
+test('reconnects a specific account', async () => {
+  const popup = { opener: window, location: { href: '' }, close: vi.fn() };
+  const open = vi.spyOn(window, 'open').mockReturnValue(popup as unknown as Window);
+  convex.connect.mockResolvedValue({ authorizationUrl: 'https://auth.openai.com/authorize' });
+  const { result } = await renderHook(() => useAiSettings());
+  await act(() =>
+    result.current.connect(account.id as Parameters<typeof result.current.connect>[0])
+  );
+  expect(convex.connect).toHaveBeenCalledWith({ connectionId: account.id });
+  open.mockRestore();
+});
+test('reports loading until settings arrive', async () => {
+  convex.useQuery.mockReturnValue(undefined);
+  const { result } = await renderHook(() => useAiSettings());
+  expect(result.current.isLoading).toBe(true);
+  expect(convex.models).not.toHaveBeenCalled();
+});

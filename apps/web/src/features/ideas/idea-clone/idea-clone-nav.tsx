@@ -39,6 +39,7 @@ export function IdeaCloneNav(props: IdeaCloneNavProps) {
             label: tripSectionLabels.overview,
             testId: testIds.tripSectionOverview
           },
+          { key: 'packing', label: tripSectionLabels.packing, testId: testIds.tripSectionPacking },
           {
             count: '…',
             key: 'itinerary',
@@ -58,6 +59,7 @@ export function IdeaCloneNav(props: IdeaCloneNavProps) {
       label: viewOnly ? 'Plan' : tripSectionLabels.overview,
       testId: testIds.tripSectionOverview
     },
+    { key: 'packing', label: tripSectionLabels.packing, testId: testIds.tripSectionPacking },
     ...(viewOnly
       ? []
       : [

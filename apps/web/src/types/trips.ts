@@ -308,7 +308,8 @@ export type CreateTripIdeaResult = Pick<
 export type CreateTripIdeaIntent = {
   addDestination: boolean;
   firstDestination?: boolean;
-  section: 'itinerary' | 'overview';
+  claimGear?: string;
+  section: 'itinerary' | 'overview' | 'packing';
   titleHint?: string;
 };
 

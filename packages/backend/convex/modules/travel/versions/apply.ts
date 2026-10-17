@@ -403,8 +403,8 @@ async function applyVersionSnapshot(
   const sourceContent = await VersionContent.load(ctx, source.trip._id);
   await applyPackingSnapshot(
     source,
-    snapshot.packingItems,
-    sourceContent.packingItems,
+    { bringers: snapshot.packingBringers, items: snapshot.packingItems },
+    { bringers: sourceContent.packingBringers, items: sourceContent.packingItems },
     options?.retainSourceKeys
   );
   const reconcileOptions: ReconcileOptions = {

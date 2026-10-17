@@ -994,6 +994,32 @@ async function setReviewers(
   return null;
 }
 
+/** Someone asked to bring a packing item in an idea gets asked to review that idea. */
+async function requestBringerReview(ctx: MutableTripCtx, userId: string): Promise<void> {
+  if (!ctx.trip.proposal) return;
+  const proposal = await ctx.db
+    .query('tripProposals')
+    .withIndex('by_workingTripId', (query) => query.eq('workingTripId', ctx.trip._id))
+    .unique();
+  if (!proposal || !reviewersCanBeChanged(proposal) || proposal.author.userId === userId) return;
+  const humans = uniqueUserReviewers(proposal.reviewers);
+  if (humans.some((reviewer) => reviewer.userId === userId)) return;
+  if (humans.length + 1 >= MAX_GROUP_MEMBERS) return;
+  const member = (await eligibleVoters(ctx)).find((voter) => voter.userId === userId);
+  if (!member) return;
+  const reviewers = withIdeaReviewer([...humans, { kind: 'user', name: member.name, userId }]);
+  await ctx.db.patch('tripProposals', proposal._id, { reviewers, updatedAt: Date.now() });
+  if (proposal.status !== 'in_review' && proposal.status !== 'conflicted') return;
+  await Notifications.notify(ctx, {
+    body: `${ctx.workspace.viewerName} asked you to bring something in “${proposal.title}”.`,
+    href: `/ideas/${proposal._id}`,
+    kind: 'idea_shared',
+    organizationId: ctx.workspace.organizationId,
+    title: 'Your review is requested',
+    userIds: [userId].filter((id) => id !== ctx.workspace.userId)
+  });
+}
+
 async function addFeedback({
   ctx,
   proposalId,
@@ -1820,7 +1846,7 @@ async function reviewContext(ctx: QueryCtx, proposalId: Id<'tripProposals'>) {
 async function titleContext(ctx: QueryCtx, proposalId: Id<'tripProposals'>, generation: number) {
   const proposal = await ctx.db.get('tripProposals', proposalId);
   if (
-    proposal?.status !== 'draft' ||
+    !proposal ||
     !IdeaNames.allowsAutoTitle(proposal) ||
     proposal.titleGeneration !== generation
   ) {
@@ -1855,14 +1881,14 @@ async function finishGeneratedTitle(
 ): Promise<null> {
   const proposal = await ctx.db.get('tripProposals', proposalId);
   if (
-    proposal?.status !== 'draft' ||
+    !proposal ||
     !IdeaNames.allowsAutoTitle(proposal) ||
     proposal.titleGeneration !== generation
   ) {
     return null;
   }
 
-  const normalized = tryNormalizeProposalTitle(title);
+  const normalized = tryNormalizeProposalTitle(IdeaNames.clampAutoTitle(title));
   if (!normalized || normalized === proposal.title) return null;
 
   await ctx.db.patch('tripProposals', proposalId, {
@@ -1896,6 +1922,7 @@ export class TripVersions {
   static prepareRebase = prepareRebase;
   static prepareResolution = prepareResolution;
   static prepareSubmit = prepareSubmit;
+  static requestBringerReview = requestBringerReview;
   static resolveFeedback = resolveFeedback;
   static reviewContext = reviewContext;
   static setApproval = setApproval;

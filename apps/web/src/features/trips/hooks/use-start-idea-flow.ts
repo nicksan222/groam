@@ -10,12 +10,14 @@ import {
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { useOpenState } from '@/features/workspace/hooks/use-open-state';
 import { useOptionalWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
+import { usePendingGearClaimStore } from '@/lib/stores/pending-gear-claim-store';
 import type { StartIdeaIntent, ViewerIdea } from '@/types/ideas';
 
 function toCreateIntent(intent: StartIdeaIntent): CreateTripIdeaIntent {
   const firstDestination = Boolean(intent.firstDestination);
   return {
     addDestination: Boolean(intent.addDestination || firstDestination),
+    claimGear: intent.claimGear,
     firstDestination,
     section:
       intent.section ?? (firstDestination || intent.addDestination ? 'itinerary' : 'overview'),
@@ -25,6 +27,7 @@ function toCreateIntent(intent: StartIdeaIntent): CreateTripIdeaIntent {
 
 function titleForIntent(intent: StartIdeaIntent) {
   if (intent.titleHint) return intent.titleHint;
+  if (intent.claimGear) return `Bring ${intent.claimGear}`;
   if (intent.addDestination || intent.firstDestination) return 'Add a stop';
   return undefined;
 }
@@ -49,6 +52,12 @@ export function useStartIdeaFlow({
     (proposal: { id: Id<'tripProposals'> }, intent: StartIdeaIntent) => {
       if (!trip) return;
       const createIntent = toCreateIntent(intent);
+      if (createIntent.claimGear)
+        usePendingGearClaimStore.getState().setClaim({
+          label: createIntent.claimGear,
+          proposalId: proposal.id,
+          sourceTripId: trip.id
+        });
       void navigate(
         ideaCloneHref({ id: proposal.id, sourceTripId: trip.id }, createIntent.section, {
           addDestination: createIntent.addDestination

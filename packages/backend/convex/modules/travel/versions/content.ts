@@ -16,7 +16,8 @@ async function loadVersionContent(ctx: MutationCtx | QueryCtx, tripId: Id<'trips
     destinationTransfers,
     activityTransfers,
     attachments,
-    packingItems
+    packingItems,
+    packingBringers
   ] = await Promise.all([
     TripDestination.forTrip(ctx, tripId),
     ItineraryActivity.forTrip(ctx, tripId),
@@ -25,7 +26,8 @@ async function loadVersionContent(ctx: MutationCtx | QueryCtx, tripId: Id<'trips
     TripTransfer.destinationForTrip(ctx, tripId),
     TripTransfer.activityForTrip(ctx, tripId),
     Attachments.forTrip(ctx, tripId),
-    TripPacking.forTrip(ctx, tripId)
+    TripPacking.forTrip(ctx, tripId),
+    TripPacking.bringersForTrip(ctx, tripId)
   ]);
   return {
     activities,
@@ -34,8 +36,9 @@ async function loadVersionContent(ctx: MutationCtx | QueryCtx, tripId: Id<'trips
     boundaryTransfers,
     destinations,
     destinationTransfers,
-    stays,
-    packingItems
+    packingBringers,
+    packingItems,
+    stays
   };
 }
 

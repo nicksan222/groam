@@ -1,6 +1,11 @@
 import { describe, expect, test } from 'vite-plus/test';
 import { manualCondition, starterCondition } from '@/features/issues/issue-condition-fixtures';
-import { boardIssue, issueItem, ideaItem } from '@/features/trips/testing/trip-board-fixtures';
+import {
+  boardIssue,
+  boardLink,
+  issueItem,
+  ideaItem
+} from '@/features/trips/testing/trip-board-fixtures';
 import type { IssueStatus } from '@/types/issues';
 import { tripBoardLaneOrder, tripBoardLanes } from './trip-board-lanes';
 import { decideMove, decideTransfer, isDraggable, itemLane } from './trip-board-moves';
@@ -42,6 +47,56 @@ describe('decideMove for issues', () => {
 
   test.each(['closed', 'wont_do'] as const)('cannot start an idea from %s', (from) => {
     expect(decideMove(issueItem({ status: from }), 'review')).toEqual({ outcome: 'unavailable' });
+  });
+
+  test('warns instead of starting a second idea for an issue an open idea answers', () => {
+    expect(decideMove(issueItem({}, { link: boardLink('Hostel') }), 'review')).toEqual({
+      heading: 'This issue already has an idea',
+      outcome: 'refused',
+      reason: '“Hostel” is still open for it. Continue there instead',
+      tone: 'warning'
+    });
+  });
+
+  test('warns from the lane pairing, not the newest idea, which may be closed', () => {
+    const closed = {
+      id: 'idea-new',
+      status: 'closed',
+      title: 'Camping',
+      workingTripId: 'trip-work'
+    };
+    const item = issueItem({ idea: closed } as never, { link: boardLink('Hostel') });
+    expect(decideMove(item, 'review')).toMatchObject({ outcome: 'refused', tone: 'warning' });
+  });
+
+  test.each(['merged', 'closed', 'in_review'] as const)(
+    'starts a fresh idea when no open idea in the lane answers it (newest is %s)',
+    (status) => {
+      const idea = { id: 'idea-1', status, title: 'Hostel', workingTripId: 'trip-work' };
+      expect(decideMove(issueItem({ idea } as never), 'review')).toMatchObject({
+        outcome: 'allowed'
+      });
+    }
+  );
+
+  test('warns before checking propose rights: the open idea is the useful answer', () => {
+    const item = issueItem({}, { canPropose: false, link: boardLink() });
+    expect(decideMove(item, 'review')).toMatchObject({ tone: 'warning' });
+  });
+
+  test.each(['closed', 'wont_do'] as const)(
+    'stays unavailable for a %s issue even with an open idea',
+    (status) => {
+      expect(decideMove(issueItem({ status }, { link: boardLink() }), 'review')).toEqual({
+        outcome: 'unavailable'
+      });
+    }
+  );
+
+  test('lets an issue with an open idea still move between issue lanes', () => {
+    expect(decideMove(issueItem({}, { link: boardLink() }), 'in_progress')).toMatchObject({
+      outcome: 'allowed'
+    });
   });
 
   test('refuses an idea without propose rights', () => {

@@ -8,6 +8,7 @@ import { page } from 'vite-plus/test/browser';
 import { itineraryTrip } from '@/features/trips/testing/itinerary-editor-fixtures';
 import { StatefulItineraryEditor } from '@/features/trips/testing/itinerary-editor-harness';
 import { ChangeSummary } from '@/features/trips/trip-versions/change-summary';
+import { TripInlineNotice } from './trip-inline-notice';
 import { TripPageShell } from './trip-page-shell';
 
 vi.mock('@/features/media/hooks/use-media-upload', () => ({
@@ -224,5 +225,48 @@ describe('page canvas', () => {
     document.documentElement.classList.add('dark');
     await view.rerender(<TripPage tab="overview" />);
     expect(pageCanvas().background).not.toBe(light);
+  });
+});
+
+describe('floating notices', () => {
+  function LongPage() {
+    return (
+      <SidebarProvider className="h-svh min-h-0 overflow-hidden">
+        <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          <TripPageShell
+            banner={<TripInlineNotice title="The shared trip has changed" />}
+            body={
+              <div>
+                <div style={{ height: 2400 }} />
+                <p>Last line</p>
+              </div>
+            }
+            hero={<h1>Coast week</h1>}
+            nav={<nav aria-label="Trip sections" />}
+          />
+        </div>
+      </SidebarProvider>
+    );
+  }
+
+  test('float as a card, also at the end of the page', async () => {
+    await useViewport(1440, 800);
+    await render(<LongPage />);
+    const notice = page.getByRole('region', { name: 'The shared trip has changed' });
+    await expect.element(notice).toBeVisible();
+    const scroller = required('[data-slot="shell-content"]');
+    const card = notice.element();
+    const viewportBottom = scroller.getBoundingClientRect().bottom;
+    const width = card.getBoundingClientRect().width;
+
+    expect(width).toBeLessThan(scroller.clientWidth);
+    expect(card.getBoundingClientRect().bottom).toBeLessThan(viewportBottom);
+
+    scroller.scrollTop = scroller.scrollHeight;
+    await expect
+      .poll(() => page.getByText('Last line').element().getBoundingClientRect().bottom)
+      .toBeLessThanOrEqual(card.getBoundingClientRect().top);
+    expect(card.getBoundingClientRect().width).toBe(width);
+    expect(card.getBoundingClientRect().bottom).toBeLessThan(viewportBottom);
   });
 });

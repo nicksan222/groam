@@ -1,6 +1,7 @@
 import type { Id } from '@groam/backend/data-model';
 import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, expect, test, vi } from 'vite-plus/test';
+import { usePendingGearClaimStore } from '@/lib/stores/pending-gear-claim-store';
 import { useStartIdeaFlow } from './use-start-idea-flow';
 import type { TripDetail } from './use-trips';
 
@@ -196,4 +197,19 @@ test('continues or starts another idea from the existing-draft choice', async ()
   await act(() => result.current.start({ titleHint: 'Another' }));
   await act(() => result.current.startAnotherIdea());
   expect(openDialog).toHaveBeenCalledWith(expect.objectContaining({ titleHint: 'Another' }));
+});
+
+test('records the gear claim for the new idea only after it is created', async () => {
+  usePendingGearClaimStore.getState().clear();
+  const { result } = await renderHook(() =>
+    useStartIdeaFlow({ createVersion: vi.fn(), proposals: [], trip: trip() })
+  );
+  await act(() => result.current.start({ claimGear: 'Tent', section: 'packing' }));
+  expect(usePendingGearClaimStore.getState().claim).toBeNull();
+  await act(() => dialog.config?.onCreated('idea-9' as Id<'tripProposals'>, { claimGear: 'Tent' }));
+  expect(usePendingGearClaimStore.getState().claim).toMatchObject({
+    label: 'Tent',
+    proposalId: 'idea-9',
+    sourceTripId: tripId
+  });
 });

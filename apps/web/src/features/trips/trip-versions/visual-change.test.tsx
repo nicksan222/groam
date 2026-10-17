@@ -42,6 +42,21 @@ describe('VisualChange', () => {
     await expect.element(page.getByText('1 detail', { exact: false })).toBeVisible();
   });
 
+  test('reads a gear assignment in plain words', async () => {
+    await render(
+      <VisualChange
+        change={makeChange({
+          entity: 'packingBringer',
+          fields: [textField('count', 'Bringing', '1', '2')],
+          label: 'Hair dryer · Ana'
+        })}
+      />
+    );
+    await expect.element(page.getByText('Hair dryer · Ana')).toBeVisible();
+    await expect.element(page.getByText('Updated gear assignment', { exact: false })).toBeVisible();
+    await expect.element(page.getByText('Bringing')).toBeVisible();
+  });
+
   test('shows before and after values', async () => {
     await render(<VisualChange change={makeChange()} />);
     await expect.element(page.getByText('Early visit').first()).toBeInTheDocument();

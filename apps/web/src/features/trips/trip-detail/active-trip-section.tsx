@@ -7,18 +7,18 @@ import { itineraryActionsFromTripState } from '@/features/trips/trip-destination
 import { TripDestinationsPanel } from '@/features/trips/trip-destinations/trip-destinations-panel';
 import { TripIdeasPanel } from '@/features/trips/trip-ideas/trip-ideas-panel';
 import { TripIssuesPanel } from '@/features/trips/trip-issues/trip-issues-panel';
-import { TripOverview } from '@/features/trips/trip-overview/trip-overview';
-import { TripReadingOverview } from '@/features/trips/trip-overview/trip-reading-overview';
+import { TripPackingPanel } from '@/features/trips/trip-packing/trip-packing-panel';
+import { TripDayPlanner } from '@/features/trips/trip-planner/trip-day-planner';
 import type { TripSection } from '@/features/trips/trip-sections';
 import type { TripNavigation, TripState } from './trip-detail-types';
 import { TripHistoryPage } from './trip-history-page';
 import { TripPlanPage } from './trip-plan-page';
-import { updateTripDuration } from './update-trip-duration';
 
 /** One tab of a shared trip; Board is the fallback. */
 function sharedTripSection({
   day,
   itinerary,
+  onStartPackingIdea,
   onStartVersion,
   section,
   startingIdea,
@@ -26,12 +26,21 @@ function sharedTripSection({
 }: {
   day?: number;
   itinerary: () => ReactNode;
+  onStartPackingIdea?: (claimGear?: string) => void;
   onStartVersion?: () => void;
   section: TripSection;
   startingIdea?: boolean;
   trip: TripDetail;
 }): ReactNode {
   if (section === 'activity') return <TripHistoryPage trip={trip} />;
+  if (section === 'packing')
+    return (
+      <TripPackingPanel
+        onStartPackingIdea={onStartPackingIdea}
+        startingIdea={startingIdea}
+        trip={trip}
+      />
+    );
   if (section === 'issues') return <TripIssuesPanel trip={trip} />;
   if (section === 'polls') return <TripPollsPanel trip={trip} />;
   if (section === 'ideas')
@@ -44,15 +53,15 @@ function sharedTripSection({
 }
 
 /**
- * A trip's section body. A shared trip shows one of its tabs: board, overview, issues, ideas,
- * polls, research, or activity. The idea clone
- * workspace also renders this for an idea's working trip, which is why the proposal branches stay.
+ * A trip's section body. A shared trip shows one of its tabs: board, overview, packing, issues, ideas,
+ * polls, research, or activity. The idea clone workspace also renders this for an idea's working
+ * trip: its Overview is the same read-only plan page, and editors change it on the Itinerary tab.
  */
 export function ActiveTripSection({
   addDestinationOpen,
   day,
   navigation,
-  onEdit,
+  onStartPackingIdea,
   onStartVersion,
   section,
   startingIdea,
@@ -62,7 +71,7 @@ export function ActiveTripSection({
   addDestinationOpen: boolean;
   day?: number;
   navigation: TripNavigation;
-  onEdit: () => void;
+  onStartPackingIdea?: (claimGear?: string) => void;
   onStartVersion?: () => void;
   section: TripSection;
   startingIdea?: boolean;
@@ -80,21 +89,17 @@ export function ActiveTripSection({
     />
   );
   if (!trip.proposal) {
-    return sharedTripSection({ day, itinerary, onStartVersion, section, startingIdea, trip });
+    return sharedTripSection({
+      day,
+      itinerary,
+      onStartPackingIdea,
+      onStartVersion,
+      section,
+      startingIdea,
+      trip
+    });
   }
-  if (!trip.permissions.canEdit) return <TripReadingOverview itinerary={itinerary()} trip={trip} />;
-  if (section === 'itinerary') return itinerary();
-  return (
-    <TripOverview
-      onAddDestination={navigation.openAddDestination}
-      onEditDetails={onEdit}
-      onOpenItinerary={() => navigation.openSection('itinerary')}
-      onStartVersion={onStartVersion}
-      onUpdateDuration={(totalDurationDays, startDate) =>
-        updateTripDuration(trip, tripState, totalDurationDays, startDate)
-      }
-      trip={trip}
-      tripState={tripState}
-    />
-  );
+  if (section === 'packing') return <TripPackingPanel trip={trip} />;
+  if (section === 'itinerary' && trip.permissions.canEdit) return itinerary();
+  return <TripPlanPage day={day} itinerary={<TripDayPlanner trip={trip} />} trip={trip} />;
 }

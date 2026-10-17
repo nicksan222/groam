@@ -38,12 +38,15 @@ export function IssueCard({
   assigneeAt = 'avatar',
   assigneeSlot,
   className,
+  ideaChipClassName,
   issue,
   ...props
 }: Omit<ComponentProps<'article'>, 'children' | 'title'> & {
   assigneeAt?: 'avatar' | 'chips' | 'hover';
   /** Replaces the assignee avatar, for example with an `IssueAssigneePicker` trigger. */
   assigneeSlot?: ReactNode;
+  /** Tints the linked-idea chip, for example to pair it with its idea card on a board. */
+  ideaChipClassName?: string;
   issue: IssueCardData;
 }) {
   const assignee =
@@ -91,7 +94,7 @@ export function IssueCard({
         {issue.condition ? <IssueConditionLine condition={issue.condition} /> : null}
         {issue.dueAt === null ? null : <IssueDueChip dueAt={issue.dueAt} status={issue.status} />}
         {issue.idea ? (
-          <span className={cardChip}>
+          <span className={cn(cardChip, ideaChipClassName)}>
             <Sparkles aria-hidden />
             <span className="truncate" title={issue.idea.title}>
               {ideaChipText[issue.idea.status]}

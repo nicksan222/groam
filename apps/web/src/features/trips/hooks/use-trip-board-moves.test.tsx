@@ -1,7 +1,12 @@
 import type { Id } from '@groam/backend/data-model';
 import { act, renderHook } from '@groam/vitest-config/react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
-import { boardIssue, issueItem, ideaItem } from '@/features/trips/testing/trip-board-fixtures';
+import {
+  boardIssue,
+  boardLink,
+  issueItem,
+  ideaItem
+} from '@/features/trips/testing/trip-board-fixtures';
 import type { TripBoardDropTarget } from '@/types/trip-board';
 import { useTripBoardMoves } from './use-trip-board-moves';
 
@@ -175,6 +180,18 @@ describe('useTripBoardMoves', () => {
     await act(async () => result.current.drop(ideaItem(), at({ lane: 'agreed' })));
     expect(mocks.toast.info).toHaveBeenCalledWith('Needs approvals before it can be applied');
     expect(mocks.merge).not.toHaveBeenCalled();
+  });
+
+  test('warns, and starts nothing, when an open idea already answers the issue', async () => {
+    const { result } = await renderHook(() => useTripBoardMoves(tripId));
+    const item = issueItem({}, { link: boardLink('Hostel') });
+    await act(async () => result.current.drop(item, at({ lane: 'review' })));
+    expect(mocks.toast.warning).toHaveBeenCalledWith('This issue already has an idea', {
+      description: '“Hostel” is still open for it. Continue there instead'
+    });
+    expect(mocks.createVersion).not.toHaveBeenCalled();
+    expect(mocks.navigate).not.toHaveBeenCalled();
+    expect(mocks.toast.info).not.toHaveBeenCalled();
   });
 
   test('ignores drops that are not targets', async () => {

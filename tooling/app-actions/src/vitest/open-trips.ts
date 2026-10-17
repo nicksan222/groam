@@ -12,6 +12,7 @@ export type TripSection =
   | 'issues'
   | 'itinerary'
   | 'overview'
+  | 'packing'
   | 'polls';
 
 /** A marker only that tab's page renders, so opening it can wait for it. */
@@ -19,6 +20,7 @@ const sectionPages: Partial<Record<TripSection, string>> = {
   activity: ids.tripHistoryPage,
   board: ids.tripBoardScroller,
   overview: ids.tripPlanPage,
+  packing: ids.tripPackingPanel,
   polls: ids.tripPollsPanel
 };
 
@@ -51,6 +53,7 @@ const sectionTabs = {
   issues: ids.tripSectionIssues,
   itinerary: ids.tripSectionItinerary,
   overview: ids.tripSectionOverview,
+  packing: ids.tripSectionPacking,
   polls: ids.tripSectionPolls,
   research: ids.tripSectionResearch
 } as const;
@@ -59,10 +62,7 @@ const sectionTabs = {
 export async function openTripSection(section: TripSection): Promise<void> {
   await tap(by(sectionTabs[section]));
   const page = sectionPages[section];
-  // The idea working copy's overview tab has no shared-trip page behind it.
-  if (page && !(section === 'overview' && by(ids.tripSectionItinerary).query())) {
-    await expect.element(by(page)).toBeVisible();
-  }
+  if (page) await expect.element(by(page)).toBeVisible();
 }
 
 export async function openSharedTrip(): Promise<void> {

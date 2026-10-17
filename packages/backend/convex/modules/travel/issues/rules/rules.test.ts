@@ -357,7 +357,7 @@ test.each<[string, RuleClause, RuleFacts, { detail: string | null; met: boolean 
   [
     'packing list started',
     { kind: 'packing_listed' },
-    facts({ packing: [{ packed: false }] }),
+    facts({ packing: [{ brought: 0, quantity: 1 }] }),
     { detail: null, met: true }
   ],
   [
@@ -367,10 +367,26 @@ test.each<[string, RuleClause, RuleFacts, { detail: string | null; met: boolean 
     { detail: 'No packing list yet', met: false }
   ],
   [
-    'still packing',
+    'an item nobody is bringing enough of',
     { kind: 'packing_packed' },
-    facts({ packing: [{ packed: true }, { packed: false }] }),
-    { detail: '1 still to pack', met: false }
+    facts({
+      packing: [
+        { brought: 2, quantity: 2 },
+        { brought: 1, quantity: 3 }
+      ]
+    }),
+    { detail: '1 still need someone to bring them', met: false }
+  ],
+  [
+    'every group item covered, over-coverage included',
+    { kind: 'packing_packed' },
+    facts({
+      packing: [
+        { brought: 2, quantity: 2 },
+        { brought: 4, quantity: 3 }
+      ]
+    }),
+    { detail: null, met: true }
   ]
 ])('%s', (_, clause, tripFacts, expected) => {
   expect(check(clause, tripFacts)).toMatchObject(expected);

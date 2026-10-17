@@ -81,10 +81,6 @@ vi.mock('@/features/trips/trip-ideas/create-trip-idea-dialog', () => ({
   CreateTripIdeaDialog: () => null
 }));
 
-vi.mock('@/features/trips/trip-overview/trip-overview', () => ({
-  TripOverview: () => <div>Overview loading</div>
-}));
-
 vi.mock('@/features/trips/trip-board/trip-board', () => ({
   TripBoard: () => <div>Board section</div>
 }));
@@ -101,8 +97,8 @@ vi.mock('@/features/trips/trip-destinations/trip-destinations-panel', () => ({
   TripDestinationsPanel: () => <div>Itinerary section</div>
 }));
 
-vi.mock('@/features/trips/trip-overview/trip-packing-list', () => ({
-  TripPackingList: () => <div>Packing list</div>
+vi.mock('@/features/trips/trip-packing/trip-packing-panel', () => ({
+  TripPackingPanel: () => <div>Packing list</div>
 }));
 
 vi.mock('@/features/trips/trip-detail/trip-details-editor', () => ({

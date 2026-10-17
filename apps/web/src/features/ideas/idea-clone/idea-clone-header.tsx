@@ -53,7 +53,7 @@ export function IdeaCloneHeader({
     <TripHeader
       actions={
         <div
-          className="w-fit max-w-full rounded-lg bg-background/80 text-foreground backdrop-blur-sm"
+          className="max-w-full"
           data-idea-id={proposalId}
           data-idea-name={ideaName}
           data-testid={testIds.ideaWorkspace}

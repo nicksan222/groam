@@ -3,6 +3,7 @@ import { IssueCard } from '@/features/issues/shared/issue-card';
 import { testIds } from '@/lib/test-ids';
 import type { TripBoardDragItem } from '@/types/trip-board';
 import { TripBoardCard } from './trip-board-card';
+import { linkToneClass, withLinkedIdea } from './trip-board-links';
 
 /** The same card, picked up: a soft deep shadow, a slight tilt and a touch larger. */
 const lifted =
@@ -12,7 +13,12 @@ const lifted =
 export function TripBoardDragPreview({ item }: { item: TripBoardDragItem }) {
   if (item.kind === 'issue') {
     return (
-      <IssueCard className={lifted} data-testid={testIds.tripBoardDragPreview} issue={item.issue} />
+      <IssueCard
+        className={lifted}
+        data-testid={testIds.tripBoardDragPreview}
+        ideaChipClassName={item.link ? linkToneClass(item.link.tone) : undefined}
+        issue={withLinkedIdea(item.issue, item.link)}
+      />
     );
   }
   return (

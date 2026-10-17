@@ -37,6 +37,10 @@ import {
   createListPackingTool,
   createManagePackingTool
 } from '#backend/assistant/tools/trips/packing';
+import {
+  createListPersonalPackingTool,
+  createManagePersonalPackingTool
+} from '#backend/assistant/tools/trips/personal-packing';
 import { createTripProposalTool } from '#backend/assistant/tools/trips/proposal';
 import {
   createGetItineraryTool,
@@ -264,6 +268,17 @@ const assistantCapabilityBindings = {
   'trip.packing.manage': defineCapability({
     ...assistantToolSpecs['trip.packing.manage'],
     create: ({ activeTripId }) => createManagePackingTool(activeTripId)
+  }),
+  // Personal lists are private: bound only in a private chat, never in shared or standalone runs.
+  'trip.packing.personal.manage': defineCapability({
+    ...assistantToolSpecs['trip.packing.personal.manage'],
+    create: ({ activeTripId, scope }) =>
+      scope === 'private' ? createManagePersonalPackingTool(activeTripId) : null
+  }),
+  'trip.packing.personal.read': defineCapability({
+    ...assistantToolSpecs['trip.packing.personal.read'],
+    create: ({ activeTripId, scope }) =>
+      scope === 'private' ? createListPersonalPackingTool(activeTripId) : null
   }),
   'trip.packing.read': defineCapability({
     ...assistantToolSpecs['trip.packing.read'],

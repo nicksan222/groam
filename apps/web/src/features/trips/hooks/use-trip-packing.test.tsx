@@ -4,7 +4,9 @@ import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { useTripPacking } from './use-trip-packing';
 
 const convex = vi.hoisted(() => ({ useMutation: vi.fn(), useQuery: vi.fn() }));
-const notifications = vi.hoisted(() => ({ error: vi.fn() }));
+const notifications = vi.hoisted(() =>
+  Object.assign(vi.fn(), { error: vi.fn(), success: vi.fn() })
+);
 
 vi.mock('convex/react', async (importOriginal) => ({
   ...(await importOriginal<typeof import('convex/react')>()),
@@ -14,72 +16,122 @@ vi.mock('@groam/ui/components/toast', () => ({ toast: notifications }));
 
 const tripId = 'trip-1' as Id<'trips'>;
 const itemId = 'packing-1' as Id<'tripPackingItems'>;
+const item = {
+  bringers: [{ count: 2, image: null, name: 'Ana', userId: 'ana' }],
+  brought: 2,
+  id: itemId,
+  label: 'Tent',
+  quantity: 3
+};
+
+/** useMutation is called add, update, remove, bring, in that order, every render. */
+function mockMutations(
+  writes: Record<'add' | 'bring' | 'remove' | 'update', ReturnType<typeof vi.fn>>
+) {
+  const order = [writes.add, writes.update, writes.remove, writes.bring];
+  let call = 0;
+  convex.useMutation.mockImplementation(() => order[call++ % order.length]);
+}
+
+const writes = () => ({
+  add: vi.fn().mockResolvedValue(null),
+  bring: vi.fn().mockResolvedValue(null),
+  remove: vi.fn().mockResolvedValue(null),
+  update: vi.fn().mockResolvedValue(null)
+});
 
 beforeEach(() => {
   vi.clearAllMocks();
   convex.useQuery.mockReturnValue([]);
-  convex.useMutation.mockReturnValue(vi.fn().mockResolvedValue(null));
 });
 
 describe('useTripPacking', () => {
-  test('adds the draft, clears it after success, and sends trip context', async () => {
-    const add = vi.fn().mockResolvedValue(null);
-    convex.useMutation.mockReturnValue(add);
+  test('sends group gear writes with the trip and resolves true', async () => {
+    const mutations = writes();
+    mockMutations(mutations);
     const { result } = await renderHook(() => useTripPacking(tripId));
 
-    await act(() => result.current.setDraft('  Passport  '));
     await act(async () => {
-      await result.current.add();
+      expect(await result.current.add('Hair dryer', 3)).toBe(true);
+      expect(await result.current.update(itemId, { quantity: 2 })).toBe(true);
+      expect(await result.current.bring(itemId, 'user-1', 1)).toBe(true);
+      expect(await result.current.remove(item)).toBe(true);
     });
 
-    expect(add).toHaveBeenCalledWith({ label: '  Passport  ', tripId });
-    expect(result.current.draft).toBe('');
-    expect(result.current.isPending).toBe(false);
+    expect(mutations.add).toHaveBeenCalledWith({ label: 'Hair dryer', quantity: 3, tripId });
+    expect(mutations.update).toHaveBeenCalledWith({ itemId, quantity: 2, tripId });
+    expect(mutations.bring).toHaveBeenCalledWith({ count: 1, itemId, tripId, userId: 'user-1' });
+    expect(mutations.remove).toHaveBeenCalledWith({ itemId, tripId });
   });
 
-  test('skips loading and reports failed updates when no trip is selected', async () => {
-    const update = vi.fn().mockRejectedValue(new Error('Read only'));
-    convex.useMutation.mockReturnValueOnce(vi.fn()).mockReturnValueOnce(update);
-    const loaded = await renderHook(() => useTripPacking(tripId));
-    await act(() => loaded.result.current.toggle(itemId, true));
-    expect(update).toHaveBeenCalledWith({ itemId, packed: true, tripId });
-    expect(notifications.error).toHaveBeenCalledWith('Read only');
-
-    await renderHook(() => useTripPacking(undefined));
-    expect(convex.useQuery).toHaveBeenLastCalledWith(expect.anything(), 'skip');
+  test('removing an item offers Undo that restores it and its bringers', async () => {
+    const mutations = writes();
+    mutations.add.mockResolvedValue({ id: 'packing-2', label: 'Tent', quantity: 3 });
+    mockMutations(mutations);
+    const { result } = await renderHook(() => useTripPacking(tripId));
+    await act(async () => {
+      await result.current.remove(item);
+    });
+    const options = notifications.mock.calls[0]?.[1] as { action: { onClick: () => void } };
+    expect(notifications.mock.calls[0]?.[0]).toBe('Removed Tent');
+    await act(async () => {
+      options.action.onClick();
+    });
+    await vi.waitFor(() =>
+      expect(mutations.bring).toHaveBeenCalledWith({
+        count: 2,
+        itemId: 'packing-2',
+        tripId,
+        userId: 'ana'
+      })
+    );
+    expect(mutations.add).toHaveBeenCalledWith({ label: 'Tent', quantity: 3, tripId });
   });
 
-  test('does not add blank drafts, reports failed adds, and removes items', async () => {
-    const add = vi.fn().mockRejectedValue(new Error('Cannot add'));
-    const update = vi.fn();
-    const remove = vi.fn().mockResolvedValue(null);
-    let mutationIndex = 0;
-    convex.useMutation.mockImplementation(() => [add, update, remove][mutationIndex++ % 3]);
-    convex.useQuery.mockReturnValue(undefined);
+  test('dropping a bringer to zero offers Undo back to their count', async () => {
+    const mutations = writes();
+    mockMutations(mutations);
+    const { result } = await renderHook(() => useTripPacking(tripId));
+    await act(async () => {
+      await result.current.bring(itemId, 'ana', 0, 1);
+    });
+    const options = notifications.mock.calls[0]?.[1] as { action: { onClick: () => void } };
+    await act(async () => {
+      options.action.onClick();
+    });
+    await vi.waitFor(() =>
+      expect(mutations.bring).toHaveBeenLastCalledWith({
+        count: 1,
+        itemId,
+        tripId,
+        userId: 'ana'
+      })
+    );
+  });
+
+  test('toasts a failed write and resolves false', async () => {
+    const mutations = writes();
+    mutations.add.mockRejectedValue(new Error('Start an idea'));
+    mockMutations(mutations);
     const { result } = await renderHook(() => useTripPacking(tripId));
 
-    await act(() => result.current.add());
-    expect(add).not.toHaveBeenCalled();
-    expect(result.current.isLoading).toBe(true);
-    await act(() => result.current.setDraft('Passport'));
-    await act(() => result.current.add());
-    expect(notifications.error).toHaveBeenCalledWith('Cannot add');
-    await act(() => result.current.remove(itemId));
-    expect(remove).toHaveBeenCalledWith({ itemId, tripId });
+    await act(async () => {
+      expect(await result.current.add('Hair dryer', 1)).toBe(false);
+    });
+    expect(notifications.error).toHaveBeenCalledWith('Start an idea');
   });
 
-  test('reports failed removal and does nothing when an item has no trip context', async () => {
-    const add = vi.fn();
-    const update = vi.fn();
-    const remove = vi.fn().mockRejectedValue(new Error('Cannot remove'));
-    let mutationIndex = 0;
-    convex.useMutation.mockImplementation(() => [add, update, remove][mutationIndex++ % 3]);
-    const selected = await renderHook(() => useTripPacking(tripId));
-    await act(() => selected.result.current.remove(itemId));
-    expect(notifications.error).toHaveBeenCalledWith('Cannot remove');
+  test('skips the query and writes nothing without a trip', async () => {
+    const mutations = writes();
+    mockMutations(mutations);
+    convex.useQuery.mockReturnValue(undefined);
+    const { result } = await renderHook(() => useTripPacking(undefined));
 
-    const noTrip = await renderHook(() => useTripPacking(undefined));
-    await act(() => noTrip.result.current.remove(itemId));
-    expect(remove).toHaveBeenCalledTimes(1);
+    expect(convex.useQuery).toHaveBeenLastCalledWith(expect.anything(), 'skip');
+    expect(result.current.isLoading).toBe(true);
+    await act(async () => {
+      expect(await result.current.remove(item)).toBe(false);
+    });
+    expect(mutations.remove).not.toHaveBeenCalled();
   });
 });

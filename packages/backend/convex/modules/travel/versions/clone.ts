@@ -49,18 +49,40 @@ export async function cloneTripContent(
   workingTripId: Id<'trips'>
 ): Promise<void> {
   const content = await VersionContent.load(ctx, source.trip._id);
-  await Promise.all(
-    content.packingItems.map((item) =>
-      ctx.db.insert('tripPackingItems', {
-        label: item.label,
-        organizationId: source.workspace.organizationId,
-        packed: item.packed,
-        sortOrder: item.sortOrder,
-        sourceId: item._id,
-        tripId: workingTripId,
-        updatedAt: item.updatedAt
-      })
+  const copiedItems = new Map(
+    await Promise.all(
+      content.packingItems.map(
+        async (item) =>
+          [
+            item._id,
+            await ctx.db.insert('tripPackingItems', {
+              label: item.label,
+              organizationId: source.workspace.organizationId,
+              quantity: item.quantity,
+              sortOrder: item.sortOrder,
+              sourceId: item._id,
+              tripId: workingTripId,
+              updatedAt: item.updatedAt
+            })
+          ] as const
+      )
     )
+  );
+  await Promise.all(
+    content.packingBringers.flatMap((bringer) => {
+      const itemId = copiedItems.get(bringer.itemId);
+      if (!itemId) return [];
+      return [
+        ctx.db.insert('tripPackingBringers', {
+          count: bringer.count,
+          itemId,
+          organizationId: source.workspace.organizationId,
+          tripId: workingTripId,
+          updatedAt: bringer.updatedAt,
+          userId: bringer.userId
+        })
+      ];
+    })
   );
   const destinationIds = new Map<Id<'tripDestinations'>, Id<'tripDestinations'>>();
   const activityIds = new Map<Id<'tripDestinationActivities'>, Id<'tripDestinationActivities'>>();

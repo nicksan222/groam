@@ -6,10 +6,11 @@ import { testIds } from '@/lib/test-ids';
 import type { TripBoardIdea, TripBoardIdeaItem } from '@/types/trip-board';
 import { TripBoardCardSlot } from './trip-board-card-slot';
 import { useTripBoardContext } from './trip-board-context';
+import { useTripBoardDrag } from './trip-board-drag-state';
 import { TripBoardFooterLink } from './trip-board-footer-link';
 import { TripBoardIdeaCard } from './trip-board-idea-card';
 import { TripBoardLane } from './trip-board-lane';
-import { isDraggable } from './trip-board-moves';
+import { decideTransfer, isDraggable } from './trip-board-moves';
 
 /** Ideas keep the order they were proposed in, so lifting one never reshuffles the lane. */
 const keepOrder = () => null;
@@ -27,6 +28,12 @@ export function TripBoardReviewLane({
   startingIdea: boolean;
 }) {
   const { rights } = useTripBoardContext();
+  const { item, target } = useTripBoardDrag();
+  // An issue its open ideas already answer, held over this lane: point at those ideas.
+  const lifted = item?.kind === 'issue' && target?.lane === 'review' ? item : null;
+  const decision = lifted ? decideTransfer(lifted, 'review') : null;
+  const answering =
+    decision?.outcome === 'refused' && decision.tone === 'warning' ? lifted?.issue.id : undefined;
   const lifts = (ideas ?? []).map((idea): TripBoardIdeaItem => ({ ...rights, idea, kind: 'idea' }));
   const canStart = Boolean(onStartIdea) && rights.canPropose && !rights.archived;
   return (
@@ -65,7 +72,10 @@ export function TripBoardReviewLane({
       >
         {lifts.map((lift) => (
           <TripBoardCardSlot item={lift} key={lift.idea.id}>
-            <TripBoardIdeaCard proposal={lift.idea} />
+            <TripBoardIdeaCard
+              highlighted={answering !== undefined && lift.idea.issueId === answering}
+              proposal={lift.idea}
+            />
           </TripBoardCardSlot>
         ))}
       </SortableContext>

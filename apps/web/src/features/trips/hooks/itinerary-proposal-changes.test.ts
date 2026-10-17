@@ -90,6 +90,12 @@ describe('itinerary proposal change lookup', () => {
       }),
       change({ change: 'removed', entity: 'packing', key: 'packing/hat.json', label: 'Hat' }),
       change({
+        change: 'removed',
+        entity: 'packingBringer',
+        key: 'packingBringers/hat-ana.json',
+        label: 'Hat · Ana'
+      }),
+      change({
         change: 'modified',
         entity: 'details',
         key: 'trip.json',

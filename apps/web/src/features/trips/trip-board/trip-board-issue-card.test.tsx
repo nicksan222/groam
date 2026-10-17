@@ -3,6 +3,7 @@ import { render } from '@groam/vitest-config/react';
 import type { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
+import { boardLink } from '@/features/trips/testing/trip-board-fixtures';
 import type { TripBoardIssue } from '@/types/trip-board';
 import { TripBoardIssueCard } from './trip-board-issue-card';
 
@@ -61,6 +62,9 @@ vi.mock('@/features/workspace/workspace-shell/workspace-state', () => ({
   })
 }));
 
+/** The lozenge around a chip's text. */
+const chipOf = (text: string) => page.getByText(text).element().parentElement!;
+
 const jordan = { kind: 'user', name: 'Jordan Lee', userId: 'user-jordan' } as const;
 
 describe('TripBoardIssueCard', () => {
@@ -92,6 +96,46 @@ describe('TripBoardIssueCard', () => {
       />
     );
     await expect.element(page.getByTestId('trip-board-assign')).not.toBeInTheDocument();
+  });
+
+  test('tints its idea chip in the hue it shares with its idea', async () => {
+    const link = boardLink('Hostel', { tone: 1 });
+    await render(
+      <TripBoardIssueCard issue={makeIssue('i1', { idea: link.idea })} link={link} quiet={false} />
+    );
+    await expect.element(page.getByTestId('issue-card')).toHaveAttribute('data-link-tone', '1');
+    await expect.element(chipOf('Idea in review')).toHaveClass(/bg-chart-2/);
+  });
+
+  test('names the open idea when its newest idea is closed', async () => {
+    const closed = {
+      id: 'idea-new',
+      status: 'closed',
+      title: 'Camping',
+      workingTripId: 'trip-work'
+    };
+    const link = boardLink('Hostel', { idea: { ...boardLink().idea, status: 'draft' } });
+    await render(
+      <TripBoardIssueCard
+        issue={makeIssue('i1', { idea: closed } as Partial<TripBoardIssue>)}
+        link={link}
+        quiet={false}
+      />
+    );
+    await expect.element(chipOf('Idea drafted')).toHaveClass(/bg-chart-1/);
+    await expect.element(page.getByText('Idea closed')).not.toBeInTheDocument();
+  });
+
+  test('leaves the idea chip plain without a link', async () => {
+    const idea = { id: 'idea-1', status: 'merged', title: 'Hostel', workingTripId: 'trip-work' };
+    await render(
+      <TripBoardIssueCard
+        issue={makeIssue('i1', { idea } as Partial<TripBoardIssue>)}
+        quiet={false}
+      />
+    );
+    await expect.element(page.getByTestId('issue-card')).not.toHaveAttribute('data-link-tone');
+    await expect.element(chipOf('Idea applied')).not.toHaveClass(/bg-chart/);
   });
 
   test.each([true, false])('quiet=%s toggles the quiet surface', async (quiet) => {

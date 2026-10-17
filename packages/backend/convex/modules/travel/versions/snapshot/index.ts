@@ -3,7 +3,10 @@ import type { Doc, Id } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import { TripActivityVersionModel } from '#convex/modules/travel/activities/schema';
 import { TripDestinationVersionModel } from '#convex/modules/travel/destinations/schema';
-import { TripPackingVersionModel } from '#convex/modules/travel/packing/schema';
+import {
+  TripPackingBringerVersionModel,
+  TripPackingVersionModel
+} from '#convex/modules/travel/packing/schema';
 import { TripStayVersionModel } from '#convex/modules/travel/stays/schema';
 import { TripTransferVersionModel } from '#convex/modules/travel/transfers/schema';
 import { TripVersionModel } from '#convex/modules/travel/trips/schema';
@@ -54,6 +57,9 @@ async function createVersionSnapshot(
       sourceKey(destination.sourceId, destination._id)
     ])
   );
+  const packingKeyById = new Map(
+    content.packingItems.map((item) => [item._id, sourceKey(item.sourceId, item._id)])
+  );
   const activityKeyById = new Map(
     content.activities.map((activity) => [activity._id, sourceKey(activity.sourceId, activity._id)])
   );
@@ -103,10 +109,24 @@ async function createVersionSnapshot(
       path: `packing/${sourceKey(item.sourceId, item._id)}.json`,
       value: VersionedModel.serialize(TripPackingVersionModel, {
         label: item.label,
-        packed: item.packed,
+        quantity: item.quantity,
         sortOrder: item.sortOrder
       })
     })),
+    ...content.packingBringers.flatMap((bringer) => {
+      const itemKey = packingKeyById.get(bringer.itemId);
+      if (!itemKey) return [];
+      return [
+        {
+          path: `packingBringers/${itemKey}--${bringer.userId}.json`,
+          value: VersionedModel.serialize(TripPackingBringerVersionModel, {
+            count: bringer.count,
+            itemKey,
+            userId: bringer.userId
+          })
+        }
+      ];
+    }),
     ...content.stays.map((stay) => ({
       path: `stays/${sourceKey(stay.sourceId, stay._id)}.json`,
       value: VersionedModel.serialize(TripStayVersionModel, {

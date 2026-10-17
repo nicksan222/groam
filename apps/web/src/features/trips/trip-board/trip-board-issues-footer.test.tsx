@@ -38,6 +38,7 @@ test('offers a new issue and the list of all issues', async () => {
   await render(
     <TripBoardContext.Provider
       value={{
+        links: new Map(),
         rights: { archived: false, canPropose: true },
         tripId: 'trip-1' as Id<'trips'>,
         viewerUserId: undefined
@@ -57,6 +58,7 @@ test('offers no new issue on an archived trip', async () => {
   await render(
     <TripBoardContext.Provider
       value={{
+        links: new Map(),
         rights: { archived: true, canPropose: true },
         tripId: 'trip-1' as Id<'trips'>,
         viewerUserId: undefined

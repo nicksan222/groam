@@ -9,7 +9,7 @@ import {
   type RuleFacts,
   ruleNeeds
 } from '#convex/modules/travel/issues/rules/index';
-import { MAX_PACKING_ITEMS } from '#convex/modules/travel/packing/schema';
+import { MAX_PACKING_BRINGERS, MAX_PACKING_ITEMS } from '#convex/modules/travel/packing/schema';
 import { MAX_STAYS_PER_TRIP } from '#convex/modules/travel/stays/schema';
 import type { TripCtx } from '#convex/modules/travel/trips/ctx';
 
@@ -65,14 +65,38 @@ const loaders = {
       MAX_DESTINATIONS_PER_TRIP,
       'destinations'
     ),
-  packing: async (ctx: Pick<QueryCtx, 'db'>, tripId: Id<'trips'>) =>
-    takeCapped(
+  packing: async (ctx: Pick<QueryCtx, 'db'>, tripId: Id<'trips'>) => {
+    const [items, bringers] = await Promise.all([
+      // Legacy rows (no quantity) are invisible, so they must not count toward the cap.
       ctx.db
         .query('tripPackingItems')
-        .withIndex('by_tripId_and_sortOrder', (query) => query.eq('tripId', tripId)),
-      MAX_PACKING_ITEMS,
-      'packing items'
-    ),
+        .withIndex('by_tripId_and_sortOrder', (query) => query.eq('tripId', tripId))
+        .take(MAX_PACKING_ITEMS + 101)
+        .then((rows) =>
+          capped(
+            rows.filter((row) => row.quantity !== undefined),
+            MAX_PACKING_ITEMS,
+            'packing items'
+          )
+        ),
+      takeCapped(
+        ctx.db
+          .query('tripPackingBringers')
+          .withIndex('by_tripId', (query) => query.eq('tripId', tripId)),
+        MAX_PACKING_BRINGERS,
+        'packing assignments'
+      )
+    ]);
+    const broughtByItem = new Map<Id<'tripPackingItems'>, number>();
+    for (const { count, itemId } of bringers) {
+      broughtByItem.set(itemId, (broughtByItem.get(itemId) ?? 0) + count);
+    }
+    return items.flatMap((item) =>
+      item.quantity === undefined
+        ? []
+        : [{ brought: broughtByItem.get(item._id) ?? 0, quantity: item.quantity }]
+    );
+  },
   stays: async (ctx: Pick<QueryCtx, 'db'>, tripId: Id<'trips'>) =>
     takeCapped(
       ctx.db

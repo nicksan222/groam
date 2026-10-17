@@ -1,6 +1,6 @@
 import type { IdeaCloneView } from '@/types/ideas';
 
-export const ideaCloneViews = ['compare', 'itinerary', 'overview'] as const;
+export const ideaCloneViews = ['compare', 'itinerary', 'overview', 'packing'] as const;
 
 export type { IdeaCloneView };
 

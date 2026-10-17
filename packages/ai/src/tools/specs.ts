@@ -331,32 +331,68 @@ export const assistantToolSpecs = {
     ui: { card: 'activity' },
     agents: ['groam'],
     guidance:
-      'Call managePacking to add, check off, rename, or remove packing items in an editable idea. Start or reopen an idea first, use its workingTripId, and read its packing list for item ids. Changes reach the shared trip only after approval and applying the idea.',
+      'Call managePacking to add a group item with a quantity, change its quantity or name, remove it, or set how many one traveler is bringing, in an editable idea. Start or reopen an idea first, use its workingTripId, and read its packing list for item and traveler ids. Personal packing lists are private and not available. Changes reach the shared trip only after approval and applying the idea.',
     eventLabel: { complete: 'Updated packing list', running: 'Updating packing list' },
     id: 'trip.packing.manage',
     toolName: 'managePacking',
     writeIntent: [
       'add',
+      'assign',
+      'bring',
+      'bringing',
       'change ... packing',
       'change the packing',
-      'check off',
       'delete ... packing',
       'delete the packing',
-      'mark packed',
-      'pack',
-      'packed',
+      'need',
       'remove',
       'rename',
-      'unpack',
       'update ... packing',
-      'update the packing'
+      'update the packing',
+      'who brings',
+      'will bring'
     ]
+  },
+  'trip.packing.personal.manage': {
+    ui: { card: 'activity' },
+    agents: ['groam'],
+    guidance:
+      'Call manageMyPacking to add, rename, tick (packed), untick, or remove items on the requesting traveler’s own private packing list. It is live (no idea needed), acts only for the traveler you are chatting with, and never changes the group list. Use managePacking for items the whole group needs. Read it first with listMyPacking to get item ids.',
+    eventLabel: { complete: 'Updated your packing list', running: 'Updating your packing list' },
+    id: 'trip.packing.personal.manage',
+    toolName: 'manageMyPacking',
+    writeIntent: [
+      'add ... my',
+      'add ... to my',
+      'check off',
+      'delete ... my',
+      'mark packed',
+      'mark as packed',
+      'my list',
+      'my packing',
+      'pack',
+      'packed',
+      'remove ... my',
+      'rename ... my',
+      'tick',
+      'uncheck',
+      'unpack',
+      'untick'
+    ]
+  },
+  'trip.packing.personal.read': {
+    ui: { card: 'activity' },
+    agents: ['groam'],
+    guidance:
+      'Call listMyPacking to read the requesting traveler’s own private packing list. Only available in private chats; never repeat personal items in a shared thread.',
+    id: 'trip.packing.personal.read',
+    toolName: 'listMyPacking'
   },
   'trip.packing.read': {
     ui: { card: 'activity' },
     agents: ['groam'],
     guidance:
-      'Call listPacking to read the packing checklist for the requested trip or idea. Before editing, read the working idea to get its item ids.',
+      'Call listPacking to read the group packing list for the requested trip or idea: each item needed quantity and who is bringing it. Before editing, read the working idea to get its item ids.',
     id: 'trip.packing.read',
     toolName: 'listPacking'
   },
@@ -522,7 +558,7 @@ export const assistantToolSpecs = {
     ui: { card: 'activity' },
     agents: ['groam', 'issue'],
     guidance:
-      'The shared trip itinerary is immutable to Groam. Before any trip-detail, date, itinerary, stay, activity, packing, or cost write, call startTripVersion, read the returned idea, and make every write against that workingTripId. When the active context is already an idea working copy, startTripVersion reopens that idea and must not create another idea from it. When assigned an issue, startTripVersion links the draft idea to that issue. Groam cannot archive, restore, or directly edit the shared itinerary. After review, Groam can approve and apply an idea when the traveler asks. Packing changes, including check-offs, require an idea and approval. Traveler RSVPs write to the shared trip. Tell the traveler draft itinerary changes still await human review unless they asked to apply.',
+      'The shared trip itinerary is immutable to Groam. Before any trip-detail, date, itinerary, stay, activity, packing, or cost write, call startTripVersion, read the returned idea, and make every write against that workingTripId. When the active context is already an idea working copy, startTripVersion reopens that idea and must not create another idea from it. When assigned an issue, startTripVersion links the draft idea to that issue. Groam cannot archive, restore, or directly edit the shared itinerary. After review, Groam can approve and apply an idea when the traveler asks. Group packing changes, including who is bringing what, require an idea and approval. Traveler RSVPs write to the shared trip. Tell the traveler draft itinerary changes still await human review unless they asked to apply.',
     eventLabel: { complete: 'Started trip idea', running: 'Starting trip idea' },
     id: 'trip.version.start',
     toolName: 'startTripVersion',

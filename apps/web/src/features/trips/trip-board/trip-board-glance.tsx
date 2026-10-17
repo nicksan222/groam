@@ -1,8 +1,14 @@
+import { cn } from '@groam/ui/lib/utils';
 import { Luggage, Wallet } from 'lucide-react';
-import { cardChip, cardStretchedLink } from '@/features/issues/shared/card-style';
+import {
+  cardChip,
+  cardChipInteractive,
+  cardStretchedLink
+} from '@/features/issues/shared/card-style';
 import { useTripPacking } from '@/features/trips/hooks/use-trip-packing';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { formatTripCost } from '@/features/trips/trip-forms/trip-currencies';
+import { coveredCount } from '@/features/trips/trip-packing/packing-coverage';
 import { Link } from '@/features/workspace/navigation/router';
 import { TripBoardCard } from './trip-board-card';
 
@@ -15,12 +21,12 @@ function routeSummary(stops: readonly string[]) {
 }
 
 /**
- * What the page header does not already say: route, budget and packing. The header owns dates,
+ * What the page header does not already say: route, budget and group gear. The header owns dates,
  * length and travelers. The whole card links to the plan page.
  */
 export function TripBoardGlance({ trip }: { trip: TripDetail }) {
   const packing = useTripPacking(trip.id);
-  const packed = packing.items.filter((item) => item.packed).length;
+  const covered = coveredCount(packing.items);
   return (
     <TripBoardCard
       chips={
@@ -32,12 +38,16 @@ export function TripBoardGlance({ trip }: { trip: TripDetail }) {
             </span>
           )}
           {packing.isLoading ? null : (
-            <span className={cardChip}>
+            <Link
+              className={cn(cardChip, cardChipInteractive, 'relative z-10')}
+              params={{ section: 'packing', tripId: trip.id }}
+              to="/trips/$tripId/$section"
+            >
               <Luggage aria-hidden />
               {packing.items.length === 0
-                ? 'Nothing packed yet'
-                : `${packed}/${packing.items.length} packed`}
-            </span>
+                ? 'No group gear yet'
+                : `${covered}/${packing.items.length} gear covered`}
+            </Link>
           )}
         </>
       }

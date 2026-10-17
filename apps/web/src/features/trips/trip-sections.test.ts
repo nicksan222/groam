@@ -20,6 +20,7 @@ test('lists the shared trip tabs in reading order with Board first and the defau
   expect(tripTabSections).toEqual([
     'board',
     'overview',
+    'packing',
     'issues',
     'ideas',
     'polls',
@@ -33,6 +34,7 @@ test('exposes a label for every trip section', () => {
   for (const section of tripSections) expect(tripSectionLabels[section]).not.toBe('');
   expect(tripSectionLabels.board).toBe('Board');
   expect(tripSectionLabels.overview).toBe('Overview');
+  expect(tripSectionLabels.packing).toBe('Packing');
 });
 
 test('titles each section by its tab label', () => {
