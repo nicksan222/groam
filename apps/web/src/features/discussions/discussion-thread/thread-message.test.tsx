@@ -112,8 +112,9 @@ test('edits a message from the actions menu', async () => {
   await page.getByText('Hi!').hover();
   await page.getByRole('button', { name: 'Message actions' }).click();
   await page.getByRole('menuitem', { name: 'Edit' }).click();
-  // Wait for the editor to load the original text, or it lands after the fill and prepends it.
+  // The editor autofocuses to the end after mount; filling earlier gets appended to the old text.
   await expect.element(page.getByLabelText('Edit message')).toHaveTextContent('Hi!');
+  await expect.element(page.getByLabelText('Edit message')).toHaveFocus();
   await page.getByLabelText('Edit message').fill('See you in Rome');
   // The rich text editor commits its change asynchronously; wait for it before saving.
   await expect.element(page.getByLabelText('Edit message')).toHaveTextContent('See you in Rome');
