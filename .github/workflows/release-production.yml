@@ -1,0 +1,60 @@
+name: 🚀 Release Production
+
+on:
+  workflow_call:
+    secrets:
+      CONVEX_DEPLOY_KEY:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    name: 🚀 Release production
+    if: >-
+      github.repository == 'nicksan222/groam' &&
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      vars.CONVEX_PRODUCTION_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      CONVEX_URL: ${{ vars.CONVEX_URL }}
+      SITE_URL: ${{ vars.SITE_URL }}
+    concurrency:
+      group: production-deployment
+      cancel-in-progress: false
+    environment:
+      name: prod
+      url: ${{ vars.SITE_URL }}
+    steps:
+      - name: Checkout tested revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+
+      - name: Setup workspace
+        uses: ./.github/actions/setup-workspace
+
+      - name: Build production release
+        run: bun run build:production
+
+      - name: Verify revision is still current main
+        shell: bash
+        run: |
+          set -euo pipefail
+          remote_main="$(git ls-remote --exit-code origin refs/heads/main | awk '{print $1}')"
+          if [ -z "$remote_main" ] || [ "$remote_main" != "$GITHUB_SHA" ]; then
+            echo "::error::Refusing to deploy because $GITHUB_SHA is no longer current main ($remote_main)."
+            exit 1
+          fi
+
+      - name: 🚀 Deploy production release
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+        run: bun run deploy:production
+
+      - name: Smoke test production
+        run: bun run smoke:production

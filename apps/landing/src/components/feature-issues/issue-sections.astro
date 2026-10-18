@@ -1,0 +1,8 @@
+---
+import FeatureNotes from '@/components/feature-notes.astro';
+import { issuesSections } from '@/content/feature-issues';
+
+const notes = issuesSections.map((item, index) => ({ ...item, agent: index === 1 }));
+---
+
+<FeatureNotes items={notes} ariaLabel="More about issues" reserveAgentSpace />

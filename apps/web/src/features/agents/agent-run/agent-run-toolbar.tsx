@@ -1,0 +1,80 @@
+import {
+  canRerunIssueAgent,
+  canRetryAgentRunFromZero,
+  isActiveAgentRun
+} from '@groam/ai/backend/runs/roster';
+import { Button } from '@groam/ui/components/button';
+import { Spinner } from '@groam/ui/components/spinner';
+import { toast } from '@groam/ui/components/toast';
+import { Settings2, Square } from 'lucide-react';
+import { useState } from 'react';
+import type { AgentRun } from '@/features/agents/hooks/use-agent';
+import { Link } from '@/features/workspace/navigation/router';
+import { errorMessage } from '@/lib/errors';
+import { testIds } from '@/lib/test-ids';
+import { AgentRerunButton } from './agent-rerun-button';
+
+export function AgentRunToolbar({
+  onRetry,
+  onStop,
+  providerError = false,
+  run
+}: {
+  onRetry: (runId: AgentRun['id']) => Promise<unknown> | unknown;
+  onStop?: (runId: AgentRun['id']) => Promise<unknown> | unknown;
+  providerError?: boolean;
+  run: AgentRun;
+}) {
+  const [stopping, setStopping] = useState(false);
+  return (
+    <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+      {providerError ? (
+        <Button asChild size="sm" variant="outline">
+          <Link params={{ section: 'ai' }} to="/settings/$section">
+            <Settings2 aria-hidden />
+            AI settings
+          </Link>
+        </Button>
+      ) : null}
+      {run.surface === 'chat' && run.discussionId ? (
+        <Button asChild size="sm" variant="outline">
+          <Link params={{ discussionId: run.discussionId }} to="/chat/$discussionId">
+            Open chat
+          </Link>
+        </Button>
+      ) : null}
+      {onStop && isActiveAgentRun(run) ? (
+        <Button
+          aria-busy={stopping}
+          data-testid={testIds.agentStop}
+          disabled={stopping}
+          onClick={async () => {
+            setStopping(true);
+            try {
+              await onStop(run.id);
+            } catch (error: unknown) {
+              toast.error(errorMessage(error, 'Unable to stop this run'));
+            } finally {
+              setStopping(false);
+            }
+          }}
+          size="sm"
+          variant="outline"
+        >
+          {stopping ? <Spinner aria-hidden /> : <Square aria-hidden />}
+          {stopping ? 'Stopping…' : 'Stop'}
+        </Button>
+      ) : null}
+      {canRetryAgentRunFromZero(run) ? (
+        <AgentRerunButton
+          label="Retry from zero"
+          onRerun={() => onRetry(run.id)}
+          testId={testIds.agentRetryFromZero}
+        />
+      ) : null}
+      {canRerunIssueAgent(run) ? (
+        <AgentRerunButton onRerun={() => onRetry(run.id)} testId={testIds.agentRerun} />
+      ) : null}
+    </div>
+  );
+}

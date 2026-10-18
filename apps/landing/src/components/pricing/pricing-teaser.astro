@@ -1,0 +1,73 @@
+---
+import { env } from '@groam/env/landing';
+import { teaser } from '@/content/pricing';
+import PageSection from '@/components/page-section.astro';
+---
+
+<PageSection layout="split" class="teaser" aria-labelledby="pricing-teaser-title">
+    <div class="copy">
+      <h2 class="section-title" id="pricing-teaser-title">{teaser.heading}</h2>
+      <div class="actions">
+        <a class="btn btn-primary btn-lg" href={env.appUrl}>Start a trip</a>
+        <a class="btn btn-outline btn-lg" href="/pricing/">See pricing</a>
+      </div>
+    </div>
+    <div class="prices" role="group" aria-label="Prices">
+      <p class="price">
+        <span class="amount">{teaser.free.price}</span>
+        <span class="label">{teaser.free.label}</span>
+      </p>
+      <p class="price paid">
+        <span class="amount">{teaser.paid.price}</span>
+        <span class="label">{teaser.paid.label}</span>
+      </p>
+    </div>
+</PageSection>
+
+<style>
+  .section-title {
+    text-wrap: balance;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 32px;
+  }
+  @media (max-width: 420px) {
+    .actions .btn {
+      flex: 1 1 100%;
+    }
+  }
+  .prices {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--column-gap);
+  }
+  .price {
+    display: grid;
+    align-content: start;
+    gap: 14px;
+    border-top: var(--rule) solid var(--ink);
+    padding-top: 10px;
+  }
+  .amount {
+    font-weight: 850;
+    font-stretch: 62%;
+    font-size: clamp(7rem, 17vw, 15rem);
+    line-height: 0.8;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .paid .amount {
+    color: var(--bill-text);
+  }
+  .label {
+    font-weight: 750;
+    font-stretch: 84%;
+    font-size: 15px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    word-spacing: var(--caps-space);
+  }
+</style>

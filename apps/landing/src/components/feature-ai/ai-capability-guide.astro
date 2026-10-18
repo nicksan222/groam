@@ -1,0 +1,559 @@
+---
+import Icon from '@/components/icon.astro';
+import PageSection from '@/components/page-section.astro';
+import SectionHeading from '@/components/section-heading.astro';
+import StepNavigation from '@/components/step-navigation.astro';
+import { revisionExample } from '@/content/feature-ai';
+import { planBefore, saturdayAfter } from '@/content/example-trip';
+
+const finalIndex = revisionExample.steps.length - 1;
+const isAgent = (author: string) => author === 'Groam' || author === 'Idea reviewer';
+const isGroup = (author: string) => author === 'Jonas & Priya';
+---
+
+<PageSection
+  class="journey"
+  aria-labelledby="journey-title"
+  data-ai-journey
+  data-current={finalIndex}
+  data-ai-state="applied"
+>
+  <SectionHeading
+    title={revisionExample.title}
+    body={revisionExample.lede}
+    headingId="journey-title"
+  >
+    <p class="apply-note">
+      A review or approval leaves the shared plan untouched. Only Apply moves the yellow draft
+      into it.
+    </p>
+  </SectionHeading>
+
+  <div class="surface journey-board">
+    <header class="journey-head">
+      <div>
+        <b>Lisbon long weekend</b>
+        <span>Idea workshop</span>
+      </div>
+      <span class="example-label">Example trip</span>
+      <button
+        class="loop-toggle journey-toggle"
+        type="button"
+        data-journey-toggle
+        hidden
+        aria-pressed="false"
+      >
+        <Icon name="pause" class="i-pause" />
+        <Icon name="play" class="i-play" />
+        <span class="visually-hidden">Pause the example</span>
+      </button>
+    </header>
+
+    <StepNavigation
+      class="step-controls"
+      steps={revisionExample.steps.map((step) => ({
+        label: step.label,
+        controls: 'ai-journey-transcript',
+        attributes: {
+          'data-idea-status': step.ideaStatus,
+          'data-idea-note': step.ideaNote
+        }
+      }))}
+      stepAttribute="data-journey-step"
+      active={finalIndex}
+      label="Example idea from request to apply"
+    />
+
+    <div class="journey-stage">
+      <header class="snapshot-head">
+        <p data-journey-position>08 · Applied</p>
+        <p class="plan-state applied" data-journey-state>
+          <Icon name="check" />
+          <span>Shared plan updated</span>
+        </p>
+      </header>
+
+      <div class="storyboard">
+        <section class="conversation-sheet" aria-labelledby="conversation-title">
+          <h3 id="conversation-title">Conversation</h3>
+          <ol id="ai-journey-transcript" data-journey-transcript tabindex="0">
+            {
+              revisionExample.steps.map((message, index) => (
+                <li
+                  class:list={[
+                    'message',
+                    { agent: isAgent(message.author), group: isGroup(message.author) }
+                  ]}
+                  data-journey-message={index}
+                >
+                  <div class="message-by">
+                    {isAgent(message.author) ? (
+                      <span class="avatar avatar-agent"><Icon name="agent" /></span>
+                    ) : isGroup(message.author) ? (
+                      <span class="avatar group-avatar"><Icon name="users" /></span>
+                    ) : (
+                      <span class="avatar avatar-maya">M</span>
+                    )}
+                    <b>{message.author}</b>
+                    <span>{message.label}</span>
+                  </div>
+                  <p>{message.text}</p>
+                </li>
+              ))
+            }
+          </ol>
+        </section>
+
+        <section class="idea-sheet strip flush" aria-label="Idea working copy" data-journey-idea>
+          <header>
+            <span class="chip chip-idea">Idea</span>
+            <div>
+              <h3>Swap Belém for Sintra</h3>
+              <p data-idea-status>{revisionExample.steps[finalIndex]?.ideaStatus}</p>
+            </div>
+          </header>
+          <p class="idea-removes" data-idea-removes>
+            Replaces the 10:00 Belém tour and Belém lunch
+          </p>
+          <ol class="idea-rows" data-idea-rows>
+            {
+              revisionExample.steps[finalIndex]?.ideaRows.map((row) => (
+                <li data-line-state={row.state}>
+                  <time>{row.time}</time><b>{row.title}</b>
+                  {row.state === 'revised' && <span>Revised</span>}
+                  {row.state === 'keep' && <span>Kept</span>}
+                </li>
+              ))
+            }
+          </ol>
+          <p class="empty-idea" data-idea-empty hidden>
+            Your request will become an editable idea here.
+          </p>
+          <p class="idea-note" data-idea-note>{revisionExample.steps[finalIndex]?.ideaNote}</p>
+        </section>
+
+        <section class="live-plan bill" aria-label="Shared Saturday plan" data-journey-plan>
+          <header>
+            <div>
+              <h3>Shared Saturday</h3>
+              <p data-plan-caption>Sintra is now live</p>
+            </div>
+            <span class="plan-chip applied" data-plan-chip>Applied</span>
+          </header>
+          <div class="plan-stack">
+            <ol class="plan-rows" data-plan-version="before" aria-hidden="true">
+              {planBefore.sat.map((row) => <li><time>{row.time}</time><b>{row.title}</b></li>)}
+            </ol>
+            <ol class="plan-rows is-visible" data-plan-version="after">
+              {saturdayAfter.map((row) => <li><time>{row.time}</time><b>{row.title}</b></li>)}
+            </ol>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div hidden aria-hidden="true">
+    {
+      revisionExample.steps.map((step, index) => (
+        <template data-journey-idea-template={index}>
+          {step.ideaRows.map((row) => (
+            <li data-line-state={row.state}>
+              <time>{row.time}</time><b>{row.title}</b>
+              {row.state === 'revised' && <span>Revised</span>}
+              {row.state === 'keep' && <span>Kept</span>}
+            </li>
+          ))}
+        </template>
+      ))
+    }
+  </div>
+</PageSection>
+
+<script>
+  import { setupAiJourney } from '@/scripts/feature-ai-journey';
+  document.querySelectorAll<HTMLElement>('[data-ai-journey]').forEach(setupAiJourney);
+</script>
+
+<style>
+  .apply-note {
+    max-width: 62ch;
+    margin-top: 18px;
+    padding: 12px 14px;
+    border-left: 5px solid var(--agent);
+    background: color-mix(in srgb, var(--agent) 18%, var(--paper));
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.45;
+  }
+  .journey-board {
+    overflow: hidden;
+  }
+  .journey-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .journey-head b {
+    display: block;
+    font-size: 1.35rem;
+    font-stretch: 64%;
+    font-weight: 850;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+  .journey-head > div > span {
+    display: block;
+    margin-top: 4px;
+    color: color-mix(in srgb, var(--paper) 72%, var(--ink));
+    font-size: 12px;
+    font-stretch: 84%;
+    font-weight: 750;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .journey-head .example-label {
+    margin-left: auto;
+  }
+  .journey-toggle {
+    color: var(--paper);
+  }
+  .journey-toggle:hover {
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .journey-toggle :global(.i-play),
+  [data-paused] .journey-toggle :global(.i-pause) {
+    display: none;
+  }
+  [data-paused] .journey-toggle :global(.i-play) {
+    display: block;
+  }
+  .journey-stage {
+    padding: clamp(14px, 2.2vw, 26px);
+  }
+  .snapshot-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .snapshot-head > p:first-child,
+  .plan-state {
+    font-size: 13px;
+    font-stretch: 84%;
+    font-weight: 800;
+    letter-spacing: 0.055em;
+    text-transform: uppercase;
+  }
+  .plan-state {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .plan-state::before {
+    width: 9px;
+    height: 9px;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    content: '';
+  }
+  .plan-state :global(svg) {
+    display: none;
+    width: 18px;
+    height: 18px;
+  }
+  .plan-state.applied {
+    color: var(--done);
+  }
+  .plan-state.applied::before {
+    display: none;
+  }
+  .plan-state.applied :global(svg) {
+    display: block;
+  }
+  .storyboard {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.95fr) minmax(0, 0.9fr);
+    gap: 14px;
+    min-width: 0;
+    min-height: 492px;
+    padding-top: 14px;
+  }
+  .storyboard > section {
+    min-width: 0;
+  }
+  .storyboard h3 {
+    font-size: 1.3rem;
+    font-stretch: 66%;
+    font-weight: 850;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+  .conversation-sheet {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    height: 492px;
+    padding: 14px;
+    border: 2px solid var(--ink);
+    background: var(--paper-raised);
+  }
+  .conversation-sheet > h3 {
+    padding-bottom: 10px;
+    border-bottom: var(--rule) solid var(--ink);
+  }
+  [data-journey-transcript] {
+    display: grid;
+    gap: 9px;
+    align-content: start;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 12px 4px 3px 0;
+    scrollbar-color: var(--ink-line) transparent;
+    overscroll-behavior: contain;
+  }
+  .message {
+    display: grid;
+    gap: 7px;
+    padding: 10px;
+    border: 1.5px solid var(--ink-line);
+    background: var(--paper);
+    transform-origin: top center;
+  }
+  .message[hidden] {
+    display: none;
+  }
+  .message.agent {
+    border-color: var(--agent-ink);
+    background: var(--agent);
+    color: var(--agent-ink);
+  }
+  .message.group {
+    border-color: var(--tint-ink);
+    background: var(--tint-jonas);
+    color: var(--tint-ink);
+  }
+  .message-by {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    font-stretch: 84%;
+    font-weight: 800;
+    letter-spacing: 0.055em;
+    text-transform: uppercase;
+  }
+  .message-by > span:last-child {
+    margin-left: auto;
+    opacity: 0.68;
+  }
+  .message-by .avatar {
+    width: 22px;
+    height: 22px;
+  }
+  .message > p {
+    font-size: 13.5px;
+    font-weight: 550;
+    line-height: 1.38;
+  }
+  .group-avatar {
+    background: var(--tint-jonas);
+    color: var(--tint-ink);
+  }
+  .group-avatar :global(svg) {
+    width: 14px;
+    height: 14px;
+  }
+  .idea-sheet,
+  .live-plan {
+    height: 492px;
+    overflow-y: auto;
+    padding: 14px;
+    scrollbar-width: thin;
+  }
+  .idea-sheet {
+    position: relative;
+    box-shadow: var(--lift);
+    transform: translateY(-3px) rotate(-0.7deg);
+    transition: box-shadow 0.6s var(--ease), transform 0.6s var(--ease);
+  }
+  .idea-sheet::after {
+    position: absolute;
+    inset: 6px;
+    border: 2px dashed color-mix(in srgb, var(--strip-ink) 45%, transparent);
+    content: '';
+    pointer-events: none;
+    transition: opacity 0.5s var(--ease);
+  }
+  .idea-sheet.flush {
+    box-shadow: none;
+    transform: none;
+  }
+  .idea-sheet.flush::after {
+    opacity: 0;
+  }
+  .idea-sheet > header,
+  .live-plan > header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    padding-bottom: 10px;
+    border-bottom: var(--rule) solid currentColor;
+  }
+  .idea-sheet > header {
+    justify-content: flex-start;
+  }
+  .idea-sheet header p,
+  .live-plan header p {
+    margin-top: 3px;
+    font-size: 11px;
+    font-stretch: 84%;
+    font-weight: 750;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .idea-removes {
+    padding: 8px 0;
+    border-bottom: 1.5px solid currentColor;
+    font-size: 11px;
+    font-weight: 750;
+    line-height: 1.25;
+    text-decoration: line-through 0.12em;
+  }
+  .idea-rows,
+  .plan-rows {
+    display: grid;
+  }
+  .idea-rows li,
+  .plan-rows li {
+    display: grid;
+    grid-template-columns: 3.2rem minmax(0, 1fr) auto;
+    gap: 7px;
+    align-items: center;
+    min-height: 46px;
+    border-bottom: 1.5px solid currentColor;
+    font-size: 13px;
+  }
+  .idea-rows time,
+  .plan-rows time {
+    font-weight: 750;
+    font-variant-numeric: tabular-nums;
+  }
+  .idea-rows b,
+  .plan-rows b {
+    line-height: 1.15;
+  }
+  .idea-rows span {
+    padding: 2px 4px;
+    border: 1px solid currentColor;
+    font-size: 9px;
+    font-stretch: 82%;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .idea-rows [data-line-state='revised'] {
+    background: color-mix(in srgb, var(--strip-ink) 10%, var(--strip));
+  }
+  .idea-rows [data-line-state='keep'] {
+    opacity: 0.72;
+  }
+  .empty-idea {
+    display: grid;
+    min-height: 260px;
+    place-items: center;
+    padding: 28px;
+    border-bottom: 1.5px solid currentColor;
+    text-align: center;
+  }
+  .empty-idea[hidden] {
+    display: none;
+  }
+  .idea-note {
+    padding-top: 10px;
+    font-size: 12px;
+    font-weight: 750;
+    line-height: 1.3;
+  }
+  .plan-chip {
+    padding: 3px 7px;
+    border: 1.5px solid currentColor;
+    font-size: 11px;
+    font-stretch: 84%;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transition: background-color 0.35s var(--ease), color 0.35s var(--ease);
+  }
+  .plan-chip.applied {
+    background: var(--done);
+    border-color: var(--done);
+    color: var(--paper);
+  }
+  .plan-stack {
+    display: grid;
+  }
+  .plan-stack > ol {
+    grid-area: 1 / 1;
+    align-self: start;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(5px);
+    transition: visibility 0s linear 0.32s, opacity 0.32s var(--ease), transform 0.32s var(--ease);
+  }
+  .plan-stack > ol.is-visible {
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+    transition-delay: 0s;
+  }
+  @media (max-width: 1040px) {
+    .storyboard {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+    .conversation-sheet {
+      grid-column: 1 / -1;
+      height: 380px;
+    }
+  }
+  @media (max-width: 700px) {
+    .journey-head {
+      flex-wrap: wrap;
+    }
+    .storyboard {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .conversation-sheet {
+      grid-column: auto;
+      height: 430px;
+    }
+    .idea-sheet,
+    .live-plan {
+      height: auto;
+      min-height: 390px;
+      overflow: visible;
+    }
+    .snapshot-head {
+      align-items: flex-start;
+    }
+    .plan-state {
+      max-width: 15ch;
+      justify-content: flex-end;
+      text-align: right;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .idea-sheet,
+    .idea-sheet::after,
+    .plan-chip,
+    .plan-stack > ol {
+      transition: none;
+    }
+  }
+</style>

@@ -1,0 +1,30 @@
+{
+  "name": "@groam/devkit",
+  "version": "0.0.0",
+  "dependencies": {
+    "@groam/env": "workspace:*"
+  },
+  "devDependencies": {
+    "@groam/typescript-config": "workspace:*",
+    "@groam/vitest-config": "workspace:*",
+    "@types/node": "^26.6.3",
+    "typescript": "~7.0.2",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "exports": {
+    "./configure-auth": "./configure-auth.ts",
+    "./constants": "./constants.ts",
+    "./http-readiness": "./http-readiness.ts",
+    "./repo-root": "./repo-root.ts",
+    "./run-convex": "./run-convex.ts",
+    "./wait-for-backend": "./wait-for-backend.ts"
+  },
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "test": "vp test run",
+    "typecheck": "tsc --noEmit"
+  },
+  "type": "module"
+}

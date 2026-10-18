@@ -1,0 +1,35 @@
+{
+  "name": "@groam/landing",
+  "version": "0.0.0",
+  "dependencies": {
+    "@fontsource-variable/archivo": "^5.3.0",
+    "@fontsource-variable/google-sans-flex": "^5.3.1",
+    "@fontsource/google-sans-code": "^5.3.1",
+    "@groam/brand": "workspace:*",
+    "@groam/env": "workspace:*",
+    "@groam/ui": "workspace:*",
+    "astro": "^7.4.0",
+    "parse5": "^8.0.1"
+  },
+  "devDependencies": {
+    "@groam/typescript-config": "workspace:*",
+    "@types/node": "^26.6.3",
+    "playwright": "^1.63.0",
+    "typescript": "~7.0.2",
+    "vite": "catalog:",
+    "vite-plus": "catalog:",
+    "vitest": "catalog:"
+  },
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "build": "astro build",
+    "dev": "astro dev --host 0.0.0.0 --port 4321",
+    "lint": "vp check .",
+    "og:render": "bun scripts/render-og.ts",
+    "preview": "astro preview --host 0.0.0.0 --port 4321",
+    "test": "astro build && vp test run",
+    "typecheck": "tsc --noEmit"
+  },
+  "type": "module"
+}

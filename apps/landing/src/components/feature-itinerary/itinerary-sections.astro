@@ -1,0 +1,196 @@
+---
+import IdeaHeading from '@/components/idea-heading.astro';
+import PageSection from '@/components/page-section.astro';
+import { sections, timeline } from '@/content/feature-itinerary';
+---
+
+<PageSection tone="bill" data-reveal aria-labelledby="it-timeline">
+  <div class="tl">
+    <div class="text">
+      <h2 id="it-timeline" class="section-title" data-reveal-item>{sections.timeline.title}</h2>
+      <p class="section-lede" data-reveal-item>{sections.timeline.body}</p>
+    </div>
+    <div class="scrub" data-scrub data-reveal-item>
+      <div class="track" tabindex="0" role="group" aria-label="The whole trip, Friday to Sunday" data-track>
+        {
+          timeline.map((day) => (
+            <section class="day" aria-label={day.name}>
+              <h3>{day.name}</h3>
+              <ol>
+                {day.stops.map((stop) => (
+                  <li>
+                    <span class="time">{stop.time}</span>
+                    <b>{stop.title}</b>
+                    {stop.note && <span class="fine">{stop.note}</span>}
+                  </li>
+                ))}
+              </ol>
+            </section>
+          ))
+        }
+      </div>
+      <label class="range">
+        <span class="fine">Slide through the trip</span>
+        <input type="range" min="0" max="100" value="0" step="1" data-range />
+      </label>
+      <p class="ex"><span class="example-label">Example trip</span></p>
+    </div>
+  </div>
+</PageSection>
+
+<PageSection>
+  <div class="short">
+    {
+      sections.short.map((section, n) => (
+        <section>
+          <h2>{n === 1 ? <IdeaHeading>{section.title}</IdeaHeading> : section.title}</h2>
+          <p>{section.body}</p>
+        </section>
+      ))
+    }
+  </div>
+</PageSection>
+
+<script>
+  import { scrubTimeline } from '@/scripts/feature-itinerary-timeline';
+  import { revealSections } from '@/scripts/feature-itinerary-reveal';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-scrub]')) scrubTimeline(root);
+  revealSections(document.querySelectorAll<HTMLElement>('[data-reveal]'));
+</script>
+
+<style>
+  .tl {
+    display: grid;
+    gap: clamp(32px, 5vw, 64px);
+  }
+  .text {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 20px clamp(24px, 5vw, 80px);
+    align-items: end;
+  }
+  .text .section-lede {
+    margin: 0;
+    color: var(--bill-ink);
+  }
+  .scrub {
+    display: grid;
+    gap: 14px;
+    min-width: 0;
+  }
+  .track {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+    gap: 0;
+  }
+  .track::-webkit-scrollbar {
+    display: none;
+  }
+  .track:focus-visible {
+    outline: 3px solid var(--bill-ink);
+    outline-offset: 4px;
+  }
+  .day {
+    flex: 0 0 min(500px, 84%);
+    padding-right: 28px;
+    margin-right: 28px;
+    border-right: 2px dashed var(--bill-line);
+  }
+  .day:last-child {
+    border-right: 0;
+    margin-right: 0;
+  }
+  .day h3 {
+    font-weight: 850;
+    font-stretch: 62%;
+    word-spacing: var(--caps-space);
+    text-transform: uppercase;
+    font-size: clamp(2.4rem, 4.6vw, 4rem);
+    line-height: 0.9;
+    padding-bottom: 8px;
+    border-bottom: var(--rule) solid var(--bill-ink);
+  }
+  .day li {
+    display: grid;
+    grid-template-columns: 4.6rem minmax(0, 1fr);
+    column-gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1.5px solid var(--bill-line);
+    font-size: 17px;
+  }
+  .day li .time {
+    grid-row: span 2;
+    color: var(--bill-ink);
+    font-size: 26px;
+    font-weight: 800;
+    font-stretch: 78%;
+    line-height: 1.1;
+  }
+  .day li b {
+    font-weight: 750;
+  }
+  .day li .fine {
+    color: var(--bill-soft);
+    grid-column: 2;
+  }
+  .range {
+    display: grid;
+    gap: 6px;
+  }
+  .range .fine {
+    color: var(--bill-ink);
+    font-weight: 700;
+  }
+  .range input {
+    width: 100%;
+    min-height: 28px;
+    accent-color: var(--bill-ink);
+  }
+  .range input:focus-visible {
+    outline: 3px solid var(--bill-ink);
+    outline-offset: 3px;
+  }
+  .ex {
+    margin: 0;
+  }
+  .short {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 32px clamp(24px, 5vw, 80px);
+  }
+  .short section {
+    padding-top: 22px;
+    border-top: var(--rule) solid var(--ink);
+  }
+  .short h2 {
+    font-weight: 850;
+    font-stretch: 62%;
+    word-spacing: var(--caps-space);
+    text-transform: uppercase;
+    font-size: clamp(2.6rem, 5.4vw, 4.8rem);
+    line-height: 0.92;
+  }
+  .short p {
+    margin-top: 20px;
+    max-width: 40ch;
+    color: var(--ink-soft);
+    font-size: 1.1rem;
+  }
+  @media (max-width: 760px) {
+    .text,
+    .short {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  @media (min-width: 1100px) {
+    .day {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+    .range {
+      display: none;
+    }
+  }
+</style>

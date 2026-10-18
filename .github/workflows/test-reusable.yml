@@ -1,0 +1,249 @@
+name: Checks
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+
+jobs:
+  lint:
+    name: 🧹 Lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CI: 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Fallow's hotspot analysis reads git history.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Lint GitHub Actions
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="${RUNNER_TEMP}/actionlint.tar.gz"
+          curl --fail --location --silent --show-error \
+            --output "$archive" \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  $archive" | sha256sum --check
+          tar --extract --gzip --file "$archive" --directory "$RUNNER_TEMP" actionlint
+          "${RUNNER_TEMP}/actionlint"
+
+      - name: Setup workspace
+        uses: ./.github/actions/setup-workspace
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Audit dependencies
+        run: bun run audit
+
+      - name: React Doctor
+        run: bun run react-doctor
+
+      - name: Dead code
+        run: bun run fallow
+
+  typecheck:
+    name: 🔷 Typecheck
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CI: 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup workspace
+        uses: ./.github/actions/setup-workspace
+
+      - name: Typecheck
+        run: bun run typecheck
+
+  unit:
+    name: 🧪 Unit tests
+    needs: [lint, typecheck]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CI: 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup workspace
+        uses: ./.github/actions/setup-workspace
+
+      - name: Backend, tooling, and package tests
+        run: bun run test:packages
+
+  web:
+    name: 🌐 Web tests
+    needs: [lint, typecheck]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CI: 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup workspace
+        uses: ./.github/actions/setup-workspace
+
+      - name: Setup Chromium
+        uses: ./.github/actions/setup-chromium
+
+      - name: Web unit and view tests
+        run: bun run test:web
+
+  ui:
+    name: 🧩 UI tests
+    needs: [lint, typecheck]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CI: 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup workspace
+        uses: ./.github/actions/setup-workspace
+
+      - name: Setup Chromium
+        uses: ./.github/actions/setup-chromium
+
+      - name: UI, assistant, and auth tests
+        run: bun run test:ui
+
+  landing:
+    name: 🛬 Landing site
+    needs: [lint, typecheck]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CI: 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup workspace
+        uses: ./.github/actions/setup-workspace
+
+      - name: Setup Chromium
+        uses: ./.github/actions/setup-chromium
+
+      # Builds the static site, then drives every page in Chromium.
+      - name: Landing build and browser tests
+        run: bun run test:landing
+
+      - name: Upload failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: landing-failure-${{ github.run_id }}
+          if-no-files-found: ignore
+          include-hidden-files: true
+          retention-days: 7
+          path: apps/landing/.vitest/
+
+  journeys:
+    name: 🎭 Journeys
+    needs: [lint, typecheck]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      CI: 'true'
+      CONVEX_AGENT_MODE: anonymous
+      STATIC_SITE_URL: http://localhost:3211
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup workspace
+        uses: ./.github/actions/setup-workspace
+
+      - name: Setup Chromium
+        uses: ./.github/actions/setup-chromium
+
+      - name: Start local Convex backend
+        shell: bash
+        run: |
+          set -euo pipefail
+          bunx convex dev --typecheck-components --tail-logs disable > /tmp/convex.log 2>&1 &
+          echo "$!" > /tmp/convex.pid
+          timeout 600 bash -c '
+            until [ -f .env.local ] && bunx convex run --component web lib:getUrls "{}" >/dev/null 2>&1; do
+              sleep 2
+            done
+          '
+
+      # The same auth setup as local dev: a secret and the Vite site the passkey rpID comes from.
+      - name: Configure auth
+        run: bun tooling/devkit/configure-auth.ts
+
+      - name: Verify generated code
+        run: |
+          bun run codegen
+          git diff --exit-code
+
+      # A failing journey keeps its Playwright trace (network, console, DOM) in the failure artifact.
+      - name: Journeys
+        run: bun run test:journeys -- --browser.trace=retain-on-failure
+
+      # Publish the same two static components and route layout used in production.
+      - name: Publish local static sites
+        run: |
+          bun run hosting:upload:web
+          bun run hosting:upload:landing
+
+      - name: Verify static routes
+        shell: bash
+        run: |
+          curl --fail --show-error --silent "$STATIC_SITE_URL/" >/dev/null
+          curl --fail --show-error --silent "$STATIC_SITE_URL/it/features/ai/" >/dev/null
+          curl --fail --show-error --silent "$STATIC_SITE_URL/app/" >/dev/null
+          curl --fail --show-error --silent "$STATIC_SITE_URL/app/settings" >/dev/null
+          test "$(curl --output /dev/null --silent --write-out '%{http_code}' "$STATIC_SITE_URL/missing.js")" = "404"
+
+      - name: Upload failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: test-failure-${{ github.run_id }}
+          if-no-files-found: ignore
+          include-hidden-files: true
+          retention-days: 7
+          path: |
+            /tmp/convex.log
+            apps/web/.vitest/
+
+      - name: Stop local Convex backend
+        if: always()
+        shell: bash
+        run: |
+          if [ -f /tmp/convex.pid ]; then
+            kill "$(cat /tmp/convex.pid)" 2>/dev/null || true
+          fi

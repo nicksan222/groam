@@ -1,0 +1,307 @@
+---
+import { env } from '@groam/env/landing';
+import BrandLink from '@/components/brand-link.astro';
+import Icon from '@/components/icon.astro';
+import LanguageSwitcher from '@/components/language-switcher.astro';
+import { withoutLocale } from '@/i18n/locale';
+import { features, featurePath, primaryNav } from '@/content/site';
+
+const path = withoutLocale(Astro.url.pathname).replace(/\/$/u, '') || '/';
+const isCurrent = (href: string) => {
+  const base = href.replace(/\/$/u, '');
+  return path === base || path.startsWith(`${base}/`);
+};
+---
+
+<a class="skip" href="#content">Skip to content</a>
+<header class="bill masthead">
+  <div class="wrap nav">
+  <BrandLink />
+  <nav class="links" aria-label="Main">
+    {
+      primaryNav.map((item) => (
+        <a href={item.href} aria-current={path === item.href.replace(/\/$/u, '') ? 'page' : undefined}>
+          {item.label}
+        </a>
+      ))
+    }
+  </nav>
+  <div class="actions">
+    <LanguageSwitcher />
+    <a class="btn btn-ghost sign-in" href={env.appUrl}>Sign in</a>
+    <a class="btn btn-primary" href={env.appUrl}>Start a trip</a>
+    <details class="menu" data-site-menu>
+      <summary class="btn btn-outline menu-toggle" aria-label="Menu">
+        <Icon name="menu" class="open-icon" />
+        <Icon name="close" class="close-icon" />
+      </summary>
+      <div class="sheet surface">
+        <a class="sheet-head" href="/features/" aria-current={isCurrent('/features/') && path === '/features' ? 'page' : undefined}>
+          Features
+        </a>
+        <ul>
+          {
+            features.map((feature) => (
+              <li>
+                <a
+                  href={featurePath(feature.slug)}
+                  aria-current={isCurrent(featurePath(feature.slug)) ? 'page' : undefined}
+                >
+                  <Icon name={feature.icon} />
+                  {feature.name}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+        <a class="sheet-head" href="/pricing/" aria-current={isCurrent('/pricing/') ? 'page' : undefined}>
+          Pricing
+        </a>
+        <a class="btn btn-outline" href={env.appUrl}>Sign in</a>
+      </div>
+    </details>
+  </div>
+  </div>
+</header>
+
+<script>
+  // The menu eases shut instead of vanishing: Escape (focus back on its toggle), a click outside,
+  // and the toggle itself all run the same short exit before the sheet closes.
+  const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  for (const menu of document.querySelectorAll<HTMLDetailsElement>('[data-site-menu]')) {
+    const toggle = menu.querySelector('summary');
+    const sheet = menu.querySelector<HTMLElement>('.sheet');
+    let closing = false;
+    const close = (refocus = false) => {
+      if (!menu.open || closing) return;
+      if (refocus) toggle?.focus();
+      if (!sheet || reduced()) {
+        menu.open = false;
+        return;
+      }
+      closing = true;
+      const exit = sheet.animate(
+        [
+          { opacity: 1, transform: 'none' },
+          { opacity: 0, transform: 'translateY(-8px)' }
+        ],
+        { duration: 200, easing: 'cubic-bezier(0.16, 1, 0.3, 1)', fill: 'forwards' }
+      );
+      void exit.finished.finally(() => {
+        menu.open = false;
+        exit.cancel();
+        closing = false;
+      });
+    };
+    toggle?.addEventListener('click', (event) => {
+      if (!menu.open) return;
+      event.preventDefault();
+      close();
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') close(true);
+    });
+    document.addEventListener('click', (event) => {
+      if (event.target instanceof Node && !menu.contains(event.target)) close();
+    });
+    menu.addEventListener('focusout', (event) => {
+      if (!(event.relatedTarget instanceof Node) || !menu.contains(event.relatedTarget)) close();
+    });
+  }
+</script>
+
+<style>
+  .skip {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 30;
+    padding: 10px 14px;
+    background: var(--strip);
+    color: var(--strip-ink);
+    font-weight: 800;
+    text-decoration: none;
+    transform: translateY(-180%);
+  }
+  .skip:focus-visible {
+    transform: none;
+  }
+  .masthead {
+    position: relative;
+    z-index: 10;
+  }
+  .nav {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: clamp(20px, 3vw, 40px);
+    padding-block: 18px;
+    border-bottom: var(--rule) solid var(--bill-ink);
+  }
+  .links {
+    display: flex;
+    gap: 4px;
+  }
+  .links a {
+    padding: 8px 10px;
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease;
+    color: var(--bill-ink);
+    font-weight: 750;
+    font-stretch: 84%;
+    font-size: 15px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+  .links a:hover {
+    background: var(--bill-ink);
+    color: var(--bill);
+  }
+  .links a[aria-current='page'] {
+    text-decoration: underline;
+    text-decoration-thickness: 3px;
+    text-underline-offset: 7px;
+  }
+  .actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .menu {
+    display: none;
+  }
+  .menu summary {
+    width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0;
+    list-style: none;
+  }
+  .menu summary::-webkit-details-marker {
+    display: none;
+  }
+  .menu :global(svg) {
+    width: 20px;
+    height: 20px;
+  }
+  .menu :global(.close-icon),
+  .menu[open] :global(.open-icon) {
+    display: none;
+  }
+  .menu[open] :global(.close-icon) {
+    display: block;
+  }
+  .menu[open] summary {
+    background: var(--bill-ink);
+    color: var(--bill);
+  }
+  .sheet {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: var(--gutter);
+    right: var(--gutter);
+    display: grid;
+    gap: 4px;
+    padding: 16px;
+    box-shadow: var(--lift);
+    transition:
+      opacity 0.3s var(--ease),
+      transform 0.35s var(--ease);
+  }
+  /* The sheet eases down into place instead of popping open. */
+  @starting-style {
+    .menu[open] .sheet {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+  }
+  .sheet-head {
+    padding: 10px 8px 6px;
+    color: var(--ink);
+    font-weight: 850;
+    font-stretch: 66%;
+    word-spacing: var(--caps-space);
+    font-size: 30px;
+    line-height: 1;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+  .sheet ul {
+    display: grid;
+    padding-bottom: 10px;
+    margin-bottom: 6px;
+    border-bottom: var(--rule) solid var(--ink);
+  }
+  .sheet li a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 8px;
+    color: var(--ink);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .sheet li a[aria-current='page'],
+  .sheet-head[aria-current='page'] {
+    text-decoration: underline;
+    text-decoration-thickness: 3px;
+    text-underline-offset: 6px;
+  }
+  .sheet li a:hover {
+    background: var(--strip);
+    color: var(--strip-ink);
+  }
+  .sheet li :global(svg) {
+    width: 18px;
+    height: 18px;
+  }
+  .sheet .btn {
+    margin-top: 6px;
+    min-height: 3rem;
+  }
+  /* At the narrowest widths the wordmark and the button both tighten so neither has to go. */
+  @media (max-width: 360px) {
+    .nav {
+      gap: 12px;
+    }
+    .nav :global(.brand) {
+      gap: 8px;
+      font-size: 20px;
+    }
+    .nav :global(.brand img) {
+      width: 26px;
+      height: 26px;
+    }
+    .actions > .btn-primary {
+      padding: 0 10px;
+      font-size: 13px;
+    }
+    .actions {
+      gap: 6px;
+    }
+  }
+  @media (max-width: 860px) {
+    .links,
+    .sign-in {
+      display: none;
+    }
+    .menu {
+      display: block;
+    }
+  }
+  @media (max-width: 600px) {
+    .nav {
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .actions {
+      flex: 1 1 100%;
+      justify-content: flex-end;
+    }
+    .actions :global(.languages) {
+      margin-right: auto;
+    }
+  }
+</style>

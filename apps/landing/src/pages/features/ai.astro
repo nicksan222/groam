@@ -1,0 +1,12 @@
+---
+import AiDemo from '@/components/feature-ai/ai-demo.astro';
+import AiCapabilityGuide from '@/components/feature-ai/ai-capability-guide.astro';
+import AiReview from '@/components/feature-ai/ai-review.astro';
+import FeatureLayout from '@/layouts/feature-layout.astro';
+---
+
+<FeatureLayout slug="ai">
+  <AiDemo slot="demo" />
+  <AiCapabilityGuide />
+  <AiReview />
+</FeatureLayout>

@@ -1,0 +1,1056 @@
+---
+import AuthorAvatar from '@/components/author-avatar.astro';
+import Icon from '@/components/icon.astro';
+import {
+  approvalStatus,
+  demoStrings,
+  diffLines,
+  planRows,
+  stepCopy,
+  stepLabels,
+  trainLine,
+  trainTime,
+  type IdeaState
+} from '@/content/feature-ideas';
+
+// The first still frame (and reduced-motion) shows the finished idea: Applied.
+const initial: IdeaState = 'applied';
+const states = Object.keys(stepLabels) as IdeaState[];
+const rowsInitial = [...planRows].sort((x, y) => x.time.localeCompare(y.time));
+const people = ['jonas', 'priya', 'sam'] as const;
+---
+
+<figure class="demo-ideas" data-ideas data-state={initial} data-view="idea">
+  <div class="bar">
+    <div class="steps" role="group" aria-label="Idea status">
+      {
+        states.map((state) => (
+          <button type="button" class="step" data-step={state} aria-pressed={state === initial ? 'true' : 'false'}>
+            {state === 'changes' ? (
+              <>
+                <span class="long">{stepLabels[state]}</span>
+                <span class="short">Changes</span>
+              </>
+            ) : (
+              stepLabels[state]
+            )}
+          </button>
+        ))
+      }
+    </div>
+    <button type="button" class="loop-toggle play" data-toggle hidden aria-pressed="false">
+      <Icon name="pause" class="i-pause" />
+      <Icon name="play" class="i-play" />
+      <span class="play-label visually-hidden">Pause</span>
+    </button>
+  </div>
+
+  <div class="board surface">
+    <article class="idea strip" aria-label="Example idea: Swap Belém for Sintra">
+      <p class="state-row"><span class="chip chip-done status" data-status>{stepLabels[initial]}</span></p>
+      <header class="head">
+        <AuthorAvatar author="maya" />
+        <div class="title">
+          <h2>{demoStrings.title}</h2>
+          <p class="fine">{demoStrings.byline}</p>
+        </div>
+      </header>
+
+      <ul class="diff" aria-label="Itinerary changes in this idea">
+        {
+          diffLines.map((line, index) => (
+            <li class:list={['line', line.kind]} data-line>
+              <span class="sign" aria-hidden="true">
+                {line.kind === 'add' ? '+' : '−'}
+              </span>
+              <span class="time" data-time={index === trainLine ? '' : undefined}>
+                {index === trainLine ? trainTime[initial] : line.time}
+              </span>
+              <span class="label">
+                <span class="sr">{line.kind === 'add' ? 'Added: ' : 'Removed: '}</span>
+                {line.title}
+              </span>
+            </li>
+          ))
+        }
+      </ul>
+
+      <p class="note" data-note>
+        <AuthorAvatar author="itinerary-agent" />
+        <span><b>{demoStrings.agentName}</b> {demoStrings.agentNote}</span>
+      </p>
+
+      <ul class="votes" aria-label="Approvals">
+        {
+          people.map((person) => (
+            <li data-person={person} data-on={approvalStatus[initial][person].on ? 'true' : 'false'}>
+              <AuthorAvatar author={person} />
+              <span data-vote-text>{approvalStatus[initial][person].text}</span>
+            </li>
+          ))
+        }
+      </ul>
+
+      <p class="status-line" data-live aria-live="polite">{stepCopy[initial]}</p>
+
+      <div class="actions">
+        <span class="swap">
+          <span data-decide hidden>
+          <button type="button" class="btn btn-primary" data-approve>
+            <Icon name="check" />
+            {demoStrings.approve}
+          </button>
+          <button type="button" class="btn btn-outline" data-request>{demoStrings.request}</button>
+        </span>
+        <span class="stamp" data-stamp><Icon name="check" />{demoStrings.stamp}</span>
+        </span>
+        <button type="button" class="btn btn-ghost" data-reset>{demoStrings.reset}</button>
+      </div>
+    </article>
+
+    <section class="plan" aria-label="Saturday itinerary">
+      <div class="plan-head">
+        <h2>{demoStrings.livePlan}</h2>
+        <span class="plan-sub">{demoStrings.live}</span>
+      </div>
+      <ol class="rows" data-rows>
+        {
+          rowsInitial.map((row) => (
+            <li class="row" data-row={row.id} data-origin={row.origin} data-mode={row.origin === 'old' ? 'gone' : 'solid'}>
+              <div class="row-in">
+                <span class="time" data-row-time>
+                  {row.time}
+                </span>
+                <span class="row-label">{row.label}</span>
+                <span class="tag" data-tag />
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+      <p class="unchanged fine">{planRows.find((row) => row.origin === 'both')?.label} stays as it is.</p>
+      <p class="legend fine">
+        <span class="key key-solid" aria-hidden="true"></span>Agreed
+        <span class="k-swap">
+          <span class="k-proposed"><span class="key key-dashed" aria-hidden="true"></span>Proposed, not yet in the plan</span>
+          <span class="k-applied"><span class="key key-flush" aria-hidden="true"></span>In the plan, from the idea</span>
+        </span>
+      </p>
+    </section>
+  </div>
+
+  <figcaption>
+    <span class="example-label">Example trip</span>
+    <span>{demoStrings.caption}</span>
+  </figcaption>
+</figure>
+
+<script>
+  import { playIdeasDemo } from '@/scripts/feature-ideas-demo';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-ideas]')) playIdeasDemo(root);
+</script>
+
+<style>
+  .demo-ideas {
+    margin: 0;
+    display: grid;
+    gap: 14px;
+  }
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 14px clamp(14px, 2vw, 22px) 0;
+    background: var(--paper-raised);
+    border: 2px solid var(--ink);
+    border-bottom: 0;
+    margin-bottom: -14px;
+  }
+  .steps {
+    display: flex;
+    gap: 0;
+    min-width: 0;
+    flex: 0 1 auto;
+  }
+  .step .short {
+    display: none;
+  }
+  .step {
+    position: relative;
+    min-height: 44px;
+    padding: 0 clamp(12px, 1.6vw, 22px);
+    border: 2px solid var(--ink);
+    border-bottom: 0;
+    margin-right: -2px;
+    background: transparent;
+    color: var(--ink);
+    font: 800 14px/1 var(--font-sans);
+    font-stretch: 84%;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color 0.35s var(--ease),
+      color 0.35s var(--ease);
+  }
+  .step:hover {
+    background: var(--ink-line);
+  }
+  .step[aria-pressed='true'] {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .step:focus-visible,
+  .play:focus-visible,
+  .actions .btn:focus-visible {
+    outline: 3px solid var(--ink);
+    outline-offset: 2px;
+  }
+  .step::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 5px;
+    background: var(--strip);
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  .demo-ideas[data-running='true'] .step[aria-pressed='true']::after {
+    animation: fill var(--step-ms, 3800ms) linear forwards;
+  }
+  @keyframes fill {
+    to {
+      transform: scaleX(1);
+    }
+  }
+  .play {
+    margin: 0 0 8px auto;
+    color: var(--ink);
+  }
+  .play[hidden] {
+    display: none;
+  }
+  .play :global(.i-play),
+  .play :global(.i-pause) {
+    grid-area: 1 / 1;
+    transition:
+      opacity 0.16s ease,
+      transform 0.25s var(--ease);
+  }
+  .play[aria-pressed='false'] :global(.i-play),
+  .play[aria-pressed='true'] :global(.i-pause) {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+
+  .board {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+    padding: clamp(18px, 2.6vw, 36px);
+    align-items: start;
+  }
+  /* The strip: lifted and tilted while proposed, pasted flush once applied. It overlaps the plan. */
+  .idea {
+    z-index: 2;
+    display: grid;
+    gap: 16px;
+    align-content: start;
+    padding: clamp(18px, 2.4vw, 30px);
+    margin-right: clamp(-48px, -3.4vw, -20px);
+    margin-top: clamp(4px, 1vw, 12px);
+  }
+  .demo-ideas[data-state='applied'] .idea {
+    outline-color: transparent;
+    box-shadow: none;
+    transform: none;
+  }
+  .demo-ideas[data-state='changes'] .idea {
+    transform: rotate(0.9deg) translateY(-6px);
+  }
+  .head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .head :global(.avatar) {
+    width: 32px;
+    height: 32px;
+    box-shadow: 0 0 0 2px var(--strip-ink);
+  }
+  .title {
+    flex: 1 1 12rem;
+    min-width: 0;
+  }
+  .title h2 {
+    font-weight: 850;
+    font-stretch: 62%;
+    word-spacing: var(--caps-space);
+    text-transform: uppercase;
+    font-size: clamp(2rem, 3.6vw, 3.1rem);
+    line-height: 0.9;
+  }
+  [data-time],
+  [data-status],
+  [data-live],
+  [data-vote-text] {
+    display: inline-block;
+  }
+  [data-live] {
+    display: block;
+  }
+  .status {
+    background: var(--strip-ink);
+    border-color: var(--strip-ink);
+    color: var(--strip);
+    transition:
+      background-color 0.3s ease,
+      color 0.3s ease;
+  }
+  .demo-ideas[data-state='applied'] .status {
+    background: var(--done);
+    border-color: var(--done);
+    color: var(--bill-ink);
+  }
+  .diff {
+    display: grid;
+    border-top: var(--rule) solid var(--strip-ink);
+  }
+  .line {
+    display: grid;
+    grid-template-columns: 16px 4.2rem minmax(0, 1fr);
+    gap: 8px;
+    align-items: baseline;
+    padding: 8px 0;
+    border-bottom: 1.5px solid var(--on-line);
+    font-weight: 600;
+    font-size: 15.5px;
+  }
+  .line .time {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--strip-ink);
+  }
+  .line.remove {
+    color: var(--on-soft);
+  }
+  .line.remove .label {
+    text-decoration: line-through;
+    text-decoration-thickness: 2px;
+  }
+  .sign {
+    font-weight: 850;
+    font-size: 16px;
+  }
+  .note {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 10px 12px;
+    background: var(--agent);
+    color: var(--agent-ink);
+    font-size: 14px;
+    transition:
+      opacity 0.5s var(--ease),
+      transform 0.5s var(--ease);
+  }
+  .votes {
+    display: grid;
+    gap: 8px;
+  }
+  .votes li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: color 0.3s ease;
+  }
+  .votes :global(.avatar) {
+    box-shadow: 0 0 0 1.5px var(--strip-ink);
+    transition:
+      transform 0.55s var(--ease),
+      opacity 0.4s ease;
+  }
+  .votes li[data-on='false'] {
+    color: var(--on-soft);
+  }
+  .votes li[data-on='false'] :global(.avatar) {
+    background: transparent;
+    color: var(--on-soft);
+    box-shadow: none;
+    border: 1.5px dashed var(--strip-ink);
+  }
+  .status-line {
+    margin: 0;
+    min-height: 2.9em;
+    font-weight: 700;
+    font-size: 1.02rem;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 44px;
+  }
+  .swap {
+    display: grid;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  [data-decide],
+  .stamp {
+    grid-area: 1 / 1;
+    align-self: center;
+    justify-self: start;
+    display: inline-flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    transition:
+      opacity 0.2s linear,
+      transform 0.2s linear,
+      visibility 0s;
+  }
+  /* The control that arrives waits for the one leaving. */
+  .demo-ideas:not([data-state='applied']) [data-decide],
+  .demo-ideas[data-state='applied'] .stamp {
+    transition:
+      opacity 0.3s var(--ease) 0.22s,
+      transform 0.4s var(--ease) 0.22s,
+      visibility 0s;
+  }
+  [data-decide][hidden],
+  .stamp[hidden] {
+    display: inline-flex;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(6px);
+    pointer-events: none;
+    transition:
+      opacity 0.2s linear,
+      transform 0.2s linear,
+      visibility 0s linear 0.2s;
+  }
+  .stamp {
+    font-weight: 850;
+    font-stretch: 80%;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-size: 14px;
+  }
+  .stamp :global(svg) {
+    width: 16px;
+    height: 16px;
+    stroke-width: 3;
+  }
+  .idea .btn {
+    --cta-bg: var(--strip-ink);
+    --cta-fg: var(--strip);
+    color: var(--strip-ink);
+  }
+  .idea .btn-primary {
+    color: var(--strip);
+  }
+  .idea .btn-outline:hover,
+  .idea .btn-ghost:hover {
+    background: var(--strip-ink);
+    color: var(--strip);
+  }
+  .actions .btn :global(svg) {
+    width: 15px;
+    height: 15px;
+  }
+
+  /* The printed plan beneath the strip. */
+  .plan {
+    display: grid;
+    gap: 12px;
+    align-content: start;
+    padding: clamp(18px, 2.4vw, 30px) 0 clamp(18px, 2.4vw, 30px) clamp(40px, 5vw, 72px);
+  }
+  .plan-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding-bottom: 8px;
+    border-bottom: var(--rule) solid var(--ink);
+  }
+  .plan-head h2 {
+    font-weight: 850;
+    font-stretch: 62%;
+    word-spacing: var(--caps-space);
+    text-transform: uppercase;
+    font-size: clamp(2rem, 3.6vw, 3.1rem);
+    line-height: 0.9;
+  }
+  .plan-sub {
+    font-weight: 800;
+    font-stretch: 84%;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .rows {
+    display: grid;
+    align-content: start;
+  }
+  /* A row folds away in two quiet steps: its content fades, then its height closes. Opening mirrors it. */
+  .row {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: grid-template-rows 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .row[data-mode='gone'] {
+    grid-template-rows: 0fr;
+    transition-delay: 0.2s;
+  }
+  .row > .row-in {
+    opacity: 1;
+    transition:
+      opacity 0.3s ease 0.15s,
+      padding 0.65s cubic-bezier(0.4, 0, 0.2, 1),
+      border-width 0.65s cubic-bezier(0.4, 0, 0.2, 1),
+      background-color 0.5s var(--ease),
+      color 0.5s var(--ease),
+      outline-color 0.5s var(--ease);
+  }
+  .row[data-mode='gone'] > .row-in {
+    opacity: 0;
+    transition:
+      opacity 0.2s ease,
+      padding 0.65s cubic-bezier(0.4, 0, 0.2, 1) 0.2s,
+      border-width 0.65s cubic-bezier(0.4, 0, 0.2, 1) 0.2s;
+  }
+  .row-in {
+    overflow: hidden;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 4.4rem minmax(0, 1fr) 8.6rem;
+    gap: 8px 10px;
+    align-items: baseline;
+    padding: 12px 10px;
+    border-bottom: 1.5px solid var(--ink-line);
+    font-weight: 600;
+    font-size: 16px;
+    outline: 2px dashed transparent;
+    outline-offset: -5px;
+    transition:
+      padding 0.55s var(--ease),
+      border-width 0.55s var(--ease),
+      background-color 0.5s var(--ease),
+      color 0.5s var(--ease),
+      outline-color 0.5s var(--ease);
+  }
+  .row-in .time {
+    font-size: 22px;
+    font-weight: 800;
+    font-stretch: 78%;
+    color: var(--ink);
+  }
+  .row[data-mode='gone'] .row-in {
+    padding-block: 0;
+    border-bottom-width: 0;
+  }
+  .row[data-mode='dashed'] .row-in {
+    background: var(--strip);
+    color: var(--strip-ink);
+    outline-color: color-mix(in srgb, var(--strip-ink) 55%, transparent);
+  }
+  .row[data-mode='dashed'] .row-in .time,
+  .row[data-mode='dashed'] .tag {
+    color: var(--strip-ink);
+  }
+  .row[data-mode='struck'] .row-in {
+    color: var(--gone);
+  }
+  .row[data-mode='struck'] .row-in .time {
+    color: var(--gone);
+  }
+  .row-label {
+    text-decoration: line-through 2px transparent;
+    transition: text-decoration-color 0.5s var(--ease);
+  }
+  .row[data-mode='struck'] .row-label {
+    text-decoration-color: currentColor;
+  }
+  .row[data-origin='idea'][data-mode='solid'] .row-in {
+    background: var(--strip);
+    color: var(--strip-ink);
+  }
+  .row[data-origin='idea'][data-mode='solid'] .row-in .time {
+    color: var(--strip-ink);
+  }
+  .row[data-origin='both'] .tag {
+    display: none;
+  }
+  .tag {
+    text-align: right;
+    font-size: 11px;
+    font-weight: 800;
+    font-stretch: 82%;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .legend {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .key {
+    display: inline-block;
+    width: 22px;
+    height: 12px;
+  }
+  .key-solid {
+    border: 1.5px solid var(--ink);
+    background: var(--paper-raised);
+  }
+  .key-dashed {
+    margin-left: 10px;
+    background: var(--strip);
+    outline: 1.5px dashed var(--strip-ink);
+    outline-offset: -3px;
+  }
+  figcaption {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+  .sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .unchanged {
+    display: none;
+    margin: 0;
+  }
+  @media (max-width: 640px) {
+    .row-in {
+      grid-template-columns: 3.6rem minmax(0, 1fr);
+    }
+    .row-in .tag {
+      grid-column: 2;
+      text-align: left;
+      min-height: 1.3em;
+    }
+    .row[data-origin='both'] {
+      display: none;
+    }
+    .unchanged {
+      display: block;
+    }
+    .row-in .time {
+      font-size: 20px;
+    }
+  }
+  @media (max-width: 860px) {
+    .board {
+      grid-template-columns: minmax(0, 1fr);
+      padding: 16px;
+    }
+    .idea {
+      margin: 0 0 -8px;
+    }
+    .plan {
+      padding: 28px 0 8px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .row,
+    .row-in,
+    .note,
+    .idea,
+    .votes :global(.avatar),
+    .status,
+    .row-label,
+    [data-decide],
+    .stamp,
+    .step {
+      transition: none;
+    }
+    .play :global(.i-play),
+    .play :global(.i-pause) {
+      transition: none;
+    }
+  }
+  @media (max-width: 560px) {
+    .steps {
+      flex: 1 1 0;
+    }
+    .step {
+      flex: 1 1 0;
+      padding-inline: 4px;
+    }
+    .step .long {
+      display: none;
+    }
+    .step .short {
+      display: inline;
+    }
+  }
+  .state-row {
+    margin: 0;
+    display: flex;
+    min-height: 2rem;
+  }
+  .state-row .status {
+    align-self: center;
+  }
+  .k-swap {
+    display: inline-grid;
+  }
+  .k-proposed,
+  .k-applied {
+    grid-area: 1 / 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: opacity 0.2s linear;
+  }
+  .demo-ideas[data-state='applied'] .k-applied,
+  .demo-ideas:not([data-state='applied']) .k-proposed {
+    transition: opacity 0.3s var(--ease) 0.22s;
+  }
+  .k-applied,
+  .demo-ideas[data-state='applied'] .k-proposed {
+    opacity: 0;
+  }
+  .demo-ideas[data-state='applied'] .k-applied {
+    opacity: 1;
+  }
+  .key-flush {
+    margin-left: 10px;
+    background: var(--strip);
+  }
+  :global(.dark) .demo-ideas[data-state='applied'] .status {
+    color: var(--strip-ink);
+  }
+  .idea .btn-ghost {
+    padding-inline: 0;
+  }
+  @media (max-width: 860px) {
+    .plan {
+      display: flex;
+      flex-direction: column;
+    }
+    .rows {
+      margin-bottom: auto;
+    }
+    .status-line {
+      min-height: 3.5em;
+    }
+  }
+  @media (max-width: 560px) {
+    .actions .swap {
+      flex: 1 1 100%;
+    }
+    .idea .btn {
+      padding-inline: 10px;
+      font-size: 13px;
+      gap: 6px;
+    }
+    [data-decide] {
+      gap: 6px;
+    }
+    .idea .btn-ghost {
+      padding-inline: 0;
+    }
+    .votes li[data-person='sam'] {
+      min-height: 2.9em;
+    }
+  }
+  /* Single column: reserve the tallest state so the board never changes height. */
+  @media (max-width: 864px) {
+    .idea {
+      min-height: 731px;
+    }
+    .plan {
+      min-height: 513px;
+    }
+  }
+  @media (max-width: 859px) {
+    .idea {
+      min-height: 730px;
+    }
+    .plan {
+      min-height: 513px;
+    }
+  }
+  @media (max-width: 844px) {
+    .idea {
+      min-height: 729px;
+    }
+    .plan {
+      min-height: 513px;
+    }
+  }
+  @media (max-width: 829px) {
+    .idea {
+      min-height: 728px;
+    }
+    .plan {
+      min-height: 513px;
+    }
+  }
+  @media (max-width: 814px) {
+    .idea {
+      min-height: 727px;
+    }
+    .plan {
+      min-height: 513px;
+    }
+  }
+  @media (max-width: 799px) {
+    .idea {
+      min-height: 726px;
+    }
+    .plan {
+      min-height: 513px;
+    }
+  }
+  @media (max-width: 784px) {
+    .idea {
+      min-height: 725px;
+    }
+    .plan {
+      min-height: 513px;
+    }
+  }
+  @media (max-width: 769px) {
+    .idea {
+      min-height: 724px;
+    }
+    .plan {
+      min-height: 513px;
+    }
+  }
+  @media (max-width: 754px) {
+    .idea {
+      min-height: 723px;
+    }
+    .plan {
+      min-height: 513px;
+    }
+  }
+  @media (max-width: 714px) {
+    .idea {
+      min-height: 722px;
+    }
+    .plan {
+      min-height: 513px;
+    }
+  }
+  @media (max-width: 659px) {
+    .idea {
+      min-height: 721px;
+    }
+    .plan {
+      min-height: 513px;
+    }
+  }
+  @media (max-width: 644px) {
+    .idea {
+      min-height: 721px;
+    }
+    .plan {
+      min-height: 630px;
+    }
+  }
+  @media (max-width: 634px) {
+    .idea {
+      min-height: 738px;
+    }
+    .plan {
+      min-height: 630px;
+    }
+  }
+  @media (max-width: 589px) {
+    .idea {
+      min-height: 737px;
+    }
+    .plan {
+      min-height: 630px;
+    }
+  }
+  @media (max-width: 569px) {
+    .idea {
+      min-height: 781px;
+    }
+    .plan {
+      min-height: 630px;
+    }
+  }
+  @media (max-width: 564px) {
+    .idea {
+      min-height: 796px;
+    }
+    .plan {
+      min-height: 630px;
+    }
+  }
+  @media (max-width: 559px) {
+    .idea {
+      min-height: 795px;
+    }
+    .plan {
+      min-height: 630px;
+    }
+  }
+  @media (max-width: 504px) {
+    .idea {
+      min-height: 794px;
+    }
+    .plan {
+      min-height: 630px;
+    }
+  }
+  @media (max-width: 459px) {
+    .idea {
+      min-height: 822px;
+    }
+    .plan {
+      min-height: 630px;
+    }
+  }
+  @media (max-width: 409px) {
+    .idea {
+      min-height: 821px;
+    }
+    .plan {
+      min-height: 630px;
+    }
+  }
+  @media (max-width: 399px) {
+    .idea {
+      min-height: 843px;
+    }
+    .plan {
+      min-height: 630px;
+    }
+  }
+  @media (max-width: 394px) {
+    .idea {
+      min-height: 866px;
+    }
+    .plan {
+      min-height: 630px;
+    }
+  }
+  @media (max-width: 384px) {
+    .idea {
+      min-height: 889px;
+    }
+    .plan {
+      min-height: 630px;
+    }
+  }
+  @media (max-width: 379px) {
+    .idea {
+      min-height: 911px;
+    }
+    .plan {
+      min-height: 630px;
+    }
+  }
+  @media (max-width: 374px) {
+    .idea {
+      min-height: 911px;
+    }
+    .plan {
+      min-height: 659px;
+    }
+  }
+  @media (max-width: 369px) {
+    .idea {
+      min-height: 956px;
+    }
+    .plan {
+      min-height: 659px;
+    }
+  }
+  @media (max-width: 359px) {
+    .idea {
+      min-height: 980px;
+    }
+    .plan {
+      min-height: 659px;
+    }
+  }
+  @media (max-width: 354px) {
+    .idea {
+      min-height: 979px;
+    }
+    .plan {
+      min-height: 684px;
+    }
+  }
+  @media (max-width: 349px) {
+    .idea {
+      min-height: 1003px;
+    }
+    .plan {
+      min-height: 684px;
+    }
+  }
+  @media (max-width: 344px) {
+    .idea {
+      min-height: 1002px;
+    }
+    .plan {
+      min-height: 684px;
+    }
+  }
+  @media (max-width: 339px) {
+    .idea {
+      min-height: 1048px;
+    }
+    .plan {
+      min-height: 709px;
+    }
+  }
+  @media (max-width: 334px) {
+    .idea {
+      min-height: 1091px;
+    }
+    .plan {
+      min-height: 709px;
+    }
+  }
+  @media (max-width: 329px) {
+    .idea {
+      min-height: 1093px;
+    }
+    .plan {
+      min-height: 709px;
+    }
+  }
+  @media (max-width: 324px) {
+    .idea {
+      min-height: 1092px;
+    }
+    .plan {
+      min-height: 709px;
+    }
+  }
+</style>

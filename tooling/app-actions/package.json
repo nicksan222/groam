@@ -1,0 +1,39 @@
+{
+  "name": "@groam/app-actions",
+  "description": "Shared application capabilities with backend, Playwright (showcase), and Vite+ browser-mode adapters.",
+  "version": "0.0.0",
+  "dependencies": {
+    "@groam/backend": "workspace:*",
+    "@groam/env": "workspace:*",
+    "@playwright/test": "^1.63.0",
+    "convex": "^1.46.0"
+  },
+  "devDependencies": {
+    "@groam/typescript-config": "workspace:*",
+    "@groam/vitest-config": "workspace:*",
+    "@types/node": "^26.6.3",
+    "typescript": "~7.0.2",
+    "vite": "catalog:",
+    "vite-plus": "catalog:",
+    "vitest": "catalog:"
+  },
+  "exports": {
+    "./backend": "./src/backend/index.ts",
+    "./ids": "./src/testing/ids.ts",
+    "./playwright": "./src/playwright/index.ts",
+    "./vitest": "./src/vitest/index.ts",
+    "./vitest/commands": "./src/vitest/commands.ts",
+    "./vitest/journey-backend": "./src/vitest/journey-backend.ts"
+  },
+  "imports": {
+    "#src/*": "./src/*.ts"
+  },
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "lint": "vp check src",
+    "test": "vp test run",
+    "typecheck": "tsc --noEmit"
+  },
+  "type": "module"
+}

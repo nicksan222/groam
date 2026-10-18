@@ -1,0 +1,22 @@
+{
+  "extends": "@groam/typescript-config/react.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    // Bun installs vitest twice (vite-plus and the browser matchers each get a copy), which splits
+    // the `expect.element` types; resolving every `vitest` import to one copy joins them again.
+    "paths": {
+      "#ai/*": ["../../packages/ai/src/*"],
+      "@/*": ["./src/*"],
+      "vitest": ["./node_modules/vitest"],
+      "vitest/internal/browser": ["./node_modules/vitest/dist/browser.d.ts"]
+    },
+    "target": "ES2020",
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "types": ["node"]
+  },
+  "include": ["src", "e2e/**/*.test.tsx"]
+}

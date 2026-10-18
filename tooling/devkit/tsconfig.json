@@ -1,0 +1,4 @@
+{
+  "extends": "@groam/typescript-config/node.json",
+  "include": ["../bun-globals.d.ts", "*.ts"]
+}

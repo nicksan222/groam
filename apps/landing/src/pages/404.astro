@@ -1,0 +1,36 @@
+---
+import LostRoute from '@/components/legal/lost-route.astro';
+import PageIntro from '@/components/page-intro.astro';
+import PageSection from '@/components/page-section.astro';
+import SubpageLayout from '@/layouts/subpage-layout.astro';
+---
+
+<SubpageLayout
+  title="Page not found"
+  description="This page doesn’t exist. Head back to Groam."
+>
+  <PageIntro
+    title="Nothing planned at this address"
+    lede="The link may be old or mistyped. Head back home or look around the features."
+  >
+    <div class="cta">
+      <a class="btn btn-primary btn-lg" href="/">Back to home</a>
+      <a class="btn btn-outline btn-lg" href="/features/">See features</a>
+      <a class="btn btn-outline btn-lg" href="/pricing/">Pricing</a>
+    </div>
+  </PageIntro>
+  <PageSection>
+    <LostRoute />
+  </PageSection>
+  <script>
+    import '@/scripts/not-found-loop';
+  </script>
+</SubpageLayout>
+
+<style>
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+</style>

@@ -1,0 +1,73 @@
+---
+import Icon from '@/components/icon.astro';
+import DayBoard from '@/components/home/day-board.astro';
+import { dayBoards, weekTrip } from '@/content/home-pile';
+
+// The example week as a pile of day bills: Monday on top, the next two days showing their tabs behind it.
+---
+
+<figure class="pile" data-pile aria-label="Example trip: a week in Portugal, one printed sheet per day">
+  <figcaption class="pile-head">
+    <p class="trip"><b>{weekTrip.name}</b> <span>{weekTrip.dates}</span></p>
+    <span class="example-label">Example trip</span>
+    <button class="loop-toggle" type="button" data-toggle aria-pressed="false" hidden>
+      <Icon name="pause" class="when-playing" />
+      <Icon name="play" class="when-paused" />
+      <span class="visually-hidden">Pause the example trip</span>
+    </button>
+  </figcaption>
+  <div class="stack" data-stack>
+    {dayBoards.map((board) => <DayBoard board={board} position={dayBoards.indexOf(board)} />)}
+  </div>
+</figure>
+
+<script>
+  import { playDayPile } from '@/scripts/home-pile';
+
+  for (const pile of document.querySelectorAll<HTMLElement>('[data-pile]')) playDayPile(pile);
+</script>
+
+<style>
+  .pile {
+    margin: 0;
+  }
+  .pile-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 14px;
+  }
+  .trip {
+    display: grid;
+    gap: 4px;
+    margin-right: auto;
+  }
+  .trip span {
+    font-size: 12px;
+    font-weight: 700;
+    font-stretch: 84%;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--bill-soft);
+  }
+  .pile-head b {
+    font-weight: 850;
+    font-stretch: 66%;
+    word-spacing: var(--caps-space);
+    font-size: clamp(1.4rem, 2vw, 1.8rem);
+    line-height: 1;
+    text-transform: uppercase;
+  }
+  .loop-toggle :global(.when-paused),
+  .pile:global(.paused) .loop-toggle :global(.when-playing) {
+    display: none;
+  }
+  .pile:global(.paused) .loop-toggle :global(.when-paused) {
+    display: block;
+  }
+  /* Room above the front sheet for the next two days' tabs behind it. */
+  .stack {
+    display: grid;
+    padding-top: 64px;
+  }
+</style>

@@ -1,0 +1,28 @@
+# Patterns `just graphify-refresh` passes to `graphify extract --exclude`.
+# Gitignore semantics: a pattern containing `/` (other than a trailing one) is
+# anchored at the repo root; a bare name or glob matches at any depth; a
+# trailing `/` matches directories only. .gitignore is honoured as well.
+# Graphify persists this list in graphify-out/.graphify_build.json; every
+# refresh passes the full list, so edits here apply on the next refresh.
+
+# Agent instructions and mirrored third-party skills are not product code.
+.claude/
+
+# Generated code is reproducible from its source definitions (covers the app
+# and every Convex component's _generated/ directory).
+_generated/
+apps/web/src/routeTree.gen.ts
+
+# Manifests and configs add script/dependency nodes ("check", "dev") that
+# hijack keyword matches; read package.json/tsconfig directly instead.
+*.json
+
+# Tests define local helpers named after domain nouns (`trip()`, `workspace`)
+# that outrank product code as query start nodes. Find tests with `rg`.
+*.test.ts
+*.test.tsx
+apps/web/e2e/
+
+# Generated media and captures are not useful to code-only indexing.
+docs/assets/
+tooling/showcase/artifacts/

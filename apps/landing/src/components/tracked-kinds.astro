@@ -1,0 +1,151 @@
+---
+import Icon from '@/components/icon.astro';
+import PageSection from '@/components/page-section.astro';
+import SectionHeading from '@/components/section-heading.astro';
+
+const kinds = [
+  {
+    label: 'Idea',
+    icon: 'idea',
+    tone: 'chip-idea',
+    body: 'A suggested change to the plan. The group looks it over, asks for tweaks, and applies it once everyone is happy.'
+  },
+  {
+    label: 'Issue',
+    icon: 'issue',
+    tone: '',
+    body: 'Something the trip still needs, like a dinner nobody has booked. It closes by itself when the idea that fixes it is applied.'
+  },
+  {
+    label: 'Conversation',
+    icon: 'chat',
+    tone: '',
+    body: "Group chat with replies and reactions, kept inside the trip it’s about."
+  },
+  {
+    label: 'Agent',
+    icon: 'agent',
+    tone: 'chip-agent',
+    body: "AI help that knows the trip and the screen you’re on. Specialized agents can work on ideas and issues."
+  }
+] as const;
+---
+
+<PageSection class="tracked" id="tracked" data-tracked>
+    <SectionHeading title="Every part of the plan has a place" body="Changes, loose ends, chat, and AI help live inside the trip, next to the plan they touch. Nobody digs through a thread to find out what was decided." />
+    <dl class="kinds">
+      {
+        kinds.map((kind, index) => (
+          <div class:list={['kind', `kind-${kind.label.toLowerCase()}`]} style={`--i: ${index}`}>
+            <dt>
+              <span class="word">
+                <Icon name={kind.icon} />
+                {kind.label}
+              </span>
+            </dt>
+            <dd>{kind.body}</dd>
+          </div>
+        ))
+      }
+    </dl>
+</PageSection>
+
+<script>
+  import { lightKinds } from '@/scripts/home-tracked';
+
+  for (const section of document.querySelectorAll<HTMLElement>('[data-tracked]')) lightKinds(section);
+</script>
+
+<style>
+  .kinds {
+    margin: 0;
+    border-top: var(--rule) solid var(--ink);
+  }
+  .kind {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    gap: 16px 56px;
+    align-items: center;
+    padding-block: clamp(18px, 2.4vw, 30px);
+    border-bottom: var(--rule) solid var(--ink);
+  }
+  dt {
+    min-width: 0;
+  }
+  .word {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.18em;
+    padding: 0.06em 0.16em 0;
+    font-weight: 850;
+    font-stretch: 62%;
+    word-spacing: var(--caps-space);
+    font-size: clamp(2.6rem, 7.2vw, 6.4rem);
+    line-height: 0.9;
+    text-transform: uppercase;
+    transition:
+      transform 0.7s var(--ease),
+      background-color 0.5s ease,
+      color 0s linear,
+      box-shadow 0.7s var(--ease);
+  }
+  .word :global(svg) {
+    width: 0.5em;
+    height: 0.5em;
+    stroke-width: 2.2;
+    flex: none;
+  }
+  /* Each kind wears its own material: the idea is a strip, the agent is printed in sky. */
+  .kind-idea .word {
+    background: var(--strip);
+    color: var(--strip-ink);
+  }
+  .kind-agent .word {
+    background: var(--agent);
+    color: var(--agent-ink);
+  }
+  .kind-issue .word :global(svg),
+  .kind-conversation .word :global(svg) {
+    color: var(--bill-text);
+  }
+  dd {
+    margin: 0;
+    max-width: 40ch;
+    color: var(--ink-soft);
+    font-size: clamp(1rem, 1.25vw, 1.15rem);
+  }
+  /* First time in view, the strip and the sky plate paste down one after another. */
+  .tracked:global(.armed:not(.lit)) .kind-idea .word,
+  .tracked:global(.armed:not(.lit)) .kind-agent .word {
+    background-color: transparent;
+    color: var(--ink);
+  }
+  /* Only the plate and its ink stagger in; the ink flips in one step once the plate is mostly
+     painted, so the word never passes through its own ground. Hover stays immediate. */
+  .tracked:global(.lit) .kind .word {
+    transition-delay: 0s, calc(var(--i) * 220ms), calc(var(--i) * 220ms + 420ms), 0s;
+  }
+  .tracked:global(.lit) .kind-idea .word {
+    animation: paste 0.9s var(--ease) calc(var(--i) * 220ms) backwards;
+  }
+  @keyframes paste {
+    from {
+      transform: rotate(-2.5deg) translateY(-8px);
+      box-shadow: var(--lift);
+    }
+    to {
+      transform: none;
+      box-shadow: none;
+    }
+  }
+  .kind:hover .word {
+    transform: translateX(0.08em);
+  }
+  @media (max-width: 860px) {
+    .head,
+    .kind {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

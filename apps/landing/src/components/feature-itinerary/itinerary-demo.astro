@@ -1,0 +1,538 @@
+---
+import AuthorAvatar from '@/components/author-avatar.astro';
+import Icon from '@/components/icon.astro';
+import { sintraIdea } from '@/content/example-trip';
+import { days, demoStrings, panels } from '@/content/feature-itinerary';
+
+const pasted = new Set<string>(sintraIdea.adds.map((stop) => stop.title));
+
+// First still frame (and reduced motion): Saturday, after the Sintra idea, the cursor at the first activity.
+const startPanel = 'sat-after';
+const people = ['maya', 'jonas', 'priya', 'sam'] as const;
+---
+
+<figure class="demo-it" data-itinerary data-day="sat" data-variant="after">
+  <div class="surface frame" role="group" aria-label={`Example itinerary: ${demoStrings.tripName}`}>
+    <div class="cover bill">
+      <div>
+        <p class="trip-name">{demoStrings.tripName}</p>
+        <p class="trip-meta time">{demoStrings.tripMeta}</p>
+      </div>
+      <div class="who" aria-hidden="true">
+        {people.map((person) => <AuthorAvatar author={person} />)}
+      </div>
+    </div>
+    <div class="bar">
+      <div class="seg" role="group" aria-label="Day" data-days>
+        {
+          days.map((day) => (
+            <button type="button" data-day-btn={day.id} aria-pressed={day.id === 'sat' ? 'true' : 'false'}>
+              {day.label}
+              <span class="d-name">{day.name}</span>
+            </button>
+          ))
+        }
+      </div>
+      <div class="ba-slot">
+        <div class="seg" role="group" aria-label={demoStrings.beforeAfterLabel} data-ba>
+          <button type="button" data-ba-btn="before" aria-pressed="false">{demoStrings.before}</button>
+          <button type="button" data-ba-btn="after" aria-pressed="true">{demoStrings.after}</button>
+        </div>
+        <p class="ba-none" data-ba-none aria-hidden="true">Only Saturday has a before and after</p>
+      </div>
+      <button type="button" class="loop-toggle play" data-toggle hidden aria-pressed="false">
+        <Icon name="pause" class="i-pause" />
+        <Icon name="play" class="i-play" />
+        <span class="play-label visually-hidden">Pause</span>
+      </button>
+    </div>
+
+    <div class="stage" data-stage>
+      {
+        panels.map((panel) => (
+          <ol class="slots" data-panel={panel.id} data-active={panel.id === startPanel ? 'true' : 'false'}>
+            {panel.slots.map((slot, index) => (
+              <li class:list={['slot', panel.id === startPanel && index === 0 && 'is-now', panel.id === 'sat-after' && pasted.has(slot.title) && 'pasted']} data-time={slot.time} tabindex="-1">
+                <span class="time" data-slot-time>{slot.time}</span>
+                <div class="act">
+                  <b data-label>{slot.title}</b>
+                  {slot.note && <span class="fine">{slot.note}</span>}
+                </div>
+                <span class="mv">
+                  <button type="button" class="mv-btn" data-move="-1" aria-label={`Move ${slot.title} up`}>
+                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 10 4-4 4 4" /></svg>
+                  </button>
+                  <button type="button" class="mv-btn" data-move="1" aria-label={`Move ${slot.title} down`}>
+                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" /></svg>
+                  </button>
+                </span>
+              </li>
+            ))}
+            <li class="sum fine">{`${panel.slots.length} stops · ends ${panel.slots.at(-1)?.time ?? ''} with ${panel.slots.at(-1)?.title ?? ''}`}</li>
+          </ol>
+        ))
+      }
+      <div class="cursor" data-cursor>
+        <button
+          type="button"
+          class="handle"
+          role="slider"
+          aria-label={demoStrings.cursorLabel}
+          aria-orientation="vertical"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="0"
+          data-handle><span data-clock>{panels.find((panel) => panel.id === startPanel)?.slots[0]?.time}</span></button>
+        <span class="line" aria-hidden="true"></span>
+      </div>
+    </div>
+    <p class="fine hint">
+      <span class="hint-wide">{demoStrings.reorderHint}</span>
+      <span class="hint-phone">{demoStrings.reorderHintPhone}</span>
+    </p>
+    <p class="sr" aria-live="polite" data-announce></p>
+  </div>
+
+  <figcaption>
+    <span class="example-label">Example trip</span>
+    <span>{demoStrings.caption}</span>
+  </figcaption>
+</figure>
+
+<script>
+  import { playItinerary } from '@/scripts/feature-itinerary-demo';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-itinerary]')) playItinerary(root);
+</script>
+
+<style>
+  .demo-it {
+    margin: 0;
+    display: grid;
+    gap: 12px;
+  }
+  .frame {
+    overflow: hidden;
+  }
+  .cover {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    padding: clamp(14px, 2.4vw, 26px) clamp(14px, 2.4vw, 26px) clamp(12px, 2vw, 20px);
+  }
+  .trip-name {
+    margin: 0;
+    font-weight: 850;
+    font-stretch: 62%;
+    word-spacing: var(--caps-space);
+    text-transform: uppercase;
+    font-size: clamp(2.2rem, 5vw, 4.2rem);
+    line-height: 0.88;
+  }
+  .trip-meta {
+    margin: 8px 0 0;
+    color: var(--bill-ink);
+    font-size: 15px;
+  }
+  .who {
+    display: flex;
+  }
+  .who :global(.avatar) {
+    margin-left: -6px;
+    width: 30px;
+    height: 30px;
+    box-shadow: 0 0 0 2px var(--bill);
+  }
+  .bar > [data-days] {
+    flex: 0 0 auto;
+  }
+  .bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 10px 20px;
+    padding: 14px clamp(14px, 2.4vw, 26px) 0;
+    border-bottom: var(--rule) solid var(--ink);
+  }
+  .seg {
+    display: flex;
+  }
+  .seg button {
+    min-height: 44px;
+    padding: 0 clamp(12px, 1.6vw, 20px);
+    margin-right: -2px;
+    border: 2px solid var(--ink);
+    border-bottom: 0;
+    background: transparent;
+    color: var(--ink);
+    font: 800 14px/1 var(--font-sans);
+    font-stretch: 84%;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color 0.35s var(--ease),
+      color 0.35s var(--ease);
+  }
+  .seg button:hover {
+    background: var(--ink-line);
+  }
+  .seg button[aria-pressed='true'] {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .d-name {
+    margin-left: 6px;
+    font-weight: 600;
+    opacity: 0.8;
+  }
+  .ba-slot {
+    display: grid;
+    align-items: end;
+    min-width: 0;
+  }
+  .hint-phone {
+    display: none;
+  }
+  .ba-slot > * {
+    grid-area: 1 / 1;
+  }
+  [data-ba],
+  .ba-none {
+    transition:
+      opacity 0.4s var(--ease),
+      visibility 0s linear 0s;
+  }
+  .ba-none {
+    margin: 0 0 12px;
+    align-self: end;
+    color: var(--ink-soft);
+    font-weight: 750;
+    font-stretch: 84%;
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    opacity: 0;
+    visibility: hidden;
+    transition-delay: 0s, 0.4s;
+  }
+  .demo-it[data-day='fri'] [data-ba],
+  .demo-it[data-day='sun'] [data-ba] {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition-delay: 0s, 0.4s;
+  }
+  .demo-it[data-day='fri'] .ba-none,
+  .demo-it[data-day='sun'] .ba-none {
+    visibility: visible;
+    opacity: 1;
+    transition-delay: 0.15s, 0s;
+  }
+  .seg button:focus-visible,
+  .play:focus-visible,
+  .mv-btn:focus-visible,
+  .handle:focus-visible {
+    outline: 3px solid var(--focus, var(--ink));
+    outline-offset: 2px;
+  }
+  .play {
+    margin: 0 0 8px auto;
+  }
+  .play[hidden] {
+    display: none;
+  }
+  .play :global(.i-play),
+  .play :global(.i-pause) {
+    grid-area: 1 / 1;
+    transition:
+      opacity 0.16s ease,
+      transform 0.25s var(--ease);
+  }
+  .play[aria-pressed='false'] :global(.i-play),
+  .play[aria-pressed='true'] :global(.i-pause) {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+  .stage {
+    position: relative;
+    display: grid;
+    padding: 4px clamp(14px, 2.4vw, 26px) 12px;
+  }
+  .slots {
+    grid-area: 1 / 1;
+    display: flex;
+    flex-direction: column;
+    margin-left: 76px;
+    transition:
+      opacity 0.3s var(--ease),
+      visibility 0s linear 0s;
+  }
+  .slots[data-active='false'] {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition-delay: 0s, 0.3s;
+  }
+  .slots[data-active='true'] {
+    transition:
+      opacity 0.45s var(--ease) 0.2s,
+      visibility 0s;
+  }
+  .slot {
+    display: grid;
+    grid-template-columns: 4.6rem minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    min-height: 72px;
+    padding: 10px 8px 10px 10px;
+    border-bottom: 1.5px solid var(--ink-line);
+    transition:
+      background-color 0.35s ease,
+      color 0.35s ease;
+  }
+  .slot .time {
+    color: inherit;
+    font-size: clamp(22px, 2.6vw, 30px);
+    font-weight: 800;
+    font-stretch: 78%;
+  }
+  .slot.pasted {
+    background: var(--strip);
+    color: var(--strip-ink);
+    --on-soft: color-mix(in srgb, var(--strip-ink) 72%, var(--strip));
+  }
+  .slot.is-now {
+    background: var(--ink);
+    color: var(--paper);
+    --focus: var(--paper);
+    --on-soft: color-mix(in srgb, var(--paper) 70%, var(--ink));
+  }
+  .act {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    font-size: clamp(16px, 1.6vw, 19px);
+  }
+  .act b {
+    font-weight: 750;
+  }
+  .act .fine {
+    color: var(--on-soft, var(--ink-soft));
+  }
+  .sum {
+    margin-top: auto;
+    padding: 12px 10px 0;
+    border-top: var(--rule) solid var(--ink);
+  }
+  .mv {
+    display: inline-flex;
+    gap: 0;
+  }
+  .mv-btn {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+  .mv-btn::before {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border: 1.5px solid currentColor;
+    transition:
+      background-color 0.25s var(--ease),
+      border-color 0.25s var(--ease);
+  }
+  .mv-btn:hover::before {
+    background: color-mix(in srgb, currentColor 14%, transparent);
+  }
+  .is-now .mv-btn:hover::before {
+    background: color-mix(in srgb, currentColor 22%, transparent);
+  }
+  .mv-btn[aria-disabled='true'] {
+    opacity: 0.3;
+    cursor: default;
+  }
+  .mv-btn svg {
+    position: relative;
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: square;
+  }
+  .cursor {
+    position: absolute;
+    left: clamp(14px, 2.4vw, 26px);
+    right: clamp(14px, 2.4vw, 26px);
+    top: 4px;
+    height: 0;
+    pointer-events: none;
+    will-change: transform;
+    z-index: 2;
+  }
+  .line {
+    position: absolute;
+    left: 60px;
+    width: 16px;
+    top: -1.5px;
+    height: 3px;
+    background: var(--bill);
+  }
+  .handle {
+    position: absolute;
+    left: 0;
+    top: -16px;
+    width: 64px;
+    height: 32px;
+    border: 0;
+    background: var(--bill);
+    color: var(--bill-ink);
+    font: 800 15px/1 var(--font-sans);
+    font-stretch: 82%;
+    font-variant-numeric: tabular-nums;
+    cursor: grab;
+    pointer-events: auto;
+    touch-action: none;
+  }
+  .handle::after {
+    content: '';
+    position: absolute;
+    inset: -6px 0;
+  }
+  .handle:active {
+    cursor: grabbing;
+  }
+  .hint {
+    margin: 0;
+    padding: 0 clamp(14px, 2.4vw, 26px) 16px;
+  }
+  .sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  figcaption {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+  @media (max-width: 480px) {
+    .slot {
+      position: relative;
+      grid-template-columns: 3.6rem minmax(0, 1fr);
+    }
+    .mv {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--paper-raised);
+      color: var(--ink);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s var(--ease);
+    }
+    .slot:focus-within .mv,
+    .slot.is-open .mv {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+  @media (max-width: 560px) {
+    .d-name {
+      display: none;
+    }
+    .slots {
+      margin-left: 58px;
+    }
+    .line {
+      left: 52px;
+      width: 8px;
+    }
+    .handle {
+      width: 52px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .slot,
+    .slots[data-active],
+    [data-ba],
+    .ba-none,
+    .seg button,
+    .mv {
+      transition: none;
+    }
+    .play :global(.i-play),
+    .play :global(.i-pause) {
+      transition: none;
+    }
+  }
+  @media (max-width: 360px) {
+    .who {
+      display: none;
+    }
+  }
+  @media (max-width: 560px) {
+    .bar > [data-days] {
+      flex: 1 1 100%;
+    }
+    .bar > [data-days] button {
+      flex: 1 1 0;
+      padding-inline: 4px;
+    }
+    .ba-slot {
+      flex: 1 1 0;
+    }
+    .ba-none {
+      font-size: 12px;
+      line-height: 1.2;
+      margin-bottom: 14px;
+    }
+    .hint-wide {
+      display: none;
+    }
+    .hint-phone {
+      display: inline;
+    }
+  }
+  @media (max-width: 480px) {
+    .slot .mv {
+      position: static;
+      grid-column: 2;
+      justify-self: end;
+      max-height: 0;
+      margin: 0;
+      overflow: hidden;
+      transform: none;
+      background: transparent;
+      opacity: 0;
+      pointer-events: none;
+      transition:
+        max-height 0.4s var(--ease),
+        opacity 0.35s var(--ease);
+    }
+    .slot:focus-within .mv,
+    .slot.is-open .mv {
+      max-height: 44px;
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+</style>

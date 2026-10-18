@@ -1,0 +1,42 @@
+---
+import { env } from '@groam/env/landing';
+import PageSection from '@/components/page-section.astro';
+---
+
+<PageSection tone="press" class="closing">
+  <div class="inner">
+    <h2 class="display">Your next trip starts with one idea.</h2>
+    <div class="cta">
+      <a class="btn btn-primary btn-lg" href={env.appUrl}>Start a trip</a>
+      <p class="fine">Plan on your own for free. Bring the group in when you’re ready.</p>
+    </div>
+  </div>
+</PageSection>
+
+<style>
+  .inner {
+    display: grid;
+    gap: var(--content-gap);
+  }
+  h2 {
+    max-width: 14ch;
+    font-size: clamp(2.9rem, 10vw, 9.5rem);
+  }
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 28px;
+    padding-top: 26px;
+    border-top: var(--rule) solid var(--press-ink);
+  }
+  @media (max-width: 420px) {
+    .cta .btn {
+      flex: 1 1 100%;
+    }
+  }
+  .fine {
+    max-width: 34ch;
+    font-size: 15px;
+  }
+</style>

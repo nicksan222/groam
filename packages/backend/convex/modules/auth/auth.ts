@@ -1,0 +1,106 @@
+import { passkey } from '@better-auth/passkey';
+import { type AuthFunctions, createClient, type GenericCtx } from '@convex-dev/better-auth';
+import { convex, crossDomain } from '@convex-dev/better-auth/plugins';
+import { type BetterAuthOptions, betterAuth } from 'better-auth/minimal';
+import { organization, twoFactor, username } from 'better-auth/plugins';
+import { components, internal } from '#convex-generated/api';
+import type { DataModel } from '#convex-generated/dataModel';
+import { env } from '#convex-generated/server';
+import authConfig from '#convex/auth.config';
+import authSchema from '#convex/components/better-auth/schema';
+import { resolveAuthTrustedOrigins } from './origins';
+import { accountRecovery } from './recovery';
+
+const authBaseUrl = env.CONVEX_SITE_URL ?? 'http://127.0.0.1:3211';
+
+export const authSiteUrl = env.SITE_URL ?? authBaseUrl;
+export const authTrustedOrigins = resolveAuthTrustedOrigins(authSiteUrl, authBaseUrl);
+const passkeyRpId = new URL(authSiteUrl).hostname;
+// A passkey belongs to one relying party: accept every trusted origin on its host (locally the
+// app on 5173 and the browser journeys on 5174).
+const passkeyOrigins = authTrustedOrigins.filter(
+  (origin) => new URL(origin).hostname === passkeyRpId
+);
+
+// Better Auth component triggers keep app-owned records synchronized in the
+// same transaction as changes to the local Better Auth component.
+const authFunctions: AuthFunctions = internal.modules.auth.auth;
+
+/** Better Auth caps each group at this many members; server-side roster reads rely on it. */
+export const ORGANIZATION_MEMBERSHIP_LIMIT = 100;
+
+export const authComponent = createClient<DataModel, typeof authSchema>(components.betterAuth, {
+  authFunctions,
+  local: { schema: authSchema },
+  triggers: {
+    user: {
+      onDelete: async (ctx, user) => {
+        await ctx.runMutation(internal.modules.ai.chatgpt.storage.removeUserConnections, {
+          userId: user._id
+        });
+      }
+    },
+    member: {
+      onCreate: async (ctx, member) => {
+        await ctx.runMutation(internal.modules.travel.issues.resync.organization, {
+          organizationId: member.organizationId
+        });
+      },
+      onDelete: async (ctx, member) => {
+        await ctx.runMutation(internal.modules.travel.issues.resync.organization, {
+          organizationId: member.organizationId
+        });
+        await ctx.runMutation(
+          internal.modules.discussions.threads.cleanup.removeOrganizationMember,
+          {
+            organizationId: member.organizationId,
+            userId: member.userId
+          }
+        );
+      }
+    },
+    organization: {
+      onDelete: async (ctx, removedOrganization) => {
+        await ctx.runMutation(internal.modules.organizations.cleanup.removeOrganizationData, {
+          organizationId: removedOrganization._id
+        });
+      }
+    }
+  }
+});
+
+export const { onCreate, onDelete } = authComponent.triggersApi();
+
+export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
+  ({
+    appName: 'Groam',
+    baseURL: authBaseUrl,
+    database: authComponent.adapter(ctx),
+    disabledPaths: ['/is-username-available'],
+    emailAndPassword: {
+      enabled: true,
+      requireEmailVerification: false,
+      revokeSessionsOnPasswordReset: true
+    },
+    plugins: [
+      username(),
+      accountRecovery(),
+      passkey({
+        origin: passkeyOrigins,
+        rpID: passkeyRpId,
+        rpName: 'Groam'
+      }),
+      twoFactor({
+        issuer: 'Groam'
+      }),
+      organization({
+        membershipLimit: ORGANIZATION_MEMBERSHIP_LIMIT,
+        organizationLimit: 10
+      }),
+      crossDomain({ siteUrl: authSiteUrl }),
+      convex({ authConfig })
+    ],
+    trustedOrigins: authTrustedOrigins
+  }) satisfies BetterAuthOptions;
+
+export const createAuth = (ctx: GenericCtx<DataModel>) => betterAuth(createAuthOptions(ctx));

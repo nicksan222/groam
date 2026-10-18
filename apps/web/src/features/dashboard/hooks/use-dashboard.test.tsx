@@ -1,0 +1,65 @@
+import { renderHook } from '@groam/vitest-config/react';
+import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import { useDashboard } from './use-dashboard';
+
+const trips = vi.hoisted(() => ({
+  useTrips: vi.fn(),
+  useWorkspaceTripProposals: vi.fn()
+}));
+const workspace = vi.hoisted(() => ({
+  useWorkspace: vi.fn()
+}));
+const agent = vi.hoisted(() => ({
+  useSetAgentContext: vi.fn()
+}));
+
+vi.mock('@/features/trips/hooks/use-trips', () => trips);
+vi.mock('@/features/workspace/workspace-shell/workspace-state', () => workspace);
+vi.mock('@groam/ai/ui/context/agent-context', () => agent);
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  workspace.useWorkspace.mockReturnValue({
+    activeOrganization: { name: 'Groam Demo', members: [] },
+    session: { user: { id: 'user-1' } }
+  });
+  trips.useTrips.mockReturnValue({ isLoading: false, trips: [] });
+  trips.useWorkspaceTripProposals.mockReturnValue({ isLoading: false, proposals: [] });
+});
+
+describe('useDashboard', () => {
+  test('presents the empty home action when there is no trip data', async () => {
+    const { result } = await renderHook(() => useDashboard());
+    expect(result.current.presentation).toEqual({ kind: 'empty' });
+    expect(agent.useSetAgentContext).toHaveBeenCalled();
+  });
+
+  test('presents waiting reviews without changing the dashboard data contract', async () => {
+    trips.useTrips.mockReturnValue({
+      isLoading: false,
+      trips: [
+        {
+          archivedAt: null,
+          id: 'trip-1',
+          name: 'Portugal',
+          outstandingActionCount: 0
+        }
+      ]
+    });
+    trips.useWorkspaceTripProposals.mockReturnValue({
+      isLoading: false,
+      proposals: [
+        {
+          author: { name: 'Ada', userId: 'user-2' },
+          id: 'proposal-1',
+          reviewRequested: true,
+          status: 'in_review',
+          title: 'Coast day'
+        }
+      ]
+    });
+
+    const { result } = await renderHook(() => useDashboard());
+    expect(result.current.presentation.kind).toBe('ready');
+  });
+});

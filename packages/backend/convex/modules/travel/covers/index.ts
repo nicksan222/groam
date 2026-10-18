@@ -1,0 +1,274 @@
+import { ConvexError } from 'convex/values';
+import { internal } from '#convex-generated/api';
+import type { Id } from '#convex-generated/dataModel';
+import type { MutationCtx } from '#convex-generated/server';
+import { requireWorkspace } from '#convex/modules/auth/workspace';
+import {
+  assertMutable,
+  loadTripContext,
+  type MutableTripCtx,
+  patchTrip,
+  recordActivity
+} from '#convex/modules/travel/trips/ctx';
+
+const MAX_COVER_SIZE = 25 * 1024 * 1024;
+/** Rejected uploads are discarded right after upload; older files are never touched. */
+const DISCARDABLE_UPLOAD_AGE_MS = 60 * 60 * 1000;
+const MAX_SNAPSHOT_PROPOSALS = 200;
+const MAX_SNAPSHOTS_PER_PROPOSAL = 20;
+const SUPPORTED_COVER_CONTENT_TYPES = new Set([
+  'image/avif',
+  'image/jpeg',
+  'image/png',
+  'image/webp'
+]);
+
+export class TripCover {
+  private constructor(
+    private readonly ctx: MutationCtx,
+    private readonly trip: MutableTripCtx
+  ) {}
+
+  static async find(ctx: MutationCtx, tripId: Id<'trips'>): Promise<TripCover> {
+    return new TripCover(ctx, await loadTripContext(ctx, tripId));
+  }
+
+  static from(ctx: MutationCtx, trip: MutableTripCtx): TripCover {
+    return new TripCover(ctx, trip);
+  }
+
+  static async generateUploadUrl(ctx: MutationCtx): Promise<string> {
+    await requireWorkspace(ctx);
+    return await ctx.storage.generateUploadUrl();
+  }
+
+  refresh(discardExisting = false) {
+    if (this.source() === 'upload') return null;
+    const generation = this.generation() + 1;
+    const cover = this.trip.trip.cover;
+    const existingAsset = !discardExisting && cover && 'asset' in cover ? cover.asset : undefined;
+    return {
+      cover: {
+        ...(existingAsset?.source === 'stock' ? { asset: existingAsset } : {}),
+        generation,
+        status: 'pending' as const
+      },
+      generation
+    };
+  }
+
+  clearAutomatic() {
+    if (this.source() === 'upload') return null;
+    return { cover: undefined, generation: this.generation() + 1 };
+  }
+
+  async set(
+    storageId: Id<'_storage'>,
+    contentType: string | undefined,
+    signatureValid: boolean
+  ): Promise<null> {
+    assertMutable(this.trip);
+    if (this.source() === 'upload' && this.storageId() === storageId) return null;
+    await TripCover.validate(this.ctx, storageId, contentType, signatureValid);
+
+    const previous = this.storageId();
+    await patchTrip(this.trip, {
+      cover: {
+        asset: { source: 'upload', storageId },
+        generation: this.generation() + 1,
+        status: 'ready'
+      },
+      updatedAt: Date.now()
+    });
+    if (previous !== storageId) {
+      await TripCover.deleteIfUnreferenced(this.ctx, this.trip.trip._id, previous);
+    }
+    await recordActivity(
+      this.trip,
+      'cover_updated',
+      `${this.trip.workspace.viewerName} replaced the trip cover`
+    );
+    return null;
+  }
+
+  async retry(): Promise<null> {
+    assertMutable(this.trip);
+    if (this.source() === 'upload') {
+      throw new ConvexError('Uploaded covers can only be replaced with another upload');
+    }
+    if (!(await TripCover.hasDestination(this.ctx, this.trip.trip._id))) {
+      throw new ConvexError('Add a destination before generating a trip cover');
+    }
+    if (this.trip.trip.cover?.status === 'pending') return null;
+
+    const refresh = this.refresh();
+    if (!refresh) throw new ConvexError('This trip cover is not managed automatically');
+    await patchTrip(this.trip, { cover: refresh.cover, updatedAt: Date.now() });
+    await recordActivity(
+      this.trip,
+      'cover_updated',
+      `${this.trip.workspace.viewerName} requested a new trip cover`
+    );
+    await this.schedule(refresh.generation);
+    return null;
+  }
+
+  async schedule(generation: number, delayMs = 0): Promise<void> {
+    await TripCover.schedule(this.ctx, this.trip.trip._id, generation, delayMs);
+  }
+
+  static async hasDestination(ctx: MutationCtx, tripId: Id<'trips'>): Promise<boolean> {
+    return (
+      (await ctx.db
+        .query('tripDestinations')
+        .withIndex('by_tripId_and_position', (query) => query.eq('tripId', tripId))
+        .first()) !== null
+    );
+  }
+
+  static async validate(
+    ctx: MutationCtx,
+    storageId: Id<'_storage'> | undefined,
+    uploadedContentType: string | undefined,
+    signatureValid: boolean
+  ): Promise<void> {
+    if (storageId === undefined) return;
+    const [metadata, referenced] = await Promise.all([
+      ctx.db.system.get('_storage', storageId),
+      TripCover.isReferenced(ctx, storageId)
+    ]);
+    if (!metadata) throw new ConvexError('cover image was not found');
+    const contentType = (metadata.contentType ?? uploadedContentType)
+      ?.split(';', 1)[0]
+      ?.trim()
+      .toLowerCase();
+    if (!contentType || !SUPPORTED_COVER_CONTENT_TYPES.has(contentType)) {
+      throw new ConvexError('cover must be a JPEG, PNG, WebP, or AVIF image');
+    }
+    if (metadata.size > MAX_COVER_SIZE) {
+      throw new ConvexError('cover image must be 25 MB or smaller');
+    }
+    if (!signatureValid) {
+      throw new ConvexError('cover contents do not match its image type');
+    }
+    if (referenced) throw new ConvexError('cover image is already in use');
+  }
+
+  static async deleteStorage(
+    ctx: MutationCtx,
+    storageId: Id<'_storage'> | undefined
+  ): Promise<void> {
+    if (storageId && (await ctx.db.system.get('_storage', storageId))) {
+      await ctx.storage.delete(storageId);
+    }
+  }
+
+  /**
+   * Delete a fresh upload that failed validation. Callers pass a client-supplied id, so only
+   * recent files that no trip, destination, or media record owns are ever removed.
+   */
+  static async discardUnusedUpload(ctx: MutationCtx, storageId: Id<'_storage'>): Promise<null> {
+    await requireWorkspace(ctx);
+    const metadata = await ctx.db.system.get('_storage', storageId);
+    if (!metadata || Date.now() - metadata._creationTime > DISCARDABLE_UPLOAD_AGE_MS) return null;
+    if (await TripCover.isReferenced(ctx, storageId)) return null;
+    await ctx.storage.delete(storageId);
+    return null;
+  }
+
+  /** Whether any trip cover, destination cover, or media record still points at the file. */
+  static async isReferenced(ctx: MutationCtx, storageId: Id<'_storage'>): Promise<boolean> {
+    const [trip, destination, media] = await Promise.all([
+      ctx.db
+        .query('trips')
+        .withIndex('by_cover_asset_storageId', (query) =>
+          query.eq('cover.asset.storageId', storageId)
+        )
+        .first(),
+      ctx.db
+        .query('tripDestinations')
+        .withIndex('by_cover_asset_storageId', (query) =>
+          query.eq('cover.asset.storageId', storageId)
+        )
+        .first(),
+      ctx.db
+        .query('media')
+        .withIndex('by_storageId', (query) => query.eq('storageId', storageId))
+        .first()
+    ]);
+    return trip !== null || destination !== null || media !== null;
+  }
+
+  /**
+   * Delete a replaced cover file unless another trip, a media record, or a saved idea
+   * snapshot of the same shared trip still references it (working copies share files).
+   */
+  static async deleteIfUnreferenced(
+    ctx: MutationCtx,
+    tripId: Id<'trips'>,
+    storageId: Id<'_storage'> | undefined
+  ): Promise<void> {
+    if (!storageId || (await TripCover.isReferenced(ctx, storageId))) return;
+    const working = await ctx.db
+      .query('tripProposals')
+      .withIndex('by_workingTripId', (query) => query.eq('workingTripId', tripId))
+      .unique();
+    const sourceTripId = working?.sourceTripId ?? tripId;
+    const proposals = await ctx.db
+      .query('tripProposals')
+      .withIndex('by_sourceTripId_and_updatedAt', (query) => query.eq('sourceTripId', sourceTripId))
+      .take(MAX_SNAPSHOT_PROPOSALS);
+    // An idea's history is bounded too; if either cap is hit, keep the file rather than guess.
+    if (proposals.length === MAX_SNAPSHOT_PROPOSALS) return;
+    for (const proposal of proposals) {
+      const snapshots = await ctx.db
+        .query('tripProposalSnapshots')
+        .withIndex('by_proposalId', (query) => query.eq('proposalId', proposal._id))
+        .take(MAX_SNAPSHOTS_PER_PROPOSAL);
+      if (snapshots.length === MAX_SNAPSHOTS_PER_PROPOSAL) return;
+      if (snapshots.some((snapshot) => snapshot.value.includes(storageId))) return;
+    }
+    await TripCover.deleteStorage(ctx, storageId);
+  }
+
+  static async schedule(
+    ctx: MutationCtx,
+    tripId: Id<'trips'>,
+    generation: number,
+    delayMs = 0
+  ): Promise<void> {
+    if (!(await TripCover.hasDestination(ctx, tripId))) return;
+    await ctx.scheduler.runAfter(delayMs, internal.modules.travel.covers.stock.generate, {
+      attempt: 0,
+      generation,
+      tripId
+    });
+  }
+
+  static async ensureForTrip(ctx: MutationCtx, tripId: Id<'trips'>): Promise<null> {
+    const data = await ctx.db.get('trips', tripId);
+    if (!data?.cover && (await TripCover.hasDestination(ctx, tripId))) {
+      const trip = await loadTripContext(ctx, tripId);
+      const refresh = TripCover.from(ctx, trip).refresh();
+      if (refresh) {
+        await patchTrip(trip, { cover: refresh.cover, updatedAt: Date.now() });
+        await TripCover.schedule(ctx, tripId, refresh.generation);
+      }
+    }
+    return null;
+  }
+
+  private generation(): number {
+    return this.trip.trip.cover?.generation ?? 0;
+  }
+
+  private source(): 'stock' | 'upload' | undefined {
+    const cover = this.trip.trip.cover;
+    return cover && 'asset' in cover ? cover.asset?.source : undefined;
+  }
+
+  private storageId(): Id<'_storage'> | undefined {
+    const cover = this.trip.trip.cover;
+    return cover && 'asset' in cover ? cover.asset?.storageId : undefined;
+  }
+}

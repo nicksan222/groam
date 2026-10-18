@@ -1,0 +1,461 @@
+@import '@fontsource-variable/archivo/wdth.css';
+@import '@groam/ui/styles/tokens';
+@import './tokens.css';
+
+/*
+ * The tour bill world. Pages alternate between cobalt bill fields (.bill) and poster paper, with
+ * an ink bill to close. Ideas are yellow paste-over strips (.strip): lifted and tilted while
+ * proposed, flush once applied. Type is one family, Archivo: condensed heavy capitals for
+ * display, normal width for reading, tabular figures for every time and price.
+ */
+:root {
+  --gutter: clamp(16px, 4.5vw, 64px);
+  --measure: 1320px;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --rule: 3px;
+  /* Condensed caps lose their word gaps; every caps style at 70% width or narrower adds this. */
+  --caps-space: 0.08em;
+  --section: clamp(40px, 4vw, 64px);
+  --content-gap: clamp(28px, 4vw, 56px);
+  --column-gap: clamp(24px, 5vw, 72px);
+  --panel-padding: clamp(16px, 2.5vw, 32px);
+  --demo-overlap: clamp(72px, 10vw, 144px);
+  --on: var(--ink);
+  --on-soft: var(--ink-soft);
+  --on-line: var(--ink-line);
+  --cta-bg: var(--ink);
+  --cta-fg: var(--paper);
+  --focus: var(--ink);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 24px;
+  background: var(--paper);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 17px/1.55 var(--font-sans);
+  font-stretch: 100%;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-kerning: normal;
+}
+
+::selection {
+  background: var(--strip);
+  color: var(--strip-ink);
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus, currentColor);
+  outline-offset: 3px;
+}
+
+/* The focus ring always takes the ink of the ground it sits on, never the control's own fill. */
+.bill {
+  --focus: var(--bill-ink);
+}
+
+.bill-ink {
+  --focus: var(--strip);
+}
+
+.surface,
+.strip {
+  --focus: var(--ink);
+}
+
+html {
+  scrollbar-color: color-mix(in srgb, var(--ink) 45%, var(--paper)) var(--paper);
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+li,
+dd {
+  text-wrap: pretty;
+}
+
+ol,
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+.wrap {
+  width: 100%;
+  max-width: calc(var(--measure) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* A cobalt bill field. Everything printed on it reads in bill ink. */
+.bill {
+  --on: var(--bill-ink);
+  --on-soft: var(--bill-soft);
+  --on-line: var(--bill-line);
+  --cta-bg: var(--bill-ink);
+  --cta-fg: var(--bill);
+  --muted-foreground: var(--bill-soft);
+  --border: var(--bill-line);
+  background: var(--bill);
+  color: var(--bill-ink);
+}
+
+/* The ink bill that closes a page. */
+.bill-ink {
+  --on: var(--press-ink);
+  --on-soft: color-mix(in srgb, var(--press-ink) 72%, var(--press));
+  --on-line: color-mix(in srgb, var(--press-ink) 26%, var(--press));
+  --cta-bg: var(--strip);
+  --cta-fg: var(--strip-ink);
+  --muted-foreground: color-mix(in srgb, var(--press-ink) 72%, var(--press));
+  --border: color-mix(in srgb, var(--press-ink) 26%, var(--press));
+  background: var(--press);
+  color: var(--press-ink);
+}
+
+/* Display type: condensed heavy capitals, set tight. */
+.display {
+  font-family: var(--font-heading);
+  font-weight: 850;
+  font-stretch: 62%;
+  text-transform: uppercase;
+  line-height: 0.86;
+  letter-spacing: -0.012em;
+  word-spacing: var(--caps-space);
+}
+
+.section-title {
+  font-weight: 850;
+  font-stretch: 64%;
+  text-transform: uppercase;
+  font-size: clamp(2.6rem, 6.4vw, 5.6rem);
+  line-height: 0.88;
+  letter-spacing: -0.01em;
+  word-spacing: var(--caps-space);
+  max-width: 16ch;
+}
+
+.section-lede {
+  margin-top: 22px;
+  max-width: 50ch;
+  color: var(--on-soft);
+  font-size: clamp(1.05rem, 1.3vw, 1.22rem);
+  line-height: 1.5;
+}
+
+.section {
+  padding-block: var(--section);
+}
+
+/* A heavy printed rule. */
+.rule {
+  border: 0;
+  border-top: var(--rule) solid currentColor;
+  margin: 0;
+}
+
+.fine {
+  font-size: 14px;
+  color: var(--on-soft);
+}
+
+/* Every clock time and price: tabular, slightly condensed, a touch heavier than the text. */
+.time {
+  font-family: var(--font-sans);
+  font-weight: 650;
+  font-stretch: 82%;
+  font-size: 13px;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  color: var(--on-soft);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Illustrative surfaces carry this: a dashed edge means "example". */
+.example-label {
+  word-spacing: var(--caps-space);
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border: 1.5px dashed currentColor;
+  color: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  font-stretch: 80%;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0.85;
+}
+
+/* A printed panel: paper with an ink frame, square corners. */
+.surface {
+  background: var(--paper-raised);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  --on: var(--ink);
+  --on-soft: var(--ink-soft);
+  --on-line: var(--ink-line);
+  --cta-bg: var(--ink);
+  --cta-fg: var(--paper);
+  --muted-foreground: var(--ink-soft);
+  --border: var(--ink-line);
+}
+
+/* The paste-over strip: an idea. Lifted and tilted while proposed, flush once applied. */
+.strip {
+  position: relative;
+  background: var(--strip);
+  color: var(--strip-ink);
+  --on: var(--strip-ink);
+  --on-soft: color-mix(in srgb, var(--strip-ink) 72%, var(--strip));
+  --on-line: color-mix(in srgb, var(--strip-ink) 22%, var(--strip));
+  --muted-foreground: color-mix(in srgb, var(--strip-ink) 72%, var(--strip));
+  outline: 2px dashed color-mix(in srgb, var(--strip-ink) 45%, transparent);
+  outline-offset: -6px;
+  box-shadow: var(--lift);
+  transform: rotate(-1.2deg) translateY(-4px);
+  transition:
+    transform 0.7s var(--ease),
+    box-shadow 0.7s var(--ease),
+    outline-color 0.4s ease;
+}
+
+.strip.flush,
+.strip[data-flush] {
+  outline-color: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Buttons: solid printed blocks. The primary inverts whatever ground it sits on. */
+.btn {
+  word-spacing: var(--caps-space);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 2.5rem;
+  padding: 0 16px;
+  border: 2px solid currentColor;
+  border-radius: 0;
+  background: transparent;
+  color: var(--on);
+  font: 750 14px/1 var(--font-sans);
+  font-stretch: 86%;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.25s var(--ease);
+}
+
+.btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.btn-lg {
+  min-height: 3.5rem;
+  padding: 0 26px;
+  font-size: 16px;
+}
+
+.btn-primary {
+  background: var(--cta-bg);
+  border-color: var(--cta-bg);
+  color: var(--cta-fg);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+}
+
+.btn-outline:hover,
+.btn-ghost:hover {
+  background: var(--on);
+  color: var(--cta-fg);
+}
+
+.bill .btn-outline:hover,
+.bill .btn-ghost:hover {
+  background: var(--bill-ink);
+  color: var(--bill);
+}
+
+.btn-ghost {
+  border-color: transparent;
+}
+
+.avatar {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 800;
+  font-stretch: 80%;
+}
+
+.avatar svg {
+  width: 15px;
+  height: 15px;
+}
+
+.avatar-maya {
+  background: var(--tint-maya);
+  color: var(--tint-ink);
+}
+
+.avatar-jonas {
+  background: var(--tint-jonas);
+  color: var(--tint-ink);
+}
+
+.avatar-priya {
+  background: var(--tint-priya);
+  color: var(--tint-ink);
+}
+
+.avatar-sam {
+  background: var(--tint-sam);
+  color: var(--tint-ink);
+}
+
+.avatar-agent {
+  background: var(--agent);
+  color: var(--agent-ink);
+  box-shadow: inset 0 0 0 1.5px var(--agent-ink);
+}
+
+/* Chips: small printed tags. Colour carries meaning only. */
+.chip {
+  word-spacing: var(--caps-space);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 1.5px solid currentColor;
+  background: transparent;
+  color: var(--on-soft);
+  font-size: 12px;
+  font-weight: 750;
+  font-stretch: 82%;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.chip svg {
+  width: 13px;
+  height: 13px;
+}
+
+.chip-idea {
+  background: var(--strip);
+  border-color: var(--strip);
+  color: var(--strip-ink);
+}
+
+.chip-agent {
+  background: var(--agent);
+  border-color: var(--agent);
+  color: var(--agent-ink);
+}
+
+.chip-done {
+  border-color: var(--done);
+  color: var(--done);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Compact loop control used across demos: a printed square with a pause or play glyph. */
+.loop-toggle {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: inline-grid;
+  place-items: center;
+  border: 2px solid currentColor;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.loop-toggle[hidden] {
+  display: none;
+}
+
+.loop-toggle svg {
+  width: 15px;
+  height: 15px;
+}

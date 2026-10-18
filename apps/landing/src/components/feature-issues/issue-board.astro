@@ -1,0 +1,388 @@
+---
+import Icon from '@/components/icon.astro';
+import { issueAt, issuesCopy, start, startSets } from '@/content/feature-issues';
+import { rowHtml } from '@/scripts/feature-issues-row';
+
+const open = start.open.map((id) =>
+  rowHtml(id, issueAt(id), startSets.linked.has(id) ? 'fix' : 'open')
+);
+const closed = start.closed.map((id) => rowHtml(id, issueAt(id), 'closed'));
+---
+
+<figure class="board-figure">
+  <div class="surface board" data-issue-board aria-label="Example trip issues" role="group">
+    <header class="head">
+      <b>Lisbon long weekend</b>
+      <span class="head-kind">Loose ends</span>
+      <span class="example-label">Example trip</span>
+      <button class="loop-toggle toggle" type="button" data-toggle aria-pressed="false" hidden>
+        <Icon name="pause" class="when-playing" />
+        <Icon name="play" class="when-paused" />
+        <span class="visually-hidden">Pause the issue board</span>
+      </button>
+    </header>
+
+    <div data-body class="body">
+      <div class="bar">
+        <div class="tabs" role="tablist" aria-label="Issue status">
+          <button type="button" role="tab" id="fi-tab-open" aria-controls="fi-open" aria-selected="true">
+            Open <span class="count" data-count="open">{start.open.length}</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            id="fi-tab-closed"
+            aria-controls="fi-closed"
+            aria-selected="false"
+            tabindex="-1"
+          >
+            Closed <span class="count" data-count="closed">{start.closed.length}</span>
+          </button>
+        </div>
+        <button class="btn btn-primary apply" type="button" data-apply>
+          <Icon name="check" />
+          Apply the idea
+        </button>
+      </div>
+
+      <ul class="fi-list" id="fi-open" role="tabpanel" aria-labelledby="fi-tab-open" data-list="open" data-empty={issuesCopy.emptyOpen} tabindex="0" set:html={open.join('')} />
+      <ul
+        class="fi-list"
+        id="fi-closed"
+        role="tabpanel"
+        aria-labelledby="fi-tab-closed"
+        data-list="closed"
+        data-empty={issuesCopy.emptyClosed}
+        tabindex="0"
+        hidden
+        set:html={closed.join('')}
+      />
+    </div>
+    <p class="status" data-status aria-live="off">{issuesCopy.idle}</p>
+  </div>
+  <figcaption class="fine">{issuesCopy.caption}</figcaption>
+</figure>
+
+<script>
+  import { playIssueBoard } from '@/scripts/feature-issues-board';
+
+  for (const board of document.querySelectorAll<HTMLElement>('[data-issue-board]')) playIssueBoard(board);
+</script>
+
+<style>
+  .board-figure {
+    display: grid;
+    gap: 14px;
+    margin-inline: auto;
+  }
+  .board {
+    overflow: hidden;
+  }
+  .body {
+    position: relative;
+  }
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 12px 16px;
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .head b {
+    font-weight: 850;
+    font-stretch: 64%;
+    word-spacing: var(--caps-space);
+    font-size: 1.35rem;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    min-width: 0;
+  }
+  .head-kind {
+    font-size: 13px;
+    font-weight: 750;
+    font-stretch: 84%;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.8;
+  }
+  .head .example-label {
+    margin-left: auto;
+  }
+  .toggle[hidden] {
+    display: none;
+  }
+  .toggle:hover {
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .toggle :global(.when-paused),
+  .toggle :global(.when-playing) {
+    grid-area: 1 / 1;
+    transition:
+      opacity 0.16s ease,
+      transform 0.25s var(--ease);
+  }
+  .toggle :global(.when-paused),
+  .board.paused .toggle :global(.when-playing) {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+  @media (max-width: 560px) {
+    .head-kind {
+      display: none;
+    }
+  }
+  .bar {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 16px 16px 0;
+    border-bottom: var(--rule) solid var(--ink);
+  }
+  .tabs {
+    display: flex;
+  }
+  .tabs button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 0 18px;
+    margin-right: -2px;
+    border: 2px solid var(--ink);
+    border-bottom: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 800 15px/1 var(--font-sans);
+    font-stretch: 84%;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+  .tabs button:hover {
+    background: var(--strip);
+    color: var(--strip-ink);
+  }
+  .tabs button[aria-selected='true'] {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .count {
+    display: inline-block;
+    min-width: 1.2em;
+    font-size: 1.15em;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+  .apply {
+    transition:
+      opacity 0.4s var(--ease),
+      background-color 0.15s ease,
+      color 0.15s ease,
+      transform 0.25s var(--ease);
+    align-self: center;
+    margin-bottom: 12px;
+  }
+  .apply :global(svg) {
+    width: 15px;
+    height: 15px;
+  }
+  .apply:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .status {
+    display: grid;
+    padding: 14px 16px;
+    border-top: var(--rule) solid var(--ink);
+    font-weight: 650;
+    font-size: 15px;
+  }
+  @media (max-width: 700px) {
+    .status {
+      min-height: calc(2 * 1.55em + 28px + var(--rule));
+    }
+  }
+  .status :global(.said) {
+    grid-area: 1 / 1;
+  }
+  figcaption {
+    max-width: 60ch;
+  }
+</style>
+
+<style is:global>
+  .fi-list {
+    position: relative;
+    min-height: 0;
+    padding-bottom: 8px;
+  }
+  .fi-list[data-list='closed'] {
+    overflow-y: auto;
+  }
+  .fi-list:empty::after {
+    content: attr(data-empty);
+    display: block;
+    padding: 28px 16px;
+    color: var(--ink-soft);
+    font-weight: 650;
+  }
+  .fi-row.is-leaving {
+    position: absolute;
+    left: 0;
+    right: 0;
+  }
+  .fi-list[hidden] {
+    display: none;
+  }
+  .fi-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+    padding: 20px 16px 22px;
+    border-bottom: 1.5px solid var(--ink-line);
+    background: var(--paper-raised);
+  }
+  .fi-tick {
+    width: 32px;
+    height: 32px;
+    margin-top: 2px;
+    border: 3px solid var(--ink);
+    display: grid;
+    place-items: center;
+    color: var(--paper);
+    transition: background-color 0.35s var(--ease);
+  }
+  .fi-tick svg {
+    width: 18px;
+    height: 18px;
+    stroke-dasharray: 24;
+    stroke-dashoffset: 24;
+    transition: stroke-dashoffset 0.45s var(--ease) 0.1s;
+  }
+  .fi-row[data-state='closing'] .fi-tick,
+  .fi-row[data-state='closed'] .fi-tick {
+    background: var(--done);
+    border-color: var(--done);
+  }
+  .fi-row[data-state='closing'] .fi-tick svg,
+  .fi-row[data-state='closed'] .fi-tick svg {
+    stroke-dashoffset: 0;
+  }
+  .fi-text {
+    position: relative;
+    display: grid;
+    gap: 12px;
+    min-width: 0;
+  }
+  .fi-title {
+    width: fit-content;
+    max-width: 100%;
+    padding-right: 7rem;
+    font-weight: 850;
+    font-stretch: 66%;
+    word-spacing: var(--caps-space);
+    font-size: clamp(1.35rem, 6vw, 2.7rem);
+    line-height: 0.95;
+    text-transform: uppercase;
+    text-decoration: line-through 0.12em transparent;
+    transition:
+      text-decoration-color 0.5s var(--ease) 0.2s,
+      color 0.5s var(--ease) 0.2s;
+  }
+  .fi-row[data-state='closing'] .fi-title,
+  .fi-row[data-state='closed'] .fi-title {
+    text-decoration-color: var(--ink);
+    color: var(--ink-soft);
+  }
+  .fi-fix {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    width: fit-content;
+    max-width: 100%;
+    min-height: 40px;
+    padding: 8px 14px;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  .fi-fix.strip .chip {
+    background: var(--strip-ink);
+    border-color: var(--strip-ink);
+    color: var(--strip);
+  }
+  .fi-fix.fi-empty {
+    padding: 8px 14px;
+    border: 1.5px dashed var(--ink-soft);
+    color: var(--ink-soft);
+    font-weight: 650;
+  }
+  .fi-row[data-state='closing'] .fi-fix,
+  .fi-row[data-state='closed'] .fi-fix {
+    outline-color: transparent;
+    box-shadow: none;
+    transform: none;
+  }
+  .fi-stamp {
+    position: absolute;
+    top: 20px;
+    right: 16px;
+    padding: 5px 10px 4px;
+    border: 3px solid var(--done);
+    color: var(--done);
+    font-weight: 850;
+    font-stretch: 70%;
+    word-spacing: var(--caps-space);
+    font-size: 1.15rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transform: translateY(-6px) rotate(-4deg);
+    opacity: 0;
+    transition:
+      opacity 0.45s var(--ease) 0.35s,
+      transform 0.6s var(--ease) 0.35s;
+  }
+  .fi-row[data-state='closing'] .fi-stamp,
+  .fi-row[data-state='closed'] .fi-stamp {
+    opacity: 1;
+    transform: rotate(-4deg);
+  }
+  @media (max-width: 560px) {
+    .fi-title {
+      padding-right: 6rem;
+    }
+  }
+  @media (max-width: 480px) {
+    .fi-row {
+      padding-top: 52px;
+    }
+    .fi-stamp {
+      top: 12px;
+    }
+    .fi-title {
+      padding-right: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .board .toggle .when-paused,
+    .board .toggle .when-playing,
+    .fi-tick,
+    .fi-tick svg,
+    .fi-title,
+    .fi-stamp {
+      transition-duration: 0s;
+      transition-delay: 0s;
+    }
+  }
+</style>

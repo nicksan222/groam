@@ -1,0 +1,22 @@
+import type { AssistantContextTag } from '@groam/ai/runtime/context-tag';
+import { v } from 'convex/values';
+import { internal } from '#convex-generated/api';
+import { mutation } from '#convex-generated/server';
+import {
+  type AssistantContextTagReference,
+  assistantContextTagReferenceValidator,
+  assistantContextTagValidator
+} from '#convex/modules/assistant/model/index';
+
+export const run = mutation({
+  args: {
+    tags: v.array(assistantContextTagReferenceValidator),
+    threadId: v.string()
+  },
+  returns: v.array(assistantContextTagValidator),
+  handler: async (
+    ctx,
+    args: { tags: AssistantContextTagReference[]; threadId: string }
+  ): Promise<AssistantContextTag[]> =>
+    await ctx.runMutation(internal.modules.assistant.model.index.setContextTags, args)
+});

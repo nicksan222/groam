@@ -1,0 +1,48 @@
+---
+import { localizedPath, localeFromPath } from '@/i18n/locale';
+import { translate } from '@/i18n/catalog';
+
+const locale = localeFromPath(Astro.url.pathname);
+---
+
+<nav class="languages" aria-label={translate(locale, 'Language')} translate="no">
+  <a href={localizedPath(Astro.url.pathname, 'en')} lang="en" hreflang="en" data-language-link aria-label={translate(locale, 'Read this page in English')} aria-current={locale === 'en' ? 'true' : undefined}>EN</a>
+  <a href={localizedPath(Astro.url.pathname, 'it')} lang="it" hreflang="it" data-language-link aria-label={translate(locale, 'Read this page in Italian')} aria-current={locale === 'it' ? 'true' : undefined}>IT</a>
+</nav>
+
+<script>
+  for (const link of document.querySelectorAll<HTMLAnchorElement>('[data-language-link]')) {
+    link.addEventListener('click', () => {
+      const next = new URL(link.href);
+      next.search = location.search;
+      next.hash = location.hash;
+      link.href = next.href;
+    });
+  }
+</script>
+
+<style>
+  .languages {
+    display: flex;
+    flex: none;
+    border: 1.5px solid var(--bill-ink);
+  }
+  a {
+    display: grid;
+    min-width: 32px;
+    min-height: 40px;
+    place-items: center;
+    color: var(--bill-ink);
+    font-size: 12px;
+    font-weight: 800;
+    text-decoration: none;
+    transition: color 0.2s var(--ease), background-color 0.2s var(--ease);
+  }
+  a[aria-current], a:hover {
+    background: var(--bill-ink);
+    color: var(--bill);
+  }
+  a:focus-visible {
+    outline-offset: -4px;
+  }
+</style>

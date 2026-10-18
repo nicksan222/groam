@@ -1,0 +1,36 @@
+---
+type Props = {
+  title: string;
+  body?: string;
+  headingId?: string;
+  layout?: 'split' | 'stack';
+};
+
+const { title, body, headingId, layout = 'split' } = Astro.props;
+---
+
+<header class:list={['section-heading', `heading-${layout}`]} data-section-heading>
+  <h2 class="section-title" id={headingId}>{title}</h2>
+  {body && <p class="section-lede">{body}</p>}
+  {Astro.slots.has('default') && <div class="heading-detail"><slot /></div>}
+</header>
+
+<style>
+  .section-heading {
+    display: grid;
+    gap: 22px var(--column-gap);
+    min-width: 0;
+  }
+  .section-lede {
+    margin: 0;
+  }
+  .heading-detail {
+    grid-column: 1 / -1;
+  }
+  @media (min-width: 900px) {
+    .heading-split {
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      align-items: end;
+    }
+  }
+</style>

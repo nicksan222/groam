@@ -1,0 +1,419 @@
+---
+import Icon from '@/components/icon.astro';
+import {
+  chatEvents,
+  conversationsCopy,
+  saturday,
+  stillEvents
+} from '@/content/feature-conversations';
+import { sintraIdea } from '@/content/example-trip';
+import { startingMessages } from '@/scripts/feature-conversations-markup';
+
+const messages = startingMessages(chatEvents, stillEvents);
+const hot = 'lunch';
+---
+
+<figure class="chat-figure">
+  <div class="surface shell" data-trip-chat role="group" aria-label="Example trip chat beside the itinerary">
+    <header class="top">
+      <b>Lisbon long weekend</b>
+      <span class="example-label">Example trip</span>
+      <button class="loop-toggle toggle" type="button" data-toggle aria-pressed="false" hidden>
+        <Icon name="pause" class="when-playing" />
+        <Icon name="play" class="when-paused" />
+        <span class="visually-hidden">Pause the chat</span>
+      </button>
+    </header>
+
+    <div class="cols">
+      <section class="chat" aria-label="Trip chat">
+        <h3 class="col-title">Chat</h3>
+        <div class="stream-wrap">
+          <p class="earlier" aria-hidden="true">Earlier in the chat</p>
+          <div class="stream" data-stream set:html={messages} />
+        </div>
+        <p class="hint fine">{conversationsCopy.hint}</p>
+      </section>
+
+      <section class="plan" aria-label="Saturday itinerary">
+        <h3 class="col-title">Saturday <span class="n">{saturday.length} stops</span></h3>
+        <ol>
+          {
+            saturday.map((row) => (
+              <li class:list={['row', { hot: row.ref === hot }]} data-plan-ref={row.ref} data-copy-label="In the chat">
+                <span class="time">{row.time}</span>
+                <span class="what">{row.title}</span>
+              </li>
+            ))
+          }
+        </ol>
+        <p class="foot fine">Applied from {sintraIdea.author}’s idea, {sintraIdea.appliedAt}</p>
+      </section>
+    </div>
+  </div>
+  <figcaption class="fine">{conversationsCopy.caption}</figcaption>
+</figure>
+
+<script>
+  import { playTripChat } from '@/scripts/feature-conversations-chat';
+
+  for (const chat of document.querySelectorAll<HTMLElement>('[data-trip-chat]')) playTripChat(chat);
+</script>
+
+<style>
+  .chat-figure {
+    display: grid;
+    gap: 14px;
+    margin-inline: auto;
+  }
+  .shell {
+    overflow: hidden;
+  }
+  .top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 12px 16px;
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .top b {
+    font-weight: 850;
+    font-stretch: 64%;
+    word-spacing: var(--caps-space);
+    font-size: 1.35rem;
+    text-transform: uppercase;
+    min-width: 0;
+  }
+  .top .example-label {
+    margin-left: auto;
+  }
+  .toggle[hidden] {
+    display: none;
+  }
+  .toggle:hover {
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .toggle :global(.when-paused),
+  .shell.paused .toggle :global(.when-playing) {
+    display: none;
+  }
+  .shell.paused .toggle :global(.when-paused) {
+    display: block;
+  }
+  .cols {
+    display: grid;
+  }
+  @media (min-width: 860px) {
+    .cols {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    }
+    .plan {
+      border-left: var(--rule) solid var(--ink);
+    }
+  }
+  @media (max-width: 859px) {
+    .plan {
+      border-top: var(--rule) solid var(--ink);
+    }
+  }
+  .col-title {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 16px;
+    padding: 16px 0 10px;
+    border-bottom: var(--rule) solid var(--ink);
+    font-weight: 850;
+    font-stretch: 62%;
+    word-spacing: var(--caps-space);
+    font-size: clamp(2rem, 4vw, 3rem);
+    line-height: 0.9;
+    text-transform: uppercase;
+  }
+  .n {
+    font-size: 13px;
+    font-weight: 750;
+    font-stretch: 84%;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+  }
+  .chat {
+    display: flex;
+    flex-direction: column;
+  }
+  .stream-wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+  }
+  .crop .stream-wrap {
+    flex: 1 1 380px;
+    min-height: 380px;
+  }
+  .stream {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+    padding: 14px 16px;
+  }
+  .crop .stream {
+    padding-top: 38px;
+  }
+  .earlier {
+    display: none;
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 2;
+    height: 28px;
+    align-items: center;
+    padding-inline: 16px;
+    background: var(--paper-raised);
+    border-bottom: 1.5px solid var(--ink-line);
+    color: var(--ink-soft);
+    font-size: 12px;
+    font-weight: 800;
+    font-stretch: 70%;
+    word-spacing: var(--caps-space);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .crop .earlier {
+    display: flex;
+  }
+  .hint {
+    padding: 10px 16px;
+    border-top: 1.5px solid var(--ink-line);
+  }
+  .plan {
+    display: flex;
+    flex-direction: column;
+  }
+  .plan ol {
+    flex: 1;
+    display: grid;
+    align-content: start;
+    padding: 6px 16px;
+  }
+  .foot {
+    padding: 10px 16px;
+    border-top: 1.5px solid var(--ink-line);
+  }
+  .row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: 10px;
+    min-height: 64px;
+    padding: 8px 10px;
+    align-items: center;
+    border-bottom: 1.5px solid var(--ink-line);
+    font-weight: 700;
+    font-size: 1.1rem;
+    transition:
+      background-color 0.25s var(--ease),
+      color 0.25s var(--ease),
+      border-color 0.25s var(--ease);
+  }
+  .row .time {
+    color: inherit;
+    font-size: 15px;
+  }
+  .row.hot {
+    background: var(--press);
+    color: var(--press-ink);
+    border-bottom-color: var(--press);
+  }
+  .row::after {
+    content: attr(data-copy-label) / '';
+    opacity: 0;
+    transition: opacity 0.2s var(--ease);
+    position: absolute;
+    right: 10px;
+    top: 5px;
+    font-size: 11px;
+    font-weight: 800;
+    font-stretch: 80%;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--press-ink);
+  }
+  .row.hot {
+    transition-duration: 0.4s;
+    transition-delay: 0.25s;
+  }
+  .row.hot::after {
+    opacity: 1;
+    transition-duration: 0.4s;
+    transition-delay: 0.25s;
+  }
+  .row .what {
+    padding-top: 12px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .row,
+    .row.hot,
+    .row::after,
+    .row.hot::after {
+      transition: none;
+    }
+  }
+</style>
+
+<style is:global>
+  .fc-msg {
+    display: grid;
+    grid-template-columns: 26px minmax(0, 1fr);
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-bottom-style: dashed;
+    outline: 2px solid transparent;
+    outline-offset: 1px;
+    font-size: 15px;
+    line-height: 1.4;
+    transition:
+      background-color 0.3s var(--ease),
+      outline-color 0.3s var(--ease);
+  }
+  .fc-msg.is-leaving {
+    position: absolute;
+    margin: 0;
+    pointer-events: none;
+  }
+  .fc-msg:hover,
+  .fc-msg:focus-within {
+    background: var(--paper-raised);
+    outline-color: var(--ink);
+  }
+  .fc-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .fc-head b {
+    font-weight: 850;
+    font-stretch: 80%;
+    font-size: 14px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .fc-text {
+    margin-top: 2px;
+    font-weight: 600;
+    font-size: 16px;
+  }
+  .fc-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .fc-reactions {
+    display: contents;
+  }
+  .fc-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 28px;
+    padding: 0 8px;
+    border: 1.5px solid var(--ink);
+    background: var(--paper-raised);
+    font-size: 12.5px;
+  }
+  .fc-chip[data-mine] {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .fc-emoji {
+    display: grid;
+  }
+  .fc-emoji svg {
+    width: 14px;
+    height: 14px;
+  }
+  .fc-n {
+    font-weight: 800;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  .fc-btn {
+    position: relative;
+    min-height: 28px;
+    padding: 0 8px;
+    border: 1.5px solid transparent;
+    background: transparent;
+    color: var(--ink);
+    font: 750 12.5px/1 var(--font-sans);
+    font-stretch: 86%;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+  .fc-btn::after {
+    content: '';
+    position: absolute;
+    inset: -8px -4px;
+  }
+  .fc-btn[hidden] {
+    display: none;
+  }
+  .fc-btn:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .fc-btn[aria-pressed='true'] {
+    border-color: var(--ink);
+  }
+  .fc-actions > .fc-reactions:empty + .fc-btn {
+    margin-left: -9px;
+  }
+  .fc-thread {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: grid-template-rows 0.5s var(--ease);
+  }
+  .fc-msg.folded .fc-thread,
+  .fc-msg[data-replies='0'] .fc-thread {
+    grid-template-rows: 0fr;
+  }
+  .fc-thread-inner {
+    overflow: hidden;
+    min-height: 0;
+    display: grid;
+    gap: 0;
+  }
+  .fc-reply:first-child {
+    margin-top: 8px;
+  }
+  .fc-reply {
+    padding: 3px 0 3px 12px;
+    border-left: 1px solid var(--ink);
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 10px;
+    font-size: 14.5px;
+  }
+  .fc-reply b {
+    font-weight: 800;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fc-thread {
+      transition-duration: 0s;
+    }
+  }
+</style>

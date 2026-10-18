@@ -1,0 +1,145 @@
+---
+import LegalDocument from '@/components/legal/legal-document.astro';
+import PageIntro from '@/components/page-intro.astro';
+import SubpageLayout from '@/layouts/subpage-layout.astro';
+
+const toc = [
+  { id: 'using-groam', title: 'Using Groam' },
+  { id: 'your-account', title: 'Your account' },
+  { id: 'your-content', title: 'Your content' },
+  { id: 'groups', title: 'Groups and shared trips' },
+  { id: 'ai', title: 'AI agents' },
+  { id: 'travel', title: 'Travel and bookings' },
+  { id: 'pricing', title: 'Pricing' },
+  { id: 'acceptable-use', title: 'Acceptable use' },
+  { id: 'availability', title: 'Availability' },
+  { id: 'ending', title: 'Ending use' },
+  { id: 'changes', title: 'Changes to these terms' }
+];
+---
+
+<SubpageLayout
+  title="Terms"
+  description="The agreement between you and Groam when you use it to plan trips."
+>
+  <PageIntro
+    title="Terms"
+    lede="The agreement between you and Groam when you use it to plan trips with your group."
+  />
+  <LegalDocument
+    draftNote="These terms are not ready to accept yet. The contracting entity, contact details, governing law, age rules, payment and refund terms, suspension process, and liability terms still need owner and legal review."
+    toc={toc}
+    updated="18 October 2026"
+  >
+    <section id="using-groam">
+      <h2>Using Groam</h2>
+      <p>
+        Groam is a place to plan trips with a group: a shared itinerary, ideas, issues, and
+        conversations. These terms are a working draft and do not yet identify the party offering
+        the service, so they should not be presented as the final agreement at sign-up.
+      </p>
+    </section>
+
+    <section id="your-account">
+      <h2>Your account</h2>
+      <p>
+        Give accurate account information, keep your sign-in details safe, and do not share an
+        account. You are responsible for activity you authorize through your account. The final
+        terms need a real contact route for reporting suspected unauthorized access.
+      </p>
+    </section>
+
+    <section id="your-content">
+      <h2>Your content</h2>
+      <p>
+        You keep any rights you have in trips, ideas, issues, messages, and files you add. You give
+        the service operator permission to host, copy, process, and display that content only as
+        needed to operate the features you choose, share it with the relevant group, protect the
+        service, and follow the law. You confirm that you have the rights and permissions needed to
+        add and share that content.
+      </p>
+    </section>
+
+    <section id="groups">
+      <h2>Groups and shared trips</h2>
+      <p>
+        Trips live in groups. A group member can access the group’s trips even if they are not going
+        on a particular trip. Members can suggest changes and discuss trips, while organizers have
+        additional controls. Activity may be recorded with its author. Group roles and access can
+        change, so review the group roster and think about what you share.
+      </p>
+    </section>
+
+    <section id="ai">
+      <h2>AI agents</h2>
+      <p>
+        AI features use your connected ChatGPT access and may send your prompt and relevant trip
+        context to OpenAI. OpenAI’s terms also apply to that connection. AI output can be wrong,
+        incomplete, out of date, or unsuitable. Review an agent’s sources and proposed changes
+        before applying them. Do not rely on AI output as professional, safety, immigration,
+        medical, legal, or financial advice.
+      </p>
+    </section>
+
+    <section id="travel">
+      <h2>Travel and bookings</h2>
+      <p>
+        Groam helps a group organize information. It is not a travel agency and does not make or
+        guarantee bookings. Prices, opening hours, schedules, availability, entry rules, visa and
+        health requirements, and safety conditions can change. Check important details with the
+        airline, hotel, venue, public authority, or other provider before paying or travelling.
+        Your contracts with those providers are separate from your use of Groam.
+      </p>
+    </section>
+
+    <section id="pricing">
+      <h2>Pricing</h2>
+      <p>
+        Planning on your own is free. Inviting travelers will cost €1 per invited traveler,
+        for each trip they join, paid by the traveler or covered by the person who invites them.
+        Paid invites are not live yet and nobody is charged today. Before payments start, the final
+        terms must state when a charge is due, who takes payment, taxes, receipts, failed payments,
+        cancellation and refund rules, and any consumer withdrawal rights.
+      </p>
+    </section>
+
+    <section id="acceptable-use">
+      <h2>Acceptable use</h2>
+      <ul>
+        <li>Do not break the law or use Groam to harm other people.</li>
+        <li>Do not try to get into accounts, trips, or systems that are not yours.</li>
+        <li>Do not disrupt the service or misuse it at a scale that affects others.</li>
+      </ul>
+    </section>
+
+    <section id="availability">
+      <h2>Availability</h2>
+      <p>
+        Groam may change, pause, or experience errors. Keep copies of information you need while
+        travelling. This draft deliberately does not set liability exclusions or caps: those terms
+        require the operator’s identity, governing law, consumer context, and legal review, and
+        nothing here limits rights that cannot legally be limited.
+      </p>
+    </section>
+
+    <section id="ending">
+      <h2>Ending use</h2>
+      <p>
+        You can stop using Groam and leave groups using the controls the product provides. Trips can
+        currently be archived rather than deleted. The final terms must explain account closure,
+        content export and deletion, when access may be suspended, notice and appeal, and what terms
+        continue after an account closes.
+      </p>
+    </section>
+
+    <section id="changes">
+      <h2>Changes to these terms</h2>
+      <p>
+        The date at the top will change when this draft changes. The final terms must explain how
+        material changes will be communicated and when they take effect. Continued use alone will
+        not be treated as acceptance where the law or the nature of the change requires a clearer
+        form of agreement.
+      </p>
+    </section>
+  </LegalDocument>
+</SubpageLayout>

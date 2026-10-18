@@ -1,0 +1,235 @@
+---
+// A bill for a trip that never arrives: a pin walks a route that bends back on itself. The
+// ticket's drawing is decorative and hidden from assistive tech; the pause button is not.
+---
+
+<div class="lost">
+  <div class="surface ticket">
+    <div class="stub">
+      <p class="dest">Somewhere on Groam</p>
+      <p class="time-label">Arrival: not scheduled</p>
+    </div>
+    <div class="stage" data-lost-stage data-running="true" aria-hidden="true">
+      <div class="inner" data-lost-inner>
+        <svg viewBox="0 0 640 260" width="640" height="260" focusable="false">
+          <path class="route" d="M80 130 C80 40 240 40 320 130 S560 220 560 130 C560 40 400 40 320 130 S80 220 80 130 Z" />
+          <circle class="stop" cx="80" cy="130" r="7" />
+          <circle class="stop" cx="560" cy="130" r="7" />
+          <circle class="stop" cx="320" cy="130" r="7" />
+        </svg>
+        <div class="walker">
+          <svg viewBox="0 0 64 64" width="44" height="44">
+            <path
+              d="M26 47.5C21.6 42 15 34.3 15 25.5A11 11 0 1 1 37 25.5C37 34.3 30.4 42 26 47.5ZM22 25.5A4 4 0 1 0 30 25.5A4 4 0 1 0 22 25.5Z"
+              fill-rule="evenodd"></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <ul class="log" aria-hidden="true">
+        <li>Searching for this page</li>
+        <li>Checking day 3</li>
+        <li>Checking the ideas</li>
+        <li>Still looking</li>
+      </ul>
+      <button class="pause" type="button" data-lost-pause data-paused="false">
+        <span class="icon when-playing" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6v12M15 6v12" stroke-width="2" /></svg>
+        </span>
+        <span class="icon when-paused" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l10-6.5-10-6.5Z" /></svg>
+        </span>
+        <span data-lost-label>Pause animation</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .lost {
+    width: 100%;
+  }
+  .ticket {
+    width: 100%;
+  }
+  .stub {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: 6px 16px;
+    padding: 14px 20px 12px;
+    background: var(--ink);
+    color: var(--paper);
+    border-bottom: 3px dashed var(--paper);
+  }
+  .dest {
+    font-weight: 850;
+    font-stretch: 62%;
+    font-size: clamp(2rem, 6vw, 3.6rem);
+    line-height: 0.9;
+    text-transform: uppercase;
+    word-spacing: var(--caps-space);
+  }
+  .time-label {
+    font-weight: 750;
+    font-stretch: 84%;
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    word-spacing: var(--caps-space);
+  }
+  .stage {
+    position: relative;
+    width: calc(100% - 2 * clamp(12px, 3vw, 32px));
+    max-width: 640px;
+    margin: clamp(20px, 4vw, 40px) auto;
+    aspect-ratio: 640 / 260;
+  }
+  .inner {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 640px;
+    height: 260px;
+    transform-origin: 0 0;
+  }
+  .inner > svg {
+    display: block;
+    overflow: visible;
+  }
+  .route {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 4;
+    stroke-linecap: butt;
+    stroke-dasharray: 14 10;
+    animation: route-flow 1.6s linear infinite;
+  }
+  .stop {
+    fill: var(--paper-raised);
+    stroke: var(--ink);
+    stroke-width: 3;
+  }
+  .walker {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 44px;
+    height: 44px;
+    margin: -40px 0 0 -22px;
+    color: var(--bill-text);
+    offset-path: path('M80 130 C80 40 240 40 320 130 S560 220 560 130 C560 40 400 40 320 130 S80 220 80 130 Z');
+    offset-rotate: 0deg;
+    animation: walk 14s linear infinite;
+    transform-origin: 0 0;
+  }
+  .walker svg {
+    display: block;
+    fill: currentColor;
+  }
+  .foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 20px;
+    border-top: var(--rule) solid var(--ink);
+  }
+  .log {
+    display: grid;
+    list-style: none;
+    font-weight: 800;
+    font-stretch: 78%;
+    font-size: 1.2rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    word-spacing: var(--caps-space);
+  }
+  .log li {
+    grid-area: 1 / 1;
+    opacity: 0;
+    animation: log-line 8s linear infinite;
+  }
+  /* Starts inside the hold, so resuming after a pause never drops the line to zero. */
+  .log li:nth-child(1) { animation-delay: -0.8s; }
+  .log li:nth-child(2) { animation-delay: 2s; }
+  .log li:nth-child(3) { animation-delay: 4s; }
+  .log li:nth-child(4) { animation-delay: 6s; }
+  .pause {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 14px;
+    border: 2px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    font-weight: 750;
+    font-stretch: 84%;
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    word-spacing: var(--caps-space);
+    cursor: pointer;
+  }
+  .pause:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .icon svg {
+    width: 14px;
+    height: 14px;
+    display: block;
+  }
+  .when-paused,
+  .pause[data-paused='true'] .when-playing {
+    display: none;
+  }
+  .pause[data-paused='true'] .when-paused {
+    display: block;
+  }
+  .ticket:has(.stage[data-running='false']) :is(.route, .walker) {
+    animation-play-state: paused;
+  }
+  /* Paused: the running sentence fades out and the first line fades in, so nothing freezes half-faded. */
+  .log li {
+    transition: opacity 0.35s var(--ease);
+  }
+  .ticket:has(.stage[data-running='false']) .log li {
+    animation: none;
+    opacity: 0;
+  }
+  .ticket:has(.stage[data-running='false']) .log li:first-child {
+    opacity: 1;
+  }
+  @keyframes route-flow {
+    to { stroke-dashoffset: -24; }
+  }
+  @keyframes walk {
+    from { offset-distance: 0%; }
+    to { offset-distance: 100%; }
+  }
+  @keyframes log-line {
+    0% { opacity: 0; transform: translateY(8px); }
+    6%, 19% { opacity: 1; transform: none; }
+    25%, 100% { opacity: 0; transform: translateY(-8px); }
+  }
+  /* Rest state: the pin stands on the first stop, the first log line is readable. */
+  @media (prefers-reduced-motion: reduce) {
+    .pause {
+      display: none;
+    }
+    .route,
+    .walker,
+    .log li {
+      animation: none;
+    }
+    .walker {
+      offset-distance: 0%;
+    }
+    .log li:first-child {
+      opacity: 1;
+    }
+  }
+</style>

@@ -1,0 +1,16 @@
+{
+  "extends": "@groam/typescript-config/base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM"],
+    // Bun installs vitest twice (vite-plus and the browser matchers each get a copy), which splits
+    // the `expect.element` types; resolving every `vitest` import to one copy joins them again.
+    "paths": {
+      "#ai/*": ["../../packages/ai/src/*"],
+      "#src/*": ["./src/*"],
+      "vitest": ["./node_modules/vitest"],
+      "vitest/internal/browser": ["./node_modules/vitest/dist/browser.d.ts"]
+    },
+    "types": ["node"]
+  },
+  "include": ["src", "vite.config.ts"]
+}

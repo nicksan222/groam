@@ -1,0 +1,100 @@
+---
+import { env } from '@groam/env/landing';
+import ClosingCall from '@/components/closing-call.astro';
+import Icon from '@/components/icon.astro';
+import PageIntro from '@/components/page-intro.astro';
+import PageDemo from '@/components/page-demo.astro';
+import PageSection from '@/components/page-section.astro';
+import { type Feature, features, featurePath } from '@/content/site';
+import SubpageLayout from '@/layouts/subpage-layout.astro';
+
+// Shared frame for every /features/<slug> page: intro from the site map, the page's
+// signature demo, its own sections, then a link on to the next feature and the close.
+type Props = { slug: Feature['slug'] };
+const feature = features.find((item) => item.slug === Astro.props.slug);
+if (!feature) throw new Error(`Unknown feature: ${Astro.props.slug}`);
+const index = features.indexOf(feature);
+const next = features[(index + 1) % features.length] ?? feature;
+---
+
+<SubpageLayout title={feature.name} description={feature.lede}>
+  <PageIntro title={feature.headline} lede={feature.lede} tail>
+    <div class="cta">
+      <a class="btn btn-primary btn-lg" href={env.appUrl}>Start a trip</a>
+      <a class="btn btn-outline btn-lg" href="/pricing/">See pricing</a>
+    </div>
+  </PageIntro>
+
+  <PageDemo>
+    <slot name="demo" />
+  </PageDemo>
+
+  <slot />
+
+  <PageSection>
+  <nav class="pager" aria-label="More features">
+    <a class="next" href={featurePath(next.slug)} aria-label={`Next: ${next.name}`} aria-describedby="next-summary">
+      <span class="label">Next</span>
+      <span class="name">
+        {next.name}
+        <Icon name="arrow-right" class="go" />
+      </span>
+      <span class="summary" id="next-summary">{next.summary}</span>
+    </a>
+  </nav>
+  </PageSection>
+
+  <ClosingCall />
+</SubpageLayout>
+
+<style>
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .pager a {
+    display: grid;
+    gap: 14px;
+    padding-top: 20px;
+    border-top: var(--rule) solid var(--ink);
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .label {
+    font-weight: 800;
+    font-stretch: 84%;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .name {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25em;
+    font-weight: 850;
+    font-stretch: 62%;
+    word-spacing: var(--caps-space);
+    font-size: clamp(2.4rem, 10vw, 9rem);
+    line-height: 0.86;
+    text-transform: uppercase;
+  }
+  .pager :global(.go) {
+    width: 0.7em;
+    height: 0.7em;
+    flex: none;
+    stroke-width: 2.4;
+    transition: transform 0.45s var(--ease);
+  }
+  .next:hover :global(.go) {
+    transform: translateX(0.2em);
+  }
+  .next:hover .name {
+    color: var(--bill-text);
+  }
+  .summary {
+    max-width: 44ch;
+    color: var(--ink-soft);
+    font-size: 1.1rem;
+  }
+</style>

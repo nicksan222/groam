@@ -1,0 +1,20 @@
+---
+import Icon from '@/components/icon.astro';
+import { type Author, authors } from '@/content/trip-activity';
+
+type Props = { author: Author };
+const { author } = Astro.props;
+const { agent, initial } = authors[author];
+---
+
+{
+  agent ? (
+    <span class="avatar avatar-agent">
+      <Icon name="agent" />
+    </span>
+  ) : (
+    <span class:list={['avatar', `avatar-${author}`]} aria-hidden="true">
+      {initial}
+    </span>
+  )
+}

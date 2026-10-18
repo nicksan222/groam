@@ -1,0 +1,24 @@
+name: 🚀 Deploy Production
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Checks
+    uses: ./.github/workflows/test-reusable.yml
+
+  deploy-production:
+    name: 🚀 Deploy production
+    needs: [test]
+    if: >-
+      github.repository == 'nicksan222/groam' &&
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/main' &&
+      vars.CONVEX_PRODUCTION_ENABLED == 'true'
+    uses: ./.github/workflows/release-production.yml
+    secrets:
+      CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}

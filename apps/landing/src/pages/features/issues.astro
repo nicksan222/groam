@@ -1,0 +1,15 @@
+---
+import ExampleJourney from '@/components/example-journey.astro';
+import IssueBoard from '@/components/feature-issues/issue-board.astro';
+import IssueFlow from '@/components/feature-issues/issue-flow.astro';
+import IssueSections from '@/components/feature-issues/issue-sections.astro';
+import FeatureLayout from '@/layouts/feature-layout.astro';
+import { exampleJourneys } from '@/content/example-journeys';
+---
+
+<FeatureLayout slug="issues">
+  <IssueBoard slot="demo" />
+  <IssueFlow />
+  <ExampleJourney journey={exampleJourneys.issues} />
+  <IssueSections />
+</FeatureLayout>

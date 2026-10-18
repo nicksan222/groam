@@ -1,0 +1,196 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/google-sans-flex';
+@import '@fontsource/google-sans-code';
+@import 'tw-animate-css';
+@import './tokens.css';
+@import './base.css';
+
+@property --scroll-fade-b {
+  syntax: '<length-percentage>';
+  inherits: false;
+  initial-value: 0px;
+}
+@property --scroll-fade-s {
+  syntax: '<length-percentage>';
+  inherits: false;
+  initial-value: 0px;
+}
+@property --scroll-fade-e {
+  syntax: '<length-percentage>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@theme inline {
+  @keyframes scroll-fade-reveal-b {
+    from {
+      --scroll-fade-b: var(--scroll-fade-size, min(12%, calc(var(--spacing) * 10)));
+    }
+    to {
+      --scroll-fade-b: 0px;
+    }
+  }
+  @keyframes scroll-fade-reveal-s {
+    from {
+      --scroll-fade-s: 0px;
+    }
+    to {
+      --scroll-fade-s: var(--scroll-fade-size, min(12%, calc(var(--spacing) * 10)));
+    }
+  }
+  @keyframes scroll-fade-reveal-e {
+    from {
+      --scroll-fade-e: var(--scroll-fade-size, min(12%, calc(var(--spacing) * 10)));
+    }
+    to {
+      --scroll-fade-e: 0px;
+    }
+  }
+}
+
+@utility scroll-fade-b {
+  mask-image: linear-gradient(
+    to bottom,
+    black 0,
+    black calc(100% - var(--scroll-fade-b, 0px)),
+    transparent 100%
+  );
+  mask-repeat: no-repeat;
+  @supports (animation-timeline: scroll()) {
+    animation: scroll-fade-reveal-b 1ms ease-in-out;
+    animation-timeline: scroll(self y);
+    animation-range: calc(100% - var(--scroll-fade-reveal, calc(var(--spacing) * 24))) 100%;
+    animation-fill-mode: both;
+  }
+  @supports not (animation-timeline: scroll()) {
+    --scroll-fade-b: var(--scroll-fade-size, min(12%, calc(var(--spacing) * 10)));
+  }
+}
+
+@utility scroll-fade-x {
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    black var(--scroll-fade-s, 0px),
+    black calc(100% - var(--scroll-fade-e, 0px)),
+    transparent 100%
+  );
+  mask-repeat: no-repeat;
+  &:where([dir='rtl'], [dir='rtl'] *) {
+    mask-image: linear-gradient(
+      to left,
+      transparent 0,
+      black var(--scroll-fade-s, 0px),
+      black calc(100% - var(--scroll-fade-e, 0px)),
+      transparent 100%
+    );
+  }
+  @supports (animation-timeline: scroll()) {
+    animation:
+      scroll-fade-reveal-s 1ms ease-in-out,
+      scroll-fade-reveal-e 1ms ease-in-out;
+    animation-timeline: scroll(self inline), scroll(self inline);
+    animation-range:
+      0 var(--scroll-fade-reveal, calc(var(--spacing) * 24)),
+      calc(100% - var(--scroll-fade-reveal, calc(var(--spacing) * 24))) 100%;
+    animation-fill-mode: both;
+  }
+  @supports not (animation-timeline: scroll()) {
+    --scroll-fade-s: var(--scroll-fade-size, min(12%, calc(var(--spacing) * 10)));
+    --scroll-fade-e: var(--scroll-fade-size, min(12%, calc(var(--spacing) * 10)));
+  }
+}
+
+@source '../../..';
+/* Streamdown renders AI markdown with Tailwind classes shipped in its dist. */
+@source '../../node_modules/streamdown/dist/*.js';
+
+@custom-variant dark (&:is(.dark *));
+
+/* Halo-style text shimmer for assistant “thinking” / in-progress labels. */
+@utility shimmer {
+  --shimmer-angle: 20deg;
+  --shimmer-spread: calc(3ch + 40px);
+  --shimmer-base: currentColor;
+  --shimmer-highlight: oklch(from currentColor l c h / calc(alpha * 0.2));
+  background-image: linear-gradient(
+    calc(90deg + var(--shimmer-angle)),
+    var(--shimmer-base) calc(50% - var(--shimmer-spread)),
+    color-mix(in oklch, var(--shimmer-highlight), var(--shimmer-base) 50%)
+      calc(50% - var(--shimmer-spread) * 0.5),
+    var(--shimmer-highlight) 50%,
+    color-mix(in oklch, var(--shimmer-highlight), var(--shimmer-base) 50%)
+      calc(50% + var(--shimmer-spread) * 0.5),
+    var(--shimmer-base) calc(50% + var(--shimmer-spread))
+  );
+  background-repeat: no-repeat;
+  background-size: calc(200% + var(--shimmer-spread) * 2) 100%;
+  background-position: 0 0;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 2s linear infinite;
+  @variant dark {
+    --shimmer-highlight: oklch(from currentColor max(0.8, calc(l + 0.4)) c h / calc(alpha + 0.4));
+  }
+  &:where([dir='rtl'], [dir='rtl'] *) {
+    animation-direction: reverse;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    background-image: none;
+    -webkit-text-fill-color: currentColor;
+  }
+}
+
+/*
+ * Tiptap rich text: placeholder plus list, quote, and code shapes Tailwind's reset removes.
+ * `rich-text-placeholder` and `rich-text-code` are classes the editor's extensions set.
+ */
+@layer components {
+  .rich-text-placeholder::before {
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+    color: var(--color-muted-foreground);
+  }
+  .rich-text > :not(:first-child) {
+    margin-top: 0.5em;
+  }
+  .rich-text ul {
+    list-style: disc;
+    padding-left: 1.25rem;
+  }
+  .rich-text ol {
+    list-style: decimal;
+    padding-left: 1.25rem;
+  }
+  .rich-text h2,
+  .rich-text h3 {
+    font-weight: 600;
+  }
+  .rich-text a {
+    color: var(--color-primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .rich-text blockquote {
+    border-left: 1px solid var(--color-border);
+    padding-left: 0.75rem;
+    color: var(--color-muted-foreground);
+  }
+  .rich-text-code {
+    border-radius: 0.25rem;
+    background: var(--color-muted);
+    padding: 0.05rem 0.3rem;
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+  }
+  .rich-text pre {
+    border-radius: 0.5rem;
+    background: var(--color-muted);
+    padding: 0.5rem 0.75rem;
+    overflow-x: auto;
+  }
+}

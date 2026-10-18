@@ -1,0 +1,45 @@
+---
+import ActivityLog from '@/components/activity-log.astro';
+import AuthorAvatar from '@/components/author-avatar.astro';
+import PageSection from '@/components/page-section.astro';
+import SectionHeading from '@/components/section-heading.astro';
+---
+
+<PageSection tone="bill" layout="split" class="record">
+    <div class="copy">
+      <SectionHeading layout="stack" title="People and agents write on the same plan" body="Every idea, review, and fix lands on the trip with who did it and when. Agents work on the same record as the group, and you can always tell which is which." />
+      <dl class="key">
+        <div><dt><span class="avatar avatar-maya" aria-hidden="true">M</span></dt><dd>A traveler, in their own color</dd></div>
+        <div><dt><AuthorAvatar author="itinerary-agent" /></dt><dd>An agent, always in sky</dd></div>
+      </dl>
+    </div>
+    <ActivityLog />
+</PageSection>
+
+<style>
+  .copy {
+    position: sticky;
+    top: 32px;
+  }
+  .key {
+    display: grid;
+    gap: 12px;
+    margin: 32px 0 0;
+    padding-top: 18px;
+    border-top: var(--rule) solid var(--bill-ink);
+  }
+  .key div {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .key dd {
+    margin: 0;
+    font-weight: 600;
+  }
+  @media (max-width: 900px) {
+    .copy {
+      position: static;
+    }
+  }
+</style>

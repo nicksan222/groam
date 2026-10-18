@@ -1,0 +1,63 @@
+---
+import Icon from '@/components/icon.astro';
+import PageSection from '@/components/page-section.astro';
+
+interface Note {
+  title: string;
+  body: string;
+  agent?: boolean;
+}
+
+interface Props {
+  items: Note[];
+  ariaLabel: string;
+  reserveAgentSpace?: boolean;
+}
+
+const { items, ariaLabel, reserveAgentSpace = false } = Astro.props;
+---
+
+<PageSection layout="split" aria-label={ariaLabel}>
+    {
+      items.map((item) => (
+        <div class="item">
+          {item.agent && (
+            <span class="avatar avatar-agent badge">
+              <Icon name="agent" />
+            </span>
+          )}
+          <h2 class:list={['section-title', { 'with-agent-space': reserveAgentSpace || item.agent }]}>{item.title}</h2>
+          <p class="section-lede">{item.body}</p>
+        </div>
+      ))
+    }
+</PageSection>
+
+<style>
+  .item {
+    position: relative;
+    padding-top: 24px;
+    border-top: var(--rule) solid var(--ink);
+  }
+  .badge {
+    position: absolute;
+    top: 24px;
+    right: 0;
+    width: 44px;
+    height: 44px;
+  }
+  .item h2 {
+    max-width: none;
+    font-size: clamp(2.4rem, 5vw, 4.4rem);
+  }
+  .item h2.with-agent-space {
+    padding-right: 60px;
+  }
+  .badge :global(svg) {
+    width: 24px;
+    height: 24px;
+  }
+  .item p {
+    color: var(--ink-soft);
+  }
+</style>

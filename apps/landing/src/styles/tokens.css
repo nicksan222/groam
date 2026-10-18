@@ -1,0 +1,109 @@
+/*
+ * Landing design tokens: the tour bill world. Cobalt bill fields, poster paper, ink, and the
+ * yellow paste-over strip that marks an idea. Raw colours live only in this file; every other
+ * landing style reads these roles. The shared app tokens are remapped here so components that
+ * still read them (--primary, --card, --border) print in the bill world too.
+ */
+:root {
+  --bill: #1f45d4;
+  --bill-deep: #1636a8;
+  --bill-ink: #f4f4ef;
+  --bill-soft: color-mix(in srgb, var(--bill-ink) 84%, var(--bill));
+  --bill-line: color-mix(in srgb, var(--bill-ink) 34%, var(--bill));
+  /* Cobalt used as text or a figure on paper; lifted at night so it holds contrast on dark paper. */
+  --bill-text: var(--bill);
+
+  --paper: #f1f1ec;
+  --paper-raised: #fafaf7;
+  --ink: #101318;
+  --ink-soft: #474c58;
+  --ink-line: color-mix(in srgb, var(--ink) 16%, var(--paper));
+
+  /* The ink bill that closes a page and carries the ticker: dark by day and by night. */
+  --press: var(--ink);
+  --press-ink: var(--paper);
+
+  --strip: #ffd23f;
+  --strip-deep: #f2b705;
+  --strip-ink: #16130a;
+
+  --agent: #94d6ff;
+  --agent-ink: #0a3954;
+  --done: #127a52;
+  --gone: #b3263a;
+  --gone-soft: color-mix(in srgb, var(--gone) 12%, var(--paper-raised));
+
+  --tint-maya: #ff9ab8;
+  --tint-jonas: #79d394;
+  --tint-priya: #bda4ff;
+  --tint-sam: #ffb276;
+  --tint-ink: #16130a;
+
+  --lift: 0 14px 22px -12px color-mix(in srgb, var(--ink) 55%, transparent);
+
+  /* Shared app roles, remapped onto the bill world. */
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--paper-raised);
+  --card-foreground: var(--ink);
+  --popover: var(--paper-raised);
+  --popover-foreground: var(--ink);
+  --canvas: color-mix(in srgb, var(--ink) 5%, var(--paper));
+  --muted: color-mix(in srgb, var(--ink) 7%, var(--paper));
+  --muted-foreground: var(--ink-soft);
+  --border: var(--ink-line);
+  --input: color-mix(in srgb, var(--ink) 40%, var(--paper));
+  --primary: var(--bill);
+  --primary-hover: var(--bill-deep);
+  --primary-foreground: var(--bill-ink);
+  --ring: var(--ink);
+  --success: var(--done);
+  --success-foreground: var(--done);
+  --avatar-sky: var(--agent);
+  --avatar-sky-foreground: var(--agent-ink);
+  --avatar-pink: var(--tint-maya);
+  --avatar-pink-foreground: var(--tint-ink);
+  --avatar-green: var(--tint-jonas);
+  --avatar-green-foreground: var(--tint-ink);
+  --avatar-mauve: var(--tint-priya);
+  --avatar-mauve-foreground: var(--tint-ink);
+  --avatar-peach: var(--tint-sam);
+  --avatar-peach-foreground: var(--tint-ink);
+  --radius: 0px;
+  --shadow-card: none;
+  --shadow-xs: none;
+  --shadow-lg: var(--lift);
+  --font-sans: 'Archivo Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Archivo Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Archivo Variable', ui-sans-serif, system-ui, sans-serif;
+  --tracking-normal: 0em;
+
+  color-scheme: light;
+}
+
+/* Night: the same bill under street light. Paper goes dark, the bill and the strip stay printed. */
+.dark {
+  --bill: #2045cc;
+  --bill-deep: #17359f;
+  --bill-ink: #f4f4ef;
+  --bill-text: #8ea6ff;
+
+  --paper: #0f1116;
+  --paper-raised: #171a21;
+  --ink: #ecede7;
+  --ink-soft: #a6acb9;
+  --ink-line: color-mix(in srgb, var(--ink) 18%, var(--paper));
+
+  --press: #050608;
+  --press-ink: #ecede7;
+
+  --agent: #7cc9f5;
+  --agent-ink: #072a3f;
+  --done: #5cd39b;
+  --gone: #ff7a8c;
+  --gone-soft: color-mix(in srgb, var(--gone) 14%, var(--paper-raised));
+
+  --lift: 0 14px 24px -12px color-mix(in srgb, #000000 80%, transparent);
+
+  color-scheme: dark;
+}

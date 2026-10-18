@@ -1,0 +1,13 @@
+---
+import ExampleJourney from '@/components/example-journey.astro';
+import IdeasDemo from '@/components/feature-ideas/ideas-demo.astro';
+import IdeasSections from '@/components/feature-ideas/ideas-sections.astro';
+import { exampleJourneys } from '@/content/example-journeys';
+import FeatureLayout from '@/layouts/feature-layout.astro';
+---
+
+<FeatureLayout slug="ideas">
+  <IdeasDemo slot="demo" />
+  <ExampleJourney journey={exampleJourneys.ideas} />
+  <IdeasSections />
+</FeatureLayout>

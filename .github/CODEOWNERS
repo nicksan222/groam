@@ -1,0 +1,5 @@
+# Default review ownership for the repository.
+* @nicksan222
+
+# Community health and automation changes require maintainer review.
+/.github/ @nicksan222

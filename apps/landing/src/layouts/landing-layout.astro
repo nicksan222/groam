@@ -1,0 +1,113 @@
+---
+import { env } from '@groam/env/landing';
+import { brandIdentity } from '@groam/brand/identity';
+import fontUrl from '@fontsource-variable/archivo/files/archivo-latin-wdth-normal.woff2?url';
+import LocalizedContent from '@/components/localized-content.astro';
+import { translate } from '@/i18n/catalog';
+import { localeFromPath, localizedPath, withoutLocale, locales } from '@/i18n/locale';
+
+import '@/styles/landing.css';
+
+type Props = { title: string; description: string };
+const { title, description } = Astro.props;
+const locale = localeFromPath(Astro.url.pathname);
+const pageTitle = translate(locale, title);
+const pageDescription = translate(locale, description);
+const basePath = withoutLocale(Astro.url.pathname);
+const path = Astro.url.pathname.endsWith('/') ? Astro.url.pathname : `${Astro.url.pathname}/`;
+const isNotFound = basePath.startsWith('/404');
+const canonical = new URL(path, env.siteUrl).href;
+// public/og/<slug>.png: one card per page; legal and 404 pages share the home card.
+const slug =
+  basePath === '/'
+    ? 'home'
+    : basePath === '/features/'
+      ? 'features'
+      : basePath.replace(/^\/(features\/)?|\/$/gu, '');
+const ogSlug = ['home', 'features', 'pricing', 'privacy', 'terms', 'itinerary', 'ideas', 'issues', 'conversations', 'ai'].includes(slug) ? slug : 'home';
+const ogImage = new URL(`/og/${ogSlug}.png`, env.siteUrl).href;
+const jsonLd =
+  basePath === '/'
+    ? JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'SoftwareApplication',
+        name: 'Groam',
+        applicationCategory: 'TravelApplication',
+        operatingSystem: 'Web',
+        description: pageDescription,
+        inLanguage: locale,
+        url: canonical,
+        offers: [
+          {
+            '@type': 'Offer',
+            name: translate(locale, 'Plan a trip'),
+            price: '0',
+            priceCurrency: 'EUR',
+            description: translate(locale, 'Planning on your own is free.')
+          },
+          {
+            '@type': 'Offer',
+            name: translate(locale, 'Invite a traveler'),
+            price: '1',
+            priceCurrency: 'EUR',
+            availability: 'https://schema.org/PreOrder',
+            description: translate(locale, 'EUR 1 for each invited traveler, for each trip they join, paid by the traveler or covered by the person who invites them. Paid invites are not live yet.')
+          }
+        ]
+      })
+    : null;
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    {isNotFound && locale === 'en' && <script is:inline>
+      // Static hosts serve the global 404 at unknown paths. Select the Italian
+      // fallback before the body paints, including when the original URL is nested.
+      if (/^\/it(?:\/|$)/u.test(location.pathname)) {
+        location.replace('/it/404/' + location.search + location.hash);
+      }
+    </script>}
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDescription} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDescription} />
+    <meta property="og:locale" content={locale === 'it' ? 'it_IT' : 'en_US'} />
+    <meta property="og:locale:alternate" content={locale === 'it' ? 'en_US' : 'it_IT'} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Groam" />
+    {!isNotFound && <meta property="og:url" content={canonical} />}
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={translate(locale, 'Groam: Plan together. Go further.')} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={pageDescription} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="robots" content={isNotFound ? 'noindex' : 'index, follow'} />
+    <meta name="theme-color" content={brandIdentity.colors.frame} />
+    {!isNotFound && <link rel="canonical" href={canonical} />}
+    {!isNotFound && locales.map((language) => <link rel="alternate" hreflang={language} href={new URL(localizedPath(basePath, language), env.siteUrl).href} />)}
+    {!isNotFound && <link rel="alternate" hreflang="x-default" href={new URL(localizedPath(basePath, 'en'), env.siteUrl).href} />}
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" sizes="48x48" href="/favicon.ico" />
+    <link rel="preload" href={fontUrl} as="font" type="font/woff2" crossorigin />
+    {jsonLd && <script type="application/ld+json" set:html={jsonLd} />}
+    <script is:inline>
+      // Follow the system theme with the shared `.dark` token class, before first paint.
+      (() => {
+        const query = matchMedia('(prefers-color-scheme: dark)');
+        const apply = () => document.documentElement.classList.toggle('dark', query.matches);
+        apply();
+        query.addEventListener('change', apply);
+      })();
+    </script>
+  </head>
+  <body>
+    <LocalizedContent><slot /></LocalizedContent>
+  </body>
+</html>

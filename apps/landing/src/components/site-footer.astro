@@ -1,0 +1,243 @@
+---
+import { env } from '@groam/env/landing';
+import BrandLink from '@/components/brand-link.astro';
+import Icon from '@/components/icon.astro';
+import { features, featurePath, legalNav } from '@/content/site';
+---
+
+<footer class="foot">
+  <div class="wrap endpiece">
+    <div class="mast">
+      <div class="brand"><BrandLink size={42} /></div>
+      <p class="line">Plan together.<br />Go further.</p>
+    </div>
+
+    <nav class="feature-index" aria-label="Features">
+      <a class="index-head" href="/features/">
+        <span>Trip index</span>
+        <span>Explore all features <Icon name="arrow-right" /></span>
+      </a>
+      <div class="feature-grid">
+        {
+          features.map((feature, index) => (
+            <a class="feature" href={featurePath(feature.slug)}>
+              <span class="number">0{index + 1}</span>
+              <Icon name={feature.icon} />
+              <strong>{feature.name}</strong>
+              <Icon name="arrow-right" />
+            </a>
+          ))
+        }
+      </div>
+    </nav>
+
+    <div class="utility-row">
+      <nav aria-label="Product">
+        <a href="/pricing/">Pricing</a>
+        <a href={env.appUrl}>Sign in</a>
+        <a class="start" href={env.appUrl}>Start a trip <Icon name="arrow-right" /></a>
+      </nav>
+      <nav aria-label="Legal">
+        {legalNav.map((item) => <a href={item.href}>{item.label}</a>)}
+      </nav>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .foot {
+    border-top: var(--rule) solid var(--ink);
+    background: var(--press);
+    color: var(--press-ink);
+    --on: var(--press-ink);
+    --focus: var(--strip);
+    --on-soft: color-mix(in srgb, var(--press-ink) 68%, var(--press));
+  }
+  .endpiece {
+    display: grid;
+    grid-template-columns: minmax(240px, 0.72fr) minmax(0, 1.5fr);
+    border-inline: 1.5px solid color-mix(in srgb, var(--press-ink) 24%, transparent);
+  }
+  .mast {
+    min-height: 440px;
+    padding: clamp(32px, 5vw, 68px) clamp(24px, 4vw, 52px);
+    border-right: var(--rule) solid var(--press-ink);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .brand {
+    transform: scale(1.45);
+    transform-origin: left center;
+  }
+  .brand :global(a) {
+    color: var(--press-ink);
+  }
+  .line {
+    margin-top: auto;
+    font-weight: 850;
+    font-stretch: 64%;
+    word-spacing: var(--caps-space);
+    font-size: clamp(2.6rem, 5vw, 5.4rem);
+    line-height: 0.82;
+    letter-spacing: -0.04em;
+    text-transform: uppercase;
+  }
+  .feature-index {
+    display: grid;
+    grid-template-rows: auto 1fr;
+  }
+  .index-head,
+  .feature {
+    color: inherit;
+    text-decoration: none;
+  }
+  .index-head {
+    min-height: 80px;
+    padding: 22px clamp(20px, 3vw, 40px);
+    border-bottom: var(--rule) solid var(--press-ink);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    font-size: 13px;
+    font-weight: 800;
+    font-stretch: 84%;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .index-head span:last-child,
+  .feature > :global(svg):last-child,
+  .start {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .index-head :global(svg),
+  .feature :global(svg),
+  .start :global(svg) {
+    width: 17px;
+    height: 17px;
+  }
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .feature {
+    min-height: 112px;
+    padding: 22px clamp(18px, 3vw, 34px);
+    border-bottom: 1.5px solid color-mix(in srgb, var(--press-ink) 34%, transparent);
+    display: grid;
+    grid-template-columns: 2.2em 24px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    transition:
+      background 180ms ease,
+      color 180ms ease;
+  }
+  .feature:nth-child(odd) {
+    border-right: 1.5px solid color-mix(in srgb, var(--press-ink) 34%, transparent);
+  }
+  .feature:hover {
+    background: var(--strip);
+    color: var(--strip-ink);
+  }
+  .feature .number {
+    color: currentColor;
+    opacity: 0.62;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .feature strong {
+    font-size: clamp(1.2rem, 2.3vw, 1.75rem);
+    font-weight: 800;
+    font-stretch: 72%;
+    text-transform: uppercase;
+    word-spacing: var(--caps-space);
+  }
+  .utility-row {
+    grid-column: 1 / -1;
+    min-height: 82px;
+    padding: 18px clamp(22px, 4vw, 52px);
+    border-top: var(--rule) solid var(--press-ink);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .utility-row nav {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px 28px;
+  }
+  .utility-row a {
+    color: var(--on-soft);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .utility-row a:hover {
+    color: var(--press-ink);
+    text-decoration: underline;
+  }
+  .utility-row .start {
+    color: var(--press-ink);
+    font-weight: 850;
+  }
+  @media (max-width: 800px) {
+    .endpiece {
+      grid-template-columns: 1fr;
+    }
+    .mast {
+      min-height: 300px;
+      border-right: 0;
+      border-bottom: var(--rule) solid var(--press-ink);
+    }
+    .line {
+      margin-top: 72px;
+    }
+    .utility-row {
+      grid-column: 1;
+    }
+  }
+  @media (max-width: 520px) {
+    .mast {
+      min-height: 270px;
+      padding: 30px 20px;
+    }
+    .brand {
+      transform: scale(1.2);
+    }
+    .line {
+      margin-top: 60px;
+      font-size: clamp(2.7rem, 14vw, 4.2rem);
+    }
+    .index-head {
+      min-height: 68px;
+      padding: 18px 20px;
+    }
+    .index-head span:last-child {
+      font-size: 0;
+    }
+    .feature-grid {
+      grid-template-columns: 1fr;
+    }
+    .feature-grid .feature {
+      min-height: 78px;
+      padding: 16px 20px;
+      border-right: 0;
+    }
+    .feature strong {
+      font-size: 1.25rem;
+    }
+    .utility-row {
+      align-items: flex-start;
+      flex-direction: column;
+      padding: 24px 20px 30px;
+    }
+    .utility-row nav {
+      gap: 12px 22px;
+    }
+  }
+</style>

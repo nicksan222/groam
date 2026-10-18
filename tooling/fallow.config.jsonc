@@ -1,0 +1,99 @@
+{
+  // Invoke from root package.json via `bunx fallow` (pinned workspace dep).
+  // Do not PATH-prepend /usr/bin: that shadows Cloud/Node 24 with /usr/bin/node v22.
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "ignorePatterns": [
+    ".claude/**",
+    "**/.astro/**",
+    "**/coverage/**",
+    "**/dist/**",
+    "**/_generated/**",
+    "**/generated.ts",
+    "**/routeTree.gen.ts"
+  ],
+  // These packages are runtime-loaded by Vitest or the toolchain. vite-plus is the dev
+  // toolchain; its only "production" importer is the Oxlint plugin entry below.
+  "ignoreDependencies": [
+    // tooling/diagrams serves this bundle to Chromium by resolved path, not import.
+    "@excalidraw/utils",
+    "@edge-runtime/vm",
+    // The Playwright provider behind vite-plus/test/browser-playwright.
+    "@vitest/browser-playwright",
+    "jiti",
+    "vite-plus"
+  ],
+  "entry": [
+    "tooling/showcase/src/video/index.tsx",
+    "apps/web/src/main.tsx",
+    "apps/web/src/routes/**/*.tsx",
+    "tooling/devkit/configure-auth.ts",
+    "tooling/diagrams/src/render.ts",
+    "packages/backend/scripts/generate-auth-schema.ts",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/doctor.config.ts",
+    // Oxlint loads the Groam lint plugin from tooling/oxc-config/lint.ts by path.
+    "tooling/oxc-config/plugin/index.ts",
+    // Vitest loads these by path from tooling/vitest-config/src/setup-files.ts.
+    "tooling/vitest-config/src/console-guard/setup.ts",
+    "tooling/vitest-config/src/fake-scheduler.ts",
+    // Browser-mode setups load these by path from each package's vite.config.ts.
+    "apps/web/src/journeys-setup.ts",
+    "apps/web/src/views-setup.ts",
+    "packages/*/src/browser-setup.ts",
+    "packages/ai/src/browser-setup.css"
+  ],
+  "health": {
+    "maxCyclomatic": 35,
+    "maxCognitive": 40,
+    "maxCrap": 700.0
+  },
+  "typeAware": {
+    // The type-aware sidecar currently exceeds its 120s timeout on this workspace.
+    "enabled": false,
+    // Workspace tsconfigs that exist today. Skip reference-only roots
+    // (apps/web/tsconfig.json, ./tsconfig.json), convex (covered by
+    // packages/backend).
+    // tooling/tsconfig.json covers devkit, convex, and quality.
+    "projects": [
+      "apps/web/tsconfig.app.json",
+      "apps/web/tsconfig.node.json",
+      "packages/ai/tsconfig.json",
+      "packages/auth/tsconfig.json",
+      "packages/backend/tsconfig.json",
+      "packages/env/tsconfig.json",
+      "packages/ui/tsconfig.json",
+      "tooling/app-actions/tsconfig.json",
+      "tooling/showcase/tsconfig.json",
+      "tooling/tsconfig.json"
+    ],
+    // Including AI contracts can truncate type-coupling (evidence-limit). Keep the
+    // semantic pass; do not fail the default check on that advisory proof.
+    // Opt into `bun run fallow:strict` for `--type-aware-require complete`.
+    "require": "best-effort"
+  },
+  "rules": {
+    "css-broken-reference": "error",
+    "css-dead-surface": "error",
+    "css-duplicate-block": "error",
+    "css-selector-complexity": "error",
+    "css-token-drift": "error",
+    "private-type-leaks": "error"
+  },
+  "overrides": [
+    {
+      // Adapter members are the public @groam/app-actions contract.
+      "files": ["tooling/app-actions/src/**/*app-actions.ts"],
+      "rules": { "unused-class-members": "off" }
+    }
+  ],
+  "duplicates": {
+    "mode": "mild",
+    // Near-identical Vitest router/sidebar stubs across feature suites sit under
+    // ~100 tokens; raise past that so mild mode focuses on real copy-paste.
+    "minTokens": 110,
+    "skipLocal": true,
+    "ignoreDefaults": false
+  },
+  "audit": {}
+}

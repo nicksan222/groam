@@ -1,0 +1,206 @@
+---
+import Icon from '@/components/icon.astro';
+import { exampleTrips } from '@/content/home-trips';
+---
+
+<section class="ribbon" aria-labelledby="ribbon-label" data-ribbon>
+  <div class="row">
+  <div class="viewport">
+    <div class="belt">
+      {
+        [false, true].map((duplicate) => (
+          <ul class="track" aria-hidden={duplicate ? 'true' : undefined} data-duplicate={duplicate || undefined}>
+            {exampleTrips.map((trip) => (
+              <li class="trip">
+                <span class="cover" style={`--tone: var(--tint-${trip.tone})`} aria-hidden="true">
+                  {trip.name.slice(0, 1)}
+                </span>
+                <span class="name">{trip.name}</span>
+                <span class="state">{trip.state}</span>
+              </li>
+            ))}
+          </ul>
+        ))
+      }
+    </div>
+  </div>
+  <div class="meta">
+    <h2 id="ribbon-label" class="visually-hidden">Example trips</h2>
+    <button class="toggle" type="button" data-toggle aria-pressed="false" hidden>
+      <Icon name="pause" class="when-playing" />
+      <Icon name="play" class="when-paused" />
+      <span class="visually-hidden">Pause the example trips ribbon</span>
+    </button>
+  </div>
+  </div>
+</section>
+
+<script>
+  import { initTripRibbon } from '@/scripts/home-ribbon';
+
+  for (const ribbon of document.querySelectorAll<HTMLElement>('[data-ribbon]')) initTripRibbon(ribbon);
+</script>
+
+<style>
+  .ribbon {
+    --focus: var(--press-ink);
+    --gap: clamp(28px, 3vw, 48px);
+    background: var(--press);
+    color: var(--press-ink);
+    overflow: hidden;
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    min-height: clamp(76px, 8vw, 104px);
+  }
+  .meta {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 10px;
+    align-self: stretch;
+    padding-inline: 18px var(--gutter);
+    background: var(--press);
+    border-left: var(--rule) solid var(--press-ink);
+    position: relative;
+    z-index: 1;
+  }
+  .toggle {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border: 2px solid currentColor;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+  .toggle:hover {
+    background: var(--press-ink);
+    color: var(--press);
+  }
+  .toggle[hidden] {
+    display: none;
+  }
+  .toggle :global(svg) {
+    width: 15px;
+    height: 15px;
+  }
+  .toggle :global(.when-paused),
+  .ribbon.paused .toggle :global(.when-playing) {
+    display: none;
+  }
+  .ribbon.paused .toggle :global(.when-paused) {
+    display: block;
+  }
+  .viewport {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .belt {
+    display: flex;
+    width: max-content;
+    animation: slide 80s linear infinite;
+    will-change: transform;
+  }
+  .viewport:hover .belt,
+  .viewport:focus-within .belt,
+  .ribbon.paused .belt,
+  .ribbon.idle .belt {
+    animation-play-state: paused;
+  }
+  .track {
+    display: flex;
+    gap: var(--gap);
+    padding-right: var(--gap);
+    margin: 0;
+    padding-left: 0;
+    list-style: none;
+  }
+  .trip {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    white-space: nowrap;
+  }
+  .cover {
+    align-self: center;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--tone);
+    color: transparent;
+    font-size: 0;
+  }
+  .name {
+    font-weight: 850;
+    font-stretch: 64%;
+    word-spacing: var(--caps-space);
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    line-height: 1;
+    text-transform: uppercase;
+  }
+  .state {
+    color: color-mix(in srgb, var(--press-ink) 70%, var(--press));
+    font-size: 15px;
+    font-weight: 600;
+  }
+  @keyframes slide {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .belt {
+      display: block;
+      animation: none;
+      width: auto;
+    }
+    .track {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+      column-gap: 32px;
+      row-gap: 14px;
+      padding-block: 22px;
+      padding-inline: var(--gutter);
+    }
+    .track[data-duplicate] {
+      display: none;
+    }
+    .trip {
+      display: grid;
+      grid-template-columns: 14px minmax(0, 1fr);
+      column-gap: 14px;
+      row-gap: 2px;
+      white-space: normal;
+    }
+    .cover {
+      align-self: start;
+      margin-top: 0.7em;
+    }
+    .state {
+      grid-column: 2;
+    }
+  }
+  @media (max-width: 640px) {
+    .row {
+      flex-direction: column-reverse;
+      align-items: stretch;
+    }
+    .meta {
+      justify-content: space-between;
+      padding-block: 10px;
+      padding-inline: var(--gutter);
+      border-left: 0;
+      border-bottom: var(--rule) solid var(--press-ink);
+    }
+    .viewport {
+      padding-block: 18px;
+    }
+  }
+</style>
