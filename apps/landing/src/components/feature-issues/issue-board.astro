@@ -1,0 +1,344 @@
+---
+import Icon from '@/components/icon.astro';
+import { issueAt, issuesCopy, start, startSets } from '@/content/feature-issues';
+import { rowHtml } from '@/scripts/feature-issues-row';
+
+const open = start.open.map((id) =>
+  rowHtml(id, issueAt(id), startSets.linked.has(id) ? 'fix' : 'open')
+);
+const closed = start.closed.map((id) => rowHtml(id, issueAt(id), 'closed'));
+---
+
+<figure class="board-figure">
+  <div class="surface board" data-issue-board aria-label="Example trip issues" role="group">
+    <header class="head">
+      <span class="live" aria-hidden="true"></span>
+      <b>Lisbon long weekend</b>
+      <span class="fine">Issues</span>
+      <span class="example-label">Example trip</span>
+      <button class="toggle" type="button" data-toggle aria-pressed="false" hidden>
+        <Icon name="pause" class="when-playing" />
+        <Icon name="play" class="when-paused" />
+        <span class="visually-hidden">Pause the issue board</span>
+      </button>
+    </header>
+
+    <div data-body>
+    <div class="bar">
+      <div class="tabs" role="tablist" aria-label="Issue status">
+        <button type="button" role="tab" id="fi-tab-open" aria-controls="fi-open" aria-selected="true">
+          Open <span class="count" data-count="open">{start.open.length}</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          id="fi-tab-closed"
+          aria-controls="fi-closed"
+          aria-selected="false"
+          tabindex="-1"
+        >
+          Closed <span class="count" data-count="closed">{start.closed.length}</span>
+        </button>
+      </div>
+      <button class="btn btn-primary apply" type="button" data-apply>
+        <Icon name="check" />
+        Apply the idea
+      </button>
+    </div>
+
+    <ul class="fi-list" id="fi-open" role="tabpanel" aria-labelledby="fi-tab-open" data-list="open" data-empty={issuesCopy.emptyOpen} tabindex="0" set:html={open.join('')} />
+    <ul
+      class="fi-list"
+      id="fi-closed"
+      role="tabpanel"
+      aria-labelledby="fi-tab-closed"
+      data-list="closed"
+      data-empty={issuesCopy.emptyClosed}
+      tabindex="0"
+      hidden
+      set:html={closed.join('')}
+    />
+
+    </div>
+    <p class="status" data-status aria-live="off">{issuesCopy.idle}</p>
+  </div>
+  <figcaption class="fine">{issuesCopy.caption}</figcaption>
+</figure>
+
+<script>
+  import { playIssueBoard } from '@/scripts/feature-issues-board';
+
+  for (const board of document.querySelectorAll<HTMLElement>('[data-issue-board]')) playIssueBoard(board);
+</script>
+
+<style>
+  .board-figure {
+    display: grid;
+    gap: 14px;
+    max-width: 720px;
+    margin-inline: auto;
+  }
+  .board {
+    overflow: hidden;
+  }
+  .head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13.5px;
+    flex-wrap: wrap;
+  }
+  .head b {
+    font-weight: 600;
+  }
+  .head .example-label {
+    margin-left: auto;
+  }
+  .live {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 0 3px var(--success-soft);
+  }
+  .board.paused .live {
+    background: var(--muted-foreground);
+    box-shadow: 0 0 0 3px var(--muted);
+  }
+  .toggle {
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--background);
+    color: var(--muted-foreground);
+    cursor: pointer;
+  }
+  .toggle:hover {
+    color: var(--foreground);
+    background: var(--muted);
+  }
+  .head {
+    flex-wrap: nowrap;
+  }
+  .head b {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  @media (max-width: 520px) {
+    .head > .fine {
+      display: none;
+    }
+  }
+  .toggle[hidden] {
+    display: none;
+  }
+  .toggle :global(svg) {
+    width: 14px;
+    height: 14px;
+  }
+  .toggle :global(.when-paused),
+  .board.paused .toggle :global(.when-playing) {
+    display: none;
+  }
+  .board.paused .toggle :global(.when-paused) {
+    display: block;
+  }
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 12px 18px;
+  }
+  .tabs {
+    display: inline-flex;
+    padding: 3px;
+    gap: 2px;
+    border-radius: calc(var(--radius) + 3px);
+    background: var(--muted);
+  }
+  .tabs button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 32px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--muted-foreground);
+    font: 500 14px/1 var(--font-sans);
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+  .tabs button[aria-selected='true'] {
+    background: var(--background);
+    color: var(--foreground);
+    box-shadow: var(--shadow-xs);
+  }
+  .count {
+    display: inline-block;
+    min-width: 1.2em;
+    font: 600 13px/1 var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+  .apply :global(svg) {
+    width: 15px;
+    height: 15px;
+  }
+  .apply:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .tabs button:focus-visible,
+  .apply:focus-visible,
+  .toggle:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+  .status {
+    padding: 12px 18px;
+    border-top: 1px solid var(--border);
+    background: var(--canvas);
+    font-size: 13.5px;
+    color: var(--muted-foreground);
+  }
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  figcaption {
+    text-align: center;
+  }
+</style>
+
+<style is:global>
+  .fi-list {
+    position: relative;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    min-height: 252px;
+  }
+  .fi-list:empty::after {
+    content: attr(data-empty);
+    display: block;
+    padding: 24px 18px;
+    border-top: 1px solid var(--border);
+    color: var(--muted-foreground);
+    font-size: 14px;
+  }
+  .fi-row.is-leaving {
+    position: absolute;
+    left: 0;
+    right: 0;
+  }
+  .fi-list[hidden] {
+    display: none;
+  }
+  .fi-row {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 14px;
+    padding: 14px 18px;
+    border-top: 1px solid var(--border);
+  }
+  .fi-tick {
+    width: 22px;
+    height: 22px;
+    margin-top: 1px;
+    border-radius: 50%;
+    border: 1.5px solid var(--input);
+    display: grid;
+    place-items: center;
+    color: var(--success-foreground);
+    transition:
+      background-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .fi-tick svg {
+    width: 13px;
+    height: 13px;
+    stroke-dasharray: 24;
+    stroke-dashoffset: 24;
+    transition: stroke-dashoffset 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.1s;
+  }
+  .fi-row[data-state='fix'] .fi-tick {
+    border-color: var(--primary);
+  }
+  .fi-row[data-state='closing'] .fi-tick,
+  .fi-row[data-state='closed'] .fi-tick {
+    background: var(--success-soft);
+    border-color: var(--success);
+  }
+  .fi-row[data-state='closing'] .fi-tick svg,
+  .fi-row[data-state='closed'] .fi-tick svg {
+    stroke-dashoffset: 0;
+  }
+  .fi-text {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+  }
+  .fi-title {
+    position: relative;
+    width: fit-content;
+    max-width: 100%;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  .fi-title::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 52%;
+    height: 1.5px;
+    background: var(--muted-foreground);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.2s;
+  }
+  .fi-row[data-state='closing'] .fi-title,
+  .fi-row[data-state='closed'] .fi-title {
+    color: var(--muted-foreground);
+  }
+  .fi-row[data-state='closing'] .fi-title::after {
+    transform: scaleX(1);
+  }
+  .fi-fix {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    font-size: 13.5px;
+    line-height: 1.4;
+    min-height: 22px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fi-tick,
+    .fi-tick svg,
+    .fi-title::after {
+      transition-duration: 0s;
+      transition-delay: 0s;
+    }
+  }
+</style>

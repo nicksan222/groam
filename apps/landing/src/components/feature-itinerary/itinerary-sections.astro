@@ -1,0 +1,175 @@
+---
+import { sections, timeline } from '@/content/feature-itinerary';
+---
+
+<div class="wrap sections">
+  <section class="tl" data-reveal aria-labelledby="it-timeline">
+    <div class="text">
+      <h2 id="it-timeline" data-reveal-item>{sections.timeline.title}</h2>
+      <p data-reveal-item>{sections.timeline.body}</p>
+    </div>
+    <div class="surface scrub" data-scrub data-reveal-item>
+      <div class="track" tabindex="0" role="group" aria-label="The whole trip, Friday to Sunday" data-track>
+        {
+          timeline.map((day) => (
+            <section class="day" aria-label={day.name}>
+              <h3>{day.name}</h3>
+              <ol>
+                {day.stops.map((stop) => (
+                  <li>
+                    <span class="time">{stop.time}</span>
+                    <b>{stop.title}</b>
+                    {stop.note && <span class="fine">{stop.note}</span>}
+                  </li>
+                ))}
+              </ol>
+            </section>
+          ))
+        }
+      </div>
+      <label class="range">
+        <span class="fine">Scrub through the trip</span>
+        <input type="range" min="0" max="100" value="0" step="1" data-range />
+      </label>
+      <p class="fine"><span class="example-label">Example trip</span></p>
+      <div class="foot">
+        {
+          sections.short.map((section) => (
+            <section>
+              <h2>{section.title}</h2>
+              <p>{section.body}</p>
+            </section>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  import { scrubTimeline } from '@/scripts/feature-itinerary-timeline';
+  import { revealSections } from '@/scripts/feature-itinerary-reveal';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-scrub]')) scrubTimeline(root);
+  revealSections(document.querySelectorAll<HTMLElement>('[data-reveal]'));
+</script>
+
+<style>
+  .sections {
+    padding-bottom: clamp(24px, 4vw, 56px);
+  }
+  .tl {
+    display: grid;
+    gap: 28px;
+    padding-block: clamp(40px, 6vw, 80px);
+    border-top: 1px solid var(--border);
+  }
+  h2 {
+    font-size: clamp(1.4rem, 2.4vw, 1.9rem);
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    max-width: 22ch;
+  }
+  p {
+    margin-top: 12px;
+    max-width: 46ch;
+    color: var(--muted-foreground);
+    font-size: 1.05rem;
+  }
+  .scrub {
+    padding: 16px 0 16px;
+    overflow: hidden;
+  }
+  .track {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 4px 20px 12px;
+    gap: 0;
+  }
+  .track::-webkit-scrollbar {
+    display: none;
+  }
+  .track:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: -2px;
+  }
+  .day {
+    flex: 0 0 min(560px, 84%);
+    padding-right: 24px;
+    margin-right: 24px;
+    border-right: 1px dashed var(--input);
+  }
+  .day:last-child {
+    border-right: 0;
+  }
+  .day h3 {
+    font-size: 1rem;
+    margin-bottom: 14px;
+  }
+  .day ol {
+    position: relative;
+    display: flex;
+    gap: 10px;
+    padding-top: 18px;
+    border-top: 2px solid var(--border);
+  }
+  .day li {
+    position: relative;
+    flex: 1 0 128px;
+    display: grid;
+    gap: 3px;
+    align-content: start;
+    font-size: 14.5px;
+  }
+  .day li::before {
+    content: '';
+    position: absolute;
+    top: -25px;
+    left: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--primary);
+    box-shadow: 0 0 0 3px var(--card);
+  }
+  .range {
+    display: grid;
+    gap: 6px;
+    padding: 4px 20px 0;
+  }
+  .range input {
+    width: 100%;
+    accent-color: var(--primary);
+  }
+  .range input:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
+  }
+  .scrub > p {
+    margin: 0;
+    padding: 8px 20px 0;
+  }
+  .foot {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 32px;
+    margin: 16px 20px 0;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .foot h2 {
+    font-size: 1.05rem;
+    letter-spacing: -0.01em;
+  }
+  .foot p {
+    margin-top: 6px;
+    font-size: 0.95rem;
+  }
+  @media (max-width: 640px) {
+    .foot {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

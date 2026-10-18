@@ -1,0 +1,56 @@
+---
+import { conversationsSections } from '@/content/feature-conversations';
+---
+
+<section class="wrap sections" aria-label="More about conversations">
+  {
+    conversationsSections.map((item) => (
+      <div class="item">
+        <h2>{item.title}</h2>
+        <p>{item.body}</p>
+      </div>
+    ))
+  }
+</section>
+
+<style>
+  .sections {
+    display: grid;
+    gap: 40px;
+    max-width: 760px;
+    padding-bottom: clamp(56px, 8vw, 112px);
+  }
+  .item {
+    display: grid;
+    gap: 10px;
+  }
+  h2 {
+    font-size: clamp(1.6rem, 3.4vw, 2.4rem);
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+  }
+  p {
+    max-width: 52ch;
+    color: var(--muted-foreground);
+    font-size: 1.1rem;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .item {
+        animation: rise linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 55%;
+      }
+    }
+  }
+  @keyframes rise {
+    from {
+      opacity: 0.2;
+      transform: translateY(24px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>

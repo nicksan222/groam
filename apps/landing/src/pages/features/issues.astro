@@ -1,0 +1,12 @@
+---
+import IssueBoard from '@/components/feature-issues/issue-board.astro';
+import IssueFlow from '@/components/feature-issues/issue-flow.astro';
+import IssueSections from '@/components/feature-issues/issue-sections.astro';
+import FeatureLayout from '@/layouts/feature-layout.astro';
+---
+
+<FeatureLayout slug="issues">
+  <IssueBoard slot="demo" />
+  <IssueFlow />
+  <IssueSections />
+</FeatureLayout>

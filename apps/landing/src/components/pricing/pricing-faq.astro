@@ -1,0 +1,100 @@
+---
+import { faq } from '@/content/pricing';
+---
+
+<section class="wrap faq" aria-labelledby="faq-title">
+  <h2 class="section-title" id="faq-title">{faq.heading}</h2>
+  <div class="list">
+    {
+      faq.items.map((item) => (
+        <details>
+          <summary>{item.q}</summary>
+          <div class="answer">
+            <p>{item.a}</p>
+          </div>
+        </details>
+      ))
+    }
+  </div>
+</section>
+
+<style>
+  .faq {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: clamp(24px, 6vw, 88px);
+    align-items: start;
+    padding-block: clamp(32px, 5vw, 72px);
+  }
+  .list {
+    border-bottom: 1px solid var(--border);
+  }
+  details {
+    border-top: 1px solid var(--border);
+  }
+  summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding-block: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  summary::after {
+    content: '';
+    flex: none;
+    width: 10px;
+    height: 10px;
+    border-right: 2px solid var(--muted-foreground);
+    border-bottom: 2px solid var(--muted-foreground);
+    transform: translateY(-2px) rotate(45deg);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  details[open] summary::after {
+    transform: translateY(2px) rotate(-135deg);
+  }
+  summary:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  .answer p {
+    padding-bottom: 20px;
+    max-width: 56ch;
+    color: var(--muted-foreground);
+  }
+  @supports (interpolate-size: allow-keywords) {
+    details {
+      interpolate-size: allow-keywords;
+    }
+    details::details-content {
+      block-size: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition:
+        block-size 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.35s ease,
+        content-visibility 0.45s allow-discrete;
+    }
+    details[open]::details-content {
+      block-size: auto;
+      opacity: 1;
+    }
+  }
+  @media (max-width: 860px) {
+    .faq {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    summary::after,
+    details::details-content {
+      transition: none;
+    }
+  }
+</style>

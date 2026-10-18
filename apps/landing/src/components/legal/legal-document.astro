@@ -1,0 +1,157 @@
+---
+// Long-form frame for /privacy and /terms: draft notice, sticky contents on desktop,
+// and a 68ch reading column. Sections are <section id> with an h2 in the default slot.
+type Props = { toc: { id: string; title: string }[]; updated: string };
+const { toc, updated } = Astro.props;
+---
+
+<div class="wrap legal">
+  <p class="notice" role="note">
+    <b>Draft.</b> Last updated {updated}. This text is a plain-language draft and may change before payments go live.
+  </p>
+  <div class="layout">
+    <nav class="toc" aria-label="On this page">
+      <ol>
+        {
+          toc.map((item, index) => (
+            <li>
+              <a href={`#${item.id}`}>
+                <span class="num">{String(index + 1).padStart(2, '0')}</span>
+                {item.title}
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </nav>
+    <article class="doc">
+      <slot />
+    </article>
+  </div>
+</div>
+
+<style>
+  .legal {
+    padding-bottom: clamp(56px, 8vw, 112px);
+  }
+  .notice {
+    max-width: 68ch;
+    margin-bottom: clamp(28px, 4vw, 48px);
+    padding: 12px 16px;
+    border: 1px dashed var(--input);
+    border-radius: var(--radius);
+    background: var(--canvas);
+    color: var(--muted-foreground);
+    font-size: 14px;
+  }
+  .notice b {
+    color: var(--foreground);
+    font-weight: 600;
+  }
+  .layout {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: clamp(32px, 6vw, 96px);
+    align-items: start;
+  }
+  .toc {
+    position: sticky;
+    top: 88px;
+    font-size: 14px;
+  }
+  .toc ol {
+    display: grid;
+    gap: 2px;
+    border-left: 1px solid var(--border);
+  }
+  .toc a {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    padding: 6px 12px;
+    margin-left: -1px;
+    border-left: 2px solid transparent;
+    color: var(--muted-foreground);
+    text-decoration: none;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .toc a:hover {
+    color: var(--foreground);
+    border-left-color: var(--primary);
+  }
+  .num {
+    font: 500 12px/1.9 var(--font-mono);
+    color: var(--muted-foreground);
+  }
+  .doc {
+    max-width: 68ch;
+    font-size: 1.0625rem;
+    line-height: 1.7;
+  }
+  .doc :global(section) {
+    scroll-margin-top: 88px;
+    padding-bottom: 40px;
+  }
+  .doc :global(h2) {
+    margin-bottom: 14px;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+  }
+  .doc :global(h3) {
+    margin: 22px 0 6px;
+    font-size: 1.05rem;
+  }
+  .doc :global(p + p),
+  .doc :global(p + ul),
+  .doc :global(ul + p) {
+    margin-top: 12px;
+  }
+  .doc :global(ul) {
+    display: grid;
+    gap: 8px;
+    padding-left: 1.2em;
+    list-style: disc;
+  }
+  .doc :global(li::marker) {
+    color: var(--muted-foreground);
+  }
+  .doc :global(a) {
+    color: var(--primary-ink);
+    text-underline-offset: 3px;
+  }
+  .doc :global(section) {
+    animation: legal-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 30%;
+  }
+  @keyframes legal-in {
+    from {
+      opacity: 0.35;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .doc :global(section) {
+      animation: none;
+    }
+  }
+  @media (max-width: 880px) {
+    .layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .toc {
+      position: static;
+    }
+    .toc ol {
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      border-left: 0;
+    }
+    .toc a {
+      border-left: 0;
+      margin: 0;
+    }
+  }
+</style>

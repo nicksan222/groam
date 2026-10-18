@@ -1,0 +1,62 @@
+---
+import { env } from '@groam/env/landing';
+import ActivityLog from '@/components/activity-log.astro';
+---
+
+<section class="wrap hero">
+  <div class="copy">
+    <h1>Get the trip out of the group chat.</h1>
+    <p class="sub">
+      Groam gives your group one shared plan. Anyone can suggest a change, everyone sees it, and nothing
+      changes in the plan until someone applies it. AI agents plan right beside you.
+    </p>
+    <div class="cta">
+      <a class="btn btn-primary btn-lg" href={env.appUrl}>Start a trip</a>
+      <a class="btn btn-outline btn-lg" href="/#tracked">See how it works</a>
+    </div>
+    <p class="fine">Free to plan on your own. AI runs on your own ChatGPT account.</p>
+  </div>
+  <ActivityLog />
+</section>
+
+<style>
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(32px, 5vw, 80px);
+    align-items: start;
+    padding-block: clamp(32px, 6vw, 88px) clamp(56px, 8vw, 120px);
+  }
+  .copy {
+    position: sticky;
+    top: 32px;
+  }
+  h1 {
+    font-size: clamp(2.5rem, 5.4vw, 4.5rem);
+    line-height: 1.03;
+    letter-spacing: -0.035em;
+  }
+  .sub {
+    margin-top: 22px;
+    max-width: 38ch;
+    color: var(--muted-foreground);
+    font-size: clamp(1.05rem, 1.4vw, 1.2rem);
+  }
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 30px;
+  }
+  .fine {
+    margin-top: 16px;
+  }
+  @media (max-width: 900px) {
+    .hero {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .copy {
+      position: static;
+    }
+  }
+</style>

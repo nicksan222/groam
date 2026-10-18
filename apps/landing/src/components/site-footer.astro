@@ -1,0 +1,71 @@
+---
+import { env } from '@groam/env/landing';
+import BrandLink from '@/components/brand-link.astro';
+import { features, featurePath, legalNav } from '@/content/site';
+---
+
+<footer class="foot">
+  <div class="wrap grid">
+    <div class="brand-col">
+      <BrandLink size={24} />
+      <p class="fine">Plan together. Go further.</p>
+    </div>
+    <nav aria-label="Features">
+      <a class="col-head" href="/features/">Features</a>
+      {features.map((feature) => <a href={featurePath(feature.slug)}>{feature.name}</a>)}
+    </nav>
+    <nav aria-label="Product">
+      <span class="col-head">Product</span>
+      <a href="/pricing/">Pricing</a>
+      <a href={env.appUrl}>Sign in</a>
+      <a href={env.appUrl}>Start a trip</a>
+    </nav>
+    <nav aria-label="Legal">
+      <span class="col-head">Legal</span>
+      {legalNav.map((item) => <a href={item.href}>{item.label}</a>)}
+    </nav>
+  </div>
+</footer>
+
+<style>
+  .foot {
+    border-top: 1px solid var(--border);
+    background: var(--canvas);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(0, 1fr));
+    gap: 32px;
+    padding-block: 48px 56px;
+  }
+  .brand-col {
+    display: grid;
+    gap: 10px;
+    align-content: start;
+  }
+  nav {
+    display: grid;
+    gap: 10px;
+    align-content: start;
+    font-size: 14px;
+  }
+  nav a {
+    color: var(--muted-foreground);
+    text-decoration: none;
+  }
+  nav a:hover {
+    color: var(--foreground);
+  }
+  nav .col-head {
+    color: var(--foreground);
+    font-weight: 600;
+  }
+  @media (max-width: 760px) {
+    .grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .brand-col {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

@@ -1,0 +1,61 @@
+---
+import { issuesSections } from '@/content/feature-issues';
+---
+
+<section class="wrap sections" aria-label="More about issues">
+  {
+    issuesSections.map((item) => (
+      <div class="item">
+        <h2>{item.title}</h2>
+        <p>{item.body}</p>
+      </div>
+    ))
+  }
+</section>
+
+<style>
+  .sections {
+    display: grid;
+    gap: 32px;
+    padding-bottom: clamp(56px, 8vw, 112px);
+  }
+  @media (min-width: 860px) {
+    .sections {
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+    }
+  }
+  .item {
+    padding-top: 20px;
+    border-top: 2px solid var(--foreground);
+  }
+  h2 {
+    font-size: 1.25rem;
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+  }
+  p {
+    margin-top: 8px;
+    max-width: 46ch;
+    color: var(--muted-foreground);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .item {
+        animation: rise linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 55%;
+      }
+    }
+  }
+  @keyframes rise {
+    from {
+      opacity: 0.2;
+      transform: translateY(24px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>

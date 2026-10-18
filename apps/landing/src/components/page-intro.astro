@@ -1,0 +1,31 @@
+---
+type Props = { title: string; lede: string };
+const { title, lede } = Astro.props;
+---
+
+<section class="wrap intro">
+  <slot name="before" />
+  <h1>{title}</h1>
+  <p class="lede">{lede}</p>
+  <slot />
+</section>
+
+<style>
+  .intro {
+    display: grid;
+    gap: 20px;
+    justify-items: start;
+    padding-block: clamp(32px, 6vw, 88px) clamp(32px, 5vw, 64px);
+  }
+  h1 {
+    max-width: 18ch;
+    font-size: clamp(2.3rem, 5vw, 4rem);
+    line-height: 1.04;
+    letter-spacing: -0.035em;
+  }
+  .lede {
+    max-width: 52ch;
+    color: var(--muted-foreground);
+    font-size: clamp(1.05rem, 1.4vw, 1.2rem);
+  }
+</style>

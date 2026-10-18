@@ -1,0 +1,28 @@
+---
+import HubExplorer from '@/components/features-hub/hub-explorer.astro';
+import ClosingCall from '@/components/closing-call.astro';
+import PageIntro from '@/components/page-intro.astro';
+import { hubClosing, hubDescription, hubHeadline, hubLede, hubTitle } from '@/content/features-hub';
+import SubpageLayout from '@/layouts/subpage-layout.astro';
+---
+
+<SubpageLayout title={hubTitle} description={hubDescription}>
+  <PageIntro title={hubHeadline} lede={hubLede} />
+  <div class="wrap explore">
+    <HubExplorer />
+  </div>
+  <div class="wrap"><p class="together">{hubClosing}</p></div>
+  <ClosingCall />
+</SubpageLayout>
+
+<style>
+  .explore {
+    padding-bottom: clamp(40px, 6vw, 80px);
+  }
+  .together {
+    padding-bottom: 16px;
+    max-width: 52ch;
+    font-size: 1.15rem;
+    color: var(--muted-foreground);
+  }
+</style>

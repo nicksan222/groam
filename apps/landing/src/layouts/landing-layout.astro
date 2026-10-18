@@ -1,0 +1,93 @@
+---
+import { env } from '@groam/env/landing';
+import { brandIdentity } from '@groam/brand/identity';
+import fontUrl from '@fontsource-variable/google-sans-flex/files/google-sans-flex-latin-wght-normal.woff2?url';
+
+import '@/styles/landing.css';
+
+type Props = { title: string; description: string };
+const { title, description } = Astro.props;
+const path = Astro.url.pathname.endsWith('/') ? Astro.url.pathname : `${Astro.url.pathname}/`;
+const isNotFound = path.startsWith('/404');
+const canonical = new URL(path, env.siteUrl).href;
+// public/og/<slug>.png: one card per page; legal and 404 pages share the home card.
+const slug =
+  path === '/'
+    ? 'home'
+    : path === '/features/'
+      ? 'features'
+      : path.replace(/^\/(features\/)?|\/$/gu, '');
+const ogSlug = ['home', 'features', 'pricing', 'privacy', 'terms', 'itinerary', 'ideas', 'issues', 'conversations', 'ai'].includes(slug) ? slug : 'home';
+const ogImage = new URL(`/og/${ogSlug}.png`, env.siteUrl).href;
+const jsonLd =
+  path === '/'
+    ? JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'SoftwareApplication',
+        name: 'Groam',
+        applicationCategory: 'TravelApplication',
+        operatingSystem: 'Web',
+        description,
+        url: canonical,
+        offers: [
+          {
+            '@type': 'Offer',
+            name: 'Plan a trip',
+            price: '0',
+            priceCurrency: 'EUR',
+            description: 'Planning on your own is free.'
+          },
+          {
+            '@type': 'Offer',
+            name: 'Invite a traveler',
+            price: '1',
+            priceCurrency: 'EUR',
+            description: 'EUR 1 for each invited traveler, paid once. Paid invites are not live yet.'
+          }
+        ]
+      })
+    : null;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Groam" />
+    {!isNotFound && <meta property="og:url" content={canonical} />}
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Groam: Plan together. Go further." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="robots" content={isNotFound ? 'noindex' : 'index, follow'} />
+    <meta name="theme-color" content={brandIdentity.colors.frame} />
+    {!isNotFound && <link rel="canonical" href={canonical} />}
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" sizes="48x48" href="/favicon.ico" />
+    <link rel="preload" href={fontUrl} as="font" type="font/woff2" crossorigin />
+    {jsonLd && <script type="application/ld+json" set:html={jsonLd} />}
+    <script is:inline>
+      // Follow the system theme with the shared `.dark` token class, before first paint.
+      (() => {
+        const query = matchMedia('(prefers-color-scheme: dark)');
+        const apply = () => document.documentElement.classList.toggle('dark', query.matches);
+        apply();
+        query.addEventListener('change', apply);
+      })();
+    </script>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

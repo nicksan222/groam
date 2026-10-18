@@ -1,0 +1,12 @@
+---
+import ChatToIdea from '@/components/feature-conversations/chat-to-idea.astro';
+import ConversationSections from '@/components/feature-conversations/conversation-sections.astro';
+import TripChat from '@/components/feature-conversations/trip-chat.astro';
+import FeatureLayout from '@/layouts/feature-layout.astro';
+---
+
+<FeatureLayout slug="conversations">
+  <TripChat slot="demo" />
+  <ChatToIdea />
+  <ConversationSections />
+</FeatureLayout>

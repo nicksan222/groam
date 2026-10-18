@@ -1,0 +1,157 @@
+---
+// Decorative 404 stage: a pin walks a dotted route that bends back on itself, so it
+// never arrives. The stage is decorative and hidden from assistive tech; the pause button is not.
+import Icon from '@/components/icon.astro';
+---
+
+<div class="lost">
+<div class="stage" data-lost-stage data-running="true" aria-hidden="true">
+  <div class="inner" data-lost-inner>
+  <svg viewBox="0 0 640 260" width="640" height="260" focusable="false">
+    <path class="route" d="M80 130 C80 40 240 40 320 130 S560 220 560 130 C560 40 400 40 320 130 S80 220 80 130 Z" />
+    <circle class="stop" cx="80" cy="130" r="6" />
+    <circle class="stop" cx="560" cy="130" r="6" />
+    <circle class="stop" cx="320" cy="130" r="6" />
+  </svg>
+  <div class="walker">
+    <svg viewBox="0 0 64 64" width="36" height="36">
+      <path
+        d="M26 47.5C21.6 42 15 34.3 15 25.5A11 11 0 1 1 37 25.5C37 34.3 30.4 42 26 47.5ZM22 25.5A4 4 0 1 0 30 25.5A4 4 0 1 0 22 25.5Z"
+        fill-rule="evenodd"></path>
+    </svg>
+  </div>
+  </div>
+  <ul class="log">
+    <li>Searching for this page</li>
+    <li>Checking day 3</li>
+    <li>Checking the ideas</li>
+    <li>Still looking</li>
+  </ul>
+</div>
+<button class="pause" type="button" data-lost-pause aria-pressed="false">
+  <Icon name="pause" />
+  <span>Pause animation</span>
+</button>
+</div>
+
+<style>
+  .lost {
+    display: grid;
+    justify-items: center;
+    gap: 16px;
+    width: 100%;
+  }
+  .pause {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--background);
+    color: var(--muted-foreground);
+    font: 500 13px/1.2 var(--font-sans);
+    cursor: pointer;
+  }
+  .pause:hover {
+    color: var(--foreground);
+  }
+  .pause :global(svg) {
+    width: 14px;
+    height: 14px;
+  }
+  .stage {
+    position: relative;
+    width: 100%;
+    max-width: 640px;
+    aspect-ratio: 640 / 260;
+  }
+  .inner {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 640px;
+    height: 260px;
+    transform-origin: 0 0;
+  }
+  .inner > svg {
+    display: block;
+    overflow: visible;
+  }
+  .route {
+    fill: none;
+    stroke: var(--primary);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: 1 12;
+    animation: route-flow 1.6s linear infinite;
+  }
+  .stop {
+    fill: var(--background);
+    stroke: var(--muted-foreground);
+    stroke-width: 2;
+  }
+  .walker {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 36px;
+    height: 36px;
+    margin: -32px 0 0 -18px;
+    color: var(--primary);
+    offset-path: path('M80 130 C80 40 240 40 320 130 S560 220 560 130 C560 40 400 40 320 130 S80 220 80 130 Z');
+    offset-rotate: 0deg;
+    animation: walk 14s linear infinite;
+    transform-origin: 0 0;
+    scale: 1;
+  }
+  .walker svg {
+    display: block;
+    fill: currentColor;
+  }
+  .log {
+    position: absolute;
+    inset: auto 0 0 auto;
+    display: grid;
+    font: 500 12px/1.4 var(--font-mono);
+    color: var(--muted-foreground);
+  }
+  .log li {
+    grid-area: 1 / 1;
+    opacity: 0;
+    animation: log-line 8s linear infinite;
+  }
+  .log li:nth-child(2) { animation-delay: 2s; }
+  .log li:nth-child(3) { animation-delay: 4s; }
+  .log li:nth-child(4) { animation-delay: 6s; }
+  .stage[data-running='false'] :is(.route, .walker, .log li) {
+    animation-play-state: paused;
+  }
+  @keyframes route-flow {
+    to { stroke-dashoffset: -13; }
+  }
+  @keyframes walk {
+    from { offset-distance: 0%; }
+    to { offset-distance: 100%; }
+  }
+  @keyframes log-line {
+    0% { opacity: 0; transform: translateY(6px); }
+    4%, 22% { opacity: 1; transform: none; }
+    28%, 100% { opacity: 0; transform: translateY(-6px); }
+  }
+  /* Rest state: the pin stands on the first stop, the first log line is readable. */
+  @media (prefers-reduced-motion: reduce) {
+    .pause {
+      display: none;
+    }
+    .route,
+    .walker,
+    .log li {
+      animation: none;
+    }
+    .walker {
+      offset-distance: 0%;
+    }
+    .log li:first-child {
+      opacity: 1;
+    }
+  }
+</style>

@@ -1,0 +1,179 @@
+---
+import AuthorAvatar from '@/components/author-avatar.astro';
+import Icon from '@/components/icon.astro';
+import { authors, tripActivity, visibleEntries } from '@/content/trip-activity';
+---
+
+<section class="surface log" aria-label="Example trip activity" data-activity-log>
+  <header class="head">
+    <span class="live" aria-hidden="true"></span>
+    <b>Lisbon long weekend</b>
+    <span class="fine">Activity</span>
+    <span class="example-label">Example trip</span>
+    <button class="toggle" type="button" data-toggle aria-pressed="false" hidden>
+      <Icon name="pause" class="when-playing" />
+      <Icon name="play" class="when-paused" />
+      <span class="visually-hidden">Pause activity</span>
+    </button>
+  </header>
+  <div class="clip" data-clip>
+  <ol class="entries" data-entries>
+    {
+      tripActivity.map((entry, index) => {
+        const author = authors[entry.author];
+        return (
+          <li class:list={['entry', { now: index === visibleEntries - 1 }]} hidden={index >= visibleEntries}>
+            <AuthorAvatar author={entry.author} />
+            <p>
+              <span class="who">{author.name}</span> <span class="verb">{entry.verb}</span>
+              {entry.detail && <span class:list={['detail', { agent: author.agent }]}>{entry.detail}</span>}
+            </p>
+            <span class="time">{entry.time}</span>
+          </li>
+        );
+      })
+    }
+  </ol>
+  </div>
+</section>
+
+<script>
+  import { playActivityLog } from '@/scripts/activity-feed';
+
+  for (const log of document.querySelectorAll<HTMLElement>('[data-activity-log]')) playActivityLog(log);
+</script>
+
+<style>
+  .log {
+    overflow: hidden;
+  }
+  .head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13.5px;
+  }
+  .head b {
+    font-weight: 600;
+  }
+  .head .example-label {
+    margin-left: auto;
+  }
+  .live {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 0 3px var(--success-soft);
+  }
+  .log.paused .live {
+    background: var(--muted-foreground);
+    box-shadow: 0 0 0 3px var(--muted);
+  }
+  .toggle {
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--background);
+    color: var(--muted-foreground);
+    cursor: pointer;
+  }
+  .toggle:hover {
+    color: var(--foreground);
+    background: var(--muted);
+  }
+  .toggle[hidden],
+  .entry[hidden] {
+    display: none;
+  }
+  .toggle :global(svg) {
+    width: 14px;
+    height: 14px;
+  }
+  .toggle :global(.when-paused),
+  .log.paused .toggle :global(.when-playing) {
+    display: none;
+  }
+  .log.paused .toggle :global(.when-paused) {
+    display: block;
+  }
+  .clip {
+    overflow: hidden;
+    margin-block: 6px;
+  }
+  .entry {
+    position: relative;
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr) auto;
+    gap: 12px;
+    padding: 12px 18px;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  .entry + .entry::before {
+    content: '';
+    position: absolute;
+    left: 29px;
+    top: -10px;
+    width: 2px;
+    height: 18px;
+    background: var(--border);
+  }
+  .entry:global(.first)::before {
+    display: none;
+  }
+  .entry .time {
+    padding-top: 3px;
+  }
+  .who {
+    font-weight: 600;
+  }
+  .verb {
+    color: var(--muted-foreground);
+  }
+  .detail {
+    display: block;
+    margin-top: 6px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: var(--canvas);
+    font-size: 13.5px;
+  }
+  .detail.agent {
+    background: color-mix(in srgb, var(--avatar-sky) 20%, var(--card, var(--background)));
+    color: var(--foreground);
+  }
+  .entry:global(.now) .time {
+    color: var(--primary-ink);
+  }
+  .entry:global(.now) .time::before {
+    content: 'now · ';
+    font-weight: 600;
+  }
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  @media (max-width: 420px) {
+    .head .fine {
+      display: none;
+    }
+    .entry {
+      grid-template-columns: 24px minmax(0, 1fr);
+    }
+    .entry .time {
+      grid-column: 2;
+      grid-row: 2;
+      padding-top: 0;
+    }
+  }
+</style>

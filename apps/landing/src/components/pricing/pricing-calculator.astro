@@ -1,0 +1,270 @@
+---
+import { env } from '@groam/env/landing';
+import { calculator, resultCopy } from '@/content/pricing';
+
+const initialInvited = 3;
+const initialCovered = 1;
+const paying = initialInvited - initialCovered;
+const initial = resultCopy(paying);
+const s = { t: Math.floor(paying / 10), o: paying % 10 };
+---
+
+<section class="wrap calc" aria-labelledby="calc-title" data-pricing-calculator>
+  <h2 class="section-title" id="calc-title">{calculator.heading}</h2>
+
+  <div class="surface panel">
+    <div class="controls">
+      <div class="field">
+        <label for="calc-invited">{calculator.invited.label}</label>
+        <div class="stepper">
+          <button type="button" class="step" data-step="invited" data-dir="-1" aria-label="One fewer traveler invited" aria-controls="calc-invited">−</button>
+          <input id="calc-invited" type="range" min="0" max="30" step="1" value={initialInvited} aria-describedby="calc-invited-hint" data-input="invited" />
+          <button type="button" class="step" data-step="invited" data-dir="1" aria-label="One more traveler invited" aria-controls="calc-invited">+</button>
+          <output class="value" for="calc-invited" data-value="invited">{initialInvited}</output>
+        </div>
+        <p class="fine" id="calc-invited-hint">{calculator.invited.hint}</p>
+      </div>
+
+      <div class="field">
+        <label for="calc-covered">{calculator.covered.label}</label>
+        <div class="stepper">
+          <button type="button" class="step" data-step="covered" data-dir="-1" aria-label="One fewer already covered" aria-controls="calc-covered">−</button>
+          <input id="calc-covered" type="range" min="0" max={initialInvited} step="1" value={initialCovered} aria-describedby="calc-covered-hint" data-input="covered" />
+          <button type="button" class="step" data-step="covered" data-dir="1" aria-label="One more already covered" aria-controls="calc-covered">+</button>
+          <output class="value" for="calc-covered" data-value="covered">{initialCovered}</output>
+        </div>
+        <p class="fine" id="calc-covered-hint">{calculator.covered.hint}</p>
+      </div>
+    </div>
+
+    <div class="result">
+      <div class="roll" aria-hidden="true" data-roll>
+        <span class="euro">€</span>
+        <span class={`col${s.t === 0 ? " hidden-col" : ""}`} data-col="tens"><span class="strip" style={`--digit:${s.t}`}>{Array.from({ length: 10 }, (_, d) => <span>{d}</span>)}</span></span>
+        <span class="col" data-col="ones"><span class="strip" style={`--digit:${s.o}`}>{Array.from({ length: 10 }, (_, d) => <span>{d}</span>)}</span></span>
+      </div>
+      <p class="sentence" aria-live="polite" aria-atomic="true">
+        <strong data-total>{initial.total}</strong>
+        <span data-rest>{initial.rest}</span>
+      </p>
+    </div>
+
+    <ul class="roster" aria-label="Travelers on this trip" data-roster>
+      <li class="person organizer">
+        <span class="avatar avatar-maya big" aria-hidden="true">M</span>
+        <span class="status">Organizer, free</span>
+      </li>
+    </ul>
+
+    <div class="foot">
+      <p class="fine">{calculator.footnote}</p>
+      <a class="btn btn-primary" href={env.appUrl}>Start a trip</a>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { initPricingCalculator } from '@/scripts/pricing-calculator';
+
+  for (const el of document.querySelectorAll<HTMLElement>('[data-pricing-calculator]')) initPricingCalculator(el);
+</script>
+
+<style>
+  .calc {
+    display: grid;
+    gap: 24px;
+    padding-block: clamp(32px, 5vw, 72px);
+  }
+  .panel {
+    display: grid;
+    gap: 28px;
+    padding: clamp(20px, 3.5vw, 40px);
+  }
+  .controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(20px, 4vw, 48px);
+  }
+  .field {
+    display: grid;
+    gap: 10px;
+    align-content: start;
+  }
+  label {
+    font-weight: 600;
+  }
+  .stepper {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: 10px;
+  }
+  .step {
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--background);
+    color: var(--foreground);
+    font: 500 18px/1 var(--font-sans);
+    cursor: pointer;
+    transition: background-color 0.15s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .step:hover {
+    background: var(--muted);
+  }
+  .step:active {
+    transform: scale(0.92);
+  }
+  .step:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .value {
+    min-width: 2ch;
+    text-align: end;
+    font: 600 1.25rem/1 var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  input[type='range'] {
+    width: 100%;
+    min-width: 0;
+    height: 2.25rem;
+    accent-color: var(--primary);
+    cursor: pointer;
+  }
+  :is(.step, input):focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+  .result {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 12px 28px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .roll {
+    display: inline-flex;
+    align-items: baseline;
+    font-size: clamp(4rem, 9vw, 6.5rem);
+    line-height: 1;
+    height: 1em;
+    letter-spacing: -0.05em;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .euro {
+    margin-right: 0.04em;
+  }
+  .col {
+    display: inline-block;
+    height: 1em;
+    width: 0.62em;
+    overflow: hidden;
+    transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .col.hidden-col {
+    width: 0;
+  }
+  .strip {
+    display: flex;
+    flex-direction: column;
+    transform: translateY(calc(var(--digit, 0) * -1em));
+    transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .strip > span {
+    height: 1em;
+    line-height: 1;
+  }
+  .sentence {
+    display: grid;
+    gap: 2px;
+    max-width: 34ch;
+    color: var(--muted-foreground);
+  }
+  .sentence strong {
+    color: var(--foreground);
+    font-size: 1.25rem;
+  }
+  .roster {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 10px;
+    min-height: 88px;
+    align-content: start;
+  }
+  .roster :global(.person) {
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    width: 76px;
+    animation: slide-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+  .roster :global(.person.leaving) {
+    animation: slide-out 0.3s ease-in forwards;
+  }
+  .roster :global(.status) {
+    font-size: 12px;
+    line-height: 1.25;
+    text-align: center;
+    color: var(--muted-foreground);
+  }
+  .roster :global(.person.paid .status) {
+    color: var(--primary-ink);
+    font-weight: 600;
+  }
+  .roster :global(.person.paid .avatar) {
+    box-shadow: 0 0 0 3px var(--primary-soft);
+  }
+  .roster :global(.person.free .avatar) {
+    box-shadow: 0 0 0 3px var(--success-soft);
+  }
+  .roster :global(.big) {
+    width: 40px;
+    height: 40px;
+    font-size: 15px;
+    transition: box-shadow 0.3s ease;
+  }
+  .roster :global(.c0) { background: var(--avatar-green); color: var(--avatar-green-foreground); }
+  .roster :global(.c1) { background: var(--avatar-mauve); color: var(--avatar-mauve-foreground); }
+  .roster :global(.c2) { background: var(--avatar-peach); color: var(--avatar-peach-foreground); }
+  .roster :global(.c3) { background: var(--avatar-sky); color: var(--avatar-sky-foreground); }
+  .roster :global(.c4) { background: var(--avatar-yellow); color: var(--avatar-yellow-foreground); }
+  .roster :global(.c5) { background: var(--avatar-teal); color: var(--avatar-teal-foreground); }
+  @keyframes slide-in {
+    from {
+      opacity: 0;
+      transform: translateX(-24px) scale(0.8);
+    }
+  }
+  @keyframes slide-out {
+    to {
+      opacity: 0;
+      transform: translateY(8px) scale(0.8);
+    }
+  }
+  .foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  @media (max-width: 720px) {
+    .controls {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .strip,
+    .col {
+      transition: none;
+    }
+    .roster :global(.person) {
+      animation: none;
+    }
+  }
+</style>

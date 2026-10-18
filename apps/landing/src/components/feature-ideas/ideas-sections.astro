@@ -1,0 +1,269 @@
+---
+import { sections, splitRows } from '@/content/feature-ideas';
+---
+
+<div class="wrap sections">
+  <section class="split-sec" data-reveal aria-labelledby="ideas-split">
+    <div class="text">
+      <h2 id="ideas-split" data-reveal-item>{sections.split.title}</h2>
+      <p data-reveal-item>{sections.split.body}</p>
+    </div>
+    <div class="surface cmp" data-split data-reveal-item>
+      <div class="seg" role="group" aria-label="Plan version" data-seg>
+        <button type="button" data-mode-btn="live" aria-pressed="false">Live plan</button>
+        <button type="button" data-mode-btn="idea" aria-pressed="true">With this idea</button>
+      </div>
+      <div class="stage" data-mode="idea">
+        <ol class="layer base" aria-label="Live plan, Saturday">
+          <li class="tag"><b>Live plan</b></li>
+          {
+            splitRows.map((row) => (
+              <li class:list={['r', row.left ? 'solid' : 'blank']}>
+                {row.left && <span class="time">{row.time}</span>}
+                {row.left}
+              </li>
+            ))
+          }
+        </ol>
+        <ol class="layer over" aria-label="Saturday with this idea" data-over>
+          <li class="tag"><b>With this idea</b></li>
+          {
+            splitRows.map((row) => (
+              <li class:list={['r', row.right ? (row.both ? 'solid' : 'dashed') : 'blank']}>
+                {row.right && <span class="time">{row.time}</span>}
+                {row.right}
+              </li>
+            ))
+          }
+        </ol>
+        <span class="divider" aria-hidden="true" data-divider><span class="grip"></span></span>
+        <input
+          class="slide"
+          type="range"
+          min="0"
+          max="100"
+          value="35"
+          aria-label="Compare the live plan with this idea"
+          data-slide />
+      </div>
+      <p class="fine"><span class="hint-wide">{sections.split.hint}</span><span class="hint-phone">{sections.split.phoneHint}</span> <span class="example-label">Example trip</span></p>
+    </div>
+  </section>
+
+  <div class="short">
+    {
+      sections.short.map((section) => (
+        <section data-reveal>
+          <h2 data-reveal-item>{section.title}</h2>
+          <p data-reveal-item>{section.body}</p>
+        </section>
+      ))
+    }
+  </div>
+</div>
+
+<script>
+  import { splitCompare } from '@/scripts/feature-ideas-split';
+  import { revealSections } from '@/scripts/feature-ideas-reveal';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-split]')) splitCompare(root);
+  revealSections(document.querySelectorAll<HTMLElement>('[data-reveal]'));
+</script>
+
+<style>
+  .sections {
+    padding-bottom: clamp(24px, 4vw, 56px);
+  }
+  .split-sec {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: clamp(24px, 5vw, 80px);
+    align-items: center;
+    padding-block: clamp(40px, 6vw, 80px);
+    border-top: 1px solid var(--border);
+  }
+  h2 {
+    font-size: clamp(1.4rem, 2.4vw, 1.9rem);
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    max-width: 22ch;
+  }
+  p {
+    margin-top: 12px;
+    max-width: 46ch;
+    color: var(--muted-foreground);
+    font-size: 1.05rem;
+  }
+  .cmp {
+    padding: 16px;
+    display: grid;
+    gap: 12px;
+  }
+  .cmp > p {
+    margin: 0;
+    font-size: 13px;
+    max-width: none;
+  }
+  .stage {
+    position: relative;
+    display: grid;
+    border-radius: 10px;
+    overflow: hidden;
+    touch-action: pan-y;
+  }
+  .layer {
+    grid-area: 1 / 1;
+    display: grid;
+    align-content: start;
+    grid-auto-rows: 44px;
+    gap: 8px;
+    padding: 10px;
+    background: var(--card);
+  }
+  .over {
+    clip-path: inset(0 0 0 var(--cut, 50%));
+    background: var(--canvas);
+  }
+  .tag {
+    display: block;
+    font-size: 13px;
+    color: var(--muted-foreground);
+    padding: 2px 2px 4px;
+  }
+  .over .tag {
+    text-align: right;
+  }
+  .r {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 8px;
+    align-items: center;
+    padding: 0 12px;
+    border-radius: 10px;
+    font-size: 14.5px;
+  }
+  .over .r {
+    grid-template-columns: minmax(0, 1fr) 44px;
+    text-align: right;
+  }
+  .over .r .time {
+    order: 2;
+  }
+  .r.solid {
+    border: 1px solid var(--border);
+    background: var(--card);
+  }
+  .r.blank {
+    padding: 0;
+  }
+  .r.dashed {
+    border: 1px dashed var(--muted-foreground);
+    color: var(--muted-foreground);
+  }
+  .divider {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--cut, 50%);
+    width: 2px;
+    margin-left: -1px;
+    background: var(--primary);
+    pointer-events: none;
+  }
+  .grip {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 28px;
+    height: 28px;
+    margin: -14px 0 0 -14px;
+    border-radius: 50%;
+    background: var(--primary);
+    box-shadow: 0 0 0 3px var(--card);
+  }
+  .slide {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: ew-resize;
+  }
+  .stage:has(.slide:focus-visible) {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+  .seg {
+    display: none;
+    padding: 3px;
+    gap: 2px;
+    background: var(--muted);
+    border-radius: calc(var(--radius) + 3px);
+  }
+  .seg button {
+    flex: 1;
+    height: 2rem;
+    border: 0;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--muted-foreground);
+    font: 500 13.5px/1 var(--font-sans);
+    cursor: pointer;
+  }
+  .seg button[aria-pressed='true'] {
+    background: var(--background);
+    color: var(--foreground);
+    box-shadow: var(--shadow-xs);
+  }
+  .seg button:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+  .short {
+    display: grid;
+    gap: 28px;
+    margin: clamp(24px, 4vw, 56px) 0 0 clamp(0px, 8vw, 120px);
+    padding: 8px 0 8px clamp(20px, 3vw, 36px);
+    border-left: 1px solid var(--border);
+  }
+  @media (max-width: 760px) {
+    .split-sec {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  .hint-phone {
+    display: none;
+  }
+  @media (max-width: 640px) {
+    .hint-wide,
+    .over .tag,
+    .r.blank {
+      display: none;
+    }
+    .hint-phone {
+      display: inline;
+    }
+    .seg {
+      display: flex;
+    }
+    .slide,
+    .divider {
+      display: none;
+    }
+    .over {
+      clip-path: none;
+    }
+    .over .r {
+      grid-template-columns: 44px minmax(0, 1fr);
+      text-align: left;
+    }
+    .over .r .time {
+      order: 0;
+    }
+    .stage[data-mode='live'] .over,
+    .stage[data-mode='idea'] .base {
+      display: none;
+    }
+  }
+</style>

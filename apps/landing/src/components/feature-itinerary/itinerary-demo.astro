@@ -1,0 +1,463 @@
+---
+import AuthorAvatar from '@/components/author-avatar.astro';
+import Icon from '@/components/icon.astro';
+import { days, demoStrings, panels } from '@/content/feature-itinerary';
+
+// First still frame (and reduced motion): Saturday, after the Sintra idea, the cursor mid-morning.
+const startPanel = 'sat-after';
+const people = ['maya', 'jonas', 'priya', 'sam'] as const;
+---
+
+<figure class="demo-it" data-itinerary data-day="sat" data-variant="after">
+  <div class="surface frame" role="group" aria-label={`Example itinerary: ${demoStrings.tripName}`}>
+    <div class="cover">
+      <svg viewBox="0 0 1200 140" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+        <rect class="sky" width="1200" height="140"></rect>
+        <circle class="sun" cx="930" cy="52" r="26"></circle>
+        <g class="clouds">
+          <path class="cloud" d="M120 40h90a14 14 0 0 0 0-28 22 22 0 0 0-42-4 18 18 0 0 0-48 32Z"></path>
+          <path class="cloud" d="M640 58h70a11 11 0 0 0 0-22 17 17 0 0 0-33-3 14 14 0 0 0-37 25Z"></path>
+        </g>
+        <path class="hill far" d="M0 104c120-26 240-30 360-12s220 20 340-6 330-34 500 8v46H0Z"></path>
+        <path class="hill near" d="M0 120c160-18 300-14 450 0s300 14 450-4 210-10 300 4v24H0Z"></path>
+        <g class="town">
+          <rect x="468" y="86" width="26" height="40"></rect>
+          <rect x="498" y="76" width="30" height="50"></rect>
+          <rect x="532" y="92" width="22" height="34"></rect>
+          <path d="M588 126v-44l14-16 14 16v44Z"></path>
+          <rect x="608" y="98" width="30" height="28"></rect>
+        </g>
+        <path class="river" d="M0 132c80 6 140-6 220 0s140 6 220 0 140-6 220 0 140 6 220 0 140-6 220 0v8H0Z"></path>
+      </svg>
+      <div class="cover-text">
+        <div>
+          <p class="trip-name">{demoStrings.tripName}</p>
+          <p>{demoStrings.tripMeta}</p>
+        </div>
+        <div class="who" aria-hidden="true">
+          {people.map((person) => <AuthorAvatar author={person} />)}
+        </div>
+      </div>
+    </div>
+
+    <div class="bar">
+      <div class="seg" role="group" aria-label="Day" data-days>
+        {
+          days.map((day) => (
+            <button type="button" data-day-btn={day.id} aria-pressed={day.id === 'sat' ? 'true' : 'false'}>
+              {day.label}
+              <span class="d-name">{day.name}</span>
+            </button>
+          ))
+        }
+      </div>
+      <div class="seg" role="group" aria-label={demoStrings.beforeAfterLabel} data-ba>
+        <button type="button" data-ba-btn="before" aria-pressed="false">{demoStrings.before}</button>
+        <button type="button" data-ba-btn="after" aria-pressed="true">{demoStrings.after}</button>
+      </div>
+      <button type="button" class="btn btn-ghost play" data-toggle hidden aria-pressed="false">
+        <Icon name="pause" class="i-pause" />
+        <Icon name="play" class="i-play" />
+        <span class="play-label">Pause</span>
+      </button>
+    </div>
+
+    <div class="stage" data-stage>
+      {
+        panels.map((panel) => (
+          <ol class="slots" data-panel={panel.id} data-active={panel.id === startPanel ? 'true' : 'false'}>
+            {panel.slots.map((slot) => (
+              <li class="slot" data-time={slot.time} tabindex="-1">
+                <span class="time" data-slot-time>{slot.time}</span>
+                <div class="act">
+                  <b data-label>{slot.title}</b>
+                  {slot.note && <span class="fine">{slot.note}</span>}
+                </div>
+                <span class="mv">
+                  <button type="button" class="mv-btn" data-move="-1" aria-label={`Move ${slot.title} up`}>
+                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 10 4-4 4 4" /></svg>
+                  </button>
+                  <button type="button" class="mv-btn" data-move="1" aria-label={`Move ${slot.title} down`}>
+                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" /></svg>
+                  </button>
+                </span>
+              </li>
+            ))}
+            <li class="sum fine">{`${panel.slots.length} stops · ends ${panel.slots.at(-1)?.time ?? ''} with ${panel.slots.at(-1)?.title ?? ''}`}</li>
+          </ol>
+        ))
+      }
+      <div class="cursor" data-cursor>
+        <button
+          type="button"
+          class="handle"
+          role="slider"
+          aria-label={demoStrings.cursorLabel}
+          aria-orientation="vertical"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="30"
+          data-handle><span data-clock>10:42</span></button>
+        <span class="line" aria-hidden="true"></span>
+      </div>
+    </div>
+    <p class="fine hint">{demoStrings.reorderHint}</p>
+    <p class="sr" aria-live="polite" data-announce></p>
+  </div>
+
+  <figcaption>
+    <span class="example-label">Example trip</span>
+    <span>{demoStrings.caption}</span>
+  </figcaption>
+</figure>
+
+<script>
+  import { playItinerary } from '@/scripts/feature-itinerary-demo';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-itinerary]')) playItinerary(root);
+</script>
+
+<style>
+  .demo-it {
+    margin: 0;
+    display: grid;
+    gap: 12px;
+  }
+  .frame {
+    overflow: hidden;
+  }
+
+  .cover {
+    position: relative;
+    height: clamp(104px, 14vw, 140px);
+    border-bottom: 1px solid var(--border);
+  }
+  .cover svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .sky {
+    fill: color-mix(in srgb, var(--avatar-sky) 38%, var(--background));
+  }
+  .sun {
+    fill: color-mix(in srgb, var(--warning) 70%, var(--background));
+    animation: bob 9s ease-in-out infinite alternate;
+  }
+  .cloud {
+    fill: color-mix(in srgb, var(--background) 85%, transparent);
+  }
+  .clouds {
+    animation: drift 28s ease-in-out infinite alternate;
+  }
+  .hill.far {
+    fill: color-mix(in srgb, var(--success) 22%, var(--avatar-sky));
+  }
+  .hill.near {
+    fill: color-mix(in srgb, var(--success) 38%, var(--background));
+  }
+  .town {
+    fill: color-mix(in srgb, var(--avatar-peach) 60%, var(--background));
+    stroke: color-mix(in srgb, var(--foreground) 14%, transparent);
+  }
+  .river {
+    fill: color-mix(in srgb, var(--primary) 45%, var(--background));
+  }
+  .demo-it:not([data-running='true']) .sun,
+  .demo-it:not([data-running='true']) :global(.clouds) {
+    animation-play-state: paused;
+  }
+  @keyframes bob {
+    to {
+      transform: translateY(14px);
+    }
+  }
+  @keyframes drift {
+    to {
+      transform: translateX(80px);
+    }
+  }
+  .cover-text {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px clamp(14px, 2.4vw, 24px);
+  }
+  .cover-text > div:first-child {
+    padding: 6px 12px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--background) 88%, transparent);
+  }
+  .trip-name {
+    margin: 0;
+    font-weight: 600;
+    font-size: 1.05rem;
+    letter-spacing: -0.01em;
+  }
+  .cover-text p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--muted-foreground);
+  }
+  .who {
+    display: flex;
+  }
+  .who :global(.avatar) {
+    margin-left: -6px;
+    box-shadow: 0 0 0 2px var(--background);
+  }
+
+  .bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+    padding: 12px clamp(14px, 2.4vw, 24px);
+  }
+  .seg {
+    display: inline-flex;
+    padding: 3px;
+    gap: 2px;
+    background: var(--muted);
+    border-radius: calc(var(--radius) + 3px);
+    max-width: 100%;
+  }
+  .seg button {
+    height: 2rem;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 0;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--muted-foreground);
+    font: 500 13.5px/1 var(--font-sans);
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+  .seg button[aria-pressed='true'] {
+    background: var(--background);
+    color: var(--foreground);
+    box-shadow: var(--shadow-xs);
+  }
+  .d-name {
+    font-weight: 400;
+    color: var(--muted-foreground);
+  }
+  .demo-it[data-day='fri'] [data-ba],
+  .demo-it[data-day='sun'] [data-ba] {
+    visibility: hidden;
+  }
+  .seg button:focus-visible,
+  .play:focus-visible,
+  .mv-btn:focus-visible,
+  .handle:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+  .play {
+    margin-left: auto;
+  }
+  .play[hidden] {
+    display: none;
+  }
+  .play :global(svg) {
+    width: 14px;
+    height: 14px;
+  }
+  .play[aria-pressed='false'] :global(.i-play),
+  .play[aria-pressed='true'] :global(.i-pause) {
+    display: none;
+  }
+
+  .stage {
+    position: relative;
+    display: grid;
+    padding: 4px clamp(14px, 2.4vw, 24px) 12px;
+  }
+  .slots {
+    grid-area: 1 / 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-left: 64px;
+  }
+  .slots[data-active='false'] {
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .slot {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 10px 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--card);
+    transition:
+      background-color 0.35s ease,
+      border-color 0.35s ease;
+  }
+  .slot.is-now {
+    background: var(--primary-soft);
+    border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+  }
+  .act {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    font-size: 15px;
+  }
+  .sum {
+    padding: 6px 4px 0;
+  }
+  .mv {
+    display: inline-flex;
+    gap: 2px;
+  }
+  .mv-btn {
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted-foreground);
+    cursor: pointer;
+  }
+  .mv-btn:hover {
+    background: var(--muted);
+    color: var(--foreground);
+  }
+  .mv-btn[aria-disabled='true'] {
+    opacity: 0.3;
+    cursor: default;
+  }
+  .mv-btn svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .cursor {
+    position: absolute;
+    left: clamp(14px, 2.4vw, 24px);
+    right: clamp(14px, 2.4vw, 24px);
+    top: 4px;
+    height: 0;
+    pointer-events: none;
+    will-change: transform;
+  }
+  .line {
+    position: absolute;
+    left: 52px;
+    width: 12px;
+    top: -1px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--primary);
+    opacity: 0.8;
+  }
+  .handle {
+    position: absolute;
+    left: 0;
+    top: -14px;
+    width: 54px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 999px;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    font: 600 12.5px/1 var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    box-shadow: var(--shadow-xs);
+    cursor: grab;
+    pointer-events: auto;
+    touch-action: none;
+  }
+  .handle:active {
+    cursor: grabbing;
+  }
+  .hint {
+    margin: 0;
+    padding: 0 clamp(14px, 2.4vw, 24px) 14px;
+  }
+  .sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  figcaption {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    color: var(--muted-foreground);
+    font-size: 14px;
+  }
+
+  @media (max-width: 480px) {
+    .slot {
+      position: relative;
+      grid-template-columns: 44px minmax(0, 1fr);
+    }
+    .mv {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--card);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .slot:focus-within .mv,
+    .slot.is-open .mv {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+  @media (max-width: 560px) {
+    .d-name {
+      display: none;
+    }
+    .slots {
+      margin-left: 58px;
+    }
+    .line {
+      left: 46px;
+    }
+    .handle {
+      width: 48px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sun,
+    .clouds {
+      animation: none;
+    }
+    .slot {
+      transition: none;
+    }
+  }
+</style>

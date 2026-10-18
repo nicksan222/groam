@@ -1,0 +1,16 @@
+---
+import SiteFooter from '@/components/site-footer.astro';
+import SiteNav from '@/components/site-nav.astro';
+import LandingLayout from '@/layouts/landing-layout.astro';
+
+type Props = { title: string; description: string };
+const { title, description } = Astro.props;
+---
+
+<LandingLayout title={`${title} · Groam`} description={description}>
+  <SiteNav />
+  <main id="content">
+    <slot />
+  </main>
+  <SiteFooter />
+</LandingLayout>

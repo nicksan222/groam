@@ -1,0 +1,24 @@
+---
+import markUrl from '@groam/brand/assets/mark.svg?url';
+
+type Props = { size?: number };
+const { size = 28 } = Astro.props;
+---
+
+<a class="brand" href="/" aria-label="Groam home">
+  <img src={markUrl} width={size} height={size} alt="" />
+  <span>Groam</span>
+</a>
+
+<style>
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--foreground);
+    font-weight: 600;
+    font-size: 17px;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+  }
+</style>

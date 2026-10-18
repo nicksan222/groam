@@ -1,0 +1,145 @@
+---
+import Icon from '@/components/icon.astro';
+import { example, included, plan } from '@/content/pricing';
+---
+
+<section class="wrap plan" aria-labelledby="plan-title">
+  <div class="prices" aria-hidden="true">
+    <p class="big"><span class="num">€0</span><span class="cap">to plan</span></p>
+    <p class="plus">+</p>
+    <p class="big"><span class="num">€1</span><span class="cap">per traveler, once</span></p>
+  </div>
+
+  <div class="body">
+    <h2 class="section-title" id="plan-title">{plan.heading}</h2>
+    <ul class="points">
+      {
+        plan.points.map((point) => (
+          <li>
+            <strong>{point.title}</strong>
+            <span>{point.body}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<section class="wrap split">
+  <article class="example" aria-labelledby="example-title">
+    <h2 class="section-title" id="example-title">{example.heading}</h2>
+    {example.paragraphs.map((text) => <p>{text}</p>)}
+  </article>
+
+  <div class="included" aria-labelledby="included-title">
+    <h2 class="section-title" id="included-title">{included.heading}</h2>
+    <ul>
+      {
+        included.items.map((item) => (
+          <li>
+            <Icon name="check" />
+            <span>{item}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .plan {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: clamp(28px, 6vw, 88px);
+    align-items: start;
+    padding-block: clamp(24px, 4vw, 56px);
+  }
+  .prices {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 12px 20px;
+    padding-top: 20px;
+    border-top: 2px solid var(--foreground);
+  }
+  .big {
+    display: grid;
+    gap: 6px;
+  }
+  .num {
+    font-size: clamp(4.5rem, 11vw, 8.5rem);
+    line-height: 0.9;
+    letter-spacing: -0.06em;
+    font-weight: 600;
+  }
+  .cap {
+    color: var(--muted-foreground);
+    font-size: 1rem;
+  }
+  .plus {
+    padding-bottom: 28px;
+    font-size: 2rem;
+    color: var(--muted-foreground);
+  }
+  .body {
+    display: grid;
+    gap: 24px;
+  }
+  .points {
+    list-style: none;
+    display: grid;
+  }
+  .points li {
+    display: grid;
+    gap: 4px;
+    padding-block: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .points span {
+    color: var(--muted-foreground);
+    max-width: 56ch;
+  }
+  .split {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(28px, 6vw, 88px);
+    padding-block: clamp(32px, 5vw, 72px);
+  }
+  .example {
+    display: grid;
+    gap: 16px;
+    align-content: start;
+    max-width: 56ch;
+  }
+  .example p {
+    color: var(--muted-foreground);
+  }
+  .included {
+    display: grid;
+    gap: 20px;
+    align-content: start;
+  }
+  .included ul {
+    list-style: none;
+    display: grid;
+    gap: 12px;
+  }
+  .included li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 12px;
+    align-items: start;
+  }
+  .included :global(svg) {
+    width: 18px;
+    height: 18px;
+    margin-top: 3px;
+    color: var(--primary-ink);
+  }
+  @media (max-width: 860px) {
+    .plan,
+    .split {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

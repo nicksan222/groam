@@ -1,0 +1,108 @@
+---
+import LegalDocument from '@/components/legal/legal-document.astro';
+import PageIntro from '@/components/page-intro.astro';
+import SubpageLayout from '@/layouts/subpage-layout.astro';
+
+const toc = [
+  { id: 'using-groam', title: 'Using Groam' },
+  { id: 'your-account', title: 'Your account' },
+  { id: 'your-content', title: 'Your content' },
+  { id: 'groups', title: 'Groups and shared trips' },
+  { id: 'ai', title: 'AI agents' },
+  { id: 'pricing', title: 'Pricing' },
+  { id: 'acceptable-use', title: 'Acceptable use' },
+  { id: 'availability', title: 'Availability and liability' },
+  { id: 'changes', title: 'Changes to these terms' }
+];
+---
+
+<SubpageLayout
+  title="Terms"
+  description="The agreement between you and Groam when you use it to plan trips."
+>
+  <PageIntro
+    title="Terms"
+    lede="The agreement between you and Groam when you use it to plan trips with your group."
+  />
+  <LegalDocument toc={toc} updated="17 October 2026">
+    <section id="using-groam">
+      <h2>Using Groam</h2>
+      <p>
+        Groam is a place to plan trips with a group: a shared itinerary, ideas, issues, and
+        conversations. By creating an account or using Groam you agree to these terms. If you
+        do not agree, please do not use it.
+      </p>
+    </section>
+
+    <section id="your-account">
+      <h2>Your account</h2>
+      <p>
+        You are responsible for what happens under your account. Keep your sign-in details
+        safe, and tell us if you think someone else has access.
+      </p>
+    </section>
+
+    <section id="your-content">
+      <h2>Your content</h2>
+      <p>
+        Your trips, ideas, issues, messages, and files stay yours. You give Groam permission
+        to store and display them as needed to run the product for you and your group. You
+        confirm that you have the right to add what you add.
+      </p>
+    </section>
+
+    <section id="groups">
+      <h2>Groups and shared trips</h2>
+      <p>
+        Trips live in groups. Members can see, suggest changes to, and discuss a group's
+        trips, and every change is recorded with its author. Think about what you share
+        before you add it to a group you do not control.
+      </p>
+    </section>
+
+    <section id="ai">
+      <h2>AI agents</h2>
+      <p>
+        Groam's AI agents run on your own connected ChatGPT account, under that service's
+        terms. Agents can make mistakes. Check what they suggest, especially bookings, times,
+        and costs, before you rely on it.
+      </p>
+    </section>
+
+    <section id="pricing">
+      <h2>Pricing</h2>
+      <p>
+        Planning on your own is free. Inviting travelers will cost €1 per invited traveler,
+        once. Paid invites are not live yet, and these terms will be updated with the details
+        before they are.
+      </p>
+    </section>
+
+    <section id="acceptable-use">
+      <h2>Acceptable use</h2>
+      <ul>
+        <li>Do not break the law or use Groam to harm other people.</li>
+        <li>Do not try to get into accounts, trips, or systems that are not yours.</li>
+        <li>Do not disrupt the service or misuse it at a scale that affects others.</li>
+      </ul>
+    </section>
+
+    <section id="availability">
+      <h2>Availability and liability</h2>
+      <p>
+        We work to keep Groam running and your plans safe, but we cannot promise it will
+        always be available or free of errors. Groam helps you organize a trip; the decisions
+        and bookings you make from it are yours. To the extent the law allows, Groam is
+        provided as is.
+      </p>
+    </section>
+
+    <section id="changes">
+      <h2>Changes to these terms</h2>
+      <p>
+        This is a draft. If we change it in a way that matters, we will update the date at the
+        top of the page. Continuing to use Groam after a change means you accept it.
+      </p>
+    </section>
+  </LegalDocument>
+</SubpageLayout>

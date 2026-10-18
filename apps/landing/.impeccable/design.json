@@ -1,0 +1,394 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-17T00:00:00Z",
+  "title": "Design System: Groam Landing",
+  "name": "Groam Landing",
+  "description": "The marketing site for Groam, where a group trip changes in real time on one shared record that people and AI agents both write.",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Tokyo Blue",
+        "canonical": "#2a6fdb",
+        "dark": "#7aa2f7",
+        "source": "@groam/ui --primary",
+        "tonalRamp": [
+          "oklch(15% 0.17 262)",
+          "oklch(25% 0.17 262)",
+          "oklch(38% 0.17 262)",
+          "oklch(50% 0.17 262)",
+          "oklch(62% 0.17 262)",
+          "oklch(74% 0.17 262)",
+          "oklch(86% 0.17 262)",
+          "oklch(95% 0.17 262)"
+        ]
+      },
+      "primary-hover": {
+        "role": "primary",
+        "displayName": "Tokyo Blue Hover",
+        "canonical": "#1f5fc7",
+        "dark": "#9ab8ff",
+        "source": "@groam/ui --primary-hover"
+      },
+      "primary-soft": {
+        "role": "primary",
+        "displayName": "Blue Wash",
+        "canonical": "color-mix(in srgb, var(--primary) 11%, var(--background))",
+        "dark": "color-mix(in srgb, var(--primary) 18%, var(--background))",
+        "source": "landing.css --primary-soft"
+      },
+      "primary-ink": {
+        "role": "primary",
+        "displayName": "Blue Ink",
+        "canonical": "color-mix(in srgb, var(--primary) 80%, var(--foreground))",
+        "source": "landing.css --primary-ink"
+      },
+      "avatar-sky": {
+        "role": "secondary",
+        "displayName": "Agent Sky",
+        "canonical": "var(--avatar-sky)",
+        "source": "@groam/ui --avatar-sky",
+        "tonalRamp": [
+          "oklch(15% 0.08 235)",
+          "oklch(25% 0.08 235)",
+          "oklch(38% 0.08 235)",
+          "oklch(50% 0.08 235)",
+          "oklch(62% 0.08 235)",
+          "oklch(74% 0.08 235)",
+          "oklch(86% 0.08 235)",
+          "oklch(95% 0.08 235)"
+        ]
+      },
+      "success": {
+        "role": "tertiary",
+        "displayName": "Applied Green",
+        "canonical": "#118c74",
+        "dark": "#73daca",
+        "source": "@groam/ui --success",
+        "tonalRamp": [
+          "oklch(15% 0.11 175)",
+          "oklch(25% 0.11 175)",
+          "oklch(38% 0.11 175)",
+          "oklch(50% 0.11 175)",
+          "oklch(62% 0.11 175)",
+          "oklch(74% 0.11 175)",
+          "oklch(86% 0.11 175)",
+          "oklch(95% 0.11 175)"
+        ]
+      },
+      "success-soft": {
+        "role": "tertiary",
+        "displayName": "Applied Wash",
+        "canonical": "color-mix(in srgb, var(--success) 14%, var(--background))",
+        "dark": "color-mix(in srgb, var(--success) 18%, var(--background))",
+        "source": "landing.css --success-soft"
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "White",
+        "canonical": "#ffffff",
+        "dark": "#1a1b26"
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Soft Canvas",
+        "canonical": "#f5f6f8",
+        "dark": "#13131a"
+      },
+      "foreground": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#2b2e38",
+        "dark": "#c0caf5",
+        "tonalRamp": [
+          "oklch(15% 0.015 270)",
+          "oklch(25% 0.015 270)",
+          "oklch(38% 0.015 270)",
+          "oklch(50% 0.015 270)",
+          "oklch(62% 0.015 270)",
+          "oklch(74% 0.015 270)",
+          "oklch(86% 0.015 270)",
+          "oklch(95% 0.015 270)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted Surface",
+        "canonical": "#eff0f3",
+        "dark": "#292e42"
+      },
+      "muted-foreground": {
+        "role": "neutral",
+        "displayName": "Muted Ink",
+        "canonical": "#5f6473",
+        "dark": "#9aa5ce"
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#e3e5ea",
+        "dark": "#2f3549"
+      },
+      "input": {
+        "role": "neutral",
+        "displayName": "Input Stroke",
+        "canonical": "#d2d5dc",
+        "dark": "#3b4261"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Home hero headline only."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page intro h1 on every subpage, max 18ch."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Section headings and the closing call, max 20ch."
+      },
+      "lede": {
+        "displayName": "Lede",
+        "purpose": "One muted paragraph under a heading, max 52ch."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Page copy; legal prose in a 68ch column."
+      },
+      "entry": {
+        "displayName": "Entry",
+        "purpose": "Activity and demo rows; actor 600, verb muted."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Buttons (15px on large) and chips (12.5px)."
+      },
+      "fine": {
+        "displayName": "Fine",
+        "purpose": "Reassurance lines, captions, pager labels."
+      },
+      "time": {
+        "displayName": "Time",
+        "purpose": "Google Sans Code; clock times and day stamps only."
+      }
+    },
+    "shadows": [
+      {
+        "name": "shadow-card",
+        "value": "0 2px 8px rgb(0 0 0 / 4%)",
+        "dark": "0 2px 8px rgb(0 0 0 / 15%)",
+        "purpose": "Surface cards; the only lift on the site."
+      },
+      {
+        "name": "shadow-xs",
+        "value": "0px 1px 2px 0px hsl(0 0% 0% / 0.05)",
+        "purpose": "Primary buttons."
+      },
+      {
+        "name": "live-halo",
+        "value": "0 0 0 3px var(--success-soft)",
+        "purpose": "Ring around the live dot; muted when paused."
+      },
+      {
+        "name": "agent-ring",
+        "value": "inset 0 0 0 1px color-mix(in srgb, var(--avatar-sky-foreground) 25%, transparent)",
+        "purpose": "Hairline ring on agent avatars."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Every eased transition and animation."
+      },
+      {
+        "name": "hover",
+        "value": "0.15s ease",
+        "purpose": "Colour changes on buttons and links."
+      },
+      {
+        "name": "slide",
+        "value": "800ms",
+        "purpose": "Feed list slide-up by the outgoing row's height."
+      },
+      {
+        "name": "reveal",
+        "value": "600-700ms",
+        "purpose": "Entry fade-in and object-block unclip; scroll-in section reveals."
+      },
+      {
+        "name": "settle",
+        "value": "1600ms",
+        "purpose": "Blue Wash fading to transparent on an arriving entry."
+      },
+      {
+        "name": "dwell",
+        "value": "2400ms",
+        "purpose": "Time between feed entries."
+      },
+      {
+        "name": "marquee",
+        "value": "70s linear infinite",
+        "purpose": "Home trip ribbon and pricing lane; paused off screen, hidden, or by control."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "prefers-reduced-motion: reduce",
+        "purpose": "No autoplay, no smooth scroll; demos rest on their finished state."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "hero-stack",
+        "value": "900px"
+      },
+      {
+        "name": "legal-stack",
+        "value": "880px"
+      },
+      {
+        "name": "nav-menu",
+        "value": "860px"
+      },
+      {
+        "name": "pager-stack",
+        "value": "640px"
+      },
+      {
+        "name": "entry-compact",
+        "value": "420px"
+      }
+    ],
+    "layout": {
+      "measure": "1240px",
+      "gutter": "clamp(20px, 5vw, 64px)",
+      "wrap": "max-width: calc(var(--measure) + 2 * var(--gutter)); margin-inline: auto; padding-inline: var(--gutter)"
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Start a trip; always opens the web app.",
+      "html": "<a class=\"ds-btn ds-btn-primary\" href=\"#\">Start a trip</a>",
+      "css": ".ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:2.25rem;padding:0 14px;border:1px solid transparent;border-radius:var(--radius,0.5rem);font:500 14px/1 'Google Sans Flex Variable', ui-sans-serif, system-ui, sans-serif;text-decoration:none;white-space:nowrap;cursor:pointer;transition:background-color .15s ease,border-color .15s ease,color .15s ease}.ds-btn-primary{background:var(--primary);color:var(--primary-foreground);box-shadow:var(--shadow-xs)}.ds-btn-primary:hover{background:var(--primary-hover)}.ds-btn:focus-visible{outline:2px solid var(--ring);outline-offset:2px}"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary route beside the primary action.",
+      "html": "<a class=\"ds-btn-outline\" href=\"#\">See how it works</a>",
+      "css": ".ds-btn-outline{display:inline-flex;align-items:center;height:2.75rem;padding:0 18px;border:1px solid var(--border);border-radius:var(--radius,0.5rem);background:var(--background);color:var(--foreground);font:500 15px/1 'Google Sans Flex Variable', ui-sans-serif, system-ui, sans-serif;text-decoration:none;transition:background-color .15s ease}.ds-btn-outline:hover{background:var(--muted)}.ds-btn-outline:focus-visible{outline:2px solid var(--ring);outline-offset:2px}"
+    },
+    {
+      "name": "Chips",
+      "kind": "chip",
+      "refersTo": "chip-idea",
+      "description": "Kind and status markers; colour is meaning.",
+      "html": "<span class=\"ds-chip\">Issue</span> <span class=\"ds-chip ds-chip-idea\">Idea</span> <span class=\"ds-chip ds-chip-agent\">Agent</span> <span class=\"ds-chip ds-chip-done\">Applied</span>",
+      "css": ".ds-chip{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:.375rem;background:var(--muted);color:var(--muted-foreground);font:500 12.5px 'Google Sans Flex Variable', ui-sans-serif, system-ui, sans-serif}.ds-chip-idea{background:color-mix(in srgb,var(--primary) 11%,var(--background));color:color-mix(in srgb,var(--primary) 80%,var(--foreground))}.ds-chip-agent{background:var(--avatar-sky);color:var(--avatar-sky-foreground)}.ds-chip-done{background:color-mix(in srgb,var(--success) 14%,var(--background));color:var(--success-foreground)}"
+    },
+    {
+      "name": "Example Label",
+      "kind": "chip",
+      "refersTo": "example-label",
+      "description": "Marks every illustrative surface.",
+      "html": "<span class=\"ds-example\">Example trip</span>",
+      "css": ".ds-example{display:inline-flex;font:400 11.5px 'Google Sans Flex Variable', ui-sans-serif, system-ui, sans-serif;color:var(--muted-foreground);border:1px dashed var(--input);border-radius:6px;padding:2px 8px}"
+    },
+    {
+      "name": "Activity Card",
+      "kind": "card",
+      "refersTo": "surface-card",
+      "description": "Signature: trip activity log with live dot, example label, pause control, and entries.",
+      "html": "<section class=\"ds-log\"><header class=\"ds-log-head\"><span class=\"ds-live\"></span><b>Lisbon long weekend</b><span class=\"ds-fine\">Activity</span><span class=\"ds-example\">Example trip</span><button class=\"ds-toggle\" type=\"button\" aria-label=\"Pause activity\"><svg viewBox=\"0 0 24 24\" width=\"14\" height=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M9 6v12M15 6v12\"/></svg></button></header><ol class=\"ds-entries\"><li class=\"ds-entry\"><span class=\"ds-avatar ds-avatar-maya\">M</span><p><b>Maya</b> <span class=\"ds-verb\">opened an idea</span><span class=\"ds-detail\">Swap Belém for Sintra</span></p><span class=\"ds-time\">Mon 19:12</span></li><li class=\"ds-entry ds-now\"><span class=\"ds-avatar ds-avatar-agent\"><svg viewBox=\"0 0 24 24\" width=\"14\" height=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\"><path d=\"M12 21c-3-3.6-6-7.2-6-11a6 6 0 1 1 12 0c0 3.8-3 7.4-6 11Z\"/></svg></span><p><b>Itinerary agent</b> <span class=\"ds-verb\">reviewed the idea</span><span class=\"ds-detail ds-agent\">Pena Palace at 11:00 leaves time for lunch in the village.</span></p><span class=\"ds-time\">now · Mon 19:13</span></li></ol></section>",
+      "css": ".ds-log{background:var(--card);border:1px solid var(--border);border-radius:.875rem;box-shadow:var(--shadow-card);overflow:hidden;font-family:'Google Sans Flex Variable', ui-sans-serif, system-ui, sans-serif;color:var(--foreground)}.ds-log-head{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--border);font-size:13.5px}.ds-log-head .ds-example{margin-left:auto}.ds-live{width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 0 3px color-mix(in srgb,var(--success) 14%,var(--background))}.ds-fine{font-size:13px;color:var(--muted-foreground)}.ds-example{font-size:11.5px;color:var(--muted-foreground);border:1px dashed var(--input);border-radius:6px;padding:2px 8px}.ds-toggle{width:28px;height:28px;display:grid;place-items:center;border:1px solid var(--border);border-radius:var(--radius,.5rem);background:var(--background);color:var(--muted-foreground);cursor:pointer}.ds-toggle:hover{color:var(--foreground);background:var(--muted)}.ds-toggle:focus-visible{outline:2px solid var(--ring);outline-offset:2px}.ds-entries{list-style:none;margin:6px 0;padding:0}.ds-entry{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:12px;padding:12px 18px;font-size:14px;line-height:1.45}.ds-entry p{margin:0}.ds-verb{color:var(--muted-foreground)}.ds-detail{display:block;margin-top:6px;padding:8px 10px;border-radius:8px;background:var(--canvas);font-size:13.5px}.ds-detail.ds-agent{background:color-mix(in srgb,var(--avatar-sky) 20%,var(--card))}.ds-time{font:500 12px/1.4 'Google Sans Code',ui-monospace,monospace;color:var(--muted-foreground);font-variant-numeric:tabular-nums;white-space:nowrap;padding-top:3px}.ds-now .ds-time{color:color-mix(in srgb,var(--primary) 80%,var(--foreground))}.ds-avatar{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:600}.ds-avatar-maya{background:var(--avatar-pink);color:var(--avatar-pink-foreground)}.ds-avatar-agent{background:var(--avatar-sky);color:var(--avatar-sky-foreground);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--avatar-sky-foreground) 25%,transparent)}"
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "refersTo": "button-primary",
+      "description": "Mark, two section links, ghost Sign in, primary Start a trip.",
+      "html": "<header class=\"ds-nav\"><a class=\"ds-brand\" href=\"#\">Groam</a><nav class=\"ds-links\"><a href=\"#\" aria-current=\"page\">Features</a><a href=\"#\">Pricing</a></nav><div class=\"ds-actions\"><a class=\"ds-ghost\" href=\"#\">Sign in</a><a class=\"ds-cta\" href=\"#\">Start a trip</a></div></header>",
+      "css": ".ds-nav{display:flex;align-items:center;gap:24px;padding:16px 0;font-family:'Google Sans Flex Variable', ui-sans-serif, system-ui, sans-serif}.ds-brand{font-weight:600;color:var(--foreground);text-decoration:none}.ds-links{display:flex;gap:16px}.ds-links a{font-size:14px;color:var(--muted-foreground);text-decoration:none}.ds-links a:hover,.ds-links a[aria-current]{color:var(--foreground)}.ds-actions{margin-left:auto;display:flex;gap:8px}.ds-ghost,.ds-cta{display:inline-flex;align-items:center;height:2.25rem;padding:0 14px;border-radius:var(--radius,.5rem);font:500 14px/1 'Google Sans Flex Variable', ui-sans-serif, system-ui, sans-serif;text-decoration:none}.ds-ghost{color:var(--foreground)}.ds-ghost:hover{background:var(--muted)}.ds-cta{background:var(--primary);color:var(--primary-foreground)}.ds-cta:hover{background:var(--primary-hover)}"
+    },
+    {
+      "name": "Feature Pager",
+      "kind": "custom",
+      "refersTo": "title",
+      "description": "Previous and next feature links at the foot of every feature page.",
+      "html": "<nav class=\"ds-pager\"><a href=\"#\"><span class=\"ds-f\">Previous</span><span class=\"ds-n\">Live itinerary</span></a><a class=\"ds-next\" href=\"#\"><span class=\"ds-f\">Next</span><span class=\"ds-n\">Issues →</span><span class=\"ds-s\">Loose ends that close themselves when their idea is applied.</span></a></nav>",
+      "css": ".ds-pager{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:12px;font-family:'Google Sans Flex Variable', ui-sans-serif, system-ui, sans-serif}.ds-pager a{display:grid;gap:6px;align-content:start;padding:24px;border-top:1px solid var(--border);color:var(--foreground);text-decoration:none;transition:border-color .2s ease}.ds-pager a:hover{border-color:var(--primary)}.ds-f{font-size:13px;color:var(--muted-foreground)}.ds-n{font-size:1.4rem;font-weight:600;letter-spacing:-.015em}.ds-next .ds-n{font-size:2rem;letter-spacing:-.025em}.ds-s{max-width:44ch;color:var(--muted-foreground)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Trip On The Record",
+    "overview": "**Creative North Star: \"The Trip On The Record\"**\n\nThe marketing site is not a second brand. It is the Groam app's own world (white and canvas neutrals, Tokyo blue actions, the Tokyo Night dark ladder, quiet hairlines, compact rounded controls, one Google Sans Flex voice) turned outward to persuade. Every page proves its claim with the product at work: an example trip that changes while the visitor watches. The component language is the trip activity log. An avatar, an actor, a verb, an object block, and a mono timestamp make up one entry, and every demo on the site is built from that grammar.\n\nThe two pins of the Groam mark become the two kinds of author. Humans wear Catppuccin avatar tints (pink, green, mauve, peach). Agents wear the sky tint with a hairline inset ring, and their object blocks carry a faint sky wash. Blue is reserved for actions, the focus ring, and the brief settle that marks what just happened. Status colour appears only as a meaning: success for applied and closed, a removed-row tint for what an idea takes away.\n\nMotion is narrative, not decoration. Loops move time forward, never reflow the page, pause off screen, in a hidden tab, and on demand, and come to rest on a finished, truthful still under reduced motion. Nothing on the site needs script to read correctly.",
+    "keyCharacteristics": [
+      "App tokens only, imported from `@groam/ui/styles/tokens`; the landing adds five derived roles and nothing else.",
+      "One example trip, \"Lisbon long weekend\", labelled \"Example trip\" everywhere it appears.",
+      "Feed entries (avatar, actor, verb, object block, mono time) are the reusable component language.",
+      "Flat, hairline-bordered surfaces on white, with canvas bands for full-width interludes.",
+      "One easing curve, `cubic-bezier(0.16, 1, 0.3, 1)`, for every eased transition and animation.",
+      "System theme only: the `.dark` class follows `prefers-color-scheme` before first paint."
+    ],
+    "rules": [
+      {
+        "name": "The Inherited Palette Rule",
+        "body": "Every colour is a `var(--token)` from `@groam/ui` or a `color-mix()` of two of them. No hex, rgb, or oklch literal appears in landing source.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Authors Rule",
+        "body": "Sky belongs to agents and the Catppuccin tints belong to humans. A visitor should be able to tell who wrote an entry from the avatar alone.",
+        "section": "colors"
+      },
+      {
+        "name": "The Blue Means Now Rule",
+        "body": "Blue marks the action to take or the thing that just changed. It fades back to neutral once the moment passes.",
+        "section": "colors"
+      },
+      {
+        "name": "The Mono Is Time Rule",
+        "body": "Google Sans Code is used for clock times and day stamps (`Tue 09:03`, `13:30`) and for nothing else.",
+        "section": "typography"
+      },
+      {
+        "name": "The No Eyebrow Rule",
+        "body": "A heading stands alone. No uppercase kicker, tracking label, or category line sits above it.",
+        "section": "typography"
+      },
+      {
+        "name": "The Hairline Lift Rule",
+        "body": "A card is lifted by its border and the shared card shadow, never by a larger shadow, a glow, or a tinted slab.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** take every colour from `@groam/ui` tokens or a `color-mix()` of them, and add landing-only roles to `src/styles/landing.css` `:root` and `.dark`.",
+      "**Do** build demos from the activity-entry grammar: avatar, actor, verb, object block, mono time.",
+      "**Do** draw Lisbon demo data from `src/content/example-trip.ts` and label every illustrative surface \"Example trip\" or \"Example trips\".",
+      "**Do** give every infinite loop a visible pause control and stop it off screen and in a hidden tab.",
+      "**Do** keep feed time moving forward and reserve space so no loop shifts layout.",
+      "**Do** ship a finished, truthful still under `prefers-reduced-motion` and without script.",
+      "**Do** use `cubic-bezier(0.16, 1, 0.3, 1)` for eased motion.",
+      "**Do** write internal hrefs with a trailing slash (`/features/`, `/pricing/`, `/features/ideas/`).",
+      "**Do** say \"idea\" for a suggested change and \"traveler\" for a person on a trip; \"Start a trip\" for the primary action."
+    ],
+    "donts": [
+      "**Don't** use gradients anywhere, on backgrounds, text, or borders.",
+      "**Don't** put an eyebrow, kicker, or uppercase label above a heading.",
+      "**Don't** number sections (01, 02, …) or headings.",
+      "**Don't** use a coloured side rule thicker than 1px on a card, row, or list item.",
+      "**Don't** write a hex, rgb, or oklch literal outside the token files.",
+      "**Don't** market open source, GitHub, or self-hosting; licensing is undecided.",
+      "**Don't** invent claims: no customer logos, user counts, ratings, or prices beyond the published free planning and €1 per invited traveler, once.",
+      "**Don't** say \"proposal\", \"member\", or \"user\" in visible copy.",
+      "**Don't** introduce a second typeface, a serif display face, or a feature-card grid under a screenshot hero."
+    ]
+  }
+}

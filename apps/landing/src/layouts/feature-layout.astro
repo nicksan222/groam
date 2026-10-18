@@ -1,0 +1,102 @@
+---
+import { env } from '@groam/env/landing';
+import ClosingCall from '@/components/closing-call.astro';
+import Icon from '@/components/icon.astro';
+import PageIntro from '@/components/page-intro.astro';
+import { type Feature, features, featurePath } from '@/content/site';
+import SubpageLayout from '@/layouts/subpage-layout.astro';
+
+// Shared frame for every /features/<slug> page: intro from the site map, the page's
+// signature demo, its own sections, then a link on to the next feature and the close.
+type Props = { slug: Feature['slug'] };
+const feature = features.find((item) => item.slug === Astro.props.slug);
+if (!feature) throw new Error(`Unknown feature: ${Astro.props.slug}`);
+const index = features.indexOf(feature);
+const next = features[(index + 1) % features.length] ?? feature;
+---
+
+<SubpageLayout title={feature.name} description={feature.lede}>
+  <PageIntro title={feature.headline} lede={feature.lede}>
+    <div class="cta">
+      <a class="btn btn-primary btn-lg" href={env.appUrl}>Start a trip</a>
+      <a class="btn btn-outline btn-lg" href="/pricing/">See pricing</a>
+    </div>
+  </PageIntro>
+
+  <div class="wrap demo">
+    <slot name="demo" />
+  </div>
+
+  <slot />
+
+  <nav class="wrap pager" aria-label="More features">
+    <a class="next" href={featurePath(next.slug)} aria-label={`Next: ${next.name}`} aria-describedby="next-summary">
+      <span class="fine">Next</span>
+      <span class="name">
+        <Icon name={next.icon} />
+        {next.name}
+        <Icon name="arrow-right" class="go" />
+      </span>
+      <span class="summary" id="next-summary">{next.summary}</span>
+    </a>
+  </nav>
+
+  <ClosingCall />
+</SubpageLayout>
+
+<style>
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .demo {
+    padding-bottom: clamp(56px, 8vw, 112px);
+  }
+  .pager {
+    display: grid;
+    padding-block: clamp(48px, 7vw, 96px) 8px;
+  }
+  .pager a {
+    display: grid;
+    gap: 6px;
+    align-content: start;
+    padding: clamp(18px, 3vw, 28px);
+    border-top: 1px solid var(--border);
+    color: var(--foreground);
+    text-decoration: none;
+    transition: border-color 0.2s ease;
+  }
+  .pager a:hover {
+    border-color: var(--primary);
+  }
+  .name {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: clamp(1.15rem, 2vw, 1.5rem);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+  .next .name {
+    font-size: clamp(1.5rem, 3.2vw, 2.4rem);
+    letter-spacing: -0.025em;
+  }
+  .pager :global(svg) {
+    width: 0.8em;
+    height: 0.8em;
+    flex: none;
+    color: var(--primary);
+  }
+  .pager :global(.go) {
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .next:hover :global(.go) {
+    transform: translateX(6px);
+  }
+  .summary {
+    max-width: 44ch;
+    color: var(--muted-foreground);
+  }
+</style>

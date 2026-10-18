@@ -1,0 +1,22 @@
+---
+import { env } from '@groam/env/landing';
+import ClosingCall from '@/components/closing-call.astro';
+import PageIntro from '@/components/page-intro.astro';
+import PricingCalculator from '@/components/pricing/pricing-calculator.astro';
+import PricingFaq from '@/components/pricing/pricing-faq.astro';
+import PricingLane from '@/components/pricing/pricing-lane.astro';
+import PricingPlan from '@/components/pricing/pricing-plan.astro';
+import SubpageLayout from '@/layouts/subpage-layout.astro';
+import { pricingIntro, pricingMeta } from '@/content/pricing';
+---
+
+<SubpageLayout title={pricingMeta.title} description={pricingMeta.description}>
+  <PageIntro title={pricingIntro.title} lede={pricingIntro.lede}>
+    <a class="btn btn-primary btn-lg" href={env.appUrl}>Start a trip</a>
+  </PageIntro>
+  <PricingPlan />
+  <PricingCalculator />
+  <PricingLane />
+  <PricingFaq />
+  <ClosingCall />
+</SubpageLayout>

@@ -1,0 +1,184 @@
+---
+import { review, sections } from '@/content/feature-ai';
+---
+
+<section class="wrap review" aria-labelledby="ai-review" data-ai-reveal>
+  <div class="copy">
+    <h2 id="ai-review">{review.title}</h2>
+    <p>{review.body}</p>
+    <dl class="aside">
+      {
+        sections.map((section) => (
+          <div>
+            <dt>{section.title}</dt>
+            <dd>{section.body}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+
+  <div class="surface board" role="group" aria-label="Saturday before and after the idea, with the agent's review">
+    <div class="col">
+      <p class="head">{review.before.label}</p>
+      <ul>
+        {
+          review.before.stops.map((stop, n) => (
+            <li class="stop gone" style={`--i:${n}`}>
+              <span class="time">{stop.time}</span>
+              <span>{stop.title}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+    <div class="note">
+      <span class="avatar avatar-agent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21c-3-3.6-6-7.2-6-11a6 6 0 1 1 12 0c0 3.8-3 7.4-6 11Z"></path><path d="M10 9.5h.01M14 9.5h.01" stroke-width="2.4"></path></svg></span>
+      <p><b>Itinerary agent</b> {review.note}</p>
+    </div>
+    <div class="col">
+      <p class="head">{review.after.label}</p>
+      <ul>
+        {
+          review.after.stops.map((stop, n) => (
+            <li class="stop" style={`--i:${n}`}>
+              <span class="time">{stop.time}</span>
+              <span>{stop.title}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+    <p class="foot"><span class="example-label">Example trip</span></p>
+  </div>
+</section>
+
+<script>
+  import { revealSections } from '@/scripts/feature-ai-reveal';
+
+  revealSections(document.querySelectorAll<HTMLElement>('[data-ai-reveal]'));
+</script>
+
+<style>
+  .review {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.4fr);
+    gap: clamp(24px, 5vw, 72px);
+    align-items: center;
+    padding-block: clamp(40px, 6vw, 80px);
+    border-top: 1px solid var(--border);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .review.will-reveal:not(.in) {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  h2 {
+    font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+    max-width: 16ch;
+  }
+  .copy p {
+    margin-top: 14px;
+    max-width: 40ch;
+    color: var(--muted-foreground);
+  }
+  .aside {
+    display: grid;
+    gap: 16px;
+    margin-top: 28px;
+    padding-left: 16px;
+    border-left: 1px solid var(--border);
+  }
+  dt {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  dd {
+    color: var(--muted-foreground);
+    font-size: 0.95rem;
+    max-width: 40ch;
+  }
+  .board {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 16px 24px;
+    padding: 20px;
+  }
+  .note {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--avatar-sky) 22%, var(--card));
+    color: var(--foreground);
+  }
+  .note :global(svg) {
+    width: 16px;
+    height: 16px;
+  }
+  .col {
+    grid-row: 1;
+  }
+  .head {
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted-foreground);
+  }
+  ul {
+    display: grid;
+    gap: 6px;
+  }
+  .stop {
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--background);
+    font-weight: 500;
+  }
+  .gone {
+    color: var(--muted-foreground);
+  }
+  .in .stop,
+  .review:not(.will-reveal) .stop {
+    animation: stop-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation-delay: calc(var(--i) * 90ms + 150ms);
+  }
+  .foot {
+    grid-column: 1 / -1;
+  }
+  @keyframes stop-in {
+    from {
+      opacity: 0;
+      transform: translateX(-8px);
+    }
+  }
+  @media (max-width: 760px) {
+    .review {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .board {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .col,
+    .note {
+      grid-row: auto;
+      grid-column: auto;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .review,
+    .stop {
+      transition: none;
+      animation: none;
+    }
+  }
+</style>

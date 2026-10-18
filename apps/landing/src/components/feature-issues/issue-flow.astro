@@ -1,0 +1,164 @@
+---
+import Icon from '@/components/icon.astro';
+import { flowCopy } from '@/content/feature-issues';
+import { tripIssues } from '@/content/example-trip';
+---
+
+<section class="wrap flow" aria-labelledby="flow-title" data-issue-flow>
+  <div class="intro">
+    <h2 id="flow-title">{flowCopy.title}</h2>
+    <p>{flowCopy.lede}</p>
+    <button class="btn btn-outline" type="button" data-reset>{flowCopy.reset}</button>
+  </div>
+  <div class="cols">
+    <div class="col surface" role="group" aria-label="Open issues">
+      <h3>Open</h3>
+      <div class="stack" data-col="open">
+        {
+          tripIssues.map((issue) => (
+            <article class="card" data-card data-state="open">
+              <p class="title">{issue.title}</p>
+              <p class="idea">
+                <span class="chip chip-idea">Idea linked</span>
+                <span>{issue.fix}</span>
+              </p>
+              <button class="btn btn-primary" type="button" data-apply-card>
+                <Icon name="check" />
+                {flowCopy.apply}
+                <span class="visually-hidden">: {issue.title}</span>
+              </button>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+    <div class="col surface closed" role="group" aria-label="Closed issues">
+      <h3>Closed</h3>
+      <div class="stack" data-col="closed" data-empty="Closed issues land here"></div>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { playIssueFlow } from '@/scripts/feature-issues-flow';
+
+  for (const flow of document.querySelectorAll<HTMLElement>('[data-issue-flow]')) playIssueFlow(flow);
+</script>
+
+<style>
+  .flow {
+    display: grid;
+    gap: 32px;
+    padding-bottom: clamp(56px, 8vw, 112px);
+  }
+  @media (min-width: 960px) {
+    .flow {
+      grid-template-columns: minmax(0, 4fr) minmax(0, 7fr);
+      align-items: start;
+      gap: 56px;
+    }
+  }
+  h2 {
+    font-size: clamp(1.5rem, 2.8vw, 2.1rem);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    max-width: 18ch;
+  }
+  .intro p {
+    margin: 12px 0 20px;
+    max-width: 44ch;
+    color: var(--muted-foreground);
+  }
+  .btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .btn:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+  .cols {
+    display: grid;
+    gap: 14px;
+  }
+  @media (min-width: 640px) {
+    .cols {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .col {
+    padding: 14px;
+    min-height: 0;
+  }
+  .col h3 {
+    padding: 2px 4px 12px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--muted-foreground);
+  }
+  .stack:empty::after {
+    content: attr(data-empty);
+    display: grid;
+    place-items: center;
+    min-height: 90px;
+    border: 1px dashed var(--input);
+    border-radius: var(--radius);
+    color: var(--muted-foreground);
+    font-size: 13.5px;
+  }
+  .stack {
+    display: grid;
+    gap: 10px;
+    align-content: start;
+    min-height: 90px;
+  }
+  .card {
+    display: grid;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--background);
+    font-size: 14px;
+  }
+  .card .title {
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .idea {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    color: var(--muted-foreground);
+  }
+  .card .btn {
+    justify-self: start;
+  }
+  .card[data-state='closed'] {
+    border-color: color-mix(in srgb, var(--success) 40%, var(--border));
+    background: var(--success-soft);
+  }
+  .card[data-state='closed'] .title {
+    color: var(--muted-foreground);
+  }
+  .card[data-state='closed'] .chip-idea {
+    background: var(--success-soft);
+    color: var(--success-foreground);
+  }
+  .card [hidden] {
+    display: none;
+  }
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .btn :global(svg) {
+    width: 15px;
+    height: 15px;
+  }
+</style>

@@ -1,0 +1,353 @@
+---
+import Icon from '@/components/icon.astro';
+import {
+  chatEvents,
+  conversationsCopy,
+  saturday,
+  startingEvents
+} from '@/content/feature-conversations';
+import { sintraIdea } from '@/content/example-trip';
+import { startingMessages } from '@/scripts/feature-conversations-markup';
+
+const messages = startingMessages(chatEvents, startingEvents);
+const hot = 'lunch';
+---
+
+<figure class="chat-figure">
+  <div class="shell" data-trip-chat role="group" aria-label="Example trip chat beside the itinerary">
+    <section class="surface chat" aria-label="Trip chat">
+      <header class="head">
+        <span class="live" aria-hidden="true"></span>
+        <b>Lisbon long weekend</b>
+        <span class="fine">Chat</span>
+        <span class="example-label">Example trip</span>
+        <button class="toggle" type="button" data-toggle aria-pressed="false" hidden>
+          <Icon name="pause" class="when-playing" />
+          <Icon name="play" class="when-paused" />
+          <span class="visually-hidden">Pause the chat</span>
+        </button>
+      </header>
+      <div class="stream" data-stream set:html={messages} />
+      <p class="hint fine">{conversationsCopy.hint}</p>
+    </section>
+
+    <section class="surface plan" aria-label="Saturday itinerary">
+      <header class="head">
+        <Icon name="calendar" />
+        <b>Saturday</b>
+        <span class="fine">{saturday.length} stops</span>
+      </header>
+      <ol>
+        {
+          saturday.map((row) => (
+            <li class:list={['row', { hot: row.ref === hot }]} data-plan-ref={row.ref}>
+              <span class="time">{row.time}</span>
+              <span class="what">{row.title}</span>
+            </li>
+          ))
+        }
+      </ol>
+      <p class="foot fine">Applied from {sintraIdea.author}’s idea, {sintraIdea.appliedAt}</p>
+    </section>
+  </div>
+  <figcaption class="fine">{conversationsCopy.caption}</figcaption>
+</figure>
+
+<script>
+  import { playTripChat } from '@/scripts/feature-conversations-chat';
+
+  for (const chat of document.querySelectorAll<HTMLElement>('[data-trip-chat]')) playTripChat(chat);
+</script>
+
+<style>
+  .chat-figure {
+    display: grid;
+    gap: 14px;
+  }
+  figcaption {
+    text-align: center;
+  }
+  .shell {
+    display: grid;
+    gap: 16px;
+    align-items: stretch;
+  }
+  @media (min-width: 860px) {
+    .shell {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+    }
+  }
+  .chat,
+  .plan {
+    overflow: hidden;
+  }
+  .plan {
+    display: flex;
+    flex-direction: column;
+  }
+  .head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13.5px;
+  }
+  .head b {
+    font-weight: 600;
+  }
+  .head > :global(svg) {
+    width: 16px;
+    height: 16px;
+    color: var(--primary);
+  }
+  .head .example-label {
+    margin-left: auto;
+  }
+  .live {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 0 3px var(--success-soft);
+  }
+  .shell.paused .live {
+    background: var(--muted-foreground);
+    box-shadow: 0 0 0 3px var(--muted);
+  }
+  .toggle {
+    flex: none;
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--background);
+    color: var(--muted-foreground);
+    cursor: pointer;
+  }
+  .toggle:hover {
+    color: var(--foreground);
+    background: var(--muted);
+  }
+  .toggle:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+  .head {
+    flex-wrap: nowrap;
+  }
+  .head b {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  @media (max-width: 520px) {
+    .head > .fine {
+      display: none;
+    }
+  }
+  .toggle[hidden] {
+    display: none;
+  }
+  .toggle :global(svg) {
+    width: 14px;
+    height: 14px;
+    color: inherit;
+  }
+  .toggle :global(.when-paused),
+  .shell.paused .toggle :global(.when-playing) {
+    display: none;
+  }
+  .shell.paused .toggle :global(.when-paused) {
+    display: block;
+  }
+  .stream {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    height: 360px;
+    overflow: hidden;
+    padding: 14px 12px 6px;
+  }
+  .hint {
+    padding: 10px 18px;
+    border-top: 1px solid var(--border);
+    background: var(--canvas);
+  }
+  .plan ol {
+    list-style: none;
+    margin: 0;
+    padding: 6px 0;
+    flex: 1;
+    display: grid;
+    align-content: start;
+  }
+  .foot {
+    padding: 10px 18px;
+    border-top: 1px solid var(--border);
+    background: var(--canvas);
+  }
+  .row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 10px;
+    height: 42px;
+    padding: 0 18px;
+    align-items: center;
+    font-size: 14.5px;
+    transition: background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .row.hot {
+    background: var(--primary-soft);
+  }
+
+  .row.hot .what {
+    font-weight: 600;
+  }
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .row,
+  }
+</style>
+
+<style is:global>
+  .fc-msg {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 12px;
+    padding: 10px 8px;
+    border-radius: 10px;
+    font-size: 14.5px;
+    line-height: 1.45;
+    transition: background-color 0.2s ease;
+  }
+  .fc-msg:hover,
+  .fc-msg:focus-within {
+    background: var(--canvas);
+  }
+  .fc-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .fc-head b {
+    font-weight: 600;
+  }
+  .fc-text {
+    margin-top: 2px;
+  }
+  .fc-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .fc-reactions {
+    display: contents;
+  }
+  .fc-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--background);
+    font-size: 12.5px;
+  }
+  .fc-chip[data-mine] {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+  }
+  .fc-emoji {
+    display: grid;
+    color: var(--muted-foreground);
+  }
+  .fc-emoji svg {
+    width: 14px;
+    height: 14px;
+  }
+  .fc-chip[data-mine] .fc-emoji {
+    color: var(--primary-ink);
+  }
+  .fc-n {
+    font: 600 12px/1 var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .fc-btn {
+    height: 24px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted-foreground);
+    font: 500 12.5px/1 var(--font-sans);
+    cursor: pointer;
+  }
+  .fc-btn[hidden] {
+    display: none;
+  }
+  .fc-btn:hover {
+    background: var(--muted);
+    color: var(--foreground);
+  }
+  .fc-btn[aria-pressed='true'] {
+    color: var(--primary-ink);
+  }
+  .fc-btn:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 1px;
+  }
+  .fc-thread {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: grid-template-rows 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .fc-msg.folded .fc-thread {
+    grid-template-rows: 0fr;
+  }
+  .fc-thread-inner {
+    overflow: hidden;
+    min-height: 0;
+    display: grid;
+    gap: 6px;
+  }
+  .fc-thread-inner:not(:empty) {
+    margin-top: 8px;
+    padding-left: 12px;
+    border-left: 1px solid var(--border);
+  }
+  .fc-msg.folded .fc-thread-inner {
+    margin-top: 0;
+  }
+  .fc-reply {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 10px;
+    font-size: 14px;
+  }
+  .fc-reply b {
+    font-weight: 600;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fc-thread {
+      transition-duration: 0s;
+    }
+  }
+</style>

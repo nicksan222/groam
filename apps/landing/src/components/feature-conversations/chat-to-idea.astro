@@ -1,0 +1,191 @@
+---
+import Icon from '@/components/icon.astro';
+import { ideaCopy } from '@/content/feature-conversations';
+---
+
+<section class="wrap lift" aria-labelledby="lift-title" data-chat-to-idea>
+  <div class="intro">
+    <h2 id="lift-title">{ideaCopy.title}</h2>
+    <p>{ideaCopy.lede}</p>
+    <button class="btn btn-primary" type="button" aria-expanded="false" data-lift>
+      <span class="when-chat">
+        <Icon name="idea" />
+        {ideaCopy.action}
+      </span>
+      <span class="when-idea">{ideaCopy.back}</span>
+    </button>
+  </div>
+
+  <div class="stage surface" role="group" aria-label="Example trip">
+    <span class="example-label">Example trip</span>
+    <div class="msg">
+      <span class="avatar avatar-maya" aria-hidden="true">M</span>
+      <div>
+        <p class="who"><b>Maya</b> <span class="time">Fri 20:05</span></p>
+        <p class="text">{ideaCopy.message}</p>
+      </div>
+    </div>
+    <div class="idea" data-idea aria-hidden="true">
+      <p class="head">
+        <span class="chip chip-idea">Idea</span>
+        <b>{ideaCopy.ideaTitle}</b>
+        <span class="fine">{ideaCopy.byline}</span>
+      </p>
+      <ul>
+        <li class="gone">
+          <span class="time">{ideaCopy.replaces.time}</span>
+          <s>{ideaCopy.replaces.title}</s>
+        </li>
+        <li class="row">
+          <span class="time">{ideaCopy.proposes.time}</span>
+          <span>{ideaCopy.proposes.title}</span>
+          <span class="chip chip-done">Proposed row</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<script>
+  for (const root of document.querySelectorAll<HTMLElement>('[data-chat-to-idea]')) {
+    const button = root.querySelector<HTMLButtonElement>('[data-lift]');
+    button?.addEventListener('click', () => {
+      const on = button.getAttribute('aria-expanded') !== 'true';
+      button.setAttribute('aria-expanded', String(on));
+      root.querySelector('[data-idea]')?.setAttribute('aria-hidden', String(!on));
+      root.toggleAttribute('data-on', on);
+    });
+  }
+</script>
+
+<style>
+  .lift {
+    display: grid;
+    gap: 32px;
+    padding-bottom: clamp(56px, 8vw, 112px);
+  }
+  @media (min-width: 960px) {
+    .lift {
+      grid-template-columns: minmax(0, 4fr) minmax(0, 7fr);
+      align-items: center;
+      gap: 56px;
+    }
+  }
+  h2 {
+    font-size: clamp(1.5rem, 2.8vw, 2.1rem);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    max-width: 20ch;
+  }
+  .intro p {
+    margin: 12px 0 20px;
+    max-width: 44ch;
+    color: var(--muted-foreground);
+  }
+  .btn :global(svg) {
+    width: 15px;
+    height: 15px;
+  }
+  .btn:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+  .btn span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn .when-idea,
+  [data-on] .btn .when-chat {
+    display: none;
+  }
+  [data-on] .btn .when-idea {
+    display: inline-flex;
+  }
+  .stage {
+    position: relative;
+    display: grid;
+    gap: 14px;
+    padding: 44px 18px 18px;
+    min-height: 260px;
+    align-content: start;
+  }
+  .stage .example-label {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+  }
+  .msg {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--canvas);
+    transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .who {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    font-size: 14.5px;
+  }
+  .text {
+    font-size: 14.5px;
+  }
+  [data-on] .msg {
+    opacity: 0.55;
+  }
+  .idea {
+    display: grid;
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid color-mix(in srgb, var(--primary) 35%, var(--border));
+    border-radius: var(--radius);
+    background: var(--primary-soft);
+    opacity: 0.4;
+    transform: translateY(6px);
+    border-style: dashed;
+    transition:
+      opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  [data-on] .idea {
+    opacity: 1;
+    transform: none;
+    border-style: solid;
+  }
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    font-size: 14px;
+  }
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+  }
+  li {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: var(--card);
+    font-size: 14px;
+  }
+  .gone {
+    color: var(--muted-foreground);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .msg,
+    .idea {
+      transition-duration: 0s;
+    }
+  }
+</style>

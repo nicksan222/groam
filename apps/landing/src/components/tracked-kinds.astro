@@ -1,0 +1,141 @@
+---
+import Icon from '@/components/icon.astro';
+
+const kinds = [
+  {
+    label: 'Idea',
+    icon: 'idea',
+    tone: 'chip-idea',
+    body: 'A suggested change to the plan. The group looks it over, asks for tweaks, and applies it once everyone is happy.'
+  },
+  {
+    label: 'Issue',
+    icon: 'issue',
+    tone: '',
+    body: 'Something the trip still needs, like a dinner nobody has booked. It closes by itself when the idea that fixes it is applied.'
+  },
+  {
+    label: 'Conversation',
+    icon: 'chat',
+    tone: '',
+    body: "Group chat with replies and reactions, kept inside the trip it's about."
+  },
+  {
+    label: 'Agent',
+    icon: 'agent',
+    tone: 'chip-agent',
+    body: "AI help that knows the trip and the screen you're on. Specialized agents can work on ideas and issues."
+  }
+] as const;
+---
+
+<section class="tracked" id="tracked" data-tracked>
+  <div class="wrap">
+    <h2 class="section-title">Every part of the plan has a place</h2>
+    <p class="section-lede">Changes, loose ends, chat, and AI help all live inside the trip, right next to the plan they touch. Nobody has to dig through a thread to learn what was decided.</p>
+    <dl class="kinds">
+      {
+        kinds.map((kind, index) => (
+          <div class="kind" style={`--i: ${index}`}>
+            <dt>
+              <span class:list={['chip', kind.tone]}>
+                <Icon name={kind.icon} />
+                {kind.label}
+              </span>
+            </dt>
+            <dd>{kind.body}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+</section>
+
+<script>
+  import { lightKinds } from '@/scripts/home-tracked';
+
+  for (const section of document.querySelectorAll<HTMLElement>('[data-tracked]')) lightKinds(section);
+</script>
+
+<style>
+  .tracked {
+    padding-block: clamp(64px, 9vw, 128px);
+    background: var(--canvas);
+    border-block: 1px solid var(--border);
+  }
+  .kinds {
+    margin: 48px 0 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border-top: 1px solid var(--border);
+  }
+  .kind {
+    display: grid;
+    gap: 12px;
+    align-content: start;
+    padding: 28px 28px 8px 0;
+  }
+  .kind + .kind {
+    padding-left: 28px;
+    border-left: 1px solid var(--border);
+  }
+  .kind {
+    position: relative;
+  }
+  .kind::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--primary);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .kind:hover::before {
+    transform: none;
+  }
+  .tracked:global(.lit) .kind::before {
+    transition-delay: calc(var(--i) * 260ms);
+    transform: none;
+    animation: dim 1.2s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--i) * 260ms + 900ms) forwards;
+  }
+  @keyframes dim {
+    to {
+      transform: scaleX(0);
+      transform-origin: right;
+    }
+  }
+  dd {
+    margin: 0;
+    max-width: 34ch;
+    color: var(--muted-foreground);
+    font-size: 15px;
+  }
+  @media (max-width: 900px) {
+    .kinds {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .kind:nth-child(odd) {
+      padding-left: 0;
+      border-left: 0;
+    }
+    .kind:nth-child(n + 3) {
+      border-top: 1px solid var(--border);
+      margin-top: 20px;
+    }
+  }
+  @media (max-width: 560px) {
+    .kinds {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .kind + .kind {
+      padding-left: 0;
+      border-left: 0;
+      border-top: 1px solid var(--border);
+      margin-top: 20px;
+    }
+  }
+</style>

@@ -1,0 +1,460 @@
+---
+import Icon from '@/components/icon.astro';
+import { hubBlurbs } from '@/content/features-hub';
+import { exampleTrip, planBefore, saturdayAfter, sintraIdea, tripIssues } from '@/content/example-trip';
+import { features, featurePath } from '@/content/site';
+---
+
+<div class="explorer" data-explorer>
+  <ul class="list">
+    {
+      features.map((feature, n) => (
+        <li class:list={['item', n === 0 && 'active run']} data-item>
+          <button type="button" aria-pressed={n === 0} aria-controls={`hub-preview-${feature.slug}`}>
+            <Icon name={feature.icon} />
+            <span class="text">
+              <b>{feature.name}</b>
+              <span class="blurb">{hubBlurbs[feature.slug]}</span>
+            </span>
+          </button>
+          <a class="more" href={`${featurePath(feature.slug).replace(/\/$/, '')}/`}>
+            Read more<span class="visually-hidden"> about {feature.name}</span>
+            <Icon name="arrow-right" />
+          </a>
+          <span class="bar" aria-hidden="true"></span>
+        </li>
+      ))
+    }
+  </ul>
+
+  <div class="stage surface">
+    <header class="stage-head">
+      <b>{exampleTrip.name}</b>
+      <span class="example-label">Example trip</span>
+      <button class="pause" type="button" data-toggle data-hub-toggle hidden aria-pressed="false">
+        <Icon name="pause" class="i-pause" />
+        <Icon name="play" class="i-play" />
+        <span class="visually-hidden">Pause the feature tour</span>
+      </button>
+    </header>
+    <div class="previews" role="group" aria-label="Preview of the selected feature">
+      <div class="preview active" id="hub-preview-itinerary" data-preview>
+        <p class="head"><b>Saturday</b><span class="time">{exampleTrip.dates}</span></p>
+        <ul class="stack">
+          {
+            saturdayAfter.map((stop, n) => (
+              <li class="r" style={`--i:${n}`}>
+                <span class="time">{stop.time}</span>
+                {stop.title}
+              </li>
+            ))
+          }
+        </ul>
+        <p class="head sub"><b>Sunday</b><span class="time">{planBefore.sun.length} stops</span></p>
+        <ul class="stack">
+          {
+            planBefore.sun.slice(0, 1).map((stop, n) => (
+              <li class="r" style={`--i:${n + 5}`}>
+                <span class="time">{stop.time}</span>
+                {stop.title}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+      <div class="preview" id="hub-preview-ideas" data-preview>
+        <p class="head"><b>{sintraIdea.title}</b><span class="chip chip-idea">Idea</span></p>
+        <ul class="stack">
+          {
+            sintraIdea.removes.map((stop, n) => (
+              <li class="r del" style={`--i:${n}`}>
+                <span class="sign">&minus;</span>
+                <span class="time">{stop.time}</span>
+                {stop.title}
+              </li>
+            ))
+          }
+          {
+            sintraIdea.adds.map((stop, n) => (
+              <li class="r add" style={`--i:${n + 2}`}>
+                <span class="sign">+</span>
+                <span class="time">{stop.time}</span>
+                {stop.title}
+              </li>
+            ))
+          }
+        </ul>
+        <p class="r note" style="--i:6">
+          <span class="avatar avatar-agent"><Icon name="agent" /></span>
+          {sintraIdea.agentNote}
+        </p>
+      </div>
+      <div class="preview" id="hub-preview-issues" data-preview>
+        <p class="head"><b>Issues</b><span class="time">{tripIssues.length} on the trip</span></p>
+        <ul class="stack">
+          {
+            tripIssues.map((issue, n) => (
+              <li class:list={['r', 'issue', n === 2 && 'closing']} style={`--i:${n}`}>
+                {n === 2 ? (
+                  <span class="chip chip-done">
+                    <Icon name="check" />
+                    Closed
+                  </span>
+                ) : (
+                  <span class="chip">Open</span>
+                )}
+                <span class="issue-text">
+                  <b>{issue.title}</b>
+                  <span class="fine">Linked idea: {issue.fix}</span>
+                </span>
+              </li>
+            ))
+          }
+        </ul>
+        <p class="fine r" style="--i:3">1 closed, 2 open. Closed when its linked idea, {sintraIdea.title}, was applied.</p>
+      </div>
+      <div class="preview" id="hub-preview-conversations" data-preview>
+        <p class="head"><b>Trip chat</b><span class="time">{exampleTrip.name}</span></p>
+        <ul class="stack chat">
+          <li class="r bubble" style="--i:0"><span class="avatar avatar-maya" aria-hidden="true">M</span>What about Sintra on Saturday instead of Belém?</li>
+          <li class="r bubble" style="--i:1"><span class="avatar avatar-jonas" aria-hidden="true">J</span>Put it in as an idea and we will look.</li>
+          <li class="r bubble" style="--i:2"><span class="avatar avatar-priya" aria-hidden="true">P</span>Sam, can you check the 09:30 train?</li>
+          <li class="r bubble" style="--i:3"><span class="avatar avatar-sam" aria-hidden="true">S</span>On it. I will reply here.</li>
+        </ul>
+      </div>
+      <div class="preview" id="hub-preview-ai" data-preview>
+        <p class="head"><b>Assistant</b><span class="chip chip-agent">Looking at Itinerary</span></p>
+        <ul class="stack chat">
+          <li class="r bubble me" style="--i:0">Does the Sintra idea clash with anything?</li>
+          <li class="r bubble bot" style="--i:1">
+            <span class="avatar avatar-agent"><Icon name="agent" /></span>
+            {sintraIdea.clashCheck}
+          </li>
+          <li class="r proposal" style="--i:2"><span class="chip chip-idea">Idea</span>{sintraIdea.title} <span class="by">by {sintraIdea.author}</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { playFeaturesHub } from '@/scripts/features-hub-explorer';
+
+  for (const explorer of document.querySelectorAll<HTMLElement>('[data-explorer]')) playFeaturesHub(explorer);
+</script>
+
+<style>
+  .explorer {
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(24px, 5vw, 72px);
+    align-items: start;
+  }
+  .list {
+    display: grid;
+  }
+  .item {
+    position: relative;
+    display: grid;
+    border-top: 1px solid var(--border);
+  }
+  .item:last-child {
+    border-bottom: 1px solid var(--border);
+  }
+  .item button {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 14px;
+    align-items: start;
+    width: 100%;
+    padding: 20px 4px 20px 0;
+    border: 0;
+    background: transparent;
+    color: var(--muted-foreground);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: color 0.3s ease, padding 0.5s var(--ease);
+  }
+  .item button:focus-visible,
+  .more:focus-visible,
+  .pause:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+  .item :global(svg) {
+    width: 22px;
+    height: 22px;
+  }
+  .item button :global(svg) {
+    margin-top: 2px;
+  }
+  .text {
+    display: grid;
+    gap: 4px;
+  }
+  .text b {
+    font-size: clamp(1.15rem, 2vw, 1.5rem);
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+  .blurb {
+    max-width: 44ch;
+  }
+  .active button {
+    color: var(--foreground);
+    padding-left: 10px;
+  }
+  .active button :global(svg) {
+    color: var(--primary);
+  }
+  .more {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    margin: -8px 0 20px 38px;
+    justify-self: start;
+    color: var(--primary-ink);
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .more :global(svg) {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.3s var(--ease);
+  }
+  .more:hover :global(svg) {
+    transform: translateX(3px);
+  }
+  .active .more {
+    display: inline-flex;
+    margin-left: 48px;
+  }
+  .bar {
+    position: absolute;
+    inset: auto 0 -1px 0;
+    height: 2px;
+    background: var(--primary);
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  .active.run .bar {
+    animation: fill 5200ms linear forwards;
+  }
+  .holding .active.run .bar {
+    animation-play-state: paused;
+  }
+  .stage {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    align-self: stretch;
+    min-height: 34rem;
+    overflow: hidden;
+  }
+  .stage-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--canvas);
+  }
+  .previews {
+    position: relative;
+    padding: 24px;
+  }
+  .preview {
+    position: absolute;
+    inset: 24px;
+    display: grid;
+    align-content: start;
+    gap: 12px;
+    opacity: 0;
+    visibility: hidden;
+    filter: blur(6px);
+    transform: translateY(-14px) scale(0.98);
+    transition:
+      opacity 0.45s var(--ease),
+      filter 0.45s var(--ease),
+      transform 0.6s var(--ease),
+      visibility 0s linear 0.6s;
+  }
+  .preview.active {
+    opacity: 1;
+    visibility: visible;
+    filter: blur(0);
+    transform: none;
+    transition-delay: 0.12s;
+    clip-path: inset(0);
+    animation: wipe 0.9s var(--ease) 0.1s backwards;
+  }
+  .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .stack {
+    display: grid;
+    gap: 8px;
+  }
+  .r .chip {
+    min-width: 4.5rem;
+    justify-content: center;
+  }
+  .sub {
+    margin-top: 6px;
+  }
+  .r {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--background);
+  }
+  .fine.r,
+  .votes {
+    border: 0;
+    padding-inline: 0;
+    background: transparent;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .votes {
+    font-size: 13px;
+  }
+  .votes .avatar:not(:first-child) {
+    margin-left: 8px;
+  }
+  .add {
+    background: var(--success-soft);
+  }
+  .del {
+    color: var(--muted-foreground);
+    text-decoration: line-through;
+  }
+  .sign {
+    font: 600 14px var(--font-mono);
+  }
+  .chat .bubble {
+    align-items: flex-start;
+    border-radius: 12px;
+  }
+  .chat .me {
+    background: var(--primary-soft);
+    color: var(--primary-ink);
+    border-color: transparent;
+  }
+  .chat .avatar {
+    flex: none;
+  }
+  .active .r {
+    animation: rise 0.7s var(--ease) backwards;
+    animation-delay: calc(var(--i) * 110ms + 200ms);
+  }
+  .note {
+    align-items: flex-start;
+    border-color: var(--input);
+  }
+  .issue-text {
+    display: grid;
+    gap: 2px;
+  }
+  .issue-text b {
+    font-weight: 600;
+  }
+  .proposal {
+    flex-wrap: wrap;
+    font-weight: 500;
+    background: color-mix(in srgb, var(--primary) 8%, var(--card));
+  }
+  .by {
+    color: var(--muted-foreground);
+    font-weight: 400;
+  }
+  .active .closing .chip-done {
+    animation: pop 0.5s var(--ease) 0.4s backwards;
+  }
+  .pause {
+    margin-left: auto;
+    display: inline-grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--background);
+    color: var(--foreground);
+    cursor: pointer;
+  }
+  .pause[hidden] {
+    display: none;
+  }
+  .pause :global(svg) {
+    width: 16px;
+    height: 16px;
+  }
+  .pause :global(.i-play),
+  .paused .pause :global(.i-pause) {
+    display: none;
+  }
+  .paused .pause :global(.i-play) {
+    display: block;
+  }
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  @keyframes wipe {
+    from {
+      clip-path: inset(0 0 100% 0);
+    }
+  }
+  @keyframes fill {
+    to {
+      transform: scaleX(1);
+    }
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+  }
+  @media (max-width: 860px) {
+    .explorer {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .stage {
+      order: -1;
+      min-height: 36rem;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .preview.active,
+    .active .r,
+    .active .closing .chip-done,
+    .active.run .bar {
+      animation: none;
+    }
+    .preview,
+    .item button,
+    .more :global(svg) {
+      transition: none;
+      filter: none;
+    }
+  }
+</style>

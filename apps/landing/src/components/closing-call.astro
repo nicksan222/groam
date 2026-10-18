@@ -1,0 +1,34 @@
+---
+import { env } from '@groam/env/landing';
+---
+
+<section class="wrap closing">
+  <h2 class="section-title">Your next trip starts with one idea.</h2>
+  <div class="cta">
+    <a class="btn btn-primary btn-lg" href={env.appUrl}>Start a trip</a>
+    <p class="fine">Plan on your own for free. Bring the group in when you're ready.</p>
+  </div>
+</section>
+
+<style>
+  .closing {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: 24px;
+    padding-block: 48px clamp(64px, 8vw, 112px);
+  }
+  .closing::before {
+    content: '';
+    flex-basis: 100%;
+    height: 2px;
+    margin-bottom: 24px;
+    background: var(--foreground);
+  }
+  .cta {
+    display: grid;
+    gap: 10px;
+    justify-items: start;
+  }
+</style>

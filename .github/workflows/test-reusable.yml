@@ -134,6 +134,39 @@ jobs:
       - name: UI, assistant, and auth tests
         run: bun run test:ui
 
+  landing:
+    name: 🛬 Landing site
+    needs: [lint, typecheck]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CI: 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup workspace
+        uses: ./.github/actions/setup-workspace
+
+      - name: Setup Chromium
+        uses: ./.github/actions/setup-chromium
+
+      # Builds the static site, then drives every page in Chromium.
+      - name: Landing build and browser tests
+        run: bun run test:landing
+
+      - name: Upload failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: landing-failure-${{ github.run_id }}
+          if-no-files-found: ignore
+          include-hidden-files: true
+          retention-days: 7
+          path: apps/landing/.vitest/
+
   journeys:
     name: 🎭 Journeys
     needs: [lint, typecheck]

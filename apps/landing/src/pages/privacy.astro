@@ -1,0 +1,115 @@
+---
+import LegalDocument from '@/components/legal/legal-document.astro';
+import PageIntro from '@/components/page-intro.astro';
+import SubpageLayout from '@/layouts/subpage-layout.astro';
+
+const toc = [
+  { id: 'what-we-collect', title: 'What we collect' },
+  { id: 'how-we-use-it', title: 'How we use it' },
+  { id: 'ai', title: 'AI and your ChatGPT account' },
+  { id: 'sharing', title: 'Who can see your trips' },
+  { id: 'payments', title: 'Payments' },
+  { id: 'your-choices', title: 'Your choices' },
+  { id: 'changes', title: 'Changes to this page' }
+];
+---
+
+<SubpageLayout
+  title="Privacy"
+  description="What Groam collects when you plan a trip, why, and the choices you have."
+>
+  <PageIntro
+    title="Privacy"
+    lede="What Groam collects when you plan a trip with us, why we need it, and the choices you have."
+  />
+  <LegalDocument toc={toc} updated="17 October 2026">
+    <section id="what-we-collect">
+      <h2>What we collect</h2>
+      <p>
+        To run Groam we store what you put into it and what it needs to sign you in.
+      </p>
+      <ul>
+        <li>
+          <b>Your account.</b> Your name, email address, and the sign-in details you set up,
+          such as a password, a passkey, or two-step verification. We handle sign-in ourselves and keep your sessions so you stay signed in.
+        </li>
+        <li>
+          <b>Your groups.</b> The groups you create or join, their members, and the invitations
+          you send.
+        </li>
+        <li>
+          <b>Your trips.</b> Destinations, dates, itineraries, ideas, issues, and the
+          conversations that sit next to them, including who wrote or changed what.
+        </li>
+        <li>
+          <b>Files you add.</b> Photos and attachments you upload to a trip.
+        </li>
+        <li>
+          <b>AI activity.</b> The chats you have with Groam's AI agents and the results they
+          produce in your trips.
+        </li>
+      </ul>
+    </section>
+
+    <section id="how-we-use-it">
+      <h2>How we use it</h2>
+      <p>
+        We use this information to run the product: to show your group the shared plan,
+        record every change on it, send the notifications you would expect, and keep your
+        account secure. We do not need it for anything else, and this draft does not describe
+        any other use.
+      </p>
+    </section>
+
+    <section id="ai">
+      <h2>AI and your ChatGPT account</h2>
+      <p>
+        Groam's AI features run on your own connected ChatGPT account. When you ask an agent
+        something, the relevant part of your trip and your message are sent to that service
+        under your account, and the answer comes back into Groam. That service has its own
+        terms and privacy policy, which apply to what it receives.
+      </p>
+      <p>
+        You can connect or disconnect your account in your settings. Without a connection,
+        you can still plan with your group.
+      </p>
+    </section>
+
+    <section id="sharing">
+      <h2>Who can see your trips</h2>
+      <p>
+        Trips belong to a group. Members of the group can see its trips, ideas, issues, and
+        conversations, and can see who made each change. People outside the group cannot.
+        Because Groam is built for planning together, anything you add to a shared trip is
+        visible to the people you shared it with.
+      </p>
+    </section>
+
+    <section id="payments">
+      <h2>Payments</h2>
+      <p>
+        Planning on your own is free. Inviting travelers will cost €1 per invited traveler,
+        once. Paid invites are not live yet, so Groam is not collecting payment details
+        today. When that changes, this page will be updated to say who handles payments and
+        what they receive.
+      </p>
+    </section>
+
+    <section id="your-choices">
+      <h2>Your choices</h2>
+      <ul>
+        <li>You can edit the details in your account and trips at any time.</li>
+        <li>You can disconnect your ChatGPT account whenever you like.</li>
+        <li>You can ask us to access, correct, or delete the information we hold about you.</li>
+      </ul>
+    </section>
+
+    <section id="changes">
+      <h2>Changes to this page</h2>
+      <p>
+        This is a draft. If we change it in a way that matters, we will update the date at the
+        top of the page.
+      </p>
+    </section>
+  </LegalDocument>
+</SubpageLayout>

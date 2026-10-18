@@ -1,0 +1,27 @@
+---
+import ClosingCall from '@/components/closing-call.astro';
+import Hero from '@/components/hero.astro';
+import IdeaThread from '@/components/idea-thread.astro';
+import TripRibbon from '@/components/home/trip-ribbon.astro';
+import PricingTeaser from '@/components/pricing/pricing-teaser.astro';
+import SiteFooter from '@/components/site-footer.astro';
+import SiteNav from '@/components/site-nav.astro';
+import TrackedKinds from '@/components/tracked-kinds.astro';
+import LandingLayout from '@/layouts/landing-layout.astro';
+---
+
+<LandingLayout
+  title="Groam · Plan group trips together"
+  description="A shared place where people and AI agents plan group trips. Every idea, review, and fix is on the record, so the group always knows what was decided."
+>
+  <SiteNav />
+  <main id="content">
+    <Hero />
+    <TripRibbon />
+    <TrackedKinds />
+    <IdeaThread />
+    <PricingTeaser />
+    <ClosingCall />
+  </main>
+  <SiteFooter />
+</LandingLayout>
