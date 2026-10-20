@@ -14,7 +14,8 @@ export type AssistantCredentialScope = { organizationId: string; userId: string 
 /** Resolve the initiating user's personal ChatGPT plan. */
 export async function configuredAssistantProvider(
   ctx: ActionCtx,
-  scope: AssistantCredentialScope
+  scope: AssistantCredentialScope,
+  options?: { research: { searchContextSize: 'low' | 'medium' | 'high' } }
 ): Promise<AssistantProviderConfiguration> {
   if (!(await hasOrganizationMembership(ctx, scope.organizationId, scope.userId)))
     throw new ConvexError('Organization access denied');
@@ -26,6 +27,7 @@ export async function configuredAssistantProvider(
   return configuredChatGptProvider({
     accessToken: connection.tokens.accessToken,
     model,
+    ...(options?.research ? { searchContextSize: options.research.searchContextSize } : {}),
     fetch: async (input, init) => {
       // Recheck on each tool step: disconnects and refreshed tokens take effect immediately.
       const current = await usableChatGptConnection(ctx, scope.userId, connection._id);

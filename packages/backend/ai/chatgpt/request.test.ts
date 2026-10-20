@@ -138,3 +138,19 @@ test('rejects allowed_tools selectors that cannot target wrapped local tool name
     })
   ).toThrow('Choose auto, required, or a specific local tool');
 });
+
+test('required selection remains valid when the researcher has one namespaced local tool', () => {
+  const result = chatGptRequest({
+    tools: [{ type: 'function', name: 'researchWeb', parameters: { type: 'object' } }],
+    input: 'Research this topic',
+    tool_choice: 'required'
+  });
+  expect(result.tool_choice).toBe('required');
+  expect(result.tools).toEqual([
+    expect.objectContaining({
+      type: 'namespace',
+      name: 'groam',
+      tools: [expect.objectContaining({ name: 'researchWeb' })]
+    })
+  ]);
+});

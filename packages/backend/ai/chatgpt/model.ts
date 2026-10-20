@@ -14,6 +14,7 @@ export function configuredChatGptProvider(input: {
   accessToken: string;
   model: string;
   fetch?: typeof globalThis.fetch;
+  searchContextSize?: 'low' | 'medium' | 'high';
 }): AssistantProviderConfiguration {
   if (!input.accessToken.trim() || !input.model.trim())
     throw new ConvexError('Connect ChatGPT and select an available model to use Groam AI.');
@@ -38,7 +39,10 @@ export function configuredChatGptProvider(input: {
     }),
     modelId: input.model,
     providerTools: {
-      web_search: provider.tools.webSearch({ externalWebAccess: true, searchContextSize: 'low' })
+      web_search: provider.tools.webSearch({
+        externalWebAccess: true,
+        searchContextSize: input.searchContextSize ?? 'low'
+      })
     }
   };
 }
