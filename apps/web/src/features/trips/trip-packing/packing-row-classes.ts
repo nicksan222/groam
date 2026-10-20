@@ -10,7 +10,4 @@ export const packingRowClass =
 export const packingRowDeferredClass =
   '[contain-intrinsic-size:auto_5rem] [content-visibility:auto]';
 
-/** Right-hand column: aligned between the shared rows and the editor's. */
-export const packingActionColumnClass = 'sm:w-32';
-
 export const packingListClass = '-mx-3 flex flex-col';

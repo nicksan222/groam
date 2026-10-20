@@ -32,7 +32,7 @@ export function GroupGearItem({
       className={cn(
         packingRowClass,
         packingRowDeferredClass,
-        'flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4'
+        'flex flex-col gap-3 @lg/gear:flex-row @lg/gear:items-center @lg/gear:gap-5'
       )}
       data-testid={testIds.tripPackingGearItem}
     >
@@ -43,7 +43,7 @@ export function GroupGearItem({
           <GroupGearBringerChips item={item} viewerUserId={viewerUserId} />
         </div>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 sm:flex-nowrap sm:justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 @lg/gear:flex-nowrap @lg/gear:justify-end @lg/gear:gap-x-5">
         <PackingCoverageBadge coverage={coverage} item={item} />
         {onClaim ? (
           <PackingClaimButton

@@ -46,7 +46,7 @@ export function GroupGearSection({
       : undefined;
 
   return (
-    <section className="flex flex-col gap-3" aria-labelledby="group-gear-heading">
+    <section className="@container/gear flex flex-col gap-3" aria-labelledby="group-gear-heading">
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <div className="min-w-0">
           <h3 className="text-sm font-semibold" id="group-gear-heading">

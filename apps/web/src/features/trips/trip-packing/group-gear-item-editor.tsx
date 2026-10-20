@@ -127,7 +127,7 @@ export function GroupGearItemEditor({
       data-testid={testIds.tripPackingGearItem}
     >
       <PackingRowFlash count={item.brought} />
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+      <div className="flex flex-col gap-2 @lg/gear:flex-row @lg/gear:items-center @lg/gear:gap-4">
         <Input
           aria-label={`Name of ${item.label}`}
           className={cn(
@@ -141,9 +141,9 @@ export function GroupGearItemEditor({
           title={label}
           value={label}
         />
-        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 sm:flex-nowrap sm:justify-end">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 @lg/gear:flex-nowrap @lg/gear:justify-end">
           <PackingCoverageBadge coverage={coverage} item={item} />
-          <div className="flex sm:w-32 sm:justify-end">
+          <div className="flex @lg/gear:w-32 @lg/gear:justify-end">
             {viewerFree ? (
               <PackingClaimButton
                 coverageState={coverage.state}
