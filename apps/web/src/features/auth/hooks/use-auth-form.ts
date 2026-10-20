@@ -10,6 +10,14 @@ function signInWithIdentifier(identifier: string, password: string) {
     : authClient.signIn.username({ password, username: identifier });
 }
 
+function needsEmailVerification(data: object | null) {
+  return data && 'token' in data && !data.token;
+}
+
+function needsTwoFactor(data: object | null) {
+  return data && 'twoFactorRedirect' in data && Boolean(data.twoFactorRedirect);
+}
+
 function isAuthenticatorCode(code: string) {
   return /^\d{6}$/u.test(code);
 }
@@ -35,6 +43,8 @@ function authenticationValidationError({
 export function useAuthForm() {
   const state = useAuthFormStore(
     useShallow((store) => ({
+      email: store.email,
+      message: store.message,
       error: store.error,
       flow: store.flow,
       identifier: store.identifier,
@@ -87,7 +97,10 @@ export function useAuthForm() {
       if (result.error) {
         throw new Error(result.error.message ?? 'Authentication failed');
       }
-      if (result.data && 'twoFactorRedirect' in result.data && result.data.twoFactorRedirect) {
+      if (!isSignIn && needsEmailVerification(result.data)) {
+        patch({ message: 'Check your email to verify your account, then sign in.', password: '' });
+      }
+      if (needsTwoFactor(result.data)) {
         patch({ needsTwoFactor: true, password: '' });
       }
     } catch (error: unknown) {
@@ -141,8 +154,12 @@ export function useAuthForm() {
 
   const signUp = async (username: string) => {
     if (!isValidUsername(username)) throw new Error(usernameRequirements);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(state.email.trim())) {
+      throw new Error('Enter a valid email address.');
+    }
     return await authClient.signUp.email({
-      email: `${crypto.randomUUID()}@users.invalid`,
+      callbackURL: window.location.origin + window.location.pathname,
+      email: state.email.trim(),
       name: state.name.trim(),
       password: state.password,
       username
