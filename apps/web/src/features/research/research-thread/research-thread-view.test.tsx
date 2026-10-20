@@ -7,6 +7,10 @@ import type { ResearchDetail } from '@/types/research';
 import { ResearchThreadView } from './research-thread-view';
 
 const state = vi.hoisted(() => ({
+  reference: undefined as
+    | undefined
+    | null
+    | { id: string; shortId: string; tripId?: string; kind: string },
   blocked: false,
   read: vi.fn(),
   actions: {
@@ -21,6 +25,10 @@ const state = vi.hoisted(() => ({
     threadId: 'thread-1' as null | string,
     writable: true
   }
+}));
+
+vi.mock('@/features/trips/hooks/use-entity-trip-reference', () => ({
+  useEntityTripReference: () => state.reference
 }));
 
 vi.mock('@/features/trips/trip-detail/trip-participation-boundary', () => ({
@@ -86,6 +94,7 @@ const research: ResearchDetail = {
 };
 
 beforeEach(() => {
+  state.reference = { id: 'r1', shortId: 'abcdef', tripId: 't1', kind: 'research' };
   state.blocked = false;
   vi.clearAllMocks();
   state.hook = { isLoading: false, research, threadId: 'thread-1', writable: true };
@@ -206,3 +215,23 @@ test('keeps brief, sources, and linked items in the supporting sidebar across vi
   await expect.element(sidebar.getByRole('heading', { name: 'Sources' })).toBeVisible();
   await expect.element(sidebar.getByRole('heading', { name: 'Linked trip items' })).toBeVisible();
 });
+
+test.each([
+  undefined,
+  null,
+  { id: 'r1', shortId: 'abcdef', kind: 'research' },
+  { id: 'r1', shortId: 'abcdef', tripId: 'other-trip', kind: 'research' },
+  { id: 'r1', shortId: 'abcdef', tripId: 't1', kind: 'group' }
+])(
+  'unresolved, missing, mixed-trip or non-research metadata %j never mounts content or checkout',
+  async (reference) => {
+    state.reference = reference;
+    state.blocked = true;
+    await view();
+    await expect
+      .element(page.getByText(reference === undefined ? 'Opening research…' : 'Research not found'))
+      .toBeVisible();
+    expect(state.read).not.toHaveBeenCalled();
+    await expect.element(page.getByText('Join this trip')).not.toBeInTheDocument();
+  }
+);

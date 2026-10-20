@@ -1,5 +1,7 @@
 import type { Id } from '@groam/backend/data-model';
-import { TripParticipationBoundary } from '@/features/trips/trip-detail/trip-participation-boundary';
+import { Search } from '@groam/icons';
+import { EmptyScreen } from '@groam/ui/components/empty-screen';
+import { EntityParticipationBoundary } from '@/features/trips/trip-detail/entity-participation-boundary';
 import { ParticipatingResearchThreadView } from './participating-research-thread-view';
 
 export function ResearchThreadView({
@@ -10,8 +12,21 @@ export function ResearchThreadView({
   tripId: Id<'trips'>;
 }) {
   return (
-    <TripParticipationBoundary tripId={tripId}>
-      {() => <ParticipatingResearchThreadView researchId={researchId} />}
-    </TripParticipationBoundary>
+    <EntityParticipationBoundary
+      reference={researchId}
+      table="discussions"
+      expectedTripId={tripId}
+      expectedKind="research"
+      loadingLabel="Opening research…"
+      missing={
+        <EmptyScreen
+          headline="Research not found"
+          description="It may have been removed, or it does not belong to this trip."
+          icon={Search}
+        />
+      }
+    >
+      <ParticipatingResearchThreadView researchId={researchId} />
+    </EntityParticipationBoundary>
   );
 }

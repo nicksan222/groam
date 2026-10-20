@@ -5,7 +5,16 @@ import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { IdeaCloneView } from './idea-clone-view';
 
-const state = vi.hoisted(() => ({ proposal: undefined as unknown, blocked: false, read: vi.fn() }));
+const state = vi.hoisted(() => ({
+  reference: undefined as undefined | null | { id: string; shortId: string; tripId?: string },
+  proposal: undefined as unknown,
+  blocked: false,
+  read: vi.fn()
+}));
+
+vi.mock('@/features/trips/hooks/use-entity-trip-reference', () => ({
+  useEntityTripReference: () => state.reference
+}));
 
 vi.mock('@/features/trips/trip-detail/trip-participation-boundary', () => ({
   TripParticipationBoundary: ({ children }: { children: () => ReactNode }) =>
@@ -61,6 +70,7 @@ function renderView(view: 'compare' | 'overview' = 'compare') {
 }
 
 beforeEach(() => {
+  state.reference = { id: 'idea-1', shortId: 'abcdef', tripId: 'trip-1' };
   state.blocked = false;
   state.read.mockClear();
   state.proposal = undefined;
@@ -120,3 +130,17 @@ describe('IdeaCloneView', () => {
     }
   );
 });
+
+test.each([undefined, null, { id: 'idea-1', shortId: 'abcdef', tripId: 'trip-other' }])(
+  'unresolved, missing, or mixed-trip idea metadata %j never mounts protected content or checkout',
+  async (reference) => {
+    state.reference = reference;
+    state.blocked = true;
+    await renderView();
+    await expect
+      .element(page.getByText(reference === undefined ? 'Loading idea…' : 'Idea not found'))
+      .toBeVisible();
+    expect(state.read).not.toHaveBeenCalled();
+    await expect.element(page.getByText('Join this trip')).not.toBeInTheDocument();
+  }
+);

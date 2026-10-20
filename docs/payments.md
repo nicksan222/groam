@@ -28,7 +28,10 @@ backend fixes the price to 100 euro cents.
 
 The backend infrastructure layer keeps new trips free. Automatic payment
 requirements activate with the checkout frontend in the final stack layer and
-apply only to trips created while payments are enabled. Existing
+apply only to trips created while both the Stripe API key and webhook secret
+are nonblank. Trips created during partial setup stay free after setup is
+completed. A webhook-secret outage does not unlock an already billable trip;
+Checkout fails before provider I/O until its configuration is restored. Existing
 trips retain their original access behavior. Removing the Stripe key skips
 payment requirements rather than locking users out.
 
