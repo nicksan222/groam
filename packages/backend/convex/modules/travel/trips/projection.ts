@@ -319,7 +319,50 @@ async function goingTravelerCount(ctx: QueryCtx, trip: TripQueryCtx): Promise<nu
   );
 }
 
+/** An unpaid preview is an explicit allowlist, built without loading plan rows or media URLs. */
+async function projectUnpaidPreview(ctx: QueryCtx, trip: TripQueryCtx) {
+  const cover = await projectCover(ctx, trip);
+  return {
+    activity: [],
+    archivedAt: trip.trip.archive?.at ?? null,
+    arrivalTransfer: null,
+    departureTransfer: null,
+    coverAttribution: cover.attribution,
+    coverStatus: trip.trip.cover?.status ?? null,
+    coverUrl: cover.url,
+    currency: trip.trip.currency,
+    dateNotes: null,
+    destination: { status: 'undecided' as const },
+    destinations: [],
+    id: trip.trip._id,
+    idealDurationDays: null,
+    initialBudget: null,
+    lastUpdatedAt: trip.trip.updatedAt,
+    minimumDurationDays: null,
+    name: trip.trip.name,
+    permissions: {
+      canArchive: false,
+      canEdit: false,
+      canEditCover: false,
+      canPropose: false,
+      canRestore: false,
+      isReadOnly: true
+    },
+    proposal: null,
+    role: trip.role,
+    startDate: null,
+    totalDurationDays: null,
+    totalPlannedCost: 0
+  };
+}
+
 export async function projectTrip(ctx: QueryCtx, trip: TripQueryCtx) {
+  if (!(await canParticipateInTrip(ctx, trip.trip, trip.workspace.userId))) {
+    const source = trip.trip.proposal
+      ? await loadSharedTripContext(ctx, trip.trip._id, trip.workspace, { allowUnpaid: true })
+      : trip;
+    return projectUnpaidPreview(ctx, source);
+  }
   const tripId = trip.trip._id;
   const [
     activity,
@@ -357,7 +400,6 @@ export async function projectTrip(ctx: QueryCtx, trip: TripQueryCtx) {
     ...activityTransfers
   ].reduce((total, item) => total + plannedCostAmount(item.cost, travelerCount), 0);
 
-  const canParticipate = await canParticipateInTrip(ctx, trip.trip, trip.workspace.userId);
   return {
     activity: activity.map((item) => ({
       actorName: item.actor.name,
@@ -391,16 +433,7 @@ export async function projectTrip(ctx: QueryCtx, trip: TripQueryCtx) {
     lastUpdatedAt: trip.trip.updatedAt,
     minimumDurationDays: trip.trip.duration?.minimumDays ?? null,
     name: trip.trip.name,
-    permissions: canParticipate
-      ? tripPermissions(trip)
-      : {
-          canArchive: false,
-          canEdit: false,
-          canEditCover: false,
-          canPropose: false,
-          canRestore: false,
-          isReadOnly: true
-        },
+    permissions: tripPermissions(trip),
     proposal: trip.trip.proposal
       ? {
           author: trip.trip.proposal.author,

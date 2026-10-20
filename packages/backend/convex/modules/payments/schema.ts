@@ -15,6 +15,7 @@ export const paymentTables = {
 
 export const PaymentValidators = {
   status: v.object({
+    archived: v.boolean(),
     enabled: v.boolean(),
     travelers: v.array(v.object({ userId: v.string(), paid: v.boolean(), free: v.boolean() }))
   }),
