@@ -21,6 +21,11 @@ panel is hidden. Developers and self-hosted installations can use the applicatio
 without Stripe. When enabling Stripe, configure its webhook secret too; incomplete
 configuration must not create a checkout that cannot be confirmed.
 
+Configure a Stripe webhook at `https://<deployment>.convex.site/stripe/webhook`
+using the Convex HTTP origin, and subscribe to `checkout.session.completed`.
+Checkout supports immediate card payments. No Stripe Price ID is needed: the
+backend fixes the price to 100 euro cents.
+
 Payment requirements apply to trips created while payments are enabled. Existing
 trips retain their original access behavior. Removing the Stripe key skips
 payment requirements rather than locking users out.
