@@ -25,21 +25,26 @@ import {
 export async function projectTripListItem(
   ctx: QueryCtx,
   data: Doc<'trips'>,
-  favoriteIds: Set<Id<'trips'>>
+  favoriteIds: Set<Id<'trips'>>,
+  viewerId: string
 ) {
+  const canParticipate = await canParticipateInTrip(ctx, data, viewerId);
   const coverStorageId =
     data.cover && 'asset' in data.cover ? data.cover.asset?.storageId : undefined;
   return {
     archivedAt: data.archive?.at ?? null,
     coverUrl: coverStorageId ? await ctx.storage.getUrl(coverStorageId) : null,
-    dateNotes: data.dateNotes ?? null,
-    destination: data.destination.status === 'known' ? data.destination.name : null,
+    dateNotes: canParticipate ? (data.dateNotes ?? null) : null,
+    destination:
+      canParticipate && data.destination.status === 'known' ? data.destination.name : null,
     favorite: favoriteIds.has(data._id),
     id: data._id,
     shortId: data.shortId,
     lastUpdatedAt: data.updatedAt,
     name: data.name,
-    ...nextActionFor(data)
+    ...(canParticipate
+      ? nextActionFor(data)
+      : { nextAction: 'Join this trip to start planning', outstandingActionCount: 0 })
   };
 }
 
