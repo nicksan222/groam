@@ -1,10 +1,20 @@
 import { ConvexError, v } from 'convex/values';
+import type { Doc } from '#convex-generated/dataModel';
 import { internalMutation } from '#convex-generated/server';
 import { hasOrganizationMembership } from '#convex/modules/auth/workspace';
 import { TripTravelers } from '#convex/modules/travel/travelers/index';
 import { isTripAdmin, loadSharedTripContext } from '#convex/modules/travel/trips/ctx';
 import { paymentFor, paymentsEnabled, requiresTripPayment } from './index';
 import { attachDeletedSession, detachPayment } from './reconciliation';
+
+function expiredUnsent(row: Doc<'tripPayments'>): boolean {
+  return (
+    row.requestProtocol === 'persist-before-io-v1' &&
+    !row.checkoutBody &&
+    !row.sessionId &&
+    row.expiresAt <= Math.floor(Date.now() / 1000)
+  );
+}
 
 /** A transaction reserves the traveler for one payer; retries reuse Stripe's idempotency key. */
 export const prepare = internalMutation({
@@ -37,8 +47,9 @@ export const prepare = internalMutation({
       throw new ConvexError('This trip cannot accept payments');
     const existing = await paymentFor(ctx, loaded.trip._id, targetId);
     if (existing?.paid) return null;
-    // The caller must first confirm the old Checkout expired at Stripe before replacing it.
-    if (existing && expiredAttempt !== existing.attempt) {
+    // Only protocol-marked, never-sent expired attempts can rotate without provider proof.
+    // recordRequest's attempt CAS prevents a stale action from sending the replaced attempt.
+    if (existing && expiredAttempt !== existing.attempt && !expiredUnsent(existing)) {
       return {
         id: existing._id,
         attempt: existing.attempt,
@@ -130,6 +141,7 @@ export const complete = internalMutation({
     if (
       !trip ||
       trip.archive ||
+      !requiresTripPayment(trip, row.userId) ||
       !(await hasOrganizationMembership(ctx, trip.organizationId, row.userId))
     ) {
       // A paid Checkout cannot grant access after departure or archival. Preserve the
