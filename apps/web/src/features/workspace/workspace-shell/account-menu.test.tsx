@@ -11,11 +11,9 @@ const state = vi.hoisted(() => ({
   toastError: vi.fn(),
   user: { image: null as string | null, name: 'Dana Demo', username: 'dana' as string | null }
 }));
-const navigate = vi.hoisted(() => vi.fn());
 
 vi.mock('@groam/auth/client', () => ({ authClient: { signOut: state.signOut } }));
 vi.mock('@groam/ui/components/toast', () => ({ toast: { error: state.toastError } }));
-vi.mock('@tanstack/react-router', () => ({ useNavigate: () => navigate }));
 vi.mock('./workspace-state', () => ({
   useWorkspace: () => ({ session: { user: state.user } })
 }));
@@ -24,7 +22,6 @@ beforeEach(() => {
   state.signOut.mockReset();
   state.signOut.mockResolvedValue({ error: null });
   state.toastError.mockClear();
-  navigate.mockClear();
   state.user = { image: null, name: 'Dana Demo', username: 'dana' };
   useAuthFormStore.getState().reset();
 });
@@ -55,13 +52,12 @@ describe('AccountMenu', () => {
     await expect.element(page.getByRole('menu').getByText(detail).last()).toBeVisible();
   });
 
-  test('settings navigates to the profile section', async () => {
+  test('does not duplicate the sidebar Settings link in the account menu', async () => {
     await mount();
-    await page.getByRole('menuitem', { name: 'Settings' }).click();
-    expect(navigate).toHaveBeenCalledWith({
-      params: { section: 'profile' },
-      to: '/settings/$section'
-    });
+    await expect
+      .element(page.getByRole('menuitem', { name: 'Settings', exact: true }))
+      .not.toBeInTheDocument();
+    await expect.element(page.getByRole('menuitem', { name: 'Sign out' })).toBeVisible();
   });
 
   test('sign out resets the auth form and signs out', async () => {

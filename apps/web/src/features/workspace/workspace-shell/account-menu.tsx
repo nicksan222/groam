@@ -1,7 +1,6 @@
 import { authClient } from '@groam/auth/client';
 import { NavUser } from '@groam/ui/components/nav-user';
 import { toast } from '@groam/ui/components/toast';
-import { useNavigate } from '@tanstack/react-router';
 import { use } from 'react';
 import { SessionChangeContext } from '@/features/auth/session-change-context';
 import { errorMessage } from '@/lib/errors';
@@ -11,7 +10,6 @@ import { useWorkspace } from './workspace-state';
 
 export function AccountMenu() {
   const { session } = useWorkspace();
-  const navigate = useNavigate();
   const changeSession = use(SessionChangeContext);
   const resetAuthForm = useAuthFormStore((store) => store.reset);
   const user = session.user;
@@ -30,7 +28,6 @@ export function AccountMenu() {
   return (
     <NavUser
       onLogout={() => void signOut()}
-      onSettings={() => void navigate({ params: { section: 'profile' }, to: '/settings/$section' })}
       user={{ avatar: user.image ?? '', detail: userIdentityLabel(user), name: user.name }}
     />
   );
