@@ -4,7 +4,7 @@ import { hasOrganizationMembership } from '#convex/modules/auth/workspace';
 import { TripTravelers } from '#convex/modules/travel/travelers/index';
 import { isTripAdmin, loadSharedTripContext } from '#convex/modules/travel/trips/ctx';
 import { paymentFor, paymentsEnabled, requiresTripPayment } from './index';
-import { attachDeletedSession } from './reconciliation';
+import { attachDeletedSession, detachPayment } from './reconciliation';
 
 /** A transaction reserves the traveler for one payer; retries reuse Stripe's idempotency key. */
 export const prepare = internalMutation({
@@ -126,10 +126,18 @@ export const complete = internalMutation({
     if (row.paid || row.attempt !== attempt) return null;
     if (row.sessionId && row.sessionId !== sessionId)
       throw new ConvexError('Checkout session mismatch');
-    await ctx.db.patch('tripPayments', id, { paid: true, sessionId });
     const trip = await ctx.db.get('trips', row.tripId);
-    if (!trip || !(await hasOrganizationMembership(ctx, trip.organizationId, row.userId)))
+    if (
+      !trip ||
+      trip.archive ||
+      !(await hasOrganizationMembership(ctx, trip.organizationId, row.userId))
+    ) {
+      // A paid Checkout cannot grant access after departure or archival. Preserve the
+      // verified session atomically for the existing durable refund reconciler.
+      await detachPayment(ctx, { ...row, sessionId });
       return null;
+    }
+    await ctx.db.patch('tripPayments', id, { paid: true, sessionId });
     // Do not change a later explicit RSVP or revive an archived trip on delayed delivery.
     const traveler = await ctx.db
       .query('tripTravelers')

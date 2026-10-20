@@ -6,6 +6,7 @@ import {
   legacyUnrecordedPayment
 } from '#testing/payments';
 import { setupTrip } from '#testing/trips';
+import { removeMember } from '#testing/waits';
 
 const checkout = api.routes.trips.payments.checkout.run;
 afterEach(() => {
@@ -150,13 +151,18 @@ test('a payment racing expiration is refunded and a lost refund response retries
   expect(await paymentReconciliationState(fixture.owner.test)).toEqual([]);
 });
 
-test('already-confirmed seats are not refunded when their trip is deleted', async () => {
-  const { state } = provider();
+test('already-confirmed seats are not refunded after archival and trip deletion', async () => {
+  const { state, session } = provider();
   vi.useFakeTimers();
   const fixture = await setupTrip(1);
   state.paid = true;
   state.status = 'complete';
   await fixture.users[0]!.client.action(checkout, { tripId: fixture.tripId });
+  expect((await paymentCleanupState(fixture.owner.test, fixture.tripId)).payments[0]!.paid).toBe(
+    true
+  );
+  await fixture.owner.client.mutation(api.routes.trips.archive.run, { tripId: fixture.tripId });
+  expect((await paidWebhook(fixture, session())).status).toBe(200);
   expect((await paymentCleanupState(fixture.owner.test, fixture.tripId)).payments[0]!.paid).toBe(
     true
   );
@@ -598,3 +604,68 @@ test.each(['new', 'legacy'])(
     );
   }
 );
+
+test.each(['self', 'sponsor'])(
+  'a removed traveler’s %s-paid Checkout is refunded without granting a seat',
+  async (payer) => {
+    const { state, session } = provider();
+    vi.useFakeTimers();
+    const fixture = await setupTrip(1);
+    const traveler = fixture.users[0]!;
+    const buyer = payer === 'sponsor' ? fixture.owner : traveler;
+    await buyer.client.action(checkout, {
+      tripId: fixture.tripId,
+      ...(payer === 'sponsor' ? { userId: traveler.userId } : {})
+    });
+    await removeMember(fixture, traveler.userId);
+    state.paid = true;
+    state.status = 'complete';
+    state.refundPending = true;
+    expect((await paidWebhook(fixture, session())).status).toBe(200);
+    expect((await paidWebhook(fixture, session())).status).toBe(200);
+    expect((await paymentCleanupState(fixture.owner.test, fixture.tripId)).payments).toEqual([]);
+    expect(await paymentReconciliationState(fixture.owner.test)).toHaveLength(1);
+    await expect(
+      traveler.client.query(api.routes.trips.get.run, { tripId: fixture.tripId })
+    ).rejects.toThrow();
+    await fixture.owner.test.finishAllScheduledFunctions(vi.runAllTimers);
+    expect(state.refunds).toBe(1);
+    expect(await paymentReconciliationState(fixture.owner.test)).toHaveLength(1);
+    state.refundPending = false;
+    await sweep(fixture);
+    expect(state.refunds).toBe(1);
+    expect(await paymentReconciliationState(fixture.owner.test)).toEqual([]);
+    expect((await paidWebhook(fixture, session())).status).toBe(200);
+    await fixture.owner.test.finishAllScheduledFunctions(vi.runAllTimers);
+    expect(state.refunds).toBe(1);
+  }
+);
+
+test('archiving before payment confirmation refunds the checkout and preserves archive/RSVP', async () => {
+  const { state, session } = provider();
+  vi.useFakeTimers();
+  const fixture = await setupTrip(1);
+  await fixture.users[0]!.client.action(checkout, { tripId: fixture.tripId });
+  await fixture.owner.client.mutation(api.routes.trips.archive.run, { tripId: fixture.tripId });
+  const trip = await fixture.owner.client.query(api.routes.trips.get.run, {
+    tripId: fixture.tripId
+  });
+  const travelers = await fixture.owner.client.query(api.routes.trips.travelers.list.run, {
+    tripId: fixture.tripId
+  });
+  state.paid = true;
+  state.status = 'complete';
+  expect((await paidWebhook(fixture, session())).status).toBe(200);
+  expect((await paidWebhook(fixture, session())).status).toBe(200);
+  await fixture.owner.test.finishAllScheduledFunctions(vi.runAllTimers);
+  expect(state.refunds).toBe(1);
+  expect((await paymentCleanupState(fixture.owner.test, fixture.tripId)).payments).toEqual([]);
+  expect(
+    await fixture.owner.client.query(api.routes.trips.get.run, { tripId: fixture.tripId })
+  ).toMatchObject({ archivedAt: trip!.archivedAt });
+  expect(
+    await fixture.owner.client.query(api.routes.trips.travelers.list.run, {
+      tripId: fixture.tripId
+    })
+  ).toEqual(travelers);
+});
