@@ -26,15 +26,26 @@ async function refundRequest(path: string, body?: URLSearchParams, key?: string)
   return z.object({ id: z.string(), status: z.string().nullable() }).parse(await response.json());
 }
 
-async function refund(row: Doc<'paymentReconciliations'>, session: CheckoutSession) {
+export type ReconciliationOutcome = {
+  terminal: boolean;
+  refundId?: string;
+  manualRefundStatus?: 'failed' | 'canceled';
+};
+
+async function refund(
+  row: Doc<'paymentReconciliations'>,
+  session: CheckoutSession
+): Promise<ReconciliationOutcome> {
   if (!session.payment_intent) return { terminal: false };
   const result = row.refundId
     ? await refundRequest(`/${encodeURIComponent(row.refundId)}`)
     : await refundRequest(
         '',
         new URLSearchParams({ payment_intent: session.payment_intent }),
-        `groam-deleted-${row.paymentId}-${row.attempt}-${session.id}`
+        `groam-deleted-${row.paymentId}-${row.attempt}-${session.id}${row.refundGeneration ? `-retry-${row.refundGeneration}` : ''}`
       );
+  if (result.status === 'failed' || result.status === 'canceled')
+    return { terminal: false, refundId: result.id, manualRefundStatus: result.status };
   return { terminal: result.status === 'succeeded', refundId: result.id };
 }
 
@@ -57,7 +68,7 @@ async function sessionFor(row: Doc<'paymentReconciliations'>) {
 export async function reconcileStripe(
   row: Doc<'paymentReconciliations'>,
   rememberSession: (sessionId: string) => Promise<boolean>
-): Promise<{ terminal: boolean; refundId?: string }> {
+): Promise<ReconciliationOutcome> {
   let session: CheckoutSession | null;
   try {
     session = await sessionFor(row);

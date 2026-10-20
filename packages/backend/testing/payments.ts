@@ -15,3 +15,11 @@ export function paymentCleanupState(test: ReturnType<typeof createTest>, tripId:
 export function paymentReconciliationState(test: ReturnType<typeof createTest>) {
   return test.run((ctx) => ctx.db.query('paymentReconciliations').take(101));
 }
+
+/** An older checkout version could issue provider I/O before persisting its request. */
+export function legacyUnrecordedPayment(
+  test: ReturnType<typeof createTest>,
+  id: Id<'tripPayments'>
+) {
+  return test.run((ctx) => ctx.db.patch(id, { requestProtocol: undefined }));
+}

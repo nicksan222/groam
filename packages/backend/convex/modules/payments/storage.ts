@@ -49,6 +49,7 @@ export const prepare = internalMutation({
       };
     }
     const fields = {
+      requestProtocol: 'persist-before-io-v1' as const,
       attempt: crypto.randomUUID(),
       expiresAt: Math.floor(Date.now() / 1000) + 3600,
       paid: false,
