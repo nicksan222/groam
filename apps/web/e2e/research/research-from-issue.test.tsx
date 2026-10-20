@@ -1,14 +1,13 @@
 import {
   arrange,
+  addResearchNote,
   by,
-  chatMessage,
   createLinkedResearch,
   expectLinkedResearch,
-  expectGone,
   ids,
   openIssue,
   openLinkedResearch,
-  sendChatMessage,
+  openResearchNotes,
   uniqueSuffix
 } from '@groam/app-actions/vitest';
 import { expect, test } from 'vite-plus/test';
@@ -32,17 +31,17 @@ test('research started from an issue collects links from two travelers and links
   await openLinkedResearch(subject);
   const researchPath = location.pathname;
   const ownerLink = `https://example.com/duomo-suites-${suffix}`;
-  await sendChatMessage(ownerLink);
-  await expectGone(page.getByText('Sending…'));
+  await addResearchNote(ownerLink);
 
   // The same browser now belongs to the second traveler, who adds a link of their own.
   await openApp(researchPath, { as: traveler });
   await expect.element(by(ids.researchHeader)).toBeVisible();
-  await expect.element(chatMessage(ownerLink)).toBeVisible();
+  await openResearchNotes();
+  const notebook = page.getByRole('region', { name: 'Research notebook' });
+  await expect.element(notebook.getByText(ownerLink, { exact: true })).toBeVisible();
   const travelerLink = `https://example.com/arno-rooms-${suffix}`;
-  await sendChatMessage(travelerLink);
-  await expectGone(page.getByText('Sending…'));
-  await expect.element(chatMessage(travelerLink)).toBeVisible();
+  await addResearchNote(travelerLink);
+  await expect.element(notebook.getByText(ownerLink, { exact: true })).toBeVisible();
 
   // Back on the issue, the research is linked.
   await openApp(`/issues/${issueId}`, { as: traveler });

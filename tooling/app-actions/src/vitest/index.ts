@@ -134,7 +134,13 @@ export {
 export { closePoll, createTripPoll, expectPollProgress, voteInPoll } from './polls';
 export { currentPath, expectGone, expectPath, idFromPath, presentAttribute } from './queries';
 export { searchIdeas, searchIssues, searchTrips } from './search-trips';
-export { createLinkedResearch, expectLinkedResearch, openLinkedResearch } from './research';
+export {
+  addResearchNote,
+  createLinkedResearch,
+  expectLinkedResearch,
+  openLinkedResearch,
+  openResearchNotes
+} from './research';
 export {
   archiveTrip,
   createTripFromTrips,
