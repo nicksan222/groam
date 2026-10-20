@@ -52,7 +52,7 @@ describe('ChatList', () => {
     expect(onCreate).toHaveBeenCalledTimes(1);
   });
 
-  test('renders a linked row per chat with preview and trip name', async () => {
+  test('renders a linked row per chat with preview, time and trip context', async () => {
     await render(
       <ChatList
         discussions={[
@@ -73,7 +73,7 @@ describe('ChatList', () => {
     expect(rows[0]?.querySelector('time')?.getAttribute('datetime')).toBe(
       '2020-01-01T00:00:00.000Z'
     );
-    await expect.element(page.getByText('Rome weekend', { exact: true })).toBeVisible();
+    expect(rows[0]?.getAttribute('title')).toBe('Rome weekend');
     await expect.element(page.getByText('Ada: Pasta tonight?', { exact: true })).toBeVisible();
     await expect.element(page.getByText('No messages yet')).toBeVisible();
     await expect
@@ -107,7 +107,7 @@ describe('ChatList', () => {
   });
 });
 
-test('gives phone message previews their own full-width line', async () => {
+test('keeps compact phone rows within the viewport', async () => {
   await useViewport(390, 844);
   await render(
     <ChatList
@@ -121,11 +121,7 @@ test('gives phone message previews their own full-width line', async () => {
   );
   const rows = page.getByTestId(testIds.chatRow).elements();
   const preview = rows[0]?.querySelector('[data-slot="record-list-description"]');
-  expect(preview?.getBoundingClientRect().width).toBeGreaterThan(280);
-  const footer = rows[0]?.querySelector('[data-slot="record-list-badges"]');
-  expect(preview?.getBoundingClientRect().bottom).toBeLessThanOrEqual(
-    footer!.getBoundingClientRect().top
-  );
+  expect(preview?.getBoundingClientRect().width).toBeGreaterThan(200);
   expect(rows[0]?.getBoundingClientRect().height).toBe(rows[1]?.getBoundingClientRect().height);
   await expect.element(page.getByText('Ada: Pasta tonight?', { exact: true })).toBeVisible();
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(

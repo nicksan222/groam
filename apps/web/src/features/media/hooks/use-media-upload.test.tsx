@@ -49,7 +49,7 @@ describe('useMediaUpload', () => {
 
     await expect(act(() => result.current(file))).resolves.toBeNull();
 
-    expect(notifications.error).toHaveBeenCalledWith('Upload an image, video, audio file, or PDF');
+    expect(notifications.error).toHaveBeenCalledWith('Upload an image, video, or PDF');
     expect(convex.generateUploadUrl).not.toHaveBeenCalled();
   });
 

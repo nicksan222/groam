@@ -1,4 +1,4 @@
-import { FileText, Music, Video } from 'lucide-react';
+import { FileText, Video } from 'lucide-react';
 import { formatBytes } from '@/features/trips/hooks/version-format';
 import type { VisualDiffField } from './proposal-types';
 
@@ -19,8 +19,6 @@ export function MediaDiffValue({ media }: { media: VisualDiffField['mediaAfter']
               <img alt="" className="size-full object-cover" loading="lazy" src={item.url} />
             ) : item.contentType.startsWith('video/') ? (
               <Video className="size-4 text-muted-foreground" />
-            ) : item.contentType.startsWith('audio/') ? (
-              <Music className="size-4 text-muted-foreground" />
             ) : (
               <FileText className="size-4 text-muted-foreground" />
             )}

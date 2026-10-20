@@ -42,7 +42,7 @@ export function DiscussionThreadHeader(props: DiscussionThreadHeaderProps) {
   if (props.isLoading) {
     return (
       <div aria-busy="true" aria-label="Opening chat…" role="status">
-        <header className="flex h-14 shrink-0 items-center gap-2.5 border-b border-border/70 px-2 sm:px-3">
+        <header className="flex h-16 shrink-0 items-center gap-3 border-b border-border/70 px-3 sm:px-6">
           <Button
             asChild
             className="shrink-0 touch-manipulation md:hidden"
@@ -83,7 +83,7 @@ function DiscussionThreadHeaderReady({ discussion }: { discussion: DiscussionLis
 
   return (
     <>
-      <header className="flex h-14 shrink-0 items-center gap-2.5 border-b border-border/70 px-2 sm:px-3">
+      <header className="flex h-16 shrink-0 items-center gap-3 border-b border-border/70 px-3 sm:px-6">
         <Button
           asChild
           className="shrink-0 touch-manipulation md:hidden"
@@ -97,12 +97,12 @@ function DiscussionThreadHeaderReady({ discussion }: { discussion: DiscussionLis
         <ChatAvatar discussion={discussion} face={discussion.members[0]} size="header" />
         <div className="min-w-0 flex-1 py-1">
           <h2
-            className="truncate text-[15px] font-semibold tracking-tight leading-5"
+            className="line-clamp-2 text-base font-semibold tracking-tight leading-5"
             data-testid={testIds.chatHeading}
           >
             {discussion.title}
           </h2>
-          <p className="truncate text-[11px] leading-4 text-muted-foreground">{memberNames}</p>
+          <p className="mt-1 truncate text-xs leading-4 text-muted-foreground">{memberNames}</p>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

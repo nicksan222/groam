@@ -155,7 +155,7 @@ export function TripActivityFields({
                   {editor.attachments.length} of 5 files
                 </span>
                 <span className="block text-xs font-normal text-muted-foreground">
-                  Tickets, bookings, maps, photos, audio, or video
+                  Tickets, bookings, maps, photos, or video
                 </span>
               </span>
               <Input

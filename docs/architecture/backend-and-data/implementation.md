@@ -218,7 +218,7 @@ Media.save(ctx, ...):
   if (trip cover uses storageId) return { error: 'The uploaded file is already used as a trip cover', ok: false }
   metadata = ctx.db.system.get('_storage', storageId)
   invalid = Files.validationError(metadata.size, contentType, signatureValid)
-    // 'Files must be 25 MB or smaller' | 'Upload a supported image, video, audio file, or PDF'
+    // 'Files must be 25 MB or smaller' | 'Upload a supported image, video, or PDF'
     // | 'The file contents do not match its media type'
   if (invalid) { ctx.storage.delete(storageId); return { error: invalid, ok: false } }
   insert media { contentType, createdBy: tokenIdentifier, name (<= 120), organizationId, size, storageId }

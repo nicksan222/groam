@@ -1,10 +1,15 @@
-import { Paperclip, SendHorizontal, X } from 'lucide-react';
+import { cn } from '@groam/ui/lib/utils';
+import { ArrowUp, Paperclip, SendHorizontal, X } from 'lucide-react';
 import { type ReactNode, useRef, useState } from 'react';
 import { Button } from './button';
 import { RichTextEditor, type RichTextEditorHandle } from './rich-text-editor';
 import { Spinner } from './spinner';
 
 const MAX_MESSAGE_LENGTH = 5_000;
+const SEND_CONTROL = {
+  inline: { className: 'rounded-full', Icon: SendHorizontal, variant: 'default' },
+  stacked: { className: 'rounded-lg text-muted-foreground', Icon: ArrowUp, variant: 'ghost' }
+} as const;
 
 export type MessageComposerApi = {
   insertText: (value: string) => void;
@@ -24,6 +29,7 @@ export type MessageComposerProps = {
   compact?: boolean;
   fileAccept?: string;
   label: string;
+  layout?: 'inline' | 'stacked';
   onAttachFiles?: (files: File[]) => void;
   onCancel?: () => void;
   onSubmit: (text: string) => Promise<boolean>;
@@ -48,6 +54,7 @@ export function MessageComposer({
   compact = false,
   fileAccept,
   label,
+  layout = 'inline',
   onAttachFiles,
   onCancel,
   onSubmit,
@@ -62,6 +69,8 @@ export function MessageComposer({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<RichTextEditorHandle>(null);
   const buttonLabel = submitLabel ?? (compact ? 'Reply' : 'Send');
+  const sendControl = SEND_CONTROL[layout];
+  const SubmitIcon = sendControl.Icon;
   const canSubmit = text.trim().length > 0 || allowEmptySubmit;
 
   const api: MessageComposerApi = {
@@ -92,7 +101,11 @@ export function MessageComposer({
   return (
     <form
       aria-label={label}
-      className="flex flex-col gap-2"
+      className={cn(
+        'flex flex-col gap-2',
+        layout === 'stacked' &&
+          'rounded-2xl border border-input bg-background p-2 focus-within:border-ring transition-colors motion-reduce:transition-none'
+      )}
       data-testid={testId}
       onSubmit={(event) => {
         event.preventDefault();
@@ -101,8 +114,46 @@ export function MessageComposer({
     >
       {attachments}
       {resolveSlot(beforeInput, api)}
-      <div className="flex items-end gap-1">
-        <div className="flex shrink-0 items-center gap-0.5 pb-0.5">
+      <div className={cn('flex items-end gap-1', layout === 'stacked' && 'flex-wrap')}>
+        <div
+          className={cn(
+            'min-w-0 px-3.5 py-2',
+            layout === 'stacked'
+              ? 'order-1 basis-full'
+              : 'order-2 flex-1 rounded-2xl border border-border/80 bg-background focus-within:border-foreground/25'
+          )}
+        >
+          <RichTextEditor
+            maxLength={MAX_MESSAGE_LENGTH}
+            aria-label={label}
+            autoFocus={autoFocus}
+            contentClassName={cn(
+              'max-h-32 overflow-y-auto text-[15px]',
+              layout === 'stacked' ? 'min-h-12 leading-6' : 'min-h-5 leading-5'
+            )}
+            disabled={isSubmitting}
+            onChange={(value) => setText(value.slice(0, MAX_MESSAGE_LENGTH))}
+            onSubmit={() => void submit()}
+            placeholder={placeholder}
+            ref={editorRef}
+            submitShortcut={submitShortcut}
+            testId={testId ? `${testId}-input` : undefined}
+            value={text}
+            variant="bare"
+          />
+          {text.length > 4_500 && (
+            <p className="pt-1 text-right text-[10px] text-muted-foreground">
+              {text.length.toLocaleString()} / 5,000
+            </p>
+          )}
+        </div>
+
+        <div
+          className={cn(
+            'flex shrink-0 items-center gap-0.5 pb-0.5',
+            layout === 'stacked' ? 'order-2 flex-1' : 'order-1'
+          )}
+        >
           {onAttachFiles && (
             <>
               <Button
@@ -147,39 +198,17 @@ export function MessageComposer({
           ) : null}
         </div>
 
-        <div className="min-w-0 flex-1 rounded-2xl border border-border/80 bg-background px-3.5 py-2 focus-within:border-foreground/25">
-          <RichTextEditor
-            maxLength={MAX_MESSAGE_LENGTH}
-            aria-label={label}
-            autoFocus={autoFocus}
-            contentClassName="max-h-32 min-h-5 overflow-y-auto text-[15px] leading-5"
-            disabled={isSubmitting}
-            onChange={(value) => setText(value.slice(0, MAX_MESSAGE_LENGTH))}
-            onSubmit={() => void submit()}
-            placeholder={placeholder}
-            ref={editorRef}
-            submitShortcut={submitShortcut}
-            testId={testId ? `${testId}-input` : undefined}
-            value={text}
-            variant="bare"
-          />
-          {text.length > 4_500 && (
-            <p className="pt-1 text-right text-[10px] text-muted-foreground">
-              {text.length.toLocaleString()} / 5,000
-            </p>
-          )}
-        </div>
-
-        <div className="flex shrink-0 items-center pb-0.5">
+        <div className="order-3 flex shrink-0 items-center pb-0.5">
           <Button
             aria-label={buttonLabel}
-            className="size-9 touch-manipulation rounded-full"
+            className={cn('size-9 touch-manipulation', sendControl.className)}
             disabled={isSubmitting || !canSubmit}
             size="icon"
             title={buttonLabel}
             type="submit"
+            variant={sendControl.variant}
           >
-            {isSubmitting ? <Spinner /> : <SendHorizontal className="size-[1.125rem]" />}
+            {isSubmitting ? <Spinner /> : <SubmitIcon className="size-4" />}
           </Button>
         </div>
       </div>

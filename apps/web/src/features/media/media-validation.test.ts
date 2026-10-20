@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vite-plus/test';
 import { mediaValidationError } from './media-validation';
 
 describe('mediaValidationError', () => {
-  test.each(['image/png', 'video/mp4', 'audio/mpeg', 'application/pdf'])(
+  test.each(['image/png', 'video/mp4', 'application/pdf'])(
     'accepts %s uploads within the size limit',
     (type) => {
       expect(mediaValidationError({ size: 1024, type })).toBeNull();
@@ -15,12 +15,17 @@ describe('mediaValidationError', () => {
     );
   });
 
-  test.each(['text/plain', 'application/zip', 'image/svg+xml', ''])(
-    'rejects unsupported type %j',
-    (type) => {
-      expect(mediaValidationError({ size: 1024, type })).toBe(
-        'Upload an image, video, audio file, or PDF'
-      );
-    }
-  );
+  test.each([
+    'audio/mpeg',
+    'audio/webm',
+    'audio/mp4',
+    'audio/ogg',
+    'audio/wav',
+    'text/plain',
+    'application/zip',
+    'image/svg+xml',
+    ''
+  ])('rejects unsupported type %j', (type) => {
+    expect(mediaValidationError({ size: 1024, type })).toBe('Upload an image, video, or PDF');
+  });
 });

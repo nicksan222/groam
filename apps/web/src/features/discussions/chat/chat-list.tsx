@@ -63,10 +63,7 @@ export function ChatList({
   }
 
   return (
-    <ul
-      aria-label="Chats"
-      className="divide-y divide-border/40 overflow-hidden rounded-lg border border-border/60 max-md:rounded-none max-md:border-x-0 bg-transparent"
-    >
+    <ul aria-label="Chats" className="divide-y divide-border/40">
       {discussions.map((discussion) => (
         <li key={discussion.id}>
           <ChatListRow active={discussion.id === activeDiscussionId} discussion={discussion} />

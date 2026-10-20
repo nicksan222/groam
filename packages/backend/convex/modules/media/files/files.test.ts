@@ -19,10 +19,6 @@ test('recognizes supported file signatures', () => {
   expect(
     Files.hasValidSignature(new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d]), 'application/pdf')
   ).toBe(true);
-  expect(Files.hasValidSignature(new TextEncoder().encode('ID3'), 'audio/mpeg')).toBe(true);
-  expect(Files.hasValidSignature(new Uint8Array([0xff, 0xe0]), 'audio/mpeg')).toBe(true);
-  expect(Files.hasValidSignature(new TextEncoder().encode('OggS'), 'audio/ogg')).toBe(true);
-  expect(Files.hasValidSignature(new TextEncoder().encode('RIFF0000WAVE'), 'audio/wav')).toBe(true);
   expect(Files.hasValidSignature(new TextEncoder().encode('0000ftypavif'), 'image/avif')).toBe(
     true
   );
@@ -38,15 +34,6 @@ test('recognizes supported file signatures', () => {
   expect(Files.hasValidSignature(new Uint8Array([0x1a, 0x45, 0xdf, 0xa3]), 'video/webm')).toBe(
     true
   );
-  expect(Files.hasValidSignature(new Uint8Array([0x1a, 0x45, 0xdf, 0xa3]), 'audio/webm')).toBe(
-    true
-  );
-  expect(
-    Files.hasValidSignature(
-      new Uint8Array([0x00, 0x00, 0x00, 0x00, 0x66, 0x74, 0x79, 0x70]),
-      'audio/mp4'
-    )
-  ).toBe(true);
   expect(
     Files.hasValidSignature(
       new Uint8Array([0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50]),
@@ -79,11 +66,6 @@ test('registers every supported upload content type', () => {
   expect([...Files.supportedContentTypes].sort()).toEqual(
     [
       'application/pdf',
-      'audio/mpeg',
-      'audio/ogg',
-      'audio/wav',
-      'audio/mp4',
-      'audio/webm',
       'image/avif',
       'image/gif',
       'image/jpeg',
@@ -104,7 +86,7 @@ test('rejects oversized, unsupported, and unsigned files', () => {
     'Files must be 25 MB or smaller'
   );
   expect(Files.validationError(12, 'text/plain', true)).toBe(
-    'Upload a supported image, video, audio file, or PDF'
+    'Upload a supported image, video, or PDF'
   );
   expect(Files.validationError(12, 'image/png', false)).toBe(
     'The file contents do not match its media type'
@@ -136,3 +118,13 @@ test('rejects blobs whose bytes do not match the declared type', async () => {
     )
   ).resolves.toEqual({ contentType: 'image/png', signatureValid: false });
 });
+
+test.each(['audio/mpeg', 'audio/ogg', 'audio/wav', 'audio/mp4', 'audio/webm'])(
+  'rejects %s even with a valid signature',
+  (contentType) => {
+    expect(Files.supportedContentTypes.has(contentType)).toBe(false);
+    expect(Files.validationError(12, contentType, true)).toBe(
+      'Upload a supported image, video, or PDF'
+    );
+  }
+);

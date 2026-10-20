@@ -1,6 +1,6 @@
 import type { MessageComposerApi } from '@groam/ui/components/message-composer';
 import { SuggestRow } from '@groam/ui/components/suggest-row';
-import { Sparkles } from 'lucide-react';
+import { AtSign } from 'lucide-react';
 import {
   AGENT_MENTION_TOKEN,
   agentMentionQuery,
@@ -22,11 +22,7 @@ export function AgentMentionSuggest({
     <SuggestRow
       description="Ask Groam — reply visible to everyone"
       disabled={disabled || api.isSubmitting}
-      icon={
-        <span className="grid size-8 place-items-center rounded-full bg-muted">
-          <Sparkles className="size-3.5" />
-        </span>
-      }
+      icon={<AtSign aria-hidden="true" className="size-4 text-muted-foreground" />}
       onSelect={() => {
         const next = replaceAgentMentionQuery(api.text, caret);
         api.setText(next.text);

@@ -11,11 +11,7 @@ export type PendingAttachment = {
 const previewUrlCache = new Set<string>();
 
 export function isPreviewableMedia(contentType: string): boolean {
-  return (
-    contentType.startsWith('image/') ||
-    contentType.startsWith('video/') ||
-    contentType.startsWith('audio/')
-  );
+  return contentType.startsWith('image/') || contentType.startsWith('video/');
 }
 
 export function createPendingPreviewUrl(file: File): string {

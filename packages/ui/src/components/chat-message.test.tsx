@@ -17,8 +17,8 @@ test('renders the private variant with delivery state', async () => {
   expect(page.getByRole('status').element().textContent).toContain('Sending');
 });
 
-test('renders audio attachments with controls', async () => {
-  await render(
+test('renders legacy audio as a file without audio or video playback', async () => {
+  const { container } = await render(
     <ChatMessage
       attachments={[
         { contentType: 'audio/webm', name: 'voice-note.webm', url: 'https://example.com/a.webm' }
@@ -27,7 +27,8 @@ test('renders audio attachments with controls', async () => {
       text=""
     />
   );
-  expect(page.getByLabelText('voice-note.webm').element().tagName).toBe('AUDIO');
+  await expect.element(page.getByRole('link', { name: /voice-note.webm/ })).toBeVisible();
+  expect(container.querySelector('audio, video')).toBeNull();
 });
 
 test('places actions and reactions beside the bubble column', async () => {

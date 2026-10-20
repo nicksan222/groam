@@ -9,7 +9,7 @@ import { AssistantSession } from '#convex/modules/assistant/agent/index';
 import { isStaleClaim } from '#convex/modules/discussions/threads/index';
 import { createOutsiderClient } from '#testing/factory';
 import { createTestUser } from '#testing/factory';
-import { pngBlob } from '#testing/media';
+import { insertLegacyAudioMedia, pngBlob } from '#testing/media';
 import { setupGroup, setupTrip } from '#testing/trips';
 
 // Agent replies stream through scheduled functions, so these tests need real timers.
@@ -789,4 +789,23 @@ test('refuses to attach a discussion to another group trip', async () => {
       tripId
     })
   ).rejects.toThrow('Trip not found');
+});
+
+test('rejects sending legacy audio media in a new discussion message', async () => {
+  const { addUser, owner } = await setupGroup();
+  const member = await addUser('Traveler');
+  const discussionId = await owner.client.mutation(api.routes.discussions.create.run, {
+    clientRequestId: 'legacy-audio-discussion',
+    memberUserIds: [member.userId],
+    title: 'Trip plans'
+  });
+  const { mediaId } = await insertLegacyAudioMedia(owner);
+  await expect(
+    owner.client.mutation(api.routes.discussions.messages.send.run, {
+      clientRequestId: 'legacy-audio-message',
+      discussionId,
+      mediaIds: [mediaId],
+      text: ''
+    })
+  ).rejects.toThrow('Upload a supported image, video, or PDF');
 });

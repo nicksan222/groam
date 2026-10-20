@@ -1,7 +1,8 @@
 import { ConvexError, type Infer } from 'convex/values';
 import type { Doc, Id } from '#convex-generated/dataModel';
-import '#convex/modules/travel/targets/kinds/index';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
+import '#convex/modules/travel/targets/kinds/index';
+import { Files } from '#convex/modules/media/files/index';
 import { TripTargetKind } from '#convex/modules/travel/targets/kind';
 import type { TripTargetValidators } from '#convex/modules/travel/targets/schema';
 
@@ -246,6 +247,15 @@ export class Attachments {
       existing.every((reference, index) => reference.mediaId === ids[index])
     ) {
       return false;
+    }
+
+    if (
+      media.some(
+        (item) =>
+          item && !Files.supportedContentTypes.has(Files.normalizeContentType(item.contentType))
+      )
+    ) {
+      throw new ConvexError('Upload a supported image, video, or PDF');
     }
 
     await Promise.all(existing.map((reference) => ctx.db.delete(reference._id)));

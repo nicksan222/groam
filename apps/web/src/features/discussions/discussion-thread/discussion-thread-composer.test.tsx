@@ -9,24 +9,6 @@ vi.mock('@groam/ui/components/toast', () => ({
   toast: { error: toastError, success: vi.fn() }
 }));
 
-vi.mock('@groam/ui/components/voice-record-button', () => ({
-  VoiceRecordButton: ({
-    disabled,
-    onRecorded
-  }: {
-    disabled?: boolean;
-    onRecorded: (file: File) => void;
-  }) => (
-    <button
-      disabled={disabled}
-      onClick={() => onRecorded(new File(['abc'], 'voice.webm', { type: 'audio/webm' }))}
-      type="button"
-    >
-      Record voice note
-    </button>
-  )
-}));
-
 beforeEach(() => {
   vi.clearAllMocks();
   URL.createObjectURL = vi.fn(() => 'blob:preview');
@@ -40,7 +22,7 @@ test('submits composed text to onSend', async () => {
   );
 
   await page.getByRole('textbox', { name: 'Message' }).fill('  Packing list  ');
-  await page.getByRole('button', { name: 'Reply' }).click();
+  await page.getByRole('button', { name: 'Send message' }).click();
 
   await vi.waitFor(() => expect(onSend).toHaveBeenCalledWith({ files: [], text: 'Packing list' }));
 });
@@ -52,7 +34,7 @@ test('restores the draft when send fails', async () => {
   );
 
   await page.getByRole('textbox', { name: 'Message' }).fill('Hold this');
-  await page.getByRole('button', { name: 'Reply' }).click();
+  await page.getByRole('button', { name: 'Send message' }).click();
 
   await vi.waitFor(() => expect(onSend).toHaveBeenCalled());
   await expect
@@ -60,22 +42,17 @@ test('restores the draft when send fails', async () => {
     .toHaveTextContent('Hold this');
 });
 
-test('attaches a voice recording and allows empty text submit', async () => {
-  const onSend = vi.fn().mockResolvedValue(true);
-  await render(
+test('rejects audio attachments even when supplied directly to the picker', async () => {
+  const onSend = vi.fn();
+  const { container } = await render(
     <DiscussionThreadComposer canStop={false} isStopping={false} onSend={onSend} onStop={vi.fn()} />
   );
-
-  await page.getByRole('button', { name: 'Record voice note' }).click();
-  await expect.element(page.getByText('voice.webm')).toBeInTheDocument();
-
-  await page.getByRole('button', { name: 'Reply' }).click();
-  await vi.waitFor(() =>
-    expect(onSend).toHaveBeenCalledWith({
-      files: [expect.objectContaining({ name: 'voice.webm' })],
-      text: ''
-    })
-  );
+  const input = container.querySelector<HTMLInputElement>('input[type="file"]');
+  if (!input) throw new Error('Expected an attachment input');
+  expect(input.accept).not.toContain('audio/');
+  await userEvent.upload(input, new File(['audio'], 'voice.webm', { type: 'audio/webm' }));
+  expect(toastError).toHaveBeenCalledWith('Upload an image, video, or PDF');
+  expect(onSend).not.toHaveBeenCalled();
 });
 
 test('rejects unsupported attachments', async () => {
@@ -89,7 +66,7 @@ test('rejects unsupported attachments', async () => {
     input,
     new File(['nope'], 'notes.exe', { type: 'application/x-msdownload' })
   );
-  expect(toastError).toHaveBeenCalledWith('Upload an image, video, audio file, or PDF');
+  expect(toastError).toHaveBeenCalledWith('Upload an image, video, or PDF');
   expect(onSend).not.toHaveBeenCalled();
 });
 
@@ -117,7 +94,7 @@ test('runs a typed command instead of sending it', async () => {
   );
 
   await page.getByRole('textbox', { name: 'Message' }).fill('/summarize');
-  await page.getByRole('button', { name: 'Reply' }).click();
+  await page.getByRole('button', { name: 'Send message' }).click();
 
   await vi.waitFor(() => expect(summarize).toHaveBeenCalledOnce());
   expect(onSend).not.toHaveBeenCalled();
@@ -137,7 +114,7 @@ test('keeps an unknown command and explains it', async () => {
   );
 
   await page.getByRole('textbox', { name: 'Message' }).fill('/nope');
-  await page.getByRole('button', { name: 'Reply' }).click();
+  await page.getByRole('button', { name: 'Send message' }).click();
 
   await vi.waitFor(() => expect(toastError).toHaveBeenCalledWith('Unknown command /nope'));
   expect(onSend).not.toHaveBeenCalled();

@@ -96,12 +96,14 @@ export class Media {
       .query('media')
       .withIndex('by_organizationId', (query) => query.eq('organizationId', organizationId))
       .take(limit);
-    for (const item of media) {
-      if (await ctx.db.system.get('_storage', item.storageId)) {
-        await ctx.storage.delete(item.storageId);
-      }
-      await ctx.db.delete('media', item._id);
-    }
+    await Promise.all(
+      media.map(async (item) => {
+        if (await ctx.db.system.get('_storage', item.storageId)) {
+          await ctx.storage.delete(item.storageId);
+        }
+        await ctx.db.delete('media', item._id);
+      })
+    );
     return media.length === limit;
   }
 
@@ -207,6 +209,9 @@ export class Media {
         .unique()
     ]);
     if (existing) {
+      if (!Files.supportedContentTypes.has(Files.normalizeContentType(existing.contentType))) {
+        return { error: 'Upload a supported image, video, or PDF', ok: false };
+      }
       const reusable =
         existing.organizationId === workspace.organizationId &&
         existing.createdBy === workspace.tokenIdentifier;

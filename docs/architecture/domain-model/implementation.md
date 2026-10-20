@@ -200,7 +200,9 @@ Source: [targets/index.ts](../../../packages/backend/convex/modules/travel/targe
 are its ordered pins onto targets. `Attachments.setTarget` replaces a target's
 pin list (a no-op when ids and order match) and deletes attachments that lost
 their last pin. Removing a pin never deletes the media; deleting media is
-refused while it is still in use.
+refused while it is still in use. New uploads accept images, video, and PDFs;
+audio uploads and new chat or trip references to legacy audio are rejected.
+Existing audio files remain readable as ordinary file attachments.
 
 ```ts
 Attachments.setTarget: > maximum => `${label} support up to ${maximum} attachments`;

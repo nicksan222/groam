@@ -2,6 +2,7 @@ import { ConvexError } from 'convex/values';
 import type { Id } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import type { DiscussionMessageMedia } from '#convex/modules/discussions/threads/schema';
+import { Files } from '#convex/modules/media/files/index';
 
 export type { DiscussionMessageMedia } from '#convex/modules/discussions/threads/schema';
 
@@ -35,7 +36,6 @@ export class DiscussionMedia {
       if (!item) return 'Sent a file';
       if (item.contentType.startsWith('image/')) return 'Sent a photo';
       if (item.contentType.startsWith('video/')) return 'Sent a video';
-      if (item.contentType.startsWith('audio/')) return 'Sent an audio file';
       return `Sent ${item.name}`;
     }
     return `Sent ${media.length} files`;
@@ -57,21 +57,24 @@ export class DiscussionMedia {
     organizationId: string,
     mediaIds: Id<'media'>[]
   ): Promise<DiscussionMessageMedia[]> {
-    const resolved: DiscussionMessageMedia[] = [];
-    for (const mediaId of mediaIds) {
-      const media = await ctx.db.get('media', mediaId);
-      if (!media || media.organizationId !== organizationId) {
-        throw new ConvexError('Media not found');
-      }
-      resolved.push({
-        contentType: media.contentType,
-        id: media._id,
-        name: media.name,
-        size: media.size,
-        url: await ctx.storage.getUrl(media.storageId)
-      });
-    }
-    return resolved;
+    return await Promise.all(
+      mediaIds.map(async (mediaId) => {
+        const media = await ctx.db.get('media', mediaId);
+        if (!media || media.organizationId !== organizationId) {
+          throw new ConvexError('Media not found');
+        }
+        if (!Files.supportedContentTypes.has(Files.normalizeContentType(media.contentType))) {
+          throw new ConvexError('Upload a supported image, video, or PDF');
+        }
+        return {
+          contentType: media.contentType,
+          id: media._id,
+          name: media.name,
+          size: media.size,
+          url: await ctx.storage.getUrl(media.storageId)
+        };
+      })
+    );
   }
 
   static async load(
@@ -121,6 +124,6 @@ export class DiscussionMedia {
       .query('discussionMessageMedia')
       .withIndex('by_messageId', (query) => query.eq('messageId', messageId))
       .take(MAX_MEDIA_PER_MESSAGE + 1);
-    for (const ref of refs) await ctx.db.delete(ref._id);
+    await Promise.all(refs.map((ref) => ctx.db.delete(ref._id)));
   }
 }

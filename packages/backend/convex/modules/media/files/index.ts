@@ -3,7 +3,7 @@ import type { Id } from '#convex-generated/dataModel';
 const MAX_FILE_SIZE = 25 * 1024 * 1024;
 const SIGNATURE_BYTES = 16;
 
-type FileCategory = 'audio' | 'document' | 'image' | 'video';
+type FileCategory = 'document' | 'image' | 'video';
 
 export type InspectedStorageFile = {
   contentType: string;
@@ -40,16 +40,6 @@ const FILE_KINDS: Record<
   { category: FileCategory; matches: (bytes: Uint8Array) => boolean }
 > = {
   'application/pdf': { category: 'document', matches: (bytes) => ascii(bytes, 0, 5) === '%PDF-' },
-  'audio/mpeg': {
-    category: 'audio',
-    matches: (bytes) =>
-      ascii(bytes, 0, 3) === 'ID3' ||
-      (bytes[0] === 0xff && bytes[1] !== undefined && (bytes[1] & 0xe0) === 0xe0)
-  },
-  'audio/ogg': { category: 'audio', matches: (bytes) => ascii(bytes, 0, 4) === 'OggS' },
-  'audio/wav': { category: 'audio', matches: (bytes) => isRiff(bytes, 'WAVE') },
-  'audio/mp4': { category: 'audio', matches: (bytes) => hasFtyp(bytes) },
-  'audio/webm': { category: 'audio', matches: isEbml },
   'image/avif': { category: 'image', matches: (bytes) => hasFtyp(bytes, ['avif', 'avis']) },
   'image/gif': {
     category: 'image',
@@ -86,7 +76,7 @@ export const Files = {
 
   validationError(size: number, contentType: string, signatureValid: boolean): string | null {
     if (size > MAX_FILE_SIZE) return 'Files must be 25 MB or smaller';
-    if (!(contentType in FILE_KINDS)) return 'Upload a supported image, video, audio file, or PDF';
+    if (!(contentType in FILE_KINDS)) return 'Upload a supported image, video, or PDF';
     return signatureValid ? null : 'The file contents do not match its media type';
   },
 

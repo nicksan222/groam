@@ -2,7 +2,7 @@ import { expect, test } from 'vite-plus/test';
 import { api } from '#convex-generated/api';
 import { listTripAttachments, setTripAttachments } from '#testing/attachments';
 import { createOutsiderClient } from '#testing/factory';
-import { pngBlob } from '#testing/media';
+import { insertLegacyAudioMedia, pngBlob } from '#testing/media';
 import { setupTrip, setupWritableTrip, tripActivityInput, tripLocationInput } from '#testing/trips';
 
 async function insertPngMedia(
@@ -313,4 +313,22 @@ test('allows deleting media pinned only on a closed idea', { timeout: 15_000 }, 
     reason: 'not needed'
   });
   await expect(owner.client.mutation(api.routes.media.remove.run, { mediaId })).resolves.toBeNull();
+});
+
+test('rejects attaching legacy audio media to a trip', async () => {
+  const { owner, tripId } = await setupWritableTrip(0);
+  const { mediaId } = await insertLegacyAudioMedia(owner);
+  await expect(
+    setTripAttachments(owner.client, {
+      mediaIds: [mediaId],
+      target: { id: tripId, type: 'trip' },
+      tripId
+    })
+  ).rejects.toThrow('Upload a supported image, video, or PDF');
+  await expect(
+    listTripAttachments(owner.client, {
+      target: { id: tripId, type: 'trip' },
+      tripId
+    })
+  ).resolves.toEqual([]);
 });

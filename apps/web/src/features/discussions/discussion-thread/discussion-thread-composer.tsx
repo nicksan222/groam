@@ -12,18 +12,12 @@ import { Button } from '@groam/ui/components/button';
 import { MessageComposer } from '@groam/ui/components/message-composer';
 import { Spinner } from '@groam/ui/components/spinner';
 import { toast } from '@groam/ui/components/toast';
-import { VoiceRecordButton } from '@groam/ui/components/voice-record-button';
 import { FileText, Square, X } from 'lucide-react';
 import { useRef, useState } from 'react';
-import { AgentMentionChip } from '@/features/discussions/agent-mention-controls/agent-mention-chip';
-import { AgentMentionSuggest } from '@/features/discussions/agent-mention-controls/agent-mention-suggest';
-import { AskGroamButton } from '@/features/discussions/agent-mention-controls/ask-groam-button';
 import {
   type ComposerCommand,
   resolveCommandSubmit
 } from '@/features/discussions/composer-commands/composer-command';
-import { ComposerCommandButton } from '@/features/discussions/composer-commands/composer-command-button';
-import { ComposerCommandMenu } from '@/features/discussions/composer-commands/composer-command-menu';
 import type { DiscussionSendInput } from '@/features/discussions/hooks/use-discussion-thread';
 import { mediaFileAccept } from '@/features/media/media-validation';
 import { testIds } from '@/lib/test-ids';
@@ -91,7 +85,7 @@ export function DiscussionThreadComposer({
   };
 
   return (
-    <div className="safe-bottom shrink-0 border-t border-border/70 bg-background px-2 pt-2 pb-2 sm:px-3 sm:pt-3 sm:pb-3">
+    <div className="safe-bottom w-full shrink-0 bg-background px-3 pt-3 pb-3 sm:px-4 sm:pb-4">
       {canStop && (
         <div className="mb-2 flex justify-end px-1">
           <Button disabled={isStopping} onClick={() => void onStop()} size="sm" variant="outline">
@@ -108,32 +102,17 @@ export function DiscussionThreadComposer({
           ) : null
         }
         autoFocus
-        beforeInput={(api) => (
-          <>
-            <ComposerCommandMenu api={api} commands={commands} />
-            <AgentMentionSuggest api={api} />
-            <AgentMentionChip api={api} />
-          </>
-        )}
         clearOnSubmit="immediate"
         compact
+        layout="stacked"
+        submitLabel="Send message"
         fileAccept={mediaFileAccept}
         label="Message"
         onAttachFiles={attachFiles}
         onSubmit={send}
-        placeholder={commands.length > 0 ? 'Message, or / for commands…' : 'Message…'}
+        placeholder="Message…"
         submitShortcut="enter"
         testId={testIds.chatComposer}
-        toolbarStart={(api) => (
-          <>
-            <AskGroamButton api={api} />
-            {commands.length > 0 ? <ComposerCommandButton api={api} /> : null}
-            <VoiceRecordButton
-              disabled={api.isSubmitting}
-              onRecorded={(file) => attachFiles([file])}
-            />
-          </>
-        )}
       />
     </div>
   );
@@ -151,7 +130,6 @@ function PendingAttachmentList({
       {attachments.map((attachment) => {
         const isImage = attachment.file.type.startsWith('image/');
         const isVideo = attachment.file.type.startsWith('video/');
-        const isAudio = attachment.file.type.startsWith('audio/');
         return (
           <Attachment key={attachment.id} size="sm" state="done">
             <AttachmentMedia variant={isImage && attachment.previewUrl ? 'image' : 'icon'}>
@@ -176,16 +154,6 @@ function PendingAttachmentList({
                   >
                     <track kind="captions" />
                   </video>
-                ) : isAudio && attachment.previewUrl ? (
-                  <audio
-                    aria-label={attachment.file.name}
-                    className="mt-1 h-8 max-w-[11rem]"
-                    controls
-                    preload="metadata"
-                    src={attachment.previewUrl}
-                  >
-                    <track kind="captions" />
-                  </audio>
                 ) : (
                   `${(attachment.file.size / 1024).toFixed(0)} KB`
                 )}

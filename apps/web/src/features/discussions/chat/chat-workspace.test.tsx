@@ -103,3 +103,42 @@ test('renders the open thread when a discussion is selected', async () => {
   );
   await expect.element(page.getByText('thread')).toBeInTheDocument();
 });
+
+test('finds chats by trip or participant and recovers from no matches', async () => {
+  state.discussions = [
+    {
+      id: 'discussion-1',
+      lastMessage: null,
+      members: [{ image: null, name: 'Ada', userId: 'user-a' }],
+      threadId: 'thread-1',
+      title: 'Airport rides',
+      tripName: 'Rome weekend',
+      updatedAt: Date.now()
+    } as DiscussionListItem,
+    {
+      id: 'discussion-2',
+      lastMessage: null,
+      members: [{ image: null, name: 'Grace', userId: 'user-b' }],
+      threadId: 'thread-2',
+      title: 'Packing list',
+      tripName: null,
+      updatedAt: Date.now()
+    } as DiscussionListItem
+  ];
+  await render(
+    <ChatWorkspace>
+      <div>thread</div>
+    </ChatWorkspace>
+  );
+  const search = page.getByRole('searchbox', { name: 'Search chats' });
+  await search.fill('rome');
+  await expect.element(page.getByRole('link', { name: 'Airport rides' })).toBeVisible();
+  await expect.element(page.getByRole('link', { name: 'Packing list' })).not.toBeInTheDocument();
+  await search.fill('Grace');
+  await expect.element(page.getByRole('link', { name: 'Packing list' })).toBeVisible();
+  await search.fill('no match');
+  await expect.element(page.getByText(/No chats match/)).toBeVisible();
+  await search.fill('');
+  await expect.element(page.getByRole('link', { name: 'Airport rides' })).toBeVisible();
+  await expect.element(page.getByRole('link', { name: 'Packing list' })).toBeVisible();
+});

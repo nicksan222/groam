@@ -10,10 +10,10 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-test('treats images, video, and audio as previewable', () => {
+test('treats only images and video as previewable', () => {
   expect(isPreviewableMedia('image/png')).toBe(true);
   expect(isPreviewableMedia('video/mp4')).toBe(true);
-  expect(isPreviewableMedia('audio/webm')).toBe(true);
+  expect(isPreviewableMedia('audio/webm')).toBe(false);
   expect(isPreviewableMedia('application/pdf')).toBe(false);
 });
 
@@ -27,7 +27,7 @@ test('appends valid files and reports validation errors', () => {
   expect(result.next).toHaveLength(1);
   expect(result.next[0]?.file).toBe(photo);
   expect(result.next[0]?.previewUrl).toBe('blob:preview');
-  expect(result.errors).toEqual(['Upload an image, video, audio file, or PDF']);
+  expect(result.errors).toEqual(['Upload an image, video, or PDF']);
   expect(createPreviewUrl).toHaveBeenCalledWith(photo);
 });
 

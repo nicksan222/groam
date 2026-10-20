@@ -33,7 +33,7 @@ export function TransferFiles({
         <div>
           <Label>Tickets and directions</Label>
           <p className="text-xs text-muted-foreground">
-            {attachments.length} of 5 files · PDFs, images, audio, or video.
+            {attachments.length} of 5 files · PDFs, images, or video.
           </p>
         </div>
         <Button

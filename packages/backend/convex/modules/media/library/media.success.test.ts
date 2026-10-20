@@ -1,7 +1,8 @@
 import { expect, test } from 'vite-plus/test';
 import { api } from '#convex-generated/api';
 import { createAuthenticatedTest, createTest } from '#testing/factory';
-import { pngBlob } from '#testing/media';
+import { insertLegacyAudioMedia, pngBlob } from '#testing/media';
+import { setupGroup } from '#testing/trips';
 
 async function createOrganizationClient() {
   const { client } = await createAuthenticatedTest({
@@ -55,27 +56,32 @@ test('media upload metadata and storage are scoped to the active organization', 
   await expect(client.run((ctx) => ctx.storage.get(storageId))).resolves.toBeNull();
 });
 
-test.each(['text/plain', 'image/svg+xml'])(
-  'rejects and removes unsupported %s uploads',
-  async (contentType) => {
-    const client = await createOrganizationClient();
-    const storageId = await client.run((ctx) =>
-      ctx.storage.store(new Blob(['unsupported'], { type: contentType }))
-    );
+test.each([
+  'text/plain',
+  'image/svg+xml',
+  'audio/mpeg',
+  'audio/ogg',
+  'audio/wav',
+  'audio/mp4',
+  'audio/webm'
+])('rejects and removes unsupported %s uploads', async (contentType) => {
+  const client = await createOrganizationClient();
+  const storageId = await client.run((ctx) =>
+    ctx.storage.store(new Blob(['unsupported'], { type: contentType }))
+  );
 
-    await expect(
-      client.action(api.routes.media.save.run, {
-        contentType,
-        name: 'unsupported-file',
-        storageId
-      })
-    ).resolves.toEqual({
-      error: 'Upload a supported image, video, audio file, or PDF',
-      ok: false
-    });
-    await expect(client.run((ctx) => ctx.storage.get(storageId))).resolves.toBeNull();
-  }
-);
+  await expect(
+    client.action(api.routes.media.save.run, {
+      contentType,
+      name: 'unsupported-file',
+      storageId
+    })
+  ).resolves.toEqual({
+    error: 'Upload a supported image, video, or PDF',
+    ok: false
+  });
+  await expect(client.run((ctx) => ctx.storage.get(storageId))).resolves.toBeNull();
+});
 
 test('oversized uploads are rejected and removed from storage', async () => {
   const client = await createOrganizationClient();
@@ -170,4 +176,32 @@ test('media procedures require authentication', async () => {
       storageId
     })
   ).rejects.toThrow('Not authenticated');
+});
+
+test('cannot register audio by claiming an image type or reusing a legacy upload', async () => {
+  const { owner } = await setupGroup();
+  const { storageId } = await insertLegacyAudioMedia(owner);
+  await expect(
+    owner.client.action(api.routes.media.save.run, {
+      contentType: 'image/png',
+      name: 'disguised.png',
+      storageId
+    })
+  ).resolves.toEqual({ error: 'Upload a supported image, video, or PDF', ok: false });
+  // Old files remain available for existing messages; only new use is rejected.
+  await expect(
+    owner.client.run(async (ctx) => (await ctx.storage.get(storageId)) !== null)
+  ).resolves.toBe(true);
+
+  const freshStorageId = await owner.client.run((ctx) =>
+    ctx.storage.store(new Blob(['ID3audio'], { type: 'audio/mpeg' }))
+  );
+  await expect(
+    owner.client.action(api.routes.media.save.run, {
+      contentType: 'image/png',
+      name: 'disguised.png',
+      storageId: freshStorageId
+    })
+  ).resolves.toEqual({ error: 'Upload a supported image, video, or PDF', ok: false });
+  await expect(owner.client.run((ctx) => ctx.storage.get(freshStorageId))).resolves.toBeNull();
 });

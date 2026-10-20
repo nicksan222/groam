@@ -199,35 +199,6 @@ export function ChatMessage(props: ChatMessageProps) {
   );
 }
 
-function AudioAttachment({
-  attachment,
-  mediaOnly,
-  mine
-}: {
-  attachment: ChatMessageAttachment;
-  mediaOnly: boolean;
-  mine: boolean;
-}) {
-  const className = mediaOnly
-    ? mine
-      ? 'rounded-2xl rounded-br-md bg-secondary px-3 py-2 text-secondary-foreground shadow-xs/5'
-      : 'rounded-2xl rounded-bl-md px-3 py-2'
-    : undefined;
-  return (
-    <div className={className}>
-      <audio
-        aria-label={attachment.name}
-        className="max-w-full"
-        controls
-        preload="metadata"
-        src={attachment.url ?? undefined}
-      >
-        <track kind="captions" />
-      </audio>
-    </div>
-  );
-}
-
 function ImageAttachment({
   attachment,
   frameClass,
@@ -301,7 +272,6 @@ function MessageAttachmentChip({
   const contentType = attachment.contentType.toLowerCase();
   const href = attachment.url ?? undefined;
   const isImage = contentType.startsWith('image/') && Boolean(attachment.url);
-  const isAudio = contentType.startsWith('audio/') && Boolean(attachment.url);
   const isVideo =
     Boolean(attachment.url) &&
     (contentType.startsWith('video/') ||
@@ -312,10 +282,6 @@ function MessageAttachmentChip({
       ? 'overflow-hidden rounded-2xl rounded-br-md shadow-xs/5'
       : 'overflow-hidden rounded-2xl rounded-bl-md'
     : 'overflow-hidden rounded-lg';
-
-  if (isAudio) {
-    return <AudioAttachment attachment={attachment} mediaOnly={mediaOnly} mine={mine} />;
-  }
 
   if (isVideo) {
     return (

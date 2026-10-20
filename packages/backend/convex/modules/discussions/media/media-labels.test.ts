@@ -9,7 +9,7 @@ test('previews captionless uploads by their kind', () => {
   expect(DiscussionMedia.previewLabel([])).toBe('');
   expect(DiscussionMedia.previewLabel([file('image/png')])).toBe('Sent a photo');
   expect(DiscussionMedia.previewLabel([file('video/mp4')])).toBe('Sent a video');
-  expect(DiscussionMedia.previewLabel([file('audio/mpeg')])).toBe('Sent an audio file');
+  expect(DiscussionMedia.previewLabel([file('audio/mpeg')])).toBe('Sent file.bin');
   expect(DiscussionMedia.previewLabel([file('application/pdf', 'plan.pdf')])).toBe('Sent plan.pdf');
   expect(DiscussionMedia.previewLabel([file('image/png'), file('video/mp4')])).toBe('Sent 2 files');
 });

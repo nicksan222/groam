@@ -7,7 +7,7 @@ import { FileDropzone } from './file-dropzone';
 test('renders the title, description, and icon', async () => {
   await render(
     <FileDropzone
-      description="Images, video, audio, or PDF up to 25 MB"
+      description="Images, video, or PDF up to 25 MB"
       icon={<UploadCloud data-icon="upload" />}
       onChoose={() => undefined}
       title="Choose media to upload"
@@ -17,9 +17,7 @@ test('renders the title, description, and icon', async () => {
   await expect
     .element(page.getByRole('button', { name: /Choose media to upload/ }))
     .toBeInTheDocument();
-  await expect
-    .element(page.getByText('Images, video, audio, or PDF up to 25 MB'))
-    .toBeInTheDocument();
+  await expect.element(page.getByText('Images, video, or PDF up to 25 MB')).toBeInTheDocument();
 });
 
 test('calls onChoose and honors disabled', async () => {
