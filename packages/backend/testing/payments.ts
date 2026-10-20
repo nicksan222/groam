@@ -11,3 +11,7 @@ export function paymentCleanupState(test: ReturnType<typeof createTest>, tripId:
       .take(101)
   }));
 }
+
+export function paymentReconciliationState(test: ReturnType<typeof createTest>) {
+  return test.run((ctx) => ctx.db.query('paymentReconciliations').take(101));
+}

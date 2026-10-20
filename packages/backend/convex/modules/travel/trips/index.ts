@@ -7,6 +7,7 @@ import { AgentWaits } from '#convex/modules/assistant/waits/index';
 import { requireWorkspace, workspaceRoster } from '#convex/modules/auth/workspace';
 import { linkTargetKey, removeLinksForTargetKey } from '#convex/modules/discussions/links/cascade';
 import { Discussions } from '#convex/modules/discussions/threads/index';
+import { detachPayment } from '#convex/modules/payments/reconciliation';
 import { PollCleanup } from '#convex/modules/polls/cleanup';
 import { insertWithShortId } from '#convex/modules/references/index';
 import { ItineraryActivity } from '#convex/modules/travel/activities/index';
@@ -285,16 +286,14 @@ async function deleteBatch(ctx: MutationCtx, trip: Doc<'trips'>): Promise<void> 
   if (await TripPreferences.deleteForTrip(ctx, trip._id, DELETE_BATCH_SIZE)) {
     return;
   }
-  if (
-    await deleteRows(
-      ctx,
-      ctx.db
-        .query('tripPayments')
-        .withIndex('by_tripId_and_userId', (query) => query.eq('tripId', trip._id))
-        .take(DELETE_BATCH_SIZE)
-    )
-  )
+  const payments = await ctx.db
+    .query('tripPayments')
+    .withIndex('by_tripId_and_userId', (query) => query.eq('tripId', trip._id))
+    .take(DELETE_BATCH_SIZE);
+  if (payments.length) {
+    await Promise.all(payments.map((row) => detachPayment(ctx, row)));
     return;
+  }
   if (await deleteHistoryRows(ctx, trip._id)) return;
 
   await TripLocations.removeTrip(ctx, trip._id);

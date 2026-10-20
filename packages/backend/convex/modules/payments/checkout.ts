@@ -13,17 +13,27 @@ import {
 } from './stripe';
 
 async function loadSession(ctx: ActionCtx, payment: PaymentAttempt, payerId: string) {
-  if (payment.sessionId) return stripeRequest(`/${encodeURIComponent(payment.sessionId)}`);
+  if (payment.sessionId) {
+    const session = await stripeRequest(`/${encodeURIComponent(payment.sessionId)}`);
+    const active = await ctx.runMutation(internal.modules.payments.storage.attachSession, {
+      id: payment.id,
+      attempt: payment.attempt,
+      sessionId: session.id
+    });
+    if (!active) throw new ConvexError('This trip is no longer available for payment.');
+    return session;
+  }
   // After the reserved expiration another authorized payer may replay the original key
   // to reconcile a lost response. Only the outer handler may expose an open session URL,
   // and it still requires the original payer until Stripe confirms expiration.
   if (Math.floor(Date.now() / 1000) < payment.expiresAt) assertPayer(payment, payerId);
-  const session = await createSession(payment);
-  await ctx.runMutation(internal.modules.payments.storage.attachSession, {
+  const session = await createSession(ctx, payment);
+  const attached = await ctx.runMutation(internal.modules.payments.storage.attachSession, {
     id: payment.id,
     attempt: payment.attempt,
     sessionId: session.id
   });
+  if (!attached) throw new ConvexError('This trip is no longer available for payment.');
   return session;
 }
 
