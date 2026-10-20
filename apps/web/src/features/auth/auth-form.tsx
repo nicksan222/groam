@@ -144,7 +144,7 @@ function AuthFields({
             value={state.newPassword}
           />
         </FormField>
-        <FormFeedback error={state.error} />
+        <FormFeedback error={state.error} message={state.message} />
       </div>
     );
   }
@@ -168,7 +168,7 @@ function AuthFields({
             value={state.twoFactorCode}
           />
         </FormField>
-        <FormFeedback error={state.error} />
+        <FormFeedback error={state.error} message={state.message} />
       </div>
     );
   }
@@ -185,6 +185,19 @@ function AuthFields({
             placeholder="Your name"
             required
             value={state.name}
+          />
+        </FormField>
+      ) : null}
+      {!isSignIn ? (
+        <FormField label="Email" required>
+          <Input
+            autoComplete="email"
+            type="email"
+            disabled={state.isPending}
+            onChange={(event) => updateState({ error: null, email: event.target.value })}
+            placeholder="you@example.com"
+            required
+            value={state.email}
           />
         </FormField>
       ) : null}
@@ -219,7 +232,7 @@ function AuthFields({
           value={state.password}
         />
       </FormField>
-      <FormFeedback error={state.error} />
+      <FormFeedback error={state.error} message={state.message} />
     </div>
   );
 }
