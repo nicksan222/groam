@@ -1,4 +1,6 @@
+import { recordListTitleClassName } from '@groam/ui/lib/record-list';
 import { render } from '@groam/vitest-config/react';
+import { useViewport } from '@groam/vitest-config/viewport';
 import { useState } from 'react';
 import { expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
@@ -111,4 +113,50 @@ test('keeps long titles and optional badges on the same two-line rhythm', async 
   expect(
     records[0]?.querySelector('[data-slot="record-list-title"]')?.getBoundingClientRect().height
   ).toBe(24);
+});
+
+test('gives phone titles two lines and context the full row width with touch-sized actions', async () => {
+  await useViewport(390, 844);
+  await render(
+    <RecordList
+      empty="No records"
+      getKey={(item) => item.id}
+      items={items}
+      onQueryChange={vi.fn()}
+      query=""
+      resourceLabel={{ singular: 'record', plural: 'records' }}
+      renderItem={(item) => (
+        <RecordListItem
+          icon={<span aria-hidden />}
+          title={
+            <a className={recordListTitleClassName} href={`#${item.id}`}>
+              {item.id === 'b'
+                ? 'Choose a lovely coastal walk for the last afternoon together'
+                : item.title}
+            </a>
+          }
+          description="A readable preview of the latest update"
+          metadata="Updated yesterday"
+          badges={<button type="button">Open</button>}
+        />
+      )}
+    />
+  );
+  const rows = page.getByRole('article').elements();
+  expect(rows[0]?.getBoundingClientRect().height).toBe(rows[1]?.getBoundingClientRect().height);
+  const first = rows[0]!;
+  const title = first.querySelector('[data-slot="record-list-title"]')!;
+  const context = first.querySelector('[data-slot="record-list-context"]')!;
+  expect(title.getBoundingClientRect().height).toBe(40);
+  expect(context.getBoundingClientRect().left).toBeLessThan(title.getBoundingClientRect().left);
+  const preview = first.querySelector('[data-slot="record-list-description"]')!;
+  const metadata = first.querySelector('[data-slot="record-list-metadata"]')!;
+  expect(preview.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+    metadata.getBoundingClientRect().top
+  );
+  expect(getComputedStyle(preview).fontSize).toBe('14px');
+  expect(first.querySelector('button')!.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
+    document.documentElement.clientWidth
+  );
 });

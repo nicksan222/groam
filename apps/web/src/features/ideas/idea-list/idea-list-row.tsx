@@ -78,35 +78,33 @@ export function IdeaListRow({
         </h4>
       }
       metadata={
-        <>
-          <RecordListBadge>
-            {draft ? 'Your draft' : ideaStatusLabel(proposal.status)}
-          </RecordListBadge>
-          <span className="min-w-0 truncate">
-            {showTripName && proposal.sourceTripName ? (
-              <>
-                <span className="font-medium">{proposal.sourceTripName}</span>
-                <span aria-hidden className="mx-1.5">
-                  ·
-                </span>
-              </>
-            ) : null}
-            started by <span>{proposal.author.name}</span>
-            {proposal.updatedAt != null ? (
-              <>
-                <span aria-hidden className="mx-1.5">
-                  ·
-                </span>
-                <time
-                  dateTime={new Date(proposal.updatedAt).toISOString()}
-                  title={new Date(proposal.updatedAt).toLocaleString()}
-                >
-                  updated {dateFormatter.format(proposal.updatedAt)}
-                </time>
-              </>
-            ) : null}
-          </span>
-        </>
+        <RecordListBadge>{draft ? 'Your draft' : ideaStatusLabel(proposal.status)}</RecordListBadge>
+      }
+      description={
+        <span className="min-w-0 truncate">
+          {showTripName && proposal.sourceTripName ? (
+            <>
+              <span className="font-medium">{proposal.sourceTripName}</span>
+              <span aria-hidden className="mx-1.5">
+                ·
+              </span>
+            </>
+          ) : null}
+          started by <span>{proposal.author.name}</span>
+          {proposal.updatedAt != null ? (
+            <>
+              <span aria-hidden className="mx-1.5">
+                ·
+              </span>
+              <time
+                dateTime={new Date(proposal.updatedAt).toISOString()}
+                title={new Date(proposal.updatedAt).toLocaleString()}
+              >
+                updated {dateFormatter.format(proposal.updatedAt)}
+              </time>
+            </>
+          ) : null}
+        </span>
       }
       badges={
         proposal.reviewRequested && proposal.status === 'in_review' ? (

@@ -9,6 +9,7 @@ import { type ReactNode, useMemo, useState } from 'react';
 export function RecordList<T>({
   empty,
   filterPlaceholder,
+  filterTestId,
   getKey,
   hasExtraFilters = false,
   items,
@@ -22,6 +23,7 @@ export function RecordList<T>({
 }: {
   empty: ReactNode;
   filterPlaceholder?: string;
+  filterTestId?: string;
   getKey: (item: T) => string;
   hasExtraFilters?: boolean;
   items: readonly T[];
@@ -45,6 +47,7 @@ export function RecordList<T>({
     <div className="min-w-0 space-y-3" data-slot="record-list">
       <RecordListToolbar
         filterPlaceholder={filterPlaceholder}
+        filterTestId={filterTestId}
         hasExtraFilters={hasExtraFilters}
         onClear={onClear}
         onQueryChange={onQueryChange}
@@ -52,8 +55,8 @@ export function RecordList<T>({
         resourceLabel={resourceLabel}
         toolbarExtra={toolbarExtra}
       />
-      <div className="min-w-0 overflow-hidden rounded-lg border border-border/60 bg-transparent text-foreground">
-        <div className="flex min-h-11 flex-wrap items-center justify-between gap-2 border-b border-border/40 bg-background/30 px-4 py-2 sm:px-5">
+      <div className="min-w-0 overflow-hidden rounded-lg border border-border/60 max-md:border-x-0 max-md:rounded-none bg-transparent text-foreground">
+        <div className="flex min-h-11 flex-wrap items-center justify-between gap-2 border-b border-border/40 bg-transparent px-4 py-1 md:bg-background/30 md:py-2 md:px-5">
           <span className="text-xs font-medium text-muted-foreground">
             {items.length} {items.length === 1 ? resourceLabel.singular : resourceLabel.plural}
           </span>
@@ -61,7 +64,7 @@ export function RecordList<T>({
             <Select onValueChange={setSort} value={selectedSort.value}>
               <SelectTrigger
                 aria-label={`Sort ${resourceLabel.plural}`}
-                className="h-7 w-auto gap-1.5 border-transparent bg-transparent text-xs text-muted-foreground shadow-none"
+                className="h-7 w-auto gap-1.5 border-transparent bg-transparent text-xs dark:bg-transparent text-muted-foreground shadow-none"
                 size="sm"
               >
                 <ArrowDownWideNarrow aria-hidden className="size-3.5" />

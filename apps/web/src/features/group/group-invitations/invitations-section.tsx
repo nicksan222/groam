@@ -1,80 +1,10 @@
-import { Badge } from '@groam/ui/components/badge';
 import { Button } from '@groam/ui/components/button';
-import { type ColumnDef, DataTable, type FilterFn } from '@groam/ui/components/data-table';
-import { dataTableColumnFillClassName } from '@groam/ui/lib/data-table';
-import { Copy } from 'lucide-react';
-import { useMemo } from 'react';
+import { RecordList } from '@groam/ui/components/record-list';
+import { RecordListBadge } from '@groam/ui/components/record-list-badge';
+import { RecordListItem } from '@groam/ui/components/record-list-item';
+import { Copy, KeyRound } from 'lucide-react';
+import { useState } from 'react';
 import type { InvitationCode } from '@/types/invitation-codes';
-
-const invitationFilter: FilterFn<InvitationCode> = (row, _columnId, value) => {
-  const query = String(value).trim().toLowerCase();
-  if (!query) return true;
-  return `${row.original.code} ${row.original.role}`.toLowerCase().includes(query);
-};
-
-function invitationColumns({
-  onCopy,
-  onRevoke,
-  pendingId
-}: {
-  onCopy: (code: string) => void;
-  onRevoke: (invitationCodeId: InvitationCode['id']) => void;
-  pendingId: InvitationCode['id'] | null;
-}): ColumnDef<InvitationCode, unknown>[] {
-  return [
-    {
-      accessorKey: 'code',
-      cell: ({ row }) => (
-        <span className="flex min-w-0 items-center gap-2">
-          <span className="font-mono font-medium tracking-wide">{row.original.code}</span>
-          <Button
-            aria-label={`Copy ${row.original.code}`}
-            onClick={() => onCopy(row.original.code)}
-            size="icon-sm"
-            variant="ghost"
-          >
-            <Copy />
-          </Button>
-        </span>
-      ),
-      enableHiding: false,
-      header: 'Code',
-      id: 'code',
-      meta: { className: `w-[50%] ${dataTableColumnFillClassName} whitespace-normal` }
-    },
-    {
-      accessorKey: 'role',
-      cell: ({ row }) => <Badge variant="secondary">{row.original.role}</Badge>,
-      header: 'Role',
-      id: 'role',
-      meta: { className: 'w-28 capitalize' }
-    },
-    {
-      accessorKey: 'expiresAt',
-      cell: ({ row }) => new Date(row.original.expiresAt).toLocaleDateString(),
-      header: 'Expires',
-      id: 'expiresAt',
-      meta: { className: 'w-32' }
-    },
-    {
-      cell: ({ row }) => (
-        <Button
-          disabled={pendingId === row.original.id}
-          onClick={() => onRevoke(row.original.id)}
-          size="sm"
-          variant="ghost"
-        >
-          Revoke
-        </Button>
-      ),
-      enableHiding: false,
-      enableSorting: false,
-      header: () => <span className="sr-only">Actions</span>,
-      id: 'actions',
-      meta: { className: 'w-28 text-right' }
-    }
-  ];
-}
 
 export function InvitationsSection({
   codes,
@@ -87,19 +17,65 @@ export function InvitationsSection({
   onRevoke: (invitationCodeId: InvitationCode['id']) => void;
   pendingId: InvitationCode['id'] | null;
 }) {
-  const columns = useMemo(
-    () => invitationColumns({ onCopy, onRevoke, pendingId }),
-    [onCopy, onRevoke, pendingId]
+  const [query, setQuery] = useState('');
+  const normalizedQuery = query.trim().toLowerCase();
+  const invitations = codes.filter((invitation) =>
+    `${invitation.code} ${invitation.role}`.toLowerCase().includes(normalizedQuery)
   );
 
   if (codes.length === 0) return null;
   return (
-    <DataTable
-      columns={columns}
-      data={codes}
-      getRowId={(invitation) => invitation.id}
-      globalFilterFn={invitationFilter}
+    <RecordList
+      empty="No invitation codes match your search."
+      getKey={(invitation) => invitation.id}
+      items={invitations}
+      onQueryChange={setQuery}
+      query={query}
       resourceLabel={{ plural: 'invitation codes', singular: 'invitation code' }}
+      sortOptions={[
+        { label: 'Original order', value: 'default' },
+        { compare: (a, b) => a.code.localeCompare(b.code), label: 'Code A–Z', value: 'code' },
+        { compare: (a, b) => a.role.localeCompare(b.role), label: 'Role', value: 'role' },
+        { compare: (a, b) => a.expiresAt - b.expiresAt, label: 'Expiring first', value: 'expiry' }
+      ]}
+      renderItem={(invitation) => (
+        <RecordListItem
+          icon={<KeyRound aria-hidden className="text-muted-foreground" />}
+          title={
+            <Button
+              aria-label={`Copy ${invitation.code}`}
+              className="inline-flex max-w-full items-center gap-2 rounded-sm text-left focus-visible:outline-2 focus-visible:outline-ring"
+              onClick={() => onCopy(invitation.code)}
+              unstyled
+            >
+              <span className="truncate font-mono tracking-wide">{invitation.code}</span>
+              <Copy aria-hidden className="size-3.5 shrink-0 text-muted-foreground" />
+            </Button>
+          }
+          metadata={
+            <>
+              <RecordListBadge className="capitalize">{invitation.role}</RecordListBadge>
+              <span className="truncate">
+                Expires{' '}
+                <time dateTime={new Date(invitation.expiresAt).toISOString()}>
+                  {new Date(invitation.expiresAt).toLocaleDateString()}
+                </time>
+              </span>
+            </>
+          }
+          badges={
+            <Button
+              className="h-11 px-2 md:h-6 text-xs text-muted-foreground"
+              disabled={pendingId === invitation.id}
+              onClick={() => onRevoke(invitation.id)}
+              size="sm"
+              variant="ghost"
+            >
+              Revoke
+            </Button>
+          }
+        />
+      )}
     />
   );
 }

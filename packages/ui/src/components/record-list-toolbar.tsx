@@ -11,6 +11,7 @@ import type { ReactNode } from 'react';
 
 export function RecordListToolbar({
   filterPlaceholder,
+  filterTestId,
   hasExtraFilters,
   onClear,
   onQueryChange,
@@ -19,6 +20,7 @@ export function RecordListToolbar({
   toolbarExtra
 }: {
   filterPlaceholder?: string;
+  filterTestId?: string;
   hasExtraFilters: boolean;
   onClear?: () => void;
   onQueryChange: (query: string) => void;
@@ -32,6 +34,8 @@ export function RecordListToolbar({
       <SearchInput
         aria-label={labels.filterAriaLabel}
         className={dataTableSearchInputClassName}
+        data-testid={filterTestId}
+        inputClassName="max-md:h-11 max-md:text-base"
         onChange={(event) => onQueryChange(event.target.value)}
         placeholder={filterPlaceholder ?? labels.filterPlaceholder}
         value={query}

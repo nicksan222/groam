@@ -152,18 +152,9 @@ describe('AgentsListView', () => {
       )
       .toBeInTheDocument();
     const roster = page.getByTestId(testIds.agentsRoster);
-    await expect.element(roster).not.toHaveClass('dashboard-lift-card');
-    await expect.element(roster).not.toHaveClass('rounded-2xl');
-    await expect.element(roster).toHaveClass('bg-card');
-    expect(
-      roster.element().querySelector('[data-slot="table-container"]')?.getAttribute('data-variant')
-    ).toBe('list');
-    await expect.element(roster.getByRole('table')).toBeInTheDocument();
-    await expect.element(page.getByRole('button', { name: 'Run' })).toBeInTheDocument();
-    await expect.element(page.getByText('Agent')).toBeInTheDocument();
-    await expect.element(page.getByText('Called by')).toBeInTheDocument();
-    await expect.element(page.getByText('Status')).toBeInTheDocument();
-    await expect.element(page.getByRole('button', { name: 'Updated' })).toBeInTheDocument();
+    await expect.element(roster.getByRole('list', { name: 'Runs' })).toBeInTheDocument();
+    await expect.element(page.getByRole('table')).not.toBeInTheDocument();
+    await expect.element(page.getByLabelText('Sort runs')).toBeInTheDocument();
     expect(page.getByTestId(testIds.agentCard).elements()).toHaveLength(4);
     await expect
       .element(page.getByRole('link', { name: /Rainy-day option/u }))
@@ -191,8 +182,7 @@ describe('AgentsListView', () => {
       expect(title?.className).toContain('font-semibold');
     }
     const rosterRow = page.getByTestId(testIds.agentCard).elements()[0];
-    expect(rosterRow?.tagName).toBe('TR');
-    expect(rosterRow?.className).toContain('cursor-pointer');
+    expect(rosterRow?.tagName).toBe('ARTICLE');
     await expect.element(page.getByText('Nothing running yet')).not.toBeInTheDocument();
     await expect.element(page.getByText('Idle')).not.toBeInTheDocument();
     await expect.element(page.getByText('Latest run from each agent.')).not.toBeInTheDocument();
@@ -270,7 +260,7 @@ describe('AgentsListView', () => {
         })
       ];
       await render(<AgentsListView />);
-      // On a phone the wide table scrolls inside its own frame instead of the page.
+      // Long titles truncate inside the same two-line row on phones.
       await expect
         .element(page.getByRole('link', { name: /A very long run title/u }))
         .toBeInTheDocument();

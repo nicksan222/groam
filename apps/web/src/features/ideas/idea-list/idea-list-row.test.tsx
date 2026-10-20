@@ -1,5 +1,6 @@
 import type { Id } from '@groam/backend/data-model';
 import { render } from '@groam/vitest-config/react';
+import { useViewport } from '@groam/vitest-config/viewport';
 import type { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
@@ -138,4 +139,19 @@ describe('IdeaListRow', () => {
       .toHaveAttribute('href', '/trips/trip-1/ideas/idea-1/compare');
     await expect.element(page.getByTestId(testIds.ideaContinue)).not.toBeInTheDocument();
   });
+});
+
+test('gives phone context its own line above the state and review footer', async () => {
+  await useViewport(390, 844);
+  await renderTable([makeIdea({ reviewRequested: true })], { showTripName: true });
+  const row = page.getByRole('article').element();
+  const description = row.querySelector('[data-slot="record-list-description"]');
+  const state = page.getByText('In review', { exact: true }).element();
+  expect(description?.textContent).toContain('Atlantic week');
+  expect(description?.textContent).toContain('started by Alex Morgan');
+  expect(state.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+    description!.getBoundingClientRect().bottom
+  );
+  expect(page.getByText('Alex Morgan', { exact: true }).elements()).toHaveLength(1);
+  await expect.element(page.getByText('Review requested')).toBeVisible();
 });

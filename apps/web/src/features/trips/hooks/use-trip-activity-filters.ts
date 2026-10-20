@@ -21,10 +21,10 @@ export function useTripActivityFilters(activity: TripDetail['activity']) {
     () =>
       filterTripActivity(activity, {
         activityType,
-        query: '',
+        query,
         userId
       }),
-    [activity, activityType, userId]
+    [activity, activityType, query, userId]
   );
   const selectedPerson = people.find((person) => person.userId === userId);
   const hasExtraFilters = userId !== ALL_ACTIVITY_USERS || activityType !== ALL_ACTIVITY_TYPES;

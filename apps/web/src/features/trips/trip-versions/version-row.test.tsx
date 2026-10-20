@@ -1,5 +1,6 @@
 import type { Id } from '@groam/backend/data-model';
 import { render } from '@groam/vitest-config/react';
+import { useViewport } from '@groam/vitest-config/viewport';
 import { describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { VersionRow } from './version-row';
@@ -9,14 +10,17 @@ type Props = Parameters<typeof VersionRow>[0];
 vi.mock('@/features/workspace/navigation/router', () => ({
   Link: ({
     children,
+    className,
     onClick,
     to
   }: {
     children?: React.ReactNode;
+    className?: string;
     onClick?: () => void;
     to: string;
   }) => (
     <a
+      className={className}
       href={to}
       onClick={(event) => {
         event.preventDefault();
@@ -91,7 +95,7 @@ describe('VersionRow', () => {
     await expect.element(page.getByText(copy)).toBeVisible();
   });
 
-  test('applied ideas have no purpose line', async () => {
+  test('applied ideas omit purpose copy', async () => {
     await render(<VersionRow {...setup(makeProposal({ status: 'merged' }))} />);
     await expect.element(page.getByText('Applied', { exact: true })).toBeVisible();
     await expect.element(page.getByText(/Reviewing changes/)).not.toBeInTheDocument();
@@ -122,4 +126,45 @@ describe('VersionRow', () => {
     await expect.element(article).toHaveAttribute('data-status', 'in_review');
     await expect.element(article).toHaveAttribute('data-idea-name', 'coast-day');
   });
+});
+
+test('uses uniform phone previews and keeps the draft title actionable', async () => {
+  await useViewport(390, 844);
+  const draft = setup(
+    makeProposal({
+      author: { name: 'Lea', userId: 'user-lea' },
+      status: 'draft',
+      feedbackCount: 3,
+      unresolvedFeedbackCount: 1
+    })
+  );
+  await render(
+    <>
+      <VersionRow {...draft} />
+      <VersionRow
+        {...setup(makeProposal({ id: 'proposal-2', status: 'merged', title: 'Applied idea' }))}
+      />
+    </>
+  );
+  const rows = page.getByRole('article').elements();
+  const description = rows[0]?.querySelector('[data-slot="record-list-description"]');
+  const state = page.getByText('Your draft', { exact: true }).element();
+  expect(description?.textContent).toContain('by Lea');
+  expect(description?.textContent).toContain('Your idea. Edit it, then send it for review.');
+  expect(state.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+    description!.getBoundingClientRect().bottom
+  );
+  expect(rows[0]?.getBoundingClientRect().height).toBe(rows[1]?.getBoundingClientRect().height);
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
+    document.documentElement.clientWidth
+  );
+  await page.getByRole('button', { name: 'Add a coast day' }).click();
+  expect(draft.onOpenCopy).toHaveBeenCalledOnce();
+});
+
+test('opens an idea from its title without duplicating activation', async () => {
+  const props = setup(makeProposal());
+  await render(<VersionRow {...props} />);
+  await page.getByRole('link', { name: 'Add a coast day' }).click();
+  expect(props.onOpen).toHaveBeenCalledOnce();
 });

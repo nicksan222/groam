@@ -1,10 +1,9 @@
-import { DataTable, type FilterFn } from '@groam/ui/components/data-table';
+import { RecordList } from '@groam/ui/components/record-list';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@groam/ui/components/select';
 import Shell from '@groam/ui/components/shell/client';
 import { listFilterTriggerClassName } from '@groam/ui/lib/data-table';
-import { useMemo } from 'react';
+import type { RecordListSort } from '@groam/ui/lib/record-list';
 import {
-  filterTripActivity,
   type TripActivityFilters,
   type TripActivityItem
 } from '@/features/trips/hooks/trip-activity-history-filter';
@@ -15,16 +14,16 @@ import {
   useTripActivityFilters
 } from '@/features/trips/hooks/use-trip-activity-filters';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
-import { tripActivityColumns } from './trip-activity-history-columns';
+import { TripActivityHistoryRow } from './trip-activity-history-row';
 
-const activityFilter: FilterFn<TripActivityItem> = (row, _columnId, value) =>
-  filterTripActivity([row.original], {
-    activityType: ALL_ACTIVITY_TYPES,
-    query: String(value),
-    userId: ALL_ACTIVITY_USERS
-  }).length > 0;
+const sortOptions: RecordListSort<TripActivityItem>[] = [
+  { label: 'Default order', value: 'default' },
+  { label: 'Newest first', value: 'newest', compare: (a, b) => b.createdAt - a.createdAt },
+  { label: 'Oldest first', value: 'oldest', compare: (a, b) => a.createdAt - b.createdAt },
+  { label: 'Event A–Z', value: 'event', compare: (a, b) => a.message.localeCompare(b.message) }
+];
 
-/** The activity table with its event count; the page around it supplies the title. */
+/** The activity list with its event count; the page around it supplies the title. */
 export function TripActivityHistory({ activity }: { activity: TripDetail['activity'] }) {
   const {
     activityType,
@@ -42,26 +41,21 @@ export function TripActivityHistory({ activity }: { activity: TripDetail['activi
     userId,
     visibleActivity
   } = useTripActivityFilters(activity);
-  const columns = useMemo(() => tripActivityColumns(), []);
 
   return (
     <Shell.Stack stack="md">
       <p className="text-xs text-muted-foreground">{eventCountLabel}</p>
       <Shell.Reveal>
-        <DataTable
-          columns={columns}
-          data={visibleActivity}
+        <RecordList
+          items={visibleActivity}
           empty={empty}
-          filterValue={query}
-          getRowId={(item) => item.id}
-          getRowProps={(item) => ({
-            'data-activity-id': item.id,
-            'data-activity-type': item.type
-          })}
-          globalFilterFn={activityFilter}
+          query={query}
+          getKey={(item) => item.id}
+          renderItem={(item) => <TripActivityHistoryRow item={item} />}
+          sortOptions={sortOptions}
           hasExtraFilters={hasExtraFilters}
           onClear={clearFilters}
-          onFilterValueChange={setQuery}
+          onQueryChange={setQuery}
           resourceLabel={{ plural: 'activity', singular: 'activity' }}
           toolbarExtra={
             <>

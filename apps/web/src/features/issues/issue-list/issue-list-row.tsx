@@ -47,30 +47,28 @@ export function IssueListRow({
           </Link>
         )
       }
-      metadata={
-        <>
-          <RecordListBadge>{issueStatusMeta[issue.status].label}</RecordListBadge>
-          <span className="min-w-0 truncate">
-            {showTripName && issue.tripName ? (
-              <>
-                <span className="font-medium">{issue.tripName}</span>
-                <span aria-hidden className="mx-1.5">
-                  ·
-                </span>
-              </>
-            ) : null}
-            opened by <span>{issue.author.name}</span>
-            <span aria-hidden className="mx-1.5">
-              ·
-            </span>
-            <time
-              dateTime={new Date(issue.updatedAt).toISOString()}
-              title={new Date(issue.updatedAt).toLocaleString()}
-            >
-              updated {relativeIssueDate(issue.updatedAt)}
-            </time>
+      metadata={<RecordListBadge>{issueStatusMeta[issue.status].label}</RecordListBadge>}
+      description={
+        <span className="min-w-0 truncate">
+          {showTripName && issue.tripName ? (
+            <>
+              <span className="font-medium">{issue.tripName}</span>
+              <span aria-hidden className="mx-1.5">
+                ·
+              </span>
+            </>
+          ) : null}
+          opened by <span>{issue.author.name}</span>
+          <span aria-hidden className="mx-1.5">
+            ·
           </span>
-        </>
+          <time
+            dateTime={new Date(issue.updatedAt).toISOString()}
+            title={new Date(issue.updatedAt).toLocaleString()}
+          >
+            updated {relativeIssueDate(issue.updatedAt)}
+          </time>
+        </span>
       }
       badges={
         issue.condition || issue.labels.length || issue.dueAt != null || issue.idea ? (

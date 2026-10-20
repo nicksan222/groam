@@ -1,4 +1,5 @@
 import { render } from '@groam/vitest-config/react';
+import { useViewport } from '@groam/vitest-config/viewport';
 import { expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import type { InvitationCode } from '@/types/invitation-codes';
@@ -21,6 +22,7 @@ test('renders active codes and lets managers copy or revoke them', async () => {
     <InvitationsSection codes={codes} onCopy={onCopy} onRevoke={onRevoke} pendingId={null} />
   );
 
+  await expect.element(page.getByRole('list', { name: 'Invitation codes' })).toBeVisible();
   await expect.element(page.getByText('ABCD-EFGH-JKLM')).toBeInTheDocument();
   await expect.element(page.getByText('member')).toBeInTheDocument();
   await expect.element(page.getByLabelText('Search invitation codes')).toBeInTheDocument();
@@ -48,4 +50,35 @@ test('renders nothing when there are no active codes', async () => {
     <InvitationsSection codes={[]} onCopy={vi.fn()} onRevoke={vi.fn()} pendingId={null} />
   );
   expect(container.innerHTML).toBe('');
+});
+
+test('searches invitation codes and restores them after clearing', async () => {
+  await render(
+    <InvitationsSection codes={codes} onCopy={vi.fn()} onRevoke={vi.fn()} pendingId={null} />
+  );
+  const search = page.getByRole('searchbox', { name: 'Search invitation codes' });
+  await search.fill('MEMBER');
+  await expect.element(page.getByText('ABCD-EFGH-JKLM')).toBeVisible();
+  await search.fill('Nothing');
+  await expect
+    .element(page.getByRole('status'))
+    .toHaveTextContent('No invitation codes match your search.');
+  await page.getByRole('button', { name: 'Clear invitation code filters' }).click();
+  await expect.element(page.getByText('ABCD-EFGH-JKLM')).toBeVisible();
+});
+
+test('keeps copy and revoke reachable on phones without horizontal overflow', async () => {
+  await useViewport(390, 844);
+  const onCopy = vi.fn();
+  const onRevoke = vi.fn();
+  await render(
+    <InvitationsSection codes={codes} onCopy={onCopy} onRevoke={onRevoke} pendingId={null} />
+  );
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
+    document.documentElement.clientWidth
+  );
+  await page.getByRole('button', { name: 'Copy ABCD-EFGH-JKLM' }).click();
+  await page.getByRole('button', { name: 'Revoke' }).click();
+  expect(onCopy).toHaveBeenCalledWith('ABCD-EFGH-JKLM');
+  expect(onRevoke).toHaveBeenCalledWith('invitation-code-a');
 });

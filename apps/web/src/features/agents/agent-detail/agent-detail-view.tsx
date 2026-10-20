@@ -6,7 +6,7 @@ import { PageLoading } from '@groam/ui/components/page-loading';
 import Shell from '@groam/ui/components/shell/client';
 import { Spinner } from '@groam/ui/components/spinner';
 import { Bot } from 'lucide-react';
-import { AgentRunTable } from '@/features/agents/agent-run/agent-run-table';
+import { AgentRunList } from '@/features/agents/agent-run/agent-run-list';
 import { useAgent } from '@/features/agents/hooks/use-agent';
 import { useStartQueuedAssignRuns } from '@/features/agents/hooks/use-agent-run';
 import { Link } from '@/features/workspace/navigation/router';
@@ -68,7 +68,7 @@ export function AgentDetailView({ agentId }: { agentId: string }) {
         <Shell.PageStack>
           <Shell.Section stack="sm">
             <Shell.SectionHeader density="compact" title="Runs" />
-            <AgentRunTable isLoading={showRunsLoading} runs={runs} />
+            <AgentRunList isLoading={showRunsLoading} runs={runs} />
             {!showRunsLoading && (status === 'CanLoadMore' || status === 'LoadingMore') ? (
               <div className="flex justify-center">
                 <Button

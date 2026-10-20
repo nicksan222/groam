@@ -1,14 +1,16 @@
 import { Button } from '@groam/ui/components/button';
 import { DashedEmpty } from '@groam/ui/components/dashed-empty';
-import { DataTable } from '@groam/ui/components/data-table';
 import { PageLoading } from '@groam/ui/components/page-loading';
+import { RecordList } from '@groam/ui/components/record-list';
 import { Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { recordListSorts } from '@/features/workspace/workspace-list/record-list-sorts';
 import { testIds } from '@/lib/test-ids';
 import type { ResearchSummary } from '@/types/research';
-import { researchColumns } from './research-list-columns';
+import { ResearchListRow } from './research-list-row';
 
 const RESEARCH_LIST_RESOURCE = { plural: 'research', singular: 'research' } as const;
+const sortOptions = recordListSorts<ResearchSummary>();
 
 export function ResearchList({
   isLoading = false,
@@ -22,7 +24,6 @@ export function ResearchList({
   researches: ResearchSummary[];
 }) {
   const [query, setQuery] = useState('');
-  const columns = useMemo(() => researchColumns(), []);
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
     if (!needle) return researches;
@@ -53,21 +54,17 @@ export function ResearchList({
   }
 
   return (
-    <DataTable
-      columns={columns}
-      data={visible}
-      empty="No research matches your search."
-      externalFilter
-      filterValue={query}
-      getRowId={(research) => research.id}
-      getRowProps={(research) => ({
-        'data-research-id': research.id,
-        'data-testid': testIds.researchCard
-      })}
-      onFilterValueChange={setQuery}
-      onRowActivate={onOpen}
-      resourceLabel={RESEARCH_LIST_RESOURCE}
-      testId={testIds.researchList}
-    />
+    <div data-testid={testIds.researchList}>
+      <RecordList
+        empty="No research matches your search."
+        getKey={(research) => research.id}
+        items={visible}
+        onQueryChange={setQuery}
+        query={query}
+        renderItem={(research) => <ResearchListRow onOpen={onOpen} research={research} />}
+        resourceLabel={RESEARCH_LIST_RESOURCE}
+        sortOptions={sortOptions}
+      />
+    </div>
   );
 }

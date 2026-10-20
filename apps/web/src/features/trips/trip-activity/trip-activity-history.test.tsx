@@ -24,13 +24,13 @@ const activity = [
   }
 ] satisfies TripDetail['activity'];
 
-test('renders activity events in a data table with compact filters', async () => {
+test('renders activity events in consistent records with compact filters', async () => {
   await render(<TripActivityHistory activity={activity} />);
 
   await expect.element(page.getByText('2 events')).toBeInTheDocument();
   await expect.element(page.getByRole('heading', { name: 'Activity' })).not.toBeInTheDocument();
-  await expect.element(page.getByRole('table')).toBeInTheDocument();
-  await expect.element(page.getByRole('button', { name: 'Event' })).toBeInTheDocument();
+  await expect.element(page.getByRole('list', { name: 'Activity' })).toBeInTheDocument();
+  await expect.element(page.getByLabelText('Sort activity')).toBeInTheDocument();
   await expect.element(page.getByLabelText('Search activity')).toBeInTheDocument();
   expect(page.getByLabelText('Filter activity by person').element().textContent).toContain(
     'People'

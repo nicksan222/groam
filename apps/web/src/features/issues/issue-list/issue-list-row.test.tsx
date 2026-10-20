@@ -1,5 +1,6 @@
 import type { Id } from '@groam/backend/data-model';
 import { render } from '@groam/vitest-config/react';
+import { useViewport } from '@groam/vitest-config/viewport';
 import type { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
@@ -137,4 +138,19 @@ describe('IssueListRow', () => {
     await renderTable([makeIssue()], false);
     await expect.element(page.getByText('Unassigned')).not.toBeInTheDocument();
   });
+});
+
+test('gives phone authorship its own line above status and labels', async () => {
+  await useViewport(390, 844);
+  await renderTable([makeIssue({ labels: ['mandatory'] })], true);
+  const row = page.getByRole('article').element();
+  const description = row.querySelector('[data-slot="record-list-description"]');
+  const state = page.getByText('To decide', { exact: true }).element();
+  expect(description?.textContent).toContain('Atlantic week');
+  expect(description?.textContent).toContain('opened by Alex Morgan');
+  expect(state.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+    description!.getBoundingClientRect().bottom
+  );
+  expect(page.getByText('Alex Morgan', { exact: true }).elements()).toHaveLength(1);
+  await expect.element(page.getByText('Mandatory')).toBeVisible();
 });

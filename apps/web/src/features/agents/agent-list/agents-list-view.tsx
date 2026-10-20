@@ -3,7 +3,7 @@ import { EmptyScreen } from '@groam/ui/components/empty-screen';
 import { PageLoading } from '@groam/ui/components/page-loading';
 import Shell from '@groam/ui/components/shell/client';
 import { Bot } from 'lucide-react';
-import { AgentRunTable } from '@/features/agents/agent-run/agent-run-table';
+import { AgentRunList } from '@/features/agents/agent-run/agent-run-list';
 import { useWorkspaceAgentRuns } from '@/features/agents/hooks/use-workspace-agent-runs';
 import { PaginatedListContent } from '@/features/workspace/workspace-list/paginated-list-content';
 import { useWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
@@ -54,7 +54,7 @@ export function AgentsListView() {
           onLoadMore={loadMore}
           status={status}
         >
-          <AgentRunTable isLoading={isLoading} runs={runs} />
+          <AgentRunList isLoading={isLoading} runs={runs} />
         </PaginatedListContent>
       </Shell.Content>
     </Shell>

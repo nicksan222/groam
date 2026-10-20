@@ -3,7 +3,7 @@ import { expect, test, vi } from 'vite-plus/test';
 import { page, userEvent } from 'vite-plus/test/browser';
 import type { WorkspaceAgentRun } from '@/features/agents/hooks/use-workspace-agent-runs';
 import { testIds } from '@/lib/test-ids';
-import { AgentRunTable } from './agent-run-table';
+import { AgentRunList } from './agent-run-list';
 
 const retry = vi.hoisted(() => vi.fn());
 const navigate = vi.hoisted(() => vi.fn());
@@ -51,12 +51,12 @@ function run(overrides: Partial<WorkspaceAgentRun> = {}): WorkspaceAgentRun {
   };
 }
 
-test('renders run, agent, caller, status, and updated columns', async () => {
-  await render(<AgentRunTable runs={[run()]} />);
+test('renders a linked record with agent, caller, status, and update context', async () => {
+  await render(<AgentRunList runs={[run()]} />);
   const row = page.getByTestId(testIds.agentCard).element();
-  expect(row.tagName).toBe('TR');
+  expect(row.tagName).toBe('ARTICLE');
   await expect.element(page.getByText('Idea reviewer')).toBeInTheDocument();
-  await expect.element(page.getByText('Alex')).toBeInTheDocument();
+  await expect.element(page.getByText('by Alex')).toBeInTheDocument();
   await expect.element(page.getByText('Failed')).toBeInTheDocument();
 
   const cell = page.getByTestId(testIds.agentRunFeedRunCell).element();
@@ -68,12 +68,11 @@ test('renders run, agent, caller, status, and updated columns', async () => {
 
   const detail = page.getByText(/Groam AI is temporarily unavailable/u).element();
   expect(detail.className).toContain('truncate');
-  expect(detail.className).toContain('text-xs');
   await expect.element(page.getByTestId(testIds.agentRetryFromZero)).not.toBeInTheDocument();
 });
 
 test('retries from zero without navigating away', async () => {
-  await render(<AgentRunTable runs={[run({ issueId: 'issue-1' as never })]} />);
+  await render(<AgentRunList runs={[run({ issueId: 'issue-1' as never })]} />);
   const retryButton = page.getByTestId(testIds.agentRetryFromZero).element();
   expect(retryButton.textContent).toBe('');
   await userEvent.click(retryButton);

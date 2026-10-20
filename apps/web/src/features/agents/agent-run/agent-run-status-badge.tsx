@@ -1,15 +1,6 @@
 import { RUN_STATUS_LABEL } from '@groam/ai/backend/runs/ids';
-import { Badge, type BadgeVariant } from '@groam/ui/components/badge';
+import { RecordListBadge } from '@groam/ui/components/record-list-badge';
 import { cn } from '@groam/ui/lib/utils';
-
-const BADGE_VARIANT = {
-  aborted: 'outline',
-  complete: 'green',
-  failed: 'outline',
-  queued: 'secondary',
-  running: 'green',
-  waiting: 'secondary'
-} as const satisfies Record<keyof typeof RUN_STATUS_LABEL, BadgeVariant>;
 
 const DOT_CLASS = {
   aborted: 'bg-muted-foreground',
@@ -29,23 +20,17 @@ export function AgentRunStatusBadge({
 }) {
   if (!status) {
     return (
-      <Badge className={className} variant="outline">
+      <RecordListBadge className={className}>
         <span className="size-1.5 shrink-0 rounded-full bg-muted-foreground" />
         Idle
-      </Badge>
+      </RecordListBadge>
     );
   }
 
   return (
-    <Badge
-      className={cn(
-        status === 'failed' && 'border-destructive/20 bg-destructive/10 text-destructive',
-        className
-      )}
-      variant={BADGE_VARIANT[status]}
-    >
+    <RecordListBadge className={cn(status === 'failed' && 'text-destructive', className)}>
       <span className={cn('size-1.5 shrink-0 rounded-full', DOT_CLASS[status])} />
       {RUN_STATUS_LABEL[status]}
-    </Badge>
+    </RecordListBadge>
   );
 }
