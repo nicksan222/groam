@@ -8,6 +8,7 @@ import { AgentRuns } from '#convex/modules/assistant/runs/index';
 import { AgentWaits } from '#convex/modules/assistant/waits/index';
 import { requireWorkspace, workspaceRoster } from '#convex/modules/auth/workspace';
 import { Notifications } from '#convex/modules/notifications/index';
+import { canParticipateInTrip } from '#convex/modules/payments/participation';
 import { insertWithShortId } from '#convex/modules/references/index';
 import { TripIssues } from '#convex/modules/travel/issues/index';
 import {
@@ -242,7 +243,12 @@ async function feedbackForProposal(ctx: QueryCtx, proposalId: Id<'tripProposals'
 
 async function eligibleVoters(source: TripCtx) {
   const roster = await workspaceRoster(source, source.workspace);
-  return roster.members;
+  const eligible = await Promise.all(
+    roster.members.map(async (member) =>
+      (await canParticipateInTrip(source, source.trip, member.userId)) ? member : null
+    )
+  );
+  return eligible.filter((member) => member !== null);
 }
 
 async function notifyIdeaAudience(
@@ -257,6 +263,7 @@ async function notifyIdeaAudience(
   }
 ) {
   const voters = await eligibleVoters(source);
+  const eligibleIds = new Set(voters.map((voter) => voter.userId));
   const reviewerIds = [];
   for (const reviewer of proposal.reviewers) {
     if (reviewer.kind === 'user') reviewerIds.push(reviewer.userId);
@@ -275,7 +282,9 @@ async function notifyIdeaAudience(
     kind: input.kind,
     organizationId: source.workspace.organizationId,
     title: input.title,
-    userIds: audience.filter((userId) => userId !== source.workspace.userId)
+    userIds: audience.filter(
+      (userId) => userId !== source.workspace.userId && eligibleIds.has(userId)
+    )
   });
 }
 
@@ -524,8 +533,12 @@ async function presentWorkspaceIdea(
   workspace: { organizationId: string; userId: string }
 ) {
   const source = await ctx.db.get('trips', proposal.sourceTripId);
-  if (!source || source.organizationId !== workspace.organizationId) {
-    throw new ConvexError('Idea source trip not found');
+  if (
+    !source ||
+    source.organizationId !== workspace.organizationId ||
+    !(await canParticipateInTrip(ctx, source, workspace.userId))
+  ) {
+    return null;
   }
   return {
     author: proposal.author,
@@ -566,7 +579,7 @@ async function listWorkspace(ctx: QueryCtx, paginationOpts: PaginationOptions) {
   const page = await Promise.all(
     result.page.map((proposal) => presentWorkspaceIdea(ctx, proposal, workspace))
   );
-  return { ...result, page };
+  return { ...result, page: page.filter((idea) => idea !== null) };
 }
 
 async function listViewerOpen(ctx: QueryCtx) {
@@ -585,7 +598,10 @@ async function listViewerOpen(ctx: QueryCtx) {
     )
   );
   const proposals = found.flat().sort((left, right) => right.updatedAt - left.updatedAt);
-  return Promise.all(proposals.map((proposal) => presentWorkspaceIdea(ctx, proposal, workspace)));
+  const visible = await Promise.all(
+    proposals.map((proposal) => presentWorkspaceIdea(ctx, proposal, workspace))
+  );
+  return visible.filter((idea) => idea !== null);
 }
 
 async function get(ctx: QueryCtx, proposalId: Id<'tripProposals'>) {

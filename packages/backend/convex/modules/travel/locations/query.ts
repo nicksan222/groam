@@ -1,8 +1,10 @@
 import { ConvexError } from 'convex/values';
+import type { Id } from '#convex-generated/dataModel';
 import type { QueryCtx } from '#convex-generated/server';
-import { requireWorkspace } from '#convex/modules/auth/workspace';
+import { requireWorkspace, type Workspace } from '#convex/modules/auth/workspace';
 import { TripLocations, type TripLocationType } from '#convex/modules/travel/locations/index';
 import { validateCoordinates } from '#convex/modules/travel/trips/normalize';
+import { findVisibleTrip } from '#convex/modules/travel/trips/visibility';
 
 const MAX_LOCATION_RESULTS = 25;
 const MAX_NEAREST_DISTANCE_METERS = 1_000_000;
@@ -15,6 +17,27 @@ function validateLimit(limit: number): void {
 
 function validatePoint(point: { latitude: number; longitude: number }): void {
   validateCoordinates(point, 'search point');
+}
+
+async function visibleLocations<T extends { key: string }>(
+  ctx: QueryCtx,
+  workspace: Workspace,
+  results: T[]
+): Promise<T[]> {
+  const access = new Map<Id<'trips'>, Promise<boolean>>();
+  const visible = await Promise.all(
+    results.map(async (result) => {
+      const location = await TripLocations.tripForKey(ctx, result.key);
+      if (!location || location.organizationId !== workspace.organizationId) return false;
+      let allowed = access.get(location.tripId);
+      if (!allowed) {
+        allowed = findVisibleTrip(ctx, location.tripId, workspace).then(Boolean);
+        access.set(location.tripId, allowed);
+      }
+      return await allowed;
+    })
+  );
+  return results.filter((_, index) => visible[index]);
 }
 
 /** Workspace-scoped geospatial lookups over trip locations. */
@@ -46,13 +69,14 @@ export class TripLocationQueries {
         `Maximum distance must be between 1 and ${MAX_NEAREST_DISTANCE_METERS} meters`
       );
     }
-    return await TripLocations.nearest(ctx, {
+    const results = await TripLocations.nearest(ctx, {
       limit,
       maxDistance,
       organizationId: workspace.organizationId,
       point,
       type
     });
+    return await visibleLocations(ctx, workspace, results);
   }
 
   static async region(
@@ -76,12 +100,13 @@ export class TripLocationQueries {
     if (rectangle.north <= rectangle.south || rectangle.east <= rectangle.west) {
       throw new ConvexError('Location rectangle bounds are invalid');
     }
-    return await TripLocations.queryRegion(ctx, {
+    const page = await TripLocations.queryRegion(ctx, {
       cursor,
       limit,
       organizationId: workspace.organizationId,
       rectangle,
       type
     });
+    return { ...page, results: await visibleLocations(ctx, workspace, page.results) };
   }
 }
