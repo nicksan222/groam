@@ -1,5 +1,23 @@
 type AssetBinding = { fetch(request: Request): Promise<Response> };
 
+function isLandingPage(path: string): boolean {
+  const lastSegment = path.split('/').at(-1) ?? '';
+  return (
+    !lastSegment.includes('.') ||
+    lastSegment.startsWith('.') ||
+    path.toLowerCase().endsWith('.html')
+  );
+}
+
+function fallbackRequest(url: URL, request: Request): Request {
+  const headers = new Headers(request.headers);
+  // A fallback is a different representation: validators and byte ranges belong to the
+  // originally requested resource and must not produce a 304 or partial error document.
+  for (const name of ['If-None-Match', 'If-Modified-Since', 'Range', 'If-Range'])
+    headers.delete(name);
+  return new Request(url, { method: request.method, headers });
+}
+
 async function landingDirectoryRedirect(url: URL, assets: AssetBinding): Promise<Response | null> {
   if (url.pathname.endsWith('/')) return null;
   const indexUrl = new URL(url);
@@ -36,9 +54,12 @@ export default {
     }
     const canonical = await landingDirectoryRedirect(url, env.ASSETS);
     if (canonical) return canonical;
-    if (url.pathname.endsWith('/')) {
-      url.pathname = url.pathname.startsWith('/it/') ? '/it/404/index.html' : '/404.html';
-      const page = await env.ASSETS.fetch(new Request(url, request));
+    if (isLandingPage(url.pathname)) {
+      url.pathname =
+        url.pathname === '/it' || url.pathname.startsWith('/it/')
+          ? '/it/404/index.html'
+          : '/404.html';
+      const page = await env.ASSETS.fetch(fallbackRequest(url, request));
       if (page.ok) return new Response(page.body, { status: 404, headers: page.headers });
     }
     return response;
