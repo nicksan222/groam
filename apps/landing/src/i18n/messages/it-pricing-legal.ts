@@ -212,7 +212,7 @@ export default {
   'When do I pay?': 'Quando pago?',
   'Who pays?': 'Chi paga?',
   'Whoever you choose. Each traveler pays their own €1, or you cover them from Travelers. Invite three friends and cover nobody. Each pays €1 and you pay nothing.':
-    'Chi vuoi tu. Ogni viaggiatore paga il proprio euro, oppure lo copri tu quando lo inviti. Invita tre amici senza pagare per nessuno: ciascuno paga 1 € e tu non paghi nulla.',
+    'Chi vuoi tu. Ogni viaggiatore paga il proprio euro, oppure lo copri tu dalla sezione Viaggiatori. Invita tre amici senza pagare per nessuno: ciascuno paga 1 € e tu non paghi nulla.',
   'Work out your trip': 'Calcola il tuo viaggio',
   'Year 1, autumn': 'Anno 1, autunno',
   'Year 2, autumn': 'Anno 2, autunno',
@@ -223,7 +223,7 @@ export default {
   'Yes, €1 per trip. Every trip is priced on its own, so going again with the same friends is €1 each again. A solo trip stays free.':
     'Sì, 1 € per viaggio. Ogni viaggio ha un prezzo a sé, quindi partire di nuovo con gli stessi amici costa ancora 1 € a testa. Un viaggio in solitaria resta gratis.',
   'Yes. Open Travelers and choose whose €1 to cover. It’s still €1 per traveler for the trip. You pick who pays, traveler by traveler.':
-    'Sì. Quando inviti qualcuno, puoi scegliere di pagare tu il suo euro. Il prezzo resta 1 € per viaggiatore per quel viaggio. Decidi chi paga, viaggiatore per viaggiatore.',
+    'Sì. Apri Viaggiatori e scegli per chi pagare 1 €. Il prezzo resta 1 € per viaggiatore per quel viaggio. Decidi chi paga, viaggiatore per viaggiatore.',
   'You can stop using Groam and leave groups using the controls the product provides. Trips can currently be archived rather than deleted. The final terms must explain account closure, content export and deletion, when access may be suspended, notice and appeal, and what terms continue after an account closes.':
     'Puoi smettere di usare Groam e lasciare i gruppi tramite i controlli forniti dal prodotto. Attualmente i viaggi possono essere archiviati anziché eliminati. I termini finali dovranno spiegare la chiusura dell’account, l’esportazione e la cancellazione dei contenuti, quando l’accesso può essere sospeso, le comunicazioni e i ricorsi e quali termini continuano ad applicarsi dopo la chiusura di un account.',
   'You keep any rights you have in trips, ideas, issues, messages, and files you add. You give the service operator permission to host, copy, process, and display that content only as needed to operate the features you choose, share it with the relevant group, protect the service, and follow the law. You confirm that you have the rights and permissions needed to add and share that content.':

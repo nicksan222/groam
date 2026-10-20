@@ -45,3 +45,12 @@ and webhook redelivery. Check that the webhook belongs to the same Convex
 deployment and Stripe mode as the API key. Confirm that returning from an unpaid
 or canceled checkout does not grant paid access. Switch to live keys only after
 the verified webhook path works with the deployed frontend's `SITE_URL`.
+
+## Recovering an ambiguous checkout
+
+Retries reuse the same Stripe idempotency key and session. If a request may have
+reached Stripe but its session could not be persisted for more than 23 hours,
+Groam stops automatic retries before Stripe can prune the key. Reconcile the
+reservation with the matching session in the correct Stripe account before
+allowing another charge. Do not delete the reservation or retry with a new key
+without checking whether its original session was paid.
