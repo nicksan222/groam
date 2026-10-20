@@ -21,7 +21,7 @@ const api: AssistantBackendApi = {
         tags: { run: undefined as never }
       },
       context: {
-        catalog: { run: undefined as never },
+        catalog: { run: undefined as never, page: { run: undefined as never } },
         screen: { run: undefined as never }
       },
       messages: { run: undefined as never },

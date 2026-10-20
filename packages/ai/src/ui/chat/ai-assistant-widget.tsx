@@ -153,6 +153,9 @@ function ContextualAssistantWidget({
   const attachments = activeChat
     ? {
         catalog: chats.catalog,
+        canLoadMoreCatalog: chats.canLoadMoreCatalog,
+        isLoadingCatalog: chats.isLoadingCatalog,
+        loadMoreCatalog: chats.loadMoreCatalog,
         disabled: assistant.isResponding || chats.updatingThreadId === activeChat.id,
         onChange: (
           reference: { id: string; kind: 'activity' | 'destination' | 'trip' },

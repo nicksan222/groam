@@ -66,6 +66,12 @@ test('assistant catalogs and explicit tags enforce paid seats and recheck stored
     member.client.query(internal.modules.assistant.model.index.taggedContext, { threadId })
   ).rejects.toThrow('Tagged trip not found');
   vi.stubEnv('STRIPE_SECRET_KEY', '');
+  const freePage = await member.client.query(api.routes.assistant.context.catalog.page.run, {
+    paginationOpts: { cursor: null, numItems: 25 }
+  });
+  expect(freePage.page).toEqual(
+    expect.arrayContaining([expect.objectContaining({ id: destinationId })])
+  );
   expect(await member.client.query(catalog, {})).toEqual(
     expect.arrayContaining([expect.objectContaining({ id: destinationId })])
   );
@@ -118,7 +124,19 @@ test.each(['legacy', 'paid'] as const)(
         input: tripInput({ name: `Newer unpaid trip ${index}` })
       });
     }
-    const items = await member.client.query(catalog, {});
+    const firstPage = await member.client.query(api.routes.assistant.context.catalog.page.run, {
+      paginationOpts: { cursor: null, numItems: 25 }
+    });
+    expect(firstPage.page).toEqual([]);
+    expect(firstPage.isDone).toBe(false);
+    expect(firstPage.continueCursor).toBeTruthy();
+    const nextPage = await member.client.query(api.routes.assistant.context.catalog.page.run, {
+      paginationOpts: { cursor: firstPage.continueCursor, numItems: 25 }
+    });
+    expect(nextPage.isDone).toBe(true);
+    expect(nextPage.continueCursor).not.toBe(firstPage.continueCursor);
+    const items = nextPage.page;
+    expect(await member.client.query(catalog, {})).toEqual([]);
     expect(items).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: sharedTripId, kind: 'trip' }),
@@ -130,5 +148,10 @@ test.each(['legacy', 'paid'] as const)(
     const creatorItems = await owner.client.query(catalog, {});
     expect(creatorItems.filter((item) => item.kind === 'trip')).toHaveLength(25);
     expect(creatorItems.some((item) => item.id === sharedTripId)).toBe(false);
+    const cappedPage = await owner.client.query(api.routes.assistant.context.catalog.page.run, {
+      paginationOpts: { cursor: null, numItems: 1000 }
+    });
+    expect(cappedPage.page.filter((item) => item.kind === 'trip')).toHaveLength(25);
+    expect(cappedPage.isDone).toBe(false);
   }
 );

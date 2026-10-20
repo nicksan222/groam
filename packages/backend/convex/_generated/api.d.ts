@@ -249,6 +249,7 @@ import type * as routes_assistant_chats_create from "../routes/assistant/chats/c
 import type * as routes_assistant_chats_list from "../routes/assistant/chats/list.js";
 import type * as routes_assistant_chats_tags from "../routes/assistant/chats/tags.js";
 import type * as routes_assistant_context_catalog from "../routes/assistant/context/catalog.js";
+import type * as routes_assistant_context_catalog_page from "../routes/assistant/context/catalog/page.js";
 import type * as routes_assistant_context_screen from "../routes/assistant/context/screen.js";
 import type * as routes_assistant_messages from "../routes/assistant/messages.js";
 import type * as routes_assistant_open from "../routes/assistant/open.js";
@@ -642,6 +643,7 @@ declare const fullApi: ApiFromModules<{
   "routes/assistant/chats/list": typeof routes_assistant_chats_list;
   "routes/assistant/chats/tags": typeof routes_assistant_chats_tags;
   "routes/assistant/context/catalog": typeof routes_assistant_context_catalog;
+  "routes/assistant/context/catalog/page": typeof routes_assistant_context_catalog_page;
   "routes/assistant/context/screen": typeof routes_assistant_context_screen;
   "routes/assistant/messages": typeof routes_assistant_messages;
   "routes/assistant/open": typeof routes_assistant_open;
