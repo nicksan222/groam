@@ -87,3 +87,45 @@ test('password reset is generic for unknown accounts and rejects forged tokens',
   });
   expect(forged.status).toBe(400);
 });
+
+test.each(['email', 'username'])(
+  'automatic verification on %s sign-in returns to the hosted app',
+  async (identifier) => {
+    const convex = createTest();
+    const email = 'callback@example.com';
+    const username = 'callbacktraveler';
+    const callbackURL = 'https://app.example.com/app/';
+    expect(
+      (
+        await post(convex, 'sign-up/email', {
+          email,
+          username,
+          name: 'Callback traveler',
+          password
+        })
+      ).status
+    ).toBe(200);
+    const login = await post(convex, `sign-in/${identifier}`, {
+      ...(identifier === 'email' ? { email } : { username }),
+      password,
+      callbackURL
+    });
+    expect(login.status).toBe(403);
+    const scheduled = await convex.run(
+      async (ctx) => await ctx.db.system.query('_scheduled_functions').take(20)
+    );
+    const verificationURLs = scheduled.flatMap((job) => {
+      const match = String(job.args[0]?.text).match(/https?:\/\/\S+/u)?.[0];
+      return match ? [new URL(match)] : [];
+    });
+    const automaticMail = verificationURLs.find(
+      (url) => url.searchParams.get('callbackURL') === callbackURL
+    );
+    expect(automaticMail).toBeDefined();
+    const verified = await convex.fetch(automaticMail!.pathname + automaticMail!.search, {
+      headers: { origin: 'https://app.example.com' }
+    });
+    expect(verified.status).toBe(302);
+    expect(verified.headers.get('location')).toBe(callbackURL);
+  }
+);
