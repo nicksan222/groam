@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'vite-plus/test';
 import { createBackendActions } from './backend';
-import { createPlaywrightActions } from './playwright';
 
 const capabilityNames = [
   'addActivity',
@@ -25,10 +24,8 @@ describe('app action adapters', () => {
     convexUrl: 'http://127.0.0.1:3214',
     siteUrl: 'http://127.0.0.1:3215'
   });
-  const playwright = createPlaywrightActions();
 
-  test.each(capabilityNames)('implements %s in both adapters', (capability) => {
+  test.each(capabilityNames)('implements %s in the backend adapter', (capability) => {
     expect(backend[capability]).toBeTypeOf('function');
-    expect(playwright[capability]).toBeTypeOf('function');
   });
 });

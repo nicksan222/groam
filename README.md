@@ -16,14 +16,6 @@ screen-aware AI into one workspace.
 
 </div>
 
-<a href="tooling/showcase/artifacts/showcase.mp4">
-  <img src="docs/assets/groam-demo.gif" alt="Groam demo showing two travelers planning a Lisbon weekend together" width="100%">
-</a>
-
-<p align="center">
-  <sub>Two travelers take a Lisbon weekend from an idea to a shared plan. <a href="tooling/showcase/artifacts/showcase.mp4">Watch the complete 3:59 showcase in 4K.</a></sub>
-</p>
-
 ## Built for planning together
 
 | | |
@@ -108,15 +100,13 @@ Open [localhost:5173](http://localhost:5173) and sign in with
 | `just graphify-explain <symbol>` | Show a symbol, its callers, and its dependencies |
 | `just graphify-affected <symbol>` | List what a change to a symbol would affect |
 | `just graphify-refresh` | Refresh the local code graph after edits |
-| `just showcase` | Rebuild the scripted 4K product film |
-| `just showcase-gif` | Rebuild the full-length 1080p README preview from the committed film |
 
 Coding agents start with [AGENTS.md](AGENTS.md). Shared [skills and roles](.agents/README.md)
 work through native discovery where supported and direct file loading elsewhere.
 
 See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for the container workflow, project
-conventions, and [AI-assisted development](.github/CONTRIBUTING.md#ai-assisted-development). The [showcase guide](tooling/showcase/README.md) explains the
-reproducible Playwright and Remotion film pipeline. For production setup and release operations, see
+conventions, and [AI-assisted development](.github/CONTRIBUTING.md#ai-assisted-development).
+For production setup and release operations, see
 the [deployment guide](docs/deployment.md); backend-specific constraints remain in the
 [Convex backend guide](packages/backend/convex/README.md).
 

@@ -4,7 +4,7 @@ Choose a folder by asking: **what developer or delivery job does this perform?**
 
 | Folder | Sole responsibility |
 | --- | --- |
-| `app-actions` | Shared app capability contracts plus backend, Vite+ browser-mode (`src/vitest`) and Playwright adapters |
+| `app-actions` | Shared app capability contracts plus backend and Vite+ browser-mode (`src/vitest`) adapters |
 | `claude` | Claude Code launcher (`claude.sh`) that starts the Headroom proxy |
 | `oxc-config` | Shared Oxlint/Oxfmt policy and the Groam lint plugin (not a package) |
 | `devkit` | Reusable local-process, readiness, and local auth/environment helpers |
@@ -13,7 +13,6 @@ Choose a folder by asking: **what developer or delivery job does this perform?**
 | `hooks` | Git hooks (Vite+ dispatcher via `vp config`) |
 | `quality` | Groam-specific architecture and convention checks |
 | `seeder` | Seed scenarios, fixtures, plans, batching, composition, and CLI |
-| `showcase` | Record and render product walkthroughs using Playwright app actions |
 | `typescript-config` | Importable TypeScript bases |
 | `vitest-config` | Importable Vite+ test (Vitest) bases |
 

@@ -69,9 +69,7 @@ if (writeViteSiteUrl) upsertViteSiteUrl('.env.local', siteUrl); // one VITE_SITE
 The secret is piped through stdin, so it never appears in a process argument
 list. `runConvex` always spawns `bunx convex` from the repository root with
 `CONVEX_AGENT_MODE` from the `convex-tooling` env target (default
-`anonymous`). `wait-for-dev-stack.ts` waits for the whole stack (the
-`/api/auth/get-session` route on 3211, the backend, and Vite on 5173) and is
-used by the showcase regeneration workflow.
+`anonymous`).
 
 Source: [`Justfile`](../../../Justfile#L20),
 [`package.json`](../../../package.json#L61),
@@ -80,14 +78,13 @@ Source: [`Justfile`](../../../Justfile#L20),
 [`configure-auth.ts`](../../../tooling/devkit/configure-auth.ts#L38),
 [`run-convex.ts`](../../../tooling/devkit/run-convex.ts#L25),
 [`local-backend.ts`](../../../tooling/devkit/local-backend.ts#L26),
-[`wait-for-backend.ts`](../../../tooling/devkit/wait-for-backend.ts#L17),
-[`wait-for-dev-stack.ts`](../../../tooling/devkit/wait-for-dev-stack.ts#L11).
+[`wait-for-backend.ts`](../../../tooling/devkit/wait-for-backend.ts#L17).
 
 ## Environment validation and the client/server split
 
 `@groam/env` exposes one Envalid-validated target per runtime, each exported
 as a subpath (`auth-client`, `web-client`, `web`, `convex-tooling`, `seeder`,
-`journeys`, `showcase`, `vitest`). Client targets read only `import.meta.env`
+`journeys`, `vitest`). Client targets read only `import.meta.env`
 `VITE_*` keys and the Vite `BASE_URL`, so provider tokens and server secrets
 have no path into the browser bundle. The Convex runtime is separate: it
 declares its variables with `defineApp({ env })` and reads them from the
@@ -228,11 +225,10 @@ The layers cover different boundaries and do not replace each other.
 - Journeys are the `journeys` setup (`apps/web/e2e/**/*.test.tsx`): the real
   app on fixed port 5174 against the running local backend, one account and
   group per test file created through the backend adapter.
-- The showcase records real browsers through the Playwright adapter.
 
 `@groam/app-actions` defines each operation once (`src/actions/<verb>.ts`) with
-a backend and a Playwright implementation; the Vitest driver supplies journey
-steps and Node-side `arrange.*` commands. The backend adapter refuses any
+a backend implementation; the Vitest driver supplies journey steps and
+Node-side `arrange.*` commands. The backend adapter refuses any
 non-localhost URL.
 
 ```ts
@@ -258,8 +254,7 @@ Source: [`vitest convex.ts`](../../../tooling/vitest-config/src/convex.ts),
 [`apps/web/vite.config.ts`](../../../apps/web/vite.config.ts#L11),
 [`app-actions README`](../../../tooling/app-actions/README.md),
 [`backend-session.ts`](../../../tooling/app-actions/src/backend/backend-session.ts#L8),
-[`test-reusable.yml`](../../../.github/workflows/test-reusable.yml#L137),
-[`showcase README`](../../../tooling/showcase/README.md).
+[`test-reusable.yml`](../../../.github/workflows/test-reusable.yml#L137).
 
 ## Seeding and local data reset
 
@@ -342,8 +337,6 @@ Source: [`pre-commit`](../../../tooling/hooks/pre-commit),
   [`settings.test.ts`](../../../packages/backend/convex/modules/ai/chatgpt/settings.test.ts).
 - App actions and seed resets cannot target remote deployments:
   [`backend-session.test.ts`](../../../tooling/app-actions/src/backend/backend-session.test.ts).
-- Every app action has both a backend and a Playwright adapter:
-  [`check-conventions.ts`](../../../tooling/quality/check-conventions.ts#L106).
 - Static hosting serves the root landing pages and `/app/` SPA while returning
   404 for missing assets, locally in
   [`test-reusable.yml`](../../../.github/workflows/test-reusable.yml) and in

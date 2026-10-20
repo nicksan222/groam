@@ -41,7 +41,7 @@ along with domain records and must be handled as sensitive data.
 
 Development and delivery share a checked-in toolchain definition. Shared action
 contracts let test and seed drivers invoke application operations; scenario
-orchestration and recording remain tooling concerns, outside the production
+orchestration remains a tooling concern, outside the production
 domain layer.
 
 Backend integration tests cover real procedure and component boundaries with

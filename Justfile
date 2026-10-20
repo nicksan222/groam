@@ -167,29 +167,9 @@ graphify-sync:
     set -uo pipefail
     log="$(just graphify-refresh 2>&1)" || { printf '%s\n' "$log" >&2; exit 1; }
 
-# ── Release and showcase ─────────────────────────────────────────────────────
+# ── Release ─────────────────────────────────────────────────────
 
 # Enable squash auto-merge for a pull request once its required checks pass.
 [group('release')]
 enable-pr-auto-merge pull-request:
     gh pr merge --auto --squash {{ pull-request }}
-
-# Capture, edit, and render the complete showcase.
-[group('showcase')]
-showcase:
-    vp run showcase
-
-# Capture showcase browser footage from a running app.
-[group('showcase')]
-showcase-capture:
-    vp run showcase:capture
-
-# Open the Remotion showcase editor.
-[group('showcase')]
-showcase-studio:
-    vp run showcase:studio
-
-# Rebuild the compact README GIF from the committed showcase film.
-[group('showcase')]
-showcase-gif:
-    vp run showcase:gif

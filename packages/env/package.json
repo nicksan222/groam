@@ -17,7 +17,6 @@
     "./journeys": "./src/apps/journeys.ts",
     "./landing": "./src/apps/landing.ts",
     "./seeder": "./src/apps/seeder.ts",
-    "./showcase": "./src/apps/showcase.ts",
     "./vitest": "./src/apps/vitest.ts",
     "./web": "./src/apps/web.ts",
     "./web-client": "./src/apps/web-client.ts",

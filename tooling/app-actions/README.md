@@ -3,20 +3,18 @@
 Groam's reusable action vocabulary and its interchangeable adapters.
 
 ```text
-src/actions/<verb>.ts             shared input, output, and action type
-src/backend/<verb>.ts             raw procedure implementation
-src/playwright/actions/<verb>.ts  browser implementation
-src/app-actions.ts                tiny list of supported capabilities
+src/actions/<verb>.ts  shared input, output, and action type
+src/backend/<verb>.ts  raw procedure implementation
+src/app-actions.ts     tiny list of supported capabilities
 ```
 
-To add a capability, create the same `<verb>.ts` in those three directories and
-attach it to `AppActions`, `BackendAppActions`, and `PlaywrightAppActions`. The
-conventions check rejects incomplete adapter pairs.
+To add a backend capability, define its contract in `src/actions/<verb>.ts`,
+implement it in `src/backend/<verb>.ts`, and attach it to `AppActions` and
+`BackendAppActions`. Browser journey steps live in `src/vitest`.
 
-Callers only use `@groam/app-actions/backend`, `@groam/app-actions/playwright`
-(the showcase films, which record a real browser), or
-`@groam/app-actions/vitest` (view tests and journeys). This package owns how one
-operation reaches Groam; it does not own test, seed, or showcase scenarios.
+Callers use `@groam/app-actions/backend` or `@groam/app-actions/vitest`
+(view tests and journeys). This package owns how one operation reaches Groam;
+it does not own test or seed scenarios.
 
 ```ts
 import { createBackendActions } from '@groam/app-actions/backend';
@@ -28,15 +26,6 @@ const tripId = await app.createTrip(owner, { name: 'Lisbon weekend' });
 
 `tooling/seeder` owns seed scales, fixtures, plans, batching, and operation
 order. It composes only primitives from the backend adapter.
-
-Browser callers choose their adapter the same way:
-
-```ts
-import { createPlaywrightActions } from '@groam/app-actions/playwright';
-
-const app = createPlaywrightActions();
-await app.createTrip(page, { name: 'Lisbon weekend' });
-```
 
 ## Browser journeys (Vite+ browser mode)
 

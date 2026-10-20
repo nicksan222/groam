@@ -2,7 +2,7 @@
 export const photonUrlPattern = 'https://photon.komoot.io/api/**';
 
 /** A Photon response body made of the given GeoJSON features. */
-export function photonFeatureCollection(features: unknown[]) {
+function photonFeatureCollection(features: unknown[]) {
   return { features, type: 'FeatureCollection' };
 }
 

@@ -89,13 +89,11 @@ const actionNames = readdirSync('tooling/app-actions/src/actions')
   .filter((file) => file.endsWith('.ts'))
   .map((file) => file.slice(0, -3));
 const incompleteActions = actionNames.filter(
-  (name) =>
-    !existsSync(`tooling/app-actions/src/backend/${name}.ts`) ||
-    !existsSync(`tooling/app-actions/src/playwright/actions/${name}.ts`)
+  (name) => !existsSync(`tooling/app-actions/src/backend/${name}.ts`)
 );
 if (incompleteActions.length > 0) {
   console.error(
-    `Every app action needs backend and Playwright implementations:\n${incompleteActions
+    `Every app action needs a backend implementation:\n${incompleteActions
       .map((name) => `  - ${name}`)
       .join('\n')}`
   );
@@ -104,8 +102,7 @@ if (incompleteActions.length > 0) {
 
 const actionRegistries = [
   'tooling/app-actions/src/app-actions.ts',
-  'tooling/app-actions/src/backend/backend-app-actions.ts',
-  'tooling/app-actions/src/playwright/playwright-app-actions.ts'
+  'tooling/app-actions/src/backend/backend-app-actions.ts'
 ] as const;
 const missingActionRegistrations = actionNames.flatMap((name) => {
   const capability = name.replace(/-([a-z])/gu, (_, letter: string) => letter.toUpperCase());
@@ -115,7 +112,7 @@ const missingActionRegistrations = actionNames.flatMap((name) => {
 });
 if (missingActionRegistrations.length > 0) {
   console.error(
-    `Every app action must be attached to both adapters:\n${missingActionRegistrations
+    `Every app action must be declared in the contract and registered in the backend adapter:\n${missingActionRegistrations
       .map((registration) => `  - ${registration}`)
       .join('\n')}`
   );
@@ -125,22 +122,20 @@ if (missingActionRegistrations.length > 0) {
 const ambiguousActionImports = files.filter((file) => {
   if (!/\.[cm]?[jt]sx?$/u.test(file) || !existsSync(file)) return false;
   const source = readFileSync(file, 'utf8');
-  return /(?:from\s+|import\(\s*)['"]@groam\/app-actions(?:['"]|\/(?!backend(?:['"]|\/)|ids['"]|playwright(?:['"]|\/)|vitest(?:['"]|\/)))/u.test(
+  return /(?:from\s+|import\(\s*)['"]@groam\/app-actions(?:['"]|\/(?!backend(?:['"]|\/)|ids['"]|vitest(?:['"]|\/)))/u.test(
     source
   );
 });
 if (ambiguousActionImports.length > 0) {
   console.error(
-    `Import app actions through @groam/app-actions/backend, @groam/app-actions/ids, @groam/app-actions/playwright, or @groam/app-actions/vitest:\n${ambiguousActionImports
+    `Import app actions through @groam/app-actions/backend, @groam/app-actions/ids, or @groam/app-actions/vitest:\n${ambiguousActionImports
       .map((file) => `  - ${file}`)
       .join('\n')}`
   );
   process.exit(1);
 }
 
-const productInteractionFiles = files.filter(
-  (file) => file.startsWith('apps/web/e2e/') || file === 'tooling/showcase/video.ts'
-);
+const productInteractionFiles = files.filter((file) => file.startsWith('apps/web/e2e/'));
 const directProductInteraction =
   /\.(?:check|click|dblclick|dragTo|fill|goto|hover|press|reload|selectOption|setInputFiles|uncheck)\s*\(/gu;
 const manualProductInteractions = productInteractionFiles.flatMap((file) => {
@@ -153,7 +148,7 @@ const manualProductInteractions = productInteractionFiles.flatMap((file) => {
 });
 if (manualProductInteractions.length > 0) {
   console.error(
-    `Compose product interactions through @groam/app-actions/vitest (journeys) or @groam/app-actions/playwright (films):\n${manualProductInteractions
+    `Compose journey product interactions through @groam/app-actions/vitest:\n${manualProductInteractions
       .map((file) => `  - ${file}`)
       .join('\n')}`
   );

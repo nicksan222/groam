@@ -57,9 +57,8 @@ just check
 ```
 
 `just check` covers audit, typecheck, lint, unit tests, React Doctor, and
-Fallow. CI also runs the browser journeys (`just journeys`, below) and the
-showcase recording (`bun run --cwd tooling/showcase test:browser`); `just check` runs
-neither of those.
+Fallow. CI also runs the browser journeys (`just journeys`, below), which
+`just check` does not run.
 
 Smaller loops:
 

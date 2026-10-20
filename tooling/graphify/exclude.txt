@@ -27,4 +27,3 @@ apps/web/e2e/
 
 # Generated media and captures are not useful to code-only indexing.
 docs/assets/
-tooling/showcase/artifacts/

@@ -42,7 +42,7 @@ at runtime boundaries. `tooling` owns development, verification and delivery.
 Dependencies follow those responsibilities: the client composes the generated
 backend API and shared presentation packages; backend execution consumes shared
 AI contracts without importing application views. Foundation packages do not
-depend on product feature modules. Test, seed and showcase scenarios depend on
+depend on product feature modules. Test and seed scenarios depend on
 application operations; production behavior stays independent of their browser
 drivers and scenario orchestration.
 

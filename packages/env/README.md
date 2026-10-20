@@ -18,7 +18,6 @@ import { env } from '@groam/env/seeder';
 | `journeys`       | `VITE_CONVEX_URL` and `VITE_CONVEX_SITE_URL` (local backend the per-file journey accounts are created on; defaults to the local Convex ports). |
 | `seeder`         | `SEED_CONVEX_URL`, `SEED_SITE_URL`, `SEED_USER_EMAIL`, `SEED_USER_PASSWORD`, `VITE_CONVEX_URL`, `VITE_CONVEX_SITE_URL` |
 | `convex-tooling` | `CONVEX_AGENT_MODE` (default `anonymous`), `VITE_CONVEX_URL`, `GROAM_READY_TIMEOUT_SECONDS`, `GROAM_STARTUP_TIMEOUT_MS` (both default `0`) |
-| `showcase`       | `SHOWCASE_BASE_URL` (default `http://localhost:5173`), `SHOWCASE_HEADED`, `SHOWCASE_OWNER_EMAIL`, `SHOWCASE_MEMBER_EMAIL`, `SHOWCASE_MEMBER_NAME`, `SHOWCASE_PASSWORD` (defaults to the demo accounts) |
 | `vitest`         | `CI` (exposed as `isCI`) |
 
 `src/apps/node-env-flags.ts` is not a target: it adds `isDev`, `isProduction`,
