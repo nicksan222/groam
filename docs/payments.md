@@ -83,3 +83,42 @@ be recovered automatically within the original 23-hour retry window and with the
 original Stripe key fingerprint and exact Checkout request. Older ambiguous
 requests require reconciliation in the correct Stripe account. Never delete a
 reconciliation record while the charge or refund outcome is unknown.
+
+### Failed or canceled refunds need an operator
+
+Stripe treats `failed` and `canceled` refunds as failures; a failed refund can require an alternative
+way to reimburse the customer. See [Stripe refund handling](https://docs.stripe.com/refunds#handle-failed-refunds)
+and [refund cancellation](https://docs.stripe.com/api/refunds/cancel). Groam moves those receipts to
+an explicit manual queue. Cron sweeps, ordinary reconciliation actions, and duplicate payment
+webhooks cannot retry them or silently create another refund.
+
+Use the deployment's **internal** `modules/payments/reconciliation:listManual` query with
+`{"status":"failed","paginationOpts":{"numItems":25,"cursor":null}}`; repeat for `canceled`.
+Follow the returned cursor for subsequent pages. Inspection is bounded to 50 rows per page and
+omits the original Checkout request and personal account fields.
+
+Before taking action, verify the deployment/Stripe account and inspect the exact refund and
+underlying payment in Stripe Dashboard. Check the failure reason, disputes, prior reimbursements,
+and whether the customer already received money. Resolve the cause and contact the customer as
+needed. Do not retry merely because a refund failed: Stripe may require an alternative remedy.
+
+If a fresh Stripe refund is appropriate, explicitly invoke the internal
+`modules/payments/reconciliation:resumeManual` mutation with the reconciliation `id`, its current
+`expectedRefundId`, and a stable `requestId` of 8–100 characters identifying this operator decision.
+Retrying that same operator request is idempotent. Each approved decision archives the old receipt
+and creates one new refund generation with its own stable Stripe idempotency key. Stale refund IDs
+are rejected. A case permits at most ten explicit retry generations and retains all earlier
+failed/canceled refund receipts rather than overwriting them.
+
+If the customer was reimbursed separately, or an external Stripe refund already settled, verify
+that evidence first. Invoke internal `modules/payments/reconciliation:resolveManual` with `id`, the
+current `expectedRefundId`, and a `resolutionReference` of 10–300 characters pointing to the verified
+receipt or support case. This is an operator attestation, not automatic provider verification.
+Store no customer personal details in that reference. The resolved record retains its original
+refund evidence and reference for audit, leaves the active manual queue, and cannot be resumed.
+
+Never delete an uncertain reconciliation record to clear a queue. Missing credentials, provider
+404s, and unknown old Checkout outcomes remain unresolved until the correct account/session can
+be reconciled. For attempts created by the persist-before-I/O protocol, cleanup can discard a
+reservation with neither a stored request nor a session: the provider request cannot have started.
+Older unmarked reservations do not have that proof and remain conservatively retained.
