@@ -1,4 +1,4 @@
-import { CheckCircle2, Circle } from 'lucide-react';
+import { CheckCircle2, Circle } from '@groam/icons';
 
 import { allowsSelfApproval, decisionHeadline } from '@/features/trips/hooks/decision-helpers';
 import type { ProposalDetail } from './proposal-types';

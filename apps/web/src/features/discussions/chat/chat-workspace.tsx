@@ -1,10 +1,10 @@
 import { useSetAgentContext } from '@groam/ai/ui/context/agent-context';
+import { Plus, Search } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { Input } from '@groam/ui/components/input';
 import { PageLoading } from '@groam/ui/components/page-loading';
 import { cn } from '@groam/ui/lib/utils';
 import { useNavigate } from '@tanstack/react-router';
-import { Plus, Search } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { CreateDiscussionDialog } from '@/features/discussions/discussion-create/create-discussion-dialog';
 import { useDiscussions } from '@/features/discussions/hooks/use-discussions';

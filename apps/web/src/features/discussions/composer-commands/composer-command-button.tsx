@@ -1,6 +1,6 @@
+import { Slash } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import type { MessageComposerApi } from '@groam/ui/components/message-composer';
-import { Slash } from 'lucide-react';
 import { testIds } from '@/lib/test-ids';
 
 /** Opens the "/" command list; only from an empty composer so a draft is never overwritten. */

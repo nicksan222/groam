@@ -1,8 +1,8 @@
+import { Copy, KeyRound } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { RecordList } from '@groam/ui/components/record-list';
 import { RecordListBadge } from '@groam/ui/components/record-list-badge';
 import { RecordListItem } from '@groam/ui/components/record-list-item';
-import { Copy, KeyRound } from 'lucide-react';
 import { useState } from 'react';
 import type { InvitationCode } from '@/types/invitation-codes';
 

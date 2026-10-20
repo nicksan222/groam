@@ -1,5 +1,5 @@
+import { ArrowRight } from '@groam/icons';
 import { cn } from '@groam/ui/lib/utils';
-import { ArrowRight } from 'lucide-react';
 import { destinationTransferChangeKey } from '@/features/trips/hooks/itinerary-proposal-changes';
 import { useItineraryChange } from '@/features/trips/hooks/use-itinerary-proposal-changes';
 import { ItineraryProposalHighlight } from '@/features/trips/itinerary-proposal-highlight/itinerary-proposal-highlight';

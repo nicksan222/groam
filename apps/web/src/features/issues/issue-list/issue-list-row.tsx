@@ -1,8 +1,8 @@
+import { Clock3, GitPullRequest, MapPin, UserRound } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { RecordListBadge } from '@groam/ui/components/record-list-badge';
 import { RecordListItem } from '@groam/ui/components/record-list-item';
 import { recordListWrappedTitleClassName } from '@groam/ui/lib/record-list';
-import { Clock3, GitPullRequest, MapPin, UserRound } from 'lucide-react';
 import { ideaStatusLabel } from '@/features/ideas/idea-status';
 import { relativeIssueDate } from '@/features/issues/hooks/issue-relative-date';
 import { issueStatusMeta } from '@/features/issues/issue-status';

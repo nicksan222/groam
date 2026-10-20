@@ -1,3 +1,4 @@
+import { ArrowDown, ArrowUp, ArrowUpDown, Trash2 } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import {
   DropdownMenu,
@@ -7,7 +8,6 @@ import {
   DropdownMenuTrigger
 } from '@groam/ui/components/dropdown-menu';
 import { Spinner } from '@groam/ui/components/spinner';
-import { ArrowDown, ArrowUp, ArrowUpDown, Trash2 } from 'lucide-react';
 
 export function DestinationControls({
   canManage,

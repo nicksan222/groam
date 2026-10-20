@@ -1,3 +1,4 @@
+import { GitMerge } from '@groam/icons';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,7 +10,6 @@ import {
   AlertDialogTitle
 } from '@groam/ui/components/alert-dialog';
 import { Spinner } from '@groam/ui/components/spinner';
-import { GitMerge } from 'lucide-react';
 import { ideaApplyConfirmAction, ideaApplyConfirmTitle } from '@/features/ideas/idea-glossary';
 import { testIds } from '@/lib/test-ids';
 

@@ -1,9 +1,9 @@
 import type { Id } from '@groam/backend/data-model';
+import { Users } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { FormDialog } from '@groam/ui/components/form-dialog';
 import { IconTile } from '@groam/ui/components/icon-tile';
 import { toast } from '@groam/ui/components/toast';
-import { Users } from 'lucide-react';
 import { type FormEvent, useState } from 'react';
 import type { CreateTripInput } from '@/features/trips/hooks/use-trips';
 import { DEFAULT_TRIP_CURRENCY } from '@/features/trips/trip-forms/trip-currencies';

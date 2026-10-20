@@ -1,3 +1,4 @@
+import { Check, Clock3, MessageSquareReply, ShieldAlert } from '@groam/icons';
 import { Avatar } from '@groam/ui/components/avatar';
 import { AvatarFallback } from '@groam/ui/components/avatar-fallback';
 import { Badge } from '@groam/ui/components/badge';
@@ -6,7 +7,6 @@ import { Markdown } from '@groam/ui/components/markdown';
 import { RichTextEditor } from '@groam/ui/components/rich-text-editor';
 import Timeline from '@groam/ui/components/timeline';
 import { initials } from '@groam/ui/lib/avatar';
-import { Check, Clock3, MessageSquareReply, ShieldAlert } from 'lucide-react';
 import { useReviewComment } from '@/features/trips/hooks/use-review-comment';
 import { formatCommentTime, formatDate } from '@/features/trips/hooks/version-format';
 import type { ProposalFeedbackItem } from './proposal-types';

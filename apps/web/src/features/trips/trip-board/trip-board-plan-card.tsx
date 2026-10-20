@@ -1,6 +1,6 @@
 import type { Id } from '@groam/backend/data-model';
+import { MapPin } from '@groam/icons';
 import { cardChip, cardStretchedLink } from '@groam/ui/lib/board-card';
-import { MapPin } from 'lucide-react';
 import { Link } from '@/features/workspace/navigation/router';
 import type { AgreedCard } from '@/types/trip-board';
 import { TripBoardCard } from './trip-board-card';

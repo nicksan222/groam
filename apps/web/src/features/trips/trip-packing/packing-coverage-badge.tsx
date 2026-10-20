@@ -1,6 +1,6 @@
+import { Check, CircleDashed, Plus } from '@groam/icons';
 import { RecordListBadge } from '@groam/ui/components/record-list-badge';
 import { cn } from '@groam/ui/lib/utils';
-import { Check, CircleDashed, Plus } from 'lucide-react';
 import { testIds } from '@/lib/test-ids';
 import type { PackingCoverage } from '@/types/packing';
 import { PackingCount } from './packing-count';

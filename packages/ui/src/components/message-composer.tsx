@@ -1,5 +1,5 @@
+import { ArrowUp, Paperclip, SendHorizontal, X } from '@groam/icons';
 import { cn } from '@groam/ui/lib/utils';
-import { ArrowUp, Paperclip, SendHorizontal, X } from 'lucide-react';
 import { type ReactNode, useRef, useState } from 'react';
 import { Button } from './button';
 import { RichTextEditor, type RichTextEditorHandle } from './rich-text-editor';

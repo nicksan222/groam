@@ -1,8 +1,8 @@
+import { FileText, Upload, X } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { Input } from '@groam/ui/components/input';
 import { Label } from '@groam/ui/components/label';
 import { Spinner } from '@groam/ui/components/spinner';
-import { FileText, Upload, X } from 'lucide-react';
 import type { RefObject } from 'react';
 import { mediaFileAccept } from '@/features/media/media-validation';
 import { testIds } from '@/lib/test-ids';

@@ -1,5 +1,5 @@
+import { MapPin } from '@groam/icons';
 import { cn } from '@groam/ui/lib/utils';
-import { MapPin } from 'lucide-react';
 import { useState } from 'react';
 
 export function EditorDestinationPhoto({

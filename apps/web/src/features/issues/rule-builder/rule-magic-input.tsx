@@ -1,8 +1,8 @@
 import { MAX_RULE_PROMPT_LENGTH } from '@groam/backend/convex/modules/travel/issues/rules/index';
+import { Sparkles } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { Input } from '@groam/ui/components/input';
 import { Spinner } from '@groam/ui/components/spinner';
-import { Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { testIds } from '@/lib/test-ids';
 import type { IssueRule } from '@/types/issues';

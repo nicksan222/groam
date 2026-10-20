@@ -1,3 +1,4 @@
+import { Check, Copy } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import {
   Dialog,
@@ -18,7 +19,6 @@ import {
   SelectTrigger,
   SelectValue
 } from '@groam/ui/components/select';
-import { Check, Copy } from 'lucide-react';
 import { useInviteDialog } from '@/features/workspace/hooks/use-invite-dialog';
 import { useWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
 import { testIds } from '@/lib/test-ids';

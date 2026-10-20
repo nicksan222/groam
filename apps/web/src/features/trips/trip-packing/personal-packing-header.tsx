@@ -1,5 +1,5 @@
+import { Check, Lock } from '@groam/icons';
 import { cn } from '@groam/ui/lib/utils';
-import { Check, Lock } from 'lucide-react';
 import type { PersonalPackingItem } from '@/types/packing';
 import { PackingCount } from './packing-count';
 import { PackingProgress } from './packing-progress';

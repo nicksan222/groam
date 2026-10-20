@@ -1,3 +1,4 @@
+import { Check, ChevronDown } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import {
   DropdownMenu,
@@ -7,7 +8,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@groam/ui/components/dropdown-menu';
-import { Check, ChevronDown } from 'lucide-react';
 
 export function AssistantChatMenu({
   activeChatId,

@@ -1,10 +1,10 @@
-import type { LucideIcon } from 'lucide-react';
+import type { Icon } from '@groam/icons';
 import type { ReactNode } from 'react';
 
 export type SettingsPanelHeadingProps = {
   action?: ReactNode;
   description: string;
-  icon: LucideIcon;
+  icon: Icon;
   title: string;
 };
 

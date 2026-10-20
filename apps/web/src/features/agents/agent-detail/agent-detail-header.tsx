@@ -1,9 +1,9 @@
+import { Bot } from '@groam/icons';
 import { Badge } from '@groam/ui/components/badge';
 import { PageCrumbNav } from '@groam/ui/components/page-crumb-nav';
 import PulsingDot from '@groam/ui/components/pulsing-dot';
 import Shell from '@groam/ui/components/shell/client';
 import { Skeleton } from '@groam/ui/components/skeleton';
-import { Bot } from 'lucide-react';
 import { Link } from '@/features/workspace/navigation/router';
 import { testIds } from '@/lib/test-ids';
 import type { AgentDetailAgent } from '@/types/agents';

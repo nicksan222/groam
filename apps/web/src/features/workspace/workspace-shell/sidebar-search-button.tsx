@@ -1,7 +1,7 @@
+import { Search } from '@groam/icons';
 import { Kbd } from '@groam/ui/components/kbd';
 import { SidebarMenuButton } from '@groam/ui/components/sidebar';
 import { useSidebar } from '@groam/ui/hooks/use-sidebar';
-import { Search } from 'lucide-react';
 import { useCommandPaletteChrome } from '@/features/workspace/hooks/command-palette-chrome';
 import { modifierKeyLabel } from '@/features/workspace/workspace-command/shortcut-label';
 import { testIds } from '@/lib/test-ids';

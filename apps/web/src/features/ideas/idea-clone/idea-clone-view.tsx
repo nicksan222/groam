@@ -1,8 +1,8 @@
 import type { Id } from '@groam/backend/data-model';
+import { FileDiff } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { EmptyScreen } from '@groam/ui/components/empty-screen';
 import { Navigate } from '@tanstack/react-router';
-import { FileDiff } from 'lucide-react';
 import { IdeaContextProvider } from '@/features/ideas/hooks/use-idea-context';
 import { ideaCloneHref } from '@/features/ideas/idea-href';
 import { useTripVersion } from '@/features/trips/hooks/use-trip-versions';

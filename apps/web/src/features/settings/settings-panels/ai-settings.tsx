@@ -1,3 +1,4 @@
+import { Sparkles } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { FormFeedback } from '@groam/ui/components/form-feedback';
 import { FormField } from '@groam/ui/components/form-field';
@@ -9,7 +10,6 @@ import {
   SelectTrigger,
   SelectValue
 } from '@groam/ui/components/select';
-import { Sparkles } from 'lucide-react';
 import { useAiSettings } from '@/features/settings/hooks/use-ai-settings';
 import {
   SettingsAside,

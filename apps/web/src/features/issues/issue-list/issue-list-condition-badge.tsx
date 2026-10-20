@@ -1,7 +1,7 @@
+import { CircleCheck, Flag } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { RecordListBadge } from '@groam/ui/components/record-list-badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@groam/ui/components/tooltip';
-import { CircleCheck, Flag } from 'lucide-react';
 import type { IssueCondition } from '@/types/issues';
 
 /** A rule stays in the badge rail; its full condition is available on hover and keyboard focus. */

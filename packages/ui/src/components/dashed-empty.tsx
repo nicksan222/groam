@@ -1,12 +1,12 @@
+import type { Icon } from '@groam/icons';
 import { cn } from '@groam/ui/lib/utils';
-import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 export type DashedEmptyProps = {
   action?: ReactNode;
   children?: ReactNode;
   className?: string;
-  icon?: LucideIcon;
+  icon?: Icon;
   iconClassName?: string;
   title?: string;
 };

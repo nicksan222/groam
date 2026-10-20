@@ -1,4 +1,4 @@
-import { GitPullRequest, Lightbulb } from 'lucide-react';
+import { GitPullRequest, Lightbulb } from '@groam/icons';
 import { IdeaWorkspaceLink } from '@/features/ideas/idea-list/idea-workspace-link';
 import { ideaStatusLabel } from '@/features/ideas/idea-status';
 import type { TripListItem, WorkspaceTripProposal } from '@/features/trips/hooks/use-trips';

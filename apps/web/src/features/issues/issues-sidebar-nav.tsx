@@ -1,3 +1,4 @@
+import { CircleDot } from '@groam/icons';
 import {
   SidebarMenuButton,
   SidebarMenuSkeleton,
@@ -8,7 +9,6 @@ import { SidebarCollapsibleItem } from '@groam/ui/components/sidebar-collapsible
 import { SidebarNestedLoadMore } from '@groam/ui/components/sidebar-nested-load-more';
 import { useSidebar } from '@groam/ui/hooks/use-sidebar';
 import { useLocation, useNavigate } from '@tanstack/react-router';
-import { CircleDot } from 'lucide-react';
 import { CreateIssueDialog } from '@/features/issues/issue-list/create-issue-dialog';
 import { useCreatableTrips } from '@/features/trips/hooks/use-creatable-trips';
 import { useSidebarNestedPaging } from '@/features/workspace/hooks/use-sidebar-nested-paging';

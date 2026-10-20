@@ -1,3 +1,4 @@
+import { Map as MapIcon } from '@groam/icons';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +20,6 @@ import { SidebarNestedLoadMore } from '@groam/ui/components/sidebar-nested-load-
 import { toast } from '@groam/ui/components/toast';
 import { useSidebar } from '@groam/ui/hooks/use-sidebar';
 import { useLocation, useNavigate } from '@tanstack/react-router';
-import { Map as MapIcon } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTripSidebarActions } from '@/features/trips/hooks/use-trip-sidebar-actions';
 import { type TripListItem, useTrips } from '@/features/trips/hooks/use-trips';

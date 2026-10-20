@@ -1,3 +1,4 @@
+import { Trash2, X } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import {
   Select,
@@ -7,7 +8,6 @@ import {
   SelectValue
 } from '@groam/ui/components/select';
 import { Spinner } from '@groam/ui/components/spinner';
-import { Trash2, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { activityDaysForDestination } from '@/features/trips/hooks/editor-day-destinations';
 import {

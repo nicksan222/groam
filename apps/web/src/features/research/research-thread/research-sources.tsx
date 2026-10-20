@@ -1,6 +1,6 @@
 import type { Id } from '@groam/backend/data-model';
+import { ArrowUpRight } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { ArrowUpRight } from 'lucide-react';
 import { useDiscussionThread } from '@/features/discussions/hooks/use-discussion-thread';
 import { useLatestResearchRun } from '@/features/research/hooks/use-latest-research-run';
 import { useSaveResearchNote } from '@/features/research/hooks/use-save-research-note';

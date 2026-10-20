@@ -1,5 +1,5 @@
+import { ArrowRight, Lock, Pencil } from '@groam/icons';
 import { cn } from '@groam/ui/lib/utils';
-import { ArrowRight, Lock, Pencil } from 'lucide-react';
 import type { ReactNode } from 'react';
 import {
   ideaCopyExplainerAction,

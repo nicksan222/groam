@@ -1,5 +1,5 @@
+import { Archive } from '@groam/icons';
 import { render } from '@groam/vitest-config/react';
-import { Archive } from 'lucide-react';
 import { expect, test } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { InlineNotice } from './inline-notice';

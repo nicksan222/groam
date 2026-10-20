@@ -1,6 +1,6 @@
+import { CheckCircle2, CircleDashed, NotebookPen } from '@groam/icons';
 import { Badge } from '@groam/ui/components/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@groam/ui/components/card';
-import { CheckCircle2, CircleDashed, NotebookPen } from 'lucide-react';
 import { testIds } from '@/lib/test-ids';
 import type { AgentRunReportSection as Section } from '@/types/agents';
 import { AgentRunReportItem } from './agent-run-report-item';

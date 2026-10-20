@@ -1,4 +1,5 @@
 import type { Id } from '@groam/backend/data-model';
+import { ArrowRight, CircleDot, Pencil, Users } from '@groam/icons';
 import { Badge } from '@groam/ui/components/badge';
 import { Button } from '@groam/ui/components/button';
 import Shell from '@groam/ui/components/shell/client';
@@ -6,7 +7,6 @@ import { Skeleton } from '@groam/ui/components/skeleton';
 import { WorkspaceNotice } from '@groam/ui/components/workspace-notice';
 import { cn } from '@groam/ui/lib/utils';
 import { useNavigate } from '@tanstack/react-router';
-import { ArrowRight, CircleDot, Pencil, Users } from 'lucide-react';
 import { ideaOpenHref } from '@/features/ideas/idea-href';
 import { ideaDetailNotice } from '@/features/ideas/idea-list/idea-page-copy';
 import { LinkedResearches } from '@/features/research/research-links/linked-researches';

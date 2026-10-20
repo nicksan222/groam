@@ -1,8 +1,8 @@
+import { KeyRound, Plus, Trash2 } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { FormFeedback } from '@groam/ui/components/form-feedback';
 import { Input } from '@groam/ui/components/input';
 import { Spinner } from '@groam/ui/components/spinner';
-import { KeyRound, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { usePasskeySettings } from '@/features/settings/hooks/use-passkey-settings';
 import {

@@ -1,5 +1,5 @@
+import { Check } from '@groam/icons';
 import { cn } from '@groam/ui/lib/utils';
-import { Check } from 'lucide-react';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 

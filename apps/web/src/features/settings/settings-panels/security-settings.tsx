@@ -1,9 +1,9 @@
+import { KeyRound, ShieldCheck } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { FormFeedback } from '@groam/ui/components/form-feedback';
 import { FormField } from '@groam/ui/components/form-field';
 import { Input } from '@groam/ui/components/input';
 import { Spinner } from '@groam/ui/components/spinner';
-import { KeyRound, ShieldCheck } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { usePasswordSettings } from '@/features/settings/hooks/use-password-settings';
 import { AccountRecoverySettings } from '@/features/settings/settings-panels/account-recovery-settings';

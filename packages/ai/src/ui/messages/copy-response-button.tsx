@@ -1,5 +1,5 @@
+import { Check, Copy } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { Check, Copy } from 'lucide-react';
 import { useState } from 'react';
 
 export function CopyResponseButton({ text }: { text: string }) {

@@ -1,3 +1,4 @@
+import { UserRound, X } from '@groam/icons';
 import { Avatar } from '@groam/ui/components/avatar';
 import { AvatarFallback } from '@groam/ui/components/avatar-fallback';
 import { AvatarImage } from '@groam/ui/components/avatar-image';
@@ -9,7 +10,6 @@ import { LiftCard } from '@groam/ui/components/lift-card';
 import Shell from '@groam/ui/components/shell/client';
 import { Spinner } from '@groam/ui/components/spinner';
 import { initials } from '@groam/ui/lib/avatar';
-import { UserRound, X } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useProfileSettings } from '@/features/settings/hooks/use-profile-settings';
 import {

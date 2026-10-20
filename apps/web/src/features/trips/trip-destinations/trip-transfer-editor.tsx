@@ -1,3 +1,4 @@
+import { ExternalLink, FileText, Paperclip, Pencil, Plus } from '@groam/icons';
 import { Badge } from '@groam/ui/components/badge';
 import { Button } from '@groam/ui/components/button';
 import {
@@ -10,7 +11,6 @@ import {
 import Shell from '@groam/ui/components/shell/client';
 import { useIsMobile } from '@groam/ui/hooks/use-mobile';
 import { mutedMetaLinkClass } from '@groam/ui/lib/muted-meta';
-import { ExternalLink, FileText, Paperclip, Pencil, Plus } from 'lucide-react';
 import type { TripTransferInput } from '@/features/trips/hooks/use-trips';
 import { formatTripLineCost } from '@/features/trips/trip-forms/trip-cost';
 import { formatDayTimeRange } from '@/features/trips/trip-local-date-time';

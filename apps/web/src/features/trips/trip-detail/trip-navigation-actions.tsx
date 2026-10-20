@@ -1,11 +1,3 @@
-import { Button } from '@groam/ui/components/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@groam/ui/components/dropdown-menu';
-import { Spinner } from '@groam/ui/components/spinner';
 import {
   Archive,
   Calendar,
@@ -15,7 +7,15 @@ import {
   RotateCcw,
   Send,
   Trash2
-} from 'lucide-react';
+} from '@groam/icons';
+import { Button } from '@groam/ui/components/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@groam/ui/components/dropdown-menu';
+import { Spinner } from '@groam/ui/components/spinner';
 import type { ReactNode } from 'react';
 import {
   ideaCloseWithoutApplying,

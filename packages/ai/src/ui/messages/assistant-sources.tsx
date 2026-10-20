@@ -1,4 +1,4 @@
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink } from '@groam/icons';
 import type { AssistantSource } from './assistant-source';
 
 export function AssistantSources({ sources }: { sources: AssistantSource[] }) {

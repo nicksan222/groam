@@ -1,9 +1,9 @@
+import { Bot } from '@groam/icons';
 import { Badge } from '@groam/ui/components/badge';
 import { SidebarMenuButton, SidebarMenuItem } from '@groam/ui/components/sidebar';
 import { useSidebar } from '@groam/ui/hooks/use-sidebar';
 import { SIDEBAR_COUNT_BADGE_CLASS } from '@groam/ui/lib/sidebar-collapsible';
 import { useLocation } from '@tanstack/react-router';
-import { Bot } from 'lucide-react';
 import { Link } from '@/features/workspace/navigation/router';
 import { navigationItemIsActive } from '@/features/workspace/workspace-sidebar/sidebar-nav';
 import { testIds } from '@/lib/test-ids';

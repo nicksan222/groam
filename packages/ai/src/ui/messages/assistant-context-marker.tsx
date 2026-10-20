@@ -1,4 +1,4 @@
-import { MapPin } from 'lucide-react';
+import { MapPin } from '@groam/icons';
 import { assistantAgents, type parseAssistantContextMessage } from '#ai/agents';
 
 export function AssistantContextMarker({

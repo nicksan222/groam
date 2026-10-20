@@ -1,5 +1,5 @@
+import type { Icon } from '@groam/icons';
 import Shell from '@groam/ui/components/shell/client';
-import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 export function TripSectionPanel({
@@ -17,7 +17,7 @@ export function TripSectionPanel({
   children: ReactNode;
   density?: 'compact';
   description: string;
-  icon: LucideIcon;
+  icon: Icon;
   stack?: 'md' | 'page' | 'sm';
   testId?: string;
   title: string;

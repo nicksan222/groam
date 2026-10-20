@@ -1,6 +1,6 @@
 import { agentRunTime } from '@groam/ai/backend/runs/time';
+import { ArrowRight } from '@groam/icons';
 import Shell from '@groam/ui/components/shell/client';
-import { ArrowRight } from 'lucide-react';
 import { useDashboardPolls } from '@/features/dashboard/hooks/use-dashboard-polls';
 import { Link } from '@/features/workspace/navigation/router';
 import { testIds } from '@/lib/test-ids';

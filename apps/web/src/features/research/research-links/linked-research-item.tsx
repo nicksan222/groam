@@ -1,5 +1,5 @@
+import { ArrowUpRight, Search } from '@groam/icons';
 import { Badge } from '@groam/ui/components/badge';
-import { ArrowUpRight, Search } from 'lucide-react';
 import { Link } from '@/features/workspace/navigation/router';
 import type { ResearchSummary } from '@/types/research';
 

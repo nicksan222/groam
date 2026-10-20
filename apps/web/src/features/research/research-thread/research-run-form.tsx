@@ -1,3 +1,4 @@
+import { Search } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { Input } from '@groam/ui/components/input';
 import {
@@ -7,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue
 } from '@groam/ui/components/select';
-import { Search } from 'lucide-react';
 import { useId, useState } from 'react';
 import type { ResearchEffort } from '@/types/research';
 

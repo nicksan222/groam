@@ -1,7 +1,7 @@
 import { agentRunTime } from '@groam/ai/backend/runs/time';
+import { Bot, Clock3, Hash, MapPin, UserRound } from '@groam/icons';
 import { RecordListBadge } from '@groam/ui/components/record-list-badge';
 import Shell from '@groam/ui/components/shell/client';
-import { Bot, Clock3, Hash, MapPin, UserRound } from 'lucide-react';
 import type { AgentRun } from '@/features/agents/hooks/use-agent';
 import { testIds } from '@/lib/test-ids';
 import { AgentRunStatusBadge } from './agent-run-status-badge';

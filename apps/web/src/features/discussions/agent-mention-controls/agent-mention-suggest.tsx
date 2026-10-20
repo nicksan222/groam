@@ -1,6 +1,6 @@
+import { AtSign } from '@groam/icons';
 import type { MessageComposerApi } from '@groam/ui/components/message-composer';
 import { SuggestRow } from '@groam/ui/components/suggest-row';
-import { AtSign } from 'lucide-react';
 import {
   AGENT_MENTION_TOKEN,
   agentMentionQuery,

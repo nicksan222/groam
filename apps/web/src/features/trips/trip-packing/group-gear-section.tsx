@@ -1,5 +1,5 @@
+import { Lightbulb } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { Lightbulb } from 'lucide-react';
 import { useOptionalIdeaContext } from '@/features/ideas/hooks/use-idea-context';
 import { usePendingGearClaim } from '@/features/trips/hooks/use-pending-gear-claim';
 import { useTripPacking } from '@/features/trips/hooks/use-trip-packing';

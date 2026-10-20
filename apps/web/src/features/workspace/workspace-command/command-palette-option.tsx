@@ -1,7 +1,7 @@
+import { CornerDownLeft } from '@groam/icons';
 import { IconTile } from '@groam/ui/components/icon-tile';
 import { MenuRow } from '@groam/ui/components/menu-row';
 import { cn } from '@groam/ui/lib/utils';
-import { CornerDownLeft } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import type { CommandPaletteMatch } from '@/features/workspace/hooks/command-palette-results';
 

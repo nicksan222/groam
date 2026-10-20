@@ -1,4 +1,5 @@
 import type { Id } from '@groam/backend/data-model';
+import { Check } from '@groam/icons';
 import { Avatar } from '@groam/ui/components/avatar';
 import { AvatarFallback } from '@groam/ui/components/avatar-fallback';
 import { AvatarImage } from '@groam/ui/components/avatar-image';
@@ -14,7 +15,6 @@ import {
   SelectValue
 } from '@groam/ui/components/select';
 import { Spinner } from '@groam/ui/components/spinner';
-import { Check } from 'lucide-react';
 import { type FormEvent, useState } from 'react';
 import {
   type DiscussionMember,

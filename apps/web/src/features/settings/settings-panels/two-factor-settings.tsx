@@ -1,9 +1,9 @@
+import { Download, ShieldCheck } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { FormFeedback } from '@groam/ui/components/form-feedback';
 import { FormField } from '@groam/ui/components/form-field';
 import { Input } from '@groam/ui/components/input';
 import { Spinner } from '@groam/ui/components/spinner';
-import { Download, ShieldCheck } from 'lucide-react';
 import QRCode from 'qrcode';
 import { useEffect, useState } from 'react';
 import {

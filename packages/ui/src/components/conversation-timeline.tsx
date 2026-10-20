@@ -1,4 +1,4 @@
-import { Sparkles } from 'lucide-react';
+import { Sparkles } from '@groam/icons';
 import type { ReactNode } from 'react';
 import { Button } from './button';
 import {

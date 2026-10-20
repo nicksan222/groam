@@ -1,9 +1,9 @@
+import { Trash2 } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { Input } from '@groam/ui/components/input';
 import { NumberInput } from '@groam/ui/components/number-input';
 import { RecordListItem } from '@groam/ui/components/record-list-item';
 import { cn } from '@groam/ui/lib/utils';
-import { Trash2 } from 'lucide-react';
 import { type KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { testIds } from '@/lib/test-ids';
 import type { GearTraveler, PackingItem } from '@/types/packing';

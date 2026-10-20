@@ -1,12 +1,12 @@
 import { BrandMark } from '@groam/brand/mark';
+import type { Icon } from '@groam/icons';
 import { cn } from '@groam/ui/lib/utils';
-import type { LucideIcon } from 'lucide-react';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 
 export type StatusPageProps = Omit<React.ComponentProps<'section'>, 'title'> & {
   actions?: ReactNode;
-  icon: LucideIcon;
+  icon: Icon;
   iconClassName?: string;
   title: string;
 };

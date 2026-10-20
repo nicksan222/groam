@@ -1,4 +1,5 @@
 import type { Id } from '@groam/backend/data-model';
+import { Users } from '@groam/icons';
 import { Avatar } from '@groam/ui/components/avatar';
 import { AvatarFallback } from '@groam/ui/components/avatar-fallback';
 import { AvatarImage } from '@groam/ui/components/avatar-image';
@@ -19,7 +20,6 @@ import {
   SheetTitle
 } from '@groam/ui/components/sheet';
 import { initials } from '@groam/ui/lib/avatar';
-import { Users } from 'lucide-react';
 import { useTripTravelers } from '@/features/trips/hooks/use-trip-travelers';
 import { useWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
 import { testIds } from '@/lib/test-ids';

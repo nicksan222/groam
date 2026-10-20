@@ -1,8 +1,8 @@
+import { Link2, Search, Users } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { RecordListBadge } from '@groam/ui/components/record-list-badge';
 import { RecordListItem } from '@groam/ui/components/record-list-item';
 import { recordListTitleClassName } from '@groam/ui/lib/record-list';
-import { Link2, Search, Users } from 'lucide-react';
 import { relativeIssueDate } from '@/features/issues/hooks/issue-relative-date';
 import { testIds } from '@/lib/test-ids';
 import type { ResearchSummary } from '@/types/research';

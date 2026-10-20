@@ -1,5 +1,5 @@
+import { Info } from '@groam/icons';
 import { render } from '@groam/vitest-config/react';
-import { Info } from 'lucide-react';
 import { describe, expect, test } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { TripInlineNotice } from './trip-inline-notice';

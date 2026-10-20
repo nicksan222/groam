@@ -1,5 +1,5 @@
+import { Compass, MapPin, Plus, Sun } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { Compass, MapPin, Plus, Sun } from 'lucide-react';
 import { testIds } from '@/lib/test-ids';
 
 export function TripEmptyItinerary({ onAddDestination }: { onAddDestination?: () => void }) {

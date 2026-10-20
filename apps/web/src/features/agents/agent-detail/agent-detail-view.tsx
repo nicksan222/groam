@@ -1,11 +1,11 @@
 import { isAssistantAgentId } from '@groam/ai/agents';
 import { useSetAgentContext } from '@groam/ai/ui/context/agent-context';
+import { Bot } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { EmptyScreen } from '@groam/ui/components/empty-screen';
 import { PageLoading } from '@groam/ui/components/page-loading';
 import Shell from '@groam/ui/components/shell/client';
 import { Spinner } from '@groam/ui/components/spinner';
-import { Bot } from 'lucide-react';
 import { AgentRunList } from '@/features/agents/agent-run/agent-run-list';
 import { useAgent } from '@/features/agents/hooks/use-agent';
 import { useStartQueuedAssignRuns } from '@/features/agents/hooks/use-agent-run';

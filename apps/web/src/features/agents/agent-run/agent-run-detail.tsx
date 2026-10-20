@@ -1,4 +1,5 @@
 import { agentRunTime } from '@groam/ai/backend/runs/time';
+import { Bot } from '@groam/icons';
 import { Avatar } from '@groam/ui/components/avatar';
 import { AvatarFallback } from '@groam/ui/components/avatar-fallback';
 import { Button } from '@groam/ui/components/button';
@@ -6,7 +7,6 @@ import Shell from '@groam/ui/components/shell/client';
 import { Spinner } from '@groam/ui/components/spinner';
 import Timeline from '@groam/ui/components/timeline';
 import { initials } from '@groam/ui/lib/avatar';
-import { Bot } from 'lucide-react';
 import type { AgentRun } from '@/features/agents/hooks/use-agent';
 import type { AgentRunEvent } from '@/features/agents/hooks/use-agent-run';
 import { testIds } from '@/lib/test-ids';

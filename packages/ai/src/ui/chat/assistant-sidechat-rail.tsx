@@ -1,8 +1,8 @@
+import { Sparkles } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@groam/ui/components/tooltip';
 import { useIsMobile } from '@groam/ui/hooks/use-mobile';
 import { cn } from '@groam/ui/lib/utils';
-import { Sparkles } from 'lucide-react';
 import type { CSSProperties, Ref } from 'react';
 
 const RAIL_WIDTH = '3rem';

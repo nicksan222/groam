@@ -1,3 +1,4 @@
+import { MessageSquare } from '@groam/icons';
 import {
   SidebarMenuButton,
   SidebarMenuSkeleton,
@@ -8,7 +9,6 @@ import { SidebarCollapsibleItem } from '@groam/ui/components/sidebar-collapsible
 import { SidebarNestedLoadMore } from '@groam/ui/components/sidebar-nested-load-more';
 import { useSidebar } from '@groam/ui/hooks/use-sidebar';
 import { useLocation, useNavigate } from '@tanstack/react-router';
-import { MessageSquare } from 'lucide-react';
 import { CreateDiscussionDialog } from '@/features/discussions/discussion-create/create-discussion-dialog';
 import { useSidebarNestedPaging } from '@/features/workspace/hooks/use-sidebar-nested-paging';
 import { useSidebarNestedVisible } from '@/features/workspace/hooks/use-sidebar-nested-visible';

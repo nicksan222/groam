@@ -1,6 +1,6 @@
+import { ArrowUpRight, Map as MapIcon, Route } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import Shell from '@groam/ui/components/shell/client';
-import { ArrowUpRight, Map as MapIcon, Route } from 'lucide-react';
 import { useState } from 'react';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { TripDestinationsMap } from '@/features/trips/trip-destinations/trip-destinations-map';

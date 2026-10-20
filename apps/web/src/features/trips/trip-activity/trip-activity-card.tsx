@@ -1,3 +1,12 @@
+import {
+  Coins,
+  ExternalLink,
+  FileText,
+  MapPin,
+  MoreHorizontal,
+  Pencil,
+  Trash2
+} from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import {
   DropdownMenu,
@@ -8,15 +17,6 @@ import {
 import { Markdown } from '@groam/ui/components/markdown';
 import Timeline from '@groam/ui/components/timeline';
 import { mutedMetaLabelClassName, mutedMetaLinkClassName } from '@groam/ui/lib/muted-meta';
-import {
-  Coins,
-  ExternalLink,
-  FileText,
-  MapPin,
-  MoreHorizontal,
-  Pencil,
-  Trash2
-} from 'lucide-react';
 import type { TimeBlock, TripActivity } from '@/features/trips/hooks/use-trip-activity-editor';
 import { formatTripLineCost } from '@/features/trips/trip-forms/trip-cost';
 import { formatDayTimeRange, formatTripDay } from '@/features/trips/trip-local-date-time';

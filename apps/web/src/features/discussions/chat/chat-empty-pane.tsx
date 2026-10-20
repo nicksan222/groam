@@ -1,4 +1,4 @@
-import { MessageSquare, Users } from 'lucide-react';
+import { MessageSquare, Users } from '@groam/icons';
 
 /** Desktop landing canvas before selecting a conversation. */
 export function ChatEmptyPane() {

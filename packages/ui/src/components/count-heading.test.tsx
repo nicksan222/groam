@@ -1,5 +1,5 @@
+import { Inbox } from '@groam/icons';
 import { render } from '@groam/vitest-config/react';
-import { Inbox } from 'lucide-react';
 import { expect, test } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { CountHeading } from './count-heading';

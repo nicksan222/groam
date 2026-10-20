@@ -1,6 +1,6 @@
+import { Check, SendHorizontal } from '@groam/icons';
 import type { Spec } from '@json-render/core';
 import { defineRegistry, JSONUIProvider, Renderer } from '@json-render/react';
-import { Check, SendHorizontal } from 'lucide-react';
 import { useState } from 'react';
 import { isRecord } from '#ai/runtime/context-tag';
 import { assistantFormCatalog } from '#ai/runtime/output';

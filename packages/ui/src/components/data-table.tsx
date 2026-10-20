@@ -1,3 +1,4 @@
+import { Settings2, X } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import {
   DropdownMenu,
@@ -46,7 +47,6 @@ import type {
   SortingState,
   VisibilityState
 } from '@tanstack/table-core';
-import { Settings2, X } from 'lucide-react';
 import { type HTMLAttributes, type ReactNode, useState } from 'react';
 
 declare module '@tanstack/table-core' {

@@ -1,8 +1,8 @@
 import { useSetAgentContext } from '@groam/ai/ui/context/agent-context';
+import { Bot } from '@groam/icons';
 import { EmptyScreen } from '@groam/ui/components/empty-screen';
 import { PageLoading } from '@groam/ui/components/page-loading';
 import Shell from '@groam/ui/components/shell/client';
-import { Bot } from 'lucide-react';
 import { AgentRunList } from '@/features/agents/agent-run/agent-run-list';
 import { useWorkspaceAgentRuns } from '@/features/agents/hooks/use-workspace-agent-runs';
 import { PaginatedListContent } from '@/features/workspace/workspace-list/paginated-list-content';

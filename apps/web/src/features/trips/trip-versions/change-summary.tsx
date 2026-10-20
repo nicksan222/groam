@@ -1,7 +1,7 @@
+import { ArrowLeftRight } from '@groam/icons';
 import { Badge } from '@groam/ui/components/badge';
 import { Button } from '@groam/ui/components/button';
 import Shell from '@groam/ui/components/shell/client';
-import { ArrowLeftRight } from 'lucide-react';
 import { useState } from 'react';
 import {
   changeSummaryDescription,

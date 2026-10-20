@@ -1,6 +1,6 @@
+import { Luggage, Wallet } from '@groam/icons';
 import { cardChip, cardChipInteractive, cardStretchedLink } from '@groam/ui/lib/board-card';
 import { cn } from '@groam/ui/lib/utils';
-import { Luggage, Wallet } from 'lucide-react';
 import { useTripPacking } from '@/features/trips/hooks/use-trip-packing';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { formatTripCost } from '@/features/trips/trip-forms/trip-currencies';

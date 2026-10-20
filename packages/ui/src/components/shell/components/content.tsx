@@ -1,8 +1,8 @@
 'use client';
 
+import { AlertTriangle, Loader2 } from '@groam/icons';
 import { EmptyScreen } from '@groam/ui/components/empty-screen';
 import { cn } from '@groam/ui/lib/utils';
-import { AlertTriangle, Loader2 } from 'lucide-react';
 import type React from 'react';
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';

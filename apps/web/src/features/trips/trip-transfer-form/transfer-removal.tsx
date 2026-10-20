@@ -1,5 +1,5 @@
+import { Trash2 } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { Trash2 } from 'lucide-react';
 import type { TransferView } from '@/features/trips/trip-transfer-options';
 import type { TransferForm } from './transfer-form-types';
 

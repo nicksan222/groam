@@ -1,6 +1,6 @@
+import { CalendarDays, Plus } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import Shell from '@groam/ui/components/shell/client';
-import { CalendarDays, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { destinationsForDay } from '@/features/trips/hooks/editor-day-destinations';
 import { isPackingEntity } from '@/features/trips/hooks/itinerary-proposal-changes';

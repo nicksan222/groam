@@ -1,5 +1,5 @@
+import { Sparkles } from '@groam/icons';
 import { render } from '@groam/vitest-config/react';
-import { Sparkles } from 'lucide-react';
 import { expect, test } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { IconBadge } from './icon-badge';

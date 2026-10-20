@@ -1,7 +1,7 @@
+import { ArrowRight, Paperclip, SlidersHorizontal } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import Shell from '@groam/ui/components/shell/client';
 import { Spinner } from '@groam/ui/components/spinner';
-import { ArrowRight, Paperclip, SlidersHorizontal } from 'lucide-react';
 import {
   itineraryDetailsChangeDescription,
   itineraryDetailsChangeTitle,

@@ -1,4 +1,4 @@
-import { Compass } from 'lucide-react';
+import { Compass } from '@groam/icons';
 
 /** One loading surface for product pages and their initial data. */
 export function PageLoading({ label = 'Loading your workspace…' }: { label?: string }) {

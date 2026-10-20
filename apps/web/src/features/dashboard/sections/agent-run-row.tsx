@@ -1,6 +1,6 @@
 import { assistantAgents, isAssistantAgentId } from '@groam/ai/agents';
 import { agentRunTime } from '@groam/ai/backend/runs/time';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight } from '@groam/icons';
 import { agentRunHref } from '@/features/agents/agent-run/agent-run-href';
 import { AgentRunStatusBadge } from '@/features/agents/agent-run/agent-run-status-badge';
 import type { WorkspaceAgentRun } from '@/features/agents/hooks/use-workspace-agent-runs';

@@ -1,3 +1,4 @@
+import { Plus } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import {
   DropdownMenu,
@@ -8,7 +9,6 @@ import {
   DropdownMenuTrigger
 } from '@groam/ui/components/dropdown-menu';
 import { SearchInput } from '@groam/ui/components/search-input';
-import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { AttachmentIcon } from '#ai/ui/attachments/attachment-icon';
 import type { AssistantAttachments } from './assistant-attachment-types';

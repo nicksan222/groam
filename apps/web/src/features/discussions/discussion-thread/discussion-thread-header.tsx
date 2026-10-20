@@ -1,3 +1,4 @@
+import { ArrowLeft, Info, Link2, MoreHorizontal, Pencil, Users } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import {
   DropdownMenu,
@@ -8,7 +9,6 @@ import {
 } from '@groam/ui/components/dropdown-menu';
 import { Skeleton } from '@groam/ui/components/skeleton';
 import { toast } from '@groam/ui/components/toast';
-import { ArrowLeft, Info, Link2, MoreHorizontal, Pencil, Users } from 'lucide-react';
 import { useState } from 'react';
 import { ChatAvatar } from '@/features/discussions/chat/chat-avatar';
 import { DiscussionDetailsSheet } from '@/features/discussions/discussion-sheets/discussion-details-sheet';

@@ -1,7 +1,7 @@
+import { MessageSquare } from '@groam/icons';
 import { Avatar } from '@groam/ui/components/avatar';
 import Timeline from '@groam/ui/components/timeline';
 import { initials } from '@groam/ui/lib/avatar';
-import { MessageSquare } from 'lucide-react';
 
 export type ComposerTimelineBadgeProps = {
   name?: string | null;

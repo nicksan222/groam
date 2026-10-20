@@ -1,6 +1,6 @@
 import type { Id } from '@groam/backend/data-model';
+import { History } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { History } from 'lucide-react';
 import { Link } from '@/features/workspace/navigation/router';
 import { testIds } from '@/lib/test-ids';
 

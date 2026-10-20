@@ -1,11 +1,11 @@
 import { useSetAgentContext } from '@groam/ai/ui/context/agent-context';
+import { KeyRound } from '@groam/icons';
 import { Avatar } from '@groam/ui/components/avatar';
 import { AvatarFallback } from '@groam/ui/components/avatar-fallback';
 import { AvatarImage } from '@groam/ui/components/avatar-image';
 import { Button } from '@groam/ui/components/button';
 import Shell from '@groam/ui/components/shell/client';
 import { initials } from '@groam/ui/lib/avatar';
-import { KeyRound } from 'lucide-react';
 import { GroupPeopleSettings } from '@/features/group/group-people/group-people-settings';
 import { AiSettings } from '@/features/settings/settings-panels/ai-settings';
 import { AppearanceSettings } from '@/features/settings/settings-panels/appearance-settings';

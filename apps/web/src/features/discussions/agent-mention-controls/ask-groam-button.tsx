@@ -1,6 +1,6 @@
+import { AtSign } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import type { MessageComposerApi } from '@groam/ui/components/message-composer';
-import { AtSign } from 'lucide-react';
 import {
   hasAgentMention,
   insertAgentMention

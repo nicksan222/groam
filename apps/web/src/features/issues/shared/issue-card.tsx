@@ -1,4 +1,5 @@
 import { isResolved } from '@groam/backend/convex/modules/travel/issues/status';
+import { Sparkles } from '@groam/icons';
 import {
   cardChip,
   cardMetaRow,
@@ -7,7 +8,6 @@ import {
   cardTitle
 } from '@groam/ui/lib/board-card';
 import { cn } from '@groam/ui/lib/utils';
-import { Sparkles } from 'lucide-react';
 import type { ComponentProps, ReactNode } from 'react';
 import { IssueAssigneeAvatar } from '@/features/issues/shared/issue-assignee-avatar';
 import { IssueConditionLine } from '@/features/issues/shared/issue-condition-line';

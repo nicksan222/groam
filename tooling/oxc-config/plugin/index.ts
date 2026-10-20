@@ -11,6 +11,7 @@ import noLocalTypeDefinitions from './rules/no-local-type-definitions.ts';
 import noNativeBrowserDialogs from './rules/no-native-browser-dialogs.ts';
 import noNativeInteractiveElements from './rules/no-native-interactive-elements.ts';
 import noNestedPlanningPageBody from './rules/no-nested-planning-page-body.ts';
+import noRawIcons from './rules/no-raw-icons.ts';
 import noRawInternalAnchors from './rules/no-raw-internal-anchors.ts';
 import noRawLocatorTestIds from './rules/no-raw-locator-test-ids.ts';
 import noRawTestIds from './rules/no-raw-test-ids.ts';
@@ -36,6 +37,7 @@ export default definePlugin({
     'no-native-browser-dialogs': noNativeBrowserDialogs,
     'no-native-interactive-elements': noNativeInteractiveElements,
     'no-nested-planning-page-body': noNestedPlanningPageBody,
+    'no-raw-icons': noRawIcons,
     'no-raw-internal-anchors': noRawInternalAnchors,
     'no-raw-locator-test-ids': noRawLocatorTestIds,
     'no-raw-test-ids': noRawTestIds,

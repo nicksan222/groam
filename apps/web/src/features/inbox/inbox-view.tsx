@@ -1,8 +1,8 @@
 import { useSetAgentContext } from '@groam/ai/ui/context/agent-context';
+import { Bell } from '@groam/icons';
 import { EmptyScreen } from '@groam/ui/components/empty-screen';
 import { PageLoading } from '@groam/ui/components/page-loading';
 import Shell from '@groam/ui/components/shell/client';
-import { Bell } from 'lucide-react';
 import { useWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
 import { testIds } from '@/lib/test-ids';
 import { useWorkspaceNotifications } from './hooks/use-workspace-notifications';

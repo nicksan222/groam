@@ -63,6 +63,7 @@
       "packages/auth/tsconfig.json",
       "packages/backend/tsconfig.json",
       "packages/env/tsconfig.json",
+      "packages/icons/tsconfig.json",
       "packages/ui/tsconfig.json",
       "tooling/app-actions/tsconfig.json",
       "tooling/tsconfig.json"

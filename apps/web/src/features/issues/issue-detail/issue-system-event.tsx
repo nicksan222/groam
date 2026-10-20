@@ -1,5 +1,5 @@
+import { UserRound } from '@groam/icons';
 import Timeline from '@groam/ui/components/timeline';
-import { UserRound } from 'lucide-react';
 import { relativeIssueDate } from '@/features/issues/hooks/issue-relative-date';
 import type { IssueEvent } from '@/types/issues';
 import { IssueEventLine } from './issue-event-line';

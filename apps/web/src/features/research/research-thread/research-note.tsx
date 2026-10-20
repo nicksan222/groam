@@ -1,6 +1,6 @@
 import { assistantReplyText } from '@groam/ai/ui/messages/assistant-run-activities';
+import { Paperclip, Sparkles } from '@groam/icons';
 import { Markdown } from '@groam/ui/components/markdown';
-import { Paperclip, Sparkles } from 'lucide-react';
 import { AssistantReplyError } from '@/features/discussions/discussion-thread/assistant-reply-error';
 import { discussionMessageBody } from '@/features/discussions/discussion-thread/discussion-message-body';
 import type { DiscussionMessage } from '@/types/discussions';

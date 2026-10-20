@@ -1,9 +1,9 @@
+import { KeyRound } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { FormFeedback } from '@groam/ui/components/form-feedback';
 import { FormField } from '@groam/ui/components/form-field';
 import { Input } from '@groam/ui/components/input';
 import { Spinner } from '@groam/ui/components/spinner';
-import { KeyRound } from 'lucide-react';
 import type { FormEvent } from 'react';
 import type { useAuthForm } from '@/features/auth/hooks/use-auth-form';
 import { testIds } from '@/lib/test-ids';

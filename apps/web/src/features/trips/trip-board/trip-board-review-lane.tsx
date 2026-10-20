@@ -1,6 +1,6 @@
 import { SortableContext } from '@dnd-kit/sortable';
+import { Plus } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { Plus } from 'lucide-react';
 import { ideaCreateCta } from '@/features/ideas/idea-glossary';
 import { testIds } from '@/lib/test-ids';
 import type { TripBoardIdea, TripBoardIdeaItem } from '@/types/trip-board';

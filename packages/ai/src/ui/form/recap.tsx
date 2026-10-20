@@ -1,5 +1,5 @@
+import { CheckCircle2, CircleAlert, Sparkles } from '@groam/icons';
 import type { BaseComponentProps } from '@json-render/react';
-import { CheckCircle2, CircleAlert, Sparkles } from 'lucide-react';
 
 export type RecapProps = {
   highlights: string[];

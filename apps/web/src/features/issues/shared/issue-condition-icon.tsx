@@ -1,4 +1,4 @@
-import { CircleCheck, Flag, PenLine } from 'lucide-react';
+import { CircleCheck, Flag, PenLine } from '@groam/icons';
 
 /** The glyph for a condition's state: a check once met, a flag while pending, a pen when written by hand. */
 export function IssueConditionIcon({

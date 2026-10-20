@@ -1,3 +1,4 @@
+import { Check, ChevronsUpDown, LogIn, Plus, Settings } from '@groam/icons';
 import { Avatar } from '@groam/ui/components/avatar';
 import { AvatarFallback } from '@groam/ui/components/avatar-fallback';
 import { AvatarImage } from '@groam/ui/components/avatar-image';
@@ -24,7 +25,6 @@ import {
 import { toast } from '@groam/ui/components/toast';
 import { useSidebar } from '@groam/ui/hooks/use-sidebar';
 import { useLocation, useNavigate } from '@tanstack/react-router';
-import { Check, ChevronsUpDown, LogIn, Plus, Settings } from 'lucide-react';
 import { AgentsSidebarNav } from '@/features/agents/agents-sidebar-nav';
 import { ChatsSidebarNav } from '@/features/discussions/chats-sidebar-nav';
 import { IdeasSidebarNav } from '@/features/ideas/ideas-sidebar-nav';

@@ -1,5 +1,5 @@
+import { Maximize2, Minimize2 } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { Maximize2, Minimize2 } from 'lucide-react';
 import { useTripBoardFullscreen } from '@/features/trips/hooks/use-trip-board-fullscreen';
 import { testIds } from '@/lib/test-ids';
 

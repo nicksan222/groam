@@ -1,4 +1,4 @@
-import { CalendarDays } from 'lucide-react';
+import { CalendarDays } from '@groam/icons';
 import type { ReactNode } from 'react';
 import { ideaOverviewDescription, ideaOverviewTitle } from '@/features/ideas/idea-glossary';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';

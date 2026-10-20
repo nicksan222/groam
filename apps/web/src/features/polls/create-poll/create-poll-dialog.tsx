@@ -1,9 +1,9 @@
+import { Plus, X } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { FormDialog } from '@groam/ui/components/form-dialog';
 import { Input } from '@groam/ui/components/input';
 import { Label } from '@groam/ui/components/label';
 import { Switch } from '@groam/ui/components/switch';
-import { Plus, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { testIds } from '@/lib/test-ids';
 import type { CreatePollDraft } from '@/types/polls';

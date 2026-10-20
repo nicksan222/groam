@@ -11,12 +11,13 @@ const allowedInternalDependencies = {
   // backend. The backend executes @groam/ai's agent and tool specs: the
   // dependency direction is one-way, backend -> ai. Nothing may rejoin it
   // into a cycle.
-  '@groam/ai': new Set(['@groam/ui']),
+  '@groam/ai': new Set(['@groam/icons', '@groam/ui']),
   '@groam/auth': new Set(['@groam/env']),
   '@groam/backend': new Set(['@groam/ai']),
   '@groam/brand': new Set<string>(),
   '@groam/env': new Set<string>(),
-  '@groam/ui': new Set(['@groam/brand'])
+  '@groam/icons': new Set<string>(),
+  '@groam/ui': new Set(['@groam/brand', '@groam/icons'])
 } as const;
 
 /** Returns runtime boundary violations. Tooling and dev-only dependencies are intentionally excluded. */

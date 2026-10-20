@@ -1,4 +1,4 @@
-import { FileText, Video } from 'lucide-react';
+import { FileText, Video } from '@groam/icons';
 import { formatBytes } from '@/features/trips/hooks/version-format';
 import type { VisualDiffField } from './proposal-types';
 

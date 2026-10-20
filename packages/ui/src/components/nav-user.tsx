@@ -1,5 +1,6 @@
 'use client';
 
+import { ChevronsUpDown, LogOut, Settings } from '@groam/icons';
 import { Avatar } from '@groam/ui/components/avatar';
 import { AvatarFallback } from '@groam/ui/components/avatar-fallback';
 import { AvatarImage } from '@groam/ui/components/avatar-image';
@@ -15,7 +16,6 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@groam/ui/compo
 import { useSidebar } from '@groam/ui/hooks/use-sidebar';
 import { avatarClasses, initials } from '@groam/ui/lib/avatar';
 import { cn } from '@groam/ui/lib/utils';
-import { ChevronsUpDown, LogOut, Settings } from 'lucide-react';
 
 export type NavUserProps = {
   user: { avatar: string; detail: string; name: string };

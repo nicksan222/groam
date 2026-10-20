@@ -1,8 +1,8 @@
 'use client';
 
+import { XIcon } from '@groam/icons';
 import { cn } from '@groam/ui/lib/utils';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { XIcon } from 'lucide-react';
 import type * as React from 'react';
 import { MODAL_OVERLAY_CLASS_NAME } from '#src/lib/modal-surface';
 

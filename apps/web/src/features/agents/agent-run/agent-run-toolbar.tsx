@@ -3,10 +3,10 @@ import {
   canRetryAgentRunFromZero,
   isActiveAgentRun
 } from '@groam/ai/backend/runs/roster';
+import { Settings2, Square } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { Spinner } from '@groam/ui/components/spinner';
 import { toast } from '@groam/ui/components/toast';
-import { Settings2, Square } from 'lucide-react';
 import { useState } from 'react';
 import type { AgentRun } from '@/features/agents/hooks/use-agent';
 import { Link } from '@/features/workspace/navigation/router';

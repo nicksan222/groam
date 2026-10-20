@@ -1,4 +1,4 @@
-import type { LucideIcon } from 'lucide-react';
+import type { Icon } from '@groam/icons';
 import type React from 'react';
 import type { ElementType, ReactNode } from 'react';
 import type {
@@ -61,7 +61,7 @@ export interface NoticeBannerProps extends Omit<SurfaceWellProps, 'children' | '
   action?: ReactNode;
   description: ReactNode;
   detail?: ReactNode;
-  icon: LucideIcon;
+  icon: Icon;
   title: ReactNode;
 }
 
@@ -69,7 +69,7 @@ export interface SectionHeaderProps {
   badge?: string;
   density?: 'compact' | 'default';
   description?: ReactNode;
-  icon?: LucideIcon;
+  icon?: Icon;
   /** Skeleton title/description while section content loads. */
   isLoading?: boolean;
   title?: ReactNode;

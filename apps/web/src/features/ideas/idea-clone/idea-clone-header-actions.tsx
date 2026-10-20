@@ -1,4 +1,13 @@
 import type { Id } from '@groam/backend/data-model';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  FileDiff,
+  MoreHorizontal,
+  Pencil,
+  Trash2
+} from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import {
   DropdownMenu,
@@ -8,15 +17,6 @@ import {
 } from '@groam/ui/components/dropdown-menu';
 import { Spinner } from '@groam/ui/components/spinner';
 import { useNavigate } from '@tanstack/react-router';
-import {
-  ArrowLeft,
-  ArrowRight,
-  Check,
-  FileDiff,
-  MoreHorizontal,
-  Pencil,
-  Trash2
-} from 'lucide-react';
 import {
   ideaBackToEditing,
   ideaCloseWithoutApplying,

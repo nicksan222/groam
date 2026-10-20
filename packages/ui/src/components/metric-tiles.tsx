@@ -1,10 +1,10 @@
+import type { Icon } from '@groam/icons';
 import { IconTile } from '@groam/ui/components/icon-tile';
 import { cn } from '@groam/ui/lib/utils';
-import type { LucideIcon } from 'lucide-react';
 import type * as React from 'react';
 
 export type MetricTile = {
-  icon?: LucideIcon;
+  icon?: Icon;
   label: string;
   longLabel?: string;
   value: number | string;

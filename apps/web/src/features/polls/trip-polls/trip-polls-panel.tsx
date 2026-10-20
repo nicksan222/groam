@@ -1,7 +1,7 @@
+import { Plus, Vote } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { EmptyScreen } from '@groam/ui/components/empty-screen';
 import { Skeleton } from '@groam/ui/components/skeleton';
-import { Plus, Vote } from 'lucide-react';
 import { useState } from 'react';
 import { CreatePollDialog } from '@/features/polls/create-poll/create-poll-dialog';
 import { usePollActions, useTripPolls } from '@/features/polls/hooks/use-polls';

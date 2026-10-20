@@ -1,7 +1,7 @@
 import { useSetAgentContext } from '@groam/ai/ui/context/agent-context';
+import { Plus } from '@groam/icons';
 import { PageLoading } from '@groam/ui/components/page-loading';
 import Shell from '@groam/ui/components/shell/client';
-import { Plus } from 'lucide-react';
 import { useStartIdeaDialog } from '@/features/ideas/hooks/use-start-idea-dialog';
 import { useViewerOpenIdeas, useWorkspaceIdeas } from '@/features/ideas/hooks/use-workspace-ideas';
 import { mergeViewerOpenIdeas } from '@/features/ideas/hooks/viewer-pending-idea';

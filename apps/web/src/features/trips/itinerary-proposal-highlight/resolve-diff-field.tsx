@@ -1,6 +1,6 @@
+import { Check, CircleDot, GitBranch } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { cn } from '@groam/ui/lib/utils';
-import { Check, CircleDot, GitBranch } from 'lucide-react';
 import type { ResolutionRow } from '@/features/trips/hooks/detail-resolution-values';
 import type { DetailsResolveChoice } from '@/types/trips';
 import { ResolveDiffContent } from './resolve-diff-content';

@@ -1,7 +1,7 @@
+import { Pencil } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { Markdown } from '@groam/ui/components/markdown';
 import { Textarea } from '@groam/ui/components/textarea';
-import { Pencil } from 'lucide-react';
 import { useState } from 'react';
 
 export function ResearchBrief({

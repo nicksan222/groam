@@ -1,3 +1,4 @@
+import { CircleDot } from '@groam/icons';
 import {
   cardChip,
   cardChipInteractive,
@@ -5,7 +6,6 @@ import {
   cardStretchedLink
 } from '@groam/ui/lib/board-card';
 import { cn } from '@groam/ui/lib/utils';
-import { CircleDot } from 'lucide-react';
 import { memo, useEffect, useRef } from 'react';
 import {
   isViewerDraft,

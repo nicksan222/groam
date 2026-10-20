@@ -1,3 +1,4 @@
+import { ChevronDown, Compass, MapPin, Search, Sparkles } from '@groam/icons';
 import { Badge } from '@groam/ui/components/badge';
 import { Button } from '@groam/ui/components/button';
 import { DashedEmpty } from '@groam/ui/components/dashed-empty';
@@ -13,7 +14,6 @@ import { Input } from '@groam/ui/components/input';
 import { LoadingPlaceholder } from '@groam/ui/components/loading-placeholder';
 import { ScrollArea } from '@groam/ui/components/scroll-area';
 import { SelectRow } from '@groam/ui/components/select-row';
-import { ChevronDown, Compass, MapPin, Search, Sparkles } from 'lucide-react';
 import { useTripDestinationSearch } from '@/features/trips/hooks/use-trip-destination-search';
 import type { TripLocation } from '@/features/trips/trip-location';
 import { testIds } from '@/lib/test-ids';

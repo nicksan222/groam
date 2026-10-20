@@ -1,4 +1,4 @@
-import { SendHorizontal, Square } from 'lucide-react';
+import { SendHorizontal, Square } from '@groam/icons';
 import { type ReactNode, type RefObject, useEffect, useRef, useState } from 'react';
 import { Button } from './button';
 import { RichTextEditor, type RichTextEditorHandle } from './rich-text-editor';

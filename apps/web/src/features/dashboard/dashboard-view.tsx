@@ -1,8 +1,8 @@
+import { Map as MapIcon, Plus } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { EmptyScreen } from '@groam/ui/components/empty-screen';
 import { PageLoading } from '@groam/ui/components/page-loading';
 import Shell from '@groam/ui/components/shell/client';
-import { Map as MapIcon, Plus } from 'lucide-react';
 import { type DashboardPresentation, useDashboard } from '@/features/dashboard/hooks/use-dashboard';
 import { useTripsSidebarUi } from '@/features/trips/hooks/use-trips-sidebar-ui';
 import { testIds } from '@/lib/test-ids';

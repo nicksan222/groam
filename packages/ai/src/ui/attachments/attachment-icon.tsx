@@ -1,4 +1,4 @@
-import { CalendarDays, MapPin, Route } from 'lucide-react';
+import { CalendarDays, MapPin, Route } from '@groam/icons';
 import type { AssistantContextTagKind } from '#ai/agents';
 
 export function AttachmentIcon({ kind }: { kind: AssistantContextTagKind }) {

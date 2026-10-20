@@ -1,7 +1,7 @@
+import { Link2, Plus } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { DetailSection } from '@groam/ui/components/detail-section';
 import { Popover, PopoverContent, PopoverTrigger } from '@groam/ui/components/popover';
-import { Link2, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { testIds } from '@/lib/test-ids';
 import type { ResearchSummary } from '@/types/research';

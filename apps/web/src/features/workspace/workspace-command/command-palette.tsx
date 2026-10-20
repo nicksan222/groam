@@ -1,3 +1,4 @@
+import { Search, SearchX } from '@groam/icons';
 import {
   Dialog,
   DialogContent,
@@ -7,7 +8,6 @@ import {
 } from '@groam/ui/components/dialog';
 import { Input } from '@groam/ui/components/input';
 import { Kbd } from '@groam/ui/components/kbd';
-import { Search, SearchX } from 'lucide-react';
 import { useId } from 'react';
 import type { CommandPaletteMatch } from '@/features/workspace/hooks/command-palette-results';
 import { useCommandPalette } from '@/features/workspace/hooks/use-command-palette';

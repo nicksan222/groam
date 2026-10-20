@@ -1,3 +1,4 @@
+import { Clock3, X } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { DayTimeRangePicker } from '@groam/ui/components/day-time-range-picker';
 import { FormFeedback } from '@groam/ui/components/form-feedback';
@@ -5,7 +6,6 @@ import { FormField } from '@groam/ui/components/form-field';
 import { Input } from '@groam/ui/components/input';
 import { RichTextEditor } from '@groam/ui/components/rich-text-editor';
 import Shell from '@groam/ui/components/shell/client';
-import { Clock3, X } from 'lucide-react';
 import { useRef } from 'react';
 import { useMediaUpload } from '@/features/media/hooks/use-media-upload';
 import { useTripTransferForm } from '@/features/trips/hooks/use-trip-transfer-form';

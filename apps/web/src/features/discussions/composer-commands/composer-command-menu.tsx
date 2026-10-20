@@ -1,6 +1,6 @@
+import { CornerDownLeft, Slash } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import type { MessageComposerApi } from '@groam/ui/components/message-composer';
-import { CornerDownLeft, Slash } from 'lucide-react';
 import { testIds } from '@/lib/test-ids';
 import {
   type ComposerCommand,

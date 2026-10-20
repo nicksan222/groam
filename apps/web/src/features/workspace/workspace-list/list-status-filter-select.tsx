@@ -1,6 +1,6 @@
+import { CirclePlus } from '@groam/icons';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@groam/ui/components/select';
 import { listFilterTriggerClassName } from '@groam/ui/lib/data-table';
-import { CirclePlus } from 'lucide-react';
 
 export function ListStatusFilterSelect<TStatus extends string>({
   ariaLabel,

@@ -1,7 +1,7 @@
 import type { Id } from '@groam/backend/data-model';
+import { CircleDashed } from '@groam/icons';
 import { Skeleton } from '@groam/ui/components/skeleton';
 import Timeline from '@groam/ui/components/timeline';
-import { CircleDashed } from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { AgentRunEvent } from '@/features/agents/hooks/use-agent-run';
 import { AgentRunLogEvent } from './agent-run-log-event';

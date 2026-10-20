@@ -1,16 +1,16 @@
 ---
-import type { IconName } from '@/content/site';
+import type { IconName } from './names';
 
 // Stroke icons drawn on one 24px grid at one weight.
-type Props = { name: IconName; class?: string };
-const { name, class: className } = Astro.props;
+type Props = { name: IconName; class?: string; filled?: boolean };
+const { name, class: className, filled = false } = Astro.props;
 ---
 
 <svg
   class={className}
-  viewBox="0 0 24 24"
-  fill="none"
-  stroke="currentColor"
+  viewBox={name.startsWith('chevron-') ? '0 0 16 16' : '0 0 24 24'}
+  fill={filled ? 'currentColor' : 'none'}
+  stroke={filled ? 'none' : 'currentColor'}
   stroke-width="1.8"
   stroke-linecap="round"
   stroke-linejoin="round"
@@ -53,6 +53,8 @@ const { name, class: className } = Astro.props;
   }
   {name === 'arrow-right' && <path d="M5 12h14M13 6l6 6-6 6" />}
   {name === 'check' && <path d="m5 12.5 4.5 4.5L19 7.5" stroke-width="2.2" />}
+  {name === 'chevron-up' && <path d="m4 10 4-4 4 4" />}
+  {name === 'chevron-down' && <path d="m4 6 4 4 4-4" />}
   {name === 'menu' && <path d="M4 7h16M4 12h16M4 17h16" />}
   {name === 'close' && <path d="M6 6l12 12M18 6 6 18" />}
   {

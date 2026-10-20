@@ -1,5 +1,5 @@
+import { AlertTriangle } from '@groam/icons';
 import { render } from '@groam/vitest-config/react';
-import { AlertTriangle } from 'lucide-react';
 import { expect, test } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { StatusPage } from './status-page';

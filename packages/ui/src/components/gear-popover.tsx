@@ -1,6 +1,6 @@
+import { Settings2 } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@groam/ui/components/popover';
-import { Settings2 } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 export type GearPopoverProps = {

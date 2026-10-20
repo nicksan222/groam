@@ -1,3 +1,4 @@
+import { X } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { SearchInput } from '@groam/ui/components/search-input';
 import {
@@ -6,7 +7,6 @@ import {
   dataTableToolbarClassName,
   type DataTableResourceLabel
 } from '@groam/ui/lib/data-table';
-import { X } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 export function RecordListToolbar({

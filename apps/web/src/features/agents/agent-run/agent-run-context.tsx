@@ -1,5 +1,6 @@
 import { isActiveAgentRun } from '@groam/ai/backend/runs/roster';
 import { agentRunDuration, agentRunTime } from '@groam/ai/backend/runs/time';
+import { Copy } from '@groam/icons';
 import { Avatar } from '@groam/ui/components/avatar';
 import { AvatarFallback } from '@groam/ui/components/avatar-fallback';
 import { Button } from '@groam/ui/components/button';
@@ -7,7 +8,6 @@ import { DetailSection } from '@groam/ui/components/detail-section';
 import { Skeleton } from '@groam/ui/components/skeleton';
 import { toast } from '@groam/ui/components/toast';
 import { initials } from '@groam/ui/lib/avatar';
-import { Copy } from 'lucide-react';
 import type { AgentRun } from '@/features/agents/hooks/use-agent';
 import { Link } from '@/features/workspace/navigation/router';
 import { testIds } from '@/lib/test-ids';

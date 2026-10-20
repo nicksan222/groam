@@ -1,13 +1,13 @@
 import { isAssistantAgentId } from '@groam/ai/agents';
 import { useSetAgentContext } from '@groam/ai/ui/context/agent-context';
 import type { Id } from '@groam/backend/data-model';
+import { Bot } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { EmptyScreen } from '@groam/ui/components/empty-screen';
 import { PageCrumbNav } from '@groam/ui/components/page-crumb-nav';
 import { PageLoading } from '@groam/ui/components/page-loading';
 import Shell from '@groam/ui/components/shell/client';
 import { useNavigate } from '@tanstack/react-router';
-import { Bot } from 'lucide-react';
 import { useMemo } from 'react';
 import { type AgentRun, useAgentRecord } from '@/features/agents/hooks/use-agent';
 import {

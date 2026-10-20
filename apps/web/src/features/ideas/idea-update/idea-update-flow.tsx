@@ -1,6 +1,6 @@
+import { ArrowLeftRight, Check } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { Spinner } from '@groam/ui/components/spinner';
-import { ArrowLeftRight, Check } from 'lucide-react';
 import {
   ideaChooseWhatToKeep,
   ideaKeepMyIdea,

@@ -1,10 +1,10 @@
+import { Bot, Hourglass } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import PulsingDot from '@groam/ui/components/pulsing-dot';
 import { Spinner } from '@groam/ui/components/spinner';
 import { toast } from '@groam/ui/components/toast';
 import { errorMessage } from '@groam/ui/lib/errors';
 import { cn } from '@groam/ui/lib/utils';
-import { Bot, Hourglass } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { agentRunCopy, presentAgentRunMessage } from '#ai/backend/runs/copy';
 import { type AgentRunStatus, RUN_STATUS_LABEL } from '#ai/backend/runs/ids';

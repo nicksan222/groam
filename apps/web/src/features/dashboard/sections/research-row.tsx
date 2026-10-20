@@ -1,5 +1,5 @@
 import { agentRunTime } from '@groam/ai/backend/runs/time';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight } from '@groam/icons';
 import { Link } from '@/features/workspace/navigation/router';
 import { testIds } from '@/lib/test-ids';
 import type { DashboardResearch } from '@/types/dashboard';

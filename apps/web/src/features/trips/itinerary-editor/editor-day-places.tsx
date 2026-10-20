@@ -1,5 +1,5 @@
+import { MapPin, Pencil } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { MapPin, Pencil } from 'lucide-react';
 import {
   destinationChangeKey,
   type ItineraryChange

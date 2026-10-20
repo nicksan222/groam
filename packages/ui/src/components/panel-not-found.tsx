@@ -1,5 +1,5 @@
+import { ArrowLeft } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { ArrowLeft } from 'lucide-react';
 
 export type PanelNotFoundProps = {
   backLabel: string;

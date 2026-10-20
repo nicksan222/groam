@@ -1,5 +1,5 @@
+import { ImageIcon } from '@groam/icons';
 import { cn } from '@groam/ui/lib/utils';
-import { ImageIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 export type CoverFrameProps = {

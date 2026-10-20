@@ -1,5 +1,5 @@
+import { Check } from '@groam/icons';
 import { cn } from '@groam/ui/lib/utils';
-import { Check } from 'lucide-react';
 import type { PackingItem } from '@/types/packing';
 import { PackingCount } from './packing-count';
 import { coveredCount } from './packing-coverage';

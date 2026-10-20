@@ -1,5 +1,5 @@
+import { Map as MapIcon } from '@groam/icons';
 import Shell from '@groam/ui/components/shell/client';
-import { Map as MapIcon } from 'lucide-react';
 import { Component, type ReactNode } from 'react';
 
 // oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape

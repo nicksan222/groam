@@ -1,5 +1,5 @@
+import { BedDouble, FileText } from '@groam/icons';
 import { Markdown } from '@groam/ui/components/markdown';
-import { BedDouble, FileText } from 'lucide-react';
 import { formatTripLineCost } from '@/features/trips/trip-forms/trip-cost';
 import type { Stay } from '@/types/trips';
 

@@ -1,8 +1,8 @@
+import { Check } from '@groam/icons';
 import { Avatar } from '@groam/ui/components/avatar';
 import { AvatarFallback } from '@groam/ui/components/avatar-fallback';
 import Shell from '@groam/ui/components/shell/client';
 import { initials } from '@groam/ui/lib/avatar';
-import { Check } from 'lucide-react';
 
 import type { ProposalDetail } from './proposal-types';
 

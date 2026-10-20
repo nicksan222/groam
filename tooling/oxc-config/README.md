@@ -13,6 +13,7 @@ rules that Oxlint has no built-in equivalent for.
 | `no-local-type-definitions` | Keeps web app domain types in `apps/web/src/types` |
 | `no-fetch-in-components` | Keeps network requests out of TSX components |
 | `no-native-interactive-elements` | Keeps app controls on shared accessible UI primitives |
+| `no-raw-icons` | Keeps icon providers, types, and inline JSX SVG behind `@groam/icons` (brand artwork stays in `@groam/brand`) |
 | `no-direct-sonner-imports` | Keeps app notifications behind the shared UI facade |
 | `no-raw-test-ids` | Keeps production web locators in the shared `testIds` contract |
 | `no-raw-internal-anchors` | Keeps internal navigation in TanStack Router |
@@ -35,5 +36,5 @@ built-in rule. Scope each rule narrowly in `lint.ts`, give its diagnostic an act
 replacement, and add accepted and rejected fixtures under `tooling/quality`. Suppress a single
 finding with `// oxlint-disable-next-line <rule> -- <reason>`.
 
-Stylesheet checks (hardcoded colors and `!important`) live in `tooling/quality/conventions.ts`,
+Astro icon checks and stylesheet checks (hardcoded colors and `!important`) live in `tooling/quality/conventions.ts`,
 because Oxlint does not lint CSS.

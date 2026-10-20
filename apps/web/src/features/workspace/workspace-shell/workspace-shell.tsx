@@ -1,8 +1,8 @@
+import { Menu, Sparkles } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { SidebarProvider } from '@groam/ui/components/sidebar';
 import { useSidebar } from '@groam/ui/hooks/use-sidebar';
 import { Outlet, useLocation } from '@tanstack/react-router';
-import { Menu, Sparkles } from 'lucide-react';
 import { Link } from '@/features/workspace/navigation/router';
 import { CommandPalette } from '@/features/workspace/workspace-command/command-palette';
 import {

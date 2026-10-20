@@ -1,5 +1,5 @@
+import { GitBranch } from '@groam/icons';
 import { IconBadge } from '@groam/ui/components/icon-badge';
-import { GitBranch } from 'lucide-react';
 import { ideaStatusLabel } from '@/features/ideas/idea-status';
 import type { IdeaStatus } from '@/types/ideas';
 

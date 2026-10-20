@@ -1,5 +1,5 @@
+import { MonitorCog } from '@groam/icons';
 import { render } from '@groam/vitest-config/react';
-import { MonitorCog } from 'lucide-react';
 import { expect, test } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { SettingsAside } from './settings-aside';

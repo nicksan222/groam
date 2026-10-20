@@ -1,3 +1,4 @@
+import { CalendarDays, CalendarRange, Check, Sparkles } from '@groam/icons';
 import { Badge } from '@groam/ui/components/badge';
 import { Button } from '@groam/ui/components/button';
 import { Calendar } from '@groam/ui/components/calendar';
@@ -8,7 +9,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@groam/ui/components/po
 import Shell from '@groam/ui/components/shell/client';
 import { Spinner } from '@groam/ui/components/spinner';
 import { dateFromString, displayDate } from '@groam/ui/lib/calendar-date';
-import { CalendarDays, CalendarRange, Check, Sparkles } from 'lucide-react';
 import { type ReactNode, useId } from 'react';
 import { startIdeaCta } from '@/features/ideas/idea-list/idea-page-copy';
 import { useTripDurationPlanner } from '@/features/trips/hooks/use-trip-duration-planner';

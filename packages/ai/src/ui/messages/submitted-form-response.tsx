@@ -1,4 +1,4 @@
-import { ClipboardCheck } from 'lucide-react';
+import { ClipboardCheck } from '@groam/icons';
 
 export function SubmittedFormResponse({ entries }: { entries: Array<[string, string]> }) {
   return (

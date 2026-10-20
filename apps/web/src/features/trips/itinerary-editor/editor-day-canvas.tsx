@@ -1,3 +1,4 @@
+import { BedDouble, CalendarDays, ChevronDown, MapPin, Plus, Route } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import {
   DropdownMenu,
@@ -6,7 +7,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@groam/ui/components/dropdown-menu';
-import { BedDouble, CalendarDays, ChevronDown, MapPin, Plus, Route } from 'lucide-react';
 import { Fragment, type ReactNode } from 'react';
 import { entryPeriod, plannerPeriods } from '@/features/trips/hooks/trip-day-planner';
 import { PlannerPeriodHeading } from '@/features/trips/trip-planner/planner-period-heading';

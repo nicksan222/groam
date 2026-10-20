@@ -1,5 +1,5 @@
-import type { LucideIcon } from 'lucide-react';
-import { Bot, CircleDot, GitBranch, Map as MapIcon, MessageSquare } from 'lucide-react';
+import type { Icon } from '@groam/icons';
+import { Bot, CircleDot, GitBranch, Map as MapIcon, MessageSquare } from '@groam/icons';
 
 // oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 export type CommandPaletteSource = {
@@ -30,7 +30,7 @@ export type CommandPaletteMatch = {
     | { params: Record<string, string>; to: string }
     | { params: Record<string, string>; search?: Record<string, unknown>; to: string }
     | { to: string };
-  icon: LucideIcon;
+  icon: Icon;
   id: string;
   kind: string;
   label: string;

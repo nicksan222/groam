@@ -1,6 +1,6 @@
+import { ArrowRight } from '@groam/icons';
 import { Badge } from '@groam/ui/components/badge';
 import Shell from '@groam/ui/components/shell/client';
-import { ArrowRight } from 'lucide-react';
 import { proposalStatusLabel, relativeDate } from '@/features/dashboard/hooks/dashboard-model';
 import { IdeaWorkspaceLink } from '@/features/ideas/idea-list/idea-workspace-link';
 import type { WorkspaceTripProposal } from '@/features/trips/hooks/use-trips';

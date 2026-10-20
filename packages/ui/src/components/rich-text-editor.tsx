@@ -1,9 +1,9 @@
+import { Bold, Code, Italic, List, ListOrdered, Strikethrough } from '@groam/icons';
 import { cn } from '@groam/ui/lib/utils';
 import { CharacterCount, Placeholder } from '@tiptap/extensions';
 import { Markdown } from '@tiptap/markdown';
 import { type Editor, EditorContent, Extension, useEditor, useEditorState } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { Bold, Code, Italic, List, ListOrdered, Strikethrough } from 'lucide-react';
 import { type Ref, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
 import { Button } from './button';
 

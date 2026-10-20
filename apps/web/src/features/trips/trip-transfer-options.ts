@@ -8,7 +8,7 @@ import {
   Ship,
   TrainFront,
   TramFront
-} from 'lucide-react';
+} from '@groam/icons';
 import type { TransferView } from '@/types/trips';
 import type { TransportMode } from './hooks/use-trips';
 

@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { X } from '@groam/icons';
 import { AttachmentIcon } from '#ai/ui/attachments/attachment-icon';
 import type { AssistantAttachments } from './assistant-attachment-types';
 

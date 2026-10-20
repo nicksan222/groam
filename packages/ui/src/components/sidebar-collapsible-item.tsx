@@ -1,3 +1,4 @@
+import { ChevronRight } from '@groam/icons';
 import {
   Collapsible,
   CollapsibleContent,
@@ -8,7 +9,6 @@ import {
   SIDEBAR_NESTED_LIST_CLASS,
   sidebarSectionToggleLabel
 } from '@groam/ui/lib/sidebar-collapsible';
-import { ChevronRight } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 export type SidebarCollapsibleItemProps = {

@@ -1,10 +1,10 @@
 import type { Id } from '@groam/backend/data-model';
+import { MessageSquare } from '@groam/icons';
 import {
   ConversationTimeline,
   type ConversationTimelineItem
 } from '@groam/ui/components/conversation-timeline';
 import { EmptyScreen } from '@groam/ui/components/empty-screen';
-import { MessageSquare } from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { ComposerCommand } from '@/features/discussions/composer-commands/composer-command';
 import { useDiscussionMessageActions } from '@/features/discussions/hooks/use-discussion-message-actions';

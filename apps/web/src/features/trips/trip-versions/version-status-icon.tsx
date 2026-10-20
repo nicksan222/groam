@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, Pencil, Users } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Pencil, Users } from '@groam/icons';
 import { ideaStatusLabel } from '@/features/ideas/idea-status';
 import type { VersionStatus } from './proposal-types';
 

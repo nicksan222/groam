@@ -1,5 +1,6 @@
 'use client';
 
+import { ArrowDownIcon } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { cn } from '@groam/ui/lib/utils';
 import {
@@ -8,7 +9,6 @@ import {
   useMessageScrollerScrollable,
   useMessageScrollerVisibility
 } from '@shadcn/react/message-scroller';
-import { ArrowDownIcon } from 'lucide-react';
 import type * as React from 'react';
 
 function MessageScrollerProvider(

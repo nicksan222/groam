@@ -1,6 +1,6 @@
+import { SearchX } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { StatusPage } from '@groam/ui/components/status-page';
-import { SearchX } from 'lucide-react';
 import { Link } from '@/features/workspace/navigation/router';
 import { testIds } from '@/lib/test-ids';
 

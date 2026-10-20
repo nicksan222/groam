@@ -1,0 +1,34 @@
+{
+  "name": "@groam/icons",
+  "version": "0.0.0",
+  "dependencies": {
+    "lucide-react": "^1.48.0"
+  },
+  "devDependencies": {
+    "@groam/typescript-config": "workspace:*",
+    "@types/react": "^19.3.0",
+    "typescript": "~7.0.2",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./astro": "./src/icon.astro",
+    "./lost-pin": "./src/lost-pin.astro",
+    "./markup": "./src/markup.ts",
+    "./names": "./src/names.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "react": "^19.2.3"
+  },
+  "private": true,
+  "scripts": {
+    "lint": "vp check .",
+    "typecheck": "tsc --noEmit"
+  },
+  "type": "module"
+}

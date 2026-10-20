@@ -1,8 +1,8 @@
+import { ArrowDownWideNarrow } from '@groam/icons';
 import { RecordListToolbar } from '@groam/ui/components/record-list-toolbar';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@groam/ui/components/select';
 import type { DataTableResourceLabel } from '@groam/ui/lib/data-table';
 import type { RecordListSort } from '@groam/ui/lib/record-list';
-import { ArrowDownWideNarrow } from 'lucide-react';
 import { type ReactNode, useMemo, useState } from 'react';
 
 /** A content-first alternative to a table, with shared filtering chrome and local sorting. */

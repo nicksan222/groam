@@ -1,6 +1,6 @@
+import { ArrowRight } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { SHELL_EYEBROW } from '@groam/ui/lib/shell-card';
-import { ArrowRight } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 export type NextStepBannerProps = {

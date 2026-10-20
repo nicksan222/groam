@@ -30,6 +30,7 @@
         "@fontsource/google-sans-code": "^5.3.1",
         "@groam/brand": "workspace:*",
         "@groam/env": "workspace:*",
+        "@groam/icons": "workspace:*",
         "@groam/ui": "workspace:*",
         "astro": "^7.4.0",
         "parse5": "^8.0.1",
@@ -57,10 +58,10 @@
         "@groam/backend": "workspace:*",
         "@groam/brand": "workspace:*",
         "@groam/env": "workspace:*",
+        "@groam/icons": "workspace:*",
         "@groam/ui": "workspace:*",
         "@tanstack/react-router": "^1.170.40",
         "convex": "^1.46.0",
-        "lucide-react": "^1.48.0",
         "maplibre-gl": "^6.11.2",
         "qrcode": "^1.5.4",
         "react": "^19.3.0",
@@ -92,12 +93,12 @@
       "version": "0.0.0",
       "dependencies": {
         "@convex-dev/agent": "^0.7.3",
+        "@groam/icons": "workspace:*",
         "@groam/ui": "workspace:*",
         "@json-render/core": "0.21.0",
         "@json-render/react": "0.21.0",
         "@json-render/shadcn": "0.21.0",
         "convex": "^1.46.0",
-        "lucide-react": "^1.48.0",
         "zod": "^4.6.5",
       },
       "devDependencies": {
@@ -215,6 +216,23 @@
         "vite-plus": "catalog:",
       },
     },
+    "packages/icons": {
+      "name": "@groam/icons",
+      "version": "0.0.0",
+      "dependencies": {
+        "lucide-react": "^1.48.0",
+      },
+      "devDependencies": {
+        "@groam/typescript-config": "workspace:*",
+        "@types/react": "^19.3.0",
+        "typescript": "~7.0.2",
+        "vite": "catalog:",
+        "vite-plus": "catalog:",
+      },
+      "peerDependencies": {
+        "react": "^19.2.3",
+      },
+    },
     "packages/ui": {
       "name": "@groam/ui",
       "version": "0.0.0",
@@ -223,6 +241,7 @@
         "@fontsource-variable/google-sans-flex": "^5.3.1",
         "@fontsource/google-sans-code": "^5.3.1",
         "@groam/brand": "workspace:*",
+        "@groam/icons": "workspace:*",
         "@radix-ui/react-alert-dialog": "^1.1.15",
         "@radix-ui/react-avatar": "^1.1.10",
         "@radix-ui/react-dialog": "^1.1.15",
@@ -245,7 +264,6 @@
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "convex": "^1.46.0",
-        "lucide-react": "^1.48.0",
         "next-themes": "^0.4.6",
         "ogl": "^1.0.11",
         "radix-ui": "^1.6.7",
@@ -724,6 +742,8 @@
     "@groam/diagrams": ["@groam/diagrams@workspace:tooling/diagrams"],
 
     "@groam/env": ["@groam/env@workspace:packages/env"],
+
+    "@groam/icons": ["@groam/icons@workspace:packages/icons"],
 
     "@groam/landing": ["@groam/landing@workspace:apps/landing"],
 

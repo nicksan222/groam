@@ -1,8 +1,8 @@
+import { Search } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { DashedEmpty } from '@groam/ui/components/dashed-empty';
 import { PageLoading } from '@groam/ui/components/page-loading';
 import { RecordList } from '@groam/ui/components/record-list';
-import { Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { recordListSorts } from '@/features/workspace/workspace-list/record-list-sorts';
 import { testIds } from '@/lib/test-ids';

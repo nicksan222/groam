@@ -1,5 +1,5 @@
+import { KeyRound, Users } from '@groam/icons';
 import { FormFeedback } from '@groam/ui/components/form-feedback';
-import { KeyRound, Users } from 'lucide-react';
 import { InvitationsSection } from '@/features/group/group-invitations/invitations-section';
 import { MembersSection } from '@/features/group/group-members/members-section';
 import { useGroupActions } from '@/features/group/hooks/use-group-actions';

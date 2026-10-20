@@ -1,5 +1,5 @@
+import { MapPin } from '@groam/icons';
 import { render } from '@groam/vitest-config/react';
-import { MapPin } from 'lucide-react';
 import { expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { SelectRow } from './select-row';

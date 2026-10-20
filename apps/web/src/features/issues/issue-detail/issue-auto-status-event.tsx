@@ -1,6 +1,6 @@
+import { CheckCircle2, Circle, RotateCcw, Sparkles } from '@groam/icons';
 import Timeline from '@groam/ui/components/timeline';
 import { cn } from '@groam/ui/lib/utils';
-import { CheckCircle2, Circle, RotateCcw, Sparkles } from 'lucide-react';
 import { relativeIssueDate } from '@/features/issues/hooks/issue-relative-date';
 import { testIds } from '@/lib/test-ids';
 import { IssueEventChip } from './issue-event-chip';

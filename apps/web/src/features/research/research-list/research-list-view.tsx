@@ -1,7 +1,7 @@
 import type { Id } from '@groam/backend/data-model';
+import { Plus, Search } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { useNavigate } from '@tanstack/react-router';
-import { Plus, Search } from 'lucide-react';
 import { useCreateResearch } from '@/features/research/hooks/use-research-actions';
 import { useTripResearches } from '@/features/research/hooks/use-trip-researches';
 import { CreateResearchDialog } from '@/features/research/research-create/create-research-dialog';

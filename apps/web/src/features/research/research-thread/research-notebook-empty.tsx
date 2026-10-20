@@ -1,5 +1,5 @@
+import { FilePenLine } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { FilePenLine } from 'lucide-react';
 
 export function ResearchNotebookEmpty({ onCreate }: { onCreate?: () => void }) {
   return (

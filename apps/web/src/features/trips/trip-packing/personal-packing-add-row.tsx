@@ -1,8 +1,8 @@
+import { CornerDownLeft, Plus } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { Input } from '@groam/ui/components/input';
 import { Spinner } from '@groam/ui/components/spinner';
 import { cn } from '@groam/ui/lib/utils';
-import { CornerDownLeft, Plus } from 'lucide-react';
 import { type FormEvent, useId, useRef, useState } from 'react';
 import { testIds } from '@/lib/test-ids';
 

@@ -1,6 +1,6 @@
+import { MessageSquare } from '@groam/icons';
 import { EmptyScreen } from '@groam/ui/components/empty-screen';
 import { Skeleton } from '@groam/ui/components/skeleton';
-import { MessageSquare } from 'lucide-react';
 import type { DiscussionListItem } from '@/features/discussions/hooks/use-discussions';
 import { testIds } from '@/lib/test-ids';
 import { ChatListRow } from './chat-list-row';

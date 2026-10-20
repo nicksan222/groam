@@ -1,11 +1,11 @@
+import type { Icon } from '@groam/icons';
 import { Badge } from '@groam/ui/components/badge';
-import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 export type IconBadgeProps = {
   children: ReactNode;
   className?: string;
-  icon: LucideIcon;
+  icon: Icon;
 };
 
 function IconBadge({ children, className, icon: Icon }: IconBadgeProps) {

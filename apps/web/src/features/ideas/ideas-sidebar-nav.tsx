@@ -1,3 +1,4 @@
+import { GitBranch } from '@groam/icons';
 import {
   SidebarMenuButton,
   SidebarMenuSkeleton,
@@ -9,7 +10,6 @@ import { SidebarNestedLoadMore } from '@groam/ui/components/sidebar-nested-load-
 import { useSidebar } from '@groam/ui/hooks/use-sidebar';
 import { cn } from '@groam/ui/lib/utils';
 import { useLocation } from '@tanstack/react-router';
-import { GitBranch } from 'lucide-react';
 import { useViewerOpenIdeas, useWorkspaceIdeas } from '@/features/ideas/hooks/use-workspace-ideas';
 import {
   isViewerDraft,

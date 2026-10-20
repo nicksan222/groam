@@ -1,6 +1,6 @@
+import { RotateCcw } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { ChatMessage } from '@groam/ui/components/chat-message';
-import { RotateCcw } from 'lucide-react';
 import { MessagePresentation } from './message-presentation';
 import { SUBMITTED_FORM_RESPONSE_PREFIX } from './parse-submitted-form-response';
 import type { MessageKindProps } from './types';

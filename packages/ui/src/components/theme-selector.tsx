@@ -1,7 +1,7 @@
 'use client';
 
+import { type Icon, Monitor, Moon, Sun } from '@groam/icons';
 import { cn } from '@groam/ui/lib/utils';
-import { type LucideIcon, Monitor, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 /** Localized labels for the three theme cards; pass app i18n strings, not hard-coded copy. */
@@ -47,7 +47,7 @@ function ThemeCard({
   variant
 }: {
   active: boolean;
-  icon: LucideIcon;
+  icon: Icon;
   label: string;
   onClick: () => void;
   variant: 'light' | 'dark' | 'system';

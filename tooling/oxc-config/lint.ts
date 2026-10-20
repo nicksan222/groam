@@ -164,6 +164,16 @@ export const lint = {
 
     // Groam guardrails, scoped like the former Grit plugins.
     {
+      files: ['**/apps/**', '**/packages/**'],
+      excludeFiles: ['**/packages/icons/**'],
+      rules: { 'groam/no-raw-icons': 'error' }
+    },
+    {
+      // Brand artwork is owned by the brand package, rather than the icon catalog.
+      files: ['**/packages/brand/**'],
+      rules: { 'groam/no-raw-icons': ['error', { allowSvg: true }] }
+    },
+    {
       files: webSource,
       excludeFiles: ['**/apps/web/src/types/**', '**/apps/web/src/routeTree.gen.ts', ...webTests],
       rules: { 'groam/no-local-type-definitions': 'error' }

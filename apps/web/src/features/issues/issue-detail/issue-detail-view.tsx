@@ -1,10 +1,10 @@
 import type { Id } from '@groam/backend/data-model';
+import { CircleDot } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { EmptyScreen } from '@groam/ui/components/empty-screen';
 import { PageCrumbNav } from '@groam/ui/components/page-crumb-nav';
 import { PageLoading } from '@groam/ui/components/page-loading';
 import Shell from '@groam/ui/components/shell/client';
-import { CircleDot } from 'lucide-react';
 import { useIssueDetailAgentContext } from '@/features/issues/hooks/use-issues-agent-context';
 import { useTripIssue } from '@/features/trips/hooks/use-trip-issues';
 import { Link } from '@/features/workspace/navigation/router';

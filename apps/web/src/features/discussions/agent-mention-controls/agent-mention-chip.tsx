@@ -1,6 +1,6 @@
+import { X } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import type { MessageComposerApi } from '@groam/ui/components/message-composer';
-import { X } from 'lucide-react';
 import {
   AGENT_MENTION_TOKEN,
   hasAgentMention,

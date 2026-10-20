@@ -1,4 +1,4 @@
-import { Eye, Pencil } from 'lucide-react';
+import { Eye, Pencil } from '@groam/icons';
 import { useOptionalIdeaContext } from '@/features/ideas/hooks/use-idea-context';
 import { IdeaStatusBadge } from '@/features/ideas/idea-status-badge';
 import { testIds } from '@/lib/test-ids';

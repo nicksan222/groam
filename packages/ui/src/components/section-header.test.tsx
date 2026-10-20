@@ -1,5 +1,5 @@
+import { Route } from '@groam/icons';
 import { render } from '@groam/vitest-config/react';
-import { Route } from 'lucide-react';
 import { expect, test } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { SectionHeader, TripSectionHeader } from './section-header';

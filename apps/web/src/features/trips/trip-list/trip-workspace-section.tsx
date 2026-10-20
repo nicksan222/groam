@@ -1,6 +1,6 @@
+import { ArrowRight, CalendarDays, Compass, MapPin } from '@groam/icons';
 import { CoverFrame } from '@groam/ui/components/cover-frame';
 import { Skeleton } from '@groam/ui/components/skeleton';
-import { ArrowRight, CalendarDays, Compass, MapPin } from 'lucide-react';
 import type { TripListItem, WorkspaceTripProposal } from '@/features/trips/hooks/use-trips';
 import { latestTripActivityAt, relativeTripDate } from '@/features/trips/trip-list/trip-list-order';
 import { Link } from '@/features/workspace/navigation/router';

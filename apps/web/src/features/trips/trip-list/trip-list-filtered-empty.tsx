@@ -1,5 +1,5 @@
+import { Map as MapIcon } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { Map as MapIcon } from 'lucide-react';
 
 /**
  * Shown when filters hide every loaded trip. While later pages are still being searched it

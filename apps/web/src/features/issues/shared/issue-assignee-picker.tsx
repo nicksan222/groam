@@ -1,4 +1,5 @@
 import { assistantAgents } from '@groam/ai/agents';
+import { Check } from '@groam/icons';
 import { MenuRow } from '@groam/ui/components/menu-row';
 import {
   Popover,
@@ -9,7 +10,6 @@ import {
   PopoverTrigger
 } from '@groam/ui/components/popover';
 import { shellCardHeaderVariants } from '@groam/ui/lib/shell-card';
-import { Check } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { IssueAssigneeAvatar } from '@/features/issues/shared/issue-assignee-avatar';
 import { useWorkspace } from '@/features/workspace/workspace-shell/workspace-state';

@@ -1,6 +1,6 @@
 import { ruleLabel } from '@groam/backend/convex/modules/travel/issues/rules/index';
+import { CircleCheck, ListPlus, Plus, Workflow } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { CircleCheck, ListPlus, Plus, Workflow } from 'lucide-react';
 import { testIds } from '@/lib/test-ids';
 import type { IssueRule, RuleDraft } from '@/types/issues';
 import { RuleClauseRow } from './rule-clause-row';

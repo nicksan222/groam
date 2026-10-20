@@ -1,5 +1,5 @@
+import { Luggage } from '@groam/icons';
 import Shell from '@groam/ui/components/shell/client';
-import { Luggage } from 'lucide-react';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { TripSectionPanel } from '@/features/trips/trip-detail/trip-section-panel';
 import { testIds } from '@/lib/test-ids';

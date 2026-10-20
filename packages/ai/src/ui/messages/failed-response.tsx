@@ -1,5 +1,5 @@
+import { CircleAlert, RotateCcw } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { CircleAlert, RotateCcw } from 'lucide-react';
 import { assistantFailureMessage } from '#ai/backend/errors';
 
 export function FailedResponse({

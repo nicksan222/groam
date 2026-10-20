@@ -1,5 +1,5 @@
+import { BedDouble, FileText, MapPin, Route } from '@groam/icons';
 import { Markdown } from '@groam/ui/components/markdown';
-import { BedDouble, FileText, MapPin, Route } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { entryTime } from '@/features/trips/hooks/trip-day-planner';
 import { formatTripLineCost } from '@/features/trips/trip-forms/trip-cost';

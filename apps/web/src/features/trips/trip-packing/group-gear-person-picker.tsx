@@ -1,8 +1,8 @@
+import { UserPlus } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { Input } from '@groam/ui/components/input';
 import { MenuRow } from '@groam/ui/components/menu-row';
 import { Popover, PopoverContent, PopoverTrigger } from '@groam/ui/components/popover';
-import { UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import type { GearTraveler } from '@/types/packing';
 import { PackingPersonAvatar } from './packing-person-avatar';

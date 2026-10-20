@@ -1,9 +1,9 @@
 import { useSetAgentContext } from '@groam/ai/ui/context/agent-context';
 import type { Id } from '@groam/backend/data-model';
+import { Search } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { EmptyScreen } from '@groam/ui/components/empty-screen';
 import { PageLoading } from '@groam/ui/components/page-loading';
-import { Search } from 'lucide-react';
 import { useResearch } from '@/features/research/hooks/use-research';
 import { Link } from '@/features/workspace/navigation/router';
 import { ResearchWorkspace } from './research-workspace';

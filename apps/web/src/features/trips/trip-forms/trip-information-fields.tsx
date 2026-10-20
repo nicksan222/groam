@@ -1,8 +1,8 @@
+import type { Icon } from '@groam/icons';
+import { CalendarDays, ChevronDown, Coins, MapPinned } from '@groam/icons';
 import { FormField } from '@groam/ui/components/form-field';
 import { IconTile } from '@groam/ui/components/icon-tile';
 import { Input } from '@groam/ui/components/input';
-import type { LucideIcon } from 'lucide-react';
-import { CalendarDays, ChevronDown, Coins, MapPinned } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { TripDestinationPicker } from '@/features/trips/trip-destinations/trip-destination-picker';
 import { TripCurrencySelect } from '@/features/trips/trip-forms/trip-currency-select';
@@ -19,7 +19,7 @@ function FormSection({
 }: {
   children: ReactNode;
   description: string;
-  icon: LucideIcon;
+  icon: Icon;
   title: string;
 }) {
   return (

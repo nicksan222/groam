@@ -1,5 +1,5 @@
+import { FileText } from '@groam/icons';
 import { cn } from '@groam/ui/lib/utils';
-import { FileText } from 'lucide-react';
 import type { ResolutionMedia } from '@/features/trips/hooks/detail-resolution-values';
 import { formatBytes } from '@/features/trips/hooks/version-format';
 

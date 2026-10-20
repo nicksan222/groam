@@ -1,6 +1,6 @@
+import { Check, Send } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { RichTextEditor } from '@groam/ui/components/rich-text-editor';
-import { Check, Send } from 'lucide-react';
 import { useState } from 'react';
 
 export type AssistantChoice = {

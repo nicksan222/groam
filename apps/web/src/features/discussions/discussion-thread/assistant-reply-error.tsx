@@ -1,4 +1,4 @@
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle } from '@groam/icons';
 import { Link } from '@/features/workspace/navigation/router';
 
 const CHATGPT_PATTERN = /chatgpt/i;

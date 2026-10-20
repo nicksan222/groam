@@ -1,5 +1,5 @@
+import { ArrowLeftRight } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { ArrowLeftRight } from 'lucide-react';
 import { needsSharedTripUpdate } from '@/features/ideas/hooks/idea-needs-update';
 import { IdeaUpdateFlow } from '@/features/ideas/idea-update/idea-update-flow';
 import { TripInlineNotice } from '@/features/trips/trip-detail/trip-inline-notice';

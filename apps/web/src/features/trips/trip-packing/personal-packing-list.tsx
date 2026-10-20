@@ -1,6 +1,6 @@
+import { Luggage } from '@groam/icons';
 import { DashedEmpty } from '@groam/ui/components/dashed-empty';
 import { LoadingPlaceholder } from '@groam/ui/components/loading-placeholder';
-import { Luggage } from 'lucide-react';
 import { useTripPersonalPacking } from '@/features/trips/hooks/use-trip-personal-packing';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { PersonalPackingAddRow } from './personal-packing-add-row';

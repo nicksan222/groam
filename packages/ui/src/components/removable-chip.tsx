@@ -1,11 +1,11 @@
+import type { Icon } from '@groam/icons';
+import { X } from '@groam/icons';
 import { cn } from '@groam/ui/lib/utils';
-import type { LucideIcon } from 'lucide-react';
-import { X } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 export type RemovableChipProps = {
   disabled?: boolean;
-  icon?: LucideIcon;
+  icon?: Icon;
   label: ReactNode;
   onRemove: () => void;
   removeLabel: string;

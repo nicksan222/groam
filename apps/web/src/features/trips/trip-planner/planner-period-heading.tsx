@@ -1,4 +1,4 @@
-import { Moon, Sun, Sunrise, Sunset } from 'lucide-react';
+import { Moon, Sun, Sunrise, Sunset } from '@groam/icons';
 import type { PlannerPeriod } from '@/types/trip-planner';
 
 const periodIcons = { full_day: Moon, morning: Sunrise, afternoon: Sun, evening: Sunset };

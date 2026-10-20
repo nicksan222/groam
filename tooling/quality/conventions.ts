@@ -71,6 +71,7 @@ export type ConventionCategory =
   | 'names'
   | 'parent-imports'
   | 'raw-convex-access'
+  | 'raw-astro-icons'
   | 'route-imports'
   | 'ui-imports'
   | 'ui-internal-imports'
@@ -171,6 +172,7 @@ export function inspectFile(
   if (!sourceExtension.test(filePath)) return findings;
 
   findings.push(...inspectComponentFile(filePath, source));
+  findings.push(...inspectAstroIcons(filePath, source));
 
   if (!tanstackRoute.test(filePath) && !astroDynamicRoute.test(filePath)) {
     const baseName = filePath.slice(filePath.lastIndexOf('/') + 1).replace(sourceExtension, '');
@@ -383,4 +385,25 @@ function isAllowedRouteSpecifier(specifier: string, options?: InspectOptions): b
       ? specifier.startsWith(entry)
       : specifier === entry || specifier.startsWith(`${entry}/`)
   );
+}
+
+function inspectAstroIcons(filePath: string, source: string): ConventionFinding[] {
+  if (
+    filePath.endsWith('.astro') &&
+    /^(?:apps|packages)\//u.test(filePath) &&
+    !filePath.startsWith('packages/icons/')
+  ) {
+    const svgTags = source.match(/<svg\b[^>]*>/gu) ?? [];
+    const rawSvg =
+      !filePath.startsWith('packages/brand/') &&
+      svgTags.some((tag) => !/\sdata-illustration(?:\s|=|>)/u.test(tag));
+    const rawProvider =
+      /(?:from\s+|import\(\s*|^import\s+)['"](?:lucide(?:-[\w-]+)?|react-icons|@(?:lucide|heroicons|tabler|phosphor-icons|iconify|fortawesome)\/[^/'"]+|@radix-ui\/react-icons)(?:\/|['"])/mu.test(
+        source
+      );
+    if (rawSvg || rawProvider) {
+      return [{ category: 'raw-astro-icons', location: filePath }];
+    }
+  }
+  return [];
 }

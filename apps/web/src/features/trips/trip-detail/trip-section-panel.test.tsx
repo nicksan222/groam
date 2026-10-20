@@ -1,5 +1,5 @@
+import { Map } from '@groam/icons';
 import { render } from '@groam/vitest-config/react';
-import { Map } from 'lucide-react';
 import { describe, expect, test } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { TripSectionPanel } from './trip-section-panel';

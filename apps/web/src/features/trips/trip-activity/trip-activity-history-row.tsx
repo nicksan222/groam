@@ -1,6 +1,6 @@
+import { History } from '@groam/icons';
 import { RecordListBadge } from '@groam/ui/components/record-list-badge';
 import { RecordListItem } from '@groam/ui/components/record-list-item';
-import { History } from 'lucide-react';
 import {
   activityTypeLabels,
   type TripActivityItem

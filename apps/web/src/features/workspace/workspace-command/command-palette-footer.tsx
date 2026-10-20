@@ -1,5 +1,5 @@
+import { ArrowDown, ArrowUp, CornerDownLeft } from '@groam/icons';
 import { Kbd } from '@groam/ui/components/kbd';
-import { ArrowDown, ArrowUp, CornerDownLeft } from 'lucide-react';
 
 export function CommandPaletteFooter({ count }: { count: number }) {
   return (

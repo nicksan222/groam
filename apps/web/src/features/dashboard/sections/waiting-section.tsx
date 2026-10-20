@@ -1,6 +1,6 @@
+import { ArrowRight } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import Shell from '@groam/ui/components/shell/client';
-import { ArrowRight } from 'lucide-react';
 import { relativeDate } from '@/features/dashboard/hooks/dashboard-model';
 import { IdeaWorkspaceLink } from '@/features/ideas/idea-list/idea-workspace-link';
 import type { WorkspaceTripProposal } from '@/features/trips/hooks/use-trips';

@@ -23,6 +23,24 @@ describe('invalidPackageDependencies', () => {
     ).toEqual([]);
   });
 
+  test('allows shared icons without a dependency back into consumers', () => {
+    for (const name of ['@groam/ai', '@groam/ui']) {
+      expect(
+        invalidPackageDependencies({
+          name,
+          dependencies: { '@groam/icons': 'workspace:*' }
+        })
+      ).toEqual([]);
+    }
+    expect(invalidPackageDependencies({ name: '@groam/icons' })).toEqual([]);
+    expect(
+      invalidPackageDependencies({
+        name: '@groam/icons',
+        dependencies: { '@groam/ui': 'workspace:*' }
+      })
+    ).toEqual(['@groam/icons -> @groam/ui']);
+  });
+
   test('rejects unlisted edges and unknown packages', () => {
     expect(
       invalidPackageDependencies({

@@ -1,18 +1,6 @@
 // Site map shared by the navigation, footer, features hub, and feature pages.
 
-export type IconName =
-  | 'agent'
-  | 'arrow-right'
-  | 'calendar'
-  | 'chat'
-  | 'check'
-  | 'close'
-  | 'idea'
-  | 'issue'
-  | 'menu'
-  | 'pause'
-  | 'play'
-  | 'users';
+import type { IconName } from '@groam/icons/names';
 
 export type Feature = {
   slug: 'itinerary' | 'ideas' | 'issues' | 'conversations' | 'ai';

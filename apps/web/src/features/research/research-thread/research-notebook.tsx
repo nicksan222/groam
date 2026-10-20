@@ -1,6 +1,6 @@
 import type { Id } from '@groam/backend/data-model';
+import { Plus } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useDiscussionThread } from '@/features/discussions/hooks/use-discussion-thread';
 import { useSaveResearchNote } from '@/features/research/hooks/use-save-research-note';

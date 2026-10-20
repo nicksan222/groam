@@ -1,5 +1,5 @@
 import type { Id } from '@groam/backend/data-model';
-import { Users } from 'lucide-react';
+import { Users } from '@groam/icons';
 import { useOptionalIdeaContext } from '@/features/ideas/hooks/use-idea-context';
 import { TripInlineNotice } from '@/features/trips/trip-detail/trip-inline-notice';
 

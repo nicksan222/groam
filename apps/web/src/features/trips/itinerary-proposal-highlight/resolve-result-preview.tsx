@@ -1,4 +1,4 @@
-import { Check, CircleDot } from 'lucide-react';
+import { Check, CircleDot } from '@groam/icons';
 import type { ResolutionRow } from '@/features/trips/hooks/detail-resolution-values';
 import type { DetailsResolveChoice } from '@/types/trips';
 import { ResolveDiffContent } from './resolve-diff-content';

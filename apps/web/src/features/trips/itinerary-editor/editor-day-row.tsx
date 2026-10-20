@@ -1,5 +1,5 @@
+import { Pencil } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { Pencil } from 'lucide-react';
 import {
   activityChangeKey,
   stayChangeKey

@@ -1,6 +1,6 @@
+import { Route } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { Spinner } from '@groam/ui/components/spinner';
-import { Route } from 'lucide-react';
 import { testIds } from '@/lib/test-ids';
 
 export function TransferActions({

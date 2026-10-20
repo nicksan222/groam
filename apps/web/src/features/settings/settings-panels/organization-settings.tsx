@@ -1,3 +1,4 @@
+import { Building2, Link2, Trash2, TriangleAlert, UploadCloud, X } from '@groam/icons';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,7 +22,6 @@ import { Spinner } from '@groam/ui/components/spinner';
 import { initials } from '@groam/ui/lib/avatar';
 import { SHELL_DESCRIPTION, SHELL_PAGE_INSET, SHELL_TITLE_TEXT } from '@groam/ui/lib/shell-layout';
 import { cn } from '@groam/ui/lib/utils';
-import { Building2, Link2, Trash2, TriangleAlert, UploadCloud, X } from 'lucide-react';
 import { type ChangeEvent, type FormEvent, useRef } from 'react';
 import { useOrganizationSettings } from '@/features/settings/hooks/use-organization-settings';
 import {

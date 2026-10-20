@@ -1,6 +1,6 @@
+import { Maximize2, Minimize2, Plus, X } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { Sheet, SheetContent, SheetTitle } from '@groam/ui/components/sheet';
-import { Maximize2, Minimize2, Plus, X } from 'lucide-react';
 import { type CSSProperties, useEffect, useState } from 'react';
 import type { AssistantAttachments } from '#ai/ui/attachments/assistant-attachments';
 import { AssistantChatMenu } from '#ai/ui/chat/assistant-chat-menu';

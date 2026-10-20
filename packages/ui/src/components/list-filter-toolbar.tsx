@@ -1,3 +1,4 @@
+import { CirclePlus, X } from '@groam/icons';
 import { Badge } from '@groam/ui/components/badge';
 import { Button } from '@groam/ui/components/button';
 import { SearchInput } from '@groam/ui/components/search-input';
@@ -10,7 +11,6 @@ import {
   listFilterTriggerClassName
 } from '@groam/ui/lib/data-table';
 import { cn } from '@groam/ui/lib/utils';
-import { CirclePlus, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 export type ListFilterOption<Status extends string> = {

@@ -1,4 +1,13 @@
 import type { Id } from '@groam/backend/data-model';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  CircleDot,
+  Columns2,
+  GitMerge,
+  ListChecks
+} from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import {
   Dialog,
@@ -9,15 +18,6 @@ import {
 } from '@groam/ui/components/dialog';
 import { Spinner } from '@groam/ui/components/spinner';
 import { cn } from '@groam/ui/lib/utils';
-import {
-  ArrowLeft,
-  ArrowRight,
-  Check,
-  CircleDot,
-  Columns2,
-  GitMerge,
-  ListChecks
-} from 'lucide-react';
 import { useState } from 'react';
 import type { ResolutionRow } from '@/features/trips/hooks/detail-resolution-values';
 import { Link } from '@/features/workspace/navigation/router';

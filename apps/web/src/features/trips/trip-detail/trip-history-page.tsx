@@ -1,4 +1,4 @@
-import { History } from 'lucide-react';
+import { History } from '@groam/icons';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { TripActivityHistory } from '@/features/trips/trip-activity/trip-activity-history';
 import { TripSectionPanel } from '@/features/trips/trip-detail/trip-section-panel';

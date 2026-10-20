@@ -1,6 +1,5 @@
 import { CHATGPT_RECONNECT } from '@groam/ai/backend/errors';
 import { presentAgentRunMessage } from '@groam/ai/backend/runs/copy';
-import Timeline from '@groam/ui/components/timeline';
 import {
   AlertCircle,
   CheckCircle2,
@@ -8,7 +7,8 @@ import {
   CircleStop,
   Hourglass,
   LoaderCircle
-} from 'lucide-react';
+} from '@groam/icons';
+import Timeline from '@groam/ui/components/timeline';
 import type { AgentRun } from '@/features/agents/hooks/use-agent';
 import { AgentRunToolbar } from './agent-run-toolbar';
 

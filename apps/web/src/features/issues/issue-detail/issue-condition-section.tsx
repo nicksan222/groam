@@ -1,6 +1,6 @@
+import { Settings2 } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { DetailSection } from '@groam/ui/components/detail-section';
-import { Settings2 } from 'lucide-react';
 import { useState } from 'react';
 import { testIds } from '@/lib/test-ids';
 import type { IssueCondition, IssueConditionInput } from '@/types/issues';

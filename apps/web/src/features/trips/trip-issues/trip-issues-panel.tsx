@@ -1,7 +1,7 @@
 import { isResolved } from '@groam/backend/convex/modules/travel/issues/status';
+import { MessageSquareText, Plus } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { useNavigate } from '@tanstack/react-router';
-import { MessageSquareText, Plus } from 'lucide-react';
 import { CreateIssueDialog } from '@/features/issues/issue-list/create-issue-dialog';
 import { IssueList } from '@/features/issues/issue-list/issue-list';
 import { useTripIssues } from '@/features/trips/hooks/use-trip-issues';

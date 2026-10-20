@@ -1,5 +1,5 @@
+import { MapPin } from '@groam/icons';
 import Shell from '@groam/ui/components/shell/client';
-import { MapPin } from 'lucide-react';
 import { destinationMoveClearsTravel } from '@/features/trips/hooks/trip-destination-form-state';
 import { DestinationControls } from '@/features/trips/trip-destinations/destination-controls';
 import { DestinationScheduleEditor } from '@/features/trips/trip-destinations/destination-schedule-editor';

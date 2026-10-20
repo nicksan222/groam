@@ -1,6 +1,6 @@
 ---
 import AuthorAvatar from '@/components/author-avatar.astro';
-import Icon from '@/components/icon.astro';
+import Icon from '@groam/icons/astro';
 import { sintraIdea } from '@/content/example-trip';
 import { days, demoStrings, panels } from '@/content/feature-itinerary';
 
@@ -60,10 +60,10 @@ const people = ['maya', 'jonas', 'priya', 'sam'] as const;
                 </div>
                 <span class="mv">
                   <button type="button" class="mv-btn" data-move="-1" aria-label={`Move ${slot.title} up`}>
-                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 10 4-4 4 4" /></svg>
+                    <Icon name="chevron-up" />
                   </button>
                   <button type="button" class="mv-btn" data-move="1" aria-label={`Move ${slot.title} down`}>
-                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" /></svg>
+                    <Icon name="chevron-down" />
                   </button>
                 </span>
               </li>
@@ -362,7 +362,7 @@ const people = ['maya', 'jonas', 'priya', 'sam'] as const;
     opacity: 0.3;
     cursor: default;
   }
-  .mv-btn svg {
+  .mv-btn :global(svg) {
     position: relative;
     width: 16px;
     height: 16px;

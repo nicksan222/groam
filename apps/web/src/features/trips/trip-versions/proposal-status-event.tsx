@@ -1,5 +1,5 @@
+import { CheckCircle2, X } from '@groam/icons';
 import Timeline from '@groam/ui/components/timeline';
-import { CheckCircle2, X } from 'lucide-react';
 
 export function ProposalStatusEvent({
   authorName,

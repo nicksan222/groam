@@ -1,6 +1,6 @@
+import { Search } from '@groam/icons';
 import { Input } from '@groam/ui/components/input';
 import { cn } from '@groam/ui/lib/utils';
-import { Search } from 'lucide-react';
 import type * as React from 'react';
 
 function SearchInput({

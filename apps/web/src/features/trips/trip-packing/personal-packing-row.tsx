@@ -1,6 +1,6 @@
+import { Check, X } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { cn } from '@groam/ui/lib/utils';
-import { Check, X } from 'lucide-react';
 import { testIds } from '@/lib/test-ids';
 import type { PersonalPackingItem } from '@/types/packing';
 import { useChanged, usePendingWrite } from './use-packing-motion';

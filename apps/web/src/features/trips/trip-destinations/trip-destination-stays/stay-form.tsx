@@ -1,10 +1,10 @@
+import { FileText, Paperclip, X } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { DayTimeRangePicker } from '@groam/ui/components/day-time-range-picker';
 import { FormField } from '@groam/ui/components/form-field';
 import { Input } from '@groam/ui/components/input';
 import { RichTextEditor } from '@groam/ui/components/rich-text-editor';
 import { Spinner } from '@groam/ui/components/spinner';
-import { FileText, Paperclip, X } from 'lucide-react';
 import type { RefObject } from 'react';
 import { mediaFileAccept } from '@/features/media/media-validation';
 import {

@@ -1,5 +1,5 @@
+import { MessageSquareText } from '@groam/icons';
 import Timeline from '@groam/ui/components/timeline';
-import { MessageSquareText } from 'lucide-react';
 import { conversationEmptyBody } from '@/features/ideas/idea-list/idea-page-copy';
 import type { VersionStatus } from './proposal-types';
 

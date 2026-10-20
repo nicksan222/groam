@@ -1,6 +1,6 @@
+import { Archive, RotateCcw } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { Spinner } from '@groam/ui/components/spinner';
-import { Archive, RotateCcw } from 'lucide-react';
 import { useArchiveTrip } from '@/features/trips/hooks/use-archive-trip';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import type { TripState } from '@/features/trips/trip-detail/trip-detail-types';

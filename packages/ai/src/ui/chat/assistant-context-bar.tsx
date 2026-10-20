@@ -1,4 +1,4 @@
-import { PanelsTopLeft, Paperclip } from 'lucide-react';
+import { PanelsTopLeft, Paperclip } from '@groam/icons';
 
 export function AssistantContextBar({
   attachments,

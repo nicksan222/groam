@@ -1,8 +1,8 @@
+import { CalendarDays, ChevronDown } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { FormField } from '@groam/ui/components/form-field';
 import { Input } from '@groam/ui/components/input';
 import { Spinner } from '@groam/ui/components/spinner';
-import { CalendarDays, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import {
   canSaveDestinationSchedule,

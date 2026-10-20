@@ -1,8 +1,8 @@
+import { CircleDot, Plus } from '@groam/icons';
 import { EmptyScreen } from '@groam/ui/components/empty-screen';
 import { PageLoading } from '@groam/ui/components/page-loading';
 import Shell from '@groam/ui/components/shell/client';
 import { useNavigate } from '@tanstack/react-router';
-import { CircleDot, Plus } from 'lucide-react';
 import { useIssueListAgentContext } from '@/features/issues/hooks/use-issues-agent-context';
 import { useWorkspaceIssues } from '@/features/issues/hooks/use-workspace-issues';
 import { CreateIssueDialog } from '@/features/issues/issue-list/create-issue-dialog';

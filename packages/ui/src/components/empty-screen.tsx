@@ -1,4 +1,4 @@
-import { List } from 'lucide-react';
+import { List } from '@groam/icons';
 import type React from 'react';
 import type { ReactNode } from 'react';
 import { cn } from '#src/lib/utils';

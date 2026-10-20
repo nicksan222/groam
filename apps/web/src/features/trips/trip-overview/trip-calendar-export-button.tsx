@@ -1,5 +1,5 @@
+import { Calendar } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { Calendar } from 'lucide-react';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import {
   exportTripCalendar,

@@ -1,4 +1,5 @@
 ---
+import Icon from '@groam/icons/astro';
 import { lane, laneTrips } from '@/content/pricing';
 import PageSection from '@/components/page-section.astro';
 
@@ -15,10 +16,10 @@ const copies = [0, 1];
       <span class="example-label">Example trips</span>
       <button class="loop-toggle" type="button" data-toggle data-paused="false" hidden>
         <span class="icon when-playing" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6v12M15 6v12" stroke-width="2" /></svg>
+          <Icon name="pause" />
         </span>
         <span class="icon when-paused" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l10-6.5-10-6.5Z" /></svg>
+          <Icon name="play" filled />
         </span>
         <span class="sr">Pause trip lane</span>
       </button>
@@ -106,7 +107,7 @@ const copies = [0, 1];
     background: var(--ink);
     color: var(--paper);
   }
-  .icon svg {
+  .icon :global(svg) {
     width: 16px;
     height: 16px;
     display: block;

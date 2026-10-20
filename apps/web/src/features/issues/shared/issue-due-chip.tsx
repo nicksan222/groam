@@ -1,7 +1,7 @@
 import { isResolved } from '@groam/backend/convex/modules/travel/issues/status';
+import { CalendarClock } from '@groam/icons';
 import { cardChip, cardChipTone } from '@groam/ui/lib/board-card';
 import { cn } from '@groam/ui/lib/utils';
-import { CalendarClock } from 'lucide-react';
 import { testIds } from '@/lib/test-ids';
 import type { IssueStatus } from '@/types/issues';
 

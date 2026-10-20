@@ -1,5 +1,5 @@
+import { MonitorCog, Sparkles } from '@groam/icons';
 import { ThemeSelector } from '@groam/ui/components/theme-selector';
-import { MonitorCog, Sparkles } from 'lucide-react';
 import {
   SettingsAside,
   SettingsPanel,

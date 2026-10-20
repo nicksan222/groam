@@ -1,6 +1,6 @@
+import { ChevronDown, MessageSquare, Minus, Pencil, Plus } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import Shell from '@groam/ui/components/shell/client';
-import { ChevronDown, MessageSquare, Minus, Pencil, Plus } from 'lucide-react';
 import { useId } from 'react';
 import type { useTripVersion } from '@/features/trips/hooks/use-trip-versions';
 import { isEmptyDiffField } from '@/features/trips/hooks/version-format';

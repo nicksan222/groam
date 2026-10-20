@@ -1,6 +1,6 @@
+import { ArrowLeft } from '@groam/icons';
 import { Skeleton } from '@groam/ui/components/skeleton';
 import { Slot } from '@radix-ui/react-slot';
-import { ArrowLeft } from 'lucide-react';
 import { cloneElement, Fragment, isValidElement, type ReactElement, type ReactNode } from 'react';
 import { cn } from '#src/lib/utils';
 import {

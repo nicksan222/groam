@@ -1,4 +1,4 @@
-import { LoaderCircle } from 'lucide-react';
+import { LoaderCircle } from '@groam/icons';
 
 export type AgentActivityMode = 'connecting' | 'thinking' | 'writing';
 

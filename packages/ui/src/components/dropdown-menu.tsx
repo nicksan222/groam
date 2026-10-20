@@ -1,8 +1,8 @@
 'use client';
 
+import { CheckIcon, ChevronRightIcon, CircleIcon } from '@groam/icons';
 import { cn } from '@groam/ui/lib/utils';
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
-import { CheckIcon, ChevronRightIcon, CircleIcon } from 'lucide-react';
 import type * as React from 'react';
 
 function DropdownMenu({ ...props }: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {

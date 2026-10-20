@@ -1,5 +1,5 @@
+import { ArrowRight } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { ArrowRight } from 'lucide-react';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { Link } from '@/features/workspace/navigation/router';
 import { testIds } from '@/lib/test-ids';

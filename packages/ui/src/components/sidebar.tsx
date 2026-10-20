@@ -1,5 +1,6 @@
 'use client';
 
+import { PanelLeftIcon } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { Input } from '@groam/ui/components/input';
 import { Separator } from '@groam/ui/components/separator';
@@ -21,7 +22,6 @@ import { useIsMobile } from '@groam/ui/hooks/use-mobile';
 import { SidebarContext, type SidebarContextValue, useSidebar } from '@groam/ui/hooks/use-sidebar';
 import { cn } from '@groam/ui/lib/utils';
 import { Slot } from '@radix-ui/react-slot';
-import { PanelLeftIcon } from 'lucide-react';
 import * as React from 'react';
 
 const SIDEBAR_WIDTH = '16rem';

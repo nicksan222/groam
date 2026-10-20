@@ -1,3 +1,4 @@
+import { MoreHorizontal, Pencil, SmilePlus, Trash2 } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import {
   DropdownMenu,
@@ -7,7 +8,6 @@ import {
 } from '@groam/ui/components/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@groam/ui/components/popover';
 import { cn } from '@groam/ui/lib/utils';
-import { MoreHorizontal, Pencil, SmilePlus, Trash2 } from 'lucide-react';
 import { useThreadMessageChrome } from '@/features/discussions/hooks/use-thread-message-chrome';
 import { useConfirm } from '@/features/workspace/workspace-shell/use-confirm-dialog';
 import { testIds } from '@/lib/test-ids';

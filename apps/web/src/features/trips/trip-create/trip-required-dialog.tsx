@@ -1,3 +1,4 @@
+import { MapPin } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import {
   Dialog,
@@ -7,7 +8,6 @@ import {
   DialogHeader,
   DialogTitle
 } from '@groam/ui/components/dialog';
-import { MapPin } from 'lucide-react';
 import { Link } from '@/features/workspace/navigation/router';
 
 export function TripRequiredDialog({

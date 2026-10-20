@@ -1,3 +1,4 @@
+import { Archive, ExternalLink, ImageIcon, Link2, MoreHorizontal, Star } from '@groam/icons';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,7 +12,6 @@ import {
   SidebarMenuSubItem
 } from '@groam/ui/components/sidebar';
 import { cn } from '@groam/ui/lib/utils';
-import { Archive, ExternalLink, ImageIcon, Link2, MoreHorizontal, Star } from 'lucide-react';
 import type { TripListItem } from '@/features/trips/hooks/use-trips';
 import { CanonicalLink } from '@/features/workspace/navigation/router';
 

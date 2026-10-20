@@ -35,7 +35,8 @@ are working across.
 Application features and navigation live in `apps/web`. `packages/backend` owns
 server entry points, domain policies and integrations. `packages/ai` shares AI
 contracts and presentation; it does not grant database authority. `packages/ui`
-and `packages/brand` supply presentation foundations. `packages/auth` connects
+and `packages/brand` supply presentation foundations. `packages/icons` owns
+the shared icon catalog and isolates icon provider dependencies. `packages/auth` connects
 clients to server-owned identity, and `packages/env` validates configuration
 at runtime boundaries. `tooling` owns development, verification and delivery.
 

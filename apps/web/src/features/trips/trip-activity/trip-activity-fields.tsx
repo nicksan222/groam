@@ -1,3 +1,4 @@
+import { CalendarDays, FileText, MoonStar, Paperclip, SunMedium, Sunrise, X } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { DayTimeRangePicker } from '@groam/ui/components/day-time-range-picker';
 import { FormFeedback } from '@groam/ui/components/form-feedback';
@@ -6,7 +7,6 @@ import { Input } from '@groam/ui/components/input';
 import { RichTextEditor } from '@groam/ui/components/rich-text-editor';
 import Shell from '@groam/ui/components/shell/client';
 import { Spinner } from '@groam/ui/components/spinner';
-import { CalendarDays, FileText, MoonStar, Paperclip, SunMedium, Sunrise, X } from 'lucide-react';
 import { mediaFileAccept } from '@/features/media/media-validation';
 import type { TripActivityEditor } from '@/features/trips/hooks/use-trip-activity-editor';
 import { tripCostError } from '@/features/trips/trip-forms/trip-cost';

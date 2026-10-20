@@ -1,3 +1,4 @@
+import { ArrowUpRight, X } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import {
   Select,
@@ -6,7 +7,6 @@ import {
   SelectTrigger,
   SelectValue
 } from '@groam/ui/components/select';
-import { ArrowUpRight, X } from 'lucide-react';
 import { useState } from 'react';
 import type { LinkTargetOption, ResearchLink, ResearchLinkTarget } from '@/types/research';
 

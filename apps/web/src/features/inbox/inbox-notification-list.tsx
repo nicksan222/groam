@@ -1,10 +1,10 @@
+import { Bell } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { RecordListBadge } from '@groam/ui/components/record-list-badge';
 import { RecordListItem } from '@groam/ui/components/record-list-item';
 import { Skeleton } from '@groam/ui/components/skeleton';
 import { recordListTitleClassName } from '@groam/ui/lib/record-list';
 import { useNavigate } from '@tanstack/react-router';
-import { Bell } from 'lucide-react';
 import { relativeIssueDate } from '@/features/issues/hooks/issue-relative-date';
 import { testIds } from '@/lib/test-ids';
 import type { InboxNotification } from '@/types/inbox';

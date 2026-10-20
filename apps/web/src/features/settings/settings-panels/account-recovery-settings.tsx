@@ -1,7 +1,7 @@
+import { Download, LifeBuoy } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { FormFeedback } from '@groam/ui/components/form-feedback';
 import { Spinner } from '@groam/ui/components/spinner';
-import { Download, LifeBuoy } from 'lucide-react';
 import { useState } from 'react';
 import { useAccountRecoverySettings } from '@/features/settings/hooks/use-account-recovery-settings';
 import {

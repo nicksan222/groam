@@ -1,6 +1,6 @@
+import { Lightbulb, Package } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { DashedEmpty } from '@groam/ui/components/dashed-empty';
-import { Lightbulb, Package } from 'lucide-react';
 import type { useTripPacking } from '@/features/trips/hooks/use-trip-packing';
 import { testIds } from '@/lib/test-ids';
 import type { GearTraveler, PackingItem } from '@/types/packing';

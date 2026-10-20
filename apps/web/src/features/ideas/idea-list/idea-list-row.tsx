@@ -1,8 +1,8 @@
+import { ArrowRight, Clock3, MapPin, MessageCircle, UserRound } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { RecordListBadge } from '@groam/ui/components/record-list-badge';
 import { RecordListItem } from '@groam/ui/components/record-list-item';
 import { recordListWrappedTitleClassName } from '@groam/ui/lib/record-list';
-import { ArrowRight, Clock3, MapPin, MessageCircle, UserRound } from 'lucide-react';
 import {
   isViewerDraft,
   pendingIdeaContinueLabel

@@ -1,4 +1,5 @@
 import { isResolved } from '@groam/backend/convex/modules/travel/issues/status';
+import { FileDiff, Settings2 } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { DatePicker } from '@groam/ui/components/date-picker';
 import { DetailSection } from '@groam/ui/components/detail-section';
@@ -7,7 +8,6 @@ import { MenuRow } from '@groam/ui/components/menu-row';
 import { PopoverDescription, PopoverHeader, PopoverTitle } from '@groam/ui/components/popover';
 import { dateFromString, displayDate, stringFromDate } from '@groam/ui/lib/calendar-date';
 import { shellCardHeaderVariants } from '@groam/ui/lib/shell-card';
-import { FileDiff, Settings2 } from 'lucide-react';
 import { ideaCloneHref } from '@/features/ideas/idea-href';
 import { startIdeaCta } from '@/features/ideas/idea-list/idea-page-copy';
 import { IssueAssigneeAvatar } from '@/features/issues/shared/issue-assignee-avatar';

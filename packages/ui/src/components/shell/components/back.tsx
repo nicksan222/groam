@@ -1,7 +1,7 @@
 'use client';
 
+import { ChevronLeft } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { ChevronLeft } from 'lucide-react';
 import type React from 'react';
 
 import type { BackProps } from '#src/components/shell/types';

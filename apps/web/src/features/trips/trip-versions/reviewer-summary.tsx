@@ -1,3 +1,4 @@
+import { Bot, Check, CheckCircle2, Circle, MessageSquareText, UserPlus, X } from '@groam/icons';
 import { Avatar } from '@groam/ui/components/avatar';
 import { AvatarFallback } from '@groam/ui/components/avatar-fallback';
 import { Badge } from '@groam/ui/components/badge';
@@ -8,7 +9,6 @@ import { SearchInput } from '@groam/ui/components/search-input';
 import Shell from '@groam/ui/components/shell/client';
 import { Spinner } from '@groam/ui/components/spinner';
 import { initials } from '@groam/ui/lib/avatar';
-import { Bot, Check, CheckCircle2, Circle, MessageSquareText, UserPlus, X } from 'lucide-react';
 import { useState } from 'react';
 import {
   reviewersDescription,

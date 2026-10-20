@@ -1,7 +1,7 @@
 import type { Id } from '@groam/backend/data-model';
+import { ArrowUpRight, Lightbulb } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import Timeline from '@groam/ui/components/timeline';
-import { ArrowUpRight, Lightbulb } from 'lucide-react';
 import { defaultIdeaCloneView } from '@/features/ideas/idea-clone/idea-sections';
 import { Link } from '@/features/workspace/navigation/router';
 import { testIds } from '@/lib/test-ids';

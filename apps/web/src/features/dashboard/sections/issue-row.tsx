@@ -1,4 +1,4 @@
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight } from '@groam/icons';
 import type { WorkspaceIssue } from '@/features/issues/hooks/use-workspace-issues';
 import { IssueStatusBadge } from '@/features/issues/shared/issue-status-badge';
 import { Link } from '@/features/workspace/navigation/router';

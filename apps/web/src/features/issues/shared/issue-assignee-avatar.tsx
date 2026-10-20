@@ -1,8 +1,8 @@
+import { Bot, UserRound } from '@groam/icons';
 import { Avatar } from '@groam/ui/components/avatar';
 import { AvatarFallback } from '@groam/ui/components/avatar-fallback';
 import { initials } from '@groam/ui/lib/avatar';
 import { cn } from '@groam/ui/lib/utils';
-import { Bot, UserRound } from 'lucide-react';
 import type { IssueCardData } from '@/types/issues';
 
 /**

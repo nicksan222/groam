@@ -1,6 +1,6 @@
+import { Minus, Plus, X } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { cn } from '@groam/ui/lib/utils';
-import { Minus, Plus, X } from 'lucide-react';
 import { testIds } from '@/lib/test-ids';
 import type { GearTraveler, PackingItem } from '@/types/packing';
 import { GroupGearPersonPicker } from './group-gear-person-picker';

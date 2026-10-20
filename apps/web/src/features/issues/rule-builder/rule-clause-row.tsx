@@ -1,6 +1,6 @@
 import { clauseLabel } from '@groam/backend/convex/modules/travel/issues/rules/index';
+import { X } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { X } from 'lucide-react';
 import { testIds } from '@/lib/test-ids';
 import type { ClauseKind, RuleClause } from '@/types/issues';
 import { RuleClauseFields } from './rule-clause-fields';

@@ -1,6 +1,6 @@
+import { ImageIcon, MapPinned } from '@groam/icons';
 import { Spinner } from '@groam/ui/components/spinner';
 import { cn } from '@groam/ui/lib/utils';
-import { ImageIcon, MapPinned } from 'lucide-react';
 import { useState } from 'react';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { testIds } from '@/lib/test-ids';

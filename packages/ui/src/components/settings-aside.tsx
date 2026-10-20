@@ -1,4 +1,4 @@
-import type { LucideIcon } from 'lucide-react';
+import type { Icon } from '@groam/icons';
 import type { ReactNode } from 'react';
 import { shellCardClassName } from '#src/lib/shell-card';
 
@@ -7,7 +7,7 @@ export type SettingsAsideProps = {
   children?: ReactNode;
   className?: string;
   description?: string;
-  icon: LucideIcon;
+  icon: Icon;
   title: string;
 };
 

@@ -1,5 +1,5 @@
+import { CalendarDays, MapPin } from '@groam/icons';
 import Shell from '@groam/ui/components/shell/client';
-import { CalendarDays, MapPin } from 'lucide-react';
 import { buildTripPlanner } from '@/features/trips/hooks/trip-day-planner';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { TripEmptyItinerary } from '@/features/trips/trip-destinations/trip-empty-itinerary';

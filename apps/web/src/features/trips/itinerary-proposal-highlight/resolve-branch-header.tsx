@@ -1,4 +1,4 @@
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight } from '@groam/icons';
 
 export function ResolveBranchHeader({
   ideaBranchName,

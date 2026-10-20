@@ -1,6 +1,6 @@
+import { Vote } from '@groam/icons';
 import { Badge } from '@groam/ui/components/badge';
 import { Button } from '@groam/ui/components/button';
-import { Vote } from 'lucide-react';
 import { usePollSelection } from '@/features/polls/hooks/use-poll-selection';
 import { testIds } from '@/lib/test-ids';
 import type { Poll } from '@/types/polls';

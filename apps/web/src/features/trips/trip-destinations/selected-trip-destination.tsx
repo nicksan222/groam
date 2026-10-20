@@ -1,4 +1,4 @@
-import { Check } from 'lucide-react';
+import { Check } from '@groam/icons';
 import type { TripLocation } from '@/features/trips/trip-location';
 
 export function SelectedTripDestination({ location }: { location: TripLocation }) {

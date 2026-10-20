@@ -1,5 +1,5 @@
+import type { Icon } from '@groam/icons';
 import { IconTile } from '@groam/ui/components/icon-tile';
-import type { LucideIcon } from 'lucide-react';
 import type * as React from 'react';
 import { cn } from '#src/lib/utils';
 
@@ -26,7 +26,7 @@ function StatStripRoot({ children, className, columns = 3, ...props }: StatStrip
 export type StatStripItemProps = {
   attention?: boolean;
   className?: string;
-  icon?: LucideIcon;
+  icon?: Icon;
   label: string;
   value: number | string;
 };

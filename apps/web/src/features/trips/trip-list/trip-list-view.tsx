@@ -1,10 +1,10 @@
+import { Map as MapIcon, Plus } from '@groam/icons';
 import { EmptyScreen } from '@groam/ui/components/empty-screen';
 import { ListFilterSection, ListFilterToolbar } from '@groam/ui/components/list-filter-toolbar';
 import { PageLoading } from '@groam/ui/components/page-loading';
 import Shell from '@groam/ui/components/shell/client';
 import { dataTableFilterLabels } from '@groam/ui/lib/data-table';
 import { useNavigate } from '@tanstack/react-router';
-import { Map as MapIcon, Plus } from 'lucide-react';
 import { useMemo } from 'react';
 
 import { useTripListAgentContext } from '@/features/trips/hooks/use-trip-list-agent-context';

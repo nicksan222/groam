@@ -1,5 +1,5 @@
+import { Plus, X } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { Plus, X } from 'lucide-react';
 import { testIds } from '@/lib/test-ids';
 import type { ClauseKind, RuleClause, RuleDraftItem, RuleMatch } from '@/types/issues';
 import { RuleClauseRow } from './rule-clause-row';

@@ -1,11 +1,11 @@
 'use client';
 
+import { CalendarDays } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { Calendar } from '@groam/ui/components/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@groam/ui/components/popover';
 import { dateFromString, displayDate, stringFromDate } from '@groam/ui/lib/calendar-date';
 import { cn } from '@groam/ui/lib/utils';
-import { CalendarDays } from 'lucide-react';
 import { useState } from 'react';
 
 export type DatePickerProps = {

@@ -1,6 +1,6 @@
+import { FileEdit } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { useNavigate } from '@tanstack/react-router';
-import { FileEdit } from 'lucide-react';
 import { useOptionalIdeaContext } from '@/features/ideas/hooks/use-idea-context';
 import { ideaPackingNotice, ideaPackingSeeChanges } from '@/features/ideas/idea-glossary';
 import { ideaCloneHref } from '@/features/ideas/idea-href';

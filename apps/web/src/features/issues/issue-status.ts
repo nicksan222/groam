@@ -1,4 +1,4 @@
-import { Ban, CircleCheck, CircleDashed, CircleDot, type LucideIcon } from 'lucide-react';
+import { Ban, CircleCheck, CircleDashed, CircleDot, type Icon } from '@groam/icons';
 import type { IssueStatus } from '@/types/issues';
 
 /** Lifecycle order, also the board column order. */
@@ -11,7 +11,7 @@ export const ISSUE_STATUSES = [
 
 export const issueStatusMeta: Record<
   IssueStatus,
-  { icon: LucideIcon; iconClassName: string; label: string }
+  { icon: Icon; iconClassName: string; label: string }
 > = {
   closed: { icon: CircleCheck, iconClassName: 'text-success-foreground', label: 'Done' },
   in_progress: { icon: CircleDot, iconClassName: 'text-warning-foreground', label: 'In progress' },

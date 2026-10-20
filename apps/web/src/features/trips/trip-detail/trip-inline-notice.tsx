@@ -1,5 +1,5 @@
+import type { Icon } from '@groam/icons';
 import { cn } from '@groam/ui/lib/utils';
-import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 /** A quiet inline notice for a trip page: one soft line with an optional action, never a band. */
@@ -14,7 +14,7 @@ export function TripInlineNotice({
   action?: ReactNode;
   children?: ReactNode;
   className?: string;
-  icon?: LucideIcon;
+  icon?: Icon;
   label?: string;
   title: string;
 }) {

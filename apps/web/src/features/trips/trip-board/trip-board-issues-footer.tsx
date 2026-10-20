@@ -1,5 +1,5 @@
+import { Plus } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { Plus } from 'lucide-react';
 import { testIds } from '@/lib/test-ids';
 import { useTripBoardContext } from './trip-board-context';
 import { TripBoardFooterLink } from './trip-board-footer-link';

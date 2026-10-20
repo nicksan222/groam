@@ -1,3 +1,4 @@
+import { Laptop, LogOut, RefreshCw, Smartphone } from '@groam/icons';
 import { Badge } from '@groam/ui/components/badge';
 import { Button } from '@groam/ui/components/button';
 import { DashedEmpty } from '@groam/ui/components/dashed-empty';
@@ -8,7 +9,6 @@ import Shell from '@groam/ui/components/shell/client';
 import { Skeleton } from '@groam/ui/components/skeleton';
 import { Spinner } from '@groam/ui/components/spinner';
 import { cn } from '@groam/ui/lib/utils';
-import { Laptop, LogOut, RefreshCw, Smartphone } from 'lucide-react';
 import { useSessionSettings } from '@/features/settings/hooks/use-session-settings';
 import {
   SettingsPanel,

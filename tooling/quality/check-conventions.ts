@@ -24,6 +24,7 @@ const packageManifestPaths = [
   'packages/auth/package.json',
   'packages/backend/package.json',
   'packages/env/package.json',
+  'packages/icons/package.json',
   'packages/ui/package.json'
 ] as const;
 
@@ -220,6 +221,8 @@ const messages: Record<ConventionFinding['category'], string> = {
   'legacy-modules': 'Use TypeScript instead of .mjs for repository-owned modules',
   names: 'Source filenames must use kebab-case',
   'parent-imports': 'Parent-directory imports must use package aliases',
+  'raw-astro-icons':
+    'Use @groam/icons/astro for icons; mark decorative SVG illustrations with data-illustration',
   'raw-convex-access': 'Raw Convex database access must stay inside components, modules and routes',
   'route-imports':
     'Web route files must only compose feature views and may import from @/features, @/lib, @tanstack/react-router, or @groam packages',

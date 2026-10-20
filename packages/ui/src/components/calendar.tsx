@@ -1,8 +1,8 @@
 'use client';
 
+import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { cn } from '@groam/ui/lib/utils';
-import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import * as React from 'react';
 import { type DayButton, DayPicker, getDefaultClassNames } from 'react-day-picker';
 import { buttonVariants } from '#src/components/button-variants';

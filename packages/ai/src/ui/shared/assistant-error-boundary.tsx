@@ -1,5 +1,5 @@
+import { CircleAlert, RotateCw } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { CircleAlert, RotateCw } from 'lucide-react';
 import { Component, type ReactNode } from 'react';
 
 export type AssistantErrorBoundaryProps = {

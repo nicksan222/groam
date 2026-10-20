@@ -1,3 +1,4 @@
+import { FileText, Square, X } from '@groam/icons';
 import {
   Attachment,
   AttachmentAction,
@@ -12,7 +13,6 @@ import { Button } from '@groam/ui/components/button';
 import { MessageComposer } from '@groam/ui/components/message-composer';
 import { Spinner } from '@groam/ui/components/spinner';
 import { toast } from '@groam/ui/components/toast';
-import { FileText, Square, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import {
   type ComposerCommand,

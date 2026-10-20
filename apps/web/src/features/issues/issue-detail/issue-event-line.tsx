@@ -1,5 +1,5 @@
 import { assistantAgents } from '@groam/ai/agents';
-import { Bot, Lightbulb, ListChecks, UserRound } from 'lucide-react';
+import { Bot, Lightbulb, ListChecks, UserRound } from '@groam/icons';
 import { issueStatusMeta } from '@/features/issues/issue-status';
 import { IssueStatusIcon } from '@/features/issues/shared/issue-status-icon';
 import type { IssueEvent } from '@/types/issues';

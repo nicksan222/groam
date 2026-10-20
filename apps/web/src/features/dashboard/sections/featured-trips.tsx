@@ -1,6 +1,6 @@
+import { ArrowRight, CalendarDays, MapPin } from '@groam/icons';
 import { CoverFrame } from '@groam/ui/components/cover-frame';
 import Shell from '@groam/ui/components/shell/client';
-import { ArrowRight, CalendarDays, MapPin } from 'lucide-react';
 import type { TripListItem } from '@/features/trips/hooks/use-trips';
 import { Link } from '@/features/workspace/navigation/router';
 

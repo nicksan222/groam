@@ -6,10 +6,10 @@ import {
   assistantRunActivities
 } from '@groam/ai/ui/messages/assistant-run-activities';
 import { AssistantReplyExtras } from '@groam/ai/ui/messages/assistant-run-parts';
+import { MessageSquareText, Paperclip, Sparkles, UserRound } from '@groam/icons';
 import { Markdown } from '@groam/ui/components/markdown';
 import Timeline from '@groam/ui/components/timeline';
 import { cn } from '@groam/ui/lib/utils';
-import { MessageSquareText, Paperclip, Sparkles, UserRound } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { AgentRunLogEvent } from '@/features/agents/agent-run/agent-run-log-event';
 import { AgentRunStatusBadge } from '@/features/agents/agent-run/agent-run-status-badge';

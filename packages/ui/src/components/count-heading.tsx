@@ -1,8 +1,8 @@
-import type { LucideIcon } from 'lucide-react';
+import type { Icon } from '@groam/icons';
 
 export type CountHeadingProps = {
   count: number | string;
-  icon: LucideIcon;
+  icon: Icon;
   title: string;
 };
 

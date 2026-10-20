@@ -1,3 +1,4 @@
+import { Trash2 } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import {
   Select,
@@ -6,7 +7,6 @@ import {
   SelectTrigger,
   SelectValue
 } from '@groam/ui/components/select';
-import { Trash2 } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { useTripStayEditor } from '@/features/trips/hooks/use-trip-stay-editor';
 import { StayForm } from '@/features/trips/trip-destinations/trip-destination-stays/stay-form';

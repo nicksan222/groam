@@ -1,6 +1,6 @@
+import { CheckCircle2, Send } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { Spinner } from '@groam/ui/components/spinner';
-import { CheckCircle2, Send } from 'lucide-react';
 import { useState } from 'react';
 import { ideaApplyToSharedTrip } from '@/features/ideas/idea-glossary';
 import {

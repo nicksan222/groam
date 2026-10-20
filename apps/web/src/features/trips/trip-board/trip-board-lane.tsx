@@ -1,6 +1,6 @@
 import { useDroppable } from '@dnd-kit/core';
+import { Ban, TriangleAlert } from '@groam/icons';
 import { cn } from '@groam/ui/lib/utils';
-import { Ban, TriangleAlert } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { testIds } from '@/lib/test-ids';
 import type { TripBoardLane as Lane, TripBoardRefusal } from '@/types/trip-board';

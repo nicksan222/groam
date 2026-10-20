@@ -1,6 +1,6 @@
+import { Plus } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { Spinner } from '@groam/ui/components/spinner';
-import { Plus } from 'lucide-react';
 import type { PackingCoverage } from '@/types/packing';
 
 /**

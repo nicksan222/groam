@@ -1,7 +1,7 @@
+import { MapPin } from '@groam/icons';
 import { ErrorWell } from '@groam/ui/components/error-well';
 import { LoadingPlaceholder } from '@groam/ui/components/loading-placeholder';
 import { SelectRow } from '@groam/ui/components/select-row';
-import { MapPin } from 'lucide-react';
 import type { TripLocation } from '@/features/trips/trip-location';
 import { testIds } from '@/lib/test-ids';
 

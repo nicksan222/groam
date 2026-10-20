@@ -1,9 +1,9 @@
 import { useSetAgentContext } from '@groam/ai/ui/context/agent-context';
 import type { Id } from '@groam/backend/data-model';
+import { MessageSquare } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { EmptyScreen } from '@groam/ui/components/empty-screen';
 import { PageLoading } from '@groam/ui/components/page-loading';
-import { MessageSquare } from 'lucide-react';
 import { useDiscussions } from '@/features/discussions/hooks/use-discussions';
 import { Link } from '@/features/workspace/navigation/router';
 import { DiscussionThreadHeader } from './discussion-thread-header';

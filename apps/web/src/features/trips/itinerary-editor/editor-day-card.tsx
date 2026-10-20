@@ -1,5 +1,5 @@
+import { MapPin, Plus } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { MapPin, Plus } from 'lucide-react';
 import {
   destinationsForDay,
   editorDayDestinations

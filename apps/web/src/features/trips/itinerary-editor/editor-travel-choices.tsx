@@ -1,5 +1,5 @@
+import { ArrowRight, Route, X } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { ArrowRight, Route, X } from 'lucide-react';
 import type { EditorTravelTarget } from '@/types/itinerary-editor';
 import type { TripDetail } from '@/types/trips';
 import { travelChoicesForDay } from './editor-travel-targets';
