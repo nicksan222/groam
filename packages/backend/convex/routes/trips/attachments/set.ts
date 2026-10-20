@@ -16,6 +16,7 @@ export const run = mutableTripMutation({
       maximum: Attachments.limitFor(target),
       mediaIds,
       organizationId: ctx.workspace.organizationId,
+      workspace: ctx.workspace,
       target,
       tripId: ctx.trip._id
     });

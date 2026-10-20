@@ -72,6 +72,7 @@ export async function applyDetailResolution(
       maximum: Attachments.limitFor(target),
       mediaIds: files.map(({ mediaId }) => mediaId),
       organizationId: ctx.workspace.organizationId,
+      workspace: ctx.workspace,
       target: { id: ctx.trip._id, type: 'trip' },
       tripId: ctx.trip._id
     });

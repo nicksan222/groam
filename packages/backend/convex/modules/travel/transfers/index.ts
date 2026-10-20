@@ -73,6 +73,7 @@ async function setBoundary(
       maximum: MAX_ATTACHMENTS,
       mediaIds: input.attachmentIds,
       organizationId: trip.workspace.organizationId,
+      workspace: trip.workspace,
       target: { id: existing._id, type: 'boundary_transfer' },
       tripId
     });
@@ -104,6 +105,7 @@ async function setBoundary(
     maximum: MAX_ATTACHMENTS,
     mediaIds: input.attachmentIds,
     organizationId: trip.workspace.organizationId,
+    workspace: trip.workspace,
     target: { id: transferId, type: 'boundary_transfer' },
     tripId
   });
@@ -189,6 +191,7 @@ async function setDestination({
       maximum: MAX_ATTACHMENTS,
       mediaIds: input.attachmentIds,
       organizationId: trip.workspace.organizationId,
+      workspace: trip.workspace,
       target: { id: existing._id, type: 'destination_transfer' },
       tripId
     });
@@ -226,6 +229,7 @@ async function setDestination({
     maximum: MAX_ATTACHMENTS,
     mediaIds: input.attachmentIds,
     organizationId: trip.workspace.organizationId,
+    workspace: trip.workspace,
     target: { id: transferId, type: 'destination_transfer' },
     tripId
   });
@@ -315,6 +319,7 @@ async function setActivity({
       maximum: MAX_ATTACHMENTS,
       mediaIds: input.attachmentIds,
       organizationId: trip.workspace.organizationId,
+      workspace: trip.workspace,
       target: { id: existing._id, type: 'activity_transfer' },
       tripId
     });
@@ -354,6 +359,7 @@ async function setActivity({
     maximum: MAX_ATTACHMENTS,
     mediaIds: input.attachmentIds,
     organizationId: trip.workspace.organizationId,
+    workspace: trip.workspace,
     target: { id: transferId, type: 'activity_transfer' },
     tripId
   });

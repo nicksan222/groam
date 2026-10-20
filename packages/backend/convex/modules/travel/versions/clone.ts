@@ -1,6 +1,7 @@
 import { ConvexError } from 'convex/values';
 import type { Doc, Id } from '#convex-generated/dataModel';
 import type { MutationCtx } from '#convex-generated/server';
+import type { Workspace } from '#convex/modules/auth/workspace';
 import { Attachments } from '#convex/modules/media/attachments/index';
 import { DestinationCover } from '#convex/modules/travel/covers/destination/index';
 import { TripLocations } from '#convex/modules/travel/locations/index';
@@ -19,7 +20,8 @@ async function copyTargetAttachments({
   sourceTarget,
   target,
   targetTripId,
-  organizationId
+  organizationId,
+  workspace
 }: {
   ctx: MutationCtx;
   sourceContent: TripVersionContent;
@@ -27,6 +29,7 @@ async function copyTargetAttachments({
   target: Target;
   targetTripId: Id<'trips'>;
   organizationId: string;
+  workspace: Workspace;
 }): Promise<boolean> {
   const mediaIds = sourceContent.attachments
     .filter((attachment) => targetKey(attachment.target) === targetKey(sourceTarget))
@@ -37,6 +40,7 @@ async function copyTargetAttachments({
     maximum: 10,
     mediaIds,
     organizationId,
+    workspace,
     target,
     tripId: targetTripId
   });
@@ -89,6 +93,7 @@ export async function cloneTripContent(
   await copyTargetAttachments({
     ctx,
     organizationId: source.workspace.organizationId,
+    workspace: source.workspace,
     sourceContent: content,
     sourceTarget: { id: source.trip._id, type: 'trip' },
     target: { id: workingTripId, type: 'trip' },
@@ -117,6 +122,7 @@ export async function cloneTripContent(
       await copyTargetAttachments({
         ctx,
         organizationId: source.workspace.organizationId,
+        workspace: source.workspace,
         sourceContent: content,
         sourceTarget: { id: destination._id, type: 'destination' },
         target: { id: destinationId, type: 'destination' },
@@ -154,6 +160,7 @@ export async function cloneTripContent(
       await copyTargetAttachments({
         ctx,
         organizationId: source.workspace.organizationId,
+        workspace: source.workspace,
         sourceContent: content,
         sourceTarget: { id: activity._id, type: 'activity' },
         target: { id: activityId, type: 'activity' },
@@ -184,6 +191,7 @@ export async function cloneTripContent(
       await copyTargetAttachments({
         ctx,
         organizationId: source.workspace.organizationId,
+        workspace: source.workspace,
         sourceContent: content,
         sourceTarget: { id: stay._id, type: 'stay' },
         target: { id: stayId, type: 'stay' },
@@ -207,6 +215,7 @@ export async function cloneTripContent(
       await copyTargetAttachments({
         ctx,
         organizationId: source.workspace.organizationId,
+        workspace: source.workspace,
         sourceContent: content,
         sourceTarget: { id: transfer._id, type: 'boundary_transfer' },
         target: { id: transferId, type: 'boundary_transfer' },
@@ -236,6 +245,7 @@ export async function cloneTripContent(
       await copyTargetAttachments({
         ctx,
         organizationId: source.workspace.organizationId,
+        workspace: source.workspace,
         sourceContent: content,
         sourceTarget: { id: transfer._id, type: 'destination_transfer' },
         target: { id: transferId, type: 'destination_transfer' },
@@ -267,6 +277,7 @@ export async function cloneTripContent(
       await copyTargetAttachments({
         ctx,
         organizationId: source.workspace.organizationId,
+        workspace: source.workspace,
         sourceContent: content,
         sourceTarget: { id: transfer._id, type: 'activity_transfer' },
         target: { id: transferId, type: 'activity_transfer' },
