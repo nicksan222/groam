@@ -30,10 +30,12 @@ test('the pricing calculator charges €1 per invited traveler for the trip', as
   await expect.poll(total).toBe('€0 for this trip.');
 });
 
-test('pricing never asks for payment details', async () => {
+test('pricing explains conditional checkout without collecting payment details', async () => {
   const { document } = await openSite('/pricing/');
   expect(document.querySelector('form, input[autocomplete^="cc-"]')).toBeNull();
-  expect(document.body.textContent).toMatch(/Nobody is charged today/u);
+  expect(document.body.textContent).toContain(
+    'One-time checkout when payments are enabled. Existing trips stay free.'
+  );
 });
 
 test('the mobile menu opens, lists every feature, and closes with Escape', async () => {
