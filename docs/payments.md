@@ -59,3 +59,27 @@ Groam stops automatic retries before Stripe can prune the key. Reconcile the
 reservation with the matching session in the correct Stripe account before
 allowing another charge. Do not delete the reservation or retry with a new key
 without checking whether its original session was paid.
+
+
+## Deleted trips and unconfirmed Checkout
+
+Trip deletion removes payment records already confirmed locally without requesting
+automatic refunds. Reservations still locally unconfirmed move to durable
+reconciliation records before the trip data is removed. Late session persistence
+and verified webhook events continue to find those records.
+
+The reconciler expires open Checkout sessions. If Stripe reports a paid session
+for a detached, unconfirmed reservation, it requests a full refund using a stable
+idempotency key. Pending or failed refunds retain their reconciliation record
+until successful; missing credentials, provider errors, and unknown outcomes also
+retain the record. This cleanup handles payment/deletion races; published
+cancellation and refund terms remain an owner and legal review item.
+
+A bounded sweep retries up to 50 due records every 15 minutes with backoff. After
+restoring the correct credentials, operators can invoke the internal
+`modules/payments/reconciliation:sweep` mutation to schedule another attempt.
+Known session IDs can be retrieved after key rotation. Unknown sessions can only
+be recovered automatically within the original 23-hour retry window and with the
+original Stripe key fingerprint and exact Checkout request. Older ambiguous
+requests require reconciliation in the correct Stripe account. Never delete a
+reconciliation record while the charge or refund outcome is unknown.

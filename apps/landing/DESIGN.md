@@ -307,7 +307,7 @@ A cobalt masthead with a 3px bill-ink rule under it: mark and condensed wordmark
 - **Do** give every loop a visible pause control, stop it off screen and in a hidden tab, and ship a finished, truthful still under reduced motion and without script.
 - **Do** use `cubic-bezier(0.16, 1, 0.3, 1)` for eased motion and keep transitions to calm crossfades, rises, turns, and pastes.
 - **Do** write internal hrefs with a trailing slash (`/features/`, `/pricing/`, `/features/ideas/`).
-- **Do** state pricing as published: free to plan on your own; €1 per invited traveler per trip, paid by the traveler or covered by whoever invites them; the organizer and solo trips are free; nobody is charged today.
+- **Do** state pricing as published: free to plan on your own; €1 per invited traveler per trip, paid by the traveler or covered by whoever invites them; the trip creator and solo trips are free. Stripe Checkout applies when payments are enabled; existing trips stay free, and payments are skipped when Stripe is not configured.
 - **Do** say "idea" for a suggested change, "traveler" for a person on a trip, and "Start a trip" for the primary action.
 
 ### Don't:
