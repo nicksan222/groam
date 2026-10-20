@@ -1,6 +1,7 @@
 import { Button } from '@groam/ui/components/button';
 import { Input } from '@groam/ui/components/input';
 import { NumberInput } from '@groam/ui/components/number-input';
+import { RecordListItem } from '@groam/ui/components/record-list-item';
 import { cn } from '@groam/ui/lib/utils';
 import { Trash2 } from 'lucide-react';
 import { type KeyboardEvent, useEffect, useRef, useState } from 'react';
@@ -10,7 +11,6 @@ import { GroupGearBringers } from './group-gear-bringers';
 import { PackingClaimButton } from './packing-claim-button';
 import { MAX_PACKING_QUANTITY, packingCoverage } from './packing-coverage';
 import { PackingCoverageBadge } from './packing-coverage-badge';
-import { packingRowClass } from './packing-row-classes';
 import { PackingRowFlash } from './packing-row-flash';
 import { useCoalescedBring, usePendingWrite } from './use-packing-motion';
 
@@ -118,20 +118,15 @@ export function GroupGearItemEditor({
   };
 
   return (
-    <li
+    <RecordListItem
       aria-busy={pending || undefined}
-      className={cn(
-        packingRowClass,
-        'flex flex-col gap-2 aria-busy:opacity-70 aria-busy:transition-opacity aria-busy:delay-200'
-      )}
+      className="aria-busy:opacity-70 aria-busy:transition-opacity aria-busy:delay-200 [&_[data-slot=record-list-title]]:h-9 [&_[data-slot=record-list-title]]:overflow-visible"
       data-testid={testIds.tripPackingGearItem}
-    >
-      <PackingRowFlash count={item.brought} />
-      <div className="flex flex-col gap-2 @lg/gear:flex-row @lg/gear:items-center @lg/gear:gap-4">
+      title={
         <Input
           aria-label={`Name of ${item.label}`}
           className={cn(
-            '-ms-3 min-w-40 flex-1 font-medium max-sm:w-[calc(100%+0.75rem)]',
+            'relative z-10 -ms-3 h-9 w-[calc(100%+0.75rem)] min-w-0 font-semibold',
             quietField
           )}
           maxLength={120}
@@ -141,28 +136,26 @@ export function GroupGearItemEditor({
           title={label}
           value={label}
         />
-        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 @lg/gear:flex-nowrap @lg/gear:justify-end">
-          <PackingCoverageBadge coverage={coverage} item={item} />
-          <div className="flex @lg/gear:w-32 @lg/gear:justify-end">
-            {viewerFree ? (
-              <PackingClaimButton
-                coverageState={coverage.state}
-                disabled={pending}
-                itemLabel={item.label}
-                onClick={() => {
-                  setClaiming(true);
-                  void run(() => onBring(item.id, viewerUserId, 1)).finally(() =>
-                    setClaiming(false)
-                  );
-                }}
-                pending={pending && claiming}
-                testId={testIds.tripPackingBringMe}
-              />
-            ) : null}
-          </div>
-        </div>
-      </div>
-      <div className="flex items-start justify-between gap-3">
+      }
+      metadata={<PackingCoverageBadge coverage={coverage} item={item} />}
+      badges={
+        viewerFree ? (
+          <PackingClaimButton
+            coverageState={coverage.state}
+            disabled={pending}
+            itemLabel={item.label}
+            onClick={() => {
+              setClaiming(true);
+              void run(() => onBring(item.id, viewerUserId, 1)).finally(() => setClaiming(false));
+            }}
+            pending={pending && claiming}
+            testId={testIds.tripPackingBringMe}
+          />
+        ) : undefined
+      }
+    >
+      <PackingRowFlash count={item.brought} />
+      <div className="relative z-10 mt-2 flex min-w-0 flex-wrap items-start justify-between gap-3">
         <GroupGearBringers
           item={item}
           onBring={(userId, count) =>
@@ -200,6 +193,6 @@ export function GroupGearItemEditor({
           </Button>
         </div>
       </div>
-    </li>
+    </RecordListItem>
   );
 }

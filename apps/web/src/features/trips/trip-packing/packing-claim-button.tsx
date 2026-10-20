@@ -30,7 +30,7 @@ export function PackingClaimButton({
     <Button
       aria-busy={pending || undefined}
       aria-label={`${more ? 'Bring one more' : "I'll bring one"} ${itemLabel}`}
-      className="w-28 shrink-0 pointer-coarse:h-9 @lg/gear:w-32"
+      className="w-24 shrink-0 pointer-coarse:h-9 @md/record:w-32"
       data-testid={testId}
       disabled={disabled || pending}
       onClick={onClick}
@@ -39,8 +39,8 @@ export function PackingClaimButton({
       variant={missing ? 'outline' : 'ghost'}
     >
       {pending ? <Spinner aria-hidden className="size-3.5" role="presentation" /> : <Plus />}
-      <span className="@lg/gear:hidden">{more ? 'Bring more' : 'Bring one'}</span>
-      <span className="hidden @lg/gear:inline">{more ? 'Bring one more' : "I'll bring one"}</span>
+      <span className="@md/record:hidden">{more ? 'Bring more' : 'Bring one'}</span>
+      <span className="hidden @md/record:inline">{more ? 'Bring one more' : "I'll bring one"}</span>
     </Button>
   );
 }

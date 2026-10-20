@@ -160,3 +160,25 @@ test('gives phone titles two lines and context the full row width with touch-siz
     document.documentElement.clientWidth
   );
 });
+
+test('uses the compact row layout inside a narrow panel on a wide screen', async () => {
+  await useViewport(1280, 800);
+  await render(
+    <div style={{ width: 360 }}>
+      <RecordListItem
+        title="A long gear name that needs the second title line"
+        description="A short preview"
+        metadata="Updated yesterday"
+        badges={<button type="button">Open</button>}
+      />
+    </div>
+  );
+  const row = page.getByRole('article').element();
+  const title = row.querySelector('[data-slot="record-list-title"]')!;
+  const context = row.querySelector('[data-slot="record-list-context"]')!;
+  expect(title.getBoundingClientRect().height).toBe(40);
+  expect(context.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+    title.getBoundingClientRect().bottom
+  );
+  expect(row.querySelector('button')!.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+});

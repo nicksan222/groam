@@ -7,7 +7,7 @@ import type { GearTraveler, PackingItem } from '@/types/packing';
 import { GroupGearItem } from './group-gear-item';
 import { GroupGearItemEditor } from './group-gear-item-editor';
 import { GroupGearSkeleton } from './group-gear-skeleton';
-import { packingListClass } from './packing-row-classes';
+import { packingRowDeferredClass } from './packing-row-classes';
 
 function emptyCopy(editable: boolean, proposal: boolean, canStart: boolean, archived: boolean) {
   if (editable) {
@@ -92,26 +92,31 @@ export function GroupGearList({
     );
   }
   return (
-    <ul className={packingListClass}>
+    <ul
+      aria-label="Group gear"
+      className="min-w-0 divide-y divide-border/40 overflow-hidden rounded-lg border border-border/60 bg-transparent"
+    >
       {packing.items.map((item) =>
         editable ? (
-          <GroupGearItemEditor
-            item={item}
-            key={item.id}
-            onBring={packing.bring}
-            onRemove={packing.remove}
-            onUpdate={packing.update}
-            travelers={travelers}
-            viewerUserId={viewerUserId}
-          />
+          <li className={`min-w-0 ${packingRowDeferredClass}`} key={item.id}>
+            <GroupGearItemEditor
+              item={item}
+              onBring={packing.bring}
+              onRemove={packing.remove}
+              onUpdate={packing.update}
+              travelers={travelers}
+              viewerUserId={viewerUserId}
+            />
+          </li>
         ) : (
-          <GroupGearItem
-            claimDisabled={startingIdea}
-            item={item}
-            key={item.id}
-            onClaim={onClaim}
-            viewerUserId={viewerUserId}
-          />
+          <li className={`min-w-0 ${packingRowDeferredClass}`} key={item.id}>
+            <GroupGearItem
+              claimDisabled={startingIdea}
+              item={item}
+              onClaim={onClaim}
+              viewerUserId={viewerUserId}
+            />
+          </li>
         )
       )}
     </ul>

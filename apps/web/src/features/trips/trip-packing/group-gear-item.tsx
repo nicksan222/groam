@@ -1,11 +1,10 @@
-import { cn } from '@groam/ui/lib/utils';
+import { RecordListItem } from '@groam/ui/components/record-list-item';
 import { testIds } from '@/lib/test-ids';
 import type { PackingItem } from '@/types/packing';
 import { GroupGearBringerChips } from './group-gear-bringer-chips';
 import { PackingClaimButton } from './packing-claim-button';
 import { packingCoverage } from './packing-coverage';
 import { PackingCoverageBadge } from './packing-coverage-badge';
-import { packingRowClass, packingRowDeferredClass } from './packing-row-classes';
 import { PackingRowFlash } from './packing-row-flash';
 
 /**
@@ -28,24 +27,13 @@ export function GroupGearItem({
   const coverage = packingCoverage(item);
   const viewerBrings = item.bringers.some((bringer) => bringer.userId === viewerUserId);
   return (
-    <li
-      className={cn(
-        packingRowClass,
-        packingRowDeferredClass,
-        'flex flex-col gap-3 @lg/gear:flex-row @lg/gear:items-center @lg/gear:gap-5'
-      )}
+    <RecordListItem
       data-testid={testIds.tripPackingGearItem}
-    >
-      <PackingRowFlash count={item.brought} />
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium [overflow-wrap:anywhere]">{item.label}</p>
-        <div className="mt-1">
-          <GroupGearBringerChips item={item} viewerUserId={viewerUserId} />
-        </div>
-      </div>
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 @lg/gear:flex-nowrap @lg/gear:justify-end @lg/gear:gap-x-5">
-        <PackingCoverageBadge coverage={coverage} item={item} />
-        {onClaim ? (
+      title={<span className="[overflow-wrap:anywhere]">{item.label}</span>}
+      metadata={<PackingCoverageBadge coverage={coverage} item={item} />}
+      description={<GroupGearBringerChips item={item} viewerUserId={viewerUserId} />}
+      badges={
+        onClaim ? (
           <PackingClaimButton
             coverageState={coverage.state}
             disabled={claimDisabled}
@@ -54,8 +42,10 @@ export function GroupGearItem({
             onClick={() => onClaim(item)}
             testId={testIds.tripPackingClaim}
           />
-        ) : null}
-      </div>
-    </li>
+        ) : undefined
+      }
+    >
+      <PackingRowFlash count={item.brought} />
+    </RecordListItem>
   );
 }
