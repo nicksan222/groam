@@ -1,5 +1,4 @@
 import type { Id } from '@groam/backend/data-model';
-import { useNavigate } from '@tanstack/react-router';
 import { useCreateLinkedResearch } from '@/features/research/hooks/use-create-linked-research';
 import { useLinkedResearches } from '@/features/research/hooks/use-linked-researches';
 import { useLinkResearch } from '@/features/research/hooks/use-research-actions';
@@ -20,21 +19,15 @@ export function LinkedResearches({
   const link = useLinkResearch();
   const createAndLink = useCreateLinkedResearch(tripId, target);
   const dialog = useOpenState(false);
-  const navigate = useNavigate();
 
   return (
-    <div className="border-t border-border/40 py-3">
+    <div className="border-t border-border/40 pt-3">
       <LinkedResearchesSection
         available={available}
         linked={linked}
         onLink={(research) => void link(research.id as Id<'discussions'>, target)}
         onNew={dialog.openPanel}
-        onOpen={(research) =>
-          void navigate({
-            params: { researchId: research.shortId, tripId },
-            to: '/trips/$tripId/research/$researchId'
-          })
-        }
+        tripId={tripId}
       />
       <CreateResearchDialog
         onClose={dialog.closePanel}

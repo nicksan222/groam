@@ -1,20 +1,38 @@
 import type { Id } from '@groam/backend/data-model';
 import { render } from '@groam/vitest-config/react';
+import type { ReactNode } from 'react';
 import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { testIds } from '@/lib/test-ids';
 import type { ResearchSummary } from '@/types/research';
 import { LinkedResearches } from './linked-researches';
 
+vi.mock('@/features/workspace/navigation/router', () => ({
+  Link: ({
+    children,
+    params,
+    to: _to,
+    ...props
+  }: {
+    children?: ReactNode;
+    params: { tripId: string; researchId: string };
+    to: string;
+    className?: string;
+    'aria-label'?: string;
+  }) => (
+    <a {...props} href={`/trips/${params.tripId}/research/${params.researchId}`}>
+      {children}
+    </a>
+  )
+}));
+
 const state = vi.hoisted(() => ({
   createAndLink: vi.fn(),
   link: vi.fn(),
-  navigate: vi.fn(),
   linked: [] as unknown[],
   available: [] as unknown[]
 }));
 
-vi.mock('@tanstack/react-router', () => ({ useNavigate: () => state.navigate }));
 vi.mock('@/features/research/hooks/use-linked-researches', () => ({
   useLinkedResearches: () => ({
     available: state.available,
@@ -54,11 +72,9 @@ const view = () =>
 
 test('opens a linked research page', async () => {
   await view();
-  await page.getByText('Hotels').click();
-  expect(state.navigate).toHaveBeenCalledWith({
-    params: { researchId: 's-r1', tripId },
-    to: '/trips/$tripId/research/$researchId'
-  });
+  const link = page.getByRole('link', { name: 'Open research: Hotels' });
+  await expect.element(link).toBeVisible();
+  expect(link.element().getAttribute('href')).toBe('/trips/t1/research/s-r1');
 });
 
 test('links an existing research to the target', async () => {
