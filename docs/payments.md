@@ -26,7 +26,9 @@ using the Convex HTTP origin, and subscribe to `checkout.session.completed`.
 Checkout supports immediate card payments. No Stripe Price ID is needed: the
 backend fixes the price to 100 euro cents.
 
-Payment requirements apply to trips created while payments are enabled. Existing
+The backend infrastructure layer keeps new trips free. Automatic payment
+requirements activate with the checkout frontend in the final stack layer and
+apply only to trips created while payments are enabled. Existing
 trips retain their original access behavior. Removing the Stripe key skips
 payment requirements rather than locking users out.
 
@@ -60,6 +62,22 @@ reservation with the matching session in the correct Stripe account before
 allowing another charge. Do not delete the reservation or retry with a new key
 without checking whether its original session was paid.
 
+
+## Rejected credentials and rollback
+
+A structured invalid-key response from Stripe on the first, unreplayed Checkout
+creation proves that request did not execute. Groam records only a typed rejection
+and permits a fresh attempt after credentials are corrected. A timeout, repeated
+send, concurrent creation, or older unmarked attempt cannot provide this proof;
+changing keys still requires reconciliation. Permission errors (403) are not
+classified as definite credential-rejection proof.
+
+Keep the optional proof fields and replay-invalidating storage writer together
+when rolling back. Do not restore a writer that replays a request without
+invalidating prior rejection proof. Use a forward fix for this protocol. Trips
+already marked billable retain that flag if creation code is reverted; retain
+the matching checkout UI and backend, or remove the Stripe key to temporarily
+skip payment requirements.
 
 ## Deleted trips and unconfirmed Checkout
 

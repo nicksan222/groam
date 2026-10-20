@@ -2,7 +2,8 @@ import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
 import { queuePreviewDiscussionRun } from '#testing/agent-preview';
 import { createOutsiderClient } from '#testing/factory';
-import { openTripDraft, setupTrip } from '#testing/trips';
+import { setupBillableTrip } from '#testing/payments';
+import { openTripDraft } from '#testing/trips';
 
 const resolve = api.routes.references.resolve.run;
 afterEach(() => {
@@ -13,7 +14,10 @@ function payments() {
   vi.stubEnv('STRIPE_SECRET_KEY', 'sk_test_previews');
   vi.stubEnv('STRIPE_WEBHOOK_SECRET', 'whsec_previews');
 }
-async function issueRun(fixture: Awaited<ReturnType<typeof setupTrip>>, tripId = fixture.tripId) {
+async function issueRun(
+  fixture: Awaited<ReturnType<typeof setupBillableTrip>>,
+  tripId = fixture.tripId
+) {
   const issueId = await fixture.owner.client.mutation(api.routes.trips.issues.create.run, {
     tripId,
     title: 'Protected run title',
@@ -31,7 +35,7 @@ test.each(['unpaid', 'paid', 'disabled'])(
   '%s run reference exposes only navigation identifiers while content retains its gate',
   async (mode) => {
     payments();
-    const fixture = await setupTrip(1);
+    const fixture = await setupBillableTrip(1);
     const member = fixture.users[0]!;
     const runId = await issueRun(fixture);
     if (mode === 'disabled') vi.stubEnv('STRIPE_SECRET_KEY', '');
@@ -72,7 +76,7 @@ test.each(['unpaid', 'paid', 'disabled'])(
 
 test('discussion-run preview preserves member audiences despite allowing unpaid navigation', async () => {
   payments();
-  const fixture = await setupTrip(2);
+  const fixture = await setupBillableTrip(2);
   const member = fixture.users[0]!;
   const discussionId = await fixture.owner.client.mutation(api.routes.discussions.create.run, {
     clientRequestId: crypto.randomUUID(),
@@ -105,7 +109,7 @@ test('discussion-run preview preserves member audiences despite allowing unpaid 
 
 test('private standalone research and assistant run references remain creator-only', async () => {
   payments();
-  const fixture = await setupTrip(1);
+  const fixture = await setupBillableTrip(1);
   const member = fixture.users[0]!;
   const research = await fixture.owner.client.mutation(
     internal.modules.assistant.research.functions.queue,
@@ -148,7 +152,7 @@ test('private standalone research and assistant run references remain creator-on
 
 test('a working-copy run preview points at its canonical shared trip', async () => {
   payments();
-  const fixture = await setupTrip(1);
+  const fixture = await setupBillableTrip(1);
   const draft = await openTripDraft(fixture.owner, fixture.tripId);
   const discussionId = await fixture.owner.client.mutation(
     api.routes.discussions.research.create.run,

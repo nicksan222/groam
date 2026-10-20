@@ -1,6 +1,7 @@
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
 import { createOutsiderClient } from '#testing/factory';
+import { setupBillableTrip } from '#testing/payments';
 import { setupTrip } from '#testing/trips';
 
 afterEach(() => vi.unstubAllEnvs());
@@ -8,7 +9,7 @@ afterEach(() => vi.unstubAllEnvs());
 test('standalone issue and idea references expose only preview routing metadata to unpaid members', async () => {
   vi.stubEnv('STRIPE_SECRET_KEY', 'sk_test_entity_preview');
   vi.stubEnv('STRIPE_WEBHOOK_SECRET', 'whsec_entity_preview');
-  const { owner, tripId, users } = await setupTrip(1);
+  const { owner, tripId, users } = await setupBillableTrip(1);
   const member = users[0]!;
   const idea = await owner.client.mutation(api.routes.trips.versions.create.run, {
     tripId,
@@ -91,7 +92,7 @@ test('legacy trip entity references and content remain available with Stripe con
 
 test('trip-linked group chat preview metadata requires actual chat membership and protects messages', async () => {
   vi.stubEnv('STRIPE_SECRET_KEY', 'sk_test_entity_preview');
-  const { owner, tripId, users } = await setupTrip(2);
+  const { owner, tripId, users } = await setupBillableTrip(2);
   const member = users[0]!;
   const nonmember = users[1]!;
   const discussionId = await owner.client.mutation(api.routes.discussions.create.run, {
