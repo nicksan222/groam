@@ -1,0 +1,161 @@
+import { afterEach, expect, test, vi } from 'vite-plus/test';
+import { api } from '#convex-generated/api';
+import { setupTrip } from '#testing/trips';
+
+const checkout = api.routes.trips.payments.checkout.run;
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+});
+
+function configure() {
+  vi.stubEnv('STRIPE_SECRET_KEY', 'sk_test_fixture');
+  vi.stubEnv('STRIPE_WEBHOOK_SECRET', 'whsec_fixture');
+}
+const session = (status = 'open') => ({
+  id: 'cs_retry',
+  url: 'https://checkout.stripe.com/c/pay/retry',
+  status,
+  payment_status: 'unpaid',
+  amount_total: 100,
+  currency: 'eur',
+  metadata: {}
+});
+const expiredCreation = () => Response.json({ error: { param: 'expires_at' } }, { status: 400 });
+
+// Only the external Stripe boundary is mocked; reservations/authentication use real routes.
+test('definitively uncreated expired checkout renews once after a failed network request', async () => {
+  configure();
+  const { tripId, users } = await setupTrip(1);
+  const member = users[0]!;
+  const now = Date.now();
+  const keys: Array<string | null> = [];
+  const provider = vi.fn(async (_url: string, init?: RequestInit) => {
+    keys.push(new Headers(init?.headers).get('Idempotency-Key'));
+    if (keys.length === 1) throw new TypeError('network unavailable');
+    if (keys.length === 2) return expiredCreation();
+    const body = new URLSearchParams(String(init?.body));
+    expect(Number(body.get('expires_at'))).toBeGreaterThan(Math.floor(Date.now() / 1000) + 1800);
+    return Response.json(session());
+  });
+  vi.stubGlobal('fetch', provider);
+  await expect(member.client.action(checkout, { tripId })).rejects.toThrow('network unavailable');
+  vi.spyOn(Date, 'now').mockReturnValue(now + 31 * 60_000);
+  expect(await member.client.action(checkout, { tripId })).toMatchObject({ skipped: false });
+  expect(keys[0]).toBe(keys[1]);
+  expect(keys[2]).not.toBe(keys[0]);
+  expect(provider).toHaveBeenCalledTimes(3);
+});
+
+test('unknown sessions beyond idempotency retention fail closed without creating another charge', async () => {
+  configure();
+  const { tripId, users } = await setupTrip(1);
+  const member = users[0]!;
+  const now = Date.now();
+  const provider = vi.fn(async () => {
+    throw new TypeError('network unavailable');
+  });
+  vi.stubGlobal('fetch', provider);
+  await expect(member.client.action(checkout, { tripId })).rejects.toThrow();
+  vi.spyOn(Date, 'now').mockReturnValue(now + 24 * 3600_000);
+  await expect(member.client.action(checkout, { tripId })).rejects.toThrow('reconciliation');
+  expect(provider).toHaveBeenCalledTimes(1);
+});
+
+test('concurrent self retries share the exact Stripe request and idempotency key', async () => {
+  configure();
+  const { tripId, users } = await setupTrip(1);
+  const member = users[0]!;
+  let unblock!: () => void;
+  const bothCreating = new Promise<void>((resolve) => {
+    unblock = resolve;
+  });
+  const requests: Array<{ key: string | null; body: string }> = [];
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (_url: string, init?: RequestInit) => {
+      if (init?.method === 'POST') {
+        requests.push({
+          key: new Headers(init.headers).get('Idempotency-Key'),
+          body: String(init.body)
+        });
+        if (requests.length === 2) unblock();
+        await bothCreating;
+      }
+      return Response.json(session());
+    })
+  );
+  const results = await Promise.all([
+    member.client.action(checkout, { tripId }),
+    member.client.action(checkout, { tripId })
+  ]);
+  expect(results[0]).toEqual(results[1]);
+  expect(requests).toHaveLength(2);
+  expect(requests[0]).toEqual(requests[1]);
+});
+
+test('a sponsor cannot take an unattached checkout, but can reclaim a confirmed expired session', async () => {
+  configure();
+  const { owner, tripId, users } = await setupTrip(1);
+  const member = users[0]!;
+  let started!: () => void;
+  let release!: () => void;
+  const creating = new Promise<void>((resolve) => {
+    started = resolve;
+  });
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const provider = vi.fn(async () => {
+    started();
+    await gate;
+    return Response.json(session());
+  });
+  vi.stubGlobal('fetch', provider);
+  const pending = member.client.action(checkout, { tripId });
+  await creating;
+  try {
+    await expect(owner.client.action(checkout, { tripId, userId: member.userId })).rejects.toThrow(
+      'already paying'
+    );
+    expect(provider).toHaveBeenCalledTimes(1);
+  } finally {
+    release();
+  }
+  await pending;
+  provider.mockImplementation(async (_url?: unknown, init?: RequestInit) =>
+    Response.json(init?.method === 'GET' ? session('expired') : { ...session(), id: 'cs_sponsor' })
+  );
+  expect(await owner.client.action(checkout, { tripId, userId: member.userId })).toMatchObject({
+    skipped: false
+  });
+  provider.mockImplementation(async () => Response.json({ ...session(), id: 'cs_sponsor' }));
+  await expect(member.client.action(checkout, { tripId })).rejects.toThrow('already paying');
+});
+
+test('a lost creation response replays the paid session instead of charging again', async () => {
+  configure();
+  const { owner, tripId, users } = await setupTrip(1);
+  const member = users[0]!;
+  const now = Date.now();
+  const keys: Array<string | null> = [];
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (_url: string, init?: RequestInit) => {
+      keys.push(new Headers(init?.headers).get('Idempotency-Key'));
+      if (keys.length === 1) throw new TypeError('response lost after Stripe accepted creation');
+      return Response.json({ ...session('complete'), url: null, payment_status: 'paid' });
+    })
+  );
+  await expect(member.client.action(checkout, { tripId })).rejects.toThrow('response lost');
+  vi.spyOn(Date, 'now').mockReturnValue(now + 31 * 60_000);
+  expect(await member.client.action(checkout, { tripId })).toEqual({ skipped: true, url: null });
+  expect(keys).toHaveLength(2);
+  expect(keys[0]).toBe(keys[1]);
+  expect(
+    (await owner.client.query(api.routes.trips.payments.status.run, { tripId })).travelers.find(
+      (traveler) => traveler.userId === member.userId
+    )?.paid
+  ).toBe(true);
+});

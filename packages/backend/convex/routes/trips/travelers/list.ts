@@ -1,9 +1,9 @@
 import { v } from 'convex/values';
 import { TripTravelers } from '#convex/modules/travel/travelers/index';
 import { TripTravelerValidators } from '#convex/modules/travel/travelers/schema';
-import { sharedTripQuery } from '#convex/modules/travel/trips/ctx';
+import { previewSharedTripQuery } from '#convex/modules/travel/trips/ctx';
 
-export const run = sharedTripQuery({
+export const run = previewSharedTripQuery({
   args: {},
   returns: v.array(TripTravelerValidators.traveler),
   handler: (ctx) => TripTravelers.list(ctx)

@@ -35,6 +35,8 @@ type Env = {
   readonly CLOUDFLARE_EMAIL_API_TOKEN: string | undefined;
   readonly CONVEX_SITE_URL: string | undefined;
   readonly SITE_URL: string | undefined;
+  readonly STRIPE_SECRET_KEY: string | undefined;
+  readonly STRIPE_WEBHOOK_SECRET: string | undefined;
 };
 
 /**

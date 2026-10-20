@@ -1,6 +1,7 @@
 import type { Doc, Id } from '#convex-generated/dataModel';
 import type { QueryCtx } from '#convex-generated/server';
 import { Attachments } from '#convex/modules/media/attachments/index';
+import { canParticipateInTrip } from '#convex/modules/payments/participation';
 import { ItineraryActivity } from '#convex/modules/travel/activities/index';
 import { TripDestination } from '#convex/modules/travel/destinations/index';
 import { TripStay } from '#convex/modules/travel/stays/index';
@@ -313,7 +314,9 @@ function projectedDuration({
 async function goingTravelerCount(ctx: QueryCtx, trip: TripQueryCtx): Promise<number> {
   const sourceId = sharedTripId(trip.trip);
   if (sourceId === trip.trip._id) return TripTravelers.goingCount(trip);
-  return TripTravelers.goingCount(await loadSharedTripContext(ctx, trip.trip._id, trip.workspace));
+  return TripTravelers.goingCount(
+    await loadSharedTripContext(ctx, trip.trip._id, trip.workspace, { allowUnpaid: true })
+  );
 }
 
 export async function projectTrip(ctx: QueryCtx, trip: TripQueryCtx) {
@@ -354,6 +357,7 @@ export async function projectTrip(ctx: QueryCtx, trip: TripQueryCtx) {
     ...activityTransfers
   ].reduce((total, item) => total + plannedCostAmount(item.cost, travelerCount), 0);
 
+  const canParticipate = await canParticipateInTrip(ctx, trip.trip, trip.workspace.userId);
   return {
     activity: activity.map((item) => ({
       actorName: item.actor.name,
@@ -387,7 +391,16 @@ export async function projectTrip(ctx: QueryCtx, trip: TripQueryCtx) {
     lastUpdatedAt: trip.trip.updatedAt,
     minimumDurationDays: trip.trip.duration?.minimumDays ?? null,
     name: trip.trip.name,
-    permissions: tripPermissions(trip),
+    permissions: canParticipate
+      ? tripPermissions(trip)
+      : {
+          canArchive: false,
+          canEdit: false,
+          canEditCover: false,
+          canPropose: false,
+          canRestore: false,
+          isReadOnly: true
+        },
     proposal: trip.trip.proposal
       ? {
           author: trip.trip.proposal.author,

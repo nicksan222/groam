@@ -1,7 +1,8 @@
 import { ConvexError } from 'convex/values';
-import type { Id } from '#convex-generated/dataModel';
+import type { Doc, Id } from '#convex-generated/dataModel';
 import type { MutationCtx } from '#convex-generated/server';
-import { workspaceRoster } from '#convex/modules/auth/workspace';
+import { systemWorkspace, workspaceRoster } from '#convex/modules/auth/workspace';
+import { assertTripPaid, paymentFor, requiresTripPayment } from '#convex/modules/payments/index';
 import { PollSignals } from '#convex/modules/polls/signals';
 import { syncTripConditions } from '#convex/modules/travel/issues/sync';
 import {
@@ -10,6 +11,7 @@ import {
   type TravelerStatus,
   travelersForTrip
 } from '#convex/modules/travel/travelers/statuses';
+import { attachTrip } from '#convex/modules/travel/trips/ctx';
 import { isTripAdmin, type TripCtx } from '#convex/modules/travel/trips/ctx';
 
 export type { TravelerStatus };
@@ -22,6 +24,18 @@ export async function listTravelers(ctx: TripCtx) {
     roster.members.map((member) => member.userId)
   );
   const byUserId = new Map(rows.flatMap((row) => (row.userId ? [[row.userId, row] as const] : [])));
+  const unpaid = new Set(
+    (
+      await Promise.all(
+        roster.members.map(async (member) =>
+          requiresTripPayment(ctx.trip, member.userId) &&
+          !(await paymentFor(ctx, ctx.trip._id, member.userId))?.paid
+            ? member.userId
+            : null
+        )
+      )
+    ).filter((id) => id !== null)
+  );
   return roster.members
     .map((member) => {
       const row = byUserId.get(member.userId);
@@ -31,7 +45,10 @@ export async function listTravelers(ctx: TripCtx) {
         image: member.image ?? null,
         invitationId: row?.invitationId ?? null,
         name: member.name,
-        status: rsvpStatus(row?.status),
+        status:
+          unpaid.has(member.userId) && row?.status !== 'maybe' && row?.status !== 'not_going'
+            ? ('invited' as const)
+            : rsvpStatus(row?.status),
         userId: member.userId
       };
     })
@@ -47,7 +64,7 @@ export async function seedTravelers(ctx: MutationCtx, trip: TripCtx<MutationCtx>
         handle: member.handle,
         name: member.name,
         organizationId: trip.workspace.organizationId,
-        status: 'going',
+        status: requiresTripPayment(trip.trip, member.userId) ? 'invited' : 'going',
         tripId: trip.trip._id,
         updatedAt: now,
         userId: member.userId
@@ -66,6 +83,7 @@ export async function setTravelerStatus(
   if (userId !== ctx.workspace.userId && !isTripAdmin(ctx)) {
     throw new ConvexError('You can only update your own RSVP');
   }
+  if (status === 'going') await assertTripPaid(ctx, userId);
   const roster = await workspaceRoster(ctx, ctx.workspace);
   const member = roster.members.find((item) => item.userId === userId);
   if (!member) throw new ConvexError('Traveler not found in this group');
@@ -109,9 +127,14 @@ export async function claimInvitation(
     .withIndex('by_invitationId', (query) => query.eq('invitationId', invitationId))
     .unique();
   if (!traveler || traveler.organizationId !== workspace.organizationId) return null;
+  const trip = await ctx.db.get('trips', traveler.tripId);
+  const unpaid =
+    trip &&
+    requiresTripPayment(trip, workspace.userId) &&
+    !(await paymentFor(ctx, trip._id, workspace.userId))?.paid;
   await ctx.db.patch('tripTravelers', traveler._id, {
     name: workspace.viewerName,
-    status: 'going',
+    status: unpaid ? 'invited' : 'going',
     updatedAt: Date.now(),
     userId: workspace.userId
   });
@@ -126,12 +149,18 @@ export async function goingCount(ctx: TripCtx): Promise<number> {
   return (await listTravelers(ctx)).filter((traveler) => traveler.status === 'going').length;
 }
 
+export async function markPaidGoing(ctx: MutationCtx, trip: Doc<'trips'>, userId: string) {
+  const workspace = systemWorkspace(trip.organizationId);
+  await setTravelerStatus(attachTrip(ctx, trip, workspace, 'organizer'), userId, 'going');
+}
+
 /** Per-trip RSVP overlay on the workspace roster. */
 // oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class TripTravelers {
   static claimInvitation = claimInvitation;
   static goingCount = goingCount;
   static list = listTravelers;
+  static markPaidGoing = markPaidGoing;
   static seed = seedTravelers;
   static setStatus = setTravelerStatus;
   static statusesForTrip = statusesForTrip;

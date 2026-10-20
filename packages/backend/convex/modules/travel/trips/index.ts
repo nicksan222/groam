@@ -1,5 +1,6 @@
 import { ConvexError, type Infer } from 'convex/values';
 import type { Doc, Id, TableNames } from '#convex-generated/dataModel';
+import { env } from '#convex-generated/server';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import { AgentRuns } from '#convex/modules/assistant/runs/index';
 import { AgentWaits } from '#convex/modules/assistant/waits/index';
@@ -412,6 +413,7 @@ async function create(
     budget: details.budget,
     clientRequestId,
     creationFingerprint,
+    ...(env.STRIPE_SECRET_KEY?.trim() ? { paymentsRequired: true } : {}),
     ...(details.coverStorageId
       ? {
           cover: {
@@ -449,18 +451,18 @@ async function create(
 }
 
 async function get(ctx: QueryCtx, tripId: Id<'trips'>) {
-  return projectTrip(ctx, await loadTripContext(ctx, tripId));
+  return projectTrip(ctx, await loadTripContext(ctx, tripId, undefined, { allowUnpaid: true }));
 }
 
 async function find(ctx: QueryCtx, tripId: Id<'trips'>) {
   const workspace = await requireWorkspace(ctx);
   const data = await ctx.db.get('trips', tripId);
   if (!data || data.organizationId !== workspace.organizationId) return null;
-  return projectTrip(ctx, await loadTripContext(ctx, tripId, workspace));
+  return projectTrip(ctx, await loadTripContext(ctx, tripId, workspace, { allowUnpaid: true }));
 }
 
 async function groupMemberCount(ctx: QueryCtx, tripId: Id<'trips'>): Promise<number> {
-  const trip = await loadTripContext(ctx, tripId);
+  const trip = await loadTripContext(ctx, tripId, undefined, { allowUnpaid: true });
   return (await workspaceRoster(ctx, trip.workspace)).members.length;
 }
 
