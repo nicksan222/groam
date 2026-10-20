@@ -5,12 +5,14 @@ import { cn } from '@groam/ui/lib/utils';
 const BADGE_VARIANT = {
   failed: 'destructive',
   idle: 'outline',
+  unknown: 'outline',
   working: 'green'
 } as const satisfies Record<keyof typeof ROSTER_STATUS_LABEL, BadgeVariant>;
 
 const DOT_CLASS = {
   failed: 'bg-current',
   idle: 'bg-muted-foreground',
+  unknown: 'bg-muted-foreground',
   working: 'bg-current motion-safe:animate-pulse'
 } as const satisfies Record<keyof typeof ROSTER_STATUS_LABEL, string>;
 

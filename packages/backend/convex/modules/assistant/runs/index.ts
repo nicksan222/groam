@@ -33,6 +33,7 @@ const MAX_ASSIGNED_ISSUES = 200;
 const MAX_EVENT_PAGE = 50;
 const MAX_RUN_PAGE = 25;
 const ROSTER_RUNS_PER_AGENT = 20;
+const ROSTER_CANDIDATES_PER_AGENT = 200;
 
 function requireRunPageSize(paginationOpts: PaginationOptions) {
   if (
@@ -731,23 +732,54 @@ async function appendStepEvents(
   return null;
 }
 
+/** Stable authorization inputs only; titles/status never affect audience permission. */
+function rosterAudienceKey(run: Doc<'agentRuns'>): string {
+  return JSON.stringify([
+    run.tripId ?? run.issueId ?? run.proposalId ?? null,
+    run.discussionId ?? null,
+    Boolean(run.researchTask),
+    run.researchTask ? run.createdBy.userId : null
+  ]);
+}
+
+async function rosterWindow(
+  ctx: QueryCtx,
+  workspace: Workspace,
+  agentId: Doc<'agentRuns'>['agentId'],
+  permissions: Map<string, Promise<boolean>>
+) {
+  const candidates = ctx.db
+    .query('agentRuns')
+    .withIndex('by_organizationId_and_agentId_and_updatedAt', (query) =>
+      query.eq('organizationId', workspace.organizationId).eq('agentId', agentId)
+    )
+    .order('desc');
+  const runs: Doc<'agentRuns'>[] = [];
+  let inspected = 0;
+  for await (const run of candidates) {
+    // This single sentinel read distinguishes true exhaustion from a truncated window.
+    // At most 201 raw rows are read, and only the first 200 receive authorization checks.
+    if (inspected === ROSTER_CANDIDATES_PER_AGENT) return { runs, incomplete: true };
+    inspected += 1;
+    const key = rosterAudienceKey(run);
+    let permission = permissions.get(key);
+    if (!permission) {
+      permission = canViewRun(ctx, run, workspace);
+      permissions.set(key, permission);
+    }
+    // oxlint-disable-next-line react-doctor/async-await-in-loop -- Ordered authorization stops at 20 visible runs rather than checking the entire candidate budget.
+    if (await permission) runs.push(run);
+    if (runs.length === ROSTER_RUNS_PER_AGENT) return { runs, incomplete: false };
+  }
+  return { runs, incomplete: false };
+}
+
 async function roster(ctx: QueryCtx): Promise<AgentRosterItem[]> {
   const workspace = await requireWorkspace(ctx);
-  const [runsByAgent, allIssues] = await Promise.all([
+  const permissions = new Map<string, Promise<boolean>>();
+  const [windows, issueCandidates] = await Promise.all([
     Promise.all(
-      assistantAgentList.map(async (agent) =>
-        visibleRuns(
-          ctx,
-          await ctx.db
-            .query('agentRuns')
-            .withIndex('by_organizationId_and_agentId_and_updatedAt', (query) =>
-              query.eq('organizationId', workspace.organizationId).eq('agentId', agent.id)
-            )
-            .order('desc')
-            .take(ROSTER_RUNS_PER_AGENT),
-          workspace
-        )
-      )
+      assistantAgentList.map((agent) => rosterWindow(ctx, workspace, agent.id, permissions))
     ),
     ctx.db
       .query('tripIssues')
@@ -755,8 +787,10 @@ async function roster(ctx: QueryCtx): Promise<AgentRosterItem[]> {
         query.eq('organizationId', workspace.organizationId)
       )
       .order('desc')
-      .take(500)
+      .take(501)
   ]);
+  const issueWindowIncomplete = issueCandidates.length > 500;
+  const allIssues = issueCandidates.slice(0, 500);
   const tripAccess = new Map<Id<'trips'>, Promise<Doc<'trips'> | null>>();
   const issueVisibility = await Promise.all(
     allIssues.map((issue) => {
@@ -770,25 +804,32 @@ async function roster(ctx: QueryCtx): Promise<AgentRosterItem[]> {
   );
   const issues = allIssues.filter((_, index) => issueVisibility[index] !== null);
   return assistantAgentList.map((agent, index) => {
-    const agentRuns = runsByAgent[index] ?? [];
+    const window = windows[index] ?? { runs: [], incomplete: false };
+    const agentRuns = window.runs;
+    const activeRunCount = countActiveAgentRuns(agentRuns);
     const assignedIssueCount = isIssueAssignableAgentId(agent.id)
-      ? issues.filter(
-          (issue) =>
-            !isResolved(issue.status) &&
-            issue.assignee?.kind === 'agent' &&
-            issue.assignee.agentId === agent.id
-        ).length
+      ? issueWindowIncomplete
+        ? null
+        : issues.filter(
+            (issue) =>
+              !isResolved(issue.status) &&
+              issue.assignee?.kind === 'agent' &&
+              issue.assignee.agentId === agent.id
+          ).length
       : 0;
     const latest = agentRuns[0];
     return {
-      activeRunCount: countActiveAgentRuns(agentRuns),
+      activeRunCount: window.incomplete ? null : activeRunCount,
+      runWindowIncomplete: window.incomplete,
+      issueWindowIncomplete: isIssueAssignableAgentId(agent.id) && issueWindowIncomplete,
       assignedIssueCount,
       description: agent.description,
       id: agent.id,
       label: agent.label,
       lastActivityAt: latest?.updatedAt ?? null,
       latestRun: latest ? presentLatestRun(latest) : null,
-      status: rosterStatusFromRuns(agentRuns),
+      status:
+        window.incomplete && activeRunCount === 0 ? 'unknown' : rosterStatusFromRuns(agentRuns),
       surface: agent.surface
     };
   });
