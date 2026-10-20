@@ -285,6 +285,16 @@ async function deleteBatch(ctx: MutationCtx, trip: Doc<'trips'>): Promise<void> 
   if (await TripPreferences.deleteForTrip(ctx, trip._id, DELETE_BATCH_SIZE)) {
     return;
   }
+  if (
+    await deleteRows(
+      ctx,
+      ctx.db
+        .query('tripPayments')
+        .withIndex('by_tripId_and_userId', (query) => query.eq('tripId', trip._id))
+        .take(DELETE_BATCH_SIZE)
+    )
+  )
+    return;
   if (await deleteHistoryRows(ctx, trip._id)) return;
 
   await TripLocations.removeTrip(ctx, trip._id);
