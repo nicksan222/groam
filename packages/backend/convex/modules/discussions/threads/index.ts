@@ -48,6 +48,7 @@ import type { DiscussionMember } from '#convex/modules/discussions/threads/schem
 import { PollCleanup } from '#convex/modules/polls/cleanup';
 import { insertWithShortId } from '#convex/modules/references/index';
 import { loadTripContext } from '#convex/modules/travel/trips/ctx';
+import { findVisibleTrip } from '#convex/modules/travel/trips/visibility';
 
 export type { DiscussionMessageMedia } from '#convex/modules/discussions/media/index';
 export type { DiscussionAccess } from '#convex/modules/discussions/threads/entity';
@@ -409,14 +410,24 @@ export class Discussions {
     if (memberships.length > MAX_MEMBERSHIP_ROWS) {
       throw new ConvexError(`Discussion limit of ${MAX_MEMBERSHIP_ROWS} exceeded`);
     }
+    // Multiple Chats rows may reference one trip; share its entitlement read within this query.
+    const trips = new Map<Id<'trips'>, Promise<Doc<'trips'> | null>>();
+    const visibleTrip = (tripId: Id<'trips'>) => {
+      let trip = trips.get(tripId);
+      if (!trip) {
+        trip = findVisibleTrip(ctx, tripId, workspace);
+        trips.set(tripId, trip);
+      }
+      return trip;
+    };
     const discussions = await Promise.all(
       memberships.map(async (membership) => {
         const discussion = await ctx.db.get('discussions', membership.discussionId);
         if (!discussion || discussion.organizationId !== workspace.organizationId) return null;
         // The literal narrows to the variant that carries members and an optional trip.
         if (discussion.kind !== 'group') return null;
-        const tripDoc = discussion.tripId ? await ctx.db.get('trips', discussion.tripId) : null;
-        const trip = tripDoc?.organizationId === workspace.organizationId ? tripDoc : null;
+        const trip = discussion.tripId ? await visibleTrip(discussion.tripId) : null;
+        if (discussion.tripId && !trip) return null;
         return {
           createdBy: discussion.createdBy,
           id: discussion._id,
