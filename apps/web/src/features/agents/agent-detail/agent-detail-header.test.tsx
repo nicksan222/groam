@@ -54,9 +54,22 @@ describe('AgentDetailHeader', () => {
   test.each([
     ['failed', 'Needs attention'],
     ['idle', 'Idle'],
+    ['unknown', 'Activity incomplete'],
     ['working', 'Working']
   ] as const)('shows the %s status', async (status, label) => {
     await render(<AgentDetailHeader agent={makeAgent({ status })} />);
     await expect.element(page.getByText(label)).toBeVisible();
   });
+});
+
+test('explains how to continue when activity is incomplete', async () => {
+  await render(
+    <AgentDetailHeader
+      agent={makeAgent({ status: 'unknown', runWindowIncomplete: true, activeRunCount: null })}
+    />
+  );
+  await expect
+    .element(page.getByText('Activity summary incomplete. Load more runs below to continue.'))
+    .toBeVisible();
+  await expect.element(page.getByText('Idle', { exact: true })).not.toBeInTheDocument();
 });

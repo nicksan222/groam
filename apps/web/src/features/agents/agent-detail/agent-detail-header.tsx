@@ -78,6 +78,11 @@ export function AgentDetailHeader(props: AgentDetailHeaderProps) {
           <span className="flex gap-1 pt-1">
             <Badge variant="outline">{props.agent.surface === 'chat' ? 'Chat' : 'Worker'}</Badge>
             <AgentStatusBadge status={props.agent.status} />
+            {props.agent.runWindowIncomplete ? (
+              <span className="text-xs text-muted-foreground">
+                Activity summary incomplete. Load more runs below to continue.
+              </span>
+            ) : null}
           </span>
         </>
       )}

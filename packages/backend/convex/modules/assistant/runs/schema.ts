@@ -86,14 +86,21 @@ const assignedIssueActivity = {
 const latestRun = run.pick('error', 'headline', 'id', 'status', 'title', 'updatedAt');
 
 const rosterItem = v.object({
-  activeRunCount: v.number(),
-  assignedIssueCount: v.number(),
+  activeRunCount: v.union(v.number(), v.null()),
+  assignedIssueCount: v.union(v.number(), v.null()),
+  runWindowIncomplete: v.optional(v.boolean()),
+  issueWindowIncomplete: v.optional(v.boolean()),
   description: v.string(),
   id: assistantAgentValidator,
   label: v.string(),
   lastActivityAt: v.union(v.number(), v.null()),
   latestRun: v.union(latestRun, v.null()),
-  status: v.union(v.literal('failed'), v.literal('idle'), v.literal('working')),
+  status: v.union(
+    v.literal('failed'),
+    v.literal('idle'),
+    v.literal('working'),
+    v.literal('unknown')
+  ),
   surface: agentSurfaceValidator
 });
 
