@@ -1,6 +1,7 @@
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api } from '#convex-generated/api';
-import { openTripDraft, setupTrip, tripActivityInput, tripLocationInput } from '#testing/trips';
+import { setupBillableTrip } from '#testing/payments';
+import { setupTrip, openTripDraft, tripActivityInput, tripLocationInput } from '#testing/trips';
 
 const findTrip = api.routes.trips.find.run;
 const getTrip = api.routes.trips.get.run;
@@ -15,8 +16,8 @@ function enablePayments() {
   vi.stubEnv('STRIPE_WEBHOOK_SECRET', 'whsec_preview');
 }
 
-async function protectedPlan() {
-  const fixture = await setupTrip(1);
+async function protectedPlan(billable = true) {
+  const fixture = await (billable ? setupBillableTrip : setupTrip)(1);
   const version = await openTripDraft(fixture.owner, fixture.tripId);
   const tripId = version.workingTripId;
   await fixture.owner.client.mutation(api.routes.trips.update.run, {
@@ -100,7 +101,7 @@ test.each(['disabled', 'legacy', 'paid'])(
   async (access) => {
     if (access === 'legacy') vi.stubEnv('STRIPE_SECRET_KEY', '');
     else enablePayments();
-    const { owner, users, tripId, previewTripId } = await protectedPlan();
+    const { owner, users, tripId, previewTripId } = await protectedPlan(access !== 'legacy');
     if (access === 'disabled') vi.stubEnv('STRIPE_SECRET_KEY', '');
     if (access === 'legacy') enablePayments();
     if (access === 'paid') {
@@ -154,7 +155,7 @@ test('payment status on an unarchived idea reports its shared source archive sta
 
 test('an unpaid draft author receives the source trip header and participant role', async () => {
   enablePayments();
-  const { owner, users, tripId } = await setupTrip(1);
+  const { owner, users, tripId } = await setupBillableTrip(1);
   const member = users[0]!;
   vi.stubEnv('STRIPE_SECRET_KEY', '');
   const draft = await openTripDraft(member, tripId);

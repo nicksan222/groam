@@ -9,6 +9,7 @@ import {
   internalQuery,
   type MutationCtx
 } from '#convex-generated/server';
+import { hasCredentialRejectionProof } from './credentials';
 import { reconcileStripe, type ReconciliationOutcome } from './refunds';
 import { paymentTables, manualRefundStatus } from './schema';
 
@@ -17,7 +18,8 @@ const RETRY_DELAY = 15 * 60_000;
 /** Detach only the immutable provider request/receipt, never payer or traveler personal fields. */
 export async function detachPayment(ctx: MutationCtx, row: Doc<'tripPayments'>) {
   const neverSent =
-    row.requestProtocol === 'persist-before-io-v1' && !row.sessionId && !row.checkoutBody;
+    (row.requestProtocol === 'persist-before-io-v1' && !row.sessionId && !row.checkoutBody) ||
+    hasCredentialRejectionProof(row);
   if (!row.paid && !neverSent) {
     const id = await ctx.db.insert('paymentReconciliations', {
       revision: 0,

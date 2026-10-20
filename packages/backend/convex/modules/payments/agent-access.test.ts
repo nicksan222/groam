@@ -1,6 +1,8 @@
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api } from '#convex-generated/api';
-import { openTripDraft, setupTrip } from '#testing/trips';
+import { setupBillableTrip } from '#testing/payments';
+import { setupTrip, openTripDraft } from '#testing/trips';
+
 import { changedTripDetails } from '#testing/versions';
 
 const paginationOpts = { cursor: null, numItems: 10 };
@@ -12,8 +14,8 @@ function enablePayments() {
   vi.stubEnv('STRIPE_SECRET_KEY', 'sk_test_agents');
   vi.stubEnv('STRIPE_WEBHOOK_SECRET', 'whsec_agents');
 }
-async function protectedRuns() {
-  const fixture = await setupTrip(1);
+async function protectedRuns(billable = true) {
+  const fixture = await (billable ? setupBillableTrip : setupTrip)(1);
   const issueId = await fixture.owner.client.mutation(api.routes.trips.issues.create.run, {
     tripId: fixture.tripId,
     title: 'Protected issue title',
@@ -101,7 +103,7 @@ test.each(['paid', 'disabled', 'legacy'])(
     if (access === 'legacy') vi.stubEnv('STRIPE_SECRET_KEY', '');
     else enablePayments();
     const { owner, member, tripId, issueId, issueRunId, reviewRunId, proposalId } =
-      await protectedRuns();
+      await protectedRuns(access !== 'legacy');
     if (access === 'disabled') vi.stubEnv('STRIPE_SECRET_KEY', '');
     if (access === 'legacy') enablePayments();
     if (access === 'paid') {

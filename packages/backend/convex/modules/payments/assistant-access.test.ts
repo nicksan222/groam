@@ -1,5 +1,6 @@
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
+import { markTripBillable, setupBillableWritableTrip } from '#testing/payments';
 import { setupWritableTrip, tripInput, tripLocationInput } from '#testing/trips';
 
 const screen = {
@@ -17,7 +18,7 @@ afterEach(() => vi.unstubAllEnvs());
 
 test('assistant catalogs and explicit tags enforce paid seats and recheck stored tags', async () => {
   vi.stubEnv('STRIPE_SECRET_KEY', 'sk_test_fixture');
-  const fixture = await setupWritableTrip(1);
+  const fixture = await setupBillableWritableTrip(1);
   const { owner, sharedTripId, tripId, users } = fixture;
   const member = users[0]!;
   const destinationId = await owner.client.mutation(api.routes.trips.destinations.add.run, {
@@ -98,7 +99,9 @@ test.each(['legacy', 'paid'] as const)(
   'assistant catalogs find older %s trips beyond more than 25 newer unpaid trips',
   async (access) => {
     vi.stubEnv('STRIPE_SECRET_KEY', access === 'legacy' ? '' : 'sk_test_fixture');
-    const { owner, sharedTripId, tripId, users } = await setupWritableTrip(1);
+    const { owner, sharedTripId, tripId, users } = await (
+      access === 'legacy' ? setupWritableTrip : setupBillableWritableTrip
+    )(1);
     const member = users[0]!;
     const destinationId = await owner.client.mutation(api.routes.trips.destinations.add.run, {
       tripId,
@@ -120,9 +123,10 @@ test.each(['legacy', 'paid'] as const)(
       }
     });
     for (let index = 0; index < 28; index++) {
-      await owner.client.action(api.routes.trips.create.run, {
+      const newerTripId = await owner.client.action(api.routes.trips.create.run, {
         input: tripInput({ name: `Newer unpaid trip ${index}` })
       });
+      await markTripBillable(owner, newerTripId);
     }
     const firstPage = await member.client.query(api.routes.assistant.context.catalog.page.run, {
       paginationOpts: { cursor: null, numItems: 25 }

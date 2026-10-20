@@ -1,6 +1,7 @@
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
-import { paginationArgs, setupTrip, tripInput } from '#testing/trips';
+import { markTripBillable } from '#testing/payments';
+import { setupTrip, paginationArgs, tripInput } from '#testing/trips';
 
 afterEach(() => vi.unstubAllEnvs());
 
@@ -16,6 +17,7 @@ async function mixedTrips() {
       destination: { status: 'known', name: 'Private destination' }
     })
   });
+  await markTripBillable(fixture.owner, paidTripId);
   return { ...fixture, legacyTripId: fixture.tripId, member: fixture.users[0]!, paidTripId };
 }
 

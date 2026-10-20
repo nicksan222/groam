@@ -19,6 +19,30 @@ export type PaymentAttempt = NonNullable<
   FunctionReturnType<typeof internal.modules.payments.storage.prepare>
 >;
 export class CheckoutCreationExpired extends Error {}
+class CheckoutCredentialsRejected extends Error {}
+
+async function creationError(response: Response): Promise<void> {
+  if (response.status === 401) {
+    const error = z
+      .object({
+        error: z.object({
+          type: z.literal('invalid_request_error'),
+          code: z.enum(['invalid_api_key', 'api_key_expired']).nullish()
+        })
+      })
+      .safeParse(await response.json().catch(() => null));
+    // https://docs.stripe.com/error-low-level: invalid-key failures occur before
+    // execution. Other statuses/body shapes are deliberately not renewal proof.
+    if (error.success) throw new CheckoutCredentialsRejected();
+  }
+  if (response.status === 400) {
+    const error = z
+      .object({ error: z.object({ param: z.string().optional() }) })
+      .safeParse(await response.json().catch(() => null));
+    if (error.success && error.data.error.param === 'expires_at')
+      throw new CheckoutCreationExpired();
+  }
+}
 
 export async function stripeRequest(path: string, body?: URLSearchParams, idempotencyKey?: string) {
   // fallow-ignore-next-line security-sink -- fixed HTTPS Stripe API origin; callers only supply encoded session IDs; redirects refused
@@ -34,13 +58,7 @@ export async function stripeRequest(path: string, body?: URLSearchParams, idempo
     signal: AbortSignal.timeout(15_000)
   });
   if (!response.ok) {
-    if (body && response.status === 400) {
-      const error = z
-        .object({ error: z.object({ param: z.string().optional() }) })
-        .safeParse(await response.json());
-      if (error.success && error.data.error.param === 'expires_at')
-        throw new CheckoutCreationExpired();
-    }
+    if (body) await creationError(response);
     throw new ConvexError('Unable to start payment. Please try again.');
   }
   return sessionSchema.parse(await response.json());
@@ -95,16 +113,28 @@ export async function createSession(ctx: ActionCtx, payment: PaymentAttempt) {
     'metadata[attempt]': payment.attempt,
     expires_at: String(payment.expiresAt)
   });
+  const requestToken = crypto.randomUUID();
   const storedBody = await ctx.runMutation(internal.modules.payments.storage.recordRequest, {
     id: payment.id,
     attempt: payment.attempt,
     body: body.toString(),
-    keyHash: await stripeKeyHash()
+    keyHash: await stripeKeyHash(),
+    requestToken
   });
   if (!storedBody) throw new ConvexError('This trip is no longer available for payment.');
-  return stripeRequest(
-    '',
-    new URLSearchParams(storedBody),
-    `groam-trip-${payment.id}-${payment.attempt}`
-  );
+  try {
+    return await stripeRequest(
+      '',
+      new URLSearchParams(storedBody),
+      `groam-trip-${payment.id}-${payment.attempt}`
+    );
+  } catch (error: unknown) {
+    if (!(error instanceof CheckoutCredentialsRejected)) throw error;
+    await ctx.runMutation(internal.modules.payments.storage.recordCredentialRejection, {
+      id: payment.id,
+      attempt: payment.attempt,
+      requestToken
+    });
+    throw new ConvexError('Stripe credentials were rejected. Please contact the trip organizer.');
+  }
 }

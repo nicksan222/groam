@@ -1,13 +1,13 @@
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api } from '#convex-generated/api';
 import { createOutsiderClient } from '#testing/factory';
-import { setupTrip } from '#testing/trips';
+import { setupBillableTrip } from '#testing/payments';
 
 afterEach(() => vi.unstubAllEnvs());
 
 test('unpaid members resolve only research navigation metadata while content stays protected', async () => {
   vi.stubEnv('STRIPE_SECRET_KEY', 'sk_test_fixture');
-  const { owner, tripId, users } = await setupTrip(1);
+  const { owner, tripId, users } = await setupBillableTrip(1);
   const member = users[0]!;
   const discussionId = await owner.client.mutation(api.routes.discussions.research.create.run, {
     clientRequestId: crypto.randomUUID(),

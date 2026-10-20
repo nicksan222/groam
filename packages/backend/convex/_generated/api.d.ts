@@ -100,6 +100,7 @@ import type * as modules_notifications_index from "../modules/notifications/inde
 import type * as modules_organizations_cleanup from "../modules/organizations/cleanup.js";
 import type * as modules_organizations_invitations_index from "../modules/organizations/invitations/index.js";
 import type * as modules_payments_checkout from "../modules/payments/checkout.js";
+import type * as modules_payments_credentials from "../modules/payments/credentials.js";
 import type * as modules_payments_index from "../modules/payments/index.js";
 import type * as modules_payments_participation from "../modules/payments/participation.js";
 import type * as modules_payments_reconciliation from "../modules/payments/reconciliation.js";
@@ -287,6 +288,7 @@ import type * as routes_discussions_roster from "../routes/discussions/roster.js
 import type * as routes_media_list from "../routes/media/list.js";
 import type * as routes_media_logo_clear from "../routes/media/logo/clear.js";
 import type * as routes_media_logo_set from "../routes/media/logo/set.js";
+import type * as routes_media_page from "../routes/media/page.js";
 import type * as routes_media_remove from "../routes/media/remove.js";
 import type * as routes_media_save from "../routes/media/save.js";
 import type * as routes_media_upload from "../routes/media/upload.js";
@@ -495,6 +497,7 @@ declare const fullApi: ApiFromModules<{
   "modules/organizations/cleanup": typeof modules_organizations_cleanup;
   "modules/organizations/invitations/index": typeof modules_organizations_invitations_index;
   "modules/payments/checkout": typeof modules_payments_checkout;
+  "modules/payments/credentials": typeof modules_payments_credentials;
   "modules/payments/index": typeof modules_payments_index;
   "modules/payments/participation": typeof modules_payments_participation;
   "modules/payments/reconciliation": typeof modules_payments_reconciliation;
@@ -682,6 +685,7 @@ declare const fullApi: ApiFromModules<{
   "routes/media/list": typeof routes_media_list;
   "routes/media/logo/clear": typeof routes_media_logo_clear;
   "routes/media/logo/set": typeof routes_media_logo_set;
+  "routes/media/page": typeof routes_media_page;
   "routes/media/remove": typeof routes_media_remove;
   "routes/media/save": typeof routes_media_save;
   "routes/media/upload": typeof routes_media_upload;

@@ -4,6 +4,7 @@ import { internalMutation } from '#convex-generated/server';
 import { hasOrganizationMembership } from '#convex/modules/auth/workspace';
 import { TripTravelers } from '#convex/modules/travel/travelers/index';
 import { isTripAdmin, loadSharedTripContext } from '#convex/modules/travel/trips/ctx';
+import { hasCredentialRejectionProof } from './credentials';
 import { paymentFor, paymentsEnabled, requiresTripPayment } from './index';
 import { attachDeletedSession, detachPayment } from './reconciliation';
 
@@ -49,7 +50,12 @@ export const prepare = internalMutation({
     if (existing?.paid) return null;
     // Only protocol-marked, never-sent expired attempts can rotate without provider proof.
     // recordRequest's attempt CAS prevents a stale action from sending the replaced attempt.
-    if (existing && expiredAttempt !== existing.attempt && !expiredUnsent(existing)) {
+    if (
+      existing &&
+      expiredAttempt !== existing.attempt &&
+      !expiredUnsent(existing) &&
+      !hasCredentialRejectionProof(existing)
+    ) {
       return {
         id: existing._id,
         attempt: existing.attempt,
@@ -74,7 +80,10 @@ export const prepare = internalMutation({
         ...fields,
         sessionId: undefined,
         checkoutBody: undefined,
-        providerKeyHash: undefined
+        providerKeyHash: undefined,
+        firstRequestToken: undefined,
+        creationRetried: undefined,
+        credentialRejection: undefined
       });
     return {
       id,
@@ -93,9 +102,15 @@ function envReady() {
 }
 
 export const recordRequest = internalMutation({
-  args: { id: v.id('tripPayments'), attempt: v.string(), body: v.string(), keyHash: v.string() },
+  args: {
+    id: v.id('tripPayments'),
+    attempt: v.string(),
+    body: v.string(),
+    keyHash: v.string(),
+    requestToken: v.optional(v.string())
+  },
   returns: v.union(v.string(), v.null()),
-  handler: async (ctx, { id, attempt, body, keyHash }) => {
+  handler: async (ctx, { id, attempt, body, keyHash, requestToken }) => {
     const row = await ctx.db.get(id);
     if (!row || row.attempt !== attempt) return null;
     if (row.checkoutBody) {
@@ -103,10 +118,40 @@ export const recordRequest = internalMutation({
         throw new ConvexError(
           'This checkout needs reconciliation before changing Stripe credentials.'
         );
+      // Every second provider send invalidates first-response proof permanently. A prior
+      // timeout may already have created a session, even if this replay returns 401.
+      await ctx.db.patch(id, { creationRetried: true, credentialRejection: undefined });
       return row.checkoutBody;
     }
-    await ctx.db.patch(id, { checkoutBody: body, providerKeyHash: keyHash });
+    await ctx.db.patch(id, {
+      checkoutBody: body,
+      providerKeyHash: keyHash,
+      firstRequestToken: row.requestProtocol === 'persist-before-io-v1' ? requestToken : undefined,
+      creationRetried: false,
+      credentialRejection: undefined
+    });
     return body;
+  }
+});
+
+/** Only the first, unreplayed creation's definite Stripe authentication failure is proof. */
+export const recordCredentialRejection = internalMutation({
+  args: { id: v.id('tripPayments'), attempt: v.string(), requestToken: v.string() },
+  returns: v.boolean(),
+  handler: async (ctx, { id, attempt, requestToken }) => {
+    const row = await ctx.db.get(id);
+    if (
+      !row ||
+      row.attempt !== attempt ||
+      row.requestProtocol !== 'persist-before-io-v1' ||
+      row.firstRequestToken !== requestToken ||
+      row.creationRetried ||
+      row.sessionId ||
+      row.paid
+    )
+      return false;
+    await ctx.db.patch(id, { credentialRejection: 'stripe-401-invalid-key' });
+    return true;
   }
 });
 
