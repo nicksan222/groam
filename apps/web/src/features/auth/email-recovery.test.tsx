@@ -1,4 +1,4 @@
-import { render } from '@groam/vitest-config/react';
+import { act, render } from '@groam/vitest-config/react';
 import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { EmailRecovery } from './email-recovery';
@@ -32,7 +32,7 @@ test('requests reset and verification links with generic account-existence feedb
   await vi.waitFor(() =>
     expect(requestPasswordReset).toHaveBeenCalledWith({
       email: 'person@example.com',
-      redirectTo: window.location.origin + window.location.pathname
+      redirectTo: window.location.origin + window.location.pathname + '?auth=reset-password'
     })
   );
   await expect
@@ -59,4 +59,28 @@ test('surfaces invalid reset tokens and keeps the new password form available', 
     token: 'invalid-token',
     newPassword: 'Changed-password-1234'
   });
+});
+
+test('ignores duplicate reset submissions until the active request settles', async () => {
+  let finish: (value: unknown) => void = () => undefined;
+  resetPassword.mockReturnValue(
+    new Promise((resolve) => {
+      finish = resolve;
+    })
+  );
+  await render(<EmailRecovery token="single-reset" />);
+  await page.getByLabelText(/^New password/u).fill('Changed-password-1234');
+  const form = page
+    .getByLabelText(/^New password/u)
+    .element()
+    .closest('form');
+  await act(() => {
+    form?.requestSubmit();
+    form?.requestSubmit();
+  });
+  expect(resetPassword).toHaveBeenCalledTimes(1);
+  await expect.element(page.getByRole('button', { name: 'Resetting…' })).toBeDisabled();
+  await act(() => finish({ data: null, error: { message: 'Expired link' } }));
+  await expect.element(page.getByRole('alert')).toHaveTextContent('Expired link');
+  await expect.element(page.getByRole('button', { name: 'Reset password' })).toBeEnabled();
 });

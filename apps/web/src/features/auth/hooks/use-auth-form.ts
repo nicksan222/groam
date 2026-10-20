@@ -5,9 +5,10 @@ import { useAuthFormStore } from '@/lib/stores/auth-form-store';
 import { isValidUsername, usernameRequirements } from '@/lib/username';
 
 function signInWithIdentifier(identifier: string, password: string) {
+  const callbackURL = window.location.origin + window.location.pathname;
   return identifier.includes('@')
-    ? authClient.signIn.email({ email: identifier, password })
-    : authClient.signIn.username({ password, username: identifier });
+    ? authClient.signIn.email({ callbackURL, email: identifier, password })
+    : authClient.signIn.username({ callbackURL, password, username: identifier });
 }
 
 function needsEmailVerification(data: object | null) {

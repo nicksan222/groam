@@ -3,13 +3,15 @@ import { Button } from '@groam/ui/components/button';
 import { FormFeedback } from '@groam/ui/components/form-feedback';
 import { FormField } from '@groam/ui/components/form-field';
 import { Input } from '@groam/ui/components/input';
-import { useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import { errorMessage } from '@/lib/errors';
 
 /** Email links return to this same public auth screen, including deployments under /app/. */
 export function EmailRecovery({ token }: { token: string | null }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const inFlight = useRef(false);
+  const requestVersion = useRef(0);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(() =>
     new URLSearchParams(window.location.search).has('error')
@@ -20,18 +22,27 @@ export function EmailRecovery({ token }: { token: string | null }) {
   const [completed, setCompleted] = useState(false);
   const callbackURL = window.location.origin + window.location.pathname;
 
+  const resetCallbackURL = new URL(callbackURL);
+  resetCallbackURL.searchParams.set('auth', 'reset-password');
+
   const send = async (verification: boolean) => {
+    if (inFlight.current) return;
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(email.trim())) {
       setError('Enter a valid email address.');
       return;
     }
+    const version = ++requestVersion.current;
+    inFlight.current = true;
     setPending(true);
     setError(null);
     setMessage(null);
     try {
       const result = verification
         ? await authClient.sendVerificationEmail({ callbackURL, email: email.trim() })
-        : await authClient.requestPasswordReset({ email: email.trim(), redirectTo: callbackURL });
+        : await authClient.requestPasswordReset({
+            email: email.trim(),
+            redirectTo: resetCallbackURL.href
+          });
       if (result.error) throw new Error(result.error.message ?? 'Unable to send email');
       setMessage(
         'If this address is eligible, an email is on its way. Check your inbox and spam folder.'
@@ -39,16 +50,22 @@ export function EmailRecovery({ token }: { token: string | null }) {
     } catch (cause) {
       setError(errorMessage(cause, 'Unable to send email. Try again.'));
     } finally {
-      setPending(false);
+      if (requestVersion.current === version) {
+        inFlight.current = false;
+        setPending(false);
+      }
     }
   };
 
   const reset = async (event: FormEvent) => {
     event.preventDefault();
+    if (inFlight.current) return;
     if (password.length < 8 || password.length > 128) {
       setError('Your password must be between 8 and 128 characters.');
       return;
     }
+    const version = ++requestVersion.current;
+    inFlight.current = true;
     setPending(true);
     setError(null);
     try {
@@ -63,7 +80,10 @@ export function EmailRecovery({ token }: { token: string | null }) {
         errorMessage(cause, 'This reset link is invalid or expired. Request another email.')
       );
     } finally {
-      setPending(false);
+      if (requestVersion.current === version) {
+        inFlight.current = false;
+        setPending(false);
+      }
     }
   };
 
