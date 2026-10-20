@@ -83,6 +83,7 @@ describe('ReviewComment', () => {
     const props = setup(makeComment());
     await render(<ReviewComment {...props} />);
     await page.getByRole('button', { name: 'Reply' }).click();
+    expect(page.getByRole('button', { name: 'Reply', exact: true }).elements()).toHaveLength(1);
     const box = page.getByLabelText('Reply to Ada Lovelace');
     await expect.element(page.getByRole('button', { name: 'Reply' }).last()).toBeDisabled();
     await box.fill('  On it  ');
