@@ -1,7 +1,11 @@
 import { v } from 'convex/values';
+import type { Doc } from '#convex-generated/dataModel';
+import type { QueryCtx } from '#convex-generated/server';
+import type { Workspace } from '#convex/modules/auth/workspace';
 import { workspaceQuery } from '#convex/modules/auth/workspace';
 import { DiscussionAccess } from '#convex/modules/discussions/threads/entity';
 import { recordByReference, referenceTable } from '#convex/modules/references/index';
+import { findVisibleTrip } from '#convex/modules/travel/trips/visibility';
 
 export const run = workspaceQuery({
   args: { table: referenceTable, reference: v.string() },
@@ -21,6 +25,8 @@ export const run = workspaceQuery({
     if (table === 'discussions') {
       const discussionId = ctx.db.normalizeId('discussions', record._id);
       if (!discussionId) return null;
+      const preview = await ctx.db.get('discussions', discussionId);
+      if (preview?.kind === 'research') return researchReference(ctx, preview, ctx.workspace);
       try {
         const { discussion } = await DiscussionAccess.forWorkspace(
           ctx,
@@ -40,3 +46,20 @@ export const run = workspaceQuery({
     return { id: record._id, shortId: record.shortId };
   }
 });
+
+/** Only routing metadata is public to unpaid organization members; content keeps its full gate. */
+async function researchReference(
+  ctx: QueryCtx,
+  discussion: Extract<Doc<'discussions'>, { kind: 'research' }>,
+  workspace: Workspace
+) {
+  if (discussion.deletingAt !== undefined) return null;
+  if (!(await findVisibleTrip(ctx, discussion.tripId, workspace, { allowUnpaid: true })))
+    return null;
+  return {
+    id: discussion._id,
+    kind: discussion.kind,
+    shortId: discussion.shortId,
+    tripId: discussion.tripId
+  };
+}
