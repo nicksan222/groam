@@ -8,6 +8,11 @@ export const Route = createFileRoute('/_workspace/trips/$tripId/research/$resear
 });
 
 function ResearchThreadPage() {
-  const { researchId } = useResolvedParams(Route.useParams());
-  return <ResearchThreadView researchId={researchId as Id<'discussions'>} />;
+  const { researchId, tripId } = useResolvedParams(Route.useParams());
+  return (
+    <ResearchThreadView
+      researchId={researchId as Id<'discussions'>}
+      tripId={tripId as Id<'trips'>}
+    />
+  );
 }

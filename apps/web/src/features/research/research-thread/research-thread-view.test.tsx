@@ -7,6 +7,8 @@ import type { ResearchDetail } from '@/types/research';
 import { ResearchThreadView } from './research-thread-view';
 
 const state = vi.hoisted(() => ({
+  blocked: false,
+  read: vi.fn(),
   actions: {
     link: vi.fn(),
     unlink: vi.fn(),
@@ -19,6 +21,11 @@ const state = vi.hoisted(() => ({
     threadId: 'thread-1' as null | string,
     writable: true
   }
+}));
+
+vi.mock('@/features/trips/trip-detail/trip-participation-boundary', () => ({
+  TripParticipationBoundary: ({ children }: { children: () => ReactNode }) =>
+    state.blocked ? <div>Join this trip</div> : children()
 }));
 
 vi.mock('@groam/ai/ui/context/agent-context', () => ({ useSetAgentContext: state.context }));
@@ -44,7 +51,12 @@ vi.mock('@/features/research/hooks/use-research-run', () => ({
     stop: vi.fn()
   })
 }));
-vi.mock('@/features/research/hooks/use-research', () => ({ useResearch: () => state.hook }));
+vi.mock('@/features/research/hooks/use-research', () => ({
+  useResearch: () => {
+    state.read();
+    return state.hook;
+  }
+}));
 vi.mock('@/features/research/hooks/use-research-actions', () => ({
   useResearchActions: () => state.actions
 }));
@@ -74,11 +86,23 @@ const research: ResearchDetail = {
 };
 
 beforeEach(() => {
+  state.blocked = false;
   vi.clearAllMocks();
   state.hook = { isLoading: false, research, threadId: 'thread-1', writable: true };
 });
 
-const view = () => render(<ResearchThreadView researchId={'r1' as Id<'discussions'>} />);
+const view = () =>
+  render(
+    <ResearchThreadView researchId={'r1' as Id<'discussions'>} tripId={'t1' as Id<'trips'>} />
+  );
+
+test('shows the participation boundary before subscribing to deep-linked research', async () => {
+  state.blocked = true;
+  await view();
+  await expect.element(page.getByText('Join this trip')).toBeVisible();
+  expect(state.read).not.toHaveBeenCalled();
+  expect(state.context).not.toHaveBeenCalled();
+});
 
 test('shows a loading state', async () => {
   state.hook = { ...state.hook, isLoading: true, research: undefined };
@@ -163,7 +187,9 @@ test('keeps topic drafts scoped to their research when navigating between topics
   const screen = await view();
   await page.getByRole('textbox', { name: 'Research topic' }).fill('An unfinished hotel question');
   state.hook = { ...state.hook, research: { ...research, id: 'r2', title: 'Train routes' } };
-  await screen.rerender(<ResearchThreadView researchId={'r2' as Id<'discussions'>} />);
+  await screen.rerender(
+    <ResearchThreadView researchId={'r2' as Id<'discussions'>} tripId={'t1' as Id<'trips'>} />
+  );
   await expect
     .element(page.getByRole('textbox', { name: 'Research topic' }))
     .toHaveValue('Train routes');

@@ -5,10 +5,18 @@ import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { IdeaCloneView } from './idea-clone-view';
 
-const state = vi.hoisted(() => ({ proposal: undefined as unknown }));
+const state = vi.hoisted(() => ({ proposal: undefined as unknown, blocked: false, read: vi.fn() }));
+
+vi.mock('@/features/trips/trip-detail/trip-participation-boundary', () => ({
+  TripParticipationBoundary: ({ children }: { children: () => ReactNode }) =>
+    state.blocked ? <div>Join this trip</div> : children()
+}));
 
 vi.mock('@/features/trips/hooks/use-trip-versions', () => ({
-  useTripVersion: () => ({ proposal: state.proposal })
+  useTripVersion: () => {
+    state.read();
+    return { proposal: state.proposal };
+  }
 }));
 
 vi.mock('@/features/ideas/hooks/use-idea-context', () => ({
@@ -53,10 +61,19 @@ function renderView(view: 'compare' | 'overview' = 'compare') {
 }
 
 beforeEach(() => {
+  state.blocked = false;
+  state.read.mockClear();
   state.proposal = undefined;
 });
 
 describe('IdeaCloneView', () => {
+  test('shows the participation boundary before subscribing to a deep-linked idea', async () => {
+    state.blocked = true;
+    await renderView();
+    await expect.element(page.getByText('Join this trip')).toBeVisible();
+    expect(state.read).not.toHaveBeenCalled();
+    await expect.element(page.getByText('workspace:', { exact: false })).not.toBeInTheDocument();
+  });
   test('shows a not-found screen when the idea is gone', async () => {
     state.proposal = null;
     await renderView();

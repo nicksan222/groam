@@ -74,8 +74,8 @@ export default {
     'Non contare te stesso. Gli organizzatori pianificano gratis. Premi “Pago io” sotto un viaggiatore per coprire il suo euro.',
   'Each pays their own €1, or Maya covers them.':
     'Ognuno paga il proprio euro, oppure paga Maya per loro.',
-  'Each traveler pays their own €1 for the trip they join. Or you cover them when you invite.':
-    'Ogni viaggiatore paga il proprio euro per il viaggio a cui partecipa. Oppure paghi tu quando lo inviti.',
+  'Each traveler pays their own €1 for the trip they join. Or you cover them from Travelers.':
+    'Ogni viaggiatore paga il proprio euro per il viaggio a cui partecipa. Oppure paghi tu dalla sezione Viaggiatori.',
   'Ending use': 'Interruzione dell’uso',
   'Every feature for every traveler, on every trip':
     'Tutte le funzionalità per ogni viaggiatore, in ogni viaggio',
@@ -132,8 +132,8 @@ export default {
     'No. Non c’è alcun rinnovo mensile o annuale. Ogni viaggiatore paga 1 € per ogni viaggio a cui partecipa, e basta.',
   'No. Planning on your own is free, so the person who starts the trip never pays for themselves. A trip for four, counting you, costs €3.':
     'No. Pianificare da soli è gratis, quindi chi crea il viaggio non paga mai per sé. Un viaggio per quattro persone, te compreso, costa 3 €.',
-  'Not yet. Paid invites are coming soon, and nobody is charged today. Plan and invite your group as usual.':
-    'Non ancora. Gli inviti a pagamento arriveranno presto e oggi non viene addebitato nulla a nessuno. Pianifica e invita il tuo gruppo come sempre.',
+  'On trips with payments enabled, pay €1 through Stripe Checkout before joining, or ask the organizer to cover you. Existing trips and installations without payments stay free.':
+    'Nei viaggi con pagamenti attivi, paga 1 € tramite Stripe Checkout prima di partecipare, oppure chiedi all’organizzatore di pagare per te. I viaggi esistenti e le installazioni senza pagamenti restano gratuiti.',
   'Nothing planned at this address': 'Nessun programma a questo indirizzo',
   'Nothing renews. AI features run on each traveler’s own ChatGPT account.':
     'Non si rinnova nulla. Le funzionalità AI usano l’account ChatGPT di ciascun viaggiatore.',
@@ -145,8 +145,8 @@ export default {
     'Contano solo i viaggiatori che partecipano davvero al viaggio. Un invito che nessuno accetta non costa nulla.',
   Organizer: 'Organizzatore',
   'Page not found · Groam': 'Pagina non trovata · Groam',
-  'Paid invites are coming soon. Nobody is charged today.':
-    'Gli inviti a pagamento arriveranno presto. Oggi non viene addebitato nulla a nessuno.',
+  'One-time checkout when payments are enabled. Existing trips stay free.':
+    'Pagamento una tantum quando i pagamenti sono attivi. I viaggi esistenti restano gratuiti.',
   'Pause animation': 'Metti in pausa l’animazione',
   'Pause trip lane': 'Metti in pausa lo scorrimento dei viaggi',
   Payments: 'Pagamenti',
@@ -211,7 +211,7 @@ export default {
   'What we collect': 'Cosa raccogliamo',
   'When do I pay?': 'Quando pago?',
   'Who pays?': 'Chi paga?',
-  'Whoever you choose. Each traveler pays their own €1, or you cover them when you invite. Invite three friends and cover nobody. Each pays €1 and you pay nothing.':
+  'Whoever you choose. Each traveler pays their own €1, or you cover them from Travelers. Invite three friends and cover nobody. Each pays €1 and you pay nothing.':
     'Chi vuoi tu. Ogni viaggiatore paga il proprio euro, oppure lo copri tu quando lo inviti. Invita tre amici senza pagare per nessuno: ciascuno paga 1 € e tu non paghi nulla.',
   'Work out your trip': 'Calcola il tuo viaggio',
   'Year 1, autumn': 'Anno 1, autunno',
@@ -222,7 +222,7 @@ export default {
   'Year 3, winter': 'Anno 3, inverno',
   'Yes, €1 per trip. Every trip is priced on its own, so going again with the same friends is €1 each again. A solo trip stays free.':
     'Sì, 1 € per viaggio. Ogni viaggio ha un prezzo a sé, quindi partire di nuovo con gli stessi amici costa ancora 1 € a testa. Un viaggio in solitaria resta gratis.',
-  'Yes. When you invite someone, choose to pay their €1 yourself. It’s still €1 per traveler for the trip. You pick who pays, traveler by traveler.':
+  'Yes. Open Travelers and choose whose €1 to cover. It’s still €1 per traveler for the trip. You pick who pays, traveler by traveler.':
     'Sì. Quando inviti qualcuno, puoi scegliere di pagare tu il suo euro. Il prezzo resta 1 € per viaggiatore per quel viaggio. Decidi chi paga, viaggiatore per viaggiatore.',
   'You can stop using Groam and leave groups using the controls the product provides. Trips can currently be archived rather than deleted. The final terms must explain account closure, content export and deletion, when access may be suspended, notice and appeal, and what terms continue after an account closes.':
     'Puoi smettere di usare Groam e lasciare i gruppi tramite i controlli forniti dal prodotto. Attualmente i viaggi possono essere archiviati anziché eliminati. I termini finali dovranno spiegare la chiusura dell’account, l’esportazione e la cancellazione dei contenuti, quando l’accesso può essere sospeso, le comunicazioni e i ricorsi e quali termini continuano ad applicarsi dopo la chiusura di un account.',

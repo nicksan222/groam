@@ -20,7 +20,7 @@ export const plan = {
     },
     {
       title: '€1 for each traveler who joins.',
-      body: 'Each traveler pays their own €1 for the trip they join. Or you cover them when you invite.'
+      body: 'Each traveler pays their own €1 for the trip they join. Or you cover them from Travelers.'
     },
     {
       title: 'A new trip is a new €1.',
@@ -107,11 +107,11 @@ export const faq = {
     },
     {
       q: 'Who pays?',
-      a: 'Whoever you choose. Each traveler pays their own €1, or you cover them when you invite. Invite three friends and cover nobody. Each pays €1 and you pay nothing.'
+      a: 'Whoever you choose. Each traveler pays their own €1, or you cover them from Travelers. Invite three friends and cover nobody. Each pays €1 and you pay nothing.'
     },
     {
       q: 'Can I pay for my friends?',
-      a: 'Yes. When you invite someone, choose to pay their €1 yourself. It’s still €1 per traveler for the trip. You pick who pays, traveler by traveler.'
+      a: 'Yes. Open Travelers and choose whose €1 to cover. It’s still €1 per traveler for the trip. You pick who pays, traveler by traveler.'
     },
     {
       q: 'What if someone never joins?',
@@ -119,7 +119,7 @@ export const faq = {
     },
     {
       q: 'When do I pay?',
-      a: 'Not yet. Paid invites are coming soon, and nobody is charged today. Plan and invite your group as usual.'
+      a: 'On trips with payments enabled, pay €1 through Stripe Checkout before joining, or ask the organizer to cover you. Existing trips and installations without payments stay free.'
     },
     {
       q: 'Do invited travelers get fewer features?',
