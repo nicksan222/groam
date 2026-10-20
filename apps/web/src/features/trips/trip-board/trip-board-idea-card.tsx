@@ -1,3 +1,9 @@
+import {
+  cardChip,
+  cardChipInteractive,
+  cardChipTone,
+  cardStretchedLink
+} from '@groam/ui/lib/board-card';
 import { cn } from '@groam/ui/lib/utils';
 import { CircleDot } from 'lucide-react';
 import { memo, useEffect, useRef } from 'react';
@@ -8,12 +14,6 @@ import {
 import { ideaOpen } from '@/features/ideas/idea-glossary';
 import { ideaOpenHref } from '@/features/ideas/idea-href';
 import { ideaPrimaryAction, ideaStatusLabel } from '@/features/ideas/idea-status';
-import {
-  cardChip,
-  cardChipInteractive,
-  cardChipTone,
-  cardStretchedLink
-} from '@/features/issues/shared/card-style';
 import { relativeTripDate } from '@/features/trips/trip-list/trip-list-order';
 import { Link } from '@/features/workspace/navigation/router';
 import { testIds } from '@/lib/test-ids';

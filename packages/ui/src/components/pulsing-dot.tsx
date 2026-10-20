@@ -17,10 +17,10 @@ const SIZE_CLASSES: Record<NonNullable<PulsingDotProps['size']>, string> = {
 
 const COLOR_CLASSES: Record<NonNullable<PulsingDotProps['color']>, string> = {
   primary: 'bg-primary',
-  success: 'bg-green-500',
-  warning: 'bg-yellow-500',
-  danger: 'bg-red-500',
-  info: 'bg-blue-500'
+  success: 'bg-success',
+  warning: 'bg-warning',
+  danger: 'bg-destructive',
+  info: 'bg-info'
 };
 
 const PulsingDot: React.FC<PulsingDotProps> = ({ className, size = 'sm', color = 'primary' }) => {

@@ -22,7 +22,7 @@ const TALL_CONTENT_CLASS = 'top-[6dvh] max-h-[88dvh] translate-y-0 overflow-y-au
  * stretched over its `p-6` padding so fields scroll underneath it.
  */
 const TALL_FOOTER_CLASS =
-  'sticky -bottom-6 z-10 -mx-6 -mb-6 border-t border-border bg-popover px-6 py-4';
+  'sticky -bottom-6 z-10 -mx-6 -mb-6 border-t border-border bg-card px-6 py-4';
 
 /**
  * Controlled modal form shell. `onClose` fires on Cancel and when the overlay

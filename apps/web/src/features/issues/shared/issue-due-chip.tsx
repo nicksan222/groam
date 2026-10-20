@@ -1,9 +1,9 @@
 import { isResolved } from '@groam/backend/convex/modules/travel/issues/status';
+import { cardChip, cardChipTone } from '@groam/ui/lib/board-card';
 import { cn } from '@groam/ui/lib/utils';
 import { CalendarClock } from 'lucide-react';
 import { testIds } from '@/lib/test-ids';
 import type { IssueStatus } from '@/types/issues';
-import { cardChip, cardChipTone } from './card-style';
 
 const dueFormatter = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short' });
 

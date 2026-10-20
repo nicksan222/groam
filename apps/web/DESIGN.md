@@ -2,22 +2,22 @@
 name: Groam
 description: A calm shared workspace where people and agents turn trip ideas into agreed plans.
 colors:
-  primary: "#2a6fdb"
-  primary-hover: "#1f5fc7"
-  background: "#ffffff"
-  canvas: "#f5f6f8"
-  foreground: "#2b2e38"
-  card: "#ffffff"
-  muted: "#eff0f3"
-  muted-foreground: "#5f6473"
-  accent: "#eceef3"
-  border: "#e3e5ea"
-  input: "#d2d5dc"
-  ring: "#2a6fdb"
-  destructive: "#f52a65"
-  success: "#118c74"
-  warning: "#e0a050"
-  info: "#3b82f6"
+  primary: "#496b9b"
+  primary-hover: "#3c5b86"
+  background: "#fdfdfd"
+  canvas: "#f4f4f6"
+  foreground: "#32343b"
+  card: "#fafafa"
+  muted: "#efeff2"
+  muted-foreground: "#636671"
+  accent: "#e9eaee"
+  border: "#e1e2e6"
+  input: "#cccfd5"
+  ring: "#496b9b"
+  destructive: "#a14c5e"
+  success: "#416e61"
+  warning: "#875f2e"
+  info: "#496b9b"
 typography:
   display: {fontFamily: "Google Sans Flex Variable, ui-sans-serif, system-ui, sans-serif", fontWeight: 600}
   body: {fontFamily: "Google Sans Flex Variable, ui-sans-serif, system-ui, sans-serif", fontWeight: 400}
@@ -27,7 +27,7 @@ rounded: {default: "0.5rem", button: "0.5rem", badge: "0.375rem"}
 spacing: {base: "0.25rem"}
 components:
   button-primary: {backgroundColor: "{colors.primary}", textColor: "#ffffff", rounded: "{rounded.button}", height: "2rem", padding: "0 0.75rem"}
-  button-secondary: {backgroundColor: "{colors.muted}", textColor: "#2b2e38", rounded: "{rounded.button}", height: "2rem", padding: "0 0.75rem"}
+  button-secondary: {backgroundColor: "{colors.muted}", textColor: "{colors.foreground}", rounded: "{rounded.button}", height: "2rem", padding: "0 0.75rem"}
   card: {backgroundColor: "{colors.card}", textColor: "{colors.foreground}", rounded: "{rounded.default}", padding: "1rem"}
 ---
 
@@ -37,37 +37,47 @@ components:
 
 **Creative North Star: "The Shared Trip Table"**
 
-Groam is a refined, calm workspace for people and AI agents planning together. The visual language is shadcn-style and all-sans: white and soft neutral light surfaces, a Tokyo Night indigo dark hierarchy, quiet hairlines, restrained actions, and compact rounded controls keep attention on the itinerary and reviewable collaboration. The Groam brand mark, a person's white pin in front of an agent's cyan pin on a Tokyo blue tile, appears on brand, authentication, onboarding, and full-page status surfaces; the workspace sidebar begins with the group switcher.
+Groam is a refined, calm workspace for people and AI agents planning together. The visual language is shadcn-style and all-sans: white and soft neutral light surfaces, a neutral charcoal dark hierarchy, quiet hairlines, restrained actions, and compact rounded controls keep attention on the itinerary and reviewable collaboration. The Groam brand mark, a person's white pin in front of an agent's cyan pin on a Tokyo blue tile, appears on brand, authentication, onboarding, and full-page status surfaces; the workspace sidebar begins with the group switcher.
 
 The approved trip direction uses a left sidebar, panoramic trip cover, compact navigation, and an assistant dock at the right on wide screens that overlays smaller screens. The approved reference is `apps/web/.impeccable/mocks/approved-trip.png`; it is a direction reference, not proof of visual QA.
 
 **Key Characteristics:**
 
 - Human and agent collaboration is legible in one shared workspace.
-- Tokyo blue primary actions lead in light mode; Night blue remains the action color in dark mode.
+- Muted slate-blue actions lead in both themes, with neutral text and subdued status colors.
 - Typography is compact, neutral, and entirely sans-serif.
 - Depth comes from tonal layering, hairline borders, and restrained shadows.
 
 ## Colors
 
-The palette follows Tokyo Night. Light mode keeps white surfaces on near-neutral slate (Tokyo Night Day hues, desaturated so text and hairlines stay quiet), with blue actions and a magenta and cyan pop on the auth aura. Dark mode uses the Tokyo Night indigo ladder with Night blue reserved for actions and focus.
+The approved palette is **Graphite**: neutral charcoal in dark mode, soft off-white in light mode, and muted slate blue for actions. Color supports hierarchy and status without competing with the itinerary. Both themes use the same semantic roles from `packages/ui/src/styles/tokens.css`.
 
 ### Primary
 
-- **Tokyo Blue** (#2a6fdb): Primary actions, selection, focus ring, and shared-work affordances. A shade deeper than Day blue (#2e7de9) so white button text clears AA.
-- **Tokyo Blue Hover** (#1f5fc7): Hover state for primary actions.
-- **Magenta / Cyan** (#9854f1 / #7dcfff): Pop stops on the auth aura only; never for text on white.
+- **Slate Blue** (#496b9b light / #8b9fc4 dark): Actions, selection and focus. Primary buttons use white text in light mode and dark text in dark mode.
+- **Slate Blue Hover** (#3c5b86 light / #9baccb dark): A restrained change in lightness for interactive feedback.
+- **Status**: Desaturated green for success, ochre for warnings, and rose for destructive actions. Badges use light tints and readable colored labels instead of solid saturated fills.
 
 ### Neutral
 
-- **White** (#ffffff): Page, card, input, and popover surfaces.
-- **Soft Canvas** (#f5f6f8): Workspace canvas behind content.
-- **Ink** (#2b2e38): Main text and headings.
-- **Muted Surface** (#eff0f3): Secondary controls and quiet grouping.
-- **Muted Ink** (#5f6473): Supporting and sidebar text.
-- **Soft Accent** (#eceef3): Tinted interaction surface.
-- **Hairline** (#e3e5ea): Dividers and card borders.
-- **Input Stroke** (#d2d5dc): Form control borders.
+| Role | Light | Dark |
+|---|---|---|
+| Page | #fdfdfd | #191a20 |
+| Canvas | #f4f4f6 | #121318 |
+| Card and dialog | #fafafa | #191a20 |
+| Popover | #f8f8fa | #202127 |
+| Main text | #32343b | #c5c7d0 |
+| Supporting text | #636671 | #a0a3af |
+| Muted controls | #efeff2 | #262831 |
+| Selection | #e9eaee | #2b303c |
+| Border | #e1e2e6 | #30323b |
+| Input border | #cccfd5 | #41444f |
+
+Avatar hues and chart categories remain distinguishable with reduced saturation. Text and small status labels must retain at least 4.5:1 contrast on their surfaces; focus indicators remain visible in both themes.
+
+### Ownership
+
+`packages/ui/src/styles/tokens.css` is the color authority. Shared workspace surfaces, layout rules and motion live in `packages/ui/src/styles/workspace.css`; board-card visual recipes are exported from `@groam/ui/lib/board-card`. The web stylesheet only imports shared packages and declares external Tailwind sources. Feature code consumes semantic utilities and maps domain state to shared visual roles.
 
 ### Named Rules
 
@@ -101,7 +111,7 @@ The implemented dashboard is action-first. The header action and empty state use
 
 ## Elevation & Depth
 
-Tonal layering and borders establish hierarchy; small shadows support controls and transient surfaces. Cards are white with a border, while popovers and dialogs may use larger shared shadows. Dark mode uses the Tokyo Night ladder: inset canvas `#13131a`, sidebar `#16161e`, page `#1a1b26`, card `#1c1d29` (a hairline-bordered lift, not a tinted slab), transient overlay `#24283b`, muted control surface `#292e42`, selection surface `#283457`, foreground `#c0caf5`, muted foreground `#9aa5ce`, and border `#2f3549`. Night blue is reserved for primary actions, primary text, and focus rings (`#7aa2f7`); intermediate surfaces stay tinted neutral. Dialogs, alert dialogs, sheets, menus, and popovers share the elevated overlay surface; the scrim is `#000000cc`. The dark auth aura uses Tokyo Night storm stops ending in deep blue `#3d59a1`.
+Tonal layering and quiet borders establish hierarchy; small shadows support controls and transient surfaces. Cards, dialogs, alert dialogs, and sheets share the card surface. Menus and popovers use the slightly elevated popover surface. Dark mode uses a deep canvas (`#121318`), inset sidebar (`#15161b`), neutral page and cards (`#191a20`), and popovers (`#202127`). The scrim is `#000000b8` in dark mode and `#24242440` in light mode. Auth surfaces use the same restrained slate family.
 
 ### Shadow Vocabulary
 
@@ -118,7 +128,7 @@ The base radius is 0.5rem. Buttons and inputs use rounded-lg; badges use rounded
 ### Buttons
 
 - **Shape:** Rounded-lg (0.5rem), one-pixel border, compact height.
-- **Primary:** Tokyo blue with high-contrast text, `2rem` high and `0 0.75rem` padding; hover uses Tokyo blue hover.
+- **Primary:** Muted slate blue with high-contrast text, `2rem` high and `0 0.75rem` padding; hover uses the matching slate-blue hover token.
 - **Hover / Focus:** Color transition; 2px blue focus ring with 1px offset; active removes small shadow.
 - **Secondary / Ghost / Tertiary:** Secondary is muted with input border; outline uses page background; ghost is borderless with muted hover; link underlines on hover.
 
@@ -130,7 +140,7 @@ The base radius is 0.5rem. Buttons and inputs use rounded-lg; badges use rounded
 ### Cards / Containers
 
 - **Corner Style:** Rounded-lg (0.5rem).
-- **Background:** Card white on canvas; dark mode uses dark card surface.
+- **Background:** Soft neutral off-white on canvas; dark mode uses the subdued dark card surface.
 - **Shadow Strategy:** Prefer border and tonal separation; lift only with shared small/card shadows.
 - **Border:** `var(--border)` for default cards.
 - **Internal Padding:** 1rem compact, 1.5rem at medium widths.
@@ -151,7 +161,7 @@ Private contextual help uses a Cloudflare-inspired sidechat pattern: a header sh
 
 ## Do's and Don'ts
 
-- **Do** use the Groam brand mark on applicable brand and authentication surfaces, and preserve the Tokyo blue primary role.
+- **Do** use the Groam brand mark on applicable brand and authentication surfaces, and preserve the Graphite slate-blue primary role.
 - **Do** keep agreed plans, proposed ideas, and private assistance understandable.
 - **Do** use shared UI primitives and semantic color tokens.
 - **Do** preserve compact rounded controls and quiet hairlines.

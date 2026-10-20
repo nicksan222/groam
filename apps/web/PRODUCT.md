@@ -20,7 +20,7 @@ The existing application provides shared itineraries, reviewable proposals, issu
 
 ## Brand Commitments
 
-The product uses a refined shadcn-style, all-sans design system: white and soft neutral light surfaces, evergreen light-mode actions, a near-black achromatic dark hierarchy with evergreen actions, quiet hairlines and compact rounded controls. The Groam brand mark reserved for applicable brand and authentication surfaces. Humans and AI agents collaborate in the same understandable trip workspace; the private assistant docks at wide desktop sizes and overlays smaller screens.
+The product uses a refined shadcn-style, all-sans design system: soft off-white light surfaces, muted slate-blue actions, and a neutral charcoal dark hierarchy, quiet hairlines and compact rounded controls. The Groam brand mark reserved for applicable brand and authentication surfaces. Humans and AI agents collaborate in the same understandable trip workspace; the private assistant docks at wide desktop sizes and overlays smaller screens.
 
 ## Evidence on Hand
 

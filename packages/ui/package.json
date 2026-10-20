@@ -172,6 +172,7 @@
     "./hooks/use-mobile": "./src/hooks/use-mobile.ts",
     "./hooks/use-sidebar": "./src/hooks/use-sidebar.ts",
     "./lib/avatar": "./src/lib/avatar.ts",
+    "./lib/board-card": "./src/lib/board-card.ts",
     "./lib/calendar-date": "./src/lib/calendar-date.ts",
     "./lib/errors": "./src/lib/errors.ts",
     "./lib/shell-layout": "./src/lib/shell-layout.ts",

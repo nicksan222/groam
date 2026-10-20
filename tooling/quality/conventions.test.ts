@@ -112,6 +112,24 @@ describe('inspectFile', () => {
     ]);
   });
 
+  test('keeps web stylesheets limited to shared imports and source discovery', () => {
+    expect(
+      inspectFile(
+        'apps/web/src/index.css',
+        "/* Shared UI owns styling. */\n@import '@groam/ui/styles';\n@source '../node_modules/widgets/*.js';"
+      )
+    ).toEqual([]);
+    expect(inspectFile('apps/web/src/index.css', '.panel { background: var(--card); }')).toEqual([
+      { category: 'web-styles', location: 'apps/web/src/index.css' }
+    ]);
+    expect(
+      inspectFile('apps/web/src/custom.css', '@keyframes reveal { to { opacity: 1; } }')
+    ).toEqual([{ category: 'web-styles', location: 'apps/web/src/custom.css' }]);
+    expect(
+      inspectFile('packages/ui/src/styles/workspace.css', '.panel { background: var(--card); }')
+    ).toEqual([]);
+  });
+
   test('rejects !important in stylesheets', () => {
     expect(
       inspectFile('packages/ui/src/styles/globals.css', '  color: var(--primary) !important;')

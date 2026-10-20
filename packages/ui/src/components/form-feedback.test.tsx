@@ -34,7 +34,7 @@ test('applies semantic styling and custom class names for success messages', asy
   await render(<FormFeedback className="mt-2" message="Saved" />);
 
   const status = page.getByRole('status').element();
-  expect(status.className).toContain('text-emerald-600');
+  expect(status.className).toContain('text-success');
   expect(status.className).toContain('mt-2');
 });
 

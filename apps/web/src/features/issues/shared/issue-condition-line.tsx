@@ -1,6 +1,6 @@
+import { cardChip, cardChipTone } from '@groam/ui/lib/board-card';
 import { cn } from '@groam/ui/lib/utils';
 import type { IssueCondition } from '@/types/issues';
-import { cardChip, cardChipTone } from './card-style';
 import { IssueConditionIcon } from './issue-condition-icon';
 
 /** While a one-clause rule is unmet, its detail ("No destination yet") says what is missing. */

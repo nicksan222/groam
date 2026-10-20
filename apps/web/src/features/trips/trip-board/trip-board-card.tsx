@@ -1,6 +1,6 @@
+import { cardMetaRow, cardSurface, cardTitle } from '@groam/ui/lib/board-card';
 import { cn } from '@groam/ui/lib/utils';
 import type { ComponentProps, ReactNode } from 'react';
-import { cardMetaRow, cardSurface, cardTitle } from '@/features/issues/shared/card-style';
 
 /**
  * The shared card for the board's idea, plan and glance cards, laid out like an issue card: a

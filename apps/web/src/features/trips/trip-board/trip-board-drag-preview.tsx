@@ -1,4 +1,4 @@
-import { cardChip } from '@/features/issues/shared/card-style';
+import { cardChip } from '@groam/ui/lib/board-card';
 import { IssueCard } from '@/features/issues/shared/issue-card';
 import { testIds } from '@/lib/test-ids';
 import type { TripBoardDragItem } from '@/types/trip-board';

@@ -16,7 +16,7 @@ function FormFeedback({ className, error, message }: FormFeedbackProps) {
   }
   if (message) {
     return (
-      <p className={cn('text-sm text-emerald-600', className)} role="status">
+      <p className={cn('text-sm text-success', className)} role="status">
         {message}
       </p>
     );

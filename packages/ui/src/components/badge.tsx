@@ -16,19 +16,19 @@ export type BadgeVariant =
   | 'violet';
 
 const VARIANTS: Record<BadgeVariant, string> = {
-  default: 'border-transparent bg-primary text-primary-foreground [a&]:hover:bg-primary/90',
+  default: 'border-transparent bg-primary/10 text-primary [a&]:hover:bg-primary/15',
   secondary: 'border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90',
   destructive:
-    'border-transparent bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60',
+    'border-transparent bg-destructive/10 text-destructive [a&]:hover:bg-destructive/15 focus-visible:ring-destructive/20',
   outline: 'text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground',
-  amber: 'border-transparent bg-amber-500/10 text-amber-600 dark:text-amber-400',
-  sky: 'border-transparent bg-sky-500/10 text-sky-600 dark:text-sky-400',
-  blue: 'border-transparent bg-blue-500/10 text-blue-600 dark:text-blue-400',
-  rose: 'border-transparent bg-rose-500/10 text-rose-600 dark:text-rose-400',
-  red: 'border-transparent bg-red-500/10 text-red-600 dark:text-red-400',
-  emerald: 'border-transparent bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-  green: 'border-transparent bg-green-500/10 text-green-600 dark:text-green-400',
-  violet: 'border-transparent bg-violet-500/10 text-violet-600 dark:text-violet-400'
+  amber: 'border-transparent bg-warning/10 text-warning',
+  sky: 'border-transparent bg-info/10 text-info',
+  blue: 'border-transparent bg-primary/10 text-primary',
+  rose: 'border-transparent bg-destructive/10 text-destructive',
+  red: 'border-transparent bg-destructive/10 text-destructive',
+  emerald: 'border-transparent bg-success/10 text-success',
+  green: 'border-transparent bg-success/10 text-success',
+  violet: 'border-transparent bg-avatar-mauve text-avatar-mauve-foreground'
 };
 
 export function Badge({

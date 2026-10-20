@@ -1,5 +1,5 @@
+import { cardChip, cardChipTone } from '@groam/ui/lib/board-card';
 import type { IssueLabel } from '@/types/issues';
-import { cardChip, cardChipTone } from './card-style';
 
 const labelText: Record<IssueLabel, string> = { mandatory: 'Mandatory' };
 

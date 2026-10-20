@@ -73,7 +73,8 @@ export type ConventionCategory =
   | 'raw-convex-access'
   | 'route-imports'
   | 'ui-imports'
-  | 'ui-internal-imports';
+  | 'ui-internal-imports'
+  | 'web-styles';
 
 export type ConventionFinding = {
   category: ConventionCategory;
@@ -250,6 +251,12 @@ function inspectStyle(filePath: string, source: string): ConventionFinding[] {
       (lineComment, prefix: string) =>
         `${prefix}${lineComment.slice(prefix.length).replace(/[^\n]/gu, ' ')}`
     );
+
+  // App CSS only wires shared styles and Tailwind's external source discovery.
+  if (filePath.startsWith('apps/web/src/') && cssFile.test(filePath)) {
+    const rules = withoutComments.replace(/@(import|source)\s+[^;{}]+;/gu, '').trim();
+    if (rules) findings.push({ category: 'web-styles', location: filePath });
+  }
 
   const isDesignTokenFile = designTokenFiles.has(filePath);
   const isCss = cssFile.test(filePath);

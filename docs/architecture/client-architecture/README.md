@@ -49,7 +49,7 @@ between independent backends.
 
 ## Shared presentation and screen context
 
-`packages/ui` provides reusable controls and layout primitives. Its shell
+`packages/ui` owns the shared palette, workspace CSS, board-card visual recipes, reusable controls and layout primitives. The web stylesheet only imports shared styles and declares external Tailwind sources. Its shell
 components describe layout composition; Groam's workspace shell owns product
 navigation and global application behavior. `packages/ai` supplies AI context,
 conversation and execution presentation shared across feature surfaces.

@@ -4,6 +4,7 @@
 @import 'tw-animate-css';
 @import './tokens.css';
 @import './base.css';
+@import './workspace.css';
 
 @property --scroll-fade-b {
   syntax: '<length-percentage>';

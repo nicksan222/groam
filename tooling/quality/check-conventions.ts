@@ -210,6 +210,8 @@ const messages: Record<ConventionFinding['category'], string> = {
   gradients: 'Use flat semantic colors instead of gradients',
   'halo-imports': 'Use @groam/* package names instead of leftover Halo package aliases',
   'hardcoded-colors': 'Use semantic color tokens instead of hardcoded colors',
+  'web-styles':
+    'Keep custom CSS in packages/ui; web stylesheets only import shared styles and declare sources',
   'hook-tests':
     'Feature capability hooks need a co-located use-*.test.ts(x) file; add coverage beside the hook instead of in a distant test folder',
   'important-styles': 'Avoid !important in stylesheets; use cascade layers or specificity instead',
