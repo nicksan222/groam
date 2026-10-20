@@ -1,6 +1,6 @@
 # Deployment
 
-Owns the production release from build through publishing and public route checks. Backend HTTP
+Owns the Convex backend and Cloudflare frontend release from build through publishing and public route checks. Backend HTTP
 routing stays with the backend; release orchestration lives here.
 
 Use the root `build:production`, `deploy:production`, and `smoke:production` scripts. Publishing is

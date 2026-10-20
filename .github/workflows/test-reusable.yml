@@ -213,7 +213,7 @@ jobs:
       - name: Journeys
         run: bun run test:journeys -- --browser.trace=retain-on-failure
 
-      # Publish the same two static components and route layout used in production.
+      # Keep the existing local Convex static-hosting compatibility checks.
       - name: Publish local static sites
         run: |
           bun run hosting:upload:web
@@ -227,6 +227,16 @@ jobs:
           curl --fail --show-error --silent "$STATIC_SITE_URL/app/" >/dev/null
           curl --fail --show-error --silent "$STATIC_SITE_URL/app/settings" >/dev/null
           test "$(curl --output /dev/null --silent --write-out '%{http_code}' "$STATIC_SITE_URL/missing.js")" = "404"
+
+      - name: Build and validate Cloudflare release without credentials
+        env:
+          CONVEX_URL: https://ci-release.convex.cloud
+          SITE_URL: https://ci.groam.example
+          CLOUDFLARE_ACCOUNT_ID: '00000000000000000000000000000000'
+          CLOUDFLARE_WORKER_NAME: groam-ci
+        run: |
+          bun run build:production
+          tooling/deploy/node_modules/.bin/wrangler deploy --config dist/cloudflare/wrangler.json --dry-run --outdir /tmp/cloudflare-dry-run
 
       - name: Upload failure artifacts
         if: failure()

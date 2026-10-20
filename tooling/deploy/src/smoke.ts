@@ -30,19 +30,28 @@ async function assertHtml(response: Response, status: number, language?: string)
   return html;
 }
 
+async function landingPage(
+  target: ProductionTarget,
+  fetcher: Fetch,
+  path: string,
+  language: string
+) {
+  const route = language === 'it' ? `/it${path}` : path;
+  const html = await assertHtml(
+    await responseAt(fetcher, `${target.siteUrl}${route}`),
+    200,
+    language
+  );
+  return { path, language, html };
+}
+
 async function smokeLanding(target: ProductionTarget, fetcher: Fetch): Promise<void> {
-  let landing = '';
-  for (const path of landingPaths) {
-    for (const language of ['en', 'it']) {
-      const route = language === 'it' ? `/it${path}` : path;
-      const html = await assertHtml(
-        await responseAt(fetcher, `${target.siteUrl}${route}`),
-        200,
-        language
-      );
-      if (path === '/' && language === 'en') landing = html;
-    }
-  }
+  const pages = await Promise.all(
+    landingPaths.flatMap((path) =>
+      ['en', 'it'].map((language) => landingPage(target, fetcher, path, language))
+    )
+  );
+  const landing = pages.find((page) => page.path === '/' && page.language === 'en')?.html ?? '';
   if (
     !landing.includes(`href="${target.appUrl}"`) ||
     !landing.includes(`href="${target.siteUrl}/"`)
@@ -55,7 +64,7 @@ async function smokeApp(target: ProductionTarget, fetcher: Fetch): Promise<void>
   if (!/<script[^>]+src=["']\/app\//u.test(app))
     throw new Error('The web build is missing its /app/ asset base.');
   await assertHtml(await responseAt(fetcher, `${target.appUrl}settings`), 200);
-  const session = await responseAt(fetcher, `${target.siteUrl}/api/auth/get-session`);
+  const session = await responseAt(fetcher, `${target.backendSiteUrl}/api/auth/get-session`);
   if (
     ![200, 401].includes(session.status) ||
     !session.headers.get('content-type')?.includes('application/json')
@@ -81,10 +90,12 @@ async function smokeFallbacks(target: ProductionTarget, fetcher: Fetch): Promise
     404,
     'it'
   );
-  for (const path of ['/missing-production-check.js', '/app/missing-production-check.js']) {
-    if ((await responseAt(fetcher, `${target.siteUrl}${path}`)).status !== 404)
-      throw new Error('A missing asset was mistaken for an application route.');
-  }
+  await Promise.all(
+    ['/missing-production-check.js', '/app/missing-production-check.js'].map(async (path) => {
+      if ((await responseAt(fetcher, `${target.siteUrl}${path}`)).status !== 404)
+        throw new Error('A missing asset was mistaken for an application route.');
+    })
+  );
 }
 
 /** Only public GET requests: no data mutations or deployment credential. */
@@ -98,7 +109,9 @@ export async function smokeProduction(
 }
 
 if (import.meta.main) {
-  await smokeProduction(productionTarget(env.convexUrl, env.siteUrl));
+  await smokeProduction(
+    productionTarget(env.convexUrl, env.siteUrl, env.cloudflareAccountId, env.cloudflareWorkerName)
+  );
   console.log(
     'Production smoke checks passed: landing, Italian routes, app, auth, assets, and 404s.'
   );

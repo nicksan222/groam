@@ -3,16 +3,17 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { repoRoot } from '@groam/devkit/repo-root';
 import { env } from '@groam/env/production';
-import {
-  assertRelease,
-  releaseManifestPath,
-  siteDirectories,
-  type ProductionRelease
-} from './release';
+import { assertProductionAuthEnvironment, assertProductionAuthOrigin } from './preflight';
+import { assertRelease, releaseManifestPath, type ProductionRelease } from './release';
 import { productionTarget, assertProductionPublisher } from './target';
 
 if (import.meta.main) {
-  const target = productionTarget(env.convexUrl, env.siteUrl);
+  const target = productionTarget(
+    env.convexUrl,
+    env.siteUrl,
+    env.cloudflareAccountId,
+    env.cloudflareWorkerName
+  );
   assertProductionPublisher(target, env);
   const sha = execFileSync('git', ['rev-parse', 'HEAD'], {
     cwd: repoRoot,
@@ -28,40 +29,48 @@ if (import.meta.main) {
     readFileSync(join(repoRoot, releaseManifestPath), 'utf8')
   ) as ProductionRelease;
   assertRelease(release, target, sha, repoRoot);
-  const commands = [
-    [
-      'convex',
-      'deploy',
-      '--typecheck-components',
-      '--codegen',
-      'disable',
-      '--message',
-      `GitHub main ${sha}`
-    ],
-    [
-      'static-hosting',
-      'upload',
-      '--prod',
-      '--component',
-      'web',
-      '--dist',
-      siteDirectories.web,
-      '--spa'
-    ],
-    [
-      'static-hosting',
-      'upload',
-      '--prod',
-      '--component',
-      'landing',
-      '--dist',
-      siteDirectories.landing,
-      '--no-spa'
-    ]
-  ];
-  for (const command of commands)
-    execFileSync(join(repoRoot, 'node_modules/.bin', command[0] as string), command.slice(1), {
+  const convexEnvironment = Object.fromEntries(
+    Object.entries(process.env).filter(([key]) => !key.startsWith('CLOUDFLARE_'))
+  );
+  assertProductionAuthEnvironment(
+    execFileSync(
+      join(repoRoot, 'node_modules/.bin/convex'),
+      ['env', 'list', '--prod', '--names-only'],
+      {
+        cwd: repoRoot,
+        env: convexEnvironment,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'inherit']
+      }
+    )
+  );
+  assertProductionAuthOrigin(
+    execFileSync(join(repoRoot, 'node_modules/.bin/convex'), ['env', 'get', 'SITE_URL', '--prod'], {
       cwd: repoRoot,
-      stdio: 'inherit'
-    });
+      env: convexEnvironment,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'inherit']
+    }),
+    target.siteUrl
+  );
+  execFileSync(
+    join(repoRoot, 'node_modules/.bin/convex'),
+    ['deploy', '--typecheck-components', '--codegen', 'disable', '--message', `GitHub main ${sha}`],
+    {
+      cwd: repoRoot,
+      stdio: 'inherit',
+      env: convexEnvironment
+    }
+  );
+  execFileSync(
+    join(repoRoot, 'tooling/deploy/node_modules/.bin/wrangler'),
+    ['deploy', '--config', join(repoRoot, 'dist/cloudflare/wrangler.json'), '--keep-vars'],
+    {
+      cwd: repoRoot,
+      stdio: 'inherit',
+      env: Object.fromEntries(
+        Object.entries(process.env).filter(([key]) => !key.startsWith('CONVEX_'))
+      )
+    }
+  );
 }

@@ -19,9 +19,12 @@ test('rejects mixed commits, destinations, and changed build output before publi
     mkdirSync(join(root, directory), { recursive: true });
     writeFileSync(join(root, directory, 'index.html'), 'build');
   }
+  mkdirSync(join(root, 'dist/cloudflare'), { recursive: true });
+  writeFileSync(join(root, 'dist/cloudflare/worker.ts'), 'verified worker');
   const release = {
     sha: 'a'.repeat(40),
     target,
+    cloudflare: siteDigest(join(root, 'dist/cloudflare')),
     web: siteDigest(join(root, siteDirectories.web)),
     landing: siteDigest(join(root, siteDirectories.landing))
   };

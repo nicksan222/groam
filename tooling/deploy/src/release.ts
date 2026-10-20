@@ -35,6 +35,7 @@ export type ProductionRelease = {
   target: ProductionTarget;
   web: string;
   landing: string;
+  cloudflare: string;
 };
 
 export function assertRelease(
@@ -47,6 +48,8 @@ export function assertRelease(
     throw new Error(
       'The production build does not match this tested commit and destination. Build it again.'
     );
+  if (siteDigest(join(root, 'dist/cloudflare')) !== release.cloudflare)
+    throw new Error('The Cloudflare release changed after verification. Build it again.');
   for (const site of ['web', 'landing'] as const) {
     if (siteDigest(join(root, siteDirectories[site])) !== release[site])
       throw new Error(`The ${site} build changed after verification. Build it again.`);

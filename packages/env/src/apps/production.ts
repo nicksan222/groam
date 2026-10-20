@@ -3,6 +3,9 @@ import { cleanEnv, str } from 'envalid';
 const values = cleanEnv(process.env, {
   CONVEX_URL: str({ default: '' }),
   SITE_URL: str({ default: '' }),
+  CLOUDFLARE_ACCOUNT_ID: str({ default: '' }),
+  CLOUDFLARE_WORKER_NAME: str({ default: 'groam' }),
+  CLOUDFLARE_API_TOKEN: str({ default: '' }),
   CONVEX_DEPLOY_KEY: str({ default: '' }),
   GITHUB_ACTIONS: str({ default: '' }),
   GITHUB_REPOSITORY: str({ default: '' }),
@@ -17,6 +20,9 @@ const keyDeploymentName = /^prod:([a-z0-9-]+)\|.+$/u.exec(values.CONVEX_DEPLOY_K
 export const env = {
   convexUrl: values.CONVEX_URL,
   siteUrl: values.SITE_URL,
+  cloudflareAccountId: values.CLOUDFLARE_ACCOUNT_ID,
+  cloudflareWorkerName: values.CLOUDFLARE_WORKER_NAME,
+  hasCloudflareToken: values.CLOUDFLARE_API_TOKEN.length > 0,
   isGitHubActions: values.GITHUB_ACTIONS === 'true',
   repository: values.GITHUB_REPOSITORY,
   ref: values.GITHUB_REF,

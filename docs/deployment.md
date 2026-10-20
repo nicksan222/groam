@@ -1,88 +1,90 @@
 # Production deployment
 
-Groam deploys one production Convex backend and two static components from the trusted `main`
-branch. The landing site is served at the root production URL, the web app is served below `/app/`,
-and authentication callbacks remain on the root Convex HTTP origin.
+Groam runs its full backend on Convex and publishes both frontends together to Cloudflare Workers
+Static Assets. One public origin serves the landing pages at `/` and the application at `/app/`.
+Convex owns authentication, database, payments, scheduled jobs, and HTTP actions. The Cloudflare
+Worker only serves static files and handles application deep links and localized landing 404s.
 
-Production releases are deliberately disabled until the repository owner completes the setup below.
-CI does not create Convex projects, deployments, environment variables, GitHub environments, or
-secrets.
+Production releases remain disabled until the owner configures the accounts and GitHub environment.
+CI never creates Convex projects or changes backend secrets.
 
-## One-time owner setup
+## One-time setup
 
-1. Create the production Convex project and deployment outside GitHub Actions.
-2. In the Convex production dashboard, set `BETTER_AUTH_SECRET` to a strong random secret and set
-   `SITE_URL` to the public site origin, such as `https://example.convex.site`. Keep it as an origin:
-   use HTTPS, omit a path, query, fragment, and trailing slash. CI intentionally does not
-   read or write Convex environment variables.
-3. Reuse the existing GitHub environment named `prod` in `nicksan222/groam`. Its deployment branch
-   policy must allow only the selected branch `main`; do not allow tags or every branch. Add the
-   production Convex deploy key as its `CONVEX_DEPLOY_KEY` secret. Do not add a personal Convex
-   access token or create a new, initially unprotected environment.
-4. Add these public variables to the `prod` environment or as GitHub repository variables:
+1. Create a production Convex deployment. Set its `BETTER_AUTH_SECRET` and set its `SITE_URL` to
+   the public **Cloudflare frontend origin**, for example `https://groam.example`. This must match
+   the frontend origin used for authentication and passkeys. Configure the authentication email
+   sender (`CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_EMAIL_API_TOKEN`, `AUTH_EMAIL_FROM`) and other backend secrets before enabling
+   production signups. Cloudflare Email Sending is a separate service from static hosting;
+   configuring Workers hosting alone does not enable outbound email.
+2. Create a Cloudflare account and reserve a Worker name, for example `groam`. The deployment
+   publishes the Worker with its static assets in one operation. Attach your custom domain to that
+   Worker in the Cloudflare dashboard before enabling production, or use its assigned `workers.dev`
+   origin. Domain/DNS setup stays outside CI. Do not enable a second automatic Cloudflare Git build:
+   the trusted GitHub release workflow owns publishing.
+3. Use the existing protected GitHub environment `prod` in `nicksan222/groam`. Restrict its deployment
+   branch policy to `main`. Store `CONVEX_DEPLOY_KEY` (a production-scoped key) and
+   `CLOUDFLARE_API_TOKEN` as **environment secrets**. Scope the Cloudflare token to this account with
+   Workers Scripts Edit permission. No credentials belong in repository variables or frontend builds.
+4. Add public environment or repository variables:
 
-   - `CONVEX_URL`: the production API origin, in the form `https://<deployment>.convex.cloud`
-   - `SITE_URL`: the matching production site origin, in the form
-     `https://<deployment>.convex.site` (or the regional origin shown in Convex)
+   | Variable | Value |
+   | --- | --- |
+   | `CONVEX_URL` | Production API origin, e.g. `https://deployment.convex.cloud` |
+   | `SITE_URL` | Public Cloudflare frontend origin, e.g. `https://groam.example` |
+   | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account's 32-character ID |
+   | `CLOUDFLARE_WORKER_NAME` | Selected Worker name, e.g. `groam` |
 
-   Add `CONVEX_PRODUCTION_ENABLED` as a GitHub repository variable with the exact value `true`.
+   HTTPS origins must have no paths, credentials, queries, or fragments. Regional Convex API URLs
+   retain their region. The matching Convex HTTP origin is derived from `CONVEX_URL`; it is used for
+   auth HTTP requests and must remain reachable.
+5. Finally set **repository** variable `CONVEX_PRODUCTION_ENABLED` to exactly `true`. The caller
+   checks this variable before attaching the protected environment. Leave it unset until setup is
+   complete. No key is needed to run PR CI. Stripe itself is optional; absent Stripe configuration
+   leaves the application in its documented payments-skipped mode.
 
-   The opt-in must be a repository variable because the caller checks it before the `prod`
-   environment is attached. Leave it unset while checking the other values. The release job fails
-   closed and remains skipped unless the value is exactly `true`.
+## Trusted release flow
 
-For European deployments, use the full regional origins shown by the dashboard, including
-`eu-west-1` in both URLs.
+A push to `main` runs all Checks before Release Production. The manual Deploy Production workflow
+also reruns Checks and accepts only `main`. Pull requests targeting `main` or any `saas/**` branch
+run Checks, so every layer in a PR stack receives CI without production credentials.
 
-The deploy key can deploy backend code and can run the internal queries and mutations needed by the
-static-hosting uploader. Treat it as a powerful production credential. Keep environment approvals
-or branch protection enabled as appropriate, rotate the key if it is exposed, and never put it in a
-repository variable or workflow-wide environment block.
+The release checks out the tested immutable SHA and installs the lockfile. Frontend builds receive
+only public destinations; neither deployment secret is present during build. The build assembles
+landing files and `/app/` files into `dist/cloudflare/assets`, copies the static routing Worker,
+and generates the Wrangler configuration. A release manifest hashes the original builds and the
+assembled Cloudflare release and binds them to this commit, account, Worker name, and destinations.
+Publishing rejects changes to source or output after verification. Before the first mutation, a
+`convex env list --names-only` preflight confirms production authentication/email variables exist
+without retrieving or printing their values. It cannot prove that the provider accepts the token
+or that the sender domain is verified; complete that setup before enabling releases.
 
-## Release paths
+Immediately before publishing, CI verifies that the SHA is still the remote `main` tip. Releases
+share a non-canceling concurrency group. The publication step deploys Convex first, then uploads
+one atomic Cloudflare frontend release. Each child CLI receives only its own deployment credential.
+A Cloudflare failure after Convex deploy leaves the previous frontend intact; fix the failure and
+rerun from current main. Backend and frontend publication are not a cross-provider transaction,
+so backend changes must remain compatible with the prior frontend during this interval.
 
-A push to `main` runs the complete **Checks** workflow. Only after every check succeeds does CI call
-the private **Release Production** workflow. The manual **Deploy Production** workflow is available
-for a deliberate rerun from `main`; it also reruns **Checks** before calling the same release job.
+The smoke check uses public GET requests without secrets. It checks the English and Italian landing
+pages, `/app/`, application deep links and JavaScript assets, the Convex auth endpoint, and missing
+routes/assets that must return 404. Deployment/credential setup cannot be verified from PR CI.
+The deployment workspace also tests the edge router, release integrity, destination validation,
+credential isolation, and smoke failures without accessing production.
 
-Both paths accept only events from `nicksan222/groam`, `refs/heads/main`, and the immutable commit in
-`github.sha`. Immediately before the first production mutation, the release job checks that this SHA
-is still the remote `main` tip. A newer main push makes the older run stop instead of publishing an
-outdated release. Production jobs share one non-canceling concurrency group, so they run serially.
-Pull-request CI can still cancel superseded runs; a main run is not canceled midway through a
-release.
+## Operation and rollback
 
-The job installs dependencies and builds without the deploy key. Only `bun run deploy:production`
-receives `CONVEX_DEPLOY_KEY`; the smoke test runs without it. Releases build directly from the tested
-SHA and do not consume artifacts produced by pull requests or other untrusted runs.
-The dedicated [`@groam/deploy`](../tooling/deploy/README.md) workspace owns build, publication,
-release-manifest validation, and public smoke orchestration; the workflows only enforce the trusted
-GitHub boundary and call its root scripts.
+Merge the reviewed stack sequentially into main and watch CI's Deploy production job. For retries,
+run Actions → Deploy Production on main. A skipped release usually means the explicit production
+opt-in is absent. Invalid configuration, missing credentials, or an outdated SHA fail closed.
 
-## Published routes and smoke coverage
+For an urgent frontend rollback, use Cloudflare's deployment history to restore a prior Worker
+version and its assets. Convex rollback is separate: deploy a reviewed compatible backend revision
+through the normal release process. Do not weaken the trusted main or manifest checks to force a
+stale artifact into production.
 
-The initial domain layout is:
+Hosted ChatGPT account connections remain disabled unless approved for hosted use. Privacy/terms
+pages still need the owner/legal review listed in [landing readiness](./landing-launch-readiness.md).
 
-- `/` and the other root pages: English landing site
-- `/it/` and other `/it/.../` pages: Italian landing site
-- `/app/`: signed-in web application
-- root authentication callback routes: Convex HTTP actions used by Better Auth
-
-The production smoke check covers the English landing page, an Italian landing page, the `/app/`
-application, and representative missing routes that must return `404`. The CI journey job publishes
-both static components locally and checks the same `/app/` mount before a release can proceed.
-
-Hosted ChatGPT account connections are currently disabled by the application code because shared
-hosted use requires OpenAI-approved access. Production deployment does not enable them. The privacy
-and terms pages are still drafts; resolve the owner and legal-review items in
-[`landing-launch-readiness.md`](./landing-launch-readiness.md) before treating them as published
-acceptance terms.
-
-## Operating a release
-
-For routine changes, merge into `main` and watch the CI **Deploy production** job after tests finish.
-For a retry, open **Actions → Deploy Production**, choose **Run workflow** on `main`, and inspect the
-test and release jobs. A skipped release means the opt-in variable or a trusted event guard did not
-match. A failure before deployment commonly means the configured public URLs are invalid or the
-tested SHA is no longer current main; start a fresh run from the latest `main` rather than weakening
-the guard.
+Cloudflare references: [Static Assets bindings](https://developers.cloudflare.com/workers/static-assets/binding/),
+[Wrangler configuration](https://developers.cloudflare.com/workers/wrangler/configuration/), and
+[GitHub Actions deployment](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/).
