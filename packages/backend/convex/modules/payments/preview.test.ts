@@ -5,6 +5,7 @@ import { openTripDraft, setupTrip, tripActivityInput, tripLocationInput } from '
 const findTrip = api.routes.trips.find.run;
 const getTrip = api.routes.trips.get.run;
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
 });
@@ -51,6 +52,9 @@ async function protectedPlan() {
 }
 
 test('unpaid find/get responses redact protected plans and proposal contents before projection', async () => {
+  // This timestamp contains a private cost's digits; substring checks must not mistake it for a leak.
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(1792534321919);
   enablePayments();
   const { owner, users, previewTripId, tripId } = await protectedPlan();
   const full = await owner.client.query(findTrip, { tripId: previewTripId });
@@ -74,16 +78,17 @@ test('unpaid find/get responses redact protected plans and proposal contents bef
       totalDurationDays: null,
       permissions: { canPropose: false, canEdit: false, isReadOnly: true }
     });
-    const payload = JSON.stringify(preview);
+    // Compare numeric values, not digit substrings that can occur in timestamps or IDs.
+    const payload = JSON.stringify(preview, (_key, value: unknown) => {
+      if (typeof value === 'number') expect([9876, 4321, 2468]).not.toContain(value);
+      return value;
+    });
     for (const secret of [
       'Private plan preview',
       'Private paid itinerary',
       'Private activity note',
       'Private ticket details',
-      'Private date notes',
-      '9876',
-      '4321',
-      '2468'
+      'Private date notes'
     ])
       expect(payload).not.toContain(secret);
   }

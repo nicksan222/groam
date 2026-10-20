@@ -1,6 +1,10 @@
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
-import { paymentCleanupState, paymentReconciliationState } from '#testing/payments';
+import {
+  paymentCleanupState,
+  paymentReconciliationState,
+  legacyUnrecordedPayment
+} from '#testing/payments';
 import { setupTrip } from '#testing/trips';
 
 const checkout = api.routes.trips.payments.checkout.run;
@@ -21,6 +25,8 @@ function provider() {
     lostCreation: false,
     loseRefund: false,
     refundPending: false,
+    refundStatus: null as string | null,
+    refundKeys: [] as string[],
     missingIntent: false,
     refunds: 0,
     expireCalls: 0,
@@ -43,19 +49,19 @@ function provider() {
   const refundResponse = (init?: RequestInit) => {
     if (init?.method === 'POST') {
       const key = new Headers(init.headers).get('Idempotency-Key')!;
-      if (!state.refundKey) {
+      if (!state.refundKeys.includes(key)) {
+        state.refundKeys.push(key);
         state.refundKey = key;
         state.refunds += 1;
       }
-      expect(key).toBe(state.refundKey);
       if (state.loseRefund) {
         state.loseRefund = false;
         throw new TypeError('refund response lost');
       }
     }
     return Response.json({
-      id: 're_lifecycle',
-      status: state.refundPending ? 'pending' : 'succeeded'
+      id: state.refunds > 1 ? `re_lifecycle_${state.refunds}` : 're_lifecycle',
+      status: state.refundStatus ?? (state.refundPending ? 'pending' : 'succeeded')
     });
   };
   const expireResponse = () => {
@@ -424,3 +430,171 @@ test('a recovered session ID survives incomplete reconciliation beyond the repla
   expect(state.refunds).toBe(1);
   expect(await paymentReconciliationState(fixture.owner.test)).toEqual([]);
 });
+
+test.each(['failed', 'canceled'] as const)(
+  '%s refunds enter a bounded manual queue and never auto-retry',
+  async (status) => {
+    const { state, mock, session } = provider();
+    vi.useFakeTimers();
+    const fixture = await setupTrip(1);
+    await fixture.users[0]!.client.action(checkout, { tripId: fixture.tripId });
+    state.race = true;
+    state.refundStatus = status;
+    await deleteOrganization(fixture);
+    const row = (await paymentReconciliationState(fixture.owner.test))[0]!;
+    expect(row.manualRefundStatus).toBe(status);
+    const count = mock.mock.calls.length;
+    await sweep(fixture);
+    await fixture.owner.test.action(internal.modules.payments.reconciliation.run, { id: row._id });
+    expect((await paidWebhook(fixture, session())).status).toBe(200);
+    await fixture.owner.test.finishAllScheduledFunctions(vi.runAllTimers);
+    expect(mock).toHaveBeenCalledTimes(count);
+    const manual = await fixture.owner.test.query(
+      internal.modules.payments.reconciliation.listManual,
+      { status, paginationOpts: { cursor: null, numItems: 25 } }
+    );
+    expect(manual.page).toMatchObject([
+      { id: row._id, refundId: 're_lifecycle', status, generation: 0, history: [] }
+    ]);
+    expect(manual.page[0]).not.toHaveProperty('checkoutBody');
+  }
+);
+
+test('explicit operator retry is CAS/idempotent and preserves failed receipt generations', async () => {
+  const { state } = provider();
+  vi.useFakeTimers();
+  const fixture = await setupTrip(1);
+  await fixture.users[0]!.client.action(checkout, { tripId: fixture.tripId });
+  state.race = true;
+  state.refundStatus = 'failed';
+  await deleteOrganization(fixture);
+  const row = (await paymentReconciliationState(fixture.owner.test))[0]!;
+  const decision = {
+    id: row._id,
+    expectedRefundId: 're_lifecycle',
+    requestId: 'support-case-2026-001'
+  };
+  await fixture.owner.test.mutation(
+    internal.modules.payments.reconciliation.resumeManual,
+    decision
+  );
+  await fixture.owner.test.mutation(
+    internal.modules.payments.reconciliation.resumeManual,
+    decision
+  );
+  await fixture.owner.test.finishAllScheduledFunctions(vi.runAllTimers);
+  const retried = (await paymentReconciliationState(fixture.owner.test))[0]!;
+  expect(state.refunds).toBe(2);
+  expect(state.refundKeys[1]).toBe(`${state.refundKeys[0]}-retry-1`);
+  expect(retried).toMatchObject({
+    refundGeneration: 1,
+    refundId: 're_lifecycle_2',
+    manualRefundStatus: 'failed',
+    refundHistory: [{ refundId: 're_lifecycle', status: 'failed', generation: 0 }]
+  });
+  await fixture.owner.test.mutation(
+    internal.modules.payments.reconciliation.resumeManual,
+    decision
+  );
+  await expect(
+    fixture.owner.test.mutation(internal.modules.payments.reconciliation.resumeManual, {
+      ...decision,
+      requestId: 'support-case-2026-stale'
+    })
+  ).rejects.toThrow('changed');
+  expect((await paymentReconciliationState(fixture.owner.test))[0]!.refundGeneration).toBe(1);
+  const exhaustHistory = async (generation: number): Promise<void> => {
+    if (generation > 10) return;
+    const current = (await paymentReconciliationState(fixture.owner.test))[0]!;
+    await fixture.owner.test.mutation(internal.modules.payments.reconciliation.resumeManual, {
+      id: current._id,
+      expectedRefundId: current.refundId!,
+      requestId: `support-explicit-retry-${generation}`
+    });
+    await fixture.owner.test.finishAllScheduledFunctions(vi.runAllTimers);
+    await exhaustHistory(generation + 1);
+  };
+  await exhaustHistory(2);
+  const exhausted = (await paymentReconciliationState(fixture.owner.test))[0]!;
+  expect(exhausted.refundHistory).toHaveLength(10);
+  await expect(
+    fixture.owner.test.mutation(internal.modules.payments.reconciliation.resumeManual, {
+      id: exhausted._id,
+      expectedRefundId: exhausted.refundId!,
+      requestId: 'support-explicit-retry-over-limit'
+    })
+  ).rejects.toThrow('exhausted');
+  expect(state.refunds).toBe(11);
+});
+
+test('verified external remedies leave financial evidence and cannot be retried', async () => {
+  const { state, mock } = provider();
+  vi.useFakeTimers();
+  const fixture = await setupTrip(1);
+  await fixture.users[0]!.client.action(checkout, { tripId: fixture.tripId });
+  state.race = true;
+  state.refundStatus = 'canceled';
+  await deleteOrganization(fixture);
+  const row = (await paymentReconciliationState(fixture.owner.test))[0]!;
+  const resolution = {
+    id: row._id,
+    expectedRefundId: 're_lifecycle',
+    resolutionReference: 'verified-support-case-2026-1234'
+  };
+  await fixture.owner.test.mutation(
+    internal.modules.payments.reconciliation.resolveManual,
+    resolution
+  );
+  await fixture.owner.test.mutation(
+    internal.modules.payments.reconciliation.resolveManual,
+    resolution
+  );
+  const before = mock.mock.calls.length;
+  await sweep(fixture);
+  expect(mock).toHaveBeenCalledTimes(before);
+  const retained = (await paymentReconciliationState(fixture.owner.test))[0]!;
+  expect(retained).toMatchObject({
+    refundId: 're_lifecycle',
+    resolutionReference: resolution.resolutionReference,
+    resolvedAt: expect.any(Number)
+  });
+  expect(
+    (
+      await fixture.owner.test.query(internal.modules.payments.reconciliation.listManual, {
+        status: 'canceled',
+        paginationOpts: { cursor: null, numItems: 25 }
+      })
+    ).page
+  ).toEqual([]);
+  await expect(
+    fixture.owner.test.mutation(internal.modules.payments.reconciliation.resumeManual, {
+      id: row._id,
+      expectedRefundId: 're_lifecycle',
+      requestId: 'another-operator-decision'
+    })
+  ).rejects.toThrow('changed');
+});
+
+test.each(['new', 'legacy'])(
+  'a %s reservation without a persisted request uses only proven no-I/O cleanup',
+  async (protocol) => {
+    const { mock } = provider();
+    vi.useFakeTimers();
+    const fixture = await setupTrip(1);
+    const reserved = await fixture.users[0]!.client.mutation(
+      internal.modules.payments.storage.prepare,
+      { tripId: fixture.tripId }
+    );
+    expect(reserved).not.toBeNull();
+    if (protocol === 'legacy') await legacyUnrecordedPayment(fixture.owner.test, reserved!.id);
+    await deleteOrganization(fixture);
+    expect(mock).not.toHaveBeenCalled();
+    expect(await paymentCleanupState(fixture.owner.test, fixture.tripId)).toEqual({
+      tripExists: false,
+      payments: []
+    });
+    expect(await paymentReconciliationState(fixture.owner.test)).toHaveLength(
+      protocol === 'new' ? 0 : 1
+    );
+  }
+);
