@@ -132,7 +132,8 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
     user: {
       additionalFields: {
         emailVerificationRequired: { type: 'boolean', required: false, input: false }
-      }
+      },
+      changeEmail: { enabled: true, updateEmailWithoutVerification: false }
     },
     trustedOrigins: authTrustedOrigins
   }) satisfies BetterAuthOptions;

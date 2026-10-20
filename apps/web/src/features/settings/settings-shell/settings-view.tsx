@@ -9,6 +9,7 @@ import { initials } from '@groam/ui/lib/avatar';
 import { GroupPeopleSettings } from '@/features/group/group-people/group-people-settings';
 import { AiSettings } from '@/features/settings/settings-panels/ai-settings';
 import { AppearanceSettings } from '@/features/settings/settings-panels/appearance-settings';
+import { EmailSettings } from '@/features/settings/settings-panels/email-settings';
 import { OrganizationSettings } from '@/features/settings/settings-panels/organization-settings';
 import { ProfileSettings } from '@/features/settings/settings-panels/profile-settings';
 import { SecuritySettings } from '@/features/settings/settings-panels/security-settings';
@@ -107,7 +108,12 @@ export function SettingsView({
                   {copy.description}
                 </p>
               </header>
-              {activeSection === 'profile' && <ProfileSettings user={session.user} />}
+              {activeSection === 'profile' && (
+                <SettingsStack>
+                  <ProfileSettings user={session.user} />
+                  <EmailSettings email={session.user.email} />
+                </SettingsStack>
+              )}
               {activeSection === 'appearance' && <AppearanceSettings />}
               {activeSection === 'group' && (
                 <SettingsStack>
