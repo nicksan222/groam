@@ -11,6 +11,7 @@ import authSchema from '#convex/components/better-auth/schema';
 import { requiresVerifiedEmail } from './delivery';
 import { resolveAuthTrustedOrigins } from './origins';
 import { accountRecovery } from './recovery';
+import { emailVerificationPolicy, verificationLink } from './verification';
 
 const authBaseUrl = env.CONVEX_SITE_URL ?? 'http://127.0.0.1:3211';
 
@@ -77,6 +78,11 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
     appName: 'Groam',
     baseURL: authBaseUrl,
     database: authComponent.adapter(ctx),
+    databaseHooks: {
+      user: {
+        create: { before: async (user) => ({ data: { ...user, emailVerificationRequired: true } }) }
+      }
+    },
     disabledPaths: ['/is-username-available'],
     emailAndPassword: {
       enabled: true,
@@ -95,12 +101,12 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
       sendOnSignUp: requiresVerifiedEmail(authSiteUrl),
       sendOnSignIn: requiresVerifiedEmail(authSiteUrl),
       autoSignInAfterVerification: false,
-      sendVerificationEmail: async ({ user, url }) => {
+      sendVerificationEmail: async ({ user, url, token }) => {
         await scheduleAuthEmail(
           ctx,
           user.email,
           'Verify your Groam email',
-          `Verify your email using this link: ${url}\n\nIf you did not create this account, ignore this email.`
+          `Verify your email using this link: ${verificationLink(url, token, authSiteUrl)}\n\nIf you did not create this account, ignore this email.`
         );
       }
     },
@@ -120,8 +126,14 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
         organizationLimit: 10
       }),
       crossDomain({ siteUrl: authSiteUrl }),
-      convex({ authConfig })
+      convex({ authConfig }),
+      emailVerificationPolicy()
     ],
+    user: {
+      additionalFields: {
+        emailVerificationRequired: { type: 'boolean', required: false, input: false }
+      }
+    },
     trustedOrigins: authTrustedOrigins
   }) satisfies BetterAuthOptions;
 

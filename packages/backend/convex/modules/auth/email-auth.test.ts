@@ -129,3 +129,56 @@ test.each(['email', 'username'])(
     expect(verified.headers.get('location')).toBe(callbackURL);
   }
 );
+
+test.each(['email', 'username'])(
+  'preexisting placeholder accounts retain %s password access, while new accounts cannot forge legacy status',
+  async (identifier) => {
+    const convex = createTest();
+    // Represent a row written before the optional rollout marker existed.
+    await post(convex, 'sign-up/email', {
+      email: 'legacyfixture@example.com',
+      username: 'legacytraveler',
+      name: 'Legacy',
+      password
+    });
+    const { components } = await import('#convex-generated/api');
+    await convex.mutation(components.betterAuth.adapter.updateOne, {
+      input: {
+        model: 'user',
+        where: [{ field: 'email', value: 'legacyfixture@example.com' }],
+        update: { email: 'legacy@users.invalid', emailVerificationRequired: null }
+      }
+    });
+    const legacyLogin = await post(convex, `sign-in/${identifier}`, {
+      ...(identifier === 'email'
+        ? { email: 'legacy@users.invalid' }
+        : { username: 'legacytraveler' }),
+      password
+    });
+    expect(legacyLogin.status).toBe(200);
+    expect((await legacyLogin.json()).token).toEqual(expect.any(String));
+    expect(
+      (
+        await post(convex, 'sign-up/email', {
+          email: 'new@users.invalid',
+          username: 'newtraveler',
+          name: 'New',
+          password,
+          emailVerificationRequired: false
+        })
+      ).status
+    ).toBe(400);
+    await post(convex, 'sign-up/email', {
+      email: 'new@example.com',
+      username: 'newtraveler',
+      name: 'New',
+      password,
+      emailVerificationRequired: false
+    });
+    const denied = await post(convex, `sign-in/${identifier}`, {
+      ...(identifier === 'email' ? { email: 'new@example.com' } : { username: 'newtraveler' }),
+      password
+    });
+    expect(denied.status).toBe(403);
+  }
+);

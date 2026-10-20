@@ -25,6 +25,7 @@ export const tables = {
     displayUsername: v.optional(v.union(v.null(), v.string())),
     twoFactorEnabled: v.optional(v.union(v.null(), v.boolean())),
     userId: v.optional(v.union(v.null(), v.string())),
+    emailVerificationRequired: v.optional(v.union(v.null(), v.boolean())),
   })
     .index("email_name", ["email","name"])
     .index("name", ["name"])

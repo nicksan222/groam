@@ -63,6 +63,7 @@ import type * as modules_auth_delivery from "../modules/auth/delivery.js";
 import type * as modules_auth_email from "../modules/auth/email.js";
 import type * as modules_auth_origins from "../modules/auth/origins.js";
 import type * as modules_auth_recovery from "../modules/auth/recovery.js";
+import type * as modules_auth_verification from "../modules/auth/verification.js";
 import type * as modules_auth_workspace from "../modules/auth/workspace.js";
 import type * as modules_dev_enrich from "../modules/dev/enrich.js";
 import type * as modules_dev_enrich_collaboration from "../modules/dev/enrich/collaboration.js";
@@ -445,6 +446,7 @@ declare const fullApi: ApiFromModules<{
   "modules/auth/email": typeof modules_auth_email;
   "modules/auth/origins": typeof modules_auth_origins;
   "modules/auth/recovery": typeof modules_auth_recovery;
+  "modules/auth/verification": typeof modules_auth_verification;
   "modules/auth/workspace": typeof modules_auth_workspace;
   "modules/dev/enrich": typeof modules_dev_enrich;
   "modules/dev/enrich/collaboration": typeof modules_dev_enrich_collaboration;
