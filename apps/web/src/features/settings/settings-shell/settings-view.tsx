@@ -87,34 +87,42 @@ export function SettingsView({
                   <KeyRound />
                   <span className="max-sm:sr-only">Create code</span>
                 </Button>
-              ) : (
+              ) : activeSection === 'profile' ? null : (
                 <SettingsHeaderAvatar user={session.user} />
               )
             }
-            description={copy.description}
+            description="Your account, preferences, and group workspace."
             title="Settings"
             titleTestId={testIds.settingsTitle}
           />
-          <SettingsSectionNav activeSection={activeSection} onSectionChange={onSectionChange} />
         </Shell.Banner>
 
         <Shell.PageBody variant="compact">
-          <div className="min-w-0" key={activeSection}>
-            {activeSection === 'profile' && <ProfileSettings user={session.user} />}
-            {activeSection === 'appearance' && <AppearanceSettings />}
-            {activeSection === 'group' && (
-              <SettingsStack>
-                <OrganizationSettings
-                  canManage={canManage}
-                  isOwner={activeRole === 'owner'}
-                  key={activeOrganization.id}
-                  organization={activeOrganization}
-                />
-                <GroupPeopleSettings />
-              </SettingsStack>
-            )}
-            {activeSection === 'security' && <SecuritySettings session={session} />}
-            {activeSection === 'ai' && <AiSettings />}
+          <div className="grid w-full items-start gap-5 md:grid-cols-[10rem_minmax(0,1fr)] md:gap-8">
+            <SettingsSectionNav activeSection={activeSection} onSectionChange={onSectionChange} />
+            <div className="min-w-0" key={activeSection}>
+              <header className="mb-7 space-y-1.5 border-b border-border pb-5">
+                <h2 className="text-xl font-semibold tracking-tight">{copy.title}</h2>
+                <p className="max-w-prose text-sm leading-6 text-muted-foreground">
+                  {copy.description}
+                </p>
+              </header>
+              {activeSection === 'profile' && <ProfileSettings user={session.user} />}
+              {activeSection === 'appearance' && <AppearanceSettings />}
+              {activeSection === 'group' && (
+                <SettingsStack>
+                  <OrganizationSettings
+                    canManage={canManage}
+                    isOwner={activeRole === 'owner'}
+                    key={activeOrganization.id}
+                    organization={activeOrganization}
+                  />
+                  <GroupPeopleSettings />
+                </SettingsStack>
+              )}
+              {activeSection === 'security' && <SecuritySettings session={session} />}
+              {activeSection === 'ai' && <AiSettings />}
+            </div>
           </div>
         </Shell.PageBody>
       </Shell.BannerLayout>

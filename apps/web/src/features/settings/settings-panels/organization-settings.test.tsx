@@ -1,4 +1,5 @@
 import { render } from '@groam/vitest-config/react';
+import { useViewport } from '@groam/vitest-config/viewport';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import type { ActiveOrganization } from '@/features/workspace/workspace-shell/workspace-state';
@@ -50,6 +51,18 @@ describe('OrganizationSettings', () => {
       .toBeVisible();
     await page.getByRole('button', { name: /Save changes/ }).click();
     expect(org.save).toHaveBeenCalledTimes(1);
+  });
+
+  test('aligns the group form with its heading on desktop', async () => {
+    await useViewport(1280, 800);
+    const { container } = await render(
+      <OrganizationSettings canManage isOwner={false} organization={organization} />
+    );
+    const heading = container.querySelector('[data-slot="settings-panel-heading"]')!;
+    const form = container.querySelector('form')!;
+    expect(
+      Math.abs(form.getBoundingClientRect().top - heading.getBoundingClientRect().top)
+    ).toBeLessThan(2);
   });
 
   test('non-managers get a read-only profile', async () => {

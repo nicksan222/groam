@@ -29,7 +29,7 @@ export function PasskeySettings() {
           <div className="space-y-2">
             {passkeys.passkeys.map((passkey) => (
               <div
-                className="flex items-center justify-between gap-3 rounded-lg border border-border p-3"
+                className="flex items-center justify-between gap-3 border-b border-border py-3"
                 key={passkey.id}
               >
                 <div className="min-w-0">
@@ -50,7 +50,7 @@ export function PasskeySettings() {
               </div>
             ))}
             {passkeys.passkeys.length === 0 ? (
-              <p className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 No passkeys yet. Add one now, then add a second from another device.
               </p>
             ) : null}

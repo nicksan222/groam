@@ -22,14 +22,12 @@ const sessionDateFormatter = new Intl.DateTimeFormat(undefined, {
 
 function SessionCard({
   currentToken,
-  index,
   isPending,
   pendingAction,
   revoke,
   session
 }: {
   currentToken: string;
-  index: number;
   isPending: boolean;
   pendingAction: string | null;
   revoke: (token: string) => Promise<unknown>;
@@ -39,15 +37,11 @@ function SessionCard({
   const device = describeDevice(session.userAgent);
   const DeviceIcon = device.isMobile ? Smartphone : Laptop;
   return (
-    <LiftCard
-      className={cn('flex items-center gap-3 p-3.5', isCurrent && 'border-foreground/20')}
-      key={session.id}
-      style={{ animationDelay: `${80 + index * 40}ms` }}
-    >
+    <div className="flex min-w-0 items-center gap-3 py-4">
       <span
         className={cn(
-          'grid size-10 shrink-0 place-items-center rounded-xl border text-muted-foreground',
-          isCurrent ? 'border-foreground/20 text-foreground' : 'border-border'
+          'grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground',
+          isCurrent && 'text-foreground'
         )}
       >
         <DeviceIcon className="size-4" />
@@ -57,7 +51,7 @@ function SessionCard({
           <p className="text-sm font-medium">{device.label}</p>
           {isCurrent ? <Badge variant="emerald">Current</Badge> : null}
         </div>
-        <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+        <p className="mt-0.5 truncate text-xs text-muted-foreground">
           {session.ipAddress || 'IP unavailable'} · {formatDate(session.createdAt)}
         </p>
       </div>
@@ -74,7 +68,7 @@ function SessionCard({
           <span className="hidden sm:inline">Sign out</span>
         </Button>
       ) : null}
-    </LiftCard>
+    </div>
   );
 }
 
@@ -167,11 +161,10 @@ function SessionList({
   if (state.sessions.length === 0)
     return <DashedEmpty className="px-4 py-8">No active sessions found.</DashedEmpty>;
   return (
-    <div className="space-y-2">
-      {state.sessions.map((session, index) => (
+    <div className="divide-y divide-border">
+      {state.sessions.map((session) => (
         <SessionCard
           currentToken={currentToken}
-          index={index}
           isPending={isPending}
           key={session.id}
           pendingAction={state.pendingAction}

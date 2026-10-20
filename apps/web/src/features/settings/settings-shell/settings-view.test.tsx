@@ -1,7 +1,17 @@
+import { SidebarProvider } from '@groam/ui/components/sidebar';
 import { render } from '@groam/vitest-config/react';
+import type { ComponentProps } from 'react';
 import { afterEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
-import { SettingsView } from './settings-view';
+import { SettingsView as SettingsViewComponent } from './settings-view';
+
+function SettingsView(props: ComponentProps<typeof SettingsViewComponent>) {
+  return (
+    <SidebarProvider>
+      <SettingsViewComponent {...props} />
+    </SidebarProvider>
+  );
+}
 
 const testState = vi.hoisted(() => ({
   aiMounts: 0,

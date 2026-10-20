@@ -68,7 +68,9 @@ export function MembersSection({
             icon={
               <Avatar className="size-7 shrink-0">
                 <AvatarImage alt={member.user.name} src={member.user.image ?? ''} />
-                <AvatarFallback>{initials(member.user.name)}</AvatarFallback>
+                <AvatarFallback className="text-[11px] leading-none font-medium tracking-normal">
+                  {initials(member.user.name)}
+                </AvatarFallback>
               </Avatar>
             }
             title={

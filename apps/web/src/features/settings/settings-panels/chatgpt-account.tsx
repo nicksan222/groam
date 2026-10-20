@@ -20,7 +20,7 @@ export function ChatGptAccount({
   onSelect: (id: ChatGptConnectionId) => Promise<void>;
 }) {
   return (
-    <div className="flex min-w-0 flex-col items-start justify-between gap-4 rounded-lg border border-border p-4 sm:flex-row sm:items-center">
+    <div className="flex min-w-0 flex-col items-start justify-between gap-4 border-b border-border py-3 sm:flex-row sm:items-center">
       <div className="min-w-0 space-y-1">
         <p className="text-sm leading-5 font-medium break-words">{account.label}</p>
         <p className="text-xs leading-5 text-muted-foreground">

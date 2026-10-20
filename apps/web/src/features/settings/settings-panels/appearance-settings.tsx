@@ -25,7 +25,7 @@ export function AppearanceSettings() {
           icon={MonitorCog}
           title="Color theme"
         />
-        <div className="-mx-1">
+        <div>
           <ThemeSelector labels={{ dark: 'Dark', light: 'Light', system: 'System' }} />
         </div>
       </SettingsPanel>

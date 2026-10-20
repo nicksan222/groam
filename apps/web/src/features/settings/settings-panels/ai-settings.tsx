@@ -38,22 +38,12 @@ export function AiSettings() {
       }
     >
       <SettingsPanel>
-        <div className="grid gap-6">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              See the work Groam has done for your group.
-            </p>
-            <Button asChild variant="outline" size="sm">
-              <Link to="/agents" data-testid={testIds.navAgents}>
-                Background activity
-              </Link>
-            </Button>
-          </div>
-          <SettingsPanelHeading
-            description="Sign in with ChatGPT to authorize eligible AI requests using your plan."
-            icon={Sparkles}
-            title="ChatGPT"
-          />
+        <SettingsPanelHeading
+          description="Sign in with ChatGPT to authorize eligible AI requests using your plan."
+          icon={Sparkles}
+          title="ChatGPT"
+        />
+        <div className="grid gap-5">
           {!remote.available ? (
             <p role="status" className="text-sm leading-relaxed text-muted-foreground">
               {remote.unavailableReason ??
@@ -91,7 +81,7 @@ export function AiSettings() {
           </div>
           {connection?.connected && !remote.planNoticeAcknowledged ? (
             <div
-              className="flex flex-col items-start gap-4 rounded-lg border border-border p-4 sm:flex-row sm:items-center sm:justify-between"
+              className="flex flex-col items-start gap-4 bg-muted/50 p-3 sm:flex-row sm:items-center sm:justify-between"
               role="note"
             >
               <p className="text-sm leading-relaxed">
@@ -147,6 +137,16 @@ export function AiSettings() {
             </a>
           </SettingsFooter>
           <FormFeedback error={settings.error} message={settings.message} />
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              See the work Groam has done for your group.
+            </p>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/agents" data-testid={testIds.navAgents}>
+                Background activity
+              </Link>
+            </Button>
+          </div>
         </div>
       </SettingsPanel>
     </SettingsSplitLayout>
