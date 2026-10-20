@@ -7,11 +7,13 @@ function seedActivitiesFor(
 ): CreateTripPlan['activities'] {
   return stops.flatMap((stop, destinationIndex) => {
     const dayNumber = stop.startDay ?? 1;
+    const lastDay = stop.endDay ?? dayNumber;
+    const middleDay = Math.min(lastDay, dayNumber + 1);
     return [
       {
         destinationIndex,
         input: {
-          notes: `A relaxed introduction to ${stop.name}`,
+          notes: `Explore ${stop.name} at an easy pace. Keep this optional if arrival is delayed; use step-free routes where possible.`,
           schedule: { day: dayNumber, timeBlock: 'morning' as const },
           title: seedActivityTitles[0]
         }
@@ -19,9 +21,56 @@ function seedActivitiesFor(
       {
         destinationIndex,
         input: {
-          notes: 'Pick a local favorite and book if needed',
-          schedule: { day: stop.endDay ?? dayNumber, timeBlock: 'evening' as const },
+          notes:
+            'Illustrative dinner plan: check vegetarian options, step-free access and the cancellation policy before making a reservation. Nothing is booked.',
+          schedule: { day: Math.max(dayNumber, lastDay - 1), timeBlock: 'evening' as const },
           title: seedActivityTitles[1]
+        }
+      },
+      {
+        destinationIndex,
+        input: {
+          title: 'Check in, unpack, and orient the group',
+          notes:
+            'Save the lodging address offline. Check luggage storage and access before arrival; no reservation is implied by this example.',
+          schedule: { day: dayNumber, timeBlock: 'afternoon' as const }
+        }
+      },
+      {
+        destinationIndex,
+        input: {
+          title: `Market breakfast in ${stop.name.split(',')[0]}`,
+          notes:
+            'Budget for an inexpensive breakfast. One vegetarian and one gluten-free option needed; split up for free time afterwards.',
+          schedule: {
+            day: middleDay,
+            timeBlock: 'morning' as const,
+            startTime: '08:30',
+            endTime: '09:30'
+          }
+        }
+      },
+      {
+        destinationIndex,
+        input: {
+          title: 'Culture stop or indoor weather backup',
+          notes:
+            'Choose the shortlist from linked research. Confirm opening days and ticket terms; keep the afternoon flexible if the group needs rest.',
+          schedule: { day: middleDay, timeBlock: 'afternoon' as const }
+        }
+      },
+      {
+        destinationIndex,
+        input: {
+          title: 'Pack up and leave a transfer buffer',
+          notes:
+            'Check the next departure with the operator. Allow time for bags, mobility needs, and a meal; this is an example plan, not a confirmed timetable.',
+          schedule: {
+            day: lastDay,
+            timeBlock: 'morning' as const,
+            startTime: '10:00',
+            endTime: '11:00'
+          }
         }
       }
     ];
@@ -35,10 +84,18 @@ export function buildWorkspaceSeedPlans(tripCount: number): CreateTripPlan[] {
 function buildWorkspaceSeedPlan(plan: ReturnType<typeof buildTripPlans>[number], index: number) {
   const known = plan.create.destination.status === 'known' ? plan.create.destination : undefined;
   const primary = known
-    ? { dayNotes: 'Arrive and explore the first stop', endDay: 2, startDay: 1 }
+    ? {
+        dayNotes:
+          'Base for the first part of the trip. Balance booked activities with independent time.',
+        endDay:
+          plan.additionalDestinations[0]?.schedule?.startDay === undefined
+            ? (plan.create.duration?.totalDays ?? 5)
+            : plan.additionalDestinations[0].schedule.startDay,
+        startDay: 1
+      }
     : undefined;
   const activities = seedActivitiesFor([
-    ...(known ? [{ endDay: 2, name: known.name, startDay: 1 }] : []),
+    ...(known ? [{ endDay: primary?.endDay, name: known.name, startDay: 1 }] : []),
     ...plan.additionalDestinations.map((stop) => ({
       endDay: stop.schedule?.endDay,
       name: stop.name,
@@ -59,7 +116,11 @@ function buildWorkspaceSeedPlan(plan: ReturnType<typeof buildTripPlans>[number],
 function workspaceProposal(archived: boolean, index: number, known: { name: string } | undefined) {
   if (archived || index % 3 !== 0 || !known) return undefined;
   return {
-    notes: 'A proposed addition for the group to review',
-    title: index % 2 === 0 ? 'Add a local highlight' : 'Refine the first day'
+    notes:
+      'Swap one busy afternoon for an accessible indoor option. Keep the existing dinner slot, budget, and travel buffers; review the source information before applying.',
+    title:
+      index % 2 === 0
+        ? 'Add a weather-safe cultural afternoon'
+        : 'Give the arrival day more breathing room'
   };
 }

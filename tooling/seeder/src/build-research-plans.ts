@@ -31,7 +31,7 @@ export function buildResearchPlans(city: string): ResearchPlan[] {
         },
         {
           authorIndex: 1,
-          text: `This guide looks thorough: https://www.atlasobscura.com/things-to-do/${slug(city)}/museums`
+          text: `A map to investigate, not a vetted shortlist: https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`museums in ${city}`)}`
         },
         {
           authorIndex: 2,
@@ -39,11 +39,11 @@ export function buildResearchPlans(city: string): ResearchPlan[] {
         },
         {
           authorIndex: 3,
-          text: 'Many are free or cheaper on the first Sunday of the month, worth checking against our dates.'
+          text: 'Before choosing: verify opening days, step-free routes, timed-entry tickets, and whether concessions apply on our actual dates. Do not assume a free-entry day.'
         },
         {
           authorIndex: 1,
-          text: 'Agreed. I will book timed tickets for the top pick once the dates are settled.'
+          text: 'Decision still open: compare the strongest two options, keep one optional, and bring the cancellation terms back to the group before anyone pays.'
         }
       ]
     },
@@ -63,7 +63,7 @@ export function buildResearchPlans(city: string): ResearchPlan[] {
         },
         {
           authorIndex: 1,
-          text: 'Good point. I would reserve dinner early, popular spots fill up days ahead.'
+          text: 'Please check the menu and booking terms directly. Shortlist one inexpensive fallback in case the group changes plans; nothing is reserved yet.'
         }
       ]
     }

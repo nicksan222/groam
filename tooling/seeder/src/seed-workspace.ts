@@ -1,6 +1,11 @@
 import type { AppUserProfile, BackendAppActions } from '@groam/app-actions/backend';
 import type { SeedScenario } from './seed-scenario';
 import {
+  seedWorkspaceDetails,
+  type SeedWorkspaceDetailActions,
+  type SeedWorkspaceDetailsResult
+} from './seed-workspace-details';
+import {
   type SeedWorkspaceResearchActions,
   type SeedWorkspaceResearchesResult,
   seedWorkspaceResearches
@@ -24,10 +29,12 @@ export type SeedWorkspaceInput = {
 
 export type SeedWorkspaceActions = Pick<BackendAppActions, 'resetLocalDevelopmentData'> &
   SeedWorkspaceResearchActions &
+  SeedWorkspaceDetailActions &
   SeedWorkspaceTripActions &
   SeedWorkspaceUserActions;
 
-export type SeedWorkspaceResult = SeedWorkspaceResearchesResult &
+export type SeedWorkspaceResult = SeedWorkspaceDetailsResult &
+  SeedWorkspaceResearchesResult &
   SeedWorkspaceTripsResult &
   SeedWorkspaceUsersResult & {
     reset?: Awaited<ReturnType<SeedWorkspaceActions['resetLocalDevelopmentData']>>;
@@ -58,5 +65,17 @@ export async function seedWorkspace(
     users: users.authenticatedUsers
   });
 
-  return { ...users, ...trips, ...researches, ...(reset ? { reset } : {}) };
+  // oxlint-disable-next-line react-doctor/server-sequential-independent-await -- Enrichment resets the owner's local seed quotas; finish research creation before sharing those rate buckets.
+  const details = await seedWorkspaceDetails(app, {
+    owner: users.authenticatedOwner,
+    tripIds: trips.tripIds
+  });
+  return {
+    ...users,
+    ...trips,
+    ...researches,
+    ...details,
+    researchCount: researches.researchCount + details.researchCount,
+    ...(reset ? { reset } : {})
+  };
 }

@@ -26,6 +26,7 @@ import { type BackendActionsConfig, BackendSession } from './backend-session';
 import { createIssue } from './create-issue';
 import { createTrip } from './create-trip';
 import { type CreateTripPlan, createTrips } from './create-trips';
+import { enrichTrip } from './enrich-trip';
 import { type AppUserProfile, type AuthenticatedAppUser, ensureUser } from './ensure-user';
 import { type AppWorkspace, type EnsureWorkspaceInput, ensureWorkspace } from './ensure-workspace';
 import { findIdea } from './find-idea';
@@ -91,6 +92,9 @@ export class BackendAppActions extends AppActions<AuthenticatedAppUser> {
   readonly updateTrip = (user: AuthenticatedAppUser, input: UpdateTripInput) =>
     updateTrip({ backend: this.backend, user }, input);
 
+  enrichTrip(user: AuthenticatedAppUser, input: { tripId: string; scenarioIndex: number }) {
+    return enrichTrip(this.backend, user, input);
+  }
   createResearch(user: AuthenticatedAppUser, input: CreateResearchInput) {
     return createResearch({ backend: this.backend, user }, input);
   }

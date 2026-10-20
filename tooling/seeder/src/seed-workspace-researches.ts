@@ -65,7 +65,7 @@ async function seedTripResearches(
 
   // Creating a research is rate limited per person, so spread creators across the travelers.
   for (const [planIndex, plan] of buildResearchPlans(city).entries()) {
-    const requestKey = `seed:research:${sequence}:${plan.key}`;
+    const requestKey = `seed:v2:research:${tripId}:${sequence}:${plan.key}`;
     // oxlint-disable-next-line react-doctor/async-await-in-loop -- Creation is rate limited per person; seed one at a time.
     const discussionId = await app.createResearch(actor(planIndex), {
       brief: plan.brief,

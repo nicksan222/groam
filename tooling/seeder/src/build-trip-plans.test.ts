@@ -30,3 +30,19 @@ test('builds deterministic destination and archive variety', () => {
     })
   ).toBe(true);
 });
+
+test('keeps multi-stop journeys regional and budgets plausible in their local currency', () => {
+  const plans = buildTripPlans(24);
+  for (const plan of plans) {
+    if (plan.create.destination.status !== 'known') continue;
+    const countryCode = plan.create.destination.countryCode;
+    expect(plan.additionalDestinations.every((stop) => stop.countryCode === countryCode)).toBe(
+      true
+    );
+  }
+  expect(
+    plans.find((plan) => plan.create.currency === 'JPY')?.create.budget?.amount
+  ).toBeGreaterThan(100000);
+  expect(plans.some((plan) => plan.create.startDate !== undefined)).toBe(true);
+  expect(plans.every((plan) => plan.create.clientRequestId.startsWith('seed:v2:'))).toBe(true);
+});

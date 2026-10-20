@@ -1,5 +1,6 @@
 import type { CreateTripPlan } from '@groam/app-actions/backend';
-import { seedDestinationAt, seedDestinationCount } from './seed-destinations';
+import { seedDestinationAt } from './seed-destinations';
+import { seedRegionalStops } from './seed-regional-stops';
 
 export type SeedTripPlan = {
   additionalDestinations: CreateTripPlan['additionalDestinations'];
@@ -35,14 +36,26 @@ function buildTripPlan(index: number, tripCount: number): SeedTripPlan {
   const idealDurationDays = minimumDurationDays + 2 + (index % 4);
   const stops = extraStopCount(index, undecided);
   const sequence = String(index + 1).padStart(2, '0');
+  const themes = [
+    'food & neighborhoods',
+    'culture by rail',
+    'slow travel',
+    'outdoors & weather backups'
+  ];
   const name = undecided
-    ? `Next adventure shortlist ${sequence}`
-    : `${destination.name.split(',')[0]} ${index % 3 === 0 ? 'long weekend' : 'escape'} ${sequence}`;
+    ? `Autumn getaway — destination shortlist ${sequence}`
+    : `${destination.name.split(',')[0]} · ${themes[index % themes.length]} ${sequence}`;
   const create: SeedTripPlan['create'] = {
-    clientRequestId: `seed:trip:${String(index + 1).padStart(4, '0')}`,
-    budget: { amount: 600 + (index % 8) * 350 },
+    clientRequestId: `seed:v2:trip:${String(index + 1).padStart(4, '0')}`,
+    budget: { amount: localBudget(destination.currency, index) },
     currency: destination.currency,
-    dateNotes: periods[index % periods.length],
+    dateNotes:
+      index % 3 === 1
+        ? 'Dates agreed; rooms and rail tickets still need checking. Group budget, excluding international flights.'
+        : periods[index % periods.length],
+    ...(index % 3 === 1
+      ? { startDate: `2027-${String(3 + (index % 6)).padStart(2, '0')}-12` }
+      : {}),
     destination: undecided
       ? { status: 'undecided' }
       : {
@@ -63,29 +76,52 @@ function buildTripPlan(index: number, tripCount: number): SeedTripPlan {
     name
   };
   return {
-    additionalDestinations: additionalDestinations(index, stops, undecided),
+    additionalDestinations: additionalDestinations(
+      index,
+      stops,
+      undecided,
+      create.duration?.totalDays ?? idealDurationDays
+    ),
     archived: tripCount >= 4 && index > 0 && (index % 9 === 0 || index === tripCount - 1),
     create
   };
 }
 
-function additionalDestinations(index: number, count: number, undecided: boolean) {
-  const usedPlaceIds = new Set(undecided ? [] : [seedDestinationAt(index).placeId]);
-  const destinations: SeedTripPlan['additionalDestinations'] = [];
-  for (let offset = 1; destinations.length < count && offset < seedDestinationCount; offset += 1) {
-    const stop = seedDestinationAt(index + offset);
-    if (usedPlaceIds.has(stop.placeId)) continue;
-    usedPlaceIds.add(stop.placeId);
-    const stopIndex = destinations.length;
-    destinations.push({
-      countryCode: stop.countryCode,
-      coordinates: { latitude: stop.latitude, longitude: stop.longitude },
-      dayNotes: `Explore ${stop.name.split(',')[0]}`,
-      name: stop.name,
-      placeId: stop.placeId,
-      schedule: { endDay: stopIndex * 2 + 4, startDay: stopIndex * 2 + 3 },
-      status: 'known'
-    });
-  }
-  return destinations;
+function additionalDestinations(
+  index: number,
+  count: number,
+  undecided: boolean,
+  totalDays: number
+) {
+  if (undecided) return [];
+  return seedRegionalStops(index, count).map((stop, stopIndex) => ({
+    countryCode: stop.countryCode,
+    coordinates: { latitude: stop.latitude, longitude: stop.longitude },
+    dayNotes: `Transfer after breakfast. Leave time to check in before exploring ${stop.name.split(',')[0]}.`,
+    name: stop.name,
+    placeId: stop.placeId,
+    schedule: {
+      endDay: stopIndex === count - 1 ? totalDays : stopIndex * 2 + 5,
+      startDay: stopIndex * 2 + 3
+    },
+    status: 'known' as const
+  }));
+}
+
+function localBudget(currency: string, index: number): number {
+  // Illustrative group budgets in each destination's own currency, not FX conversions.
+  const budgets: Record<string, number> = {
+    EUR: 2400,
+    JPY: 420000,
+    MXN: 48000,
+    ISK: 460000,
+    MAD: 22000,
+    NZD: 5200,
+    CAD: 4200,
+    THB: 68000,
+    USD: 3600,
+    ZAR: 48000,
+    NOK: 38000
+  };
+  return Math.round((budgets[currency] ?? 3000) * (1 + (index % 4) * 0.15));
 }

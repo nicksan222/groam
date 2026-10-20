@@ -85,6 +85,12 @@ In another terminal, seed the demo workspace:
 just seed
 ```
 
+The seed includes regional itineraries, stays, transport, packing, issues,
+changed draft ideas, planning polls, and linked research with illustrative
+reports and sources. Research fixtures do not make AI requests or represent
+verified bookings. Seeding resets local data by default; use
+`just seed --no-reset` to add the scenarios while keeping existing work.
+
 Open [localhost:5173](http://localhost:5173) and sign in with
 `demo@groam.example` / `GroamDemo123!`.
 

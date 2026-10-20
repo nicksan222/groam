@@ -106,8 +106,6 @@ const destinations = [
   }
 ] as const satisfies readonly SeedDestination[];
 
-export const seedDestinationCount = destinations.length;
-
 export function seedDestinationAt(index: number): SeedDestination {
   const destination = destinations[index % destinations.length];
   if (!destination) throw new Error('No seed destinations are configured');
