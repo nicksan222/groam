@@ -38,5 +38,5 @@ export async function paymentStatus(ctx: TripCtx) {
       paid: Boolean((await paymentFor(ctx, ctx.trip._id, userId))?.paid)
     }))
   );
-  return { enabled, travelers };
+  return { archived: ctx.trip.archive !== undefined, enabled, travelers };
 }
