@@ -78,7 +78,7 @@ const panels: Record<string, string> = {
   pricing:
     label('Example trip: a group of four') +
     rows([
-      ['pink', 'M', 'Maya, organizer', 'Free'],
+      ['pink', 'M', 'Maya, trip creator', 'Free'],
       ['green', 'J', 'Jonas', '€1'],
       ['mauve', 'P', 'Priya', '€1'],
       ['peach', 'S', 'Sam', '€1']

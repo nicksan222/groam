@@ -54,8 +54,8 @@ export default {
   'Cookies and device storage': 'Cookie e archiviazione sul dispositivo',
   'Covers, photos, and conversation attachments, together with file names and types.':
     'Copertine, foto e allegati alle conversazioni, insieme ai nomi e ai tipi di file.',
-  'Create trips, build the itinerary, and use every feature. A solo trip costs nothing, and the organizer never pays for themselves.':
-    'Crea viaggi, costruisci l’itinerario e usa tutte le funzionalità. Un viaggio in solitaria non costa nulla e l’organizzatore non paga mai per sé.',
+  'Create trips, build the itinerary, and use every feature. A solo trip costs nothing, and the trip creator never pays for their own place.':
+    'Crea viaggi, costruisci l’itinerario e usa tutte le funzionalità. Un viaggio in solitaria non costa nulla e chi crea il viaggio non paga il proprio posto.',
   'Depending on where you live, privacy law may give you rights over your personal data, such as access, correction, deletion, restriction, portability, objection, or a right to complain to a data-protection authority. The final notice must explain which rights apply, how to exercise them, and where to send a request. No privacy contact is published in this draft because the operator has not supplied one.':
     'A seconda del luogo in cui vivi, la normativa sulla privacy può riconoscerti diritti sui tuoi dati personali, come l’accesso, la rettifica, la cancellazione, la limitazione, la portabilità, l’opposizione o il diritto di presentare reclamo a un’autorità per la protezione dei dati. L’informativa finale dovrà spiegare quali diritti si applicano, come esercitarli e dove inviare una richiesta. In questa bozza non è pubblicato alcun contatto per la privacy perché il gestore non ne ha fornito uno.',
   'Destinations, dates, budgets, itineraries, traveler responses, ideas, issues, polls, and conversations, including authorship and change history.':
@@ -69,9 +69,9 @@ export default {
     'Non interrompere il servizio e non usarlo impropriamente su una scala che danneggi gli altri.',
   'Do not try to get into accounts, trips, or systems that are not yours.':
     'Non tentare di accedere ad account, viaggi o sistemi che non ti appartengono.',
-  'Does the organizer count as a traveler?': 'L’organizzatore conta come viaggiatore?',
-  'Don’t count yourself. Organizers plan free. Press “I’ll pay” under a traveler to cover their €1.':
-    'Non contare te stesso. Gli organizzatori pianificano gratis. Premi “Pago io” sotto un viaggiatore per coprire il suo euro.',
+  'Does every organizer get a free place?': 'Ogni organizzatore ha un posto gratuito?',
+  'Don’t count the trip creator. Their place is free. Press “I’ll pay” under a traveler to cover their €1.':
+    'Non contare chi crea il viaggio: il suo posto è gratuito. Premi “Pago io” sotto un viaggiatore per coprire il suo euro.',
   'Each pays their own €1, or Maya covers them.':
     'Ognuno paga il proprio euro, oppure paga Maya per loro.',
   'Each traveler pays their own €1 for the trip they join. Or you cover them from Travelers.':
@@ -122,16 +122,16 @@ export default {
     'Ultimo aggiornamento: 18 ottobre 2026. Questa non è ancora un’informativa sulla privacy completa. Prima del lancio devono ancora essere aggiunti i dati del gestore, le basi giuridiche, l’elenco dei fornitori di servizi, le informazioni sui trasferimenti, i periodi di conservazione e un contatto per la privacy.',
   'Legal document': 'Documento legale',
   'Lisbon long weekend, fare per traveler': 'Fine settimana lungo a Lisbona, quota per viaggiatore',
-  'Maya plans a long weekend in Lisbon and invites Jonas, Priya, and Sam. Maya is the organizer, so she plans free. Jonas, Priya, and Sam pay €1 each. That’s 4 people on the trip for €3.':
-    'Maya organizza un fine settimana lungo a Lisbona e invita Jonas, Priya e Sam. Maya è l’organizzatrice, quindi pianifica gratis. Jonas, Priya e Sam pagano 1 € ciascuno. Sono 4 persone in viaggio per 3 €.',
+  'Maya creates a long weekend in Lisbon and invites Jonas, Priya, and Sam. Maya is the trip creator, so her place is free. Jonas, Priya, and Sam pay €1 each. That’s 4 people on the trip for €3.':
+    'Maya crea un weekend lungo a Lisbona e invita Jonas, Priya e Sam. Maya ha creato il viaggio, quindi il suo posto è gratuito. Jonas, Priya e Sam pagano 1 € ciascuno. Sono 4 persone in viaggio per 3 €.',
   'No invited travelers, so no charge.': 'Nessun viaggiatore invitato, quindi nessun addebito.',
   'No subscription. No AI fee.': 'Nessun abbonamento. Nessun costo per l’AI.',
   'No. Everyone on a trip gets every feature.':
     'No. Tutti i partecipanti al viaggio hanno accesso a tutte le funzionalità.',
   'No. Nothing renews monthly or yearly. Each traveler pays €1 for each trip they join, and that’s it.':
     'No. Non c’è alcun rinnovo mensile o annuale. Ogni viaggiatore paga 1 € per ogni viaggio a cui partecipa, e basta.',
-  'No. Planning on your own is free, so the person who starts the trip never pays for themselves. A trip for four, counting you, costs €3.':
-    'No. Pianificare da soli è gratis, quindi chi crea il viaggio non paga mai per sé. Un viaggio per quattro persone, te compreso, costa 3 €.',
+  'Only the trip creator’s own place is free. Other organizers pay €1 per trip like other invited travelers, or another organizer covers them. A trip for four, including its creator, costs €3.':
+    'Solo il posto di chi crea il viaggio è gratuito. Gli altri organizzatori pagano 1 € per viaggio come gli altri invitati, oppure un altro organizzatore copre la loro quota. Un viaggio per quattro persone, incluso chi lo crea, costa 3 €.',
   'On trips with payments enabled, pay €1 through Stripe Checkout before joining, or ask the organizer to cover you. Existing trips and installations without payments stay free.':
     'Nei viaggi con pagamenti attivi, paga 1 € tramite Stripe Checkout prima di partecipare, oppure chiedi all’organizzatore di pagare per te. I viaggi esistenti e le installazioni senza pagamenti restano gratuiti.',
   'Nothing planned at this address': 'Nessun programma a questo indirizzo',
@@ -143,7 +143,7 @@ export default {
   'One price, for each trip': 'Un prezzo per ogni viaggio',
   'Only travelers who actually join the trip count. An invite nobody accepts costs nothing.':
     'Contano solo i viaggiatori che partecipano davvero al viaggio. Un invito che nessuno accetta non costa nulla.',
-  Organizer: 'Organizzatore',
+  'Trip creator': 'Creatore del viaggio',
   'Page not found · Groam': 'Pagina non trovata · Groam',
   'One-time checkout when payments are enabled. Existing trips stay free.':
     'Pagamento una tantum quando i pagamenti sono attivi. I viaggi esistenti restano gratuiti.',
@@ -152,8 +152,8 @@ export default {
   Payments: 'Pagamenti',
   'Pays own €1': 'Paga il proprio euro',
   'People on this trip': 'Persone in questo viaggio',
-  'Plan on your own for free. Each traveler you invite is €1 for each trip they join. They pay their own, or you cover it. You never pay for yourself, and there’s no subscription.':
-    'Pianifica da solo gratis. Ogni viaggiatore che inviti costa 1 € per ogni viaggio a cui partecipa. Paga la propria quota, oppure la copri tu. Tu non paghi mai per te stesso e non c’è alcun abbonamento.',
+  'Plan on your own for free. Each invited traveler is €1 for each trip they join. They pay their own, or an organizer covers it. The trip creator’s place is free, and there’s no subscription.':
+    'Pianifica da solo gratis. Ogni viaggiatore invitato costa 1 € per ogni viaggio a cui partecipa. Paga la propria quota, oppure la copre un organizzatore. Il posto di chi crea il viaggio è gratuito e non c’è alcun abbonamento.',
   'Planning on your own is free. Each traveler you invite pays €1 for each trip they join. No subscription, no AI fee.':
     'Pianificare da soli è gratis. Ogni viaggiatore che inviti paga 1 € per ogni viaggio a cui partecipa. Nessun abbonamento, nessun costo per l’AI.',
   'Planning on your own is free. When payments are enabled, invited travelers pay €1 per trip through Stripe Checkout, or a trip organizer covers their payment. The trip creator is free. Existing trips stay free, and payments are skipped when Stripe is not configured. The final terms still need owner and legal review of when a charge is due, who takes payment, taxes, receipts, failed payments, cancellation and refund rules, and any consumer withdrawal rights.':
@@ -188,8 +188,8 @@ export default {
     'Il link potrebbe essere vecchio o digitato male. Torna alla home oppure esplora le funzionalità.',
   'The next spring, Maya plans Porto with Jonas and a new friend, Lena. Jonas and Lena pay €1 each again. That trip costs €2.':
     'La primavera successiva, Maya pianifica un viaggio a Porto con Jonas e una nuova amica, Lena. Jonas e Lena pagano di nuovo 1 € ciascuno. Quel viaggio costa 2 €.',
-  'The same friends, trip after trip. Each traveler is €1 for each trip they join, paid by them or by you. A solo trip is free.':
-    'Gli stessi amici, viaggio dopo viaggio. Ogni viaggiatore costa 1 € per ogni viaggio a cui partecipa, pagato da lui o da te. Un viaggio in solitaria è gratis.',
+  'The same friends, trip after trip. Each invited traveler is €1 for each trip they join, paid by them or covered by an organizer. The trip creator’s own place is free.':
+    'Gli stessi amici, viaggio dopo viaggio. Ogni viaggiatore invitato costa 1 € per ogni viaggio a cui partecipa, pagato da lui o coperto da un organizzatore. Il posto di chi crea il viaggio è gratuito.',
   'This page doesn’t exist. Head back to Groam.': 'Questa pagina non esiste. Torna a Groam.',
   'Totals are per trip. Each traveler counts once they join.':
     'I totali si riferiscono a un singolo viaggio. Ogni viaggiatore conta quando partecipa.',
@@ -211,8 +211,8 @@ export default {
   'What we collect': 'Cosa raccogliamo',
   'When do I pay?': 'Quando pago?',
   'Who pays?': 'Chi paga?',
-  'Whoever you choose. Each traveler pays their own €1, or you cover them from Travelers. Invite three friends and cover nobody. Each pays €1 and you pay nothing.':
-    'Chi vuoi tu. Ogni viaggiatore paga il proprio euro, oppure lo copri tu dalla sezione Viaggiatori. Invita tre amici senza pagare per nessuno: ciascuno paga 1 € e tu non paghi nulla.',
+  'Each invited traveler pays their own €1, or an organizer covers them from Travelers. Create a trip and invite three friends without covering anyone: each pays €1, while your own place as the trip creator is free.':
+    'Ogni viaggiatore invitato paga il proprio euro, oppure un organizzatore copre la sua quota dalla sezione Viaggiatori. Crea un viaggio e invita tre amici senza pagare per nessuno: ciascuno paga 1 €, mentre il tuo posto come creatore del viaggio è gratuito.',
   'Work out your trip': 'Calcola il tuo viaggio',
   'Year 1, autumn': 'Anno 1, autunno',
   'Year 2, autumn': 'Anno 2, autunno',
@@ -239,7 +239,7 @@ export default {
   'Your rights': 'I tuoi diritti',
   'Your trips and activity.': 'I tuoi viaggi e le tue attività.',
   invited: 'invitati',
-  organizer: 'organizzatore',
+  'trip creator': 'creatore del viaggio',
   '€1 for each traveler who joins.': '1 € per ogni viaggiatore che partecipa.',
   '€1 per traveler': '1 € per viaggiatore',
   '€3 for this trip.': '3 € per questo viaggio.',

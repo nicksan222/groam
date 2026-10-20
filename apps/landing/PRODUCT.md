@@ -26,7 +26,7 @@ The visitor compares Groam against the group chat, a shared spreadsheet or doc, 
 
 - Features: live itinerary, ideas, issues, trip conversations, AI help and specialized agents.
 - AI features run on each traveler's own ChatGPT account. No AI fee.
-- Pricing: free to plan on your own; €1 per invited traveler per trip, paid by the traveler or covered by whoever invites them (their choice per invite); the organizer and solo trips are free. No subscription, no AI fee. When payments are enabled, invited travelers join through Stripe Checkout. Existing trips stay free, and payments are skipped when Stripe is not configured.
+- Pricing: free to plan on your own; €1 per invited traveler per trip, paid by the traveler or covered by a trip organizer (their choice per invite); the trip creator and solo trips are free. No subscription, no AI fee. When payments are enabled, invited travelers join through Stripe Checkout. Existing trips stay free, and payments are skipped when Stripe is not configured.
 - Static Astro site in `apps/landing`; links into the web app.
 - Vocabulary: trip, plan, itinerary, traveler, group, idea, issue, conversation, agent, apply, approve, ask for changes. Never "proposal", "bots", "platform", "workflow".
 

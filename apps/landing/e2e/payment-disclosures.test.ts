@@ -42,3 +42,28 @@ test.each(['/', '/it/'])(
     expect(description).not.toMatch(/not live yet|non sono ancora attivi/u);
   }
 );
+
+test.each([
+  ['/pricing/', 'Trip creator', 'trip creator', /Other organizers pay €1 per trip/u],
+  [
+    '/it/pricing/',
+    'Creatore del viaggio',
+    'creatore del viaggio',
+    /Gli altri organizzatori pagano 1 € per viaggio/u
+  ]
+] as const)(
+  'pricing on %s exempts only the creator and labels the example consistently',
+  async (path, status, role, otherOrganizers) => {
+    const { document } = await openSite(path, { reducedMotion: true, width: 390, height: 900 });
+    expect(document.body.textContent).toMatch(otherOrganizers);
+    expect(document.body.textContent).not.toMatch(
+      /Organizers plan free|the organizer never pays|Gli organizzatori pianificano gratis/u
+    );
+    expect(document.querySelector('[data-roster] .organizer .status')?.textContent?.trim()).toBe(
+      status
+    );
+    expect(document.querySelector('.fare .role')?.textContent?.trim()).toBe(role);
+    expect(document.querySelector('.who.organizer .chip-state')?.textContent?.trim()).toBe(role);
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(390);
+  }
+);
