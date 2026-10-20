@@ -7,13 +7,21 @@ the blockers below are resolved.
 
 ## Confirmed product behavior
 
-- Authentication is handled in Groam with email and password plus optional passkeys and two-step
-  verification. Session records can include an IP address and user agent. Evidence:
-  `packages/backend/convex/modules/auth/auth.ts` and
-  `packages/backend/convex/components/better-auth/generated.ts`.
-- A trip is visible to signed-in members of its organization. Trip RSVP status does not narrow that
-  access. Evidence: `packages/backend/convex/modules/travel/trips/visibility.ts` and
-  `packages/backend/convex/modules/travel/travelers/index.ts`.
+- Convex handles real-email/password authentication, hosted email verification, password recovery,
+  optional passkeys, and two-step verification. Transactional verification/recovery mail is delivered
+  through Cloudflare Email Sending. Session records can include an IP address and user agent.
+  Evidence: `packages/backend/convex/modules/auth/{auth,email,delivery}.ts`,
+  `packages/backend/convex/components/better-auth/generated.ts`, and `packages/auth/README.md`.
+- Trip access requires organization membership and, for billable trips, payment participation.
+  Unpaid members receive a limited invitation preview rather than the protected itinerary. The trip
+  creator is free, and trips created while billing is disabled remain free. An absent Stripe key
+  skips billing on all trips. RSVP status alone does not narrow access. Evidence:
+  `packages/backend/convex/modules/travel/trips/{visibility,projection}.ts` and
+  `packages/backend/convex/modules/payments/participation.ts`.
+- Deployment wiring publishes the landing and web frontends to Cloudflare Workers Static Assets;
+  Convex remains the application backend. This is implementation evidence, not confirmation that
+  production accounts, domains, credentials, or regions have been provisioned. Evidence:
+  `tooling/deploy/` and `docs/deployment.md`.
 - AI uses the selected user’s ChatGPT grant. Groam sends requests to OpenAI’s Responses API and sets
   `store: false`; Groam separately stores conversations, agent runs, and trip activity needed by the
   product. Evidence: `packages/backend/ai/chatgpt/provider.ts`,
@@ -22,8 +30,19 @@ the blockers below are resolved.
   unreferenced files, but there is no product-wide retention schedule. Evidence:
   `packages/backend/convex/modules/travel/covers/index.ts` and
   `packages/backend/convex/modules/discussions/media/index.ts`.
-- No payment processor or paid-invite implementation was found. The landing pricing copy explicitly
-  says paid invites are not live yet.
+- Optional Stripe Checkout implements a one-time €1 payment per invited traveler per trip. Only
+  the trip creator is exempt; other organizers pay unless covered. Travelers can pay for themselves,
+  and organizers can cover a current member. Stripe hosts the payment form; Convex creates fixed-price
+  Checkouts, verifies webhook confirmation, and stores participation/payment records. Absent or blank
+  `STRIPE_SECRET_KEY` skips payments. A key without its webhook secret cannot start Checkout.
+  Evidence: `packages/backend/convex/modules/payments/{index,storage,stripe,webhook}.ts`,
+  `apps/web/src/features/trips/trip-travelers/trip-payments-panel.tsx`, and `docs/payments.md`.
+- Unconfirmed sessions that become ineligible enter durable expiration/refund reconciliation.
+  Missing credentials and ambiguous outcomes retain records; failed/canceled refunds enter an
+  explicit operator queue with receipt history and a remediation runbook. Confirmed prior payments
+  do not receive automatic refunds merely because a trip is later deleted. These technical recovery
+  rules do not establish the complete customer cancellation/refund terms. Evidence:
+  `packages/backend/convex/modules/payments/{reconciliation,refunds}.ts` and `docs/payments.md`.
 - No optional analytics, advertising tracker, or landing-site cookie use was found. The web app uses
   authentication/session cookies through Better Auth.
 
@@ -45,9 +64,10 @@ the blockers below are resolved.
    complaint handling, and regional rights language.
 7. **Children and age:** minimum age, parental-consent approach if relevant, and whether the service
    is offered to children.
-8. **Payments:** payment processor, merchant of record, charge trigger, taxes, receipts, failed
-   payments, cancellation, refunds, statutory withdrawal rights, and the exact responsibility split
-   between inviter and traveler.
+8. **Payments:** confirm the production Stripe account and contracting/merchant identity; finalize
+   charge-trigger disclosures, taxes, receipts, failed payments, cancellation, refunds, statutory
+   withdrawal rights, and the responsibility split between organizer, payer, and traveler. The
+   implemented Checkout/reconciliation flows above are product facts, not completed legal terms.
 9. **Terms framework:** acceptance event, governing law and forum, consumer protections, suspension
    and appeal, termination effects, content-license duration, warranty language, liability allocation,
    indemnity if appropriate, and change-notice procedure.
