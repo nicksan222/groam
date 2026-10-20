@@ -9,6 +9,8 @@ export type AgentRun = FunctionReturnType<typeof api.routes.agents.runs.list.run
 
 export type AgentRunListRun = AgentRun | WorkspaceAgentRun;
 
+export type AgentRunStatusFilter = 'all' | AgentRunListRun['status'];
+
 export type AgentRunEvent = FunctionReturnType<
   typeof api.routes.agents.runs.events.run
 >['page'][number];

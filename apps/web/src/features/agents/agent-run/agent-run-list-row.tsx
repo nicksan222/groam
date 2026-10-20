@@ -2,9 +2,13 @@ import { presentAgentRunMessage } from '@groam/ai/backend/runs/copy';
 import { canRetryAgentRunFromZero } from '@groam/ai/backend/runs/roster';
 import { agentRunTime } from '@groam/ai/backend/runs/time';
 import { AgentRetryFromZeroButton } from '@groam/ai/ui/runs/agent-retry-from-zero';
+import { Avatar } from '@groam/ui/components/avatar';
+import { AvatarFallback } from '@groam/ui/components/avatar-fallback';
+import { RecordListBadge } from '@groam/ui/components/record-list-badge';
 import { RecordListItem } from '@groam/ui/components/record-list-item';
-import { recordListTitleClassName } from '@groam/ui/lib/record-list';
-import { Bot } from 'lucide-react';
+import { initials } from '@groam/ui/lib/avatar';
+import { recordListWrappedTitleClassName } from '@groam/ui/lib/record-list';
+import { Bot, Clock3, MapPin, MessageSquareText, UserRound } from 'lucide-react';
 import { Link } from '@/features/workspace/navigation/router';
 import { testIds } from '@/lib/test-ids';
 import type { AgentRunListRun } from '@/types/agents';
@@ -23,37 +27,66 @@ export function AgentRunListRow({
   const detail = run.status === 'failed' && run.error ? presentAgentRunMessage(run) : run.headline;
   return (
     <RecordListItem
+      wrapTitle
       badges={
         <>
-          <time
-            className="ml-auto shrink-0 text-xs tabular-nums text-muted-foreground"
-            dateTime={new Date(run.updatedAt).toISOString()}
-          >
-            {agentRunTime(run.updatedAt)}
-          </time>
+          <RecordListBadge className="gap-1.5 tabular-nums">
+            <Clock3 aria-hidden />
+            <time
+              dateTime={new Date(run.updatedAt).toISOString()}
+              title={new Date(run.updatedAt).toLocaleString()}
+            >
+              {agentRunTime(run.updatedAt)}
+            </time>
+          </RecordListBadge>
           {canRetryAgentRunFromZero(run) ? (
             <AgentRetryFromZeroButton onRetry={onRetry} testId={testIds.agentRetryFromZero} />
           ) : null}
+          <Avatar
+            aria-label={`Started by ${run.createdBy.name}`}
+            className="ml-2 hidden size-6 @md/record:flex"
+            role="img"
+            title={`Started by ${run.createdBy.name}`}
+          >
+            <AvatarFallback className="text-[9px]">{initials(run.createdBy.name)}</AvatarFallback>
+          </Avatar>
         </>
       }
       description={
-        <span className="block truncate" title={detail ?? undefined}>
-          {detail ?? 'No update yet'}
+        <span className="flex h-6 min-w-0 items-center gap-1.5">
+          {run.related.tripName ? (
+            <RecordListBadge
+              className="min-w-0 max-w-[50%] shrink gap-1.5"
+              title={run.related.tripName}
+            >
+              <MapPin aria-hidden className="shrink-0" />
+              <span className="truncate">{run.related.tripName}</span>
+            </RecordListBadge>
+          ) : null}
+          <RecordListBadge className="min-w-0 shrink gap-1.5" title={detail ?? undefined}>
+            <MessageSquareText aria-hidden className="shrink-0" />
+            <span className="truncate">{detail ?? 'No update yet'}</span>
+          </RecordListBadge>
         </span>
       }
       data-testid={testIds.agentCard}
-      icon={<Bot aria-hidden className="text-muted-foreground" />}
       metadata={
         <>
           <AgentRunStatusBadge status={run.status} />
-          <span className="shrink-0">{agentLabel}</span>
-          <span className="sr-only sm:not-sr-only sm:shrink-0">by {run.createdBy.name}</span>
+          <RecordListBadge className="gap-1.5">
+            <Bot aria-hidden />
+            {agentLabel}
+          </RecordListBadge>
+          <RecordListBadge className="hidden gap-1.5 @lg/record:inline-flex">
+            <UserRound aria-hidden />
+            <span>by {run.createdBy.name}</span>
+          </RecordListBadge>
         </>
       }
       title={
         <span className="block min-w-0" data-testid={testIds.agentRunFeedRunCell}>
           <Link
-            className={recordListTitleClassName}
+            className={recordListWrappedTitleClassName}
             title={run.title}
             {...agentRunHref(run.agentId, run.id)}
           >

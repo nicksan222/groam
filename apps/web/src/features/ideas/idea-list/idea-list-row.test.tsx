@@ -78,6 +78,11 @@ describe('IdeaListRow', () => {
     await expect.element(page.getByText('Alex Morgan')).toBeInTheDocument();
     await expect.element(page.getByText('In review')).toBeInTheDocument();
     await expect.element(page.getByText(/updated Aug 17, 2026/u)).toBeInTheDocument();
+    for (const label of ['Atlantic week', 'Alex Morgan', 'updated Aug 17, 2026']) {
+      const chip = page.getByText(label, { exact: true }).element().closest('[data-slot="badge"]');
+      expect(chip).not.toBeNull();
+      expect(chip?.querySelector('svg')).not.toBeNull();
+    }
   });
 
   test('puts authorship and trip below a linked title and calls out requested reviews', async () => {
@@ -154,4 +159,32 @@ test('gives phone context its own line above the state and review footer', async
   );
   expect(page.getByText('Alex Morgan', { exact: true }).elements()).toHaveLength(1);
   await expect.element(page.getByText('Review requested')).toBeVisible();
+});
+
+test.each([390, 1280])('wraps the complete idea title above its chips at %ipx', async (width) => {
+  await useViewport(width, 844);
+  const title =
+    'Add a coastal day with accessible transport and a rainy-day alternative for the group. '.repeat(
+      4
+    );
+  await renderTable([makeIdea({ title, reviewRequested: true })], { showTripName: true });
+  const row = page.getByRole('article').element();
+  const heading = page.getByRole('heading', { name: title.trim() }).element();
+  const titleArea = row.querySelector('[data-slot="record-list-title"]')!;
+  const context = row.querySelector('[data-slot="record-list-context"]')!;
+  expect(heading.getBoundingClientRect().height).toBeGreaterThan(24);
+  expect(titleArea.scrollHeight).toBeLessThanOrEqual(titleArea.clientHeight);
+  expect(context.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+    titleArea.getBoundingClientRect().bottom
+  );
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
+    document.documentElement.clientWidth
+  );
+  if (width === 1280) {
+    const status = page.getByText('In review', { exact: true }).element().getBoundingClientRect();
+    const action = page.getByTestId(testIds.ideaView).element().getBoundingClientRect();
+    expect(
+      Math.abs(status.top + status.height / 2 - action.top - action.height / 2)
+    ).toBeLessThanOrEqual(1);
+  }
 });

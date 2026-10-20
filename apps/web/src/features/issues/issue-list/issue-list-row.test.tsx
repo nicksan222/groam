@@ -11,16 +11,19 @@ import { IssueListRow } from './issue-list-row';
 vi.mock('@/features/workspace/navigation/router', () => ({
   Link: ({
     children,
+    className,
     params = {},
     title,
     to
   }: {
     children?: ReactNode;
+    className?: string;
     params?: Record<string, string>;
     title?: string;
     to: string;
   }) => (
     <a
+      className={className}
       href={Object.entries(params).reduce(
         (href, [key, value]) => href.replace(`$${key}`, value),
         to
@@ -138,6 +141,35 @@ describe('IssueListRow', () => {
     await renderTable([makeIssue()], false);
     await expect.element(page.getByText('Unassigned')).not.toBeInTheDocument();
   });
+});
+
+test.each([390, 1280])('wraps a long issue title above its metadata at %ipx', async (width) => {
+  await useViewport(width, 844);
+  await renderTable(
+    [
+      makeIssue({
+        title:
+          'Choose a comfortable coastal route with accessible transport and a backup for bad weather. '.repeat(
+            4
+          )
+      })
+    ],
+    true
+  );
+  const row = page.getByRole('article').element();
+  const link = page.getByRole('link', { name: /Choose a comfortable coastal route/u }).element();
+  const title = row.querySelector('[data-slot="record-list-title"]')!;
+  const context = row.querySelector('[data-slot="record-list-context"]')!;
+  expect(link.getBoundingClientRect().height).toBeGreaterThan(
+    Number.parseFloat(getComputedStyle(link).lineHeight)
+  );
+  expect(title.scrollHeight).toBeLessThanOrEqual(title.clientHeight);
+  expect(context.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+    title.getBoundingClientRect().bottom
+  );
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
+    document.documentElement.clientWidth
+  );
 });
 
 test('gives phone authorship its own line above status and labels', async () => {

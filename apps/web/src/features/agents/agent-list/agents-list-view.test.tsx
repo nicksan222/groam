@@ -178,7 +178,6 @@ describe('AgentsListView', () => {
     for (const cell of runCells) {
       expect(cell.className).toContain('min-w-0');
       const title = cell.querySelector('a');
-      expect(title?.className).toContain('truncate');
       expect(title?.className).toContain('font-semibold');
     }
     const rosterRow = page.getByTestId(testIds.agentCard).elements()[0];
@@ -251,19 +250,34 @@ describe('AgentsListView', () => {
       );
     });
 
-    test('keeps a populated run table inside the page', async () => {
+    test('wraps the full run title above its badges without overflowing', async () => {
       await useViewport(width, 844);
       state.runs = [
         run({
           id: 'run-long' as WorkspaceAgentRun['id'],
-          title: 'A very long run title that has to truncate instead of pushing the page sideways'
+          title:
+            'A very long run title that wraps naturally and keeps every planning detail readable. '.repeat(
+              4
+            )
         })
       ];
       await render(<AgentsListView />);
-      // Long titles truncate inside the same two-line row on phones.
       await expect
         .element(page.getByRole('link', { name: /A very long run title/u }))
         .toBeInTheDocument();
+      const link = page.getByRole('link', { name: /A very long run title/u }).element();
+      const title = link.closest('[data-slot="record-list-title"]')!;
+      const context = page
+        .getByTestId(testIds.agentCard)
+        .element()
+        .querySelector('[data-slot="record-list-context"]')!;
+      expect(link.getBoundingClientRect().height).toBeGreaterThan(
+        Number.parseFloat(getComputedStyle(link).lineHeight)
+      );
+      expect(title.scrollHeight).toBeLessThanOrEqual(title.clientHeight);
+      expect(context.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+        title.getBoundingClientRect().bottom
+      );
       expect(fits(page.getByTestId(testIds.agentsRoster).element())).toBe(true);
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
         document.documentElement.clientWidth
