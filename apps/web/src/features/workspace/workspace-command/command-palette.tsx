@@ -1,4 +1,5 @@
 import { Search, SearchX } from '@groam/icons';
+import { Button } from '@groam/ui/components/button';
 import {
   Dialog,
   DialogContent,
@@ -8,6 +9,7 @@ import {
 } from '@groam/ui/components/dialog';
 import { Input } from '@groam/ui/components/input';
 import { Kbd } from '@groam/ui/components/kbd';
+import { Spinner } from '@groam/ui/components/spinner';
 import { useId } from 'react';
 import type { CommandPaletteMatch } from '@/features/workspace/hooks/command-palette-results';
 import { useCommandPalette } from '@/features/workspace/hooks/use-command-palette';
@@ -19,6 +21,8 @@ export function CommandPalette() {
   const {
     activeIndex,
     go,
+    ideaPagination,
+    issuePagination,
     onInputKeyDown,
     onOpenChange,
     open,
@@ -27,6 +31,9 @@ export function CommandPalette() {
     setActiveIndex,
     setQuery
   } = useCommandPalette();
+  const hasMore = [ideaPagination.status, issuePagination.status].some(
+    (status) => status === 'CanLoadMore' || status === 'LoadingMore'
+  );
   const baseId = useId();
   const listId = `${baseId}-list`;
   const optionId = (index: number) => `${baseId}-option-${index}`;
@@ -68,7 +75,7 @@ export function CommandPalette() {
           role="listbox"
         >
           {results.length === 0 ? (
-            <EmptyResults query={query} />
+            <EmptyResults hasMore={hasMore} query={query} />
           ) : (
             groupResults(results).map((section) => (
               <div
@@ -97,23 +104,61 @@ export function CommandPalette() {
             ))
           )}
         </div>
+        {hasMore && (
+          <div
+            aria-label="More search results"
+            role="group"
+            className="flex flex-wrap justify-center gap-2 border-t px-4 py-2"
+          >
+            {ideaPagination.status === 'CanLoadMore' || ideaPagination.status === 'LoadingMore' ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-busy={ideaPagination.status === 'LoadingMore'}
+                disabled={ideaPagination.status === 'LoadingMore'}
+                onClick={ideaPagination.loadMore}
+              >
+                {ideaPagination.status === 'LoadingMore' && <Spinner aria-hidden />} Load more ideas
+              </Button>
+            ) : null}
+            {issuePagination.status === 'CanLoadMore' ||
+            issuePagination.status === 'LoadingMore' ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-busy={issuePagination.status === 'LoadingMore'}
+                disabled={issuePagination.status === 'LoadingMore'}
+                onClick={issuePagination.loadMore}
+              >
+                {issuePagination.status === 'LoadingMore' && <Spinner aria-hidden />} Load more
+                issues
+              </Button>
+            ) : null}
+          </div>
+        )}
         <CommandPaletteFooter count={results.length} />
       </DialogContent>
     </Dialog>
   );
 }
 
-function EmptyResults({ query }: { query: string }) {
+function EmptyResults({ hasMore, query }: { hasMore: boolean; query: string }) {
   return (
     <div className="flex flex-col items-center gap-1.5 px-6 py-10 text-center">
       <SearchX aria-hidden className="mb-1 size-5 text-muted-foreground" />
       <p className="text-sm font-medium text-foreground">
-        {query.trim() ? `No matches for “${query.trim()}”` : 'Nothing to jump to yet'}
+        {query.trim()
+          ? `${hasMore ? 'No loaded matches' : 'No matches'} for “${query.trim()}”`
+          : hasMore
+            ? 'No loaded results yet'
+            : 'Nothing to jump to yet'}
       </p>
       <p className="text-xs text-muted-foreground">
-        {query.trim()
-          ? 'Try part of a trip, idea, issue, or chat name.'
-          : 'Trips, ideas, issues, and chats show up here as you create them.'}
+        {hasMore
+          ? 'Load more to search older ideas and issues.'
+          : query.trim()
+            ? 'Try part of a trip, idea, issue, or chat name.'
+            : 'Trips, ideas, issues, and chats show up here as you create them.'}
       </p>
     </div>
   );

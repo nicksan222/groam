@@ -16,8 +16,8 @@ export function useCommandPalette() {
   const navigate = useNavigate();
   const searchOpts = open ? { initialNumItems: 25 } : 'skip';
   const { trips } = useTrips(open ? { includeArchived: false, initialNumItems: 25 } : 'skip');
-  const { proposals } = useWorkspaceIdeas(searchOpts);
-  const { issues } = useWorkspaceIssues(searchOpts);
+  const { proposals, status: ideaStatus, loadMore: loadMoreIdeas } = useWorkspaceIdeas(searchOpts);
+  const { issues, status: issueStatus, loadMore: loadMoreIssues } = useWorkspaceIssues(searchOpts);
   const { discussions } = useDiscussions(open ? undefined : 'skip');
   const { agents } = useAgentRoster();
 
@@ -94,6 +94,18 @@ export function useCommandPalette() {
 
   return {
     activeIndex: active,
+    ideaPagination: {
+      status: ideaStatus,
+      loadMore: () => {
+        if (open && ideaStatus === 'CanLoadMore') loadMoreIdeas(25);
+      }
+    },
+    issuePagination: {
+      status: issueStatus,
+      loadMore: () => {
+        if (open && issueStatus === 'CanLoadMore') loadMoreIssues(25);
+      }
+    },
     go,
     onInputKeyDown,
     onOpenChange: (next: boolean) => {

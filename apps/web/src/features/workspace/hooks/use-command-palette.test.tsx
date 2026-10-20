@@ -13,6 +13,10 @@ const chrome = vi.hoisted(() => ({
 const data = vi.hoisted(() => ({
   agents: [] as unknown[],
   discussions: [] as unknown[],
+  ideaStatus: 'Exhausted' as 'CanLoadMore' | 'Exhausted' | 'LoadingMore',
+  issueStatus: 'Exhausted' as 'CanLoadMore' | 'Exhausted' | 'LoadingMore',
+  loadMoreIdeas: vi.fn(),
+  loadMoreIssues: vi.fn(),
   issues: [] as unknown[],
   proposals: [] as unknown[],
   trips: [] as unknown[]
@@ -51,6 +55,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   chrome.open = false;
   chrome.query = '';
+  data.ideaStatus = 'Exhausted';
+  data.issueStatus = 'Exhausted';
   data.agents = [];
   data.discussions = [];
   data.issues = [];
@@ -58,8 +64,16 @@ beforeEach(() => {
   data.trips = [];
   hooks.agents.mockImplementation(() => ({ agents: data.agents }));
   hooks.discussions.mockImplementation(() => ({ discussions: data.discussions }));
-  hooks.ideas.mockImplementation(() => ({ proposals: data.proposals }));
-  hooks.issues.mockImplementation(() => ({ issues: data.issues }));
+  hooks.ideas.mockImplementation(() => ({
+    proposals: data.proposals,
+    status: data.ideaStatus,
+    loadMore: data.loadMoreIdeas
+  }));
+  hooks.issues.mockImplementation(() => ({
+    issues: data.issues,
+    status: data.issueStatus,
+    loadMore: data.loadMoreIssues
+  }));
   hooks.trips.mockImplementation(() => ({ trips: data.trips }));
 });
 
@@ -68,6 +82,8 @@ describe('useCommandPalette', () => {
     const { unmount } = await renderHook(() => useCommandPalette());
     expect(hooks.trips).toHaveBeenCalledWith('skip');
     expect(hooks.discussions).toHaveBeenCalledWith('skip');
+    expect(hooks.ideas).toHaveBeenCalledWith('skip');
+    expect(hooks.issues).toHaveBeenCalledWith('skip');
 
     const event = new KeyboardEvent('keydown', { ctrlKey: true, key: 'k', cancelable: true });
     window.dispatchEvent(event);
@@ -88,4 +104,32 @@ describe('useCommandPalette', () => {
     expect(chrome.closeAndClear).toHaveBeenCalledOnce();
     expect(navigate).toHaveBeenCalledWith(result.current.results[0]?.href);
   });
+});
+
+test('pagination is explicit and each stream is guarded while closed, loading, or exhausted', async () => {
+  data.ideaStatus = 'CanLoadMore';
+  data.issueStatus = 'CanLoadMore';
+  const { result, rerender } = await renderHook(() => useCommandPalette());
+  await act(() => {
+    result.current.ideaPagination.loadMore();
+    result.current.issuePagination.loadMore();
+  });
+  expect(data.loadMoreIdeas).not.toHaveBeenCalled();
+  expect(data.loadMoreIssues).not.toHaveBeenCalled();
+  chrome.open = true;
+  await rerender();
+  expect(data.loadMoreIdeas).not.toHaveBeenCalled();
+  expect(data.loadMoreIssues).not.toHaveBeenCalled();
+  await act(() => result.current.ideaPagination.loadMore());
+  expect(data.loadMoreIdeas).toHaveBeenCalledWith(25);
+  expect(data.loadMoreIssues).not.toHaveBeenCalled();
+  data.ideaStatus = 'LoadingMore';
+  data.issueStatus = 'Exhausted';
+  await rerender();
+  await act(() => {
+    result.current.ideaPagination.loadMore();
+    result.current.issuePagination.loadMore();
+  });
+  expect(data.loadMoreIdeas).toHaveBeenCalledTimes(1);
+  expect(data.loadMoreIssues).not.toHaveBeenCalled();
 });
