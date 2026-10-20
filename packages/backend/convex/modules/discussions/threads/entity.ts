@@ -74,6 +74,24 @@ export class DiscussionAccess {
     discussionId: Id<'discussions'>,
     workspace: Workspace
   ): Promise<DiscussionAccess> {
+    return DiscussionAccess.loadForWorkspace(ctx, discussionId, workspace);
+  }
+
+  /** Routing metadata only: validate the audience without granting content/write access. */
+  static async assertPreviewAudience(
+    ctx: DiscussionCtx,
+    discussionId: Id<'discussions'>,
+    workspace: Workspace
+  ): Promise<void> {
+    await DiscussionAccess.loadForWorkspace(ctx, discussionId, workspace, true);
+  }
+
+  private static async loadForWorkspace(
+    ctx: DiscussionCtx,
+    discussionId: Id<'discussions'>,
+    workspace: Workspace,
+    allowUnpaid = false
+  ): Promise<DiscussionAccess> {
     const discussion = await ctx.db.get('discussions', discussionId);
     if (!discussion || discussion.organizationId !== workspace.organizationId) {
       throw new ConvexError('Discussion not found');
@@ -82,7 +100,7 @@ export class DiscussionAccess {
     if ('deletingAt' in discussion && discussion.deletingAt !== undefined) {
       throw new ConvexError('Discussion not found');
     }
-    const linkedTrip = await visibleLinkedTrip(ctx, discussion, workspace);
+    const linkedTrip = await visibleLinkedTrip(ctx, discussion, workspace, allowUnpaid);
     const { audience } = kindPolicy(discussion.kind);
     if (audience === 'owner') {
       if (discussion.createdBy.userId !== workspace.userId) {
@@ -176,11 +194,12 @@ export class DiscussionAccess {
 async function visibleLinkedTrip(
   ctx: DiscussionCtx,
   discussion: Doc<'discussions'>,
-  workspace: Workspace
+  workspace: Workspace,
+  allowUnpaid: boolean
 ) {
   const tripId = 'tripId' in discussion ? discussion.tripId : undefined;
   if (!tripId) return null;
-  const trip = await findVisibleTrip(ctx, tripId, workspace);
+  const trip = await findVisibleTrip(ctx, tripId, workspace, { allowUnpaid });
   if (!trip) throw new ConvexError('Discussion not found');
   return trip;
 }

@@ -12,6 +12,10 @@ const state = vi.hoisted(() => ({
   trip: null as { id: string; name: string } | null
 }));
 
+vi.mock('@/features/trips/trip-detail/entity-participation-boundary', () => ({
+  EntityParticipationBoundary: ({ children }: { children: ReactNode }) => children
+}));
+
 vi.mock('@groam/ai/ui/context/agent-context', () => ({
   useSetAgentContext: () => undefined
 }));

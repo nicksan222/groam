@@ -100,7 +100,7 @@ test('public issue creation displays the stored short ID', { timeout: 15000 }, a
       table: 'tripIssues',
       reference: issue!.shortId!
     })
-  ).toEqual({ id: issueId, shortId: issue?.shortId });
+  ).toEqual({ id: issueId, shortId: issue?.shortId, tripId });
 });
 
 test('short chat references preserve participant access', { timeout: 15000 }, async () => {

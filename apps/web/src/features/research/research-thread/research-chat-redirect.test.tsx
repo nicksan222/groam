@@ -3,7 +3,9 @@ import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { ResearchChatRedirect } from './research-chat-redirect';
 
-const state = vi.hoisted(() => ({ target: null as null | { researchId: string; tripId: string } }));
+const state = vi.hoisted(() => ({
+  target: null as undefined | null | { researchId: string; tripId: string }
+}));
 
 vi.mock('@/features/research/hooks/use-research-chat-redirect', () => ({
   useResearchChatRedirect: () => state.target
@@ -29,4 +31,11 @@ test('redirects a research id to its trip page', async () => {
   await expect
     .element(page.getByTestId('redirect'))
     .toHaveTextContent('/trips/$tripId/research/$researchId {"researchId":"rs1","tripId":"t1"}');
+});
+
+test('waits for metadata before mounting chat content', async () => {
+  state.target = undefined;
+  await render(<ResearchChatRedirect discussionId="d1">protected chat</ResearchChatRedirect>);
+  await expect.element(page.getByRole('status', { name: 'Opening chat…' })).toBeVisible();
+  await expect.element(page.getByText('protected chat')).not.toBeInTheDocument();
 });

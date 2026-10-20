@@ -54,6 +54,10 @@ const state = vi.hoisted(() => ({
   }
 }));
 
+vi.mock('@/features/trips/trip-detail/entity-participation-boundary', () => ({
+  EntityParticipationBoundary: ({ children }: { children: ReactNode }) => children
+}));
+
 vi.mock('@/features/research/research-links/linked-researches', () => ({
   LinkedResearches: () => null
 }));

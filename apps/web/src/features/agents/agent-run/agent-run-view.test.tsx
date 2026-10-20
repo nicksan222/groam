@@ -1,6 +1,7 @@
 import { agentRunEventLabels } from '@groam/ai/backend/runs/events';
 import { agentRunDuration, agentRunTime } from '@groam/ai/backend/runs/time';
 import { render } from '@groam/vitest-config/react';
+import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import type { AgentRun } from '@/features/agents/hooks/use-agent';
@@ -41,6 +42,10 @@ const state = vi.hoisted(() => ({
     | 'LoadingMore',
   run: undefined as AgentRun | undefined,
   runs: [] as AgentRun[]
+}));
+
+vi.mock('@/features/trips/trip-detail/entity-participation-boundary', () => ({
+  EntityParticipationBoundary: ({ children }: { children: ReactNode }) => children
 }));
 
 vi.mock('@groam/ai/ui/context/agent-context', () => ({

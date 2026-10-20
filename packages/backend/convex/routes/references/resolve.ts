@@ -1,6 +1,7 @@
 import { v } from 'convex/values';
 import type { Doc } from '#convex-generated/dataModel';
 import type { QueryCtx } from '#convex-generated/server';
+import { AgentRuns } from '#convex/modules/assistant/runs/index';
 import type { Workspace } from '#convex/modules/auth/workspace';
 import { workspaceQuery } from '#convex/modules/auth/workspace';
 import { DiscussionAccess } from '#convex/modules/discussions/threads/entity';
@@ -22,26 +23,18 @@ export const run = workspaceQuery({
   handler: async (ctx, { table, reference }) => {
     const record = await recordByReference(ctx, table, reference);
     if (!record || record.organizationId !== ctx.workspace.organizationId) return null;
+    if (table === 'tripProposals' || table === 'tripIssues') {
+      return entityReference(
+        ctx,
+        record as Doc<'tripProposals'> | Doc<'tripIssues'>,
+        ctx.workspace
+      );
+    }
+    if (table === 'agentRuns') {
+      return AgentRuns.previewReference(ctx, record._id as Doc<'agentRuns'>['_id'], ctx.workspace);
+    }
     if (table === 'discussions') {
-      const discussionId = ctx.db.normalizeId('discussions', record._id);
-      if (!discussionId) return null;
-      const preview = await ctx.db.get('discussions', discussionId);
-      if (preview?.kind === 'research') return researchReference(ctx, preview, ctx.workspace);
-      try {
-        const { discussion } = await DiscussionAccess.forWorkspace(
-          ctx,
-          discussionId,
-          ctx.workspace
-        );
-        return {
-          id: record._id,
-          kind: discussion.kind,
-          shortId: record.shortId,
-          ...('tripId' in discussion && discussion.tripId ? { tripId: discussion.tripId } : {})
-        };
-      } catch {
-        return null;
-      }
+      return discussionReference(ctx, record as Doc<'discussions'>, ctx.workspace);
     }
     return { id: record._id, shortId: record.shortId };
   }
@@ -62,4 +55,50 @@ async function researchReference(
     shortId: discussion.shortId,
     tripId: discussion.tripId
   };
+}
+
+/** Preview routing has the same workspace boundary as the shared trip shell. */
+async function entityReference(
+  ctx: QueryCtx,
+  entity: Doc<'tripProposals'> | Doc<'tripIssues'>,
+  workspace: Workspace
+) {
+  const owningTripId = 'sourceTripId' in entity ? entity.sourceTripId : entity.tripId;
+  const trip = await findVisibleTrip(ctx, owningTripId, workspace, { allowUnpaid: true });
+  if (!trip) return null;
+  const tripId = trip.proposal?.sourceTripId ?? trip._id;
+  if (!(await findVisibleTrip(ctx, tripId, workspace, { allowUnpaid: true }))) return null;
+  return { id: entity._id, shortId: entity.shortId, tripId };
+}
+
+async function discussionReference(
+  ctx: QueryCtx,
+  discussion: Doc<'discussions'>,
+  workspace: Workspace
+) {
+  if (discussion.kind === 'research') return researchReference(ctx, discussion, workspace);
+  if (discussion.kind === 'group' && discussion.tripId) {
+    const member = await ctx.db
+      .query('discussionMembers')
+      .withIndex('by_discussionId_and_userId', (q) =>
+        q.eq('discussionId', discussion._id).eq('userId', workspace.userId)
+      )
+      .unique();
+    if (!member) return null;
+    const trip = await findVisibleTrip(ctx, discussion.tripId, workspace, { allowUnpaid: true });
+    if (!trip) return null;
+    const tripId = trip.proposal?.sourceTripId ?? trip._id;
+    if (!(await findVisibleTrip(ctx, tripId, workspace, { allowUnpaid: true }))) return null;
+    return { id: discussion._id, kind: discussion.kind, shortId: discussion.shortId, tripId };
+  }
+  try {
+    const { discussion: allowed } = await DiscussionAccess.forWorkspace(
+      ctx,
+      discussion._id,
+      workspace
+    );
+    return { id: allowed._id, kind: allowed.kind, shortId: allowed.shortId };
+  } catch {
+    return null;
+  }
 }

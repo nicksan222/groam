@@ -2,39 +2,30 @@ import type { Id } from '@groam/backend/data-model';
 import { FileDiff } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { EmptyScreen } from '@groam/ui/components/empty-screen';
-import { PageLoading } from '@groam/ui/components/page-loading';
-import { Navigate } from '@tanstack/react-router';
-import { ideaOpenHref } from '@/features/ideas/idea-href';
-import { useTripVersion } from '@/features/trips/hooks/use-trip-versions';
+import { EntityParticipationBoundary } from '@/features/trips/trip-detail/entity-participation-boundary';
 import { Link } from '@/features/workspace/navigation/router';
-import { useOptionalWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
+import { ParticipatingIdeaDetailView } from './participating-idea-detail-view';
 
 export function IdeaDetailView({ proposalId }: { proposalId: Id<'tripProposals'> }) {
-  const { proposal } = useTripVersion(proposalId);
-  const viewerUserId = useOptionalWorkspace()?.session.user.id;
-
-  if (proposal === null) {
-    return (
-      <EmptyScreen
-        buttonRaw={
-          <Button asChild variant="outline">
-            <Link to="/ideas">Back to ideas</Link>
-          </Button>
-        }
-        description="It may have been removed, or you do not have access to this trip."
-        headline="Idea not found"
-        icon={FileDiff}
-      />
-    );
-  }
-
-  if (proposal === undefined) {
-    return <PageLoading label="Loading idea…" />;
-  }
-
-  const href = ideaOpenHref(proposal, viewerUserId);
-  if (!('params' in href) || !('search' in href)) {
-    return <Navigate params={href.params} replace to={href.to} />;
-  }
-  return <Navigate params={href.params} replace search={href.search} to={href.to} />;
+  return (
+    <EntityParticipationBoundary
+      reference={proposalId}
+      table="tripProposals"
+      loadingLabel="Loading idea…"
+      missing={
+        <EmptyScreen
+          buttonRaw={
+            <Button asChild variant="outline">
+              <Link to="/ideas">Back to ideas</Link>
+            </Button>
+          }
+          description="It may have been removed, or you do not have access to this trip."
+          headline="Idea not found"
+          icon={FileDiff}
+        />
+      }
+    >
+      <ParticipatingIdeaDetailView proposalId={proposalId} />
+    </EntityParticipationBoundary>
+  );
 }

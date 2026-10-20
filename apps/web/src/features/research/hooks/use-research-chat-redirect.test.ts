@@ -14,7 +14,7 @@ test('returns the research page params for a research id', async () => {
   expect(result.current).toEqual({ researchId: 'rs1', tripId: 't1' });
 });
 
-test.each([undefined, null, { id: 'd1', kind: 'group', shortId: 'd1' }, { id: 'x', shortId: 'x' }])(
+test.each([null, { id: 'd1', kind: 'group', shortId: 'd1' }, { id: 'x', shortId: 'x' }])(
   'returns null for %j',
   async (resolved) => {
     state.useQuery.mockReturnValue(resolved);
@@ -22,3 +22,9 @@ test.each([undefined, null, { id: 'd1', kind: 'group', shortId: 'd1' }, { id: 'x
     expect(result.current).toBeNull();
   }
 );
+
+test('keeps unresolved metadata distinct from an ordinary chat', async () => {
+  state.useQuery.mockReturnValue(undefined);
+  const { result } = await renderHook(() => useResearchChatRedirect('d1'));
+  expect(result.current).toBeUndefined();
+});

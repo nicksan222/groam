@@ -136,6 +136,10 @@ async function linkedRunTrip(ctx: RunReader, run: Doc<'agentRuns'>) {
   if (run.issueId) return (await ctx.db.get('tripIssues', run.issueId))?.tripId ?? null;
   if (run.proposalId)
     return (await ctx.db.get('tripProposals', run.proposalId))?.sourceTripId ?? null;
+  if (run.discussionId) {
+    const discussion = await ctx.db.get('discussions', run.discussionId);
+    return discussion && 'tripId' in discussion ? (discussion.tripId ?? null) : null;
+  }
   return null;
 }
 
@@ -143,19 +147,35 @@ async function linkedRunTrip(ctx: RunReader, run: Doc<'agentRuns'>) {
 async function canViewRun(
   ctx: RunReader,
   run: Doc<'agentRuns'>,
-  workspace: Workspace
+  workspace: Workspace,
+  preview = false
 ): Promise<boolean> {
   if (run.organizationId !== workspace.organizationId) return false;
   const tripId = await linkedRunTrip(ctx, run);
   if ((run.tripId || run.issueId || run.proposalId || run.researchTask) && !tripId) return false;
-  if (tripId && !(await findVisibleTrip(ctx, tripId, workspace))) return false;
+  if (tripId && !(await findVisibleTrip(ctx, tripId, workspace, { allowUnpaid: preview })))
+    return false;
   if (!run.discussionId) return !run.researchTask || run.createdBy.userId === workspace.userId;
   try {
-    await DiscussionAccess.forWorkspace(ctx, run.discussionId, workspace);
+    if (preview) await DiscussionAccess.assertPreviewAudience(ctx, run.discussionId, workspace);
+    else await DiscussionAccess.forWorkspace(ctx, run.discussionId, workspace);
     return true;
   } catch {
     return false;
   }
+}
+
+/** Only navigation identifiers; content remains behind the full participation gate. */
+async function previewReference(ctx: RunReader, runId: Id<'agentRuns'>, workspace: Workspace) {
+  const run = await ctx.db.get('agentRuns', runId);
+  if (!run || !(await canViewRun(ctx, run, workspace, true))) return null;
+  const tripId = await linkedRunTrip(ctx, run);
+  if (!tripId) return { id: run._id, shortId: run.shortId };
+  const trip = await findVisibleTrip(ctx, tripId, workspace, { allowUnpaid: true });
+  if (!trip) return null;
+  const sourceId = trip.proposal?.sourceTripId ?? trip._id;
+  if (!(await findVisibleTrip(ctx, sourceId, workspace, { allowUnpaid: true }))) return null;
+  return { id: run._id, shortId: run.shortId, tripId: sourceId };
 }
 
 /** Drops runs the viewer may not see; one bounded index lookup per discussion run. */
@@ -1089,6 +1109,7 @@ export class AgentRuns {
   static listRuns = listRuns;
   static listWorkspaceRuns = listWorkspaceRuns;
   static presentRun = presentRun;
+  static previewReference = previewReference;
   static queueDiscussionTurn = queueDiscussionTurn;
   static queueIssueRun = queueIssueRun;
   static queueReviewRun = queueReviewRun;

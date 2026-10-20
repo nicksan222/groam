@@ -7,6 +7,7 @@ export function useResearchChatRedirect(discussionId: string) {
     reference: discussionId,
     table: 'discussions'
   });
+  if (resolved === undefined) return undefined;
   if (resolved && 'kind' in resolved && resolved.kind === 'research' && resolved.tripId) {
     return { researchId: resolved.shortId, tripId: resolved.tripId };
   }
