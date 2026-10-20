@@ -1,6 +1,6 @@
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
-import { setupWritableTrip, tripLocationInput } from '#testing/trips';
+import { setupWritableTrip, tripInput, tripLocationInput } from '#testing/trips';
 
 const screen = {
   capabilities: [],
@@ -87,3 +87,48 @@ test('legacy free trips remain available in assistant catalogs and tags after St
     member.client.mutation(tags, { threadId, tags: [{ kind: 'trip', id: tripId }] })
   ).resolves.toHaveLength(1);
 });
+
+test.each(['legacy', 'paid'] as const)(
+  'assistant catalogs find older %s trips beyond more than 25 newer unpaid trips',
+  async (access) => {
+    vi.stubEnv('STRIPE_SECRET_KEY', access === 'legacy' ? '' : 'sk_test_fixture');
+    const { owner, sharedTripId, tripId, users } = await setupWritableTrip(1);
+    const member = users[0]!;
+    const destinationId = await owner.client.mutation(api.routes.trips.destinations.add.run, {
+      tripId,
+      input: tripLocationInput({ name: 'Older accessible destination', placeId: 'older-visible' })
+    });
+    vi.stubEnv('STRIPE_SECRET_KEY', 'sk_test_fixture');
+    await owner.test.run(async (ctx) => {
+      await ctx.db.patch('trips', sharedTripId, { updatedAt: 1 });
+      await ctx.db.patch('trips', tripId, { updatedAt: 1 });
+      if (access === 'paid') {
+        await ctx.db.insert('tripPayments', {
+          attempt: 'older-paid',
+          expiresAt: 1,
+          paid: true,
+          payerId: owner.userId,
+          tripId: sharedTripId,
+          userId: member.userId
+        });
+      }
+    });
+    for (let index = 0; index < 28; index++) {
+      await owner.client.action(api.routes.trips.create.run, {
+        input: tripInput({ name: `Newer unpaid trip ${index}` })
+      });
+    }
+    const items = await member.client.query(catalog, {});
+    expect(items).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: sharedTripId, kind: 'trip' }),
+        expect.objectContaining({ id: tripId, kind: 'trip' }),
+        expect.objectContaining({ id: destinationId, label: 'Older accessible destination' })
+      ])
+    );
+    expect(items.some((item) => item.label.startsWith('Newer unpaid trip'))).toBe(false);
+    const creatorItems = await owner.client.query(catalog, {});
+    expect(creatorItems.filter((item) => item.kind === 'trip')).toHaveLength(25);
+    expect(creatorItems.some((item) => item.id === sharedTripId)).toBe(false);
+  }
+);
