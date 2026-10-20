@@ -1,11 +1,12 @@
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
 import {
+  setupBillableTrip,
   paymentCleanupState,
   paymentReconciliationState,
   legacyUnrecordedPayment
 } from '#testing/payments';
-import { setupTrip } from '#testing/trips';
+
 import { removeMember } from '#testing/waits';
 
 const checkout = api.routes.trips.payments.checkout.run;
@@ -104,7 +105,7 @@ function provider() {
   return { state, mock, session };
 }
 
-async function deleteOrganization(fixture: Awaited<ReturnType<typeof setupTrip>>) {
+async function deleteOrganization(fixture: Awaited<ReturnType<typeof setupBillableTrip>>) {
   expect(
     (
       await fixture.owner.authClient.organization.delete({
@@ -114,7 +115,7 @@ async function deleteOrganization(fixture: Awaited<ReturnType<typeof setupTrip>>
   ).toBeNull();
   await fixture.owner.test.finishAllScheduledFunctions(vi.runAllTimers);
 }
-async function sweep(fixture: Awaited<ReturnType<typeof setupTrip>>) {
+async function sweep(fixture: Awaited<ReturnType<typeof setupBillableTrip>>) {
   vi.advanceTimersByTime(16 * 60_000);
   await fixture.owner.test.mutation(internal.modules.payments.reconciliation.sweep, {});
   await fixture.owner.test.finishAllScheduledFunctions(vi.runAllTimers);
@@ -123,7 +124,7 @@ async function sweep(fixture: Awaited<ReturnType<typeof setupTrip>>) {
 test('deletion expires attached open Checkout before removing its durable reconciliation receipt', async () => {
   const { state } = provider();
   vi.useFakeTimers();
-  const fixture = await setupTrip(1);
+  const fixture = await setupBillableTrip(1);
   await fixture.users[0]!.client.action(checkout, { tripId: fixture.tripId });
   await deleteOrganization(fixture);
   expect(state.expireCalls).toBe(1);
@@ -139,7 +140,7 @@ test('deletion expires attached open Checkout before removing its durable reconc
 test('a payment racing expiration is refunded and a lost refund response retries idempotently', async () => {
   const { state } = provider();
   vi.useFakeTimers();
-  const fixture = await setupTrip(1);
+  const fixture = await setupBillableTrip(1);
   await fixture.users[0]!.client.action(checkout, { tripId: fixture.tripId });
   state.race = true;
   state.loseRefund = true;
@@ -154,7 +155,7 @@ test('a payment racing expiration is refunded and a lost refund response retries
 test('already-confirmed seats are not refunded after archival and trip deletion', async () => {
   const { state, session } = provider();
   vi.useFakeTimers();
-  const fixture = await setupTrip(1);
+  const fixture = await setupBillableTrip(1);
   state.paid = true;
   state.status = 'complete';
   await fixture.users[0]!.client.action(checkout, { tripId: fixture.tripId });
@@ -174,7 +175,7 @@ test('already-confirmed seats are not refunded after archival and trip deletion'
 test('lost creation responses replay exact original requests after deletion without personal identifiers', async () => {
   const { state } = provider();
   vi.useFakeTimers();
-  const fixture = await setupTrip(1);
+  const fixture = await setupBillableTrip(1);
   state.lostCreation = true;
   await expect(
     fixture.users[0]!.client.action(checkout, { tripId: fixture.tripId })
@@ -191,7 +192,7 @@ test('lost creation responses replay exact original requests after deletion with
 test('removed credentials retain reconciliation until the correct key is restored', async () => {
   const { state, mock } = provider();
   vi.useFakeTimers();
-  const fixture = await setupTrip(1);
+  const fixture = await setupBillableTrip(1);
   await fixture.users[0]!.client.action(checkout, { tripId: fixture.tripId });
   vi.stubEnv('STRIPE_SECRET_KEY', '');
   await deleteOrganization(fixture);
@@ -212,7 +213,7 @@ test.each(['old', 'wrong-key'])(
   async (reason) => {
     const { state, mock } = provider();
     vi.useFakeTimers();
-    const fixture = await setupTrip(1);
+    const fixture = await setupBillableTrip(1);
     state.lostCreation = true;
     await expect(
       fixture.users[0]!.client.action(checkout, { tripId: fixture.tripId })
@@ -228,7 +229,7 @@ test.each(['old', 'wrong-key'])(
 test('a late creation response attaches to the detached receipt without exposing a deleted trip URL', async () => {
   const { state } = provider();
   vi.useFakeTimers();
-  const fixture = await setupTrip(1);
+  const fixture = await setupBillableTrip(1);
   let release!: () => void;
   let entered!: () => void;
   const gate = new Promise<void>((resolve) => {
@@ -261,7 +262,7 @@ test('a late creation response attaches to the detached receipt without exposing
 test('pending refunds retain their receipt until Stripe confirms success', async () => {
   const { state } = provider();
   vi.useFakeTimers();
-  const fixture = await setupTrip(1);
+  const fixture = await setupBillableTrip(1);
   await fixture.users[0]!.client.action(checkout, { tripId: fixture.tripId });
   state.race = true;
   state.refundPending = true;
@@ -275,7 +276,7 @@ test('pending refunds retain their receipt until Stripe confirms success', async
 });
 
 async function paidWebhook(
-  fixture: Awaited<ReturnType<typeof setupTrip>>,
+  fixture: Awaited<ReturnType<typeof setupBillableTrip>>,
   session: ReturnType<ReturnType<typeof provider>['session']>
 ) {
   const timestamp = Math.floor(Date.now() / 1000);
@@ -316,7 +317,7 @@ async function paidWebhook(
 test('a verified late payment invalidates a stale cleanup claim and refunds once', async () => {
   const { state, session } = provider();
   vi.useFakeTimers();
-  const fixture = await setupTrip(1);
+  const fixture = await setupBillableTrip(1);
   state.lostCreation = true;
   await expect(
     fixture.users[0]!.client.action(checkout, { tripId: fixture.tripId })
@@ -350,7 +351,7 @@ test('a verified late payment invalidates a stale cleanup claim and refunds once
 test('a lost successful refund remains durable if Stripe later prunes its idempotency response', async () => {
   const { state, mock } = provider();
   vi.useFakeTimers();
-  const fixture = await setupTrip(1);
+  const fixture = await setupBillableTrip(1);
   await fixture.users[0]!.client.action(checkout, { tripId: fixture.tripId });
   state.race = true;
   state.loseRefund = true;
@@ -371,7 +372,7 @@ test('a lost successful refund remains durable if Stripe later prunes its idempo
 test('unknown provider sessions do not become terminal on a 404', async () => {
   const { mock } = provider();
   vi.useFakeTimers();
-  const fixture = await setupTrip(1);
+  const fixture = await setupBillableTrip(1);
   await fixture.users[0]!.client.action(checkout, { tripId: fixture.tripId });
   mock.mockImplementation(async () =>
     Response.json({ error: { code: 'resource_missing' } }, { status: 404 })
@@ -385,7 +386,7 @@ test('unknown provider sessions do not become terminal on a 404', async () => {
 test('an expired claim cannot remove a receipt owned by a replacement claim', async () => {
   provider();
   vi.useFakeTimers();
-  const fixture = await setupTrip(1);
+  const fixture = await setupBillableTrip(1);
   await fixture.users[0]!.client.action(checkout, { tripId: fixture.tripId });
   vi.stubEnv('STRIPE_SECRET_KEY', '');
   await deleteOrganization(fixture);
@@ -412,7 +413,7 @@ test('an expired claim cannot remove a receipt owned by a replacement claim', as
 test('a recovered session ID survives incomplete reconciliation beyond the replay cutoff', async () => {
   const { state } = provider();
   vi.useFakeTimers();
-  const fixture = await setupTrip(1);
+  const fixture = await setupBillableTrip(1);
   state.lostCreation = true;
   await expect(
     fixture.users[0]!.client.action(checkout, { tripId: fixture.tripId })
@@ -442,7 +443,7 @@ test.each(['failed', 'canceled'] as const)(
   async (status) => {
     const { state, mock, session } = provider();
     vi.useFakeTimers();
-    const fixture = await setupTrip(1);
+    const fixture = await setupBillableTrip(1);
     await fixture.users[0]!.client.action(checkout, { tripId: fixture.tripId });
     state.race = true;
     state.refundStatus = status;
@@ -469,7 +470,7 @@ test.each(['failed', 'canceled'] as const)(
 test('explicit operator retry is CAS/idempotent and preserves failed receipt generations', async () => {
   const { state } = provider();
   vi.useFakeTimers();
-  const fixture = await setupTrip(1);
+  const fixture = await setupBillableTrip(1);
   await fixture.users[0]!.client.action(checkout, { tripId: fixture.tripId });
   state.race = true;
   state.refundStatus = 'failed';
@@ -536,7 +537,7 @@ test('explicit operator retry is CAS/idempotent and preserves failed receipt gen
 test('verified external remedies leave financial evidence and cannot be retried', async () => {
   const { state, mock } = provider();
   vi.useFakeTimers();
-  const fixture = await setupTrip(1);
+  const fixture = await setupBillableTrip(1);
   await fixture.users[0]!.client.action(checkout, { tripId: fixture.tripId });
   state.race = true;
   state.refundStatus = 'canceled';
@@ -586,7 +587,7 @@ test.each(['new', 'legacy'])(
   async (protocol) => {
     const { mock } = provider();
     vi.useFakeTimers();
-    const fixture = await setupTrip(1);
+    const fixture = await setupBillableTrip(1);
     const reserved = await fixture.users[0]!.client.mutation(
       internal.modules.payments.storage.prepare,
       { tripId: fixture.tripId }
@@ -610,7 +611,7 @@ test.each(['self', 'sponsor'])(
   async (payer) => {
     const { state, session } = provider();
     vi.useFakeTimers();
-    const fixture = await setupTrip(1);
+    const fixture = await setupBillableTrip(1);
     const traveler = fixture.users[0]!;
     const buyer = payer === 'sponsor' ? fixture.owner : traveler;
     await buyer.client.action(checkout, {
@@ -644,7 +645,7 @@ test.each(['self', 'sponsor'])(
 test('archiving before payment confirmation refunds the checkout and preserves archive/RSVP', async () => {
   const { state, session } = provider();
   vi.useFakeTimers();
-  const fixture = await setupTrip(1);
+  const fixture = await setupBillableTrip(1);
   await fixture.users[0]!.client.action(checkout, { tripId: fixture.tripId });
   await fixture.owner.client.mutation(api.routes.trips.archive.run, { tripId: fixture.tripId });
   const trip = await fixture.owner.client.query(api.routes.trips.get.run, {
@@ -673,7 +674,7 @@ test('archiving before payment confirmation refunds the checkout and preserves a
 test('completion with payments disabled preserves free access and queues refund until keys return', async () => {
   const { state, session, mock } = provider();
   vi.useFakeTimers();
-  const fixture = await setupTrip(1);
+  const fixture = await setupBillableTrip(1);
   const member = fixture.users[0]!;
   await member.client.action(checkout, { tripId: fixture.tripId });
   vi.stubEnv('STRIPE_SECRET_KEY', '');

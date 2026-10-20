@@ -1,13 +1,14 @@
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
-import { openTripDraft, setupWritableTrip, tripInput, tripLocationInput } from '#testing/trips';
+import { setupBillableWritableTrip } from '#testing/payments';
+import { openTripDraft, tripInput, tripLocationInput } from '#testing/trips';
 
 afterEach(() => vi.unstubAllEnvs());
 
 test('location searches hide unpaid draft coordinates and restore paid or disabled access', async () => {
   vi.stubEnv('STRIPE_SECRET_KEY', 'sk_test_locations');
   vi.stubEnv('STRIPE_WEBHOOK_SECRET', 'whsec_locations');
-  const { owner, users, tripId, sharedTripId } = await setupWritableTrip(1);
+  const { owner, users, tripId, sharedTripId } = await setupBillableWritableTrip(1);
   const member = users[0]!;
   const point = { latitude: 38.72, longitude: -9.14 };
   await owner.client.mutation(api.routes.trips.update.run, {
@@ -65,7 +66,7 @@ test('location searches hide unpaid draft coordinates and restore paid or disabl
 
 test('nearest search fills its limit past inaccessible locations', async () => {
   vi.stubEnv('STRIPE_SECRET_KEY', 'sk_test_locations');
-  const { owner, users, tripId } = await setupWritableTrip(1);
+  const { owner, users, tripId } = await setupBillableWritableTrip(1);
   const point = { latitude: 38.72, longitude: -9.14 };
   await owner.client.mutation(api.routes.trips.update.run, {
     tripId,

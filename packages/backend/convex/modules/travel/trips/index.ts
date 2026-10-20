@@ -1,6 +1,5 @@
 import { ConvexError, type Infer } from 'convex/values';
 import type { Doc, Id, TableNames } from '#convex-generated/dataModel';
-import { env } from '#convex-generated/server';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import { AgentRuns } from '#convex/modules/assistant/runs/index';
 import { AgentWaits } from '#convex/modules/assistant/waits/index';
@@ -422,7 +421,6 @@ async function create(
     budget: details.budget,
     clientRequestId,
     creationFingerprint,
-    ...(env.STRIPE_SECRET_KEY?.trim() ? { paymentsRequired: true } : {}),
     ...(details.coverStorageId
       ? {
           cover: {

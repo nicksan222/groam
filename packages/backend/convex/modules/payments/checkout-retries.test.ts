@@ -1,7 +1,6 @@
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
-import { legacyUnrecordedPayment } from '#testing/payments';
-import { setupTrip } from '#testing/trips';
+import { setupBillableTrip, legacyUnrecordedPayment } from '#testing/payments';
 
 const checkout = api.routes.trips.payments.checkout.run;
 afterEach(() => {
@@ -28,7 +27,7 @@ const expiredCreation = () => Response.json({ error: { param: 'expires_at' } }, 
 // Only the external Stripe boundary is mocked; reservations/authentication use real routes.
 test('definitively uncreated expired checkout renews once after a failed network request', async () => {
   configure();
-  const { tripId, users } = await setupTrip(1);
+  const { tripId, users } = await setupBillableTrip(1);
   const member = users[0]!;
   const now = Date.now();
   const keys: Array<string | null> = [];
@@ -51,7 +50,7 @@ test('definitively uncreated expired checkout renews once after a failed network
 
 test('unknown sessions beyond idempotency retention fail closed without creating another charge', async () => {
   configure();
-  const { tripId, users } = await setupTrip(1);
+  const { tripId, users } = await setupBillableTrip(1);
   const member = users[0]!;
   const now = Date.now();
   const provider = vi.fn(async () => {
@@ -66,7 +65,7 @@ test('unknown sessions beyond idempotency retention fail closed without creating
 
 test('concurrent self retries share the exact Stripe request and idempotency key', async () => {
   configure();
-  const { tripId, users } = await setupTrip(1);
+  const { tripId, users } = await setupBillableTrip(1);
   const member = users[0]!;
   let unblock!: () => void;
   const bothCreating = new Promise<void>((resolve) => {
@@ -98,7 +97,7 @@ test('concurrent self retries share the exact Stripe request and idempotency key
 
 test('a sponsor cannot take an unattached checkout, but can reclaim a confirmed expired session', async () => {
   configure();
-  const { owner, tripId, users } = await setupTrip(1);
+  const { owner, tripId, users } = await setupBillableTrip(1);
   const member = users[0]!;
   let started!: () => void;
   let release!: () => void;
@@ -137,7 +136,7 @@ test('a sponsor cannot take an unattached checkout, but can reclaim a confirmed 
 
 test('a lost creation response replays the paid session instead of charging again', async () => {
   configure();
-  const { owner, tripId, users } = await setupTrip(1);
+  const { owner, tripId, users } = await setupBillableTrip(1);
   const member = users[0]!;
   const now = Date.now();
   const keys: Array<string | null> = [];
@@ -165,7 +164,7 @@ test.each(['expired', 'uncreated'])(
   'a sponsor reconciles an abandoned unattached %s checkout after expiry',
   async (oldState) => {
     configure();
-    const { owner, tripId, users } = await setupTrip(1);
+    const { owner, tripId, users } = await setupBillableTrip(1);
     const member = users[0]!;
     const now = Date.now();
     const keys: Array<string | null> = [];
@@ -195,7 +194,7 @@ test.each(['expired', 'uncreated'])(
 
 test('a sponsor reconciles a paid abandoned checkout without creating a second session', async () => {
   configure();
-  const { owner, tripId, users } = await setupTrip(1);
+  const { owner, tripId, users } = await setupBillableTrip(1);
   const member = users[0]!;
   const now = Date.now();
   const keys: Array<string | null> = [];
@@ -224,7 +223,7 @@ test('a sponsor reconciles a paid abandoned checkout without creating a second s
 
 test('reconciliation never exposes an original payer open URL to a sponsor', async () => {
   configure();
-  const { owner, tripId, users } = await setupTrip(1);
+  const { owner, tripId, users } = await setupBillableTrip(1);
   const member = users[0]!;
   const now = Date.now();
   const provider = vi.fn(async () => Response.json(session()));
@@ -240,7 +239,7 @@ test('reconciliation never exposes an original payer open URL to a sponsor', asy
 
 test('a sponsor also fails closed for an old ambiguous abandoned attempt', async () => {
   configure();
-  const { owner, tripId, users } = await setupTrip(1);
+  const { owner, tripId, users } = await setupBillableTrip(1);
   const member = users[0]!;
   const now = Date.now();
   const provider = vi.fn(async () => {
@@ -259,7 +258,7 @@ test.each(['self', 'sponsor'])(
   'an expired provably unsent attempt renews safely for %s after the replay cutoff',
   async (payer) => {
     configure();
-    const { owner, tripId, users } = await setupTrip(1);
+    const { owner, tripId, users } = await setupBillableTrip(1);
     const member = users[0]!;
     const original = (await member.client.mutation(internal.modules.payments.storage.prepare, {
       tripId
@@ -293,7 +292,7 @@ test.each(['self', 'sponsor'])(
 
 test('legacy unsent-looking attempts remain ambiguous after the replay cutoff', async () => {
   configure();
-  const { owner, tripId, users } = await setupTrip(1);
+  const { owner, tripId, users } = await setupBillableTrip(1);
   const member = users[0]!;
   const original = (await member.client.mutation(internal.modules.payments.storage.prepare, {
     tripId

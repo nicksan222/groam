@@ -1,7 +1,7 @@
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api } from '#convex-generated/api';
+import { setupBillableTrip } from '#testing/payments';
 import { createTripPoll } from '#testing/polls';
-import { setupTrip } from '#testing/trips';
 
 afterEach(() => vi.unstubAllEnvs());
 
@@ -12,7 +12,7 @@ function enablePayments() {
 
 test('unpaid members can preview and decline but cannot propose, chat, or vote by direct API', async () => {
   enablePayments();
-  const { owner, tripId, users } = await setupTrip(1);
+  const { owner, tripId, users } = await setupBillableTrip(1);
   const member = users[0]!;
   const discussionId = await owner.client.mutation(api.routes.discussions.create.run, {
     clientRequestId: crypto.randomUUID(),
@@ -65,7 +65,7 @@ test('unpaid members can preview and decline but cannot propose, chat, or vote b
 
 test('paid seats unlock participation and idea drafts inherit the shared trip entitlement', async () => {
   enablePayments();
-  const { owner, tripId, users } = await setupTrip(1);
+  const { owner, tripId, users } = await setupBillableTrip(1);
   const member = users[0]!;
   const paymentId = await owner.test.run(
     async (ctx) =>
@@ -92,7 +92,7 @@ test('paid seats unlock participation and idea drafts inherit the shared trip en
 
 test('disabling Stripe preserves participation on billable trips', async () => {
   enablePayments();
-  const { tripId, users } = await setupTrip(1);
+  const { tripId, users } = await setupBillableTrip(1);
   vi.stubEnv('STRIPE_SECRET_KEY', '');
   await expect(
     users[0]!.client.mutation(api.routes.trips.versions.create.run, { tripId })

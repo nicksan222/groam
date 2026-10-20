@@ -1,6 +1,7 @@
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api } from '#convex-generated/api';
 import { createOutsiderClient } from '#testing/factory';
+import { setupBillableTrip } from '#testing/payments';
 import { setupTrip } from '#testing/trips';
 
 const paymentStatus = api.routes.trips.payments.status.run;
@@ -35,9 +36,9 @@ test('enabling Stripe keeps legacy trips free', async () => {
   expect(await users[0]!.client.action(checkout, { tripId })).toEqual({ skipped: true, url: null });
 });
 
-test('new paid trips exempt creator and refuse unpaid RSVP going', async () => {
+test('billable trips exempt creator and refuse unpaid RSVP going', async () => {
   configureStripe();
-  const { owner, tripId, users } = await setupTrip(1);
+  const { owner, tripId, users } = await setupBillableTrip(1);
   const member = users[0]!;
   const status = await owner.client.query(paymentStatus, { tripId });
   expect(status).toMatchObject({ enabled: true });
@@ -71,7 +72,7 @@ test('checkout enforces membership and sponsor permissions even without Stripe',
 test('a key without webhook configuration fails closed for billable trips', async () => {
   vi.stubEnv('STRIPE_SECRET_KEY', 'sk_test_fixture');
   vi.stubEnv('STRIPE_WEBHOOK_SECRET', '');
-  const { tripId, users } = await setupTrip(1);
+  const { tripId, users } = await setupBillableTrip(1);
   await expect(users[0]!.client.action(checkout, { tripId })).rejects.toThrow(
     'not fully configured'
   );
@@ -79,7 +80,7 @@ test('a key without webhook configuration fails closed for billable trips', asyn
 
 test('checkout retries use one fixed €1 session and signed webhook grants one seat', async () => {
   configureStripe();
-  const { owner, tripId, users } = await setupTrip(1);
+  const { owner, tripId, users } = await setupBillableTrip(1);
   const member = users[0]!;
   let metadata: { paymentId: string; attempt: string } | undefined;
   let session: Record<string, unknown>;

@@ -3,7 +3,8 @@ import { api } from '#convex-generated/api';
 import { setTripAttachments } from '#testing/attachments';
 import { createOutsiderClient } from '#testing/factory';
 import { pngBlob } from '#testing/media';
-import { openTripDraft, setupTrip, tripInput } from '#testing/trips';
+import { setupBillableTrip } from '#testing/payments';
+import { setupTrip, openTripDraft, tripInput } from '#testing/trips';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -15,7 +16,7 @@ function payments() {
   vi.stubEnv('STRIPE_WEBHOOK_SECRET', 'whsec_media');
 }
 async function upload(
-  client: Awaited<ReturnType<typeof setupTrip>>['owner']['client'],
+  client: Awaited<ReturnType<typeof setupBillableTrip>>['owner']['client'],
   name: string
 ) {
   const storageId = await client.run((ctx) => ctx.storage.store(pngBlob()));
@@ -30,7 +31,7 @@ async function upload(
 async function fixture(access = 'unpaid') {
   if (access === 'legacy') vi.stubEnv('STRIPE_SECRET_KEY', '');
   else payments();
-  const trip = await setupTrip(1);
+  const trip = await (access === 'legacy' ? setupTrip : setupBillableTrip)(1);
   const member = trip.users[0]!;
   const protectedFile = await upload(member.client, 'Protected passport.png');
   const ordinary = await upload(member.client, 'Ordinary upload.png');
@@ -244,4 +245,67 @@ test('a paid reader may deliberately publish a file to an ordinary chat for the 
       (file) => file.id === trip.protectedFile.mediaId
     )?.url
   ).toEqual(expect.any(String));
+});
+
+test('media pages retain a cursor through fifty protected candidates to older accessible uploads', async () => {
+  payments();
+  const trip = await setupBillableTrip(1);
+  const member = trip.users[0]!;
+  const older = await upload(trip.owner.client, 'Older accessible upload.png');
+  const protectedFiles = await Promise.all(
+    Array.from({ length: 50 }, (_, index) =>
+      upload(trip.owner.client, `Hidden itinerary ${index}.png`)
+    )
+  );
+  const linked = await trip.owner.client.mutation(api.routes.discussions.create.run, {
+    clientRequestId: crypto.randomUUID(),
+    memberUserIds: [member.userId],
+    title: 'Protected files',
+    tripId: trip.tripId
+  });
+  const attachBatch = async (index: number): Promise<void> => {
+    if (index >= protectedFiles.length) return;
+    await trip.owner.client.mutation(api.routes.discussions.messages.send.run, {
+      clientRequestId: crypto.randomUUID(),
+      discussionId: linked,
+      text: 'Private trip documents',
+      mediaIds: protectedFiles.slice(index, index + 5).map((file) => file.mediaId)
+    });
+    await attachBatch(index + 5);
+  };
+  await attachBatch(0);
+  expect(await member.client.query(api.routes.media.list.run, { limit: 50 })).toEqual([]);
+  const first = await member.client.query(api.routes.media.page.run, {
+    paginationOpts: { numItems: 50, cursor: null }
+  });
+  expect(first.page).toEqual([]);
+  expect(first.isDone).toBe(false);
+  expect(first.continueCursor).toEqual(expect.any(String));
+  const next = await member.client.query(api.routes.media.page.run, {
+    paginationOpts: { numItems: 50, cursor: first.continueCursor }
+  });
+  expect(next.page).toEqual([
+    expect.objectContaining({ id: older.mediaId, url: expect.any(String) })
+  ]);
+  expect(next.isDone).toBe(true);
+  const payload = JSON.stringify([first.page, next.page]);
+  expect(payload).not.toContain('Hidden itinerary');
+  for (const file of protectedFiles) expect(payload).not.toContain(file.mediaId);
+  const outsider = await createOutsiderClient(trip.owner.test);
+  expect(
+    (
+      await outsider.client.query(api.routes.media.page.run, {
+        paginationOpts: { numItems: 50, cursor: null }
+      })
+    ).page
+  ).toEqual([]);
+});
+
+test.each([0, 51, 1.5])('media page rejects invalid raw page size %s', async (numItems) => {
+  const trip = await setupTrip(0);
+  await expect(
+    trip.owner.client.query(api.routes.media.page.run, {
+      paginationOpts: { numItems, cursor: null }
+    })
+  ).rejects.toThrow('Media page size');
 });

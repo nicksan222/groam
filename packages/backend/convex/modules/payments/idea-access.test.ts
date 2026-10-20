@@ -1,6 +1,8 @@
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
-import { paginationArgs, setupTrip, tripInput } from '#testing/trips';
+import { markTripBillable } from '#testing/payments';
+import { setupTrip, paginationArgs, tripInput } from '#testing/trips';
+
 import { changedTripDetails } from '#testing/versions';
 
 afterEach(() => vi.unstubAllEnvs());
@@ -21,6 +23,7 @@ async function setupIdeas() {
   const paidTripId = await fixture.owner.client.action(api.routes.trips.create.run, {
     input: tripInput({ name: 'Paid source name' })
   });
+  await markTripBillable(fixture.owner, paidTripId);
   const privateIdea = await fixture.owner.client.mutation(api.routes.trips.versions.create.run, {
     tripId: paidTripId,
     title: 'Private paid idea'

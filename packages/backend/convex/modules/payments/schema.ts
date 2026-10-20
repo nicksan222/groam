@@ -14,6 +14,9 @@ export const paymentTables = {
     checkoutBody: v.optional(v.string()),
     providerKeyHash: v.optional(v.string()),
     requestProtocol: v.optional(v.literal('persist-before-io-v1')),
+    firstRequestToken: v.optional(v.string()),
+    creationRetried: v.optional(v.boolean()),
+    credentialRejection: v.optional(v.literal('stripe-401-invalid-key')),
     paid: v.boolean()
   }).index('by_tripId_and_userId', ['tripId', 'userId']),
   paymentReconciliations: defineTable({

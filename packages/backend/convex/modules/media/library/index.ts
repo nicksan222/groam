@@ -1,3 +1,4 @@
+import type { PaginationOptions, PaginationResult } from 'convex/server';
 import { ConvexError } from 'convex/values';
 import type { Doc, Id } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
@@ -112,6 +113,7 @@ export class Media {
     return media.length === limit;
   }
 
+  /** Compatibility reader: only the most recent raw candidate window, never a complete library. */
   static async list(ctx: QueryCtx, limit: number): Promise<ListedMedia[]> {
     const workspace = await requireWorkspace(ctx);
     if (!Number.isInteger(limit) || limit < MEDIA_LIST_MIN || limit > MEDIA_LIST_MAX) {
@@ -127,6 +129,38 @@ export class Media {
       .order('desc')
       .take(limit);
 
+    return Media.visibleRows(ctx, workspace, media);
+  }
+
+  /** Preferred library reader: an empty filtered page still retains its continuation cursor. */
+  static async page(
+    ctx: QueryCtx,
+    paginationOpts: PaginationOptions
+  ): Promise<PaginationResult<ListedMedia>> {
+    const workspace = await requireWorkspace(ctx);
+    if (
+      !Number.isInteger(paginationOpts.numItems) ||
+      paginationOpts.numItems < 1 ||
+      paginationOpts.numItems > MEDIA_LIST_MAX
+    )
+      throw new ConvexError(
+        `Media page size must be a whole number between 1 and ${MEDIA_LIST_MAX}`
+      );
+    const result = await ctx.db
+      .query('media')
+      .withIndex('by_organizationId', (query) =>
+        query.eq('organizationId', workspace.organizationId)
+      )
+      .order('desc')
+      .paginate({ ...paginationOpts, maximumRowsRead: MEDIA_LIST_MAX });
+    return { ...result, page: await Media.visibleRows(ctx, workspace, result.page) };
+  }
+
+  private static async visibleRows(
+    ctx: QueryCtx,
+    workspace: Workspace,
+    media: Doc<'media'>[]
+  ): Promise<ListedMedia[]> {
     const access = new MediaAccess(ctx, workspace);
     const visible = await Promise.all(
       media.map(async (item) => ((await access.canRead(item._id)) ? item : null))
