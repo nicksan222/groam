@@ -56,6 +56,13 @@ export function emailVerificationPolicy() {
               return;
             }
             if (!payload.updateTo) return;
+            // Better Auth applies returned transport-hook headers only after all before hooks.
+            // Normalize the browser transport here before the authoritative signed-cookie read.
+            const forwardedCookie = ctx.headers?.get('better-auth-cookie');
+            if (forwardedCookie && !ctx.headers?.has('authorization')) {
+              ctx.headers = new Headers(ctx.headers);
+              ctx.headers.set('cookie', forwardedCookie);
+            }
             const session = await getAuthoritativeSessionFromCtx(ctx);
             if (!session || session.user.email !== payload.email) {
               throw new APIError('UNAUTHORIZED', {
