@@ -76,17 +76,15 @@ function DiscussionChatMessage({
 
   return (
     <div
-      className={mine ? 'flex justify-end' : 'flex justify-start'}
+      className={cn(
+        'flex',
+        mine ? 'justify-end' : 'justify-start',
+        (actions || reactions) && 'group/chat-message'
+      )}
       data-content={text}
       data-testid={testId}
     >
-      <div
-        className={cn(
-          'max-w-[min(100%,24rem)]',
-          mine ? 'text-right' : 'text-left',
-          (actions || reactions) && 'group/chat-message'
-        )}
-      >
+      <div className={cn('max-w-[min(100%,24rem)]', mine ? 'text-right' : 'text-left')}>
         {!mine && (
           <p className="mb-1 px-1 text-[10px] font-semibold text-muted-foreground">
             {authorName ?? 'Participant'}

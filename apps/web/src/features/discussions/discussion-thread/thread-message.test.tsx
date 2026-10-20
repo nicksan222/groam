@@ -2,6 +2,7 @@ import { render } from '@groam/vitest-config/react';
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import type { DiscussionMessage } from '@/features/discussions/hooks/use-discussion-thread';
+import { testIds } from '@/lib/test-ids';
 import { ThreadMessage } from './thread-message';
 
 vi.mock('./assistant-run-card', () => ({
@@ -68,6 +69,20 @@ test('reacts from the stamp picker', async () => {
 
   expect(onReact).toHaveBeenCalledWith('👍');
 });
+
+test.each([true, false])(
+  'reacts after hovering a full-width message row (mine: %s)',
+  async (mine) => {
+    const onReact = vi.fn();
+    await render(<ThreadMessage message={message({ mine })} onReact={onReact} reactions={[]} />);
+
+    await page.getByTestId(testIds.chatMessage).hover();
+    await page.getByRole('button', { name: 'Add reaction' }).click();
+    await page.getByRole('button', { name: 'Agree' }).click();
+
+    expect(onReact).toHaveBeenCalledWith('👍');
+  }
+);
 
 test('toggles an existing reaction chip on the bubble', async () => {
   const onReact = vi.fn();
