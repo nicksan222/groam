@@ -14,7 +14,10 @@ import {
 
 async function loadSession(ctx: ActionCtx, payment: PaymentAttempt, payerId: string) {
   if (payment.sessionId) return stripeRequest(`/${encodeURIComponent(payment.sessionId)}`);
-  assertPayer(payment, payerId);
+  // After the reserved expiration another authorized payer may replay the original key
+  // to reconcile a lost response. Only the outer handler may expose an open session URL,
+  // and it still requires the original payer until Stripe confirms expiration.
+  if (Math.floor(Date.now() / 1000) < payment.expiresAt) assertPayer(payment, payerId);
   const session = await createSession(payment);
   await ctx.runMutation(internal.modules.payments.storage.attachSession, {
     id: payment.id,

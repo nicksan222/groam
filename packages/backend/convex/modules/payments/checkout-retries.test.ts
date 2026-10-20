@@ -159,3 +159,97 @@ test('a lost creation response replays the paid session instead of charging agai
     )?.paid
   ).toBe(true);
 });
+
+test.each(['expired', 'uncreated'])(
+  'a sponsor reconciles an abandoned unattached %s checkout after expiry',
+  async (oldState) => {
+    configure();
+    const { owner, tripId, users } = await setupTrip(1);
+    const member = users[0]!;
+    const now = Date.now();
+    const keys: Array<string | null> = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url: string, init?: RequestInit) => {
+        if (init?.method === 'GET')
+          return Response.json({ ...session(), id: 'cs_sponsor_reconciled' });
+        keys.push(new Headers(init?.headers).get('Idempotency-Key'));
+        if (keys.length === 1) throw new TypeError('original payer lost response');
+        if (keys.length === 2)
+          return oldState === 'uncreated' ? expiredCreation() : Response.json(session('expired'));
+        return Response.json({ ...session(), id: 'cs_sponsor_reconciled' });
+      })
+    );
+    await expect(member.client.action(checkout, { tripId })).rejects.toThrow('lost response');
+    vi.spyOn(Date, 'now').mockReturnValue(now + 61 * 60_000);
+    expect(await owner.client.action(checkout, { tripId, userId: member.userId })).toMatchObject({
+      skipped: false
+    });
+    expect(keys).toHaveLength(3);
+    expect(keys[0]).toBe(keys[1]);
+    expect(keys[2]).not.toBe(keys[0]);
+    await expect(member.client.action(checkout, { tripId })).rejects.toThrow('already paying');
+  }
+);
+
+test('a sponsor reconciles a paid abandoned checkout without creating a second session', async () => {
+  configure();
+  const { owner, tripId, users } = await setupTrip(1);
+  const member = users[0]!;
+  const now = Date.now();
+  const keys: Array<string | null> = [];
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (_url: string, init?: RequestInit) => {
+      keys.push(new Headers(init?.headers).get('Idempotency-Key'));
+      if (keys.length === 1) throw new TypeError('response lost');
+      return Response.json({ ...session('complete'), url: null, payment_status: 'paid' });
+    })
+  );
+  await expect(member.client.action(checkout, { tripId })).rejects.toThrow('response lost');
+  vi.spyOn(Date, 'now').mockReturnValue(now + 61 * 60_000);
+  expect(await owner.client.action(checkout, { tripId, userId: member.userId })).toEqual({
+    skipped: true,
+    url: null
+  });
+  expect(keys).toHaveLength(2);
+  expect(keys[0]).toBe(keys[1]);
+  expect(
+    (await owner.client.query(api.routes.trips.payments.status.run, { tripId })).travelers.find(
+      (traveler) => traveler.userId === member.userId
+    )?.paid
+  ).toBe(true);
+});
+
+test('reconciliation never exposes an original payer open URL to a sponsor', async () => {
+  configure();
+  const { owner, tripId, users } = await setupTrip(1);
+  const member = users[0]!;
+  const now = Date.now();
+  const provider = vi.fn(async () => Response.json(session()));
+  provider.mockRejectedValueOnce(new TypeError('response lost'));
+  vi.stubGlobal('fetch', provider);
+  await expect(member.client.action(checkout, { tripId })).rejects.toThrow('response lost');
+  vi.spyOn(Date, 'now').mockReturnValue(now + 61 * 60_000);
+  await expect(owner.client.action(checkout, { tripId, userId: member.userId })).rejects.toThrow(
+    'already paying'
+  );
+  expect(provider).toHaveBeenCalledTimes(2);
+});
+
+test('a sponsor also fails closed for an old ambiguous abandoned attempt', async () => {
+  configure();
+  const { owner, tripId, users } = await setupTrip(1);
+  const member = users[0]!;
+  const now = Date.now();
+  const provider = vi.fn(async () => {
+    throw new TypeError('response lost');
+  });
+  vi.stubGlobal('fetch', provider);
+  await expect(member.client.action(checkout, { tripId })).rejects.toThrow('response lost');
+  vi.spyOn(Date, 'now').mockReturnValue(now + 24 * 3600_000);
+  await expect(owner.client.action(checkout, { tripId, userId: member.userId })).rejects.toThrow(
+    'reconciliation'
+  );
+  expect(provider).toHaveBeenCalledTimes(1);
+});
