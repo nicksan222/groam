@@ -342,14 +342,14 @@ Source: [provider.ts](../../../packages/backend/convex/modules/ai/provider.ts#L1
 - **New guarded public function:** pick the narrowest existing builder
   (`workspaceQuery`, `tripQuery`, `mutableTripMutation`, `destinationMutation`)
   and keep its implicit args. Follow
-  [add-convex-route](../../../.claude/skills/add-convex-route/SKILL.md).
+  [add-convex-route](../../../.agents/skills/add-convex-route/SKILL.md).
 - **New builder or guard:** add it next to the resource it protects (for trips,
   `modules/travel/trips/ctx.ts`) by composing an `input` that calls
   `loadTripContext` / `loadMutableTrip`, plus an internal twin that resolves
   the workspace with `requireActor(ctx, asRun)`. See
-  [add-backend-module](../../../.claude/skills/add-backend-module/SKILL.md).
+  [add-backend-module](../../../.agents/skills/add-backend-module/SKILL.md).
 - **New agent-callable write:** expose it as an internal actor-aware function
   so the tool's `asRun` validates and trip checks still run.
 - **Tests:** cover the allowed path and at least one denial (other
   organization, non-author, finished run) with
-  [add-convex-test](../../../.claude/skills/add-convex-test/SKILL.md).
+  [add-convex-test](../../../.agents/skills/add-convex-test/SKILL.md).

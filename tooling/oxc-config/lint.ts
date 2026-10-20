@@ -33,7 +33,9 @@ export const lint = {
     '**/generated.ts',
     '**/routeTree.gen.ts',
     '**/vendor/**',
-    '.claude/**'
+    '.claude/**',
+    '.agents/**',
+    '.codex/**'
   ],
   rules: {
     'vite-plus/prefer-vite-plus-imports': 'error',

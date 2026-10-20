@@ -290,7 +290,7 @@ Source: [versions/snapshot/index.ts](../../../packages/backend/convex/modules/tr
 ## Extending
 
 For a new itinerary resource, follow
-[add-backend-module](../../../.claude/skills/add-backend-module/SKILL.md): add
+[add-backend-module](../../../.agents/skills/add-backend-module/SKILL.md): add
 a schema fragment with `tripId` and `sourceId`, spread it into `schema.ts`, and
 route every write through `assertMutable` and `patchTrip`. To version it,
 declare a `VersionedModel.define` model beside the schema and update
@@ -298,4 +298,4 @@ declare a `VersionedModel.define` model beside the schema and update
 it addressable, add a target kind as described in
 [targets/README.md](../../../packages/backend/convex/modules/travel/targets/README.md)
 and extend the unions in `targets/schema.ts`. Test it with
-[add-convex-test](../../../.claude/skills/add-convex-test/SKILL.md).
+[add-convex-test](../../../.agents/skills/add-convex-test/SKILL.md).

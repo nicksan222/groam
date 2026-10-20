@@ -22,7 +22,6 @@
     "source=${localEnv:HOME}/.config/gh,target=/home/node/.config/gh,type=bind"
   ],
   "containerEnv": {
-    "CAVEMAN_DEFAULT_MODE": "full",
     "DISABLE_AUTOUPDATER": "1",
     "HEADROOM_BEACON": "off"
   },

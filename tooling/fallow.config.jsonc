@@ -4,6 +4,8 @@
   "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
   "ignorePatterns": [
     ".claude/**",
+    ".agents/**",
+    ".codex/**",
     "**/.astro/**",
     "**/coverage/**",
     "**/dist/**",

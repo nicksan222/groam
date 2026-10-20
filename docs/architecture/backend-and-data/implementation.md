@@ -328,17 +328,17 @@ Source: [trips/ctx.ts](../../../packages/backend/convex/modules/travel/trips/ctx
 
 - **New public operation:** add `routes/<domain>/<name>.ts` exporting `run`,
   built on the narrowest builder, with `args` and `returns` validators. See
-  [add-convex-route](../../../.claude/skills/add-convex-route/SKILL.md).
+  [add-convex-route](../../../.agents/skills/add-convex-route/SKILL.md).
 - **New table or module:** add a `schema.ts` fragment (`*Tables`, optional
   `*Validators`) inside the owning module folder, spread it in `schema.ts`, and
   index every scoped read. Put new builders next to the resource. See
-  [add-backend-module](../../../.claude/skills/add-backend-module/SKILL.md).
+  [add-backend-module](../../../.agents/skills/add-backend-module/SKILL.md).
 - **External or Node work:** keep it in an action and commit through an
   internal mutation that revalidates state (and a token if the work is long).
   Never use `ctx.db` in `'use node'` files.
 - **Deletion:** extend the owning module's batch purge and the organization
   cleanup chain rather than deleting unboundedly in one transaction.
 - **Configuration:** add deployment variables through
-  [add-env-variable](../../../.claude/skills/add-env-variable/SKILL.md).
+  [add-env-variable](../../../.agents/skills/add-env-variable/SKILL.md).
 - **Tests:** use the shared factory and real routes via
-  [add-convex-test](../../../.claude/skills/add-convex-test/SKILL.md).
+  [add-convex-test](../../../.agents/skills/add-convex-test/SKILL.md).

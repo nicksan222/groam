@@ -306,7 +306,7 @@ git stash push --keep-index --include-untracked; vp run fallow:changed; git stas
 
 # just check -> vp run check
 vp run audit && vp run typecheck && vp run lint && vp run test && vp run react-doctor && vp run fallow
-# lint = lint:conventions && lint:claude && lint:packages && vp check
+# lint = lint:conventions && lint:agents && lint:packages && vp check
 ```
 
 Source: [`pre-commit`](../../../tooling/hooks/pre-commit),
@@ -322,8 +322,9 @@ Source: [`pre-commit`](../../../tooling/hooks/pre-commit),
   come from `package.json` and `convex.json`:
   [`constants.test.ts`](../../../tooling/devkit/constants.test.ts).
 - Tool pins live only in Dockerfile `ARG` defaults, never as duplicate build
-  args: [`claude-harness.test.ts`](../../../tooling/quality/claude-harness.test.ts),
-  run by `vp run lint:claude`.
+  args: [`agent-tooling.test.ts`](../../../tooling/quality/agent-tooling.test.ts),
+  with configuration validated by `vp run lint:agents` and helper tests run by
+  `vp run test:quality`.
 - Auth setup keeps an existing `BETTER_AUTH_SECRET` and upserts one
   `VITE_SITE_URL` line: [`configure-auth.test.ts`](../../../tooling/devkit/configure-auth.test.ts).
 - Shutdown only stops this repository's backend, and another HTTP server is
@@ -352,7 +353,7 @@ Source: [`pre-commit`](../../../tooling/hooks/pre-commit),
 ## Extending
 
 - **New environment variable.** Follow the
-  [`add-env-variable`](../../../.claude/skills/add-env-variable/SKILL.md) skill:
+  [`add-env-variable`](../../../.agents/skills/add-env-variable/SKILL.md) skill:
   add an Envalid field to the matching `packages/env/src/apps/<target>.ts`
   (client keys must be `VITE_*` and never carry secrets), or a `defineApp`
   entry in `convex.config.ts` for a Convex runtime value. Document it in the
@@ -367,6 +368,6 @@ Source: [`pre-commit`](../../../tooling/hooks/pre-commit),
   workflow both run it, and to the root `check` script when it should run
   locally too.
 - **New seed data.** Use the
-  [`seed-local-data`](../../../.claude/skills/seed-local-data/SKILL.md) skill;
+  [`seed-local-data`](../../../.agents/skills/seed-local-data/SKILL.md) skill;
   seed plans live in `tooling/seeder` and call only `@groam/app-actions/backend`
   primitives.

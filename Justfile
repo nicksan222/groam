@@ -1,4 +1,4 @@
-# Groam command map. Every recipe runs inside the dev container.
+# Groam command map. Use the pinned toolchain; see .devcontainer/ for setup.
 # `just` (no arguments) lists the recipes by group.
 
 set dotenv-load
@@ -95,10 +95,14 @@ update-convex-agent-files:
     #!/usr/bin/env bash
     set -euo pipefail
     CONVEX_AGENT_MODE=anonymous vp exec convex ai-files update
-    # The updater always recreates a root AGENTS.md and Codex-only
-    # agents/openai.yaml files; this repo is Claude-only (CLAUDE.md + .claude/).
-    rm -f AGENTS.md
-    rm -rf .claude/skills/*/agents
+    # Install upstream skills into the shared source and refresh native adapters.
+    just sync-agents
+    vp run lint:agents
+
+# Refresh skill links and native agent wrappers from the shared source.
+[group('agents')]
+sync-agents:
+    bun tooling/quality/check-agent-tooling.ts --sync
 
 # ── Agents and code graph ────────────────────────────────────────────────────
 

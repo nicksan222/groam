@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   type ConventionFinding,
@@ -78,7 +78,11 @@ const files = execFileSync('git', ['ls-files', '--cached', '--others', '--exclud
   .trim()
   .split('\n')
   .filter(
-    (file) => file && !file.includes('/vendor/') && !file.startsWith('.claude/skills/impeccable/')
+    (file) =>
+      file &&
+      !file.includes('/vendor/') &&
+      !file.startsWith('.claude/skills/impeccable/') &&
+      !file.startsWith('.agents/skills/impeccable/')
   );
 
 const actionNames = readdirSync('tooling/app-actions/src/actions')
@@ -186,7 +190,7 @@ for (const file of files) {
   for (const directory of invalidDirectoryNames(file)) {
     directoryNames.add(directory);
   }
-  if (!existsSync(file)) continue;
+  if (!existsSync(file) || !statSync(file).isFile()) continue;
   findings.push(...inspectFile(file, readFileSync(file, 'utf8'), inspectOptions));
 }
 

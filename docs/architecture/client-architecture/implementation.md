@@ -290,14 +290,14 @@ Source: [`agent-context.tsx`](../../../packages/ai/src/ui/context/agent-context.
 ## Extending
 
 - New page: one route file plus a feature view
-  ([add-web-route](../../../.claude/skills/add-web-route/SKILL.md),
-  [place-feature-view](../../../.claude/skills/place-feature-view/SKILL.md)).
+  ([add-web-route](../../../.agents/skills/add-web-route/SKILL.md),
+  [place-feature-view](../../../.agents/skills/place-feature-view/SKILL.md)).
   Name resource params after a key in `referenceTables` so they resolve.
 - New subscription or write:
-  [add-feature-hook](../../../.claude/skills/add-feature-hook/SKILL.md).
+  [add-feature-hook](../../../.agents/skills/add-feature-hook/SKILL.md).
 - New screen the assistant should understand:
-  [register-agent-screen-context](../../../.claude/skills/register-agent-screen-context/SKILL.md).
+  [register-agent-screen-context](../../../.agents/skills/register-agent-screen-context/SKILL.md).
 - New sidebar entry:
-  [add-sidebar-nav](../../../.claude/skills/add-sidebar-nav/SKILL.md); view
+  [add-sidebar-nav](../../../.agents/skills/add-sidebar-nav/SKILL.md); view
   coverage with mocked hooks:
-  [add-web-view-test](../../../.claude/skills/add-web-view-test/SKILL.md).
+  [add-web-view-test](../../../.agents/skills/add-web-view-test/SKILL.md).

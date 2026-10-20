@@ -75,9 +75,9 @@ From a host terminal, start it and run commands through the Dev Container CLI:
 .devcontainer/devcontainer exec just dev
 ```
 
-Git may run on the host; all repository tooling runs in the container. On a
-clean host, run the containerized `just check` gate before committing with
-`git commit --no-verify`, so Git hooks do not launch project tools on the host.
+Git may run on the host; use the pinned container toolchain for repository
+tasks when it is absent on the host. Run commits where the project hooks can
+execute, normally inside the container; preserve the hooks and quality gates.
 The launcher delegates to the official Dev Container CLI and automatically
 handles Git metadata stored outside the workspace by Git worktrees.
 When already attached to the container or using Codespaces, run `just dev`
@@ -102,13 +102,17 @@ Open [localhost:5173](http://localhost:5173) and sign in with
 | --- | --- |
 | `just check` | Run the complete CI quality suite |
 | `just test` | Run unit and integration tests |
-| `claude` | Start Claude Code with the repository harness (in the dev container) |
+| `just sync-agents` | Refresh native adapters from the shared skills and roles |
+| `claude` | Start the optional Claude launcher in the dev container |
 | `just journeys` | Run browser journeys against the local backend |
 | `just graphify-explain <symbol>` | Show a symbol, its callers, and its dependencies |
 | `just graphify-affected <symbol>` | List what a change to a symbol would affect |
 | `just graphify-refresh` | Refresh the local code graph after edits |
 | `just showcase` | Rebuild the scripted 4K product film |
 | `just showcase-gif` | Rebuild the full-length 1080p README preview from the committed film |
+
+Coding agents start with [AGENTS.md](AGENTS.md). Shared [skills and roles](.agents/README.md)
+work through native discovery where supported and direct file loading elsewhere.
 
 See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for the container workflow, project
 conventions, and [AI-assisted development](.github/CONTRIBUTING.md#ai-assisted-development). The [showcase guide](tooling/showcase/README.md) explains the

@@ -326,8 +326,8 @@ Source: [versions/index.ts](../../../packages/backend/convex/modules/travel/vers
 To version a new field, add it with a `VersionDiff` strategy and label to the
 owning model (for example `TripVersionModel`), then update
 `VersionSnapshots.create`, `snapshot/format.ts`, `clone.ts` and `apply.ts`.
-Follow [add-backend-module](../../../.claude/skills/add-backend-module/SKILL.md)
+Follow [add-backend-module](../../../.agents/skills/add-backend-module/SKILL.md)
 and test through the real `api.routes.trips.versions.*` routes with
-[add-convex-test](../../../.claude/skills/add-convex-test/SKILL.md). A new
+[add-convex-test](../../../.agents/skills/add-convex-test/SKILL.md). A new
 operation that needs Git history must use the prepare, token, finish and
 `cancelOperation` shape.

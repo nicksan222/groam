@@ -21,16 +21,18 @@ Use the root `Justfile` for human-invoked workflows. Package scripts remain the
 small, composable commands consumed by `vp run`, CI, npm lifecycle hooks, and the
 Just recipes.
 
-Claude Code, the only supported agent harness, uses these recipes inside the
-checked-in dev container; there is no separate host or cloud-agent toolchain
-lifecycle to keep synchronized. Personal overrides such as
-`.claude/settings.local.json` are ignored by Git.
+All coding harnesses use these commands and the shared `AGENTS.md` guidance.
+Skills and role prompts have their canonical source in `.agents/`; native
+adapters route there. See [shared agent tooling](../.agents/README.md) for
+configuration, runtime detection, discovery fallbacks, and validation. The dev
+container supplies the reproducible toolchain; personal provider settings stay
+in local/user configuration.
 
 Configuration implementations belong here, including `fallow.config.jsonc` and
 `syncpack.config.json`. A file stays at the repository root only when its tool
 requires root discovery (`package.json`, `bun.lock`, `convex.json`,
 `doctor.config.ts`, `tsconfig.json`, `vite.config.ts`, `skills-lock.json`, and
-`CLAUDE.md`, whose Convex section `convex ai-files` rewrites in place) or when it
+`AGENTS.md` and its small provider entry points) or when it
 is an entry point (`README.md`, `LICENSE`, `Justfile`). Community health files
 live in `.github/`.
 

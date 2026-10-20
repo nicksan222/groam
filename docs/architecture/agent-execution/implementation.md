@@ -338,7 +338,7 @@ Source: [engine/workflow.test.ts](../../../packages/backend/convex/modules/assis
 5. Call `AgentWaits.signal({ kind, refId })` from every domain write that can
    change the outcome, with `deleted: true` when the entity is removed.
 6. Add tests following
-   [add-convex-test](../../../.claude/skills/add-convex-test/SKILL.md).
+   [add-convex-test](../../../.agents/skills/add-convex-test/SKILL.md).
 
 **New run behavior.** Change turns, sessions or tools, never `workflow.ts`. New
 agents and tools follow

@@ -16,9 +16,12 @@ coverage
 **/test-results
 *.local
 graphify-out/
-# Personal Claude Code overrides (models, providers, env, MCP, notes).
+# Personal agent overrides (models, providers, env, MCP, notes).
 .claude/settings.local.json
 CLAUDE.local.md
+AGENTS.local.md
+GEMINI.local.md
+.codex/config.local.toml
 .worktrees/
 
 # Editor directories and files

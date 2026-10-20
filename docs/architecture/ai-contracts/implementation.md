@@ -359,18 +359,18 @@ Source: [ai/provider.ts](../../../packages/backend/convex/modules/ai/provider.ts
 - **A new agent.** Extend `AssistantAgentId` in `agents/ids.ts`, add
   `agents/<id>/definition.ts`, add one line to `assistantAgents`, and grant
   tools by adding the id to the specs' `agents` lists. Follow
-  [add-assistant-agent](../../../.claude/skills/add-assistant-agent/SKILL.md).
+  [add-assistant-agent](../../../.agents/skills/add-assistant-agent/SKILL.md).
 - **A new capability or tool.** Add one `assistantToolSpecs` entry (with
   `writeIntent` and `eventLabel` for a write), one binding in
   `assistantCapabilityBindings`, and a tool that calls an existing internal
   actor-aware function. Follow
-  [add-agent-capability](../../../.claude/skills/add-agent-capability/SKILL.md).
+  [add-agent-capability](../../../.agents/skills/add-agent-capability/SKILL.md).
 - **A new generated-form component.** Follow
-  [add-json-render-component](../../../.claude/skills/add-json-render-component/SKILL.md);
+  [add-json-render-component](../../../.agents/skills/add-json-render-component/SKILL.md);
   the id list and catalog must stay in sync.
 - **A new screen the assistant can see.** Follow
-  [register-agent-screen-context](../../../.claude/skills/register-agent-screen-context/SKILL.md).
+  [register-agent-screen-context](../../../.agents/skills/register-agent-screen-context/SKILL.md).
 - **Agent integration changes** (sessions, provider): load
-  [convex-agent](../../../.claude/skills/convex-agent/SKILL.md) first. Run
+  [convex-agent](../../../.agents/skills/convex-agent/SKILL.md) first. Run
   and wait behavior is covered in
   [Agent execution implementation](../agent-execution/implementation.md).

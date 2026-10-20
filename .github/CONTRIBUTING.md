@@ -99,43 +99,39 @@ Do not hand-edit `apps/web/src/routeTree.gen.ts`. Add routes as files under
   `export const run`
 - Environment variables go through `@groam/env/*` or Convex `defineApp({ env })`
 
-Agent-oriented layout notes live in [`CLAUDE.md`](../CLAUDE.md).
+Agent-oriented layout notes live in [`AGENTS.md`](../AGENTS.md).
 
 ## AI-assisted development
 
-[Claude Code](https://claude.com/claude-code) is the only supported agent
-harness; the repository carries no configuration for other coding agents. It
-is preinstalled in the dev container, where `claude` is aliased to
-[`tooling/claude/claude.sh`](../tooling/claude/claude.sh) (`just claude` runs the
-same launcher). The launcher starts or reuses the Headroom proxy, which
-compresses tool output before it reaches the model. Everything else is standard
-project config:
+Start with [`AGENTS.md`](../AGENTS.md), the shared repository instructions for
+any coding harness. Skills live in [`.agents/skills`](../.agents/skills), and
+subagent role instructions in [`.agents/roles`](../.agents/roles). Discover the
+current descriptions there rather than maintaining a separate roster.
 
-- plugins (including Caveman) in [`.claude/settings.json`](../.claude/settings.json);
-- the Convex MCP server and the Headroom MCP server in
-  [`.mcp.json`](../.mcp.json) (run `vp exec convex login` once to authorize the
-  Convex one).
+Claude and Codex have native adapters generated from that single source.
+Claude skill folders link to the shared collection. Claude, Gemini, and Copilot
+instruction files symlink to `AGENTS.md`; other harnesses can read it explicitly.
+Where native discovery or delegation is unavailable, load the matching skill
+or role file directly and follow the documented capability fallback.
 
-Set `CLAUDE_HEADROOM=off` to start Claude without the proxy, for example for
-Remote Control.
+Use `just sync-agents` after adding skills or changing role metadata.
+`vp run lint:agents` runs in the normal lint/CI gate and checks metadata,
+source/command references, local links, native adapter drift, MCP settings,
+and container pins. It permits other harness configuration. These structural
+checks complement source review; they cannot prove prose is semantically fresh.
 
-Project skills live in [`.claude/skills`](../.claude/skills) and subagents in
-[`.claude/agents`](../.claude/agents): `developer`, `pm`, `pushback`, `reviewer`,
-`qa`, `traveler`, `scenario`, `upgrade-reviewer`, and `pr-maker`. The main
-session leads and delegates to them.
+The dev container includes the optional Claude launcher at
+[`tooling/claude/claude.sh`](../tooling/claude/claude.sh), with Headroom compression
+when available. Other harnesses use the same project commands without that
+launcher. Keep model choices, routing, credentials, permissions, and personal
+plugins in user/local configuration. Shared roles inherit the invoking
+session's models; they never assume a provider's model aliases.
 
-Personal overrides stay out of Git:
-
-| File | Use it for |
-| --- | --- |
-| `.claude/settings.local.json` | Models, provider routing (Bedrock, Vertex, gateways), env, permissions |
-| `claude mcp add --scope local` | Extra MCP servers |
-| `CLAUDE.local.md` | Personal instructions |
-
-`vp run lint:claude` (part of `just lint` and `just check`, so it runs in CI)
-validates subagent and skill frontmatter, the shared settings and MCP JSON, and
-the launcher, and fails if files for another agent harness reappear. Agent-facing
-instructions, including the model override example, live in [`CLAUDE.md`](../CLAUDE.md).
+Project MCP definitions are in [`.mcp.json`](../.mcp.json). Import them through
+your harness's supported setup if it uses another format, and authorize them
+locally. Neither MCP nor optional plugins are required for code search.
+See [shared tooling maintenance](../.agents/README.md) for adapter details,
+upstream updates, source discovery, and portability limits.
 
 ## Proposing changes
 

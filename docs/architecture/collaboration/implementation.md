@@ -336,7 +336,7 @@ Source: [`notifications/index.ts`](../../../packages/backend/convex/modules/noti
 
 - New conversation kind: extend `ConversationKind`, `conversationKinds` and
   the `discussions` union, and route each decision through `kindPolicy`
-  ([add-backend-module](../../../.claude/skills/add-backend-module/SKILL.md)).
+  ([add-backend-module](../../../.agents/skills/add-backend-module/SKILL.md)).
 - New link target: extend `linkTarget`, `linkTargetKey`, `assertTargetInTrip`
   and `resolveLabel`, and call `removeLinksForTargetKey` on its delete path.
 - New rule fact: make every shared-trip write that changes it reach
@@ -345,6 +345,6 @@ Source: [`notifications/index.ts`](../../../packages/backend/convex/modules/noti
 - New notification kind: add it to `NotificationValidators.kind` and write it
   from the originating domain with `Notifications.notify`.
 - Public entry points:
-  [add-convex-route](../../../.claude/skills/add-convex-route/SKILL.md); tests
+  [add-convex-route](../../../.agents/skills/add-convex-route/SKILL.md); tests
   through real routes:
-  [add-convex-test](../../../.claude/skills/add-convex-test/SKILL.md).
+  [add-convex-test](../../../.agents/skills/add-convex-test/SKILL.md).
