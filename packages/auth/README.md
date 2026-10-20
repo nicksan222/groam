@@ -46,3 +46,10 @@ unverified. Inspect Convex scheduled-action failures and resend after correcting
 configuration. Automatic retries are intentionally avoided because this send API
 has no documented idempotency key.
 
+
+Legacy `@users.invalid` accounts without the optional `emailVerificationRequired`
+marker retain password sign-in. The server marks all new accounts, rejects new
+placeholder addresses, and never accepts the marker from public signup or profile
+updates. All other hosted accounts require verification. Preserve this additive
+optional schema field during rollbacks. The next stack layer adds verified email
+changes so legacy accounts can migrate to a real inbox.
