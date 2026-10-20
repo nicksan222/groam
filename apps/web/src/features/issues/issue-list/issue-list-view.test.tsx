@@ -90,7 +90,7 @@ describe('IssueListView', () => {
     state.issues = [workspaceIssue()];
     await render(<IssueListView />);
     await expect.element(page.getByText('Coast day')).toBeInTheDocument();
-    expect(page.getByText(/Atlantic week/u).elements()).toHaveLength(2);
+    expect(page.getByText(/Atlantic week/u).elements()).toHaveLength(1);
     await expect.element(page.getByText('Acme Labs')).not.toBeInTheDocument();
     await expect.element(page.getByRole('heading', { name: 'Issues' })).toBeInTheDocument();
     await expect.element(page.getByLabelText('Search issues')).toBeInTheDocument();

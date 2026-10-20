@@ -32,6 +32,10 @@ export type IdeaListItem = Pick<
   sourceTripName?: WorkspaceIdea['sourceTripName'];
 };
 
+/** Optional workspace metadata used by the shared record presentation. */
+export type IdeaRecordListItem = IdeaListItem &
+  Partial<Pick<WorkspaceIdea, 'sourceTripId' | 'updatedAt' | 'reviewRequested'>>;
+
 export type IdeaListFilters = {
   query: string;
   status: IdeaStatusFilter;

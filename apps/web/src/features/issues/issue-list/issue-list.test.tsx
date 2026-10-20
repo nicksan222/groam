@@ -1,9 +1,9 @@
 import type { Id } from '@groam/backend/data-model';
 import { render } from '@groam/vitest-config/react';
 import { useViewport } from '@groam/vitest-config/viewport';
-import { describe, expect, test, vi } from 'vite-plus/test';
+import { expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
-import { expectPhoneListRow, expectWideListRow } from '@/lib/testing/list-row-assertions';
+import { testIds } from '@/lib/test-ids';
 import type { IssueListItem } from '@/types/issues';
 import { IssueList } from './issue-list';
 
@@ -63,55 +63,63 @@ async function renderList() {
   );
 }
 
-test('renders a compact search-and-status toolbar instead of stacked filter chrome', async () => {
+test('renders a searchable semantic list with status filtering and sorting', async () => {
   await renderList();
-
-  const toolbar = document.querySelector('[aria-label="Filter issues"]');
-  expect(toolbar?.className).toContain('flex');
-  expect(toolbar?.className).toContain('items-center');
-  expect(toolbar?.className).not.toContain('dashboard-panel');
-  expect(document.querySelector('table')).toBeTruthy();
-  await expect.element(page.getByRole('button', { name: 'Issue' })).toBeInTheDocument();
-  await expect.element(page.getByRole('button', { name: /Open \d+/u })).not.toBeInTheDocument();
-  await expect.element(page.getByRole('button', { name: /Closed \d+/u })).not.toBeInTheDocument();
-  await expect.element(page.getByLabelText('Search issues')).toBeInTheDocument();
-  expect(page.getByLabelText('Filter issues by status').element().textContent).toContain('Open');
-  await expect.element(page.getByText('Coast day')).toBeInTheDocument();
-  await expect.element(page.getByText('Museum morning')).toBeInTheDocument();
+  await expect.element(page.getByRole('list', { name: 'Issues' })).toBeInTheDocument();
+  await expect.element(page.getByRole('table')).not.toBeInTheDocument();
+  await expect.element(page.getByLabelText('Search issues')).toBeVisible();
+  await expect.element(page.getByLabelText('Filter issues by status')).toBeVisible();
+  await expect.element(page.getByLabelText('Sort issues')).toBeVisible();
+  expect(page.getByTestId(testIds.issueRow).elements()).toHaveLength(2);
 });
 
-test('searches visible issue fields and can clear the filter', async () => {
+test('searches issue context and clears the filter', async () => {
   await renderList();
-
-  await page.getByLabelText('Search issues').fill('museum');
+  await page.getByLabelText('Search issues').fill('City break');
   await expect.element(page.getByText('Coast day')).not.toBeInTheDocument();
-  await expect.element(page.getByText('Museum morning')).toBeInTheDocument();
-
+  await expect.element(page.getByText('Museum morning')).toBeVisible();
   await page.getByRole('button', { name: 'Clear issue filters' }).click();
-  await expect.element(page.getByText('Coast day')).toBeInTheDocument();
+  await expect.element(page.getByText('Coast day')).toBeVisible();
   await expect.element(page.getByLabelText('Search issues')).toHaveValue('');
 });
 
-describe('on a phone', () => {
-  const firstRow = () =>
-    page
-      .getByRole('row')
-      .filter({ has: page.getByRole('link', { name: /Coast day|Museum morning/u }) })
-      .first();
+test('sorts by activity and restores the original order', async () => {
+  await renderList();
+  await page.getByLabelText('Sort issues').click();
+  await page.getByRole('option', { name: 'Oldest updated' }).click();
+  expect(page.getByTestId(testIds.issueRow).elements()[0]?.getAttribute('data-issue-title')).toBe(
+    'Museum morning'
+  );
+  await page.getByLabelText('Sort issues').click();
+  await page.getByRole('option', { name: 'Default order' }).click();
+  expect(page.getByTestId(testIds.issueRow).elements()[0]?.getAttribute('data-issue-title')).toBe(
+    'Coast day'
+  );
+});
 
-  test('keeps titles readable, drops secondary columns and opens a row on tap', async () => {
-    await useViewport(390, 844);
-    await renderList();
-    await expectPhoneListRow(firstRow());
-    await expect.element(page.getByText('Opened by')).not.toBeVisible();
+test('uses the full phone width without horizontal scrolling or variable row heights', async () => {
+  await useViewport(390, 844);
+  await renderList();
+  const rows = page.getByTestId(testIds.issueRow).elements();
+  expect(rows[0]?.getBoundingClientRect().width).toBeGreaterThan(300);
+  expect(rows[0]?.getBoundingClientRect().height).toBe(rows[1]?.getBoundingClientRect().height);
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
+    document.documentElement.clientWidth
+  );
+  await expect
+    .element(page.getByRole('link', { name: 'Coast day' }))
+    .toHaveAttribute('href', '/issues/issue-1');
+});
 
-    // The title is a real link, so a tap navigates without needing row activation.
-    await expect.element(firstRow().getByRole('link')).toHaveAttribute('href', '/issues/issue-1');
-  });
-
-  test('shows the author and assignee columns again on a wide screen', async () => {
-    await renderList();
-    await expectWideListRow(firstRow());
-    await expect.element(page.getByText('Opened by')).toBeVisible();
-  });
+test('honors custom issue activation', async () => {
+  const onRowActivate = vi.fn();
+  await render(
+    <IssueList
+      emptyFilterMessage={() => 'No issues'}
+      issues={issues}
+      onRowActivate={onRowActivate}
+    />
+  );
+  await page.getByRole('button', { name: 'Coast day' }).click();
+  expect(onRowActivate).toHaveBeenCalledWith(issues[0]);
 });

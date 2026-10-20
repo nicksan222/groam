@@ -97,7 +97,7 @@ describe('IdeaListView', () => {
     await expect.element(page.getByText('Acme Labs')).not.toBeInTheDocument();
     await expect.element(page.getByTestId('ideas-title')).toBeInTheDocument();
     await expect.element(page.getByText('Add a coast day')).toBeInTheDocument();
-    expect(page.getByText('Atlantic week').elements()).toHaveLength(2);
+    expect(page.getByText('Atlantic week').elements()).toHaveLength(1);
     await expect.element(page.getByText('In review')).toBeInTheDocument();
     await expect.element(page.getByText('Coast day')).not.toBeInTheDocument();
     await expect
@@ -153,8 +153,6 @@ describe('IdeaListView', () => {
       .elements()
       .map((heading) => heading.textContent);
     expect(titles[0]).toBe('Extend the stay');
-    expect(document.querySelector('[data-viewer-draft="true"]')?.className).toContain(
-      'bg-primary/5'
-    );
+    await expect.element(page.getByText('Your draft')).toBeVisible();
   });
 });

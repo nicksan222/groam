@@ -1,5 +1,5 @@
-import { type ColumnDef, DataTable } from '@groam/ui/components/data-table';
 import { PageLoading } from '@groam/ui/components/page-loading';
+import { RecordList } from '@groam/ui/components/record-list';
 import { useNavigate } from '@tanstack/react-router';
 import { type ReactNode, useCallback, useMemo } from 'react';
 import {
@@ -12,29 +12,10 @@ import {
   useIdeaListFilters
 } from '@/features/ideas/hooks/use-idea-list-filters';
 import type { WorkspaceIdea } from '@/features/ideas/hooks/use-workspace-ideas';
-import {
-  isViewerDraft,
-  viewerDraftHighlightClass
-} from '@/features/ideas/hooks/viewer-pending-idea';
 import { ideaOpenHref } from '@/features/ideas/idea-href';
 import { ListStatusFilterSelect } from '@/features/workspace/workspace-list/list-status-filter-select';
-import { testIds } from '@/lib/test-ids';
-import { ideaColumns } from './idea-list-columns';
-
-function ideaCardColumns<T extends IdeaListItem>(
-  renderItem: (item: T) => ReactNode
-): ColumnDef<T, unknown>[] {
-  return [
-    {
-      cell: ({ row }) => renderItem(row.original),
-      enableHiding: false,
-      enableSorting: false,
-      header: 'Idea',
-      id: 'idea',
-      meta: { cellClassName: 'overflow-hidden p-0!', className: 'px-4 whitespace-normal' }
-    }
-  ];
-}
+import { recordListSorts } from '@/features/workspace/workspace-list/record-list-sorts';
+import { IdeaListRow } from './idea-list-row';
 
 const IDEA_LIST_RESOURCE = { plural: 'ideas', singular: 'idea' } as const;
 
@@ -106,14 +87,7 @@ export function IdeaList<T extends IdeaListItem>({
     [navigate, onRowActivate, viewerUserId]
   );
 
-  const columns = useMemo(() => {
-    if (renderItem) return ideaCardColumns(renderItem);
-    return ideaColumns({
-      onOpen: openProposal as unknown as (proposal: WorkspaceIdea) => void,
-      showTripName,
-      viewerUserId
-    }) as ColumnDef<T, unknown>[];
-  }, [openProposal, renderItem, showTripName, viewerUserId]);
+  const sortOptions = useMemo(() => recordListSorts<T>(), []);
 
   if (isLoading || !proposals) {
     return <PageLoading label="Loading ideas…" />;
@@ -122,36 +96,29 @@ export function IdeaList<T extends IdeaListItem>({
   return (
     <>
       <Heading className="sr-only">Ideas</Heading>
-      <DataTable
-        columns={columns}
-        data={visibleProposals}
+      <RecordList
         empty={empty}
-        externalFilter
         filterPlaceholder={filterPlaceholder}
-        filterValue={query}
-        getRowId={(proposal) => proposal.id}
-        getRowProps={
-          renderItem
-            ? undefined
-            : (proposal) => ({
-                'data-idea-id': proposal.id,
-                'data-idea-name': proposal.ideaName,
-                'data-status': proposal.status,
-                'data-testid': testIds.ideaRow,
-                'data-viewer-draft': isViewerDraft(proposal, viewerUserId) ? true : undefined
-              })
-        }
+        getKey={(proposal) => proposal.id}
         hasExtraFilters={hasExtraFilters}
+        items={visibleProposals}
         onClear={clearStatusFilter}
-        onFilterValueChange={setQuery}
-        onRowActivate={renderItem ? undefined : openProposal}
-        resourceLabel={IDEA_LIST_RESOURCE}
-        rowClassName={
-          renderItem
-            ? undefined
-            : (proposal) =>
-                isViewerDraft(proposal, viewerUserId) ? viewerDraftHighlightClass : undefined
+        onQueryChange={setQuery}
+        query={query}
+        renderItem={
+          renderItem ??
+          ((proposal) => (
+            <IdeaListRow
+              onActivate={() => openProposal(proposal)}
+              onTitleActivate={onRowActivate ? () => onRowActivate(proposal) : undefined}
+              proposal={proposal}
+              showTripName={showTripName}
+              viewerUserId={viewerUserId}
+            />
+          ))
         }
+        resourceLabel={IDEA_LIST_RESOURCE}
+        sortOptions={sortOptions}
         toolbarExtra={
           toolbarExtra ?? (
             <ListStatusFilterSelect

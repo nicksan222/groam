@@ -1,6 +1,5 @@
-import { DataTable } from '@groam/ui/components/data-table';
 import { PageLoading } from '@groam/ui/components/page-loading';
-import { useNavigate } from '@tanstack/react-router';
+import { RecordList } from '@groam/ui/components/record-list';
 import { type ReactNode, useMemo } from 'react';
 import { issueStatusFilterLabels } from '@/features/issues/hooks/issue-list-filter';
 import {
@@ -9,10 +8,11 @@ import {
 } from '@/features/issues/hooks/use-issue-list-filters';
 import { useLoadWhileFilteredEmpty } from '@/features/workspace/hooks/use-load-while-filtered-empty';
 import { ListStatusFilterSelect } from '@/features/workspace/workspace-list/list-status-filter-select';
+import { recordListSorts } from '@/features/workspace/workspace-list/record-list-sorts';
 import { testIds } from '@/lib/test-ids';
 import type { IssueListItem, IssueStatusFilter } from '@/types/issues';
 import type { PaginatedListStatus } from '@/types/workspace';
-import { issueColumns } from './issue-list-columns';
+import { IssueListRow } from './issue-list-row';
 
 const ISSUE_LIST_RESOURCE = { plural: 'issues', singular: 'issue' } as const;
 
@@ -40,7 +40,6 @@ export function IssueList({
   showTripName?: boolean;
   toolbarExtra?: ReactNode;
 }) {
-  const navigate = useNavigate();
   const listIssues = issues ?? [];
 
   const {
@@ -58,38 +57,27 @@ export function IssueList({
     loadMore: pagination?.loadMore ?? noop,
     status: pagination?.status
   });
-  const columns = useMemo(() => issueColumns({ showTripName }), [showTripName]);
-
-  const activate =
-    onRowActivate ??
-    ((issue: IssueListItem) => {
-      void navigate({ params: { issueId: issue.id }, to: '/issues/$issueId' });
-    });
+  const sortOptions = useMemo(() => recordListSorts<IssueListItem>(), []);
 
   if (isLoading || !issues) {
     return <PageLoading label="Loading issues…" />;
   }
 
   return (
-    <DataTable
-      columns={columns}
-      data={visibleIssues}
+    <RecordList
       empty={searching ? 'Looking through more issues…' : empty}
-      externalFilter
       filterPlaceholder={filterPlaceholder}
-      filterValue={query}
-      getRowId={(issue) => issue.id}
-      getRowProps={(issue) => ({
-        'data-issue-id': issue.id,
-        'data-issue-title': issue.title,
-        'data-status': issue.status,
-        'data-testid': testIds.issueRow
-      })}
+      getKey={(issue) => issue.id}
       hasExtraFilters={hasExtraFilters}
+      items={visibleIssues}
       onClear={clearStatusFilter}
-      onFilterValueChange={setQuery}
-      onRowActivate={activate}
+      onQueryChange={setQuery}
+      query={query}
+      renderItem={(issue) => (
+        <IssueListRow issue={issue} onActivate={onRowActivate} showTripName={showTripName} />
+      )}
       resourceLabel={ISSUE_LIST_RESOURCE}
+      sortOptions={sortOptions}
       toolbarExtra={
         toolbarExtra ?? (
           <ListStatusFilterSelect

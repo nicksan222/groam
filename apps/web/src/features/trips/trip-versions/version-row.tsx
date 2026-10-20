@@ -1,5 +1,6 @@
 import type { Id } from '@groam/backend/data-model';
 import { Button } from '@groam/ui/components/button';
+import { RecordListBadge } from '@groam/ui/components/record-list-badge';
 import { cn } from '@groam/ui/lib/utils';
 import {
   isViewerDraft,
@@ -9,8 +10,7 @@ import {
 import { ideaOpen } from '@/features/ideas/idea-glossary';
 import { ideaOpenHref } from '@/features/ideas/idea-href';
 import { ideaRowPurpose } from '@/features/ideas/idea-list/idea-page-copy';
-import { ideaPrimaryAction } from '@/features/ideas/idea-status';
-import { IdeaStatusBadge } from '@/features/ideas/idea-status-badge';
+import { ideaPrimaryAction, ideaStatusLabel } from '@/features/ideas/idea-status';
 import type { useTripVersions } from '@/features/trips/hooks/use-trip-versions';
 import { formatDate } from '@/features/trips/hooks/version-format';
 import { Link } from '@/features/workspace/navigation/router';
@@ -63,7 +63,12 @@ export function VersionRow({
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <h4 className="truncate text-sm font-semibold">{proposal.title}</h4>
-          <IdeaStatusBadge conflictCount={proposal.conflictCount} status={proposal.status} />
+          <RecordListBadge>{ideaStatusLabel(proposal.status)}</RecordListBadge>
+          {proposal.status === 'conflicted' && proposal.conflictCount > 0 ? (
+            <RecordListBadge>
+              {proposal.conflictCount} conflict{proposal.conflictCount === 1 ? '' : 's'}
+            </RecordListBadge>
+          ) : null}
         </div>
         {purpose ? <p className="mt-1 text-xs text-muted-foreground">{purpose}</p> : null}
         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
@@ -78,7 +83,12 @@ export function VersionRow({
       </div>
       <div className="flex gap-2 self-end sm:self-auto">
         {draft ? (
-          <Button data-testid={testIds.ideaContinue} onClick={onOpenCopy} size="sm">
+          <Button
+            data-testid={testIds.ideaContinue}
+            onClick={onOpenCopy}
+            size="sm"
+            variant="outline"
+          >
             {pendingIdeaContinueLabel('draft')}
           </Button>
         ) : (

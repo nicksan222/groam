@@ -147,7 +147,7 @@ test('lists open ideas and highlights the active working draft route', async () 
   expect(labels[0]).toBe('Your draft: Extend Lisbon stay');
   const draftLink = page.getByRole('link', { name: 'Your draft: Extend Lisbon stay' });
   await expect.element(draftLink).toHaveAttribute('data-active', 'true');
-  await expect.element(draftLink).toHaveClass('bg-primary/5');
+  await expect.element(draftLink).toHaveClass('bg-muted/20');
   await expect.element(page.getByTestId(testIds.navIdeas)).toHaveAttribute('href', '/ideas');
   await expect.element(page.getByTestId(testIds.navIdeas)).toHaveAttribute('data-active', 'false');
 });

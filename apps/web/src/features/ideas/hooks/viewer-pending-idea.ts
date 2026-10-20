@@ -19,7 +19,7 @@ export function isViewerDraft(proposal: ViewerIdea, viewerUserId: string | null 
 }
 
 /** Shared highlight for the viewer’s in-progress draft row. */
-export const viewerDraftHighlightClass = 'bg-primary/5';
+export const viewerDraftHighlightClass = 'bg-muted/20';
 
 export function findViewerOpenIdeas<T extends ViewerIdea>(
   proposals: T[],
