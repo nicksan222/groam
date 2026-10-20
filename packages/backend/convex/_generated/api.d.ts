@@ -89,6 +89,7 @@ import type * as modules_discussions_threads_cleanup from "../modules/discussion
 import type * as modules_discussions_threads_entity from "../modules/discussions/threads/entity.js";
 import type * as modules_discussions_threads_index from "../modules/discussions/threads/index.js";
 import type * as modules_discussions_threads_limits from "../modules/discussions/threads/limits.js";
+import type * as modules_media_access from "../modules/media/access.js";
 import type * as modules_media_attachments_index from "../modules/media/attachments/index.js";
 import type * as modules_media_files_index from "../modules/media/files/index.js";
 import type * as modules_media_library_commit from "../modules/media/library/commit.js";
@@ -482,6 +483,7 @@ declare const fullApi: ApiFromModules<{
   "modules/discussions/threads/entity": typeof modules_discussions_threads_entity;
   "modules/discussions/threads/index": typeof modules_discussions_threads_index;
   "modules/discussions/threads/limits": typeof modules_discussions_threads_limits;
+  "modules/media/access": typeof modules_media_access;
   "modules/media/attachments/index": typeof modules_media_attachments_index;
   "modules/media/files/index": typeof modules_media_files_index;
   "modules/media/library/commit": typeof modules_media_library_commit;

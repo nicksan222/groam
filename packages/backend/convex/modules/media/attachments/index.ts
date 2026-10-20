@@ -2,6 +2,8 @@ import { ConvexError, type Infer } from 'convex/values';
 import type { Doc, Id } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import '#convex/modules/travel/targets/kinds/index';
+import type { Workspace } from '#convex/modules/auth/workspace';
+import { MediaAccess } from '#convex/modules/media/access';
 import { Files } from '#convex/modules/media/files/index';
 import { TripTargetKind } from '#convex/modules/travel/targets/kind';
 import type { TripTargetValidators } from '#convex/modules/travel/targets/schema';
@@ -156,22 +158,31 @@ export class Attachments {
       tripId,
       target,
       maximum,
-      organizationId
+      organizationId,
+      workspace
     }: {
       tripId: Id<'trips'>;
       target: AttachmentTarget;
       maximum: number;
       organizationId: string;
+      workspace: Workspace;
     }
   ): Promise<AttachmentView[]> {
     const references = await Attachments.forTarget(ctx, tripId, target, maximum);
+    const access = new MediaAccess(ctx, workspace);
     const rows = await Promise.all(
       references.map(async (reference) => {
         const [attachment, media] = await Promise.all([
           ctx.db.get('attachments', reference.attachmentId),
           ctx.db.get('media', reference.mediaId)
         ]);
-        if (!attachment || !media || media.organizationId !== organizationId) return null;
+        if (
+          !attachment ||
+          !media ||
+          media.organizationId !== organizationId ||
+          !(await access.canRead(media._id))
+        )
+          return null;
         return {
           contentType: media.contentType,
           id: attachment._id,
@@ -215,6 +226,7 @@ export class Attachments {
       target,
       mediaIds,
       organizationId,
+      workspace,
       maximum,
       label = 'Attachments'
     }: {
@@ -222,6 +234,7 @@ export class Attachments {
       target: AttachmentTarget;
       mediaIds: Id<'media'>[] | undefined;
       organizationId: string;
+      workspace: Workspace;
       maximum: number;
       label?: string;
     }
@@ -242,6 +255,9 @@ export class Attachments {
     if (media.some((item) => !item || item.organizationId !== organizationId)) {
       throw new ConvexError(`${singular} attachment not found`);
     }
+    const access = new MediaAccess(ctx, workspace);
+    if (!(await Promise.all(ids.map((id) => access.canRead(id)))).every(Boolean))
+      throw new ConvexError(`${singular} attachment not found`);
     if (
       existing.length === ids.length &&
       existing.every((reference, index) => reference.mediaId === ids[index])

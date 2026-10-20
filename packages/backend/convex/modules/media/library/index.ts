@@ -8,6 +8,7 @@ import {
   type Workspace
 } from '#convex/modules/auth/workspace';
 import { Discussions } from '#convex/modules/discussions/threads/index';
+import { MediaAccess } from '#convex/modules/media/access';
 import { Attachments } from '#convex/modules/media/attachments/index';
 import { Files } from '#convex/modules/media/files/index';
 import type {
@@ -34,7 +35,11 @@ export class Media {
   static async find(ctx: MutationCtx, mediaId: Id<'media'>): Promise<Media> {
     const workspace = await requireWorkspace(ctx);
     const media = await ctx.db.get('media', mediaId);
-    if (!media || media.organizationId !== workspace.organizationId) {
+    if (
+      !media ||
+      media.organizationId !== workspace.organizationId ||
+      !(await new MediaAccess(ctx, workspace).canRead(mediaId))
+    ) {
       throw new ConvexError('Media not found');
     }
     return new Media(ctx, media, workspace);
@@ -122,16 +127,22 @@ export class Media {
       .order('desc')
       .take(limit);
 
+    const access = new MediaAccess(ctx, workspace);
+    const visible = await Promise.all(
+      media.map(async (item) => ((await access.canRead(item._id)) ? item : null))
+    );
     return await Promise.all(
-      media.map(async (item) => ({
-        contentType: item.contentType,
-        createdAt: item._creationTime,
-        id: item._id,
-        name: item.name,
-        ...(item.purpose ? { purpose: item.purpose } : {}),
-        size: item.size,
-        url: await ctx.storage.getUrl(item.storageId)
-      }))
+      visible
+        .filter((item) => item !== null)
+        .map(async (item) => ({
+          contentType: item.contentType,
+          createdAt: item._creationTime,
+          id: item._id,
+          name: item.name,
+          ...(item.purpose ? { purpose: item.purpose } : {}),
+          size: item.size,
+          url: await ctx.storage.getUrl(item.storageId)
+        }))
     );
   }
 
@@ -214,7 +225,8 @@ export class Media {
       }
       const reusable =
         existing.organizationId === workspace.organizationId &&
-        existing.createdBy === workspace.tokenIdentifier;
+        existing.createdBy === workspace.tokenIdentifier &&
+        (await new MediaAccess(ctx, workspace).canRead(existing._id));
       return reusable
         ? { mediaId: existing._id, ok: true }
         : { error: 'The uploaded file is not available', ok: false };

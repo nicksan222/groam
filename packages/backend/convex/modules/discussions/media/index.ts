@@ -1,7 +1,9 @@
 import { ConvexError } from 'convex/values';
 import type { Id } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
+import type { Workspace } from '#convex/modules/auth/workspace';
 import type { DiscussionMessageMedia } from '#convex/modules/discussions/threads/schema';
+import { MediaAccess } from '#convex/modules/media/access';
 import { Files } from '#convex/modules/media/files/index';
 
 export type { DiscussionMessageMedia } from '#convex/modules/discussions/threads/schema';
@@ -54,13 +56,18 @@ export class DiscussionMedia {
 
   static async require(
     ctx: MutationCtx | QueryCtx,
-    organizationId: string,
+    workspace: Workspace,
     mediaIds: Id<'media'>[]
   ): Promise<DiscussionMessageMedia[]> {
+    const access = new MediaAccess(ctx, workspace);
     return await Promise.all(
       mediaIds.map(async (mediaId) => {
         const media = await ctx.db.get('media', mediaId);
-        if (!media || media.organizationId !== organizationId) {
+        if (
+          !media ||
+          media.organizationId !== workspace.organizationId ||
+          !(await access.canRead(mediaId))
+        ) {
           throw new ConvexError('Media not found');
         }
         if (!Files.supportedContentTypes.has(Files.normalizeContentType(media.contentType))) {
@@ -79,14 +86,20 @@ export class DiscussionMedia {
 
   static async load(
     ctx: MutationCtx | QueryCtx,
-    organizationId: string,
+    workspace: Workspace,
     mediaIds: Id<'media'>[]
   ): Promise<DiscussionMessageMedia[]> {
     if (mediaIds.length === 0) return [];
+    const access = new MediaAccess(ctx, workspace);
     const attachments = await Promise.all(
       mediaIds.map(async (mediaId) => {
         const item = await ctx.db.get('media', mediaId);
-        if (!item || item.organizationId !== organizationId) return null;
+        if (
+          !item ||
+          item.organizationId !== workspace.organizationId ||
+          !(await access.canRead(mediaId))
+        )
+          return null;
         return {
           contentType: item.contentType,
           id: item._id,

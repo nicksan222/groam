@@ -71,6 +71,7 @@ async function setAttachments(
     maximum: MAX_TARGET_ATTACHMENTS,
     mediaIds,
     organizationId: source.workspace.organizationId,
+    workspace: source.workspace,
     target,
     tripId: source.trip._id
   });

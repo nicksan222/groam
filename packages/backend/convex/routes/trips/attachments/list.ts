@@ -22,6 +22,7 @@ export const run = tripQuery({
     return await Attachments.viewForTarget(ctx, {
       maximum: Attachments.limitFor(target),
       organizationId: ctx.workspace.organizationId,
+      workspace: ctx.workspace,
       target,
       tripId: ctx.trip._id
     });

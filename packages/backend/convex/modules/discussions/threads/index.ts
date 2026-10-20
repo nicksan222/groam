@@ -180,7 +180,7 @@ export class Discussions {
 
   /** Agent message id → attachments, for the chat UI that lists files beside bubbles. */
   static async listMessageAttachments(ctx: QueryCtx, discussionId: Id<'discussions'>) {
-    const { discussion } = await DiscussionAccess.require(ctx, discussionId);
+    const { workspace } = await DiscussionAccess.require(ctx, discussionId);
     const receipts = await ctx.db
       .query('discussionMessages')
       .withIndex('by_discussionId', (query) => query.eq('discussionId', discussionId))
@@ -191,7 +191,7 @@ export class Discussions {
         if (!receipt.agentMessageId) return null;
         const attachments = await DiscussionMedia.load(
           ctx,
-          discussion.organizationId,
+          workspace,
           await DiscussionMedia.idsForReceipt(ctx, receipt)
         );
         if (attachments.length === 0) return null;
@@ -241,7 +241,7 @@ export class Discussions {
       receipt
         ? await DiscussionMedia.load(
             ctx,
-            discussion.organizationId,
+            workspace,
             await DiscussionMedia.idsForReceipt(ctx, receipt)
           )
         : [];
@@ -515,7 +515,7 @@ export class Discussions {
     const normalizedMediaIds = DiscussionMedia.normalizeIds(mediaIds);
     const media =
       normalizedMediaIds.length > 0
-        ? await DiscussionMedia.require(ctx, workspace.organizationId, normalizedMediaIds)
+        ? await DiscussionMedia.require(ctx, workspace, normalizedMediaIds)
         : [];
     const normalizedContent = Messages.normalizeContent(text, 'Message', {
       allowEmpty: media.length > 0
