@@ -36,6 +36,7 @@ test.each(['/', '/it/'])(
     ) as {
       offers?: { description?: string }[];
     };
+    for (const offer of data.offers ?? []) expect(offer).not.toHaveProperty('availability');
     const description = data.offers?.map((offer) => offer.description ?? '').join(' ') ?? '';
     expect(description).toContain('Stripe Checkout');
     expect(description).toMatch(/payments are enabled|pagamenti sono abilitati/u);
