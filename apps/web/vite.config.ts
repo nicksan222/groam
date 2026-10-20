@@ -26,11 +26,12 @@ const testConfig = mergeConfig(
         },
         {
           // Full-app journeys against one live backend wait longer than mounted views, and run
-          // a few files at a time so that backend keeps up. A shared 4-core CI runner takes two
-          // at a time, each about twice as slow.
+          // a few files at a time so that backend keeps up. CI runs one journey at a time:
+          // Chromium, Vite compilation and the local backend share the runner, and concurrent
+          // full-app subscriptions can exhaust the backend's strict one-second query budget.
           expect: { poll: { timeout: 30_000 } },
           include: ['e2e/**/*.test.tsx'],
-          maxWorkers: testEnv.isCI ? 2 : 4,
+          maxWorkers: testEnv.isCI ? 1 : 4,
           name: 'journeys',
           setupFiles: ['./src/journeys-setup.ts'],
           testTimeout: testEnv.isCI ? 120_000 : 60_000
