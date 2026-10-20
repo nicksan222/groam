@@ -199,13 +199,21 @@ export class TripTargets {
 
   static async contextCatalog(
     ctx: MutationCtx | QueryCtx,
-    trips: Doc<'trips'>[],
-    workspace: Workspace
+    trips: AsyncIterable<Doc<'trips'>>,
+    workspace: Workspace,
+    maxTrips: number
   ): Promise<ContextCatalogItem[]> {
+    // Apply the catalog limit to accessible trips, not the indexed candidate window.
+    // Iterating one organization range stops as soon as enough visible trips are found.
+    const visibleTrips: Doc<'trips'>[] = [];
+    for await (const trip of trips) {
+      if (!(await findVisibleTrip(ctx, trip._id, workspace))) continue;
+      visibleTrips.push(trip);
+      if (visibleTrips.length >= maxTrips) break;
+    }
     const kinds = TripTargetKind.contextTagged();
     const groups = await Promise.all(
-      trips.map(async (trip) => {
-        if (!(await findVisibleTrip(ctx, trip._id, workspace))) return [];
+      visibleTrips.map(async (trip) => {
         const rowsByKind = await Promise.all(
           kinds.map(async (kind) => ({ kind, rows: await catalogRows(ctx, kind, trip._id) }))
         );

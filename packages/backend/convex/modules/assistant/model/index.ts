@@ -104,14 +104,13 @@ export const contextCatalog = internalWorkspaceQuery({
   args: {},
   returns: v.array(assistantContextCatalogItemValidator),
   handler: async (ctx) => {
-    const trips = await ctx.db
+    const trips = ctx.db
       .query('trips')
       .withIndex('by_organizationId_and_updatedAt', (query) =>
         query.eq('organizationId', ctx.workspace.organizationId)
       )
-      .order('desc')
-      .take(MAX_CATALOG_TRIPS);
-    return await TripTargets.contextCatalog(ctx, trips, ctx.workspace);
+      .order('desc');
+    return await TripTargets.contextCatalog(ctx, trips, ctx.workspace, MAX_CATALOG_TRIPS);
   }
 });
 
