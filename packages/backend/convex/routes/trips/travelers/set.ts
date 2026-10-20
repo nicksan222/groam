@@ -1,9 +1,9 @@
 import { v } from 'convex/values';
 import { TripTravelers } from '#convex/modules/travel/travelers/index';
 import { TripTravelerValidators } from '#convex/modules/travel/travelers/schema';
-import { sharedTripMutation } from '#convex/modules/travel/trips/ctx';
+import { previewSharedTripMutation } from '#convex/modules/travel/trips/ctx';
 
-export const run = sharedTripMutation({
+export const run = previewSharedTripMutation({
   args: {
     status: TripTravelerValidators.status,
     userId: v.optional(v.string())

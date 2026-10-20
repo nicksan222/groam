@@ -72,6 +72,7 @@ export const tripTables = {
     budget: v.optional(budget),
     clientRequestId: v.string(),
     creationFingerprint: v.string(),
+    paymentsRequired: v.optional(v.boolean()),
     cover: v.optional(TripCoverValidators.cover),
     creator: v.object({ userId: v.string() }),
     currency,

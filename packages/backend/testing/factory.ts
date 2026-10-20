@@ -3,6 +3,7 @@
 import { register as registerAgent } from '@convex-dev/agent/test';
 import { register as registerGeospatial } from '@convex-dev/geospatial/test';
 import { register as registerRateLimiter } from '@convex-dev/rate-limiter/test';
+import { register as registerStripe } from '@convex-dev/stripe/test';
 import { register as registerWorkflow } from '@convex-dev/workflow/test';
 import { convexTest } from 'convex-test';
 import { decodeJwt } from 'jose';
@@ -66,6 +67,7 @@ export function createTest() {
   registerGeospatial(test);
   registerRateLimiter(test);
   registerWorkflow(test);
+  registerStripe(test);
   return test;
 }
 

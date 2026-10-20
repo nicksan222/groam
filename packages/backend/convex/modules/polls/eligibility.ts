@@ -2,6 +2,7 @@ import type { Doc } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import { type OrganizationRoster, systemRoster } from '#convex/modules/auth/workspace';
 import { kindPolicy } from '#convex/modules/discussions/kinds/index';
+import { canParticipateInTrip } from '#convex/modules/payments/participation';
 import { type PollTally, type PollVoter, tallyPoll } from '#convex/modules/polls/tally';
 import { statusesForTrip } from '#convex/modules/travel/travelers/statuses';
 
@@ -32,8 +33,14 @@ export function voterLoader(ctx: Ctx) {
         poll.organizationId,
         await roster(poll.organizationId)
       );
-      return statuses
-        .filter((traveler) => traveler.status !== 'not_going')
+      const trip = await ctx.db.get('trips', poll.tripId);
+      if (!trip) return [];
+      const candidates = statuses.filter((traveler) => traveler.status !== 'not_going');
+      const permitted = await Promise.all(
+        candidates.map(({ userId }) => canParticipateInTrip(ctx, trip, userId))
+      );
+      return candidates
+        .filter((_, index) => permitted[index])
         .map(({ name, userId }) => ({ name, userId }));
     }
     return (await roster(poll.organizationId)).members.map(({ name, userId }) => ({

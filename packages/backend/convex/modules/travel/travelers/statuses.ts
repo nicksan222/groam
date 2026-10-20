@@ -2,6 +2,7 @@ import type { Infer } from 'convex/values';
 import type { Id } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import { type OrganizationRoster, systemRoster } from '#convex/modules/auth/workspace';
+import { paymentFor, requiresTripPayment } from '#convex/modules/payments/index';
 import type { TripTravelerValidators } from '#convex/modules/travel/travelers/schema';
 
 export type TravelerStatus = Infer<typeof TripTravelerValidators.status>;
@@ -47,9 +48,18 @@ export async function statusesForTrip(
     roster.members.map((member) => member.userId)
   );
   const byUserId = new Map(rows.flatMap((row) => (row.userId ? [[row.userId, row] as const] : [])));
-  return roster.members.map((member) => ({
-    name: member.name,
-    status: rsvpStatus(byUserId.get(member.userId)?.status),
-    userId: member.userId
-  }));
+  const trip = await ctx.db.get('trips', tripId);
+  return Promise.all(
+    roster.members.map(async (member) => ({
+      name: member.name,
+      status:
+        trip &&
+        requiresTripPayment(trip, member.userId) &&
+        !(await paymentFor(ctx, tripId, member.userId))?.paid &&
+        !['maybe', 'not_going'].includes(byUserId.get(member.userId)?.status ?? '')
+          ? ('invited' as const)
+          : rsvpStatus(byUserId.get(member.userId)?.status),
+      userId: member.userId
+    }))
+  );
 }
