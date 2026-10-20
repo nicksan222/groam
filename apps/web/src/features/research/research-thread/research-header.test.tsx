@@ -1,8 +1,12 @@
 import { render } from '@groam/vitest-config/react';
-import { expect, test } from 'vite-plus/test';
+import { expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import type { ResearchDetail } from '@/types/research';
 import { ResearchHeader } from './research-header';
+
+vi.mock('@/features/workspace/navigation/router', () => ({
+  Link: ({ children }: { children: React.ReactNode }) => <a href="/trips/t1/research">{children}</a>
+}));
 
 const detail = (partial: Partial<ResearchDetail> = {}): ResearchDetail => ({
   brief: 'Compare hotels',
@@ -15,19 +19,30 @@ const detail = (partial: Partial<ResearchDetail> = {}): ResearchDetail => ({
   ...partial
 });
 
-test('renders title and brief without actions', async () => {
+test('introduces the research topic with standard detail navigation', async () => {
   await render(<ResearchHeader research={detail()} />);
-  await expect.element(page.getByText('Hotels in Rome')).toBeVisible();
-  await expect.element(page.getByText('Compare hotels')).toBeVisible();
-  await expect.element(page.getByRole('button')).not.toBeInTheDocument();
+  await expect
+    .element(page.getByRole('heading', { name: 'Hotels in Rome', level: 1 }))
+    .toBeVisible();
+  await expect.element(page.getByRole('link', { name: 'Trip research' })).toBeVisible();
+  await expect.element(page.getByText('Compare hotels')).not.toBeInTheDocument();
 });
 
-test('renders the brief as Markdown', async () => {
-  await render(<ResearchHeader research={detail({ brief: 'Compare **hotels**' })} />);
-  expect(page.getByText('hotels').element().getAttribute('data-streamdown')).toBe('strong');
+test('keeps a long research title readable', async () => {
+  await render(
+    <ResearchHeader research={detail({ title: 'A very long subject '.repeat(8), brief: null })} />
+  );
+  await expect.element(page.getByRole('heading', { level: 1 })).toBeVisible();
 });
 
-test('omits the brief line when there is none', async () => {
-  await render(<ResearchHeader research={detail({ brief: null })} />);
-  await expect.element(page.getByRole('paragraph')).not.toBeInTheDocument();
+test('keeps research views available without conversation navigation', async () => {
+  const onViewChange = vi.fn();
+  await render(
+    <ResearchHeader activeView="notes" onViewChange={onViewChange} research={detail()} />
+  );
+  await expect.element(page.getByRole('navigation', { name: 'Research views' })).toBeVisible();
+  await expect.element(page.getByRole('button', { name: 'Notes', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Overview', exact: true }).click();
+  expect(onViewChange).toHaveBeenCalledWith('overview');
+  await expect.element(page.getByRole('button', { name: 'Conversation' })).not.toBeInTheDocument();
 });

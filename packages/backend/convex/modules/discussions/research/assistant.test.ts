@@ -1,7 +1,5 @@
-import { mockModel } from '@convex-dev/agent';
 import { assistantToolSpecs } from '@groam/ai/tools/specs';
-import { type FunctionReference, makeFunctionReference } from 'convex/server';
-import { v } from 'convex/values';
+import type { FunctionReference } from 'convex/server';
 import { expect, test, vi } from 'vite-plus/test';
 import {
   createCreateResearchTool,
@@ -11,9 +9,6 @@ import {
   createReadResearchTool
 } from '#backend/assistant/tools/research/research';
 import { api, internal } from '#convex-generated/api';
-import type { Id } from '#convex-generated/dataModel';
-import { action } from '#convex-generated/server';
-import { AssistantSession } from '#convex/modules/assistant/agent/index';
 import { AssistantInstructions } from '#convex/modules/assistant/agent/instructions';
 import { createOutsiderClient } from '#testing/factory';
 import { setupTrip } from '#testing/trips';
@@ -23,51 +18,6 @@ vi.useRealTimers();
 const paginationOpts = { cursor: null, numItems: 25 };
 let counter = 0;
 const requestId = () => `research-tools-${(counter += 1)}-${crypto.randomUUID()}`;
-
-// oxlint-disable-next-line jest/no-export -- convex-test discovers test-only actions through module exports.
-export const captureInstructions = action({
-  args: { discussionId: v.id('discussions'), promptMessageId: v.string() },
-  returns: v.string(),
-  handler: async (ctx, { discussionId, promptMessageId }) => {
-    const screen = {
-      capabilities: [],
-      data: '{}',
-      description: 'Research thread',
-      key: `discussion:${discussionId}`,
-      target: { kind: 'workspace' as const },
-      title: 'Research'
-    };
-    const claim = await ctx.runMutation(
-      internal.modules.discussions.assistant.index.claimResponse,
-      { discussionId, promptMessageId, screen }
-    );
-    if (!claim) return '';
-    const model = mockModel({ content: [{ text: 'Noted.', type: 'text' }] });
-    let captured = '';
-    const originalStream = model.doStream.bind(model);
-    model.doStream = async (options) => {
-      captured = JSON.stringify(options.prompt);
-      return await originalStream(options);
-    };
-    await AssistantSession.continueDiscussionWithModel(
-      ctx,
-      {
-        agent: claim.agent,
-        prompt: claim.prompt,
-        screen,
-        threadId: claim.threadId
-      },
-      { languageModel: model, promptMessageId, runId: claim.runId }
-    );
-    return captured;
-  }
-});
-
-const captureInstructionsReference = makeFunctionReference<
-  'action',
-  { discussionId: Id<'discussions'>; promptMessageId: string },
-  string
->('modules/discussions/research/assistant.test:captureInstructions');
 
 type Client = Awaited<ReturnType<typeof setupTrip>>['owner']['client'];
 type RunnableTool = {
@@ -102,8 +52,18 @@ async function setupResearch() {
 }
 
 test('specs name the research tools for the right agents', () => {
-  expect(assistantToolSpecs['research.list'].agents).toEqual(['groam', 'researcher']);
-  expect(assistantToolSpecs['research.read'].agents).toEqual(['groam', 'researcher']);
+  expect(assistantToolSpecs['research.list'].agents).toEqual([
+    'groam',
+    'issue',
+    'reviewer',
+    'researcher'
+  ]);
+  expect(assistantToolSpecs['research.read'].agents).toEqual([
+    'groam',
+    'issue',
+    'reviewer',
+    'researcher'
+  ]);
   expect(assistantToolSpecs['research.create'].agents).toEqual(['groam']);
   expect(assistantToolSpecs['research.post'].agents).toEqual(['groam']);
   expect(assistantToolSpecs['research.link'].agents).toEqual(['groam', 'researcher']);
@@ -267,21 +227,19 @@ test(
       links: [],
       title: 'Museums in Lisbon'
     });
-    expect(
-      AssistantInstructions.for('researcher', 'discussion', [], context ?? undefined)
-    ).toContain('Museums in Lisbon');
+    expect(AssistantInstructions.for('groam', 'discussion', [], context ?? undefined)).toContain(
+      'Museums in Lisbon'
+    );
 
     const sent = await client.mutation(api.routes.discussions.messages.send.run, {
       clientRequestId: requestId(),
       discussionId,
       text: '@researcher find museums'
     });
-    const prompt = await client.action(captureInstructionsReference, {
-      discussionId,
-      promptMessageId: sent.messageId
-    });
-    expect(prompt).toContain('Museums in Lisbon');
-    expect(prompt).toContain('Kid friendly options');
+    expect(sent.assistantAgent).toBeNull();
+    expect(
+      await client.query(api.routes.discussions.research.latest.run, { discussionId })
+    ).toBeNull();
   }
 );
 
@@ -291,8 +249,9 @@ test(
   async () => {
     const { discussionId, owner, tripId } = await setupResearch();
     const { client } = owner;
-    await runTool(createPostToResearchTool('researcher'), client, {
-      researchId: discussionId,
+    await client.mutation(internal.modules.discussions.research.tools.post, {
+      discussionId,
+      agentId: 'researcher',
       text: 'Found three museums.'
     });
     const [research] = await client.query(api.routes.discussions.research.list.run, {

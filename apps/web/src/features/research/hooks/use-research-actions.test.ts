@@ -37,22 +37,6 @@ test('create passes the subject as title with a request id', async () => {
   );
 });
 
-test('summarize sends the prompt to the researcher agent', async () => {
-  const send = vi.fn().mockResolvedValue({ assistantAgent: null, messageId: 'm1' });
-  convex.useMutation.mockReturnValue(send);
-  const { result } = await renderHook(() => useResearchActions(discussionId));
-  await act(async () => {
-    await result.current.summarize();
-  });
-  expect(send).toHaveBeenCalledWith(
-    expect.objectContaining({
-      assistantAgent: 'researcher',
-      discussionId,
-      text: 'Summarize this research'
-    })
-  );
-});
-
 test('unlink and updateBrief map to the backend routes', async () => {
   const mutate = vi.fn().mockResolvedValue(null);
   convex.useMutation.mockReturnValue(mutate);
@@ -116,49 +100,4 @@ test('useLinkResearch maps an idea target', async () => {
     await result.current(discussionId, { id: 'p1', kind: 'idea' });
   });
   expect(mutate).toHaveBeenCalledWith({ discussionId, target: { kind: 'idea', proposalId: 'p1' } });
-});
-
-test('summarize asks the researcher to respond when an agent and screen exist', async () => {
-  ui.context = { screen: true };
-  const respond = vi.fn().mockResolvedValue(undefined);
-  convex.useAction.mockReturnValue(respond);
-  convex.useMutation.mockReturnValue(
-    vi.fn().mockResolvedValue({ assistantAgent: 'researcher', messageId: 'm1' })
-  );
-  const { result } = await renderHook(() => useResearchActions(discussionId));
-  let ok: boolean | undefined;
-  await act(async () => {
-    ok = await result.current.summarize();
-  });
-  expect(ok).toBe(true);
-  expect(respond).toHaveBeenCalledWith({
-    discussionId,
-    promptMessageId: 'm1',
-    screen: { serialized: true }
-  });
-  expect(result.current.isSummarizing).toBe(false);
-});
-
-test('summarize toasts when the respond action fails', async () => {
-  ui.context = { screen: true };
-  convex.useAction.mockReturnValue(vi.fn().mockRejectedValue(new Error('boom')));
-  convex.useMutation.mockReturnValue(
-    vi.fn().mockResolvedValue({ assistantAgent: 'researcher', messageId: 'm1' })
-  );
-  const { result } = await renderHook(() => useResearchActions(discussionId));
-  await act(async () => {
-    await result.current.summarize();
-  });
-  await vi.waitFor(() => expect(ui.error).toHaveBeenCalled());
-});
-
-test('summarize resolves false and toasts when sending fails', async () => {
-  convex.useMutation.mockReturnValue(vi.fn().mockRejectedValue(new Error('down')));
-  const { result } = await renderHook(() => useResearchActions(discussionId));
-  let ok: boolean | undefined;
-  await act(async () => {
-    ok = await result.current.summarize();
-  });
-  expect(ok).toBe(false);
-  expect(ui.error).toHaveBeenCalled();
 });

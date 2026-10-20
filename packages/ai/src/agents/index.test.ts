@@ -118,12 +118,12 @@ test('assignable id lists match standalone agent definitions', () => {
   expect(proposalIds).toEqual([...proposalAssignableAgentIds]);
 });
 
-test('registers the researcher chat agent with read-only capabilities', () => {
+test('registers the researcher as a standalone worker without chat mentions', () => {
   const researcher = assistantAgents.researcher;
-  expect(researcher.surface).toBe('chat');
-  expect(researcher.mention).toBe('@researcher');
-  expect(chatAgentIds).toContain('researcher');
-  expect(mentionedAssistantAgent('hey @researcher find museums')?.id).toBe('researcher');
+  expect(researcher.surface).toBe('standalone');
+  expect(researcher).not.toHaveProperty('mention');
+  expect(chatAgentIds).not.toContain('researcher');
+  expect(mentionedAssistantAgent('hey @researcher find museums')).toBeNull();
   expect(researcher.capabilities).toContain('web.search');
   expect(
     researcher.capabilities.filter(

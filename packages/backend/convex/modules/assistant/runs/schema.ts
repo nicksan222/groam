@@ -9,6 +9,21 @@ import {
   assistantScreenValidator
 } from '#convex/modules/assistant/validators/index';
 
+export const researchEffortValidator = v.union(
+  v.literal('quick'),
+  v.literal('standard'),
+  v.literal('deep')
+);
+export const researchTaskValidator = v.object({
+  topic: v.string(),
+  parentRunId: v.optional(v.id('agentRuns')),
+  effort: researchEffortValidator
+});
+export const researchResultValidator = v.object({
+  sources: v.array(v.object({ url: v.string(), title: v.string() })),
+  incomplete: v.boolean()
+});
+
 const actor = v.object({ name: v.string(), userId: v.string() });
 
 const related = v.object({
@@ -32,6 +47,7 @@ const run = v.object({
   proposalId: v.union(v.id('tripProposals'), v.null()),
   related,
   report: v.union(v.string(), v.null()),
+  researchTask: v.optional(researchTaskValidator),
   startedAt: v.union(v.number(), v.null()),
   status: agentRunStatusValidator,
   surface: agentSurfaceValidator,
@@ -131,6 +147,8 @@ export const assistantRunTables = {
     promptMessageId: v.optional(v.string()),
     proposalId: v.optional(v.id('tripProposals')),
     report: v.optional(v.string()),
+    researchTask: v.optional(researchTaskValidator),
+    researchResult: v.optional(researchResultValidator),
     /** Screen context the turn runs against (chat only). */
     screen: v.optional(assistantScreenValidator),
     startedAt: v.optional(v.number()),
@@ -145,6 +163,7 @@ export const assistantRunTables = {
     /** `@convex-dev/workflow` id; set when the engine starts the run. */
     workflowId: v.optional(v.string())
   })
+    .index('by_researchTask_parentRunId', ['researchTask.parentRunId'])
     .index('by_shortId', ['shortId'])
     .index('by_organizationId_and_updatedAt', ['organizationId', 'updatedAt'])
     .index('by_organizationId_and_agentId_and_updatedAt', [

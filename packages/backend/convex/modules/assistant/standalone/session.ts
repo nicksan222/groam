@@ -15,6 +15,7 @@ import type { Id } from '#convex-generated/dataModel';
 import type { ActionCtx } from '#convex-generated/server';
 import { AssistantProvider } from '#convex/modules/ai/provider';
 import { AssistantInstructions } from '#convex/modules/assistant/agent/instructions';
+import { ResearchSession } from '#convex/modules/assistant/research/session';
 import type { AgentRunView } from '#convex/modules/assistant/runs/schema';
 import { AgentRunTracking } from '#convex/modules/assistant/runs/tracking';
 import { AssistantScreens } from '#convex/modules/assistant/screen/index';
@@ -228,6 +229,8 @@ async function turn(
   run: AgentRunView,
   resumeNote?: string
 ): Promise<StandaloneTurn> {
+  if (run.researchTask)
+    return { report: (await ResearchSession.execute(ctx, run)).report, review: null };
   if (run.issueId) return { report: await executeIssue(ctx, run, resumeNote), review: null };
   if (run.proposalId) {
     const review = await executeReview(ctx, run, resumeNote);

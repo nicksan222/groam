@@ -29,6 +29,32 @@ Some caller-bound operations run inline and finish in the calling action. They
 cannot claim work already owned by a workflow. Stale-run cleanup covers unowned
 or legacy work, while workflow-owned runs finish through their execution owner.
 
+## Topic research
+
+The researcher is a standalone worker, with no chat mention or conversation UI.
+A research page starts a topic investigation through the existing durable run
+engine. Planning, issue, and review agents call `researchTopic` and receive the
+same research executor's report and source citations before continuing their
+own task. Delegated research executes inline, following caller-bound reviews;
+it does not introduce another workflow engine.
+
+Quick, Standard, and Deep select increasing model-step and search-call budgets
+and hosted search context sizes. The first step requires web search, and the
+last available step disables tools to reserve synthesis. These are execution
+budgets, not a guarantee of exhaustive coverage or a fixed number of websites:
+the provider may perform multiple internal search operations per hosted call.
+The executor exposes a local search tool that makes a hosted web-search request
+and returns evidence for the next agent step. This enforces a request budget
+while allowing the researcher to choose follow-up queries. It has no planning
+writes or recursive research delegation. Reports include provider-returned source URLs
+and explicitly mark missing evidence or exhausted coverage.
+
+The initiating person's ChatGPT connection and current trip access apply to
+both page-started and delegated research. Existing saved notes and historical
+researcher messages remain readable; new research notes do not invoke a chat
+agent. The page subscribes to persisted runs and their event logs so progress
+and reports survive reloads.
+
 ## Durable waits
 
 A wait persists its condition, scope, deadline and workflow event identity.

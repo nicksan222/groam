@@ -1,3 +1,4 @@
+import { assistantAgents, isChatAgent } from '@groam/ai/agents';
 import { ConvexError, v } from 'convex/values';
 import { internalMutation, internalQuery } from '#convex-generated/server';
 import {
@@ -65,7 +66,10 @@ export const prompt = internalQuery({
       )
       .unique();
     if (!request?.assistantAgent) throw new ConvexError('AI request not found');
-    return { agent: request.assistantAgent, prompt: request.content.text };
+    const agent = assistantAgents[request.assistantAgent];
+    if (!isChatAgent(agent))
+      throw new ConvexError('This agent runs research tasks instead of chat');
+    return { agent: agent.id, prompt: request.content.text };
   }
 });
 

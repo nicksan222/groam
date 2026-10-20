@@ -142,7 +142,7 @@ async function finishDiscussionTurn(
   { error, status }: ReturnType<typeof terminalOf>
 ): Promise<void> {
   const { discussionId, promptMessageId } = run;
-  if (!discussionId) return;
+  if (!discussionId || run.researchTask) return;
   if (promptMessageId) {
     if (await superseded(ctx, run)) return;
     await Discussions.finishAssistantResponse(ctx, {

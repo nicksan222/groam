@@ -22,6 +22,7 @@ import type {
 } from '#convex/modules/assistant/runs/schema';
 import type { AssistantScreen } from '#convex/modules/assistant/validators/index';
 import { requireWorkspace, type Workspace } from '#convex/modules/auth/workspace';
+import { DiscussionAccess } from '#convex/modules/discussions/threads/entity';
 import { insertWithShortId } from '#convex/modules/references/index';
 import { assertTripWritable, issueWithTrip } from '#convex/modules/travel/issues/guard';
 import { isResolved } from '#convex/modules/travel/issues/status';
@@ -71,6 +72,7 @@ function presentRun(
     proposalId: run.proposalId ?? null,
     related,
     report: run.report ?? null,
+    ...(run.researchTask ? { researchTask: run.researchTask } : {}),
     startedAt: run.startedAt ?? null,
     status: run.status,
     surface: run.surface,
@@ -136,6 +138,18 @@ async function canViewRun(
 ): Promise<boolean> {
   if (run.organizationId !== workspace.organizationId) return false;
   const discussionId = run.discussionId;
+  if (run.researchTask) {
+    if (!run.tripId || !(await findVisibleTrip(ctx, run.tripId, workspace))) return false;
+    if (!discussionId && run.createdBy.userId !== workspace.userId) return false;
+    if (discussionId) {
+      try {
+        await DiscussionAccess.forWorkspace(ctx, discussionId, workspace);
+      } catch {
+        return false;
+      }
+    }
+    return true;
+  }
   if (!discussionId) return true;
   const membership = await ctx.db
     .query('discussionMembers')

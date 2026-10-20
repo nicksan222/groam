@@ -1,11 +1,8 @@
-import { useCurrentAgentContext } from '@groam/ai/ui/context/agent-context';
-import { serializeAgentScreenContext } from '@groam/ai/ui/context/agent-screen-context';
 import { api } from '@groam/backend/api';
 import type { Id } from '@groam/backend/data-model';
-import { toast } from '@groam/ui/components/toast';
-import { useAction, useMutation } from 'convex/react';
-import { useCallback, useState } from 'react';
-import { attempt, attemptValue, errorMessage } from '@/lib/errors';
+import { useMutation } from 'convex/react';
+import { useCallback } from 'react';
+import { attempt, attemptValue } from '@/lib/errors';
 import type { ResearchLinkTarget } from '@/types/research';
 import { toBackendTarget } from './research-link-target';
 
@@ -40,50 +37,16 @@ export function useLinkResearch() {
   );
 }
 
-/** Edits and messages for one research: brief, delete, links, and the researcher summary. */
+/** Edits for one research: brief, delete, and linked trip items. */
 export function useResearchActions(discussionId: Id<'discussions'>) {
   const updateMutation = useMutation(api.routes.discussions.research.update.run);
   const removeMutation = useMutation(api.routes.discussions.research.remove.run);
   const unlinkMutation = useMutation(api.routes.discussions.research.links.unlink.run);
-  const sendMutation = useMutation(api.routes.discussions.messages.send.run);
-  // Loosely typed like the discussion send path: the serialized screen's trip id is a plain string.
-  const respondAction: ReturnType<typeof useAction> = useAction(
-    api.routes.discussions.messages.respond.run
-  );
   const link = useLinkResearch();
-  const context = useCurrentAgentContext();
-  const [isSummarizing, setSummarizing] = useState(false);
-
-  const summarize = useCallback(async () => {
-    setSummarizing(true);
-    try {
-      const result = await sendMutation({
-        assistantAgent: 'researcher',
-        clientRequestId: crypto.randomUUID(),
-        discussionId,
-        text: 'Summarize this research'
-      });
-      if (result.assistantAgent && context) {
-        void respondAction({
-          discussionId,
-          promptMessageId: result.messageId,
-          screen: serializeAgentScreenContext(context)
-        }).catch((error: unknown) => toast.error(errorMessage(error, 'Unable to get the summary')));
-      }
-      return true;
-    } catch (error: unknown) {
-      toast.error(errorMessage(error, 'Unable to ask for a summary'));
-      return false;
-    } finally {
-      setSummarizing(false);
-    }
-  }, [context, discussionId, respondAction, sendMutation]);
 
   return {
-    isSummarizing,
     link: (target: ResearchLinkTarget) => link(discussionId, target),
     remove: () => attempt(() => removeMutation({ discussionId }), 'Unable to delete this research'),
-    summarize,
     unlink: (target: ResearchLinkTarget) =>
       attempt(
         () => unlinkMutation({ discussionId, target: toBackendTarget(target) }),

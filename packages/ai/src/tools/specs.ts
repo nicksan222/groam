@@ -120,9 +120,18 @@ export const assistantToolSpecs = {
     toolName: 'createPoll',
     ui: { card: 'activity' }
   },
+  'research.run': {
+    ui: { card: 'activity' },
+    agents: ['groam', 'issue', 'reviewer'],
+    eventLabel: { complete: 'Research report received', running: 'Asking researcher' },
+    guidance:
+      'When planning or reviewing depends on current external facts, uncertain logistics, or comparing options, call researchTopic with a concrete question and the appropriate effort. Use its cited findings and caveats to continue your task. Do not ask the traveler to do the research. Quick checks a narrow question; standard compares options; deep investigates complex decisions. Avoid repeating a question already answered by available research.',
+    id: 'research.run',
+    toolName: 'researchTopic'
+  },
   'research.list': {
     ui: { card: 'activity' },
-    agents: ['groam', 'researcher'],
+    agents: ['groam', 'issue', 'reviewer', 'researcher'],
     guidance:
       'Call listResearches to find a trip’s researches (id, title, brief, last activity) before reading, posting to, or linking one.',
     id: 'research.list',
@@ -130,7 +139,7 @@ export const assistantToolSpecs = {
   },
   'research.read': {
     ui: { card: 'activity' },
-    agents: ['groam', 'researcher'],
+    agents: ['groam', 'issue', 'reviewer', 'researcher'],
     guidance:
       'Call readResearch for a research’s brief, linked trip items, and recent messages. Use it before summarizing or adding to one.',
     id: 'research.read',

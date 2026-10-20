@@ -10,6 +10,7 @@ import {
 import {
   type AssistantAgentId,
   assistantAgents,
+  isChatAgent,
   type ChatAgentId,
   isAssistantAgentId,
   mentionedAssistantAgent
@@ -108,6 +109,7 @@ function selectAssistantAgent(
   text: string,
   requested: ChatAgentId | undefined
 ): ChatAgentId | null {
+  if (kind === 'research') return null;
   if (kindPolicy(kind).agentTrigger === 'always') return requested ?? DEFAULT_DISCUSSION_AGENT;
   return requested ?? mentionedAssistantAgent(text)?.id ?? null;
 }
@@ -535,7 +537,10 @@ export class Discussions {
         throw new ConvexError('Message request id was already used');
       }
       return {
-        assistantAgent: existing.assistantAgent ?? null,
+        assistantAgent:
+          existing.assistantAgent && isChatAgent(assistantAgents[existing.assistantAgent])
+            ? (assistantAgents[existing.assistantAgent].id as ChatAgentId)
+            : null,
         messageId: existing.agentMessageId
       };
     }
@@ -643,6 +648,9 @@ export class Discussions {
     if (!request || request.author.userId !== workspace.userId || !request.assistantAgent) {
       throw new ConvexError('AI request not found');
     }
+    const agent = assistantAgents[request.assistantAgent];
+    if (!isChatAgent(agent) || discussion.kind === 'research')
+      throw new ConvexError('Research uses topic-based runs');
     if (
       request.assistantStatus === 'complete' ||
       (request.assistantStatus === 'responding' &&
@@ -669,7 +677,7 @@ export class Discussions {
       title: discussion.title
     });
     return {
-      agent: request.assistantAgent,
+      agent: agent.id,
       expectedUpdatedAt: discussion.updatedAt,
       prompt: request.content.text,
       runId,

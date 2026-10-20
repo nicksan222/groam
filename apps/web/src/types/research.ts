@@ -49,3 +49,9 @@ export type LinkTargetOption = {
   label: string;
   target: ResearchLinkTarget;
 };
+
+export type ResearchSource = { href: string; host: string; path: string };
+
+export type ResearchEffort = FunctionArgs<
+  typeof api.routes.discussions.research.start.run
+>['effort'];

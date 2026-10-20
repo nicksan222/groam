@@ -8,9 +8,7 @@ import { ResearchThreadView } from './research-thread-view';
 
 const state = vi.hoisted(() => ({
   actions: {
-    isSummarizing: false,
     link: vi.fn(),
-    summarize: vi.fn(),
     unlink: vi.fn(),
     updateBrief: vi.fn()
   },
@@ -28,6 +26,24 @@ vi.mock('@tanstack/react-router', () => ({ useNavigate: () => vi.fn() }));
 vi.mock('@/features/workspace/navigation/router', () => ({
   Link: ({ children, to }: { children?: ReactNode; to: string }) => <a href={to}>{children}</a>
 }));
+vi.mock('@/features/research/hooks/use-latest-research-run', () => ({
+  useLatestResearchRun: () => null
+}));
+vi.mock('@/features/research/hooks/use-save-research-note', () => ({
+  useSaveResearchNote: () => vi.fn()
+}));
+vi.mock('@/features/research/hooks/use-research-run', () => ({
+  useResearchRun: () => ({
+    error: null,
+    events: [],
+    isActive: false,
+    isLoading: false,
+    isStarting: false,
+    run: null,
+    start: vi.fn(),
+    stop: vi.fn()
+  })
+}));
 vi.mock('@/features/research/hooks/use-research', () => ({ useResearch: () => state.hook }));
 vi.mock('@/features/research/hooks/use-research-actions', () => ({
   useResearchActions: () => state.actions
@@ -35,28 +51,16 @@ vi.mock('@/features/research/hooks/use-research-actions', () => ({
 vi.mock('@/features/research/hooks/use-research-links', () => ({
   useResearchLinkOptions: () => ({ options: [] })
 }));
-vi.mock('@/features/discussions/discussion-thread/discussion-thread-body', () => ({
-  DiscussionThreadBody: ({
-    commands = [],
-    events = [],
-    readOnlyNotice
-  }: {
-    commands?: Array<{ name: string; run?: (argument: string) => unknown }>;
-    events?: Array<{ content: ReactNode; key: string }>;
-    readOnlyNotice?: string;
-  }) => (
-    <div data-testid="thread-body">
-      {readOnlyNotice ?? 'composer'}
-      {events.map((event) => (
-        <div key={event.key}>{event.content}</div>
-      ))}
-      {commands.map((command) => (
-        <button key={command.name} onClick={() => void command.run?.('')} type="button">
-          /{command.name}
-        </button>
-      ))}
-    </div>
-  )
+vi.mock('@/features/discussions/hooks/use-discussion-thread', () => ({
+  useDiscussionThread: () => ({
+    messages: [],
+    status: 'Exhausted',
+    send: vi.fn(),
+    stop: vi.fn(),
+    canStop: false,
+    isStopping: false,
+    loadMore: vi.fn()
+  })
 }));
 
 const research: ResearchDetail = {
@@ -88,23 +92,21 @@ test('shows not found when the research is missing', async () => {
   await expect.element(page.getByText('Research not found')).toBeVisible();
 });
 
-test('renders header and thread and registers screen context', async () => {
+test('shows research with supporting context and registers screen context', async () => {
   await view();
   await expect.element(page.getByText('Hotels in Rome')).toBeVisible();
-  await expect.element(page.getByRole('button', { name: '/summarize' })).toBeVisible();
+  await expect.element(page.getByRole('heading', { name: 'Sources' })).toBeVisible();
+  await expect
+    .element(page.getByRole('button', { name: 'Conversation', exact: true }))
+    .not.toBeInTheDocument();
+  await expect
+    .element(page.getByRole('button', { name: 'Summarize findings' }))
+    .not.toBeInTheDocument();
   const last = state.context.mock.calls.at(-1)?.[0];
   expect(last).toMatchObject({
     data: { researchId: 'r1', title: 'Hotels in Rome' },
     key: 'research:r1'
   });
-});
-
-test('offers commands and summarize asks the researcher', async () => {
-  await view();
-  await expect.element(page.getByRole('button', { name: '/brief' })).toBeInTheDocument();
-  await expect.element(page.getByRole('button', { name: '/unlink' })).not.toBeInTheDocument();
-  await page.getByRole('button', { name: '/summarize' }).click();
-  expect(state.actions.summarize).toHaveBeenCalled();
 });
 
 test('shows linked items in the thread', async () => {
@@ -125,13 +127,56 @@ test('shows linked items in the thread', async () => {
     }
   };
   await view();
-  await expect.element(page.getByText('Ada linked issue')).toBeVisible();
-  await page.getByRole('button', { name: 'Remove link Book flights' }).click();
+  await expect.element(page.getByRole('button', { name: 'Book flights' })).toBeVisible();
+  await page.getByRole('button', { name: 'Unlink Book flights' }).click();
   expect(state.actions.unlink).toHaveBeenCalledWith({ id: 'i1', kind: 'issue' });
 });
 
 test('replaces the composer with a notice when the trip is archived', async () => {
   state.hook = { ...state.hook, writable: false };
   await view();
-  await expect.element(page.getByTestId('thread-body')).toHaveTextContent('This trip is archived');
+  await page.getByRole('button', { name: 'Notes', exact: true }).click();
+  await expect
+    .element(
+      page.getByRole('region', { name: 'Research notebook' }).getByText('This trip is archived')
+    )
+    .toBeVisible();
+  await expect.element(page.getByRole('button', { name: 'Add note' })).not.toBeInTheDocument();
+});
+
+test('keeps an unfinished brief and source URL when switching research views', async () => {
+  await view();
+  await page.getByRole('button', { name: 'Edit', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Research brief' }).fill('Keep this draft');
+  await page.getByRole('textbox', { name: 'Source URL' }).fill('https://example.com/unsaved');
+  await page.getByRole('button', { name: 'Notes', exact: true }).click();
+  await page.getByRole('button', { name: 'Overview', exact: true }).click();
+  await expect
+    .element(page.getByRole('textbox', { name: 'Research brief' }))
+    .toHaveValue('Keep this draft');
+  await expect
+    .element(page.getByRole('textbox', { name: 'Source URL' }))
+    .toHaveValue('https://example.com/unsaved');
+});
+
+test('keeps topic drafts scoped to their research when navigating between topics', async () => {
+  const screen = await view();
+  await page.getByRole('textbox', { name: 'Research topic' }).fill('An unfinished hotel question');
+  state.hook = { ...state.hook, research: { ...research, id: 'r2', title: 'Train routes' } };
+  await screen.rerender(<ResearchThreadView researchId={'r2' as Id<'discussions'>} />);
+  await expect
+    .element(page.getByRole('textbox', { name: 'Research topic' }))
+    .toHaveValue('Train routes');
+});
+
+test('keeps brief, sources, and linked items in the supporting sidebar across views', async () => {
+  await view();
+  const sidebar = page.getByRole('complementary');
+  await expect.element(sidebar.getByRole('heading', { name: 'Research brief' })).toBeVisible();
+  await expect.element(sidebar.getByRole('heading', { name: 'Sources' })).toBeVisible();
+  await expect.element(sidebar.getByRole('heading', { name: 'Linked trip items' })).toBeVisible();
+  await page.getByRole('button', { name: 'Notes', exact: true }).click();
+  await expect.element(sidebar.getByRole('heading', { name: 'Research brief' })).toBeVisible();
+  await expect.element(sidebar.getByRole('heading', { name: 'Sources' })).toBeVisible();
+  await expect.element(sidebar.getByRole('heading', { name: 'Linked trip items' })).toBeVisible();
 });

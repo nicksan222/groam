@@ -18,6 +18,7 @@ import {
   createPostToResearchTool,
   createReadResearchTool
 } from '#backend/assistant/tools/research/research';
+import { createResearchTopicTool } from '#backend/assistant/tools/research/run';
 import {
   createAddActivityTool,
   createRemoveActivityTool,
@@ -191,6 +192,10 @@ const assistantCapabilityBindings = {
   'poll.create': defineCapability({
     ...assistantToolSpecs['poll.create'],
     create: ({ activeTripId, actorRunId }) => (actorRunId ? createPollTool(activeTripId) : null)
+  }),
+  'research.run': defineCapability({
+    ...assistantToolSpecs['research.run'],
+    create: ({ activeTripId }) => createResearchTopicTool(activeTripId)
   }),
   'research.list': defineCapability({
     ...assistantToolSpecs['research.list'],

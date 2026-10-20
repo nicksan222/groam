@@ -92,7 +92,7 @@ export const discussionTables = {
     .index('by_messageId', ['messageId']),
   discussionMessages: defineTable({
     agentMessageId: v.optional(v.string()),
-    assistantAgent: v.optional(chatAgentValidator),
+    assistantAgent: v.optional(v.union(chatAgentValidator, v.literal('researcher'))),
     assistantStatus: v.optional(
       v.union(
         v.literal('requested'),

@@ -39,7 +39,7 @@ test('teaches generated forms only in private chats', () => {
 });
 
 test('adds the research subject, brief, and links to discussion instructions', () => {
-  const instructions = assistantInstructions('researcher', 'discussion', [], {
+  const instructions = assistantInstructions('groam', 'discussion', [], {
     brief: 'Kid friendly, under €20',
     links: [
       { kind: 'destination', label: 'Lisbon' },
@@ -51,14 +51,13 @@ test('adds the research subject, brief, and links to discussion instructions', (
   expect(instructions).toContain('Research brief: Kid friendly, under €20');
   expect(instructions).toContain('- destination: Lisbon');
   expect(instructions).toContain('- idea: Museum day');
-  expect(instructions).toContain('Do not change the itinerary.');
 });
 
 test('omits research context when absent, brief-less, or outside discussions', () => {
-  expect(assistantInstructions('researcher', 'discussion', [])).not.toContain(
+  expect(assistantInstructions('groam', 'discussion', [])).not.toContain(
     'This conversation is a trip research'
   );
-  const bare = assistantInstructions('researcher', 'discussion', [], {
+  const bare = assistantInstructions('groam', 'discussion', [], {
     brief: null,
     links: [],
     title: 'Hotels'
@@ -66,6 +65,6 @@ test('omits research context when absent, brief-less, or outside discussions', (
   expect(bare).not.toContain('Research brief');
   expect(bare).toContain('No trip items are linked');
   expect(
-    assistantInstructions('researcher', 'private', [], { brief: null, links: [], title: 'x' })
+    assistantInstructions('groam', 'private', [], { brief: null, links: [], title: 'x' })
   ).not.toContain('This conversation is a trip research');
 });

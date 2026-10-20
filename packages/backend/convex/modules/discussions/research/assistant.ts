@@ -1,5 +1,5 @@
 import { listMessages, saveMessages } from '@convex-dev/agent';
-import { type ChatAgentId, assistantAgents } from '@groam/ai/agents';
+import { type AssistantAgentId, assistantAgents } from '@groam/ai/agents';
 import type { ResearchInstructionContext } from '@groam/ai/backend/instructions';
 import { ConvexError } from 'convex/values';
 import { components } from '#convex-generated/api';
@@ -19,13 +19,20 @@ export class ResearchAssistant {
   /** Brief, links, and the last messages as plain text, oldest first. */
   static async read(ctx: QueryCtx, discussionId: Id<'discussions'>) {
     const research = await Research.get(ctx, discussionId);
-    const recent = research.threadId
-      ? await listMessages(ctx, components.agent, {
-          excludeToolMessages: true,
-          paginationOpts: { cursor: null, numItems: RECENT_MESSAGE_LIMIT },
-          threadId: research.threadId
-        })
-      : null;
+    const [recent, runs] = await Promise.all([
+      research.threadId
+        ? listMessages(ctx, components.agent, {
+            excludeToolMessages: true,
+            paginationOpts: { cursor: null, numItems: RECENT_MESSAGE_LIMIT },
+            threadId: research.threadId
+          })
+        : null,
+      ctx.db
+        .query('agentRuns')
+        .withIndex('by_discussionId_and_updatedAt', (q) => q.eq('discussionId', discussionId))
+        .order('desc')
+        .take(20)
+    ]);
     const messages = await Promise.all(
       (recent?.page ?? []).flatMap((message) => {
         const text = message.text?.trim() ?? '';
@@ -55,7 +62,16 @@ export class ResearchAssistant {
         ];
       })
     );
+    const completed = runs.find(
+      (run) => run.researchTask && run.status === 'complete' && run.report
+    );
     return {
+      latestReport: completed
+        ? {
+            report: (completed.report ?? '').slice(0, 16_000),
+            sources: completed.researchResult?.sources ?? []
+          }
+        : null,
       brief: research.brief,
       id: research.id,
       links: research.links.map((link) => ({
@@ -85,7 +101,7 @@ export class ResearchAssistant {
   static async post(
     ctx: MutationCtx,
     discussionId: Id<'discussions'>,
-    agentId: ChatAgentId,
+    agentId: AssistantAgentId,
     text: string
   ): Promise<{ messageId: string }> {
     const access = await DiscussionAccess.require(ctx, discussionId);

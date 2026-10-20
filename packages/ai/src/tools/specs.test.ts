@@ -49,6 +49,9 @@ test('worker assignments match the reviewed sets', () => {
     'context.screen.read',
     'context.workspace.find',
     'poll.create',
+    'research.run',
+    'research.list',
+    'research.read',
     'trip.activity.add',
     'trip.activity.remove',
     'trip.activity.update',
@@ -71,6 +74,9 @@ test('worker assignments match the reviewed sets', () => {
   ]);
   expect(capabilitiesForAgent('reviewer')).toEqual([
     'context.workspace.find',
+    'research.run',
+    'research.list',
+    'research.read',
     'trip.itinerary.read',
     'trip.status.read',
     'web.search'
@@ -129,4 +135,10 @@ test('agent definitions resolve the same tools as their specs', () => {
   expect(toolSpecsFor(reviewerAgent).map((spec) => spec.id)).toEqual(
     capabilitiesForAgent('reviewer')
   );
+});
+
+test('research delegation is available to planners and workers without recursion or planning write intent', () => {
+  expect(assistantToolSpecs['research.run'].agents).toEqual(['groam', 'issue', 'reviewer']);
+  expect(capabilitiesForAgent('researcher')).not.toContain('research.run');
+  expect(assistantToolSpecs['research.run']).not.toHaveProperty('writeIntent');
 });

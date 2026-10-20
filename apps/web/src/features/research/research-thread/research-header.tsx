@@ -1,18 +1,49 @@
-import { Markdown } from '@groam/ui/components/markdown';
+import { PageCrumbNav } from '@groam/ui/components/page-crumb-nav';
+import Shell from '@groam/ui/components/shell/client';
+import { Link } from '@/features/workspace/navigation/router';
 import { testIds } from '@/lib/test-ids';
 import type { ResearchDetail } from '@/types/research';
 
-/** Title and brief only; research actions live above the composer. */
-export function ResearchHeader({ research }: { research: ResearchDetail }) {
+export function ResearchHeader({
+  activeView = 'overview',
+  onViewChange,
+  research
+}: {
+  activeView?: string;
+  onViewChange?: (view: string) => void;
+  research: ResearchDetail;
+}) {
   return (
-    <header
-      className="grid shrink-0 gap-0.5 border-b border-border/70 px-4 py-3"
-      data-testid={testIds.researchHeader}
-    >
-      <h1 className="min-w-0 truncate text-base font-semibold">{research.title}</h1>
-      {research.brief ? (
-        <Markdown className="line-clamp-2 text-muted-foreground">{research.brief}</Markdown>
+    <Shell.Banner className="border-b border-border/40" data-testid={testIds.researchHeader}>
+      <Shell.BannerInset className="flex min-w-0 flex-col gap-1.5 py-2.5 sm:py-3">
+        <PageCrumbNav
+          inset={false}
+          parent={{
+            asChild: true,
+            children: (
+              <Link
+                params={{ section: 'research', tripId: research.tripId }}
+                to="/trips/$tripId/$section"
+              />
+            ),
+            label: 'Trip research'
+          }}
+        />
+        <Shell.Title className="min-w-0 break-words">{research.title}</Shell.Title>
+      </Shell.BannerInset>
+      {onViewChange ? (
+        <Shell.UnderlineNav aria-label="Research views">
+          {['Overview', 'Notes'].map((title) => (
+            <Shell.Tab
+              isActive={activeView === title.toLowerCase()}
+              key={title}
+              onClick={() => onViewChange(title.toLowerCase())}
+              position="top"
+              title={title}
+            />
+          ))}
+        </Shell.UnderlineNav>
       ) : null}
-    </header>
+    </Shell.Banner>
   );
 }

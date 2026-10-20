@@ -28,11 +28,14 @@ Source: [`collaboration.excalidraw`](./collaboration.excalidraw).
 
 ## Research and resource links
 
-Research is a trip-scoped conversation with a brief and links to planning
-resources. It is a discussion kind, not an aggregate owning another discussion.
-Trip visibility defines its audience; participants record engagement rather than
-replacing the trip access boundary. The diagram shows this trip-scoped path;
-other conversation kinds share the message infrastructure under their own policy.
+Research is a trip-scoped workspace with a topic, brief, saved notes, sources,
+and autonomous research reports. It reuses a discussion kind for note storage;
+the researcher runs as a standalone worker rather than a chat participant.
+Trip visibility defines the audience of page-started research; participation
+records engagement rather than replacing trip access. Delegated reports without
+a shared research workspace remain visible only to their initiating traveler.
+The diagram shows the trip-scoped storage path; group conversations share the
+message infrastructure under their own policy.
 
 Links connect discussion to domain resources without transferring ownership of
 those resources. Their target resolver validates scope and identity. Forward

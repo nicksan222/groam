@@ -3,19 +3,10 @@ import type { Id } from '@groam/backend/data-model';
 import { Button } from '@groam/ui/components/button';
 import { EmptyScreen } from '@groam/ui/components/empty-screen';
 import { PageLoading } from '@groam/ui/components/page-loading';
-import { useNavigate } from '@tanstack/react-router';
 import { Search } from 'lucide-react';
-import { DiscussionThreadBody } from '@/features/discussions/discussion-thread/discussion-thread-body';
-import { researchCommands } from '@/features/research/hooks/research-commands';
 import { useResearch } from '@/features/research/hooks/use-research';
-import { useResearchActions } from '@/features/research/hooks/use-research-actions';
-import { useResearchLinkOptions } from '@/features/research/hooks/use-research-links';
 import { Link } from '@/features/workspace/navigation/router';
-import type { ResearchDetail, ResearchLink } from '@/types/research';
-import { ResearchHeader } from './research-header';
-import { ResearchLinkEvent } from './research-link-event';
-
-const archivedNotice = 'This trip is archived';
+import { ResearchWorkspace } from './research-workspace';
 
 export function ResearchThreadView({ researchId }: { researchId: Id<'discussions'> }) {
   const { isLoading, research, threadId, writable } = useResearch(researchId);
@@ -23,7 +14,7 @@ export function ResearchThreadView({ researchId }: { researchId: Id<'discussions
   useSetAgentContext(
     research
       ? {
-          capabilities: ['research.read', 'research.post', 'research.link'],
+          capabilities: ['research.read', 'research.post', 'research.link', 'research.run'],
           data: {
             brief: research.brief,
             canManage: research.canManage,
@@ -33,7 +24,7 @@ export function ResearchThreadView({ researchId }: { researchId: Id<'discussions
             writable
           },
           description:
-            'Help the group gather and summarize findings for this research. Use the linked trip items as context.',
+            'Help the group research this topic autonomously with a chosen effort level. Reports, sources, brief, and group notes live here. Use linked trip items as context.',
           key: `research:${research.id}`,
           title: research.title
         }
@@ -44,71 +35,11 @@ export function ResearchThreadView({ researchId }: { researchId: Id<'discussions
   if (!research) return <ResearchNotFound />;
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-background">
-      <ResearchHeader research={research} />
-      <ResearchThread
-        discussionId={researchId}
-        research={research}
-        threadId={threadId}
-        writable={writable}
-      />
-    </div>
-  );
-}
-
-function ResearchThread({
-  discussionId,
-  research,
-  threadId,
-  writable
-}: {
-  discussionId: Id<'discussions'>;
-  research: ResearchDetail;
-  threadId: null | string;
-  writable: boolean;
-}) {
-  const navigate = useNavigate();
-  const actions = useResearchActions(discussionId);
-  const { options } = useResearchLinkOptions(research.tripId as Id<'trips'>, research.links);
-
-  const openLink = (link: ResearchLink) => {
-    if (link.target.kind === 'issue') {
-      void navigate({ params: { issueId: link.target.id }, to: '/issues/$issueId' });
-    } else if (link.target.kind === 'idea') {
-      void navigate({ params: { proposalId: link.target.id }, to: '/ideas/$proposalId' });
-    }
-  };
-  const canOpen = (link: ResearchLink) =>
-    link.target.kind === 'issue' || link.target.kind === 'idea';
-
-  const commands = researchCommands({
-    linkOptions: options,
-    onLink: (option) => actions.link(option.target),
-    onSaveBrief: actions.updateBrief,
-    onSummarize: actions.summarize,
-    onUnlink: (link) => actions.unlink(link.target),
-    research
-  });
-
-  const events = research.links.map((link) => ({
-    content: (
-      <ResearchLinkEvent
-        link={link}
-        onOpen={canOpen(link) ? openLink : undefined}
-        onRemove={writable ? (removed) => void actions.unlink(removed.target) : undefined}
-      />
-    ),
-    createdAt: link.createdAt,
-    key: `link:${link.id}`
-  }));
-
-  return (
-    <DiscussionThreadBody
-      commands={writable ? commands : undefined}
-      discussionId={discussionId}
-      events={events}
-      readOnlyNotice={writable ? undefined : archivedNotice}
+    <ResearchWorkspace
+      key={research.id}
+      research={research}
       threadId={threadId}
+      writable={writable}
     />
   );
 }

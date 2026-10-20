@@ -39,7 +39,7 @@ export function CreateResearchDialog({
   return (
     <FormDialog
       contentClassName="sm:max-w-md"
-      description="Dump links and notes about one subject. Groam can summarize them later."
+      description="Choose a topic and add a brief. The researcher can investigate it and collect sources for your trip."
       error={error}
       isPending={isPending}
       onClose={onClose}
