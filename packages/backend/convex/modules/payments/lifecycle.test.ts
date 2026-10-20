@@ -669,3 +669,32 @@ test('archiving before payment confirmation refunds the checkout and preserves a
     })
   ).toEqual(travelers);
 });
+
+test('completion with payments disabled preserves free access and queues refund until keys return', async () => {
+  const { state, session, mock } = provider();
+  vi.useFakeTimers();
+  const fixture = await setupTrip(1);
+  const member = fixture.users[0]!;
+  await member.client.action(checkout, { tripId: fixture.tripId });
+  vi.stubEnv('STRIPE_SECRET_KEY', '');
+  state.paid = true;
+  state.status = 'complete';
+  const calls = mock.mock.calls.length;
+  expect((await paidWebhook(fixture, session())).status).toBe(200);
+  expect((await paidWebhook(fixture, session())).status).toBe(200);
+  await fixture.owner.test.finishAllScheduledFunctions(vi.runAllTimers);
+  expect(mock).toHaveBeenCalledTimes(calls);
+  expect((await paymentCleanupState(fixture.owner.test, fixture.tripId)).payments).toEqual([]);
+  expect(await paymentReconciliationState(fixture.owner.test)).toHaveLength(1);
+  expect(await member.client.action(checkout, { tripId: fixture.tripId })).toEqual({
+    skipped: true,
+    url: null
+  });
+  expect(
+    await member.client.query(api.routes.trips.get.run, { tripId: fixture.tripId })
+  ).not.toBeNull();
+  vi.stubEnv('STRIPE_SECRET_KEY', 'sk_test_lifecycle');
+  await sweep(fixture);
+  expect(state.refunds).toBe(1);
+  expect(await paymentReconciliationState(fixture.owner.test)).toEqual([]);
+});

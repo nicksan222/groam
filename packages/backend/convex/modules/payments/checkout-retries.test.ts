@@ -1,5 +1,6 @@
 import { afterEach, expect, test, vi } from 'vite-plus/test';
-import { api } from '#convex-generated/api';
+import { api, internal } from '#convex-generated/api';
+import { legacyUnrecordedPayment } from '#testing/payments';
 import { setupTrip } from '#testing/trips';
 
 const checkout = api.routes.trips.payments.checkout.run;
@@ -252,4 +253,55 @@ test('a sponsor also fails closed for an old ambiguous abandoned attempt', async
     'reconciliation'
   );
   expect(provider).toHaveBeenCalledTimes(1);
+});
+
+test.each(['self', 'sponsor'])(
+  'an expired provably unsent attempt renews safely for %s after the replay cutoff',
+  async (payer) => {
+    configure();
+    const { owner, tripId, users } = await setupTrip(1);
+    const member = users[0]!;
+    const original = (await member.client.mutation(internal.modules.payments.storage.prepare, {
+      tripId
+    }))!;
+    vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 24 * 3600_000);
+    const provider = vi.fn(async (_url: string, init?: RequestInit) => {
+      const body = new URLSearchParams(String(init?.body));
+      expect(body.get('metadata[attempt]')).not.toBe(original.attempt);
+      expect(Number(body.get('expires_at'))).toBeGreaterThan(Date.now() / 1000);
+      return Response.json(session());
+    });
+    vi.stubGlobal('fetch', provider);
+    const buyer = payer === 'self' ? member : owner;
+    expect(
+      await buyer.client.action(checkout, {
+        tripId,
+        ...(payer === 'sponsor' ? { userId: member.userId } : {})
+      })
+    ).toMatchObject({ skipped: false });
+    expect(provider).toHaveBeenCalledTimes(1);
+    expect(
+      await member.client.mutation(internal.modules.payments.storage.recordRequest, {
+        id: original.id,
+        attempt: original.attempt,
+        body: 'stale',
+        keyHash: 'stale'
+      })
+    ).toBeNull();
+  }
+);
+
+test('legacy unsent-looking attempts remain ambiguous after the replay cutoff', async () => {
+  configure();
+  const { owner, tripId, users } = await setupTrip(1);
+  const member = users[0]!;
+  const original = (await member.client.mutation(internal.modules.payments.storage.prepare, {
+    tripId
+  }))!;
+  await legacyUnrecordedPayment(owner.test, original.id);
+  vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 24 * 3600_000);
+  const provider = vi.fn();
+  vi.stubGlobal('fetch', provider);
+  await expect(member.client.action(checkout, { tripId })).rejects.toThrow('reconciliation');
+  expect(provider).not.toHaveBeenCalled();
 });
