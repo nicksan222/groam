@@ -1,6 +1,19 @@
 import { cn } from '@groam/ui/lib/utils';
 import type { ComponentProps, ReactNode } from 'react';
 
+function recordLayout(layout: 'stacked' | 'inline') {
+  if (layout === 'stacked') return {};
+  return {
+    content: '@xl/record:flex @xl/record:items-center @xl/record:gap-6',
+    title: 'text-sm font-medium @xl/record:flex-1',
+    context:
+      'grid-cols-[auto_minmax(0,1fr)_auto] @xl/record:mt-0 @xl/record:w-[26rem] @xl/record:max-w-[65%] @xl/record:shrink-0 @xl/record:gap-3',
+    metadata: 'col-start-1 row-start-1',
+    description: 'col-span-1 col-start-2',
+    badges: 'col-start-3 row-start-1'
+  };
+}
+
 /** Compact desktop records adapt into title, preview and a touch-friendly footer on phones. */
 export function RecordListItem({
   className,
@@ -8,6 +21,7 @@ export function RecordListItem({
   badges,
   description,
   icon,
+  layout = 'stacked',
   metadata,
   title,
   wrapTitle = false,
@@ -17,11 +31,14 @@ export function RecordListItem({
   badges?: ReactNode;
   description?: ReactNode;
   icon?: ReactNode;
+  /** Inline records keep their title and context together when the container has room. */
+  layout?: 'stacked' | 'inline';
   metadata?: ReactNode;
   title: ReactNode;
   wrapTitle?: boolean;
   trailing?: ReactNode;
 }) {
+  const arrangement = recordLayout(layout);
   return (
     <article
       className={cn(
@@ -37,14 +54,20 @@ export function RecordListItem({
             {icon}
           </div>
         ) : null}
-        <div className="contents @md/record:block @md/record:min-w-0 @md/record:flex-1">
+        <div
+          className={cn(
+            'contents @md/record:block @md/record:min-w-0 @md/record:flex-1',
+            arrangement.content
+          )}
+        >
           <div
             className={cn(
               'min-w-0 text-base leading-5 font-semibold text-foreground @md/record:leading-6 [&>h4]:min-w-0',
               wrapTitle
                 ? 'whitespace-normal wrap-anywhere'
                 : 'h-10 overflow-hidden @md/record:h-6 @md/record:truncate',
-              icon ? 'col-start-2' : 'col-span-2'
+              icon ? 'col-start-2' : 'col-span-2',
+              arrangement.title
             )}
             data-slot="record-list-title"
           >
@@ -53,7 +76,8 @@ export function RecordListItem({
           <div
             className={cn(
               'col-span-2 grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-2 @md/record:mt-2 @md/record:flex @md/record:h-6',
-              !description && 'min-h-11 @md/record:min-h-0'
+              !description && 'min-h-11 @md/record:min-h-0',
+              arrangement.context
             )}
             data-slot="record-list-context"
           >
@@ -63,7 +87,8 @@ export function RecordListItem({
                   'flex h-11 min-w-0 items-center gap-2 overflow-hidden text-xs leading-5 text-muted-foreground @md/record:h-6',
                   description
                     ? 'row-start-2 @md/record:max-w-[50%] @md/record:shrink-0'
-                    : '@md/record:flex-1'
+                    : '@md/record:flex-1',
+                  arrangement.metadata
                 )}
                 data-slot="record-list-metadata"
               >
@@ -72,7 +97,10 @@ export function RecordListItem({
             ) : null}
             {description ? (
               <div
-                className="col-span-2 row-start-1 min-h-5 min-w-0 truncate text-sm leading-5 text-muted-foreground @md/record:flex-1 @md/record:text-xs"
+                className={cn(
+                  'col-span-2 row-start-1 min-h-5 min-w-0 truncate text-sm leading-5 text-muted-foreground @md/record:flex-1 @md/record:text-xs',
+                  arrangement.description
+                )}
                 data-slot="record-list-description"
               >
                 {description}
@@ -85,7 +113,8 @@ export function RecordListItem({
               <div
                 className={cn(
                   'relative z-10 col-start-2 flex h-11 shrink-0 items-center gap-1.5 @max-md/record:[&_button]:min-h-11 @max-md/record:[&_button]:min-w-11 @md/record:h-6',
-                  description && 'row-start-2'
+                  description && 'row-start-2',
+                  arrangement.badges
                 )}
                 data-slot="record-list-badges"
               >

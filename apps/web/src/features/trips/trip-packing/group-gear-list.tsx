@@ -94,7 +94,7 @@ export function GroupGearList({
   return (
     <ul
       aria-label="Group gear"
-      className="min-w-0 divide-y divide-border/40 overflow-hidden rounded-lg border border-border/60 bg-transparent"
+      className="-mx-4 min-w-0 divide-y divide-border/40 overflow-hidden bg-transparent"
     >
       {packing.items.map((item) =>
         editable ? (

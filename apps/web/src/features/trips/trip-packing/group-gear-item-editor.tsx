@@ -137,7 +137,7 @@ export function GroupGearItemEditor({
           value={label}
         />
       }
-      metadata={<PackingCoverageBadge coverage={coverage} item={item} />}
+      metadata={<PackingCoverageBadge coverage={coverage} item={item} concise />}
       badges={
         viewerFree ? (
           <PackingClaimButton

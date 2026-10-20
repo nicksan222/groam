@@ -86,5 +86,3 @@ export function ideaPackingNotice(status: string, canEdit: boolean): string {
     ? ideaPackingDraftNotice
     : 'Draft: you can read this gear list, but only its author can edit it.';
 }
-export const ideaChangesViaIdea =
-  'Gear changes go through an idea, so everyone can weigh in. You can approve your own.';

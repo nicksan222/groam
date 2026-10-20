@@ -22,7 +22,14 @@ export function GroupGearBringerChips({
 }) {
   const arrived = useArrivals(item.bringers.map((bringer) => bringer.userId));
   if (item.bringers.length === 0) {
-    return <p className="text-xs text-muted-foreground">Nobody&apos;s bringing this yet</p>;
+    return (
+      <p className="truncate text-xs text-muted-foreground">
+        <span className="@md/record:hidden" aria-hidden>
+          Unclaimed
+        </span>
+        <span className="sr-only @md/record:not-sr-only">Nobody&apos;s bringing this yet</span>
+      </p>
+    );
   }
   const shown = item.bringers.slice(0, VISIBLE_CHIPS);
   const hidden = item.bringers.slice(VISIBLE_CHIPS);
@@ -36,7 +43,7 @@ export function GroupGearBringerChips({
         <span
           aria-hidden
           className={cn(
-            'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-border bg-muted/30 py-0.5 pe-2 ps-0.5 text-xs',
+            'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap pe-2 text-xs',
             arrived.has(bringer.userId) && 'packing-pop-in'
           )}
           data-entering={arrived.has(bringer.userId) ? 'true' : undefined}

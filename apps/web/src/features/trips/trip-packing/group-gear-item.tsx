@@ -29,8 +29,10 @@ export function GroupGearItem({
   return (
     <RecordListItem
       data-testid={testIds.tripPackingGearItem}
+      layout="inline"
+      wrapTitle
       title={<span className="[overflow-wrap:anywhere]">{item.label}</span>}
-      metadata={<PackingCoverageBadge coverage={coverage} item={item} />}
+      metadata={<PackingCoverageBadge coverage={coverage} item={item} concise />}
       description={<GroupGearBringerChips item={item} viewerUserId={viewerUserId} />}
       badges={
         onClaim ? (

@@ -13,10 +13,12 @@ const stateIcon = { covered: Check, missing: CircleDashed, over: Plus } as const
  */
 export function PackingCoverageBadge({
   coverage,
-  item
+  item,
+  concise = false
 }: {
   coverage: PackingCoverage;
   item: { brought: number; quantity: number };
+  concise?: boolean;
 }) {
   const Icon = stateIcon[coverage.state];
   const changed = useChanged(coverage.state);
@@ -34,8 +36,8 @@ export function PackingCoverageBadge({
           changed && coverage.state === 'covered' && 'packing-check-pop'
         )}
       />
-      <span className="sr-only @md/record:not-sr-only">{coverage.label}</span>
-      <span aria-hidden className="hidden @md/record:inline">
+      <span className={cn('sr-only', !concise && '@md/record:not-sr-only')}>{coverage.label}</span>
+      <span aria-hidden className={cn('hidden', !concise && '@md/record:inline')}>
         ·
       </span>
       <span>

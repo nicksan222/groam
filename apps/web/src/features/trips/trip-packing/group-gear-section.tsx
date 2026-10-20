@@ -47,26 +47,7 @@ export function GroupGearSection({
 
   return (
     <section className="@container/gear flex flex-col gap-3" aria-labelledby="group-gear-heading">
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-        <div className="min-w-0">
-          <h3 className="text-sm font-semibold" id="group-gear-heading">
-            Group gear
-          </h3>
-          <GroupGearSummary items={packing.items} />
-        </div>
-        {canStartIdea && hasItems ? (
-          <Button
-            data-testid={testIds.tripPackingChange}
-            disabled={startingIdea}
-            onClick={() => onStartPackingIdea?.()}
-            size="sm"
-            variant="outline"
-          >
-            <Lightbulb />
-            Suggest gear changes
-          </Button>
-        ) : null}
-      </div>
+      <GroupGearSummary items={packing.items} claimable={Boolean(claim) || editable} />
       <p aria-live="polite" className="sr-only" role="status">
         {announcement}
       </p>
@@ -83,7 +64,21 @@ export function GroupGearSection({
         viewerUserId={viewerUserId}
       />
       {editable ? <AddGearForm empty={packing.items.length === 0} onAdd={packing.add} /> : null}
-      <GroupGearFooter archived={archived} sharedTrip={sharedTrip && hasItems} />
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <GroupGearFooter archived={archived} />
+        {canStartIdea && hasItems ? (
+          <Button
+            data-testid={testIds.tripPackingChange}
+            disabled={startingIdea}
+            onClick={() => onStartPackingIdea?.()}
+            size="sm"
+            variant="ghost"
+          >
+            <Lightbulb />
+            Suggest gear changes
+          </Button>
+        ) : null}
+      </div>
     </section>
   );
 }

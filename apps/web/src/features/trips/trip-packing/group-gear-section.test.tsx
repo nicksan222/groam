@@ -92,7 +92,7 @@ describe('GroupGearSection on the shared trip', () => {
     await expect.element(page.getByText('1 spare')).toBeVisible();
     await expect.element(page.getByText('2 of 3 items covered')).toBeVisible();
     await expect
-      .element(page.getByText('Gear changes go through an idea', { exact: false }))
+      .element(page.getByText('Claim an item to let the group know', { exact: false }))
       .toBeVisible();
     await expect.element(page.getByRole('textbox')).not.toBeInTheDocument();
     await expect.element(page.getByTestId(testIds.tripPackingGearAdd)).not.toBeInTheDocument();
