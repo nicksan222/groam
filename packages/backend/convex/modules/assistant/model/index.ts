@@ -3,6 +3,7 @@ import {
   assistantThreadSummary,
   parseAssistantThreadSummary
 } from '@groam/ai/runtime/thread-summary';
+import { paginationOptsValidator, paginationResultValidator } from 'convex/server';
 import { ConvexError, v } from 'convex/values';
 import { components } from '#convex-generated/api';
 import { AgentRuns } from '#convex/modules/assistant/runs/index';
@@ -104,13 +105,34 @@ export const contextCatalog = internalWorkspaceQuery({
   args: {},
   returns: v.array(assistantContextCatalogItemValidator),
   handler: async (ctx) => {
-    const trips = ctx.db
+    const trips = await ctx.db
       .query('trips')
       .withIndex('by_organizationId_and_updatedAt', (query) =>
         query.eq('organizationId', ctx.workspace.organizationId)
       )
-      .order('desc');
-    return await TripTargets.contextCatalog(ctx, trips, ctx.workspace, MAX_CATALOG_TRIPS);
+      .order('desc')
+      .take(MAX_CATALOG_TRIPS);
+    return await TripTargets.contextCatalog(ctx, trips, ctx.workspace);
+  }
+});
+
+/** Candidate pages retain their cursor even when all trips require payment. */
+export const contextCatalogPage = internalWorkspaceQuery({
+  args: { paginationOpts: paginationOptsValidator },
+  returns: paginationResultValidator(assistantContextCatalogItemValidator),
+  handler: async (ctx, { paginationOpts }) => {
+    const result = await ctx.db
+      .query('trips')
+      .withIndex('by_organizationId_and_updatedAt', (query) =>
+        query.eq('organizationId', ctx.workspace.organizationId)
+      )
+      .order('desc')
+      .paginate({
+        ...paginationOpts,
+        maximumRowsRead: MAX_CATALOG_TRIPS,
+        numItems: Math.min(paginationOpts.numItems, MAX_CATALOG_TRIPS)
+      });
+    return { ...result, page: await TripTargets.contextCatalog(ctx, result.page, ctx.workspace) };
   }
 });
 

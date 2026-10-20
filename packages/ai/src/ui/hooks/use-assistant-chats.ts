@@ -1,6 +1,6 @@
 import { toast } from '@groam/ui/components/toast';
 import { errorMessage } from '@groam/ui/lib/errors';
-import { useAction, useMutation, useQuery } from 'convex/react';
+import { useAction, useMutation, usePaginatedQuery, useQuery } from 'convex/react';
 import { useCallback, useState } from 'react';
 import type { AssistantContextTag, AssistantContextTagKind } from '#ai/agents';
 import type { AgentScreenContext } from '#ai/ui/context/agent-context';
@@ -38,9 +38,13 @@ function mutationTagReference(reference: AssistantContextTagReference) {
 
 export function useAssistantChats(api: AssistantBackendApi, enabled = true) {
   const chatResults = useQuery(api.routes.assistant.chats.list.run, enabled ? {} : 'skip');
-  const catalogResults = useQuery(api.routes.assistant.context.catalog.run, enabled ? {} : 'skip');
+  const catalogQuery = usePaginatedQuery(
+    api.routes.assistant.context.catalog.page.run,
+    enabled ? {} : 'skip',
+    { initialNumItems: 25 }
+  );
   const chats: AssistantChatSummary[] = chatResults ?? [];
-  const catalog = catalogResults ?? [];
+  const catalog = catalogQuery.results;
   const createAction = useAction(api.routes.assistant.chats.create.run);
   const setTagsMutation = useMutation(api.routes.assistant.chats.tags.run);
   const [isCreating, setCreating] = useState(false);
@@ -80,6 +84,13 @@ export function useAssistantChats(api: AssistantBackendApi, enabled = true) {
 
   return {
     catalog,
+    canLoadMoreCatalog: enabled && catalogQuery.status === 'CanLoadMore',
+    isLoadingCatalog:
+      enabled &&
+      (catalogQuery.status === 'LoadingFirstPage' || catalogQuery.status === 'LoadingMore'),
+    loadMoreCatalog: () => {
+      if (enabled && catalogQuery.status === 'CanLoadMore') catalogQuery.loadMore(25);
+    },
     chats,
     createChat,
     isCreating,
