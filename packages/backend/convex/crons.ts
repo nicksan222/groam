@@ -12,4 +12,11 @@ crons.interval(
   {}
 );
 
+crons.interval(
+  'reconcile deleted trip checkouts',
+  { minutes: 15 },
+  internal.modules.payments.reconciliation.sweep,
+  {}
+);
+
 export default crons;

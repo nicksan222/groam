@@ -1,8 +1,8 @@
 import type { FunctionReturnType } from 'convex/server';
 import { ConvexError } from 'convex/values';
 import { z } from 'zod';
-import type { internal } from '#convex-generated/api';
-import { env } from '#convex-generated/server';
+import { internal } from '#convex-generated/api';
+import { env, type ActionCtx } from '#convex-generated/server';
 
 const sessionSchema = z.object({
   id: z.string(),
@@ -11,7 +11,8 @@ const sessionSchema = z.object({
   payment_status: z.string(),
   amount_total: z.number().nullable(),
   currency: z.string().nullable(),
-  metadata: z.record(z.string(), z.string()).nullable()
+  metadata: z.record(z.string(), z.string()).nullable(),
+  payment_intent: z.string().nullable().optional()
 });
 export type CheckoutSession = z.infer<typeof sessionSchema>;
 export type PaymentAttempt = NonNullable<
@@ -65,7 +66,15 @@ export function isPaid(session: CheckoutSession): boolean {
   );
 }
 
-export async function createSession(payment: PaymentAttempt) {
+export async function stripeKeyHash(): Promise<string> {
+  const bytes = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(env.STRIPE_SECRET_KEY ?? '')
+  );
+  return Array.from(new Uint8Array(bytes), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+export async function createSession(ctx: ActionCtx, payment: PaymentAttempt) {
   // Stripe may prune idempotency keys after 24h. An unknown old attempt must be reconciled,
   // never recreated blindly; its original request may have succeeded and been paid.
   if (Math.floor(Date.now() / 1000) > payment.expiresAt + 22 * 3600)
@@ -86,5 +95,16 @@ export async function createSession(payment: PaymentAttempt) {
     'metadata[attempt]': payment.attempt,
     expires_at: String(payment.expiresAt)
   });
-  return stripeRequest('', body, `groam-trip-${payment.id}-${payment.attempt}`);
+  const storedBody = await ctx.runMutation(internal.modules.payments.storage.recordRequest, {
+    id: payment.id,
+    attempt: payment.attempt,
+    body: body.toString(),
+    keyHash: await stripeKeyHash()
+  });
+  if (!storedBody) throw new ConvexError('This trip is no longer available for payment.');
+  return stripeRequest(
+    '',
+    new URLSearchParams(storedBody),
+    `groam-trip-${payment.id}-${payment.attempt}`
+  );
 }

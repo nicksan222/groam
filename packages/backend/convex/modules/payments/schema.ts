@@ -9,8 +9,25 @@ export const paymentTables = {
     attempt: v.string(),
     expiresAt: v.number(),
     sessionId: v.optional(v.string()),
+    checkoutBody: v.optional(v.string()),
+    providerKeyHash: v.optional(v.string()),
     paid: v.boolean()
-  }).index('by_tripId_and_userId', ['tripId', 'userId'])
+  }).index('by_tripId_and_userId', ['tripId', 'userId']),
+  paymentReconciliations: defineTable({
+    paymentId: v.id('tripPayments'),
+    attempt: v.string(),
+    expiresAt: v.number(),
+    sessionId: v.optional(v.string()),
+    checkoutBody: v.optional(v.string()),
+    providerKeyHash: v.optional(v.string()),
+    revision: v.number(),
+    leaseToken: v.optional(v.string()),
+    refundId: v.optional(v.string()),
+    nextAttemptAt: v.number(),
+    leaseUntil: v.optional(v.number())
+  })
+    .index('by_paymentId_and_attempt', ['paymentId', 'attempt'])
+    .index('by_nextAttemptAt', ['nextAttemptAt'])
 };
 
 export const PaymentValidators = {

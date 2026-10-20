@@ -100,6 +100,8 @@ import type * as modules_organizations_invitations_index from "../modules/organi
 import type * as modules_payments_checkout from "../modules/payments/checkout.js";
 import type * as modules_payments_index from "../modules/payments/index.js";
 import type * as modules_payments_participation from "../modules/payments/participation.js";
+import type * as modules_payments_reconciliation from "../modules/payments/reconciliation.js";
+import type * as modules_payments_refunds from "../modules/payments/refunds.js";
 import type * as modules_payments_storage from "../modules/payments/storage.js";
 import type * as modules_payments_stripe from "../modules/payments/stripe.js";
 import type * as modules_payments_webhook from "../modules/payments/webhook.js";
@@ -490,6 +492,8 @@ declare const fullApi: ApiFromModules<{
   "modules/payments/checkout": typeof modules_payments_checkout;
   "modules/payments/index": typeof modules_payments_index;
   "modules/payments/participation": typeof modules_payments_participation;
+  "modules/payments/reconciliation": typeof modules_payments_reconciliation;
+  "modules/payments/refunds": typeof modules_payments_refunds;
   "modules/payments/storage": typeof modules_payments_storage;
   "modules/payments/stripe": typeof modules_payments_stripe;
   "modules/payments/webhook": typeof modules_payments_webhook;

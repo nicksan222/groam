@@ -4,6 +4,7 @@ import { hasOrganizationMembership } from '#convex/modules/auth/workspace';
 import { TripTravelers } from '#convex/modules/travel/travelers/index';
 import { isTripAdmin, loadSharedTripContext } from '#convex/modules/travel/trips/ctx';
 import { paymentFor, paymentsEnabled, requiresTripPayment } from './index';
+import { attachDeletedSession } from './reconciliation';
 
 /** A transaction reserves the traveler for one payer; retries reuse Stripe's idempotency key. */
 export const prepare = internalMutation({
@@ -56,7 +57,13 @@ export const prepare = internalMutation({
       userId: targetId
     };
     const id = existing ? existing._id : await ctx.db.insert('tripPayments', fields);
-    if (existing) await ctx.db.patch('tripPayments', id, { ...fields, sessionId: undefined });
+    if (existing)
+      await ctx.db.patch('tripPayments', id, {
+        ...fields,
+        sessionId: undefined,
+        checkoutBody: undefined,
+        providerKeyHash: undefined
+      });
     return {
       id,
       attempt: fields.attempt,
@@ -73,14 +80,35 @@ function envReady() {
   return paymentsEnabled() && Boolean(env.STRIPE_WEBHOOK_SECRET?.trim());
 }
 
+export const recordRequest = internalMutation({
+  args: { id: v.id('tripPayments'), attempt: v.string(), body: v.string(), keyHash: v.string() },
+  returns: v.union(v.string(), v.null()),
+  handler: async (ctx, { id, attempt, body, keyHash }) => {
+    const row = await ctx.db.get(id);
+    if (!row || row.attempt !== attempt) return null;
+    if (row.checkoutBody) {
+      if (row.providerKeyHash !== keyHash)
+        throw new ConvexError(
+          'This checkout needs reconciliation before changing Stripe credentials.'
+        );
+      return row.checkoutBody;
+    }
+    await ctx.db.patch(id, { checkoutBody: body, providerKeyHash: keyHash });
+    return body;
+  }
+});
+
 export const attachSession = internalMutation({
   args: { id: v.id('tripPayments'), attempt: v.string(), sessionId: v.string() },
-  returns: v.null(),
+  returns: v.boolean(),
   handler: async (ctx, args) => {
     const row = await ctx.db.get('tripPayments', args.id);
-    if (row?.attempt === args.attempt)
+    if (row?.attempt === args.attempt) {
       await ctx.db.patch('tripPayments', row._id, { sessionId: args.sessionId });
-    return null;
+      return true;
+    }
+    await attachDeletedSession(ctx, args.id, args.attempt, args.sessionId);
+    return false;
   }
 });
 
@@ -90,7 +118,11 @@ export const complete = internalMutation({
   returns: v.null(),
   handler: async (ctx, { id, attempt, sessionId }) => {
     const row = await ctx.db.get('tripPayments', id);
-    if (!row || row.paid || row.attempt !== attempt) return null;
+    if (!row) {
+      await attachDeletedSession(ctx, id, attempt, sessionId);
+      return null;
+    }
+    if (row.paid || row.attempt !== attempt) return null;
     if (row.sessionId && row.sessionId !== sessionId)
       throw new ConvexError('Checkout session mismatch');
     await ctx.db.patch('tripPayments', id, { paid: true, sessionId });
