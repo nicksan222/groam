@@ -604,6 +604,31 @@ async function listViewerOpen(ctx: QueryCtx) {
   return visible.filter((idea) => idea !== null);
 }
 
+async function listViewerOpenPage(ctx: QueryCtx, paginationOpts: PaginationOptions) {
+  const workspace = await requireWorkspace(ctx);
+  const result = await ctx.db
+    .query('tripProposals')
+    .withIndex('by_organizationId_and_author_userId_and_updatedAt', (query) =>
+      query.eq('organizationId', workspace.organizationId).eq('author.userId', workspace.userId)
+    )
+    .order('desc')
+    .paginate({
+      ...paginationOpts,
+      numItems: Math.min(paginationOpts.numItems, 50),
+      maximumRowsRead: 50
+    });
+  const candidates = result.page.filter(
+    (proposal) =>
+      proposal.status === 'draft' ||
+      proposal.status === 'in_review' ||
+      proposal.status === 'conflicted'
+  );
+  const page = await Promise.all(
+    candidates.map((proposal) => presentWorkspaceIdea(ctx, proposal, workspace))
+  );
+  return { ...result, page: page.filter((idea) => idea !== null) };
+}
+
 async function get(ctx: QueryCtx, proposalId: Id<'tripProposals'>) {
   const { proposal, source } = await proposalWithSource(ctx, proposalId);
   const working = await ctx.db.get('trips', proposal.workingTripId);
@@ -1942,6 +1967,7 @@ export class TripVersions {
   static list = list;
   static listFeedback = listFeedback;
   static listViewerOpen = listViewerOpen;
+  static listViewerOpenPage = listViewerOpenPage;
   static listWorkspace = listWorkspace;
   static markConflict = markConflict;
   static prepareMerge = prepareMerge;

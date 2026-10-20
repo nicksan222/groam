@@ -1,3 +1,5 @@
+import type { PaginationOptions } from 'convex/server';
+import { ConvexError } from 'convex/values';
 import type { Doc, Id } from '#convex-generated/dataModel';
 import type { QueryCtx } from '#convex-generated/server';
 import type { Workspace } from '#convex/modules/auth/workspace';
@@ -22,6 +24,33 @@ async function listOpen(
     )
     .order('desc')
     .take(OPEN_SCAN);
+  return presentOpen(ctx, workspace, rows, limit);
+}
+
+/** Raw candidate pages retain continuation even when no polls are readable. */
+async function pageOpen(ctx: QueryCtx, workspace: Workspace, paginationOpts: PaginationOptions) {
+  if (
+    !Number.isInteger(paginationOpts.numItems) ||
+    paginationOpts.numItems < 1 ||
+    paginationOpts.numItems > OPEN_SCAN
+  )
+    throw new ConvexError(`Poll page size must be between 1 and ${OPEN_SCAN}`);
+  const result = await ctx.db
+    .query('polls')
+    .withIndex('by_organizationId_and_status', (q) =>
+      q.eq('organizationId', workspace.organizationId).eq('status', 'open')
+    )
+    .order('desc')
+    .paginate({ ...paginationOpts, maximumRowsRead: OPEN_SCAN });
+  return { ...result, page: await presentOpen(ctx, workspace, result.page) };
+}
+
+async function presentOpen(
+  ctx: QueryCtx,
+  workspace: Workspace,
+  rows: Doc<'polls'>[],
+  limit = rows.length
+): Promise<PollOpenItem[]> {
   const visible = await Promise.all(rows.map((poll) => canRead(ctx, poll, workspace)));
   const readable = rows.filter((_, index) => visible[index]).slice(0, limit);
   const voters = voterLoader(ctx);
@@ -62,4 +91,4 @@ async function listOpen(
   );
 }
 
-export const PollOpenReads = { listOpen };
+export const PollOpenReads = { listOpen, pageOpen };

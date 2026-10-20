@@ -5,7 +5,13 @@ import { dashboardPoll } from '@/features/dashboard/testing/dashboard-activity-f
 import { testIds } from '@/lib/test-ids';
 import { OpenPollsSection } from './open-polls-section';
 
-const state = vi.hoisted(() => ({ isLoading: false, polls: [] as unknown[] }));
+const state = vi.hoisted(() => ({
+  isLoading: false,
+  canLoadMore: false,
+  isLoadingMore: false,
+  loadMore: vi.fn(),
+  polls: [] as unknown[]
+}));
 vi.mock('@/features/dashboard/hooks/use-dashboard-polls', () => ({
   useDashboardPolls: () => state
 }));
@@ -16,6 +22,9 @@ vi.mock('@tanstack/react-router', async () => {
 
 beforeEach(() => {
   state.isLoading = false;
+  state.canLoadMore = false;
+  state.isLoadingMore = false;
+  state.loadMore.mockClear();
   state.polls = [];
 });
 
@@ -57,4 +66,15 @@ describe('OpenPollsSection', () => {
     await expect.element(row.getByText(/Group · 2 voted/u)).toBeVisible();
     await expect.element(row).not.toHaveAttribute('href');
   });
+});
+
+test('an empty filtered page offers Load more and then shows accessible polls', async () => {
+  state.canLoadMore = true;
+  const screen = await render(<OpenPollsSection />);
+  await page.getByRole('button', { name: 'Load more polls' }).click();
+  expect(state.loadMore).toHaveBeenCalledOnce();
+  state.polls = [dashboardPoll()];
+  state.canLoadMore = false;
+  await screen.rerender(<OpenPollsSection />);
+  await expect.element(page.getByTestId(testIds.dashboardOpenPollsRow)).toBeVisible();
 });

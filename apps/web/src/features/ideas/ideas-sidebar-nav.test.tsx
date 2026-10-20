@@ -9,6 +9,9 @@ import { testIds } from '@/lib/test-ids';
 import { IdeasSidebarNav } from './ideas-sidebar-nav';
 
 const state = vi.hoisted(() => ({
+  viewerCanLoadMore: false,
+  viewerLoadingMore: false,
+  viewerLoadMore: vi.fn(),
   isLoading: false,
   loadMore: vi.fn(),
   params: {} as Record<string, unknown>,
@@ -30,6 +33,9 @@ vi.mock('@tanstack/react-router', async (importOriginal) => ({
 
 vi.mock('@/features/ideas/hooks/use-workspace-ideas', () => ({
   useViewerOpenIdeas: () => ({
+    canLoadMore: state.viewerCanLoadMore,
+    isLoadingMore: state.viewerLoadingMore,
+    loadMore: state.viewerLoadMore,
     isLoading: false,
     proposals: state.proposals.filter((proposal) => proposal.status === 'draft')
   }),
@@ -77,6 +83,8 @@ beforeEach(() => {
   useSidebarChromeStore.getState().setSectionOpen('ideas', true);
   vi.clearAllMocks();
   state.isLoading = false;
+  state.viewerCanLoadMore = false;
+  state.viewerLoadingMore = false;
   state.loadMore = vi.fn();
   state.params = {};
   state.pathname = '/ideas';
@@ -178,4 +186,13 @@ test('collapses listed ideas from the parent action without leaving the index li
   await page.getByRole('button', { name: 'Collapse ideas' }).click();
   await expect.element(page.getByText('Your draft: Extend Lisbon stay')).not.toBeInTheDocument();
   await expect.element(page.getByRole('button', { name: 'Expand ideas' })).toBeInTheDocument();
+});
+
+test('offers pending-idea continuation when both visible lists are empty', async () => {
+  state.status = 'Done';
+  state.viewerCanLoadMore = true;
+  await renderNav();
+  expect(state.viewerLoadMore).not.toHaveBeenCalled();
+  await page.getByText('Load more of your open ideas').click();
+  expect(state.viewerLoadMore).toHaveBeenCalledTimes(1);
 });

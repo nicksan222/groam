@@ -15,6 +15,13 @@ export type DashboardActivityContext = {
 
 function activityData({ issues, polls, research, runs }: DashboardActivityContext) {
   return {
+    activityPreviewScope: 'initial-pages',
+    pollsMoreAvailable: polls.isLoading ? null : polls.canLoadMore || polls.isLoadingMore,
+    pollsPreviewLoading: polls.isLoading || polls.isLoadingMore,
+    researchMoreAvailable: research.isLoading
+      ? null
+      : research.canLoadMore || research.isLoadingMore,
+    researchPreviewLoading: research.isLoading || research.isLoadingMore,
     agentRunsRecent: runs.activity.map((run) => ({
       agent: run.agentId,
       id: run.id,
@@ -74,7 +81,7 @@ export function buildDashboardContext({
       ...(activity ? activityData(activity) : {})
     },
     description:
-      'Summarize what is going on in the group: what needs the viewer first (idea reviews, waiting agent runs, assigned issues, polls to vote on), then agent activity, open issues, research, and trips needing attention.',
+      'Summarize what is going on in the group: what needs the viewer first (idea reviews, waiting agent runs, assigned issues, polls to vote on), then agent activity, open issues, research, and trips needing attention. Polls and research are independent initial bounded previews; more items may have been loaded on screen. Query tools before assuming completeness or that an empty preview means no items exist.',
     key: 'workspace:dashboard',
     title: `${groupName} · Home`
   };

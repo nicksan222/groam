@@ -47,7 +47,8 @@ export function IdeasSidebarNav() {
     ? { initialNumItems: SIDEBAR_NESTED_PAGE_SIZE }
     : ('skip' as const);
   const { isLoading, loadMore, proposals, status } = useWorkspaceIdeas(listOptions);
-  const { proposals: viewerOpenIdeas } = useViewerOpenIdeas(sectionOpen ? undefined : 'skip');
+  const viewerPending = useViewerOpenIdeas(sectionOpen ? undefined : 'skip');
+  const viewerOpenIdeas = viewerPending.proposals;
   const viewerUserId = workspace?.session.user.id;
   const openIdeas = pinViewerOpenIdeas(
     filterOpenIdeas(mergeViewerOpenIdeas(proposals, viewerOpenIdeas)),
@@ -61,7 +62,10 @@ export function IdeasSidebarNav() {
     status,
     total: openIdeas.length
   });
-  const emptyPortfolio = showEmptyPortfolio(openIdeas.length, canFetchMore);
+  const emptyPortfolio = showEmptyPortfolio(
+    openIdeas.length,
+    canFetchMore || viewerPending.canLoadMore || viewerPending.isLoadingMore
+  );
 
   return (
     <SidebarCollapsibleItem
@@ -123,6 +127,14 @@ export function IdeasSidebarNav() {
               </SidebarMenuSubItem>
             );
           })}
+          {(viewerPending.canLoadMore || viewerPending.isLoadingMore) && (
+            <SidebarNestedLoadMore
+              label="Load more of your open ideas"
+              loadingLabel="Loading your open ideas…"
+              isLoadingMore={viewerPending.isLoadingMore}
+              onLoadMore={viewerPending.loadMore}
+            />
+          )}
           {canLoadMore && (
             <SidebarNestedLoadMore isLoadingMore={isLoadingMore} onLoadMore={onLoadMore} />
           )}

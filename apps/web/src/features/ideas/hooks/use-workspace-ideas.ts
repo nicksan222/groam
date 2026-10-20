@@ -1,7 +1,7 @@
 import { api } from '@groam/backend/api';
 import type { Id } from '@groam/backend/data-model';
 import { toast } from '@groam/ui/components/toast';
-import { useMutation, usePaginatedQuery, useQuery } from 'convex/react';
+import { useMutation, usePaginatedQuery } from 'convex/react';
 import { useCallback } from 'react';
 import { errorMessage } from '@/lib/errors';
 import type { WorkspaceIdea } from '@/types/ideas';
@@ -24,13 +24,19 @@ export function useWorkspaceIdeas(options?: { initialNumItems?: number } | 'skip
 }
 
 export function useViewerOpenIdeas(options?: 'skip') {
-  const proposals = useQuery(
-    api.routes.trips.versions.workspace.pending.run,
-    options === 'skip' ? 'skip' : {}
+  const query = usePaginatedQuery(
+    api.routes.trips.versions.workspace.pending.page.run,
+    options === 'skip' ? 'skip' : {},
+    { initialNumItems: 50 }
   );
   return {
-    isLoading: proposals === undefined,
-    proposals: proposals ?? []
+    isLoading: options !== 'skip' && query.status === 'LoadingFirstPage',
+    proposals: query.results,
+    canLoadMore: options !== 'skip' && query.status === 'CanLoadMore',
+    isLoadingMore: options !== 'skip' && query.status === 'LoadingMore',
+    loadMore: () => {
+      if (options !== 'skip' && query.status === 'CanLoadMore') query.loadMore(50);
+    }
   };
 }
 

@@ -283,6 +283,7 @@ import type * as routes_discussions_research_remove from "../routes/discussions/
 import type * as routes_discussions_research_start from "../routes/discussions/research/start.js";
 import type * as routes_discussions_research_update from "../routes/discussions/research/update.js";
 import type * as routes_discussions_research_workspace from "../routes/discussions/research/workspace.js";
+import type * as routes_discussions_research_workspace_page from "../routes/discussions/research/workspace/page.js";
 import type * as routes_discussions_roster from "../routes/discussions/roster.js";
 import type * as routes_media_list from "../routes/media/list.js";
 import type * as routes_media_logo_clear from "../routes/media/logo/clear.js";
@@ -303,6 +304,7 @@ import type * as routes_polls_create from "../routes/polls/create.js";
 import type * as routes_polls_get from "../routes/polls/get.js";
 import type * as routes_polls_list_discussion from "../routes/polls/list/discussion.js";
 import type * as routes_polls_list_open from "../routes/polls/list/open.js";
+import type * as routes_polls_list_open_page from "../routes/polls/list/open/page.js";
 import type * as routes_polls_list_trip from "../routes/polls/list/trip.js";
 import type * as routes_polls_list_workspace from "../routes/polls/list/workspace.js";
 import type * as routes_polls_remove from "../routes/polls/remove.js";
@@ -396,6 +398,7 @@ import type * as routes_trips_versions_reviewers_set from "../routes/trips/versi
 import type * as routes_trips_versions_submit from "../routes/trips/versions/submit.js";
 import type * as routes_trips_versions_workspace_list from "../routes/trips/versions/workspace/list.js";
 import type * as routes_trips_versions_workspace_pending from "../routes/trips/versions/workspace/pending.js";
+import type * as routes_trips_versions_workspace_pending_page from "../routes/trips/versions/workspace/pending/page.js";
 
 import type {
   ApiFromModules,
@@ -679,6 +682,7 @@ declare const fullApi: ApiFromModules<{
   "routes/discussions/research/start": typeof routes_discussions_research_start;
   "routes/discussions/research/update": typeof routes_discussions_research_update;
   "routes/discussions/research/workspace": typeof routes_discussions_research_workspace;
+  "routes/discussions/research/workspace/page": typeof routes_discussions_research_workspace_page;
   "routes/discussions/roster": typeof routes_discussions_roster;
   "routes/media/list": typeof routes_media_list;
   "routes/media/logo/clear": typeof routes_media_logo_clear;
@@ -699,6 +703,7 @@ declare const fullApi: ApiFromModules<{
   "routes/polls/get": typeof routes_polls_get;
   "routes/polls/list/discussion": typeof routes_polls_list_discussion;
   "routes/polls/list/open": typeof routes_polls_list_open;
+  "routes/polls/list/open/page": typeof routes_polls_list_open_page;
   "routes/polls/list/trip": typeof routes_polls_list_trip;
   "routes/polls/list/workspace": typeof routes_polls_list_workspace;
   "routes/polls/remove": typeof routes_polls_remove;
@@ -792,6 +797,7 @@ declare const fullApi: ApiFromModules<{
   "routes/trips/versions/submit": typeof routes_trips_versions_submit;
   "routes/trips/versions/workspace/list": typeof routes_trips_versions_workspace_list;
   "routes/trips/versions/workspace/pending": typeof routes_trips_versions_workspace_pending;
+  "routes/trips/versions/workspace/pending/page": typeof routes_trips_versions_workspace_pending_page;
 }>;
 
 /**
