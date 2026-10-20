@@ -2,9 +2,11 @@ import { ConvexError, type Infer } from 'convex/values';
 import type { Doc, Id, TableNames } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import '#convex/modules/travel/targets/kinds/index';
+import type { Workspace } from '#convex/modules/auth/workspace';
 import { TripTargetKind } from '#convex/modules/travel/targets/kind';
 import type { TripTargetValidators } from '#convex/modules/travel/targets/schema';
 import type { TripCtx } from '#convex/modules/travel/trips/ctx';
+import { findVisibleTrip } from '#convex/modules/travel/trips/visibility';
 
 type AttachTarget = Infer<typeof TripTargetValidators.attachable>;
 type CollaborativeTarget = Infer<typeof TripTargetValidators.collaborative>;
@@ -73,13 +75,13 @@ async function targetBelongsToTrip(
   return tripIdOf(await ctx.db.get(table, id)) === tripId;
 }
 
-async function requireOrganizationTrip(
+async function requireParticipatingTrip(
   ctx: ReadCtx,
-  organizationId: string,
+  workspace: Workspace,
   tripId: Id<'trips'>
 ): Promise<Doc<'trips'>> {
-  const trip = await ctx.db.get('trips', tripId);
-  if (!trip || trip.organizationId !== organizationId) {
+  const trip = await findVisibleTrip(ctx, tripId, workspace);
+  if (!trip) {
     throw new ConvexError('Tagged trip not found');
   }
   return trip;
@@ -174,7 +176,7 @@ export class TripTargets {
 
   static async resolveContextTag(
     ctx: MutationCtx | QueryCtx,
-    organizationId: string,
+    workspace: Workspace,
     reference: ContextTagReference
   ): Promise<ContextTag> {
     const kind = TripTargetKind.of(reference.kind);
@@ -186,7 +188,7 @@ export class TripTargets {
     if (!row) throw new ConvexError(kind.taggedNotFoundMessage);
     const tripId = kind.table === 'trips' ? (id as Id<'trips'>) : tripIdOf(row);
     if (!tripId) throw new ConvexError(kind.taggedNotFoundMessage);
-    await requireOrganizationTrip(ctx, organizationId, tripId);
+    await requireParticipatingTrip(ctx, workspace, tripId);
     return {
       id: row._id,
       kind: contextKind(kind),
@@ -197,11 +199,13 @@ export class TripTargets {
 
   static async contextCatalog(
     ctx: MutationCtx | QueryCtx,
-    trips: Doc<'trips'>[]
+    trips: Doc<'trips'>[],
+    workspace: Workspace
   ): Promise<ContextCatalogItem[]> {
     const kinds = TripTargetKind.contextTagged();
     const groups = await Promise.all(
       trips.map(async (trip) => {
+        if (!(await findVisibleTrip(ctx, trip._id, workspace))) return [];
         const rowsByKind = await Promise.all(
           kinds.map(async (kind) => ({ kind, rows: await catalogRows(ctx, kind, trip._id) }))
         );
@@ -231,7 +235,7 @@ export class TripTargets {
 
   static async contextDetails(
     ctx: QueryCtx,
-    organizationId: string,
+    workspace: Workspace,
     reference: ContextTagReference
   ): Promise<unknown> {
     const kind = TripTargetKind.of(reference.kind);
@@ -243,7 +247,7 @@ export class TripTargets {
     if (!row) throw new ConvexError(kind.taggedNotFoundMessage);
     const tripId = kind.table === 'trips' ? (id as Id<'trips'>) : tripIdOf(row);
     if (!tripId) throw new ConvexError(kind.taggedNotFoundMessage);
-    await requireOrganizationTrip(ctx, organizationId, tripId);
+    await requireParticipatingTrip(ctx, workspace, tripId);
     return await kind.contextDetails(ctx, row, kind.contextLabel(asLabeledRow(row)));
   }
 }

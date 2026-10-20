@@ -130,34 +130,31 @@ async function nextSeq(ctx: RunWriter, runId: Id<'agentRuns'>): Promise<number> 
   return (last?.seq ?? 0) + 1;
 }
 
-/** Org match, plus discussion membership for discussion runs (their log carries the chat). */
+async function linkedRunTrip(ctx: RunReader, run: Doc<'agentRuns'>) {
+  if (run.tripId) return run.tripId;
+  if (run.issueId) return (await ctx.db.get('tripIssues', run.issueId))?.tripId ?? null;
+  if (run.proposalId)
+    return (await ctx.db.get('tripProposals', run.proposalId))?.sourceTripId ?? null;
+  return null;
+}
+
+/** Every linked trip requires participation; discussion logs also require their audience grant. */
 async function canViewRun(
   ctx: RunReader,
   run: Doc<'agentRuns'>,
   workspace: Workspace
 ): Promise<boolean> {
   if (run.organizationId !== workspace.organizationId) return false;
-  const discussionId = run.discussionId;
-  if (run.researchTask) {
-    if (!run.tripId || !(await findVisibleTrip(ctx, run.tripId, workspace))) return false;
-    if (!discussionId && run.createdBy.userId !== workspace.userId) return false;
-    if (discussionId) {
-      try {
-        await DiscussionAccess.forWorkspace(ctx, discussionId, workspace);
-      } catch {
-        return false;
-      }
-    }
+  const tripId = await linkedRunTrip(ctx, run);
+  if ((run.tripId || run.issueId || run.proposalId || run.researchTask) && !tripId) return false;
+  if (tripId && !(await findVisibleTrip(ctx, tripId, workspace))) return false;
+  if (!run.discussionId) return !run.researchTask || run.createdBy.userId === workspace.userId;
+  try {
+    await DiscussionAccess.forWorkspace(ctx, run.discussionId, workspace);
     return true;
+  } catch {
+    return false;
   }
-  if (!discussionId) return true;
-  const membership = await ctx.db
-    .query('discussionMembers')
-    .withIndex('by_discussionId_and_userId', (query) =>
-      query.eq('discussionId', discussionId).eq('userId', workspace.userId)
-    )
-    .unique();
-  return membership !== null;
 }
 
 /** Drops runs the viewer may not see; one bounded index lookup per discussion run. */
@@ -736,7 +733,7 @@ async function appendStepEvents(
 
 async function roster(ctx: QueryCtx): Promise<AgentRosterItem[]> {
   const workspace = await requireWorkspace(ctx);
-  const [runsByAgent, issues] = await Promise.all([
+  const [runsByAgent, allIssues] = await Promise.all([
     Promise.all(
       assistantAgentList.map(async (agent) =>
         visibleRuns(
@@ -760,6 +757,18 @@ async function roster(ctx: QueryCtx): Promise<AgentRosterItem[]> {
       .order('desc')
       .take(500)
   ]);
+  const tripAccess = new Map<Id<'trips'>, Promise<Doc<'trips'> | null>>();
+  const issueVisibility = await Promise.all(
+    allIssues.map((issue) => {
+      let visible = tripAccess.get(issue.tripId);
+      if (!visible) {
+        visible = findVisibleTrip(ctx, issue.tripId, workspace);
+        tripAccess.set(issue.tripId, visible);
+      }
+      return visible;
+    })
+  );
+  const issues = allIssues.filter((_, index) => issueVisibility[index] !== null);
   return assistantAgentList.map((agent, index) => {
     const agentRuns = runsByAgent[index] ?? [];
     const assignedIssueCount = isIssueAssignableAgentId(agent.id)
@@ -886,7 +895,11 @@ async function assignedIssueIdForActivity(
   }
   if (!activity.proposalId) return null;
   const proposal = await ctx.db.get('tripProposals', activity.proposalId);
-  if (!proposal || proposal.organizationId !== workspace.organizationId) {
+  if (
+    !proposal ||
+    proposal.organizationId !== workspace.organizationId ||
+    !(await findVisibleTrip(ctx, proposal.sourceTripId, workspace))
+  ) {
     return null;
   }
   return proposal.issueId ?? null;
@@ -901,7 +914,8 @@ async function assignedIssues(ctx: QueryCtx, agentId: string, activity: Assigned
     if (
       !issue ||
       issue.organizationId !== workspace.organizationId ||
-      !isAssignedActiveIssue(issue, agentId)
+      !isAssignedActiveIssue(issue, agentId) ||
+      !(await findVisibleTrip(ctx, issue.tripId, workspace))
     ) {
       return [];
     }
@@ -909,7 +923,7 @@ async function assignedIssues(ctx: QueryCtx, agentId: string, activity: Assigned
     return [presentAssignedIssue(issue)];
   }
   const tripId = activity.tripId;
-  if (!tripId) return [];
+  if (!tripId || !(await findVisibleTrip(ctx, tripId, workspace))) return [];
   const issues = await ctx.db
     .query('tripIssues')
     .withIndex('by_tripId_and_updatedAt', (query) => query.eq('tripId', tripId))
@@ -928,13 +942,18 @@ async function latestIssueRun(
 ): Promise<AgentRunView | null> {
   const workspace = await requireWorkspace(ctx);
   const issue = await ctx.db.get('tripIssues', issueId);
-  if (!issue || issue.organizationId !== workspace.organizationId) return null;
+  if (
+    !issue ||
+    issue.organizationId !== workspace.organizationId ||
+    !(await findVisibleTrip(ctx, issue.tripId, workspace))
+  )
+    return null;
   const run = await ctx.db
     .query('agentRuns')
     .withIndex('by_issueId_and_updatedAt', (query) => query.eq('issueId', issueId))
     .order('desc')
     .first();
-  return run ? presentRun(run) : null;
+  return run && (await canViewRun(ctx, run, workspace)) ? presentRun(run) : null;
 }
 
 async function latestProposalRun(
@@ -943,7 +962,12 @@ async function latestProposalRun(
 ): Promise<AgentRunView | null> {
   const workspace = await requireWorkspace(ctx);
   const proposal = await ctx.db.get('tripProposals', proposalId);
-  if (!proposal || proposal.organizationId !== workspace.organizationId) return null;
+  if (
+    !proposal ||
+    proposal.organizationId !== workspace.organizationId ||
+    !(await findVisibleTrip(ctx, proposal.sourceTripId, workspace))
+  )
+    return null;
   const runs = await ctx.db
     .query('agentRuns')
     .withIndex('by_proposalId_and_updatedAt', (query) => query.eq('proposalId', proposalId))
@@ -953,7 +977,7 @@ async function latestProposalRun(
     (candidate) =>
       candidate.agentId === 'reviewer' && candidate.organizationId === workspace.organizationId
   );
-  return run ? presentRun(run) : null;
+  return run && (await canViewRun(ctx, run, workspace)) ? presentRun(run) : null;
 }
 
 async function retryIssueRun(ctx: RunWriter, runId: Id<'agentRuns'>): Promise<Id<'agentRuns'>> {

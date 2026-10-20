@@ -111,7 +111,7 @@ export const contextCatalog = internalWorkspaceQuery({
       )
       .order('desc')
       .take(MAX_CATALOG_TRIPS);
-    return await TripTargets.contextCatalog(ctx, trips);
+    return await TripTargets.contextCatalog(ctx, trips, ctx.workspace);
   }
 });
 
@@ -130,15 +130,11 @@ export const taggedContext = internalWorkspaceQuery({
     }
     return await Promise.all(
       references.map(async (reference) => {
-        const resolved = await TripTargets.resolveContextTag(
-          ctx,
-          workspace.organizationId,
-          reference
-        );
+        const resolved = await TripTargets.resolveContextTag(ctx, workspace, reference);
         const details =
           reference.kind === 'trip'
             ? await AssistantTripContext.load(ctx, reference.id)
-            : await TripTargets.contextDetails(ctx, workspace.organizationId, reference);
+            : await TripTargets.contextDetails(ctx, workspace, reference);
         return { ...resolved, details: JSON.stringify(details) };
       })
     );
@@ -182,7 +178,7 @@ export const setContextTags = internalWorkspaceMutation({
         index
     );
     const resolved = await Promise.all(
-      unique.map((tag) => TripTargets.resolveContextTag(ctx, workspace.organizationId, tag))
+      unique.map((tag) => TripTargets.resolveContextTag(ctx, workspace, tag))
     );
     await updateThreadMetadata(ctx, components.agent, {
       patch: {
