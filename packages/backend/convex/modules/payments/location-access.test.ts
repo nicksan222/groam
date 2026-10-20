@@ -1,6 +1,6 @@
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
-import { setupWritableTrip, tripLocationInput } from '#testing/trips';
+import { openTripDraft, setupWritableTrip, tripInput, tripLocationInput } from '#testing/trips';
 
 afterEach(() => vi.unstubAllEnvs());
 
@@ -61,4 +61,33 @@ test('location searches hide unpaid draft coordinates and restore paid or disabl
     sessionId: 'cs_test_locations'
   });
   await searches(member, true);
+});
+
+test('nearest search fills its limit past inaccessible locations', async () => {
+  vi.stubEnv('STRIPE_SECRET_KEY', 'sk_test_locations');
+  const { owner, users, tripId } = await setupWritableTrip(1);
+  const point = { latitude: 38.72, longitude: -9.14 };
+  await owner.client.mutation(api.routes.trips.update.run, {
+    tripId,
+    input: { currency: 'EUR', name: 'Hidden nearest', destination: tripLocationInput(point) }
+  });
+  vi.stubEnv('STRIPE_SECRET_KEY', '');
+  const legacyTrip = await owner.client.action(api.routes.trips.create.run, { input: tripInput() });
+  const draft = await openTripDraft(owner, legacyTrip);
+  await owner.client.mutation(api.routes.trips.update.run, {
+    tripId: draft.workingTripId,
+    input: {
+      currency: 'EUR',
+      name: 'Visible farther',
+      destination: tripLocationInput({ latitude: 38.73, longitude: -9.14 })
+    }
+  });
+  vi.stubEnv('STRIPE_SECRET_KEY', 'sk_test_locations');
+  const results = await users[0]!.client.query(api.routes.trips.locations.nearest.run, {
+    limit: 1,
+    maxDistance: 10_000,
+    point,
+    type: 'trip'
+  });
+  expect(results).toEqual([expect.objectContaining({ key: `trip:${draft.workingTripId}` })]);
 });
