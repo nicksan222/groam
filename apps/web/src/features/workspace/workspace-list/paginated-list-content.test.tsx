@@ -26,11 +26,26 @@ function mount(props: {
 }
 
 describe('PaginatedListContent', () => {
-  test('shows only the empty state when empty', async () => {
-    await mount({ isEmpty: true, status: 'CanLoadMore' });
+  test('shows only the empty state after exhaustion', async () => {
+    await mount({ isEmpty: true, status: 'Exhausted' });
     await expect.element(page.getByText('Nothing here')).toBeVisible();
     await expect.element(page.getByText('Row one')).not.toBeInTheDocument();
     await expect.element(page.getByRole('button', { name: 'Load more' })).not.toBeInTheDocument();
+  });
+
+  test('continues past an empty filtered page without claiming exhaustion', async () => {
+    const onLoadMore = vi.fn();
+    await mount({ isEmpty: true, onLoadMore, status: 'CanLoadMore' });
+    await expect.element(page.getByText('Nothing here')).not.toBeInTheDocument();
+    await expect.element(page.getByText('Row one')).not.toBeInTheDocument();
+    await page.getByRole('button', { name: 'Load more' }).click();
+    expect(onLoadMore).toHaveBeenCalledWith(25);
+  });
+
+  test('keeps an empty-page continuation disabled while loading', async () => {
+    await mount({ isEmpty: true, status: 'LoadingMore' });
+    await expect.element(page.getByText('Nothing here')).not.toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: /Load more/ })).toBeDisabled();
   });
 
   test.each<Status>(['Exhausted', 'LoadingFirstPage'])(

@@ -6,6 +6,9 @@ import type { WorkspaceIdea } from '@/features/ideas/hooks/use-workspace-ideas';
 import { IdeaListView } from './idea-list-view';
 
 const state = vi.hoisted(() => ({
+  viewerCanLoadMore: false,
+  viewerLoadingMore: false,
+  viewerLoadMore: vi.fn(),
   isLoading: false,
   loadMore: vi.fn(),
   proposals: [] as WorkspaceIdea[],
@@ -33,6 +36,9 @@ vi.mock('@/features/trips/hooks/use-trips', () => ({
 vi.mock('@/features/ideas/hooks/use-workspace-ideas', () => ({
   useCreateIdea: () => vi.fn(),
   useViewerOpenIdeas: () => ({
+    canLoadMore: state.viewerCanLoadMore,
+    isLoadingMore: state.viewerLoadingMore,
+    loadMore: state.viewerLoadMore,
     isLoading: false,
     proposals: state.proposals.filter((proposal) => proposal.status === 'draft')
   }),
@@ -53,6 +59,8 @@ vi.mock('@/lib/navigation/router', async (importOriginal) => ({
 beforeEach(() => {
   vi.clearAllMocks();
   state.isLoading = false;
+  state.viewerCanLoadMore = false;
+  state.viewerLoadingMore = false;
   state.proposals = [];
   state.loadMore = vi.fn();
   state.status = 'Exhausted';
@@ -155,4 +163,33 @@ describe('IdeaListView', () => {
     expect(titles[0]).toBe('Extend the stay');
     await expect.element(page.getByText('Your draft')).toBeVisible();
   });
+});
+
+test('offers pending-idea continuation even when no accessible ideas have loaded', async () => {
+  state.viewerCanLoadMore = true;
+  await render(<IdeaListView />);
+  expect(state.viewerLoadMore).not.toHaveBeenCalled();
+  await expect.element(page.getByTestId('empty-screen')).not.toBeInTheDocument();
+  await expect.element(page.getByText('No open ideas.', { exact: true })).not.toBeInTheDocument();
+  await page.getByRole('button', { name: 'Load more of your open ideas' }).click();
+  expect(state.viewerLoadMore).toHaveBeenCalledTimes(1);
+});
+
+test('disables pending-idea continuation while the next page is loading', async () => {
+  state.viewerLoadingMore = true;
+  await render(<IdeaListView />);
+  await expect
+    .element(page.getByRole('button', { name: 'Loading your open ideas…' }))
+    .toBeDisabled();
+});
+
+test('keeps workspace continuation visible after an empty filtered page without claiming the list is empty', async () => {
+  state.status = 'CanLoadMore';
+  await render(<IdeaListView />);
+  await expect.element(page.getByRole('button', { name: 'Load more ideas' })).toBeVisible();
+  await expect.element(page.getByTestId('empty-screen')).not.toBeInTheDocument();
+  await expect.element(page.getByText('No open ideas.', { exact: true })).not.toBeInTheDocument();
+  await expect.element(page.getByText('No ideas yet.', { exact: true })).not.toBeInTheDocument();
+  await page.getByRole('button', { name: 'Load more ideas' }).click();
+  expect(state.loadMore).toHaveBeenCalledWith(25);
 });

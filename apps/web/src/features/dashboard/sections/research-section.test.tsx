@@ -5,7 +5,13 @@ import { dashboardResearch } from '@/features/dashboard/testing/dashboard-activi
 import { testIds } from '@/lib/test-ids';
 import { ResearchSection } from './research-section';
 
-const state = vi.hoisted(() => ({ isLoading: false, research: [] as unknown[] }));
+const state = vi.hoisted(() => ({
+  isLoading: false,
+  canLoadMore: false,
+  isLoadingMore: false,
+  loadMore: vi.fn(),
+  research: [] as unknown[]
+}));
 vi.mock('@/features/dashboard/hooks/use-dashboard-research', () => ({
   useDashboardResearch: () => state
 }));
@@ -16,6 +22,9 @@ vi.mock('@/lib/navigation/router', async () => {
 
 beforeEach(() => {
   state.isLoading = false;
+  state.canLoadMore = false;
+  state.isLoadingMore = false;
+  state.loadMore.mockClear();
   state.research = [];
 });
 
@@ -44,4 +53,15 @@ describe('ResearchSection', () => {
     await render(<ResearchSection />);
     await expect.element(page.getByRole('img', { name: 'Unread' })).toBeVisible();
   });
+});
+
+test('an empty filtered page offers Load more and then shows accessible research', async () => {
+  state.canLoadMore = true;
+  const screen = await render(<ResearchSection />);
+  await page.getByRole('button', { name: 'Load more research' }).click();
+  expect(state.loadMore).toHaveBeenCalledOnce();
+  state.research = [dashboardResearch()];
+  state.canLoadMore = false;
+  await screen.rerender(<ResearchSection />);
+  await expect.element(page.getByTestId(testIds.dashboardResearchRow)).toBeVisible();
 });

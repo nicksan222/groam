@@ -1,3 +1,5 @@
+import type { PaginationOptions } from 'convex/server';
+import { ConvexError } from 'convex/values';
 import type { Doc, Id } from '#convex-generated/dataModel';
 import type { QueryCtx } from '#convex-generated/server';
 import type { Workspace } from '#convex/modules/auth/workspace';
@@ -16,6 +18,36 @@ export async function listForWorkspace(ctx: QueryCtx, workspace: Workspace) {
     )
     .order('desc')
     .take(WORKSPACE_SCAN);
+  return (await presentWorkspaceRows(ctx, workspace, rows)).slice(0, WORKSPACE_LIMIT);
+}
+
+/** Candidate pagination preserves progress through hidden and deleting researches. */
+export async function pageForWorkspace(
+  ctx: QueryCtx,
+  workspace: Workspace,
+  paginationOpts: PaginationOptions
+) {
+  if (
+    !Number.isInteger(paginationOpts.numItems) ||
+    paginationOpts.numItems < 1 ||
+    paginationOpts.numItems > WORKSPACE_SCAN
+  )
+    throw new ConvexError(`Research page size must be between 1 and ${WORKSPACE_SCAN}`);
+  const result = await ctx.db
+    .query('discussions')
+    .withIndex('by_organizationId_and_kind_and_updatedAt', (q) =>
+      q.eq('organizationId', workspace.organizationId).eq('kind', 'research')
+    )
+    .order('desc')
+    .paginate({ ...paginationOpts, maximumRowsRead: WORKSPACE_SCAN });
+  return { ...result, page: await presentWorkspaceRows(ctx, workspace, result.page) };
+}
+
+async function presentWorkspaceRows(
+  ctx: QueryCtx,
+  workspace: Workspace,
+  rows: Doc<'discussions'>[]
+) {
   const trips = new Map<Id<'trips'>, Promise<Doc<'trips'> | null>>();
   const tripOf = (tripId: Id<'trips'>) => {
     let trip = trips.get(tripId);
@@ -51,5 +83,5 @@ export async function listForWorkspace(ctx: QueryCtx, workspace: Workspace) {
       };
     })
   );
-  return items.filter((item) => item !== null).slice(0, WORKSPACE_LIMIT);
+  return items.filter((item) => item !== null);
 }
