@@ -52,3 +52,13 @@ username identifiers. Better Auth owns the `emailVerified` state; signup cannot
 choose it. Addresses under `users.invalid` are rejected because they cannot
 receive verification mail. Password-reset links use both `token` and
 `auth=reset-password` to open the recovery screen, including for signed-in users.
+
+## Changing an account email
+
+Settings → Profile → Account email lets signed-in users verify a replacement
+address. Better Auth keeps the current address until the new inbox is verified
+and requires a fresh session for this change.
+
+Change-email links open the frontend and verify through its authenticated client.
+The signed token must match a fresh session for the original account; an anonymous
+recipient or a different account cannot consume the link or gain a session.

@@ -124,6 +124,7 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
       convex({ authConfig }),
       emailVerificationPolicy()
     ],
+    user: { changeEmail: { enabled: true, updateEmailWithoutVerification: false } },
     trustedOrigins: authTrustedOrigins
   }) satisfies BetterAuthOptions;
 
