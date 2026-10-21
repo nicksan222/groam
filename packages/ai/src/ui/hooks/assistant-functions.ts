@@ -26,7 +26,6 @@ export type AssistantBackendApi = {
       };
       context: {
         catalog: {
-          run: FunctionReference<'query', 'public'>;
           page: {
             run: FunctionReference<
               'query',
