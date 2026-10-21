@@ -1,12 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { repoRoot } from '@groam/devkit/repo-root';
+import { variableNames } from '@groam/env/deployment';
 import { expect, test } from 'vite-plus/test';
 import { status, type Facts } from '#src/setup/checklist';
 import {
   githubEnvironments,
   releaseSwitches,
-  requiredConvexSecrets,
   requirements,
   type Requirement
 } from '#src/setup/requirements';
@@ -54,6 +54,20 @@ test('marks what this machine can check and leaves the rest to the release', () 
   expect(status(find('emailFrom'), facts)).toBe('done');
 });
 
-test('the release requires the email relay secret it cannot create', () => {
-  expect(requiredConvexSecrets('production')).toEqual(['AUTH_EMAIL_RELAY_SECRET']);
+test('lists every deployment variable from @groam/env/deployment where it lives', () => {
+  const listed = requirements('production');
+  const at = (location: string) =>
+    listed.filter((r) => r.location === location).map(({ name }) => name);
+  expect(at('Convex environment')).toEqual(variableNames('convex'));
+  expect(at('apps/web (Void)')).toContain(variableNames('worker')[0]);
+  expect(at('GitHub environment secret')).toEqual(variableNames('github'));
+});
+
+test('each preflight job hands over every GitHub secret the definition lists', () => {
+  for (const environment of ['beta', 'production'])
+    for (const name of variableNames('github')) {
+      const preflight =
+        workflow.split(`  preflight-${environment}:`)[1]?.split('\n  beta:')[0] ?? '';
+      expect(preflight).toContain(`${name}: \${{ secrets.${name} }}`);
+    }
 });

@@ -14,6 +14,7 @@
   "exports": {
     "./auth-client": "./src/apps/auth-client.ts",
     "./convex-tooling": "./src/apps/convex-tooling.ts",
+    "./deployment": "./src/deployment/variables.ts",
     "./journeys": "./src/apps/journeys.ts",
     "./landing": "./src/apps/landing.ts",
     "./seeder": "./src/apps/seeder.ts",

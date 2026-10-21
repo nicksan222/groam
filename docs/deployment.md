@@ -22,8 +22,12 @@ data or credentials. Feature branches never receive release credentials.
 
 ## One-time setup per environment
 
-Everything an environment needs lives in one list,
-[`tooling/deploy/src/setup/requirements.ts`](../tooling/deploy/src/setup/requirements.ts). Run:
+Every variable and secret an environment needs is defined once, in
+[`@groam/env/deployment`](../packages/env/src/deployment/variables.ts): the Convex deployment's
+variables, the web Worker's secrets, and the GitHub environment's secrets. The backend's typed env,
+the Worker's `env.ts`, the setup checklist, and the release preflight all read it. The checklist
+([`tooling/deploy/src/setup/requirements.ts`](../tooling/deploy/src/setup/requirements.ts)) adds
+the committed settings, Cloudflare token permissions, and locks. Run:
 
 ```sh
 bun run deploy:setup
@@ -46,11 +50,15 @@ Cloudflare Git build; GitHub owns publishing.
 Every push to main is released automatically, beta first:
 
 1. **Checks** run on the pushed revision.
-2. **Deploy beta** publishes it to beta.
-3. **End-to-end on beta** (`bun run test:deployed`) drives the live beta in a real browser as a
+2. **Preflight** (`bun run deploy:preflight`) checks beta and production in parallel: every
+   GitHub secret, Convex variable, and web Worker secret in
+   [`@groam/env/deployment`](../packages/env/src/deployment/variables.ts), plus the committed
+   settings and locks. It reports everything missing at once and stops the run before any deploy.
+3. **Deploy beta** publishes it to beta.
+4. **End-to-end on beta** (`bun run test:deployed`) drives the live beta in a real browser as a
    signed-out visitor: the sign-in screen and its legal links, deep links, static files and 404s,
    the Convex auth backend, and the landing pages.
-4. **Deploy production** publishes the same revision, only if both beta steps passed.
+5. **Deploy production** publishes the same revision, only if both beta steps passed.
 
 Actions → **Release main** reruns the whole pipeline for current main. A deploy refuses a revision
 that is no longer the tip of main, so a newer push supersedes an older one. Direct local releases

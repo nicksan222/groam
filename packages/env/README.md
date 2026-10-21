@@ -17,6 +17,7 @@ import { env } from '@groam/env/seeder';
 | `landing`        | `VITE_SITE_URL` (web app origin for calls to action, default `http://localhost:5173`), `LANDING_SITE_URL` (landing origin for canonical URLs and sitemap, default `http://localhost:4321`) |
 | `production`     | Release workflow only: `GROAM_ENVIRONMENT`, publisher credentials, and GitHub context; public destinations come from `@groam/deploy/environments` |
 | `void`           | `GROAM_ENVIRONMENT`, selecting which `@groam/deploy/environments` entry a Void build targets |
+| `deployment`     | Not a target: the single definition of every hosted variable and secret (Convex deployment, web Worker, GitHub environment), read by the backend's typed env, `apps/web/env.ts`, the setup checklist, and the release preflight |
 | `journeys`       | `VITE_CONVEX_URL` and `VITE_CONVEX_SITE_URL` (local backend the per-file journey accounts are created on; defaults to the local Convex ports). |
 | `seeder`         | `SEED_CONVEX_URL`, `SEED_SITE_URL`, `SEED_USER_EMAIL`, `SEED_USER_PASSWORD`, `VITE_CONVEX_URL`, `VITE_CONVEX_SITE_URL` |
 | `convex-tooling` | `CONVEX_AGENT_MODE` (default `anonymous`), `VITE_CONVEX_URL`, `GROAM_READY_TIMEOUT_SECONDS`, `GROAM_STARTUP_TIMEOUT_MS` (both default `0`) |

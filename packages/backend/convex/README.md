@@ -107,9 +107,10 @@ integration is supplied. A website client ID alone does not enable plan-funded
 inference; the local OAuth flow must not use a shared remote callback. See the
 [official integration documentation](https://developers.openai.com/siwc/token-sharing-open-source).
 
-Better Auth secrets (`BETTER_AUTH_SECRET`, `SITE_URL`) are written by
-`tooling/devkit/configure-auth.ts` during `vp run dev`
-startup; they are not listed in `@groam/env`.
+Hosted deployment variables (`SITE_URL`, `BETTER_AUTH_SECRET`, the email relay and Stripe
+secrets) are defined in `@groam/env/deployment`, which `convex.config.ts` declares as the typed
+`env`. Locally, `tooling/devkit/configure-auth.ts` writes the Better Auth values during
+`vp run dev` startup.
 
 ## Testing
 
