@@ -29,6 +29,7 @@
     "apps/web/pages/**/*.{ts,tsx}",
     "apps/web/middleware/**/*.ts",
     "apps/web/void.config.ts",
+    "apps/landing/void.config.ts",
     "tooling/devkit/configure-auth.ts",
     "tooling/diagrams/src/render.ts",
     "packages/backend/scripts/generate-auth-schema.ts",
