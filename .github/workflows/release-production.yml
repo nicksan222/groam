@@ -5,6 +5,8 @@ on:
     secrets:
       CONVEX_DEPLOY_KEY:
         required: true
+      CLOUDFLARE_API_TOKEN:
+        required: true
 
 permissions:
   contents: read
@@ -20,14 +22,12 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
-      CONVEX_URL: ${{ vars.CONVEX_URL }}
-      SITE_URL: ${{ vars.SITE_URL }}
+      GROAM_ENVIRONMENT: production
     concurrency:
       group: production-deployment
       cancel-in-progress: false
     environment:
       name: prod
-      url: ${{ vars.SITE_URL }}
     steps:
       - name: Checkout tested revision
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -37,9 +37,6 @@ jobs:
 
       - name: Setup workspace
         uses: ./.github/actions/setup-workspace
-
-      - name: Build production release
-        run: bun run build:production
 
       - name: Verify revision is still current main
         shell: bash
@@ -51,10 +48,11 @@ jobs:
             exit 1
           fi
 
+      # Deploys Convex, then `void deploy` builds and publishes the web app and the landing site,
+      # each as its own Void project. Void checks every new version before it takes traffic.
       - name: 🚀 Deploy production release
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: bun run deploy:production
 
-      - name: Smoke test production
-        run: bun run smoke:production

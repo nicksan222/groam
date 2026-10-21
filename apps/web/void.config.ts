@@ -1,7 +1,18 @@
+import { environments } from '@groam/deploy/environments';
+import { env } from '@groam/env/void';
 import { defineConfig } from 'void/config';
 
-// The web app runs on Void Pages; Convex stays the application and authentication backend.
+const { web } = environments[env.environment];
+
+// The web app's own Void deployment (the landing site deploys separately from apps/landing).
+// Convex stays the application and authentication backend.
 export default defineConfig({
+  cloudflare: {
+    name: web.worker,
+    routes: [{ custom_domain: true, pattern: web.host }],
+    preview_urls: false,
+    workers_dev: true
+  },
   head: {
     htmlAttrs: { lang: 'en' },
     link: [

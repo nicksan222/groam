@@ -14,12 +14,17 @@
     "vite": "catalog:",
     "vite-plus": "catalog:"
   },
+  "exports": {
+    "./environments": "./src/environments.ts"
+  },
+  "imports": {
+    "#src/*": "./src/*.ts"
+  },
   "license": "MIT",
   "private": true,
   "scripts": {
-    "build:production": "bun --no-env-file src/build.ts",
-    "deploy:production": "bun --no-env-file src/deploy.ts",
-    "smoke:production": "bun --no-env-file src/smoke.ts",
+    "deploy:beta": "GROAM_ENVIRONMENT=beta bun --no-env-file src/release.ts",
+    "deploy:production": "GROAM_ENVIRONMENT=production bun --no-env-file src/release.ts",
     "test": "vp test run",
     "typecheck": "tsc --noEmit"
   },

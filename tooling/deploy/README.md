@@ -1,10 +1,36 @@
-# Deployment
+# Application releases
 
-Owns the production release from build through publishing and public route checks. Backend HTTP
-routing stays with the backend; release orchestration lives here.
+`@groam/deploy` publishes the Convex backend and two Void/Cloudflare frontends. Everything a
+release needs lives here:
 
-Use the root `build:production`, `deploy:production`, and `smoke:production` scripts. Publishing is
-restricted to the trusted main-branch GitHub Actions workflow. Both frontend builds run without a
-deploy key, and a release manifest binds their contents to the tested commit and destination.
+```
+src/
+  environments.ts      Public settings per environment: the single source of truth
+  release.ts           Entry point: verify, then publish Convex, web, and landing
+  release/             Release target, trusted-publisher check, git checkout checks
+  convex/              Convex CLI wrapper, auth settings sync, backend deploy
+  void/                Void lock handling, frontend build environment, frontend deploy
+locks/<environment>/   Committed Void locks (web.void.lock.json, landing.void.lock.json)
+```
 
-See [deployment setup and operation](../../docs/deployment.md) for the owner setup and release flow.
+`environments.ts` holds each environment's Convex URL, optional Cloudflare account, and the
+Worker name and custom domain of each app. Both `void.config.ts` files import it through
+`@groam/deploy/environments`, so Void creates the Workers and domains from the same values.
+
+Use `deploy:production` or `deploy:beta` from the repository root. Production accepts trusted
+main pushes or manual releases; beta accepts only a manual release from main. Both require the
+production-scoped deploy key of their own Convex project, the GitHub environment's secrets, an
+immutable tested SHA, and a clean checkout.
+
+Before deploying Convex, the release sets its `SITE_URL` to the web origin and generates
+`BETTER_AUTH_SECRET` if the deployment has none. It never replaces or prints an existing secret.
+
+Void hardcodes `void.lock.json` in each app directory. The release copies the committed lock there
+for one deploy, rejects any change Void makes to it, and always removes it. Never copy a
+production lock into beta.
+
+Convex deploys first, followed by web and landing. Void builds and checks each version before
+traffic moves. These deployments are not atomic; a later failure requires a deliberate retry.
+Frontend deploys receive public URLs and the Cloudflare token only; Convex gets only its deploy key.
+
+See [deployment setup and operation](../../docs/deployment.md).

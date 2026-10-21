@@ -38,3 +38,7 @@ GEMINI.local.md
 # Void generated types, local state, and Cloudflare config
 .void/
 .void-wrangler.jsonc
+
+# Void writes app-local locks during a deploy; committed copies live in tooling/deploy/locks.
+apps/web/void.lock.json
+apps/landing/void.lock.json
