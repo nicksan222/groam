@@ -1,11 +1,12 @@
 import { authClient } from '@groam/auth/client';
 import { useShallow } from 'zustand/react/shallow';
+import { emailCallbackURL, isEmail } from '@/lib/email';
 import { errorMessage } from '@/lib/errors';
 import { useAuthFormStore } from '@/lib/stores/auth-form-store';
 import { isValidUsername, usernameRequirements } from '@/lib/username';
 
 function signInWithIdentifier(identifier: string, password: string) {
-  const callbackURL = window.location.origin + window.location.pathname;
+  const callbackURL = emailCallbackURL();
   return identifier.includes('@')
     ? authClient.signIn.email({ callbackURL, email: identifier, password })
     : authClient.signIn.username({ callbackURL, password, username: identifier });
@@ -155,11 +156,11 @@ export function useAuthForm() {
 
   const signUp = async (username: string) => {
     if (!isValidUsername(username)) throw new Error(usernameRequirements);
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(state.email.trim())) {
+    if (!isEmail(state.email.trim())) {
       throw new Error('Enter a valid email address.');
     }
     return await authClient.signUp.email({
-      callbackURL: window.location.origin + window.location.pathname,
+      callbackURL: emailCallbackURL(),
       email: state.email.trim(),
       name: state.name.trim(),
       password: state.password,

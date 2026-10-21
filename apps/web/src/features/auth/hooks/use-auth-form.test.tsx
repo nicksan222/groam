@@ -55,25 +55,6 @@ describe('useAuthForm', () => {
     });
   });
 
-  test.each(['traveler', 'traveler@example.com'])(
-    'preserves the hosted app path when signing in as %s',
-    async (identifier) => {
-      const originalURL = window.location.href;
-      window.history.replaceState(null, '', '/app/');
-      try {
-        const { result } = await renderHook(() => useAuthForm());
-        await act(() => result.current.updateState({ identifier, password: 'password123' }));
-        await act(() => result.current.submit());
-        const signIn = identifier.includes('@') ? auth.signInEmail : auth.signIn;
-        expect(signIn).toHaveBeenCalledWith(
-          expect.objectContaining({ callbackURL: window.location.origin + '/app/' })
-        );
-      } finally {
-        window.history.replaceState(null, '', originalURL);
-      }
-    }
-  );
-
   test('signs up with a real email and username', async () => {
     const { result } = await renderHook(() => useAuthForm());
     await act(() =>

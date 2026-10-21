@@ -45,6 +45,7 @@ export const ids = {
   authRecoveryNewPassword: 'auth-recovery-new-password',
   authRecoveryOpen: 'auth-recovery-open',
   authRecoveryUsername: 'auth-recovery-username',
+  authSignupEmail: 'auth-signup-email',
   authSubmit: 'auth-submit',
   authSwitchFlow: 'auth-switch-flow',
   authTwoFactorCode: 'auth-two-factor-code',

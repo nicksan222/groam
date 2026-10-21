@@ -1,60 +1,28 @@
 import type { BetterAuthPlugin } from 'better-auth';
-import { APIError, createAuthMiddleware, getAuthoritativeSessionFromCtx } from 'better-auth/api';
-import { decodeJwt, jwtVerify } from 'jose';
+import { APIError, createAuthMiddleware } from 'better-auth/api';
 
-const isPlaceholder = (email: string) => email.toLowerCase().endsWith('@users.invalid');
+/** Accounts created before email sign-in hold these addresses; they can never receive mail. */
+export const isPlaceholderEmail = (email: string) =>
+  email.trim().toLowerCase().endsWith('@users.invalid');
 
-/** Reject unreachable signup addresses and secure replacement-email verification. */
+/** Every hosted site requires email ownership; only local development skips it. */
+export function requiresVerifiedEmail(siteUrl: string) {
+  return !new Set(['localhost', '127.0.0.1', '[::1]']).has(new URL(siteUrl).hostname);
+}
+
+/** Reject signup addresses that cannot receive verification mail. */
 export function emailVerificationPolicy() {
   return {
     id: 'groam-email-verification-policy',
     hooks: {
       before: [
         {
-          matcher: (ctx) => ctx.path === '/sign-up/email' || ctx.path === '/change-email',
+          matcher: (ctx) => ctx.path === '/sign-up/email',
           handler: createAuthMiddleware(async (ctx) => {
-            const email = ctx.body?.newEmail ?? ctx.body?.email;
-            if (typeof email === 'string' && isPlaceholder(email.trim())) {
+            const email = ctx.body?.email;
+            if (typeof email === 'string' && isPlaceholderEmail(email)) {
               throw new APIError('BAD_REQUEST', {
                 message: 'Use an email address you can receive mail at.'
-              });
-            }
-          })
-        },
-        {
-          matcher: (ctx) => ctx.path === '/verify-email',
-          handler: createAuthMiddleware(async (ctx) => {
-            const token = ctx.query?.token;
-            if (typeof token !== 'string') return;
-            let payload;
-            try {
-              ({ payload } = await jwtVerify(token, new TextEncoder().encode(ctx.context.secret), {
-                algorithms: ['HS256']
-              }));
-            } catch {
-              // Better Auth owns ordinary invalid/expired-token responses and safe redirects.
-              return;
-            }
-            if (!payload.updateTo) return;
-            // Better Auth applies returned transport-hook headers only after all before hooks.
-            // Normalize the browser transport here before the authoritative signed-cookie read.
-            const forwardedCookie = ctx.headers?.get('better-auth-cookie');
-            if (forwardedCookie && !ctx.headers?.has('authorization')) {
-              ctx.headers = new Headers(ctx.headers);
-              ctx.headers.set('cookie', forwardedCookie);
-            }
-            const session = await getAuthoritativeSessionFromCtx(ctx);
-            if (!session || session.user.email !== payload.email) {
-              throw new APIError('UNAUTHORIZED', {
-                message:
-                  'Sign in to the account that requested this email change, then reopen the link.'
-              });
-            }
-            const age = Date.now() - new Date(session.session.createdAt).getTime();
-            const freshAge = ctx.context.sessionConfig.freshAge;
-            if (freshAge !== 0 && age >= freshAge * 1000) {
-              throw new APIError('FORBIDDEN', {
-                message: 'Sign in again before confirming this email change.'
               });
             }
           })
@@ -62,14 +30,4 @@ export function emailVerificationPolicy() {
       ]
     }
   } satisfies BetterAuthPlugin;
-}
-
-/** Change-email links return through the frontend so its authenticated transport can verify. */
-export function verificationLink(url: string, token: string, siteUrl: string) {
-  if (!decodeJwt(token).updateTo) return url;
-  const target = new URL(new URL(url).searchParams.get('callbackURL') ?? '/', siteUrl);
-  if (target.origin !== new URL(siteUrl).origin)
-    throw new Error('Invalid verification callback origin');
-  target.searchParams.set('emailChangeToken', token);
-  return target.href;
 }

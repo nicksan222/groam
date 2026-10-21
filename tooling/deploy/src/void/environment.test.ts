@@ -30,8 +30,7 @@ test('Void deploys receive public destinations and no backend credentials', () =
     VITE_SITE_URL: 'https://app.groam.example',
     VITE_LANDING_URL: 'https://groam.example',
     LANDING_SITE_URL: 'https://groam.example/',
-    CLOUDFLARE_WORKERS_SUBDOMAIN: 'groam',
-    AUTH_EMAIL_FROM: 'Groam <noreply@mail.groam.app>'
+    CLOUDFLARE_WORKERS_SUBDOMAIN: 'groam'
   });
 });
 

@@ -4,6 +4,7 @@ import { Spinner } from '@groam/ui/components/spinner';
 import { Authenticated, AuthLoading, Unauthenticated } from 'convex/react';
 import { Activity, lazy, type PropsWithChildren, Suspense } from 'react';
 import { useSessionChange } from '@/features/auth/hooks/use-session-change';
+import { passwordResetCallback } from '@/features/auth/password-reset-callback';
 import { SessionChangeContext } from '@/features/auth/session-change-context';
 import { RouteErrorBoundary } from '@/features/errors/route-error/route-error-boundary';
 import { useLocation } from '@/lib/navigation/router';
@@ -31,10 +32,7 @@ export default function App({ children }: PropsWithChildren) {
   // Any navigation, including a query change, starts the page over, as a page load would.
   const { pathname, search } = useLocation();
 
-  const resetQuery = new URLSearchParams(window.location.search);
-  const isPasswordReset =
-    Boolean(resetQuery.get('token')) && resetQuery.get('auth') === 'reset-password';
-  if (isPasswordReset) {
+  if (passwordResetCallback()) {
     return (
       <SessionChangeContext value={changeSession}>
         <Suspense fallback={<LoadingSession />}>

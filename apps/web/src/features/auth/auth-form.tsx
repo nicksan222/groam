@@ -192,11 +192,12 @@ function AuthFields({
         <FormField label="Email" required>
           <Input
             autoComplete="email"
-            type="email"
+            data-testid={testIds.authSignupEmail}
             disabled={state.isPending}
             onChange={(event) => updateState({ error: null, email: event.target.value })}
             placeholder="you@example.com"
             required
+            type="email"
             value={state.email}
           />
         </FormField>

@@ -163,3 +163,20 @@ test('signup rejects addresses that cannot receive verification mail', async () 
   });
   expect(signup.status).toBe(400);
 });
+
+test('auth mail is capped per recipient without changing the public response', async () => {
+  const convex = createTest();
+  const email = 'limited@example.com';
+  await post(convex, 'sign-up/email', { email, name: 'Limited traveler', password });
+  for (let request = 0; request < 6; request += 1) {
+    const reset = await post(convex, 'request-password-reset', {
+      email,
+      redirectTo: 'https://app.example.com/app/'
+    });
+    expect(reset.status).toBe(200);
+  }
+  const scheduled = await convex.run(
+    async (ctx) => await ctx.db.system.query('_scheduled_functions').take(20)
+  );
+  expect(scheduled.filter((job) => job.args[0]?.to === email)).toHaveLength(5);
+});

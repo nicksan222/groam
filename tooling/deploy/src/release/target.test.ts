@@ -10,7 +10,6 @@ describe('release target', () => {
     expect(productionTarget.deploymentName).toBe('groam-demo');
     expect(productionTarget.workers).toEqual({ web: 'groam-app', landing: 'groam-landing' });
     expect(productionTarget.workersSubdomain).toBe('groam');
-    expect(productionTarget.emailFrom).toBe('Groam <noreply@mail.groam.app>');
   });
 
   test('accepts regional origins without confusing the region with the deployment', () => {

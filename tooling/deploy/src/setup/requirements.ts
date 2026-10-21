@@ -135,7 +135,7 @@ export function requirements(environment: ReleaseEnvironment): Requirement[] {
       name: 'void email setup',
       location: 'apps/web (Void)',
       setBy: 'you',
-      how: `In apps/web, run \`void email setup --platform cloudflare\` with AUTH_EMAIL_FROM set to emailFrom (see packages/auth/README.md#hosted-authentication-and-email).`
+      how: 'Needs a Workers Paid plan with Email Sending onboarded (to mail any recipient). Then, in apps/web, run `void email setup --platform cloudflare`; the sender comes from emailFrom.'
     },
     {
       name: `${environment}/web.void.lock.json, ${environment}/landing.void.lock.json`,

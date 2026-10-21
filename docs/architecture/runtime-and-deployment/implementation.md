@@ -64,6 +64,8 @@ if (await isConvexBackendResponding(backendUrl) && !(await stopLocalBackend(back
 if (!runConvex(['env', 'list', '--names-only']).has('BETTER_AUTH_SECRET'))
   runConvex(['env', 'set', 'BETTER_AUTH_SECRET'], { input: randomBytes(32).toString('base64url') });
 runConvex(['env', 'set', 'SITE_URL', siteUrl]);
+// One AUTH_EMAIL_RELAY_SECRET in Convex and apps/web/.env (reused if either holds it), so local
+// auth mail reaches Void's dev inbox.
 if (writeViteSiteUrl) upsertViteSiteUrl('.env.local', siteUrl); // one VITE_SITE_URL= line
 ```
 
@@ -90,8 +92,9 @@ as a subpath (`auth-client`, `web-client`, `landing`, `convex-tooling`, `seeder`
 browser bundle. The `web-client` target includes `VITE_LANDING_URL`, where the
 app links Terms and Privacy on the separate landing site. The Convex runtime is separate: it
 declares its variables with `defineApp({ env })` and reads them from the
-generated `env`. `BETTER_AUTH_SECRET` and `SITE_URL` are deployment variables
-set by `configure-auth.ts` locally. The owner configures them directly in the
+generated `env`. `BETTER_AUTH_SECRET`, `SITE_URL`, and `AUTH_EMAIL_RELAY_SECRET`
+are deployment variables set by `configure-auth.ts` locally, which also writes the
+relay secret to `apps/web/.env` for the Void Worker. The owner configures them directly in the
 Convex dashboard for production; CI cannot read or write them. They are not
 managed by `@groam/env`.
 
@@ -328,8 +331,8 @@ Source: [`pre-commit`](../../../tooling/hooks/pre-commit),
   args: [`agent-tooling.test.ts`](../../../tooling/quality/agent-tooling.test.ts),
   with configuration validated by `vp run lint:agents` and helper tests run by
   `vp run test:quality`.
-- Auth setup keeps an existing `BETTER_AUTH_SECRET` and upserts one
-  `VITE_SITE_URL` line: [`configure-auth.test.ts`](../../../tooling/devkit/configure-auth.test.ts).
+- Auth setup keeps an existing `BETTER_AUTH_SECRET`, shares one relay secret
+  with `apps/web/.env`, and upserts one `VITE_SITE_URL` line: [`configure-auth.test.ts`](../../../tooling/devkit/configure-auth.test.ts).
 - Shutdown only stops this repository's backend, and another HTTP server is
   not mistaken for Convex:
   [`local-backend.test.ts`](../../../tooling/devkit/local-backend.test.ts).

@@ -12,7 +12,6 @@ export type ReleaseTarget = {
   deploymentName: string;
   cloudflareAccountId: string;
   workersSubdomain: string;
-  emailFrom: string;
 };
 
 function hostedOrigin(value: string, suffix = ''): URL {
@@ -92,7 +91,6 @@ export function releaseTarget(
     backendSiteUrl: `https://${hostPrefix}.convex.site`,
     deploymentName: hostPrefix.split('.')[0] ?? '',
     cloudflareAccountId,
-    workersSubdomain,
-    emailFrom: settings.emailFrom.trim()
+    workersSubdomain
   };
 }

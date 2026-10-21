@@ -16,7 +16,6 @@ import { env } from '@groam/env/seeder';
 | `web-client`     | `VITE_CONVEX_URL`, `VITE_CONVEX_SITE_URL`, `VITE_SITE_URL`, `VITE_LANDING_URL` (landing origin, default `http://localhost:4321`), optional `VITE_PHOTON_URL` (default Photon), optional `VITE_MAP_TILES_URL` (OpenStreetMap raster template) |
 | `landing`        | `VITE_SITE_URL` (web app origin for calls to action, default `http://localhost:5173`), `LANDING_SITE_URL` (landing origin for canonical URLs and sitemap, default `http://localhost:4321`) |
 | `production`     | Release workflow only: `GROAM_ENVIRONMENT`, publisher credentials, and GitHub context; public destinations come from `@groam/deploy/environments` |
-| `web`            | `AUTH_EMAIL_FROM` (sender in `apps/web/void.config.ts`; local default `noreply@groam.localhost`, Void's dev inbox; releases use the environment's `emailFrom`) |
 | `void`           | `GROAM_ENVIRONMENT`, selecting which `@groam/deploy/environments` entry a Void build targets |
 | `journeys`       | `VITE_CONVEX_URL` and `VITE_CONVEX_SITE_URL` (local backend the per-file journey accounts are created on; defaults to the local Convex ports). |
 | `seeder`         | `SEED_CONVEX_URL`, `SEED_SITE_URL`, `SEED_USER_EMAIL`, `SEED_USER_PASSWORD`, `VITE_CONVEX_URL`, `VITE_CONVEX_SITE_URL` |

@@ -14,47 +14,21 @@ transport. Server configuration stays beside the official local component in
 
 ## Hosted authentication and email
 
-New users register with a real email address, a username, and a password. Hosted
-sites require email verification before password sign-in; localhost retains the
-provider-free development flow. Verification does not create a session automatically.
-Existing passkey, authenticator, backup-code, and offline recovery-code flows remain.
-Password-reset links expire according to Better Auth's default one-hour lifetime;
-a successful reset consumes the token and revokes existing sessions.
+Hosted sites require a verified email before password sign-in; localhost skips it. Convex
+schedules each message (`packages/backend/convex/modules/auth/email.ts`, rate-limited per
+recipient) and hands it to the Void Worker at `apps/web/routes/api/email.ts`, signed as in
+`packages/backend/convex/modules/auth/relay.ts`.
 
-The public auth screen includes password-reset requests and verification resends.
-Both preserve the current frontend path under `/app`. Better Auth stores users,
-sessions, passkeys and verification tokens in its Convex component. Better Auth
-schedules an internal Convex action for each message, keeping delivery latency out
-of account-existence responses.
+Setup for a hosted environment:
 
-That action hands the message to the Void Worker at the frontend origin
-(`POST {SITE_URL}/api/email`, `apps/web/routes/api/email.ts`), which sends it with
-`void/email`. Requests are signed (HMAC-SHA256 over a timestamp and the body) with a
-secret Convex and the Worker share, and expire after five minutes; the Worker sends
-nothing for unsigned, stale or malformed requests and never echoes provider details.
-The signing helpers live in `packages/backend/convex/modules/auth/relay.ts`.
+1. Set Convex `SITE_URL` (the frontend origin) and `AUTH_EMAIL_RELAY_SECRET`.
+2. Set the same secret on the Worker: `void secret put AUTH_EMAIL_RELAY_SECRET` in `apps/web`.
+3. Set `emailFrom` in `tooling/deploy/src/environments.ts`, then run
+   `void email setup --platform cloudflare` in `apps/web`.
 
-Configure before publishing a hosted signup flow:
+A missing or mismatched relay secret does **not** skip verification: delivery fails and users
+stay unverified. Accounts created before email sign-in hold placeholder `@users.invalid`
+addresses and cannot use password sign-in on hosted deployments.
 
-- Convex: `SITE_URL` (the public frontend origin, also used for trusted origins and the
-  passkey relying party) and `AUTH_EMAIL_RELAY_SECRET`.
-- Void Worker: the same `AUTH_EMAIL_RELAY_SECRET`, set with `void secret put` from
-  `apps/web` (declared in `apps/web/env.ts`, so `void deploy` refuses to publish without it).
-- Sender: `AUTH_EMAIL_FROM` (GitHub variable), an address on your Cloudflare email
-  domain. `void deploy --require-email` sets up Email Routing and Sending for it; run
-  `void email setup --platform cloudflare` locally once and commit `apps/web/void.lock.json`.
-  Sending to arbitrary recipients needs Workers Paid and Email Sending onboarding.
-
-Locally, `tooling/devkit/configure-auth.ts` (run by `bun run dev`) writes one relay
-secret to the Convex deployment and `apps/web/.env`, so mail Convex sends appears in
-Void's dev inbox (its URL is printed when the web dev server starts). Missing relay
-configuration does **not** bypass hosted verification: scheduled delivery fails and
-users remain unverified. Inspect Convex scheduled-action failures and resend after
-correcting configuration. Automatic retries are intentionally avoided so a slow
-provider cannot send duplicate links.
-
-Hosted password sign-in requires verified email ownership for both email and
-username identifiers. Better Auth owns the `emailVerified` state; signup cannot
-choose it. Addresses under `users.invalid` are rejected because they cannot
-receive verification mail. Password-reset links use both `token` and
-`auth=reset-password` to open the recovery screen, including for signed-in users.
+Locally, `just dev` writes one relay secret to Convex and `apps/web/.env`; mail appears in
+Void's dev inbox. After pulling this change, run `just dev` once so `apps/web/.env` gets it.

@@ -21,7 +21,6 @@ export function frontendEnvironment(
     VITE_SITE_URL: target.siteUrl,
     VITE_LANDING_URL: target.landingUrl,
     LANDING_SITE_URL: `${target.landingUrl}/`,
-    AUTH_EMAIL_FROM: target.emailFrom,
     ASTRO_TELEMETRY_DISABLED: '1'
   };
 }

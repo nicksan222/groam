@@ -1,6 +1,18 @@
+import { HOUR, RateLimiter } from '@convex-dev/rate-limiter';
 import { v } from 'convex/values';
+import { components } from '#convex-generated/api';
 import { env, internalAction } from '#convex-generated/server';
 import { deliverAuthEmail } from './delivery';
+
+/** Public signup, verification, and reset endpoints all mail one address; cap it per recipient. */
+export const authEmailRateLimiter = new RateLimiter(components.rateLimiter, {
+  authEmail: {
+    capacity: 5,
+    kind: 'token bucket',
+    period: HOUR,
+    rate: 5
+  }
+});
 
 /** Scheduled by Better Auth so email-provider latency cannot enumerate registered accounts. */
 export const send = internalAction({
