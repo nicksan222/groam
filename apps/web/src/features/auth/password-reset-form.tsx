@@ -7,10 +7,26 @@ import { useRef, useState, type FormEvent } from 'react';
 import { emailCallbackURL } from '@/lib/email';
 import { errorMessage } from '@/lib/errors';
 
+const invalidLink = 'This reset link is invalid or expired. Request another email.';
+
+/** Resets the password; resolves to an error message, or null once it is reset. */
+async function resetPassword(password: string, token: string): Promise<string | null> {
+  if (password.length < 8 || password.length > 128)
+    return 'Your password must be between 8 and 128 characters.';
+  try {
+    const { error } = await authClient.resetPassword({ newPassword: password, token });
+    return error ? (error.message ?? invalidLink) : null;
+  } catch (cause) {
+    return errorMessage(cause, invalidLink);
+  }
+}
+
 /** Sets a new password from an emailed reset link. */
 export function PasswordResetForm({ token }: { token: string }) {
   const [password, setPassword] = useState('');
-  const inFlight = useRef(false);
+  // The request that owns the form; a reset token works once, so a second submit waits for it.
+  const activeRequest = useRef(0);
+  const nextRequest = useRef(0);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [completed, setCompleted] = useState(false);
@@ -18,27 +34,26 @@ export function PasswordResetForm({ token }: { token: string }) {
 
   const reset = async (event: FormEvent) => {
     event.preventDefault();
-    if (inFlight.current) return;
-    if (password.length < 8 || password.length > 128) {
-      setError('Your password must be between 8 and 128 characters.');
-      return;
-    }
-    inFlight.current = true;
+    if (activeRequest.current) return;
+    const request = ++nextRequest.current;
+    activeRequest.current = request;
     setPending(true);
     setError(null);
     try {
-      const result = await authClient.resetPassword({ newPassword: password, token });
-      if (result.error) throw new Error(result.error.message ?? 'Unable to reset password');
+      const failure = await resetPassword(password, token);
+      if (activeRequest.current !== request) return;
+      if (failure) {
+        setError(failure);
+        return;
+      }
       setCompleted(true);
       setPassword('');
       window.history.replaceState(null, '', callbackURL);
-    } catch (cause) {
-      setError(
-        errorMessage(cause, 'This reset link is invalid or expired. Request another email.')
-      );
     } finally {
-      inFlight.current = false;
-      setPending(false);
+      if (activeRequest.current === request) {
+        activeRequest.current = 0;
+        setPending(false);
+      }
     }
   };
 
