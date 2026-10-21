@@ -49,13 +49,21 @@ test.each([undefined, '', '   '])(
     vi.stubEnv('STRIPE_WEBHOOK_SECRET', secret);
     const { owner, tripId, users } = await setupTrip(1);
     const member = users[0]!;
-    expect((await owner.client.query(api.routes.trips.payments.status.run, { tripId })).enabled).toBe(true);
-    await expect(member.client.action(api.routes.trips.payments.checkout.run, { tripId })).rejects.toThrow('Payments are not fully configured');
+    expect(
+      (await owner.client.query(api.routes.trips.payments.status.run, { tripId })).enabled
+    ).toBe(true);
+    await expect(
+      member.client.action(api.routes.trips.payments.checkout.run, { tripId })
+    ).rejects.toThrow('Payments are not fully configured');
     vi.stubEnv('STRIPE_WEBHOOK_SECRET', 'whsec_activation');
     const status = await member.client.query(api.routes.trips.payments.status.run, { tripId });
     expect(status.enabled).toBe(true);
-    expect(status.travelers.find((traveler) => traveler.userId === member.userId)?.free).toBe(false);
-    await expect(member.client.mutation(api.routes.trips.travelers.set.run, { tripId, status: 'going' })).rejects.toThrow('Pay €1');
+    expect(status.travelers.find((traveler) => traveler.userId === member.userId)?.free).toBe(
+      false
+    );
+    await expect(
+      member.client.mutation(api.routes.trips.travelers.set.run, { tripId, status: 'going' })
+    ).rejects.toThrow('Pay €1');
   }
 );
 

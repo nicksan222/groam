@@ -132,8 +132,8 @@ export default {
     'No. Non c’è alcun rinnovo mensile o annuale. Ogni viaggiatore paga 1 € per ogni viaggio a cui partecipa, e basta.',
   'Only the trip creator’s own place is free. Other organizers pay €1 per trip like other invited travelers, or another organizer covers them. A trip for four, including its creator, costs €3.':
     'Solo il posto di chi crea il viaggio è gratuito. Gli altri organizzatori pagano 1 € per viaggio come gli altri invitati, oppure un altro organizzatore copre la loro quota. Un viaggio per quattro persone, incluso chi lo crea, costa 3 €.',
-  'On trips with payments enabled, pay €1 through Stripe Checkout before joining, or ask the organizer to cover you. Existing trips and installations without payments stay free.':
-    'Nei viaggi con pagamenti attivi, paga 1 € tramite Stripe Checkout prima di partecipare, oppure chiedi all’organizzatore di pagare per te. I viaggi esistenti e le installazioni senza pagamenti restano gratuiti.',
+  'On trips with payments enabled, pay €1 through Stripe Checkout before joining, or ask the organizer to cover you. Payments apply to every trip when enabled and are skipped when Stripe is not configured.':
+    'Nei viaggi con pagamenti attivi, paga 1 € tramite Stripe Checkout prima di partecipare, oppure chiedi all’organizzatore di pagare per te. I pagamenti si applicano a tutti i viaggi quando sono abilitati e vengono saltati se Stripe non è configurato.',
   'Nothing planned at this address': 'Nessun programma a questo indirizzo',
   'Nothing renews. AI features run on each traveler’s own ChatGPT account.':
     'Non si rinnova nulla. Le funzionalità AI usano l’account ChatGPT di ciascun viaggiatore.',
@@ -145,8 +145,8 @@ export default {
     'Contano solo i viaggiatori che partecipano davvero al viaggio. Un invito che nessuno accetta non costa nulla.',
   'Trip creator': 'Creatore del viaggio',
   'Page not found · Groam': 'Pagina non trovata · Groam',
-  'One-time checkout when payments are enabled. Existing trips stay free.':
-    'Pagamento una tantum quando i pagamenti sono attivi. I viaggi esistenti restano gratuiti.',
+  'One-time checkout for every trip when payments are enabled.':
+    'Pagamento una tantum per ogni viaggio quando i pagamenti sono attivi.',
   'Pause animation': 'Metti in pausa l’animazione',
   'Pause trip lane': 'Metti in pausa lo scorrimento dei viaggi',
   Payments: 'Pagamenti',
@@ -156,10 +156,10 @@ export default {
     'Pianifica da solo gratis. Ogni viaggiatore invitato costa 1 € per ogni viaggio a cui partecipa. Paga la propria quota, oppure la copre un organizzatore. Il posto di chi crea il viaggio è gratuito e non c’è alcun abbonamento.',
   'Planning on your own is free. Each traveler you invite pays €1 for each trip they join. No subscription, no AI fee.':
     'Pianificare da soli è gratis. Ogni viaggiatore che inviti paga 1 € per ogni viaggio a cui partecipa. Nessun abbonamento, nessun costo per l’AI.',
-  'Planning on your own is free. When payments are enabled, invited travelers pay €1 per trip through Stripe Checkout, or a trip organizer covers their payment. The trip creator is free. Existing trips stay free, and payments are skipped when Stripe is not configured. The final terms still need owner and legal review of when a charge is due, who takes payment, taxes, receipts, failed payments, cancellation and refund rules, and any consumer withdrawal rights.':
-    'Pianificare da soli è gratis. Quando i pagamenti sono abilitati, ogni viaggiatore invitato paga 1 € per viaggio tramite Stripe Checkout, oppure un organizzatore copre la sua quota. Chi crea il viaggio non paga. I viaggi esistenti restano gratuiti e, se Stripe non è configurato, i pagamenti vengono saltati. I termini finali richiedono ancora la revisione del titolare e di un legale su quando è dovuto un addebito, chi riscuote il pagamento, imposte, ricevute, pagamenti non riusciti, regole su annullamenti e rimborsi ed eventuali diritti di recesso dei consumatori.',
-  'Planning on your own is free. When payments are enabled, invited travelers pay €1 per trip through Stripe Checkout, or a trip organizer covers their payment. The trip creator is free. Existing trips stay free, and payments are skipped when Stripe is not configured. Stripe Checkout handles the payment form, and Groam stores payment confirmation records in Convex. The privacy notice and payment terms still need owner and legal review before accepting live payments.':
-    'Pianificare da soli è gratis. Quando i pagamenti sono abilitati, ogni viaggiatore invitato paga 1 € per viaggio tramite Stripe Checkout, oppure un organizzatore copre la sua quota. Chi crea il viaggio non paga. I viaggi esistenti restano gratuiti e, se Stripe non è configurato, i pagamenti vengono saltati. Stripe Checkout gestisce il modulo di pagamento e Groam conserva i dati di conferma del pagamento in Convex. L’informativa sulla privacy e i termini di pagamento richiedono ancora la revisione del titolare e di un legale prima di accettare pagamenti reali.',
+  'Planning on your own is free. When payments are enabled, invited travelers pay €1 per trip through Stripe Checkout, or a trip organizer covers their payment. The trip creator is free. Payments apply to every trip when enabled and are skipped when Stripe is not configured. The final terms still need owner and legal review of when a charge is due, who takes payment, taxes, receipts, failed payments, cancellation and refund rules, and any consumer withdrawal rights.':
+    'Pianificare da soli è gratis. Quando i pagamenti sono abilitati, ogni viaggiatore invitato paga 1 € per viaggio tramite Stripe Checkout, oppure un organizzatore copre la sua quota. Chi crea il viaggio non paga. I pagamenti si applicano a tutti i viaggi quando sono abilitati e vengono saltati se Stripe non è configurato. I termini finali richiedono ancora la revisione del titolare e di un legale su quando è dovuto un addebito, chi riscuote il pagamento, imposte, ricevute, pagamenti non riusciti, regole su annullamenti e rimborsi ed eventuali diritti di recesso dei consumatori.',
+  'Planning on your own is free. When payments are enabled, invited travelers pay €1 per trip through Stripe Checkout, or a trip organizer covers their payment. The trip creator is free. Payments apply to every trip when enabled and are skipped when Stripe is not configured. Stripe Checkout handles the payment form, and Groam stores payment confirmation records in Convex. The privacy notice and payment terms still need owner and legal review before accepting live payments.':
+    'Pianificare da soli è gratis. Quando i pagamenti sono abilitati, ogni viaggiatore invitato paga 1 € per viaggio tramite Stripe Checkout, oppure un organizzatore copre la sua quota. Chi crea il viaggio non paga. I pagamenti si applicano a tutti i viaggi quando sono abilitati e vengono saltati se Stripe non è configurato. Stripe Checkout gestisce il modulo di pagamento e Groam conserva i dati di conferma del pagamento in Convex. L’informativa sulla privacy e i termini di pagamento richiedono ancora la revisione del titolare e di un legale prima di accettare pagamenti reali.',
   'Pricing · Groam': 'Prezzi · Groam',
   'Privacy · Groam': 'Privacy · Groam',
   'Questions people ask': 'Domande frequenti',

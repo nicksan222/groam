@@ -16,7 +16,7 @@ and Stripe webhooks. Configure these secrets on the intended Convex deployment:
   endpoint.
 - `SITE_URL`: the public web app origin used for checkout return URLs.
 
-Without `STRIPE_SECRET_KEY`, payment requirements are skipped and the payment
+Without a nonblank `STRIPE_SECRET_KEY`, payment requirements are skipped and the payment
 panel is hidden. Developers and self-hosted installations can use the application
 without Stripe. When enabling Stripe, configure its webhook secret too; incomplete
 configuration must not create a checkout that cannot be confirmed.
@@ -26,14 +26,12 @@ using the Convex HTTP origin, and subscribe to `checkout.session.completed`.
 Checkout supports immediate card payments. No Stripe Price ID is needed: the
 backend fixes the price to 100 euro cents.
 
-The backend infrastructure layer keeps new trips free. Automatic payment
-requirements activate with the checkout frontend in the final stack layer and
-apply only to trips created while both the Stripe API key and webhook secret
-are nonblank. Trips created during partial setup stay free after setup is
-completed. A webhook-secret outage does not unlock an already billable trip;
-Checkout fails before provider I/O until its configuration is restored. Existing
-trips retain their original access behavior. Removing the Stripe key skips
-payment requirements rather than locking users out.
+A nonblank Stripe API key enables payment requirements for every trip. Each traveler
+other than the trip creator must pay once per trip or have an organizer cover them.
+Adding a key applies this rule to all trips, including trips created without a key.
+Removing the key or setting it to a blank value skips payment requirements for all
+trips. A present API key with a missing or blank webhook secret keeps payment
+requirements enabled but rejects checkout creation until both secrets are configured.
 
 ## Confirmation and access
 
@@ -66,21 +64,17 @@ allowing another charge. Do not delete the reservation or retry with a new key
 without checking whether its original session was paid.
 
 
-## Rejected credentials and rollback
+## Rejected credentials
 
 A structured invalid-key response from Stripe on the first, unreplayed Checkout
 creation proves that request did not execute. Groam records only a typed rejection
 and permits a fresh attempt after credentials are corrected. A timeout, repeated
-send, concurrent creation, or older unmarked attempt cannot provide this proof;
+send or concurrent creation cannot provide this proof;
 changing keys still requires reconciliation. Permission errors (403) are not
 classified as definite credential-rejection proof.
 
-Keep the optional proof fields and replay-invalidating storage writer together
-when rolling back. Do not restore a writer that replays a request without
-invalidating prior rejection proof. Use a forward fix for this protocol. Trips
-already marked billable retain that flag if creation code is reverted; retain
-the matching checkout UI and backend, or remove the Stripe key to temporarily
-skip payment requirements.
+Every replay must invalidate prior credential-rejection proof before provider I/O;
+only the first unreplayed, structured invalid-key response can authorize renewal.
 
 ## Deleted trips and unconfirmed Checkout
 
@@ -140,6 +134,5 @@ refund evidence and reference for audit, leaves the active manual queue, and can
 
 Never delete an uncertain reconciliation record to clear a queue. Missing credentials, provider
 404s, and unknown old Checkout outcomes remain unresolved until the correct account/session can
-be reconciled. For attempts created by the persist-before-I/O protocol, cleanup can discard a
+be reconciled. Every attempt persists its request before provider I/O, so cleanup can discard a
 reservation with neither a stored request nor a session: the provider request cannot have started.
-Older unmarked reservations do not have that proof and remain conservatively retained.

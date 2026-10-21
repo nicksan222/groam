@@ -73,11 +73,14 @@ test('standalone issue and idea references expose only preview routing metadata 
   });
 });
 
-test('legacy trip entity references and content remain available with Stripe configured later', async () => {
+test('enabling Stripe retains trip navigation metadata while gating previously accessible content', async () => {
   vi.stubEnv('STRIPE_SECRET_KEY', '');
   const { owner, tripId, users } = await setupTrip(1);
   const member = users[0]!;
   const idea = await owner.client.mutation(api.routes.trips.versions.create.run, { tripId });
+  expect(
+    await member.client.query(api.routes.trips.versions.get.run, { proposalId: idea.proposalId })
+  ).toMatchObject({ id: idea.proposalId });
   vi.stubEnv('STRIPE_SECRET_KEY', 'sk_test_entity_preview');
   expect(
     await member.client.query(api.routes.references.resolve.run, {
@@ -85,9 +88,9 @@ test('legacy trip entity references and content remain available with Stripe con
       reference: idea.proposalId
     })
   ).toMatchObject({ tripId });
-  expect(
-    await member.client.query(api.routes.trips.versions.get.run, { proposalId: idea.proposalId })
-  ).toMatchObject({ id: idea.proposalId });
+  await expect(
+    member.client.query(api.routes.trips.versions.get.run, { proposalId: idea.proposalId })
+  ).rejects.toThrow('Trip not found');
 });
 
 test('trip-linked group chat preview metadata requires actual chat membership and protects messages', async () => {

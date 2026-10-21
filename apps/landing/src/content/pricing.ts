@@ -119,7 +119,7 @@ export const faq = {
     },
     {
       q: 'When do I pay?',
-      a: 'On trips with payments enabled, pay €1 through Stripe Checkout before joining, or ask the organizer to cover you. Existing trips and installations without payments stay free.'
+      a: 'On trips with payments enabled, pay €1 through Stripe Checkout before joining, or ask the organizer to cover you. Payments apply to every trip when enabled and are skipped when Stripe is not configured.'
     },
     {
       q: 'Do invited travelers get fewer features?',

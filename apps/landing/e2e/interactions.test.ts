@@ -34,7 +34,7 @@ test('pricing explains conditional checkout without collecting payment details',
   const { document } = await openSite('/pricing/');
   expect(document.querySelector('form, input[autocomplete^="cc-"]')).toBeNull();
   expect(document.body.textContent).toContain(
-    'One-time checkout when payments are enabled. Existing trips stay free.'
+    'One-time checkout for every trip when payments are enabled.'
   );
 });
 
