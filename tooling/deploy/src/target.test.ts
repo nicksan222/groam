@@ -77,6 +77,8 @@ describe('production publishing boundary', () => {
     expect(result.VITE_CONVEX_URL).toBe(target.convexUrl);
     expect(result.VITE_CONVEX_SITE_URL).toBe(target.siteUrl);
     expect(result.VITE_SITE_URL).toBe(target.appUrl);
+    // Terms and Privacy links must point at the published landing site, not the dev default.
+    expect(result.VITE_LANDING_URL).toBe(target.siteUrl);
     expect(result.STATIC_HOSTING_BASE_PATH).toBe('/app/');
   });
 });

@@ -88,6 +88,8 @@ export function buildEnvironment(
     VITE_CONVEX_URL: target.convexUrl,
     VITE_CONVEX_SITE_URL: target.siteUrl,
     VITE_SITE_URL: target.appUrl,
+    // The landing site is served from the root of the same origin, so the app links there.
+    VITE_LANDING_URL: target.siteUrl,
     LANDING_SITE_URL: `${target.siteUrl}/`,
     STATIC_HOSTING_BASE_PATH: '/app/',
     ASTRO_TELEMETRY_DISABLED: '1'
