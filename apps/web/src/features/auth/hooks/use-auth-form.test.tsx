@@ -42,7 +42,7 @@ describe('useAuthForm', () => {
     expect(result.current.state).toMatchObject({ error: null, isPending: false });
   });
 
-  test('keeps legacy email sign-in working', async () => {
+  test('signs in with email and password', async () => {
     const { result } = await renderHook(() => useAuthForm());
     await act(() =>
       result.current.updateState({ identifier: 'traveler@example.com', password: 'password123' })

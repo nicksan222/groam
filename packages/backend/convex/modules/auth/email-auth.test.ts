@@ -131,54 +131,35 @@ test.each(['email', 'username'])(
 );
 
 test.each(['email', 'username'])(
-  'preexisting placeholder accounts retain %s password access, while new accounts cannot forge legacy status',
+  'hosted %s sign-in requires verification even when signup claims a verified email',
   async (identifier) => {
     const convex = createTest();
-    // Represent a row written before the optional rollout marker existed.
-    await post(convex, 'sign-up/email', {
-      email: 'legacyfixture@example.com',
-      username: 'legacytraveler',
-      name: 'Legacy',
-      password
-    });
-    const { components } = await import('#convex-generated/api');
-    await convex.mutation(components.betterAuth.adapter.updateOne, {
-      input: {
-        model: 'user',
-        where: [{ field: 'email', value: 'legacyfixture@example.com' }],
-        update: { email: 'legacy@users.invalid', emailVerificationRequired: null }
-      }
-    });
-    const legacyLogin = await post(convex, `sign-in/${identifier}`, {
-      ...(identifier === 'email'
-        ? { email: 'legacy@users.invalid' }
-        : { username: 'legacytraveler' }),
-      password
-    });
-    expect(legacyLogin.status).toBe(200);
-    expect((await legacyLogin.json()).token).toEqual(expect.any(String));
-    expect(
-      (
-        await post(convex, 'sign-up/email', {
-          email: 'new@users.invalid',
-          username: 'newtraveler',
-          name: 'New',
-          password,
-          emailVerificationRequired: false
-        })
-      ).status
-    ).toBe(400);
-    await post(convex, 'sign-up/email', {
-      email: 'new@example.com',
-      username: 'newtraveler',
-      name: 'New',
+    const signup = await post(convex, 'sign-up/email', {
+      email: 'unverified@example.com',
+      username: 'unverifiedtraveler',
+      name: 'Unverified traveler',
       password,
-      emailVerificationRequired: false
+      emailVerified: true
     });
+    expect(signup.status).toBe(200);
+    expect(await signup.json()).toMatchObject({ token: null, user: { emailVerified: false } });
     const denied = await post(convex, `sign-in/${identifier}`, {
-      ...(identifier === 'email' ? { email: 'new@example.com' } : { username: 'newtraveler' }),
+      ...(identifier === 'email'
+        ? { email: 'unverified@example.com' }
+        : { username: 'unverifiedtraveler' }),
       password
     });
     expect(denied.status).toBe(403);
   }
 );
+
+test('signup rejects addresses that cannot receive verification mail', async () => {
+  const convex = createTest();
+  const signup = await post(convex, 'sign-up/email', {
+    email: 'unreachable@users.invalid',
+    username: 'unreachabletraveler',
+    name: 'Unreachable traveler',
+    password
+  });
+  expect(signup.status).toBe(400);
+});

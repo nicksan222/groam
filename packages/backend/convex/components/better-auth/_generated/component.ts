@@ -34,7 +34,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   createdAt: number;
                   displayUsername?: null | string;
                   email: string;
-                  emailVerificationRequired?: null | boolean;
                   emailVerified: boolean;
                   image?: null | string;
                   name: string;
@@ -177,7 +176,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "displayUsername"
                     | "twoFactorEnabled"
                     | "userId"
-                    | "emailVerificationRequired"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -538,7 +536,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "displayUsername"
                     | "twoFactorEnabled"
                     | "userId"
-                    | "emailVerificationRequired"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -973,7 +970,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   createdAt?: number;
                   displayUsername?: null | string;
                   email?: string;
-                  emailVerificationRequired?: null | boolean;
                   emailVerified?: boolean;
                   image?: null | string;
                   name?: string;
@@ -995,7 +991,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "displayUsername"
                     | "twoFactorEnabled"
                     | "userId"
-                    | "emailVerificationRequired"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -1426,7 +1421,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   createdAt?: number;
                   displayUsername?: null | string;
                   email?: string;
-                  emailVerificationRequired?: null | boolean;
                   emailVerified?: boolean;
                   image?: null | string;
                   name?: string;
@@ -1448,7 +1442,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "displayUsername"
                     | "twoFactorEnabled"
                     | "userId"
-                    | "emailVerificationRequired"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:

@@ -1,5 +1,4 @@
 import { AgentContextProvider } from '@groam/ai/ui/context/agent-context';
-import { env } from '@groam/env/web-client';
 import { Toaster } from '@groam/ui/components/sonner';
 import { Spinner } from '@groam/ui/components/spinner';
 import { Authenticated, AuthLoading, Unauthenticated } from 'convex/react';
@@ -33,11 +32,8 @@ export default function App({ children }: PropsWithChildren) {
   const { pathname, search } = useLocation();
 
   const resetQuery = new URLSearchParams(window.location.search);
-  const atAppRoot =
-    window.location.pathname.replace(/\/$/u, '') ===
-    new URL(env.siteUrl).pathname.replace(/\/$/u, '');
   const isPasswordReset =
-    Boolean(resetQuery.get('token')) && (resetQuery.get('auth') === 'reset-password' || atAppRoot);
+    Boolean(resetQuery.get('token')) && resetQuery.get('auth') === 'reset-password';
   if (isPasswordReset) {
     return (
       <SessionChangeContext value={changeSession}>
