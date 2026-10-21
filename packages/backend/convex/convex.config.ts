@@ -9,8 +9,7 @@ import { v } from 'convex/values';
 import betterAuth from './components/better-auth/convex.config';
 
 const app = defineApp({
-  // Deployment variables come from @groam/env/deployment; the release preflight checks that
-  // hosted deployments set the ones they need, so code still treats them as optional.
+  // Optional here: the release preflight checks hosted deployments set the ones they need.
   env: {
     CONVEX_SITE_URL: v.optional(v.string()),
     ...schemaFor('convex', () => v.optional(v.string()))

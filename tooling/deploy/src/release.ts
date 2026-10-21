@@ -13,10 +13,9 @@ import { deployFrontends } from '#src/void/deploy';
 if (import.meta.main) {
   const target = releaseTarget(env.environment, environments[env.environment]);
 
-  assertTrustedPublisher(target, env);
+  assertTrustedPublisher(env);
   assertTestedCommit(env.sha);
-  // Every variable, secret, and lock the environment needs (@groam/env/deployment).
-  await assertPreflight(target.environment);
+  await assertPreflight(target);
   assertCleanCheckout();
 
   syncBackendSettings(target);

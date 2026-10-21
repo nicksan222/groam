@@ -1,8 +1,7 @@
 name: 🚀 Release
 
-# Every tested main revision is checked against both environments' setup, goes to beta first,
-# is checked end to end on beta, and only then goes to production. Each job reads its
-# environment's own secrets.
+# Every tested main revision is preflighted, goes to beta first, is checked end to end on beta,
+# and only then goes to production. Each job reads its environment's own secrets.
 on:
   workflow_call:
 
@@ -33,8 +32,6 @@ jobs:
       - name: Setup workspace
         uses: ./.github/actions/setup-workspace
 
-      # Every variable and secret the environment needs (@groam/env/deployment), checked before
-      # anything deploys; reports all that is missing at once.
       - name: Check beta is ready to release
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
@@ -64,8 +61,6 @@ jobs:
       - name: Setup workspace
         uses: ./.github/actions/setup-workspace
 
-      # Every variable and secret the environment needs (@groam/env/deployment), checked before
-      # anything deploys; reports all that is missing at once.
       - name: Check production is ready to release
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
@@ -74,8 +69,7 @@ jobs:
 
   beta:
     name: 🧪 Deploy beta
-    # Waits for both preflights, so a production gap fails the run before beta changes. A skipped
-    # production preflight (production off) does not block beta.
+    # Waits for the production preflight too, so production gaps fail before beta changes.
     needs: [preflight-beta, preflight-production]
     if: >-
       !failure() && !cancelled() &&

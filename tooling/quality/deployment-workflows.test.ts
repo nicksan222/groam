@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
+import { variableNames } from '@groam/env/deployment';
 import { describe, expect, test } from 'vite-plus/test';
 
 const read = (path: string) => readFileSync(path, 'utf8');
@@ -53,6 +54,8 @@ describe('release workflows', () => {
       expect(block).toContain(`GROAM_ENVIRONMENT: ${environment}`);
       expect(block).toContain(`name: ${githubEnvironment}`);
       expect(block).toContain(`vars.${releaseSwitch} == 'true'`);
+      for (const name of variableNames('github'))
+        expect(block).toContain(`${name}: \${{ secrets.${name} }}`);
     }
     expect(job('beta')).toContain('needs: [preflight-beta, preflight-production]');
     expect(job('beta')).toContain('!failure() && !cancelled()');

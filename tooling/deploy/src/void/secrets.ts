@@ -1,51 +1,32 @@
-import type { VariableName } from '@groam/env/deployment';
+import { env } from '@groam/env/production';
 import type { ReleaseTarget } from '#src/release/target';
+import { lockedAccountId } from '#src/void/lock';
 
-const api = new URL('https://api.cloudflare.com/client/v4/');
-
-/** The token a release already has; preflight reads Worker secret names with it, never values. */
-const tokenName = 'CLOUDFLARE_API_TOKEN' satisfies VariableName<'github'>;
-
-/** Calls the Cloudflare API; each path segment is encoded, and the host can only be Cloudflare's. */
-async function cloudflare(...segments: string[]): Promise<unknown> {
-  const url = new URL(segments.map(encodeURIComponent).join('/'), api);
-  if (url.origin !== api.origin) throw new Error('Refusing a non-Cloudflare API request.');
-  // fallow-ignore-next-line security-sink -- fixed Cloudflare origin, rechecked above; segments are encoded committed config or Cloudflare IDs
-  const response = await fetch(url, {
-    headers: { authorization: `Bearer ${process.env[tokenName] ?? ''}` }
-  });
-  if (!response.ok)
-    throw new Error(`Cloudflare ${segments[0]} request failed (${response.status}).`);
+/**
+ * Names (never values) of the secrets set on the web app's Worker. The account comes from
+ * `cloudflareAccountId` or, when that is empty, from the environment's committed Void lock.
+ */
+export async function workerSecretNames(target: ReleaseTarget): Promise<Set<string>> {
+  const worker = target.workers.web;
+  const account = target.cloudflareAccountId || lockedAccountId(target.environment, 'web');
+  if (!/^[a-f0-9]{32}$/u.test(account))
+    throw new Error(
+      `No Cloudflare account for the web Worker (${worker}): set cloudflareAccountId or commit its Void lock.`
+    );
+  if (!/^[a-z0-9-]+$/u.test(worker)) throw new Error(`Invalid Worker name "${worker}".`);
+  const label = `web Worker (${worker}) secrets request failed`;
+  // fallow-ignore-next-line security-sink -- fixed Cloudflare API origin; account and Worker are validated above
+  const response = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${account}/workers/scripts/${worker}/secrets`,
+    { headers: { authorization: `Bearer ${env.cloudflareApiToken()}` }, redirect: 'error' }
+  );
+  if (!response.ok) throw new Error(`${label} (${response.status}).`);
   const body = (await response.json()) as {
     success?: boolean;
-    result?: unknown;
+    result?: { name: string }[];
     errors?: { message?: string }[];
   };
-  if (!body.success)
-    throw new Error(
-      `Cloudflare ${segments[0]} request failed: ${body.errors?.map((e) => e.message).join('; ') ?? 'no details'}`
-    );
-  return body.result;
-}
-
-async function accountId(target: ReleaseTarget): Promise<string> {
-  if (target.cloudflareAccountId) return target.cloudflareAccountId;
-  const accounts = (await cloudflare('accounts')) as { id: string }[];
-  if (accounts.length !== 1)
-    throw new Error('The token reaches several Cloudflare accounts; set cloudflareAccountId.');
-  return accounts[0]?.id ?? '';
-}
-
-/** Names of the secrets set on the web app's Worker. */
-export async function workerSecretNames(target: ReleaseTarget): Promise<Set<string>> {
-  const account = await accountId(target);
-  const secrets = (await cloudflare(
-    'accounts',
-    account,
-    'workers',
-    'scripts',
-    target.workers.web,
-    'secrets'
-  )) as { name: string }[];
-  return new Set(secrets.map(({ name }) => name));
+  if (!body.success || !body.result)
+    throw new Error(`${label}: ${body.errors?.map((e) => e.message).join('; ') || 'no details'}.`);
+  return new Set(body.result.map(({ name }) => name));
 }

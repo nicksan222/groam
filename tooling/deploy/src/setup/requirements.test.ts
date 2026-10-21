@@ -62,12 +62,3 @@ test('lists every deployment variable from @groam/env/deployment where it lives'
   expect(at('apps/web (Void)')).toContain(variableNames('worker')[0]);
   expect(at('GitHub environment secret')).toEqual(variableNames('github'));
 });
-
-test('each preflight job hands over every GitHub secret the definition lists', () => {
-  for (const environment of ['beta', 'production'])
-    for (const name of variableNames('github')) {
-      const preflight =
-        workflow.split(`  preflight-${environment}:`)[1]?.split('\n  beta:')[0] ?? '';
-      expect(preflight).toContain(`${name}: \${{ secrets.${name} }}`);
-    }
-});

@@ -13,8 +13,7 @@ const allowedInternalDependencies = {
   // into a cycle.
   '@groam/ai': new Set(['@groam/icons', '@groam/ui']),
   '@groam/auth': new Set(['@groam/env']),
-  // The backend declares its Convex env from @groam/env/deployment, the single definition of
-  // what each hosted environment needs; @groam/env has no internal dependencies of its own.
+  // Only @groam/env/deployment, the variable definitions (lint:conventions enforces the subpath).
   '@groam/backend': new Set(['@groam/ai', '@groam/env']),
   '@groam/brand': new Set<string>(),
   '@groam/env': new Set<string>(),
