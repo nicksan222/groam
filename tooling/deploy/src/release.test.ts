@@ -7,10 +7,7 @@ import { productionTarget } from './target';
 
 const roots: string[] = [];
 afterEach(() => roots.splice(0).forEach((root) => rmSync(root, { recursive: true, force: true })));
-const target = productionTarget(
-  'https://groam-demo.convex.cloud',
-  'https://groam-demo.convex.site'
-);
+const target = productionTarget('https://groam-demo.convex.cloud', 'https://groam.example');
 
 test('rejects mixed commits, destinations, and changed build output before publishing', () => {
   const root = mkdtempSync(join(tmpdir(), 'groam-release-'));

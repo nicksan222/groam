@@ -42,7 +42,7 @@ const testConfig = createWebVitestConfig(import.meta.dirname, {
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const app = {
-    base: env.staticHostingBasePath,
+    base: env.basePath,
     // maplibre-gl is a single ~1 MB module in its own chunk; anything else this large should warn.
     build: { chunkSizeWarningLimit: 1_100 },
     envDir: '../..',

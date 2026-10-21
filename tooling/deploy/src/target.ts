@@ -44,6 +44,10 @@ export function productionTarget(
     throw new Error('Configure a valid Cloudflare account ID and Worker name.');
   const cloud = hostedOrigin(convexUrl, '.convex.cloud');
   const site = hostedOrigin(siteUrl);
+  if (['.convex.site', '.convex.cloud'].some((suffix) => site.hostname.endsWith(suffix)))
+    throw new Error(
+      'SITE_URL must be the Cloudflare frontend origin; Convex serves only the backend.'
+    );
   const hostPrefix = cloud.hostname.slice(0, -'.convex.cloud'.length);
   const deploymentName = hostPrefix.split('.')[0] ?? '';
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*(?:\.[a-z]{2}-[a-z]+-\d+)?$/u.test(hostPrefix))
@@ -107,7 +111,7 @@ export function buildEnvironment(
     VITE_CONVEX_SITE_URL: target.backendSiteUrl,
     VITE_SITE_URL: target.appUrl,
     LANDING_SITE_URL: `${target.siteUrl}/`,
-    STATIC_HOSTING_BASE_PATH: '/app/',
+    WEB_BASE_PATH: '/app/',
     ASTRO_TELEMETRY_DISABLED: '1'
   };
 }

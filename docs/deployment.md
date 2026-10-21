@@ -8,6 +8,10 @@ Worker only serves static files and handles application deep links and localized
 Production releases remain disabled until the owner configures the accounts and GitHub environment.
 CI never creates Convex projects or changes backend secrets.
 
+`main` is the canonical SaaS branch and the only production release branch.
+Temporary `saas/**` branches exist to review the sequential PR stack; they are not
+an alternate product or deployment target. Convex frontend hosting has been removed.
+
 ## One-time setup
 
 1. Create a production Convex deployment. Set its `BETTER_AUTH_SECRET` and set its `SITE_URL` to
@@ -62,8 +66,8 @@ Immediately before publishing, CI verifies that the SHA is still the remote `mai
 share a non-canceling concurrency group. The publication step deploys Convex first, then uploads
 one atomic Cloudflare frontend release. Each child CLI receives only its own deployment credential.
 A Cloudflare failure after Convex deploy leaves the previous frontend intact; fix the failure and
-rerun from current main. Backend and frontend publication are not a cross-provider transaction,
-so backend changes must remain compatible with the prior frontend during this interval.
+rerun from current main. Backend and frontend publication are separate steps; confirm both complete before
+considering the release successful.
 
 The smoke check uses public GET requests without secrets. It checks the English and Italian landing
 pages, `/app/`, application deep links and JavaScript assets, the Convex auth endpoint, and missing
@@ -78,7 +82,7 @@ run Actions → Deploy Production on main. A skipped release usually means the e
 opt-in is absent. Invalid configuration, missing credentials, or an outdated SHA fail closed.
 
 For an urgent frontend rollback, use Cloudflare's deployment history to restore a prior Worker
-version and its assets. Convex rollback is separate: deploy a reviewed compatible backend revision
+version and its assets. Convex rollback is separate: deploy a reviewed backend revision
 through the normal release process. Do not weaken the trusted main or manifest checks to force a
 stale artifact into production.
 

@@ -26,12 +26,14 @@ describe('production destination', () => {
   test('accepts matching regional origins without confusing the region with the deployment', () => {
     const regional = productionTarget(
       'https://pastel-ocelot-555.eu-west-1.convex.cloud',
-      'https://pastel-ocelot-555.eu-west-1.convex.site'
+      'https://groam.example'
     );
     expect(regional.deploymentName).toBe('pastel-ocelot-555');
-    expect(regional.appUrl).toBe('https://pastel-ocelot-555.eu-west-1.convex.site/app/');
+    expect(regional.appUrl).toBe('https://groam.example/app/');
   });
   test.each([
+    ['https://groam-demo.convex.cloud', 'https://groam-demo.convex.site'],
+    ['https://groam-demo.convex.cloud', 'https://groam-demo.convex.cloud'],
     ['http://localhost:3210', 'http://localhost:3211'],
     ['https://groam-demo.convex.cloud', 'http://groam.example'],
     ['https://groam-demo.convex.cloud', 'https://groam-demo.convex.site/app/'],
@@ -80,6 +82,6 @@ describe('production publishing boundary', () => {
     expect(result.VITE_CONVEX_URL).toBe(target.convexUrl);
     expect(result.VITE_CONVEX_SITE_URL).toBe(target.backendSiteUrl);
     expect(result.VITE_SITE_URL).toBe(target.appUrl);
-    expect(result.STATIC_HOSTING_BASE_PATH).toBe('/app/');
+    expect(result.WEB_BASE_PATH).toBe('/app/');
   });
 });

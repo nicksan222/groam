@@ -175,7 +175,6 @@ jobs:
     env:
       CI: 'true'
       CONVEX_AGENT_MODE: anonymous
-      STATIC_SITE_URL: http://localhost:3211
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -192,10 +191,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          bunx convex dev --typecheck-components --tail-logs disable > /tmp/convex.log 2>&1 &
+          rm -f /tmp/convex-ready
+          bunx convex dev --typecheck-components --tail-logs disable --start 'touch /tmp/convex-ready && sleep infinity' > /tmp/convex.log 2>&1 &
           echo "$!" > /tmp/convex.pid
           timeout 600 bash -c '
-            until [ -f .env.local ] && bunx convex run --component web lib:getUrls "{}" >/dev/null 2>&1; do
+            until [ -f .env.local ] && [ -f /tmp/convex-ready ]; do
               sleep 2
             done
           '
@@ -213,21 +213,6 @@ jobs:
       - name: Journeys
         run: bun run test:journeys -- --browser.trace=retain-on-failure
 
-      # Keep the existing local Convex static-hosting compatibility checks.
-      - name: Publish local static sites
-        run: |
-          bun run hosting:upload:web
-          bun run hosting:upload:landing
-
-      - name: Verify static routes
-        shell: bash
-        run: |
-          curl --fail --show-error --silent "$STATIC_SITE_URL/" >/dev/null
-          curl --fail --show-error --silent "$STATIC_SITE_URL/it/features/ai/" >/dev/null
-          curl --fail --show-error --silent "$STATIC_SITE_URL/app/" >/dev/null
-          curl --fail --show-error --silent "$STATIC_SITE_URL/app/settings" >/dev/null
-          test "$(curl --output /dev/null --silent --write-out '%{http_code}' "$STATIC_SITE_URL/missing.js")" = "404"
-
       - name: Build and validate Cloudflare release without credentials
         env:
           CONVEX_URL: https://ci-release.convex.cloud
@@ -237,6 +222,31 @@ jobs:
         run: |
           bun run build:production
           tooling/deploy/node_modules/.bin/wrangler deploy --config dist/cloudflare/wrangler.json --dry-run --outdir /tmp/cloudflare-dry-run
+
+      - name: Verify Cloudflare static routes locally
+        shell: bash
+        run: |
+          set -euo pipefail
+          tooling/deploy/node_modules/.bin/wrangler dev --config dist/cloudflare/wrangler.json --local --ip 127.0.0.1 --port 8787 > /tmp/cloudflare.log 2>&1 &
+          echo "$!" > /tmp/cloudflare.pid
+          timeout 120 bash -c 'until curl --fail --silent http://127.0.0.1:8787/ >/dev/null; do sleep 2; done'
+          origin=http://127.0.0.1:8787
+          curl --fail --show-error --silent "$origin/" | grep 'lang="en"' >/dev/null
+          curl --fail --show-error --silent "$origin/it/features/ai/" | grep 'lang="it"' >/dev/null
+          curl --fail --show-error --silent "$origin/app/" --output /tmp/cloudflare-app.html
+          asset=$(sed -n 's/.*<script[^>]*src="\([^" ]*\)".*/\1/p' /tmp/cloudflare-app.html)
+          [[ "$asset" == /app/*.js ]]
+          curl --fail --show-error --silent "$origin$asset" >/dev/null
+          curl --fail --show-error --silent "$origin/app/settings" >/dev/null
+          for path in /missing.js /app/missing.js /missing-page/ /it/missing-page/; do
+            test "$(curl --output /dev/null --silent --write-out '%{http_code}' "$origin$path")" = "404"
+          done
+          curl --show-error --silent "$origin/missing-page/" | grep 'lang="en"' >/dev/null
+          curl --show-error --silent "$origin/it/missing-page/" | grep 'lang="it"' >/dev/null
+          # The Convex HTTP origin exposes backend endpoints only.
+          for path in / /app/ /app/settings; do
+            test "$(curl --output /dev/null --silent --write-out '%{http_code}' "http://localhost:3211$path")" = "404"
+          done
 
       - name: Upload failure artifacts
         if: failure()
@@ -248,12 +258,15 @@ jobs:
           retention-days: 7
           path: |
             /tmp/convex.log
+            /tmp/cloudflare.log
             apps/web/.vitest/
 
-      - name: Stop local Convex backend
+      - name: Stop local services
         if: always()
         shell: bash
         run: |
-          if [ -f /tmp/convex.pid ]; then
-            kill "$(cat /tmp/convex.pid)" 2>/dev/null || true
-          fi
+          for service in convex cloudflare; do
+            if [ -f "/tmp/$service.pid" ]; then
+              kill "$(cat "/tmp/$service.pid")" 2>/dev/null || true
+            fi
+          done

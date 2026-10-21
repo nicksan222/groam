@@ -69,7 +69,7 @@ async function smokeApp(target: ProductionTarget, fetcher: Fetch): Promise<void>
     ![200, 401].includes(session.status) ||
     !session.headers.get('content-type')?.includes('application/json')
   )
-    throw new Error('The auth endpoint is unavailable or shadowed by static hosting.');
+    throw new Error('The Convex auth endpoint is unavailable or returned an unexpected response.');
   const assetPath = /<script[^>]+src=["']([^"']+)["']/u.exec(app)?.[1];
   if (!assetPath?.startsWith('/app/')) throw new Error('No production app entry asset found.');
   const asset = await fetcher(new URL(assetPath, target.siteUrl).href, {

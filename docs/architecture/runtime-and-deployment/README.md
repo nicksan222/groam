@@ -17,10 +17,11 @@ independent of network services.
 
 ## Hosting and configuration
 
-Convex serves application procedures and HTTP routes; its static-hosting
-component can serve the built web application. Authentication and external
-authorization callbacks coexist with the SPA routes. During development, Vite
-serves frontend assets separately from the local backend.
+Cloudflare Workers Static Assets is the sole production frontend host: landing
+pages live at `/` and the application at `/app/`. Convex serves application
+procedures and backend HTTP routes, including authentication and external
+authorization callbacks. During development, Vite serves frontend assets
+separately from the local backend.
 
 Validated environment targets define client and process configuration. Build-time
 configuration and local development bootstrap configure the backend and auth
@@ -47,7 +48,7 @@ domain layer.
 Backend integration tests cover real procedure and component boundaries with
 controlled external model responses. View tests and browser journeys cover
 client interactions and reactivity; delivery workflows additionally verify
-static hosting. These checks serve
+the assembled Cloudflare Worker and assets. These checks serve
 different boundaries and are not interchangeable.
 
 Operational commands and connection
@@ -60,7 +61,7 @@ built, with pseudocode traced from the source and the tests that enforce them.
 
 ## Source anchors
 
-- [HTTP and hosting composition](../../../packages/backend/convex/http.ts)
+- [Backend HTTP composition](../../../packages/backend/convex/http.ts)
 - [Development and verification guide](../../../.github/CONTRIBUTING.md)
 - [Runtime helpers](../../../tooling/devkit/README.md), [test adapters](../../../tooling/app-actions/README.md) and [AI deployment constraints](../../../packages/backend/convex/README.md#ai-configuration)
 
