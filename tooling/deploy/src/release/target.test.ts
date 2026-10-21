@@ -9,6 +9,7 @@ describe('release target', () => {
     expect(productionTarget.backendSiteUrl).toBe('https://groam-demo.convex.site');
     expect(productionTarget.deploymentName).toBe('groam-demo');
     expect(productionTarget.workers).toEqual({ web: 'groam-app', landing: 'groam-landing' });
+    expect(productionTarget.workersSubdomain).toBe('groam');
   });
 
   test('accepts regional origins without confusing the region with the deployment', () => {
@@ -29,7 +30,10 @@ describe('release target', () => {
     { web: { worker: 'groam-app', host: 'groam-demo.convex.site' } },
     { web: { worker: 'groam-app', host: 'app.groam.example/app' } },
     { landing: { worker: 'groam-landing', host: 'app.groam.example' } },
-    { cloudflareAccountId: 'not-an-account' }
+    { cloudflareAccountId: 'not-an-account' },
+    { workersSubdomain: '' },
+    { workersSubdomain: 'https://groam.workers.dev' },
+    { workersSubdomain: 'Groam Team' }
   ])('rejects an ambiguous or incomplete environment: %j', (override) => {
     expect(() => releaseTarget('production', { ...productionSettings, ...override })).toThrow();
   });

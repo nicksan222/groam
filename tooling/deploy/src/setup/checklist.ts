@@ -18,6 +18,7 @@ export type Facts = {
   configError: string | null;
   convexUrl: string;
   hosts: boolean;
+  workersSubdomain: boolean;
   locks: boolean;
   githubSecrets: ReadonlySet<string> | null;
   githubVariables: ReadonlyMap<string, string> | null;
@@ -31,6 +32,7 @@ type Check = (requirement: Requirement, facts: Facts) => boolean | null;
 const checks: Partial<Record<Location, Check>> = {
   'tooling/deploy/src/environments.ts': ({ name }, facts) => {
     if (name === 'convexUrl') return Boolean(facts.convexUrl);
+    if (name === 'workersSubdomain') return facts.workersSubdomain;
     return name.includes('host') ? facts.hosts : null;
   },
   'tooling/deploy/locks': (_, facts) => facts.locks,
@@ -87,6 +89,7 @@ function gatherFacts(environment: ReleaseEnvironment): Facts {
     configError,
     convexUrl: settings.convexUrl,
     hosts: Boolean(settings.web.host && settings.landing.host),
+    workersSubdomain: Boolean(settings.workersSubdomain),
     locks: frontendApps.every((app) => existsSync(join(repoRoot, lockPath(environment, app)))),
     githubSecrets: secrets ? new Set(secrets.keys()) : null,
     githubVariables: variables
@@ -112,7 +115,7 @@ if (import.meta.main) {
         console.log(`        ${requirement.how}`);
     }
     // Field-level gaps are listed above; this catches values that are filled in but invalid.
-    if (facts.configError && facts.convexUrl && facts.hosts)
+    if (facts.configError && facts.convexUrl && facts.hosts && facts.workersSubdomain)
       console.log(`  Config: ${facts.configError}`);
     if (!facts.githubSecrets)
       console.log('  GitHub not checked: run `gh auth login` to include it.');

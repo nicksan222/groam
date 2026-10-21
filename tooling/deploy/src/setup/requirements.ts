@@ -51,6 +51,12 @@ export function requirements(environment: ReleaseEnvironment): Requirement[] {
       how: 'Hostnames in a Cloudflare zone you own; Void attaches them as custom domains.'
     },
     {
+      name: 'workersSubdomain',
+      location: 'tooling/deploy/src/environments.ts',
+      setBy: 'you',
+      how: 'Cloudflare → Workers & Pages → your workers.dev subdomain (e.g. "my-team"); Void checks each new version there because preview URLs are off.'
+    },
+    {
       name: 'cloudflareAccountId',
       location: 'tooling/deploy/src/environments.ts',
       setBy: 'you',

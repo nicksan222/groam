@@ -15,8 +15,9 @@ e2e/                   Live checks against a deployed environment (`test:deploye
 locks/<environment>/   Committed Void locks (web.void.lock.json, landing.void.lock.json)
 ```
 
-`environments.ts` holds each environment's Convex URL, optional Cloudflare account, and the
-Worker name and custom domain of each app. Both `void.config.ts` files import it through
+`environments.ts` holds each environment's Convex URL, optional Cloudflare account, workers.dev
+subdomain (Void's readiness checks use it because version preview URLs are off), and the Worker
+name and custom domain of each app. Both `void.config.ts` files import it through
 `@groam/deploy/environments`, so Void creates the Workers and domains from the same values.
 
 Run `bun run deploy:setup` to see what each environment still needs: config values, GitHub

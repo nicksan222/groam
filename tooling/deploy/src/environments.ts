@@ -14,6 +14,11 @@ export type Environment = {
   convexUrl: string;
   /** Only needed when the Cloudflare token can reach several accounts. */
   cloudflareAccountId: string;
+  /**
+   * The account's workers.dev subdomain (`my-team`). Version preview URLs are off, so Void checks
+   * each new version there before it takes traffic.
+   */
+  workersSubdomain: string;
 } & Record<FrontendApp, Frontend>;
 
 /**
@@ -25,12 +30,14 @@ export const environments: Record<ReleaseEnvironment, Environment> = {
   production: {
     convexUrl: '',
     cloudflareAccountId: '',
+    workersSubdomain: '',
     web: { worker: 'groam-app', host: 'app.groam.app' },
     landing: { worker: 'groam-landing', host: 'groam.app' }
   },
   beta: {
     convexUrl: '',
     cloudflareAccountId: '',
+    workersSubdomain: '',
     web: { worker: 'groam-app-beta', host: 'app.beta.groam.app' },
     landing: { worker: 'groam-landing-beta', host: 'beta.groam.app' }
   }

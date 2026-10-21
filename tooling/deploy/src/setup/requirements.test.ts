@@ -29,6 +29,7 @@ const facts: Facts = {
   configError: null,
   convexUrl: '',
   hosts: true,
+  workersSubdomain: false,
   locks: false,
   githubSecrets: new Set(['CONVEX_DEPLOY_KEY']),
   githubVariables: null
@@ -47,4 +48,5 @@ test('marks what this machine can check and leaves the rest to the release', () 
   expect(status(find('CONVEX_PRODUCTION_ENABLED'), facts)).toBe('unchecked');
   expect(status(find('SITE_URL'), facts)).toBe('automatic');
   expect(status(find('Workers Scripts: Edit'), facts)).toBe('unchecked');
+  expect(status(find('workersSubdomain'), facts)).toBe('missing');
 });

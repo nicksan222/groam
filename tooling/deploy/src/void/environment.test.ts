@@ -29,12 +29,15 @@ test('Void deploys receive public destinations and no backend credentials', () =
     VITE_CONVEX_SITE_URL: productionTarget.backendSiteUrl,
     VITE_SITE_URL: 'https://app.groam.example',
     VITE_LANDING_URL: 'https://groam.example',
-    LANDING_SITE_URL: 'https://groam.example/'
+    LANDING_SITE_URL: 'https://groam.example/',
+    CLOUDFLARE_WORKERS_SUBDOMAIN: 'groam'
   });
 });
 
 test('selects the environment and omits the account when the token reaches only one', () => {
   const result = frontendEnvironment(betaTarget, {});
   expect(result.GROAM_ENVIRONMENT).toBe('beta');
+  // `my-team.workers.dev` is accepted and passed to Void as `my-team`.
+  expect(result.CLOUDFLARE_WORKERS_SUBDOMAIN).toBe('groam-beta');
   expect(result).not.toHaveProperty('CLOUDFLARE_ACCOUNT_ID');
 });

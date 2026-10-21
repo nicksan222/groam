@@ -14,6 +14,8 @@ export function frontendEnvironment(
     ),
     GROAM_ENVIRONMENT: target.environment,
     ...(target.cloudflareAccountId ? { CLOUDFLARE_ACCOUNT_ID: target.cloudflareAccountId } : {}),
+    // Version preview URLs are off; Void checks new versions on the workers.dev subdomain.
+    CLOUDFLARE_WORKERS_SUBDOMAIN: target.workersSubdomain,
     VITE_CONVEX_URL: target.convexUrl,
     VITE_CONVEX_SITE_URL: target.backendSiteUrl,
     VITE_SITE_URL: target.siteUrl,

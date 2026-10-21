@@ -11,6 +11,7 @@ export type ReleaseTarget = {
   backendSiteUrl: string;
   deploymentName: string;
   cloudflareAccountId: string;
+  workersSubdomain: string;
 };
 
 function hostedOrigin(value: string, suffix = ''): URL {
@@ -43,6 +44,12 @@ export function releaseTarget(
   const { cloudflareAccountId } = settings;
   if (cloudflareAccountId && !/^[a-f0-9]{32}$/u.test(cloudflareAccountId))
     throw new Error('Configure a valid Cloudflare account ID.');
+  // Accept `my-team` or `my-team.workers.dev`; Void needs it because preview URLs are off.
+  const workersSubdomain = settings.workersSubdomain.trim().replace(/\.workers\.dev$/u, '');
+  if (!/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/u.test(workersSubdomain))
+    throw new Error(
+      'Set workersSubdomain to the account\'s workers.dev subdomain, e.g. "my-team".'
+    );
   const cloud = hostedOrigin(settings.convexUrl, '.convex.cloud');
   const site = hostedOrigin(`https://${settings.web.host}`);
   const landing = hostedOrigin(`https://${settings.landing.host}`);
@@ -67,6 +74,7 @@ export function releaseTarget(
     landingUrl: landing.origin,
     backendSiteUrl: `https://${hostPrefix}.convex.site`,
     deploymentName: hostPrefix.split('.')[0] ?? '',
-    cloudflareAccountId
+    cloudflareAccountId,
+    workersSubdomain
   };
 }

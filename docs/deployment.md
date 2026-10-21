@@ -5,8 +5,9 @@ keeps its realtime Convex subscriptions. Void publishes the app and Astro landin
 Cloudflare Workers, each at its own origin. The app remains client mounted; there is no `/app` prefix.
 
 [`tooling/deploy/src/environments.ts`](../tooling/deploy/src/environments.ts) is the single source
-of truth for each environment's public settings: Convex URL, Worker names, hostnames, and an
-optional Cloudflare account. Void creates the Workers and custom domains from it, and the release
+of truth for each environment's public settings: Convex URL, Worker names, hostnames, the
+account's workers.dev subdomain (where Void checks new versions, since preview URLs are off), and
+an optional Cloudflare account. Void creates the Workers and custom domains from it, and the release
 ([`tooling/deploy`](../tooling/deploy/README.md)) sets Convex `SITE_URL` from it. GitHub holds secrets only.
 
 | | Beta | Production |
