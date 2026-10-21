@@ -2,11 +2,11 @@
   "name": "groam-workspace",
   "version": "0.0.0",
   "catalog": {
-    "vite": "npm:@voidzero-dev/vite-plus-core@1.2.0",
-    "vitest": "5.0.4",
-    "vite-plus": "1.2.0",
-    "@vitest/browser-playwright": "5.0.4",
-    "@vitest/coverage-istanbul": "5.0.4"
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.3.0",
+    "vitest": "5.0.5",
+    "vite-plus": "1.3.0",
+    "@vitest/browser-playwright": "5.0.5",
+    "@vitest/coverage-istanbul": "5.0.5"
   },
   "dependencies": {
     "@groam/env": "workspace:*",
@@ -34,7 +34,9 @@
     "undici": "^7.29.1",
     "zod": "^4.6.5",
     "vite": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "@vitest/browser": "5.0.5",
+    "@vitest/ui": "5.0.5"
   },
   "packageManager": "bun@1.3.11",
   "patchedDependencies": {
