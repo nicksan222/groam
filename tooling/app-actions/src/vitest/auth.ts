@@ -14,6 +14,7 @@ export async function signUp(user: TestUserCredentials): Promise<void> {
   await expect.element(by(ids.authName)).toBeVisible();
   await enter(by(ids.authName), user.name);
   await enter(by(ids.authEmail), user.username);
+  await enter(by(ids.authSignupEmail), `${user.username}@example.com`);
   await enter(by(ids.authPassword), user.password);
   await tap(by(ids.authSubmit));
   await expectGone(page.getByRole('alert'));

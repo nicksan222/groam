@@ -58,8 +58,12 @@ import type * as modules_assistant_waits_functions from "../modules/assistant/wa
 import type * as modules_assistant_waits_index from "../modules/assistant/waits/index.js";
 import type * as modules_auth_actor from "../modules/auth/actor.js";
 import type * as modules_auth_auth from "../modules/auth/auth.js";
+import type * as modules_auth_delivery from "../modules/auth/delivery.js";
+import type * as modules_auth_email from "../modules/auth/email.js";
 import type * as modules_auth_origins from "../modules/auth/origins.js";
 import type * as modules_auth_recovery from "../modules/auth/recovery.js";
+import type * as modules_auth_relay from "../modules/auth/relay.js";
+import type * as modules_auth_verification from "../modules/auth/verification.js";
 import type * as modules_auth_workspace from "../modules/auth/workspace.js";
 import type * as modules_dev_enrich from "../modules/dev/enrich.js";
 import type * as modules_dev_enrich_collaboration from "../modules/dev/enrich/collaboration.js";
@@ -437,8 +441,12 @@ declare const fullApi: ApiFromModules<{
   "modules/assistant/waits/index": typeof modules_assistant_waits_index;
   "modules/auth/actor": typeof modules_auth_actor;
   "modules/auth/auth": typeof modules_auth_auth;
+  "modules/auth/delivery": typeof modules_auth_delivery;
+  "modules/auth/email": typeof modules_auth_email;
   "modules/auth/origins": typeof modules_auth_origins;
   "modules/auth/recovery": typeof modules_auth_recovery;
+  "modules/auth/relay": typeof modules_auth_relay;
+  "modules/auth/verification": typeof modules_auth_verification;
   "modules/auth/workspace": typeof modules_auth_workspace;
   "modules/dev/enrich": typeof modules_dev_enrich;
   "modules/dev/enrich/collaboration": typeof modules_dev_enrich_collaboration;

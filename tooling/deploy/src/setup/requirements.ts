@@ -7,7 +7,8 @@ export type Location =
   | 'GitHub environment secret'
   | 'GitHub repository variable'
   | 'Cloudflare API token'
-  | 'Convex environment';
+  | 'Convex environment'
+  | 'apps/web (Void)';
 
 export type Requirement = {
   name: string;
@@ -57,6 +58,12 @@ export function requirements(environment: ReleaseEnvironment): Requirement[] {
       how: 'Cloudflare → Workers & Pages → your workers.dev subdomain (e.g. "my-team"); Void checks each new version there because preview URLs are off.'
     },
     {
+      name: 'emailFrom',
+      location: 'tooling/deploy/src/environments.ts',
+      setBy: 'you',
+      how: 'Sender of authentication mail, e.g. "Groam <noreply@groam.app>", on a domain in your Cloudflare account.'
+    },
+    {
       name: 'cloudflareAccountId',
       location: 'tooling/deploy/src/environments.ts',
       setBy: 'you',
@@ -88,6 +95,12 @@ export function requirements(environment: ReleaseEnvironment): Requirement[] {
       how: 'Zone permission: lets Void attach the custom domains.'
     },
     {
+      name: 'Email Routing: Edit, Email Sending: Edit',
+      location: 'Cloudflare API token',
+      setBy: 'you',
+      how: 'Zone permissions: let Void set up authentication mail for the sender domain.'
+    },
+    {
       name: 'SITE_URL',
       location: 'Convex environment',
       setBy: 'release',
@@ -100,11 +113,29 @@ export function requirements(environment: ReleaseEnvironment): Requirement[] {
       how: 'Generated on the first release and never replaced.'
     },
     {
+      name: 'AUTH_EMAIL_RELAY_SECRET',
+      location: 'Convex environment',
+      setBy: 'you',
+      how: 'A long random value (`openssl rand -base64 32`), set with `convex env set`; the web Worker needs the same value.'
+    },
+    {
       name: 'STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET',
       location: 'Convex environment',
       setBy: 'you',
       optional: true,
       how: 'Only for payments: set both, or neither, with `convex env set`.'
+    },
+    {
+      name: 'AUTH_EMAIL_RELAY_SECRET',
+      location: 'apps/web (Void)',
+      setBy: 'you',
+      how: 'The same value as in Convex: `void secret put AUTH_EMAIL_RELAY_SECRET` in apps/web.'
+    },
+    {
+      name: 'void email setup',
+      location: 'apps/web (Void)',
+      setBy: 'you',
+      how: 'Needs a Workers Paid plan with Email Sending onboarded (to mail any recipient). Then, in apps/web, run `void email setup --platform cloudflare`; the sender comes from emailFrom.'
     },
     {
       name: `${environment}/web.void.lock.json, ${environment}/landing.void.lock.json`,

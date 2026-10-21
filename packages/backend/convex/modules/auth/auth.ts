@@ -8,13 +8,16 @@ import type { DataModel } from '#convex-generated/dataModel';
 import { env } from '#convex-generated/server';
 import authConfig from '#convex/auth.config';
 import authSchema from '#convex/components/better-auth/schema';
+import { authEmailRateLimiter } from './email';
 import { resolveAuthTrustedOrigins } from './origins';
 import { accountRecovery } from './recovery';
+import { emailVerificationPolicy, isPlaceholderEmail, requiresVerifiedEmail } from './verification';
 
 const authBaseUrl = env.CONVEX_SITE_URL ?? 'http://127.0.0.1:3211';
 
 export const authSiteUrl = env.SITE_URL ?? authBaseUrl;
 export const authTrustedOrigins = resolveAuthTrustedOrigins(authSiteUrl, authBaseUrl);
+const verifiesEmail = requiresVerifiedEmail(authSiteUrl);
 const passkeyRpId = new URL(authSiteUrl).hostname;
 // A passkey belongs to one relying party: accept every trusted origin on its host (locally the
 // app on 5173 and the browser journeys on 5174).
@@ -79,8 +82,29 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
     disabledPaths: ['/is-username-available'],
     emailAndPassword: {
       enabled: true,
-      requireEmailVerification: false,
+      requireEmailVerification: verifiesEmail,
+      sendResetPassword: async ({ user, url }) => {
+        await scheduleAuthEmail(
+          ctx,
+          user.email,
+          'Reset your Groam password',
+          `Reset your password using this link: ${url}\n\nIf you did not request this, ignore this email.`
+        );
+      },
       revokeSessionsOnPasswordReset: true
+    },
+    emailVerification: {
+      sendOnSignUp: verifiesEmail,
+      sendOnSignIn: verifiesEmail,
+      autoSignInAfterVerification: false,
+      sendVerificationEmail: async ({ user, url }) => {
+        await scheduleAuthEmail(
+          ctx,
+          user.email,
+          'Verify your Groam email',
+          `Verify your email using this link: ${url}\n\nIf you did not create this account, ignore this email.`
+        );
+      }
     },
     plugins: [
       username(),
@@ -98,9 +122,24 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
         organizationLimit: 10
       }),
       crossDomain({ siteUrl: authSiteUrl }),
-      convex({ authConfig })
+      convex({ authConfig }),
+      emailVerificationPolicy()
     ],
     trustedOrigins: authTrustedOrigins
   }) satisfies BetterAuthOptions;
 
 export const createAuth = (ctx: GenericCtx<DataModel>) => betterAuth(createAuthOptions(ctx));
+
+async function scheduleAuthEmail(
+  ctx: GenericCtx<DataModel>,
+  to: string,
+  subject: string,
+  text: string
+) {
+  if (!('scheduler' in ctx)) throw new Error('Authentication email requires an action context');
+  // Skip silently: the endpoint's response must not reveal whether the account exists.
+  if (isPlaceholderEmail(to)) return;
+  const { ok } = await authEmailRateLimiter.limit(ctx, 'authEmail', { key: to.toLowerCase() });
+  if (!ok) return;
+  await ctx.scheduler.runAfter(0, internal.modules.auth.email.send, { to, subject, text });
+}

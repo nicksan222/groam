@@ -5,6 +5,8 @@ type AuthFlow = 'recover' | 'signIn' | 'signUp';
 
 // oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
 type AuthFormStore = {
+  email: string;
+  message: string | null;
   error: string | null;
   flow: AuthFlow;
   identifier: string;
@@ -24,6 +26,8 @@ type AuthFormStore = {
 };
 
 const initialAuthForm = {
+  email: '',
+  message: null,
   error: null,
   flow: 'signIn' as AuthFlow,
   identifier: '',
@@ -45,6 +49,7 @@ export const useAuthFormStore = create<AuthFormStore>((set, get) => ({
     const isSignIn = get().flow === 'signIn';
     set({
       error: null,
+      message: null,
       flow: isSignIn ? 'signUp' : 'signIn',
       needsTwoFactor: false,
       password: '',
@@ -54,6 +59,7 @@ export const useAuthFormStore = create<AuthFormStore>((set, get) => ({
   switchToRecovery: () =>
     set({
       error: null,
+      message: null,
       flow: 'recover',
       needsTwoFactor: false,
       password: '',

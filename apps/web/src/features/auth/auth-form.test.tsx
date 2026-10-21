@@ -20,6 +20,8 @@ function makeProps(
     updateState: vi.fn(),
     ...rest,
     state: {
+      email: '',
+      message: null,
       error: null,
       flow: 'signIn',
       identifier: '',

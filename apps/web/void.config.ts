@@ -2,7 +2,7 @@ import { environments } from '@groam/deploy/environments';
 import { env } from '@groam/env/void';
 import { defineConfig } from 'void/config';
 
-const { web } = environments[env.environment];
+const { emailFrom, web } = environments[env.environment];
 
 // The web app's own Void deployment (the landing site deploys separately from apps/landing).
 // Convex stays the application and authentication backend.
@@ -13,6 +13,8 @@ export default defineConfig({
     preview_urls: false,
     workers_dev: true
   },
+  // Authentication mail (routes/api/email.ts). Local development captures it in Void's inbox.
+  email: { from: emailFrom },
   head: {
     htmlAttrs: { lang: 'en' },
     link: [

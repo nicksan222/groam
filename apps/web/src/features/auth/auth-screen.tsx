@@ -2,10 +2,14 @@ import { env } from '@groam/env/web-client';
 import { AuthCard } from '@groam/ui/components/auth-card';
 import { AuthShell } from '@groam/ui/components/auth-shell';
 import { AuthForm } from '@/features/auth/auth-form';
+import { EmailLinkRequest } from '@/features/auth/email-link-request';
 import { useAuthForm } from '@/features/auth/hooks/use-auth-form';
+import { passwordResetCallback } from '@/features/auth/password-reset-callback';
+import { PasswordResetForm } from '@/features/auth/password-reset-form';
 
 export function AuthScreen() {
   const authForm = useAuthForm();
+  const resetToken = passwordResetCallback()?.token;
   const { isRecovery, isSignIn } = authForm;
 
   return (
@@ -27,10 +31,23 @@ export function AuthScreen() {
           )
         }
         title={
-          isRecovery ? 'Recover your account' : isSignIn ? 'Welcome back' : 'Create your account'
+          resetToken
+            ? 'Reset your password'
+            : isRecovery
+              ? 'Recover your account'
+              : isSignIn
+                ? 'Welcome back'
+                : 'Create your account'
         }
       >
-        <AuthForm {...authForm} />
+        {resetToken ? (
+          <PasswordResetForm token={resetToken} />
+        ) : (
+          <>
+            <AuthForm {...authForm} />
+            <EmailLinkRequest />
+          </>
+        )}
       </AuthCard>
     </AuthShell>
   );

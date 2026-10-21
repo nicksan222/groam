@@ -6,6 +6,7 @@ import { status, type Facts } from '#src/setup/checklist';
 import {
   githubEnvironments,
   releaseSwitches,
+  requiredConvexSecrets,
   requirements,
   type Requirement
 } from '#src/setup/requirements';
@@ -30,6 +31,7 @@ const facts: Facts = {
   convexUrl: '',
   hosts: true,
   workersSubdomain: false,
+  emailFrom: true,
   locks: false,
   githubSecrets: new Set(['CONVEX_DEPLOY_KEY']),
   githubVariables: null
@@ -49,4 +51,9 @@ test('marks what this machine can check and leaves the rest to the release', () 
   expect(status(find('SITE_URL'), facts)).toBe('automatic');
   expect(status(find('Workers Scripts: Edit'), facts)).toBe('unchecked');
   expect(status(find('workersSubdomain'), facts)).toBe('missing');
+  expect(status(find('emailFrom'), facts)).toBe('done');
+});
+
+test('the release requires the email relay secret it cannot create', () => {
+  expect(requiredConvexSecrets('production')).toEqual(['AUTH_EMAIL_RELAY_SECRET']);
 });

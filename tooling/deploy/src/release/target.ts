@@ -37,6 +37,21 @@ function hostedOrigin(value: string, suffix = ''): URL {
   return url;
 }
 
+/**
+ * Void sets up Cloudflare Email Routing and Sending for the sender's domain on deploy, so it must
+ * be a real address, optionally with a display name.
+ */
+function assertEmailSender(from: string): void {
+  const address = /^(?:[^<>@]+ <([^<>\s]+)>|([^<>\s]+))$/u.exec(from.trim());
+  const email = address?.[1] ?? address?.[2] ?? '';
+  const domain = email.split('@')[1] ?? '';
+  if (
+    !/^[^@\s]+@[a-z0-9-]+(?:\.[a-z0-9-]+)+$/iu.test(email) ||
+    /\.(?:localhost|example)$/iu.test(domain)
+  )
+    throw new Error('Set emailFrom to the production sender, e.g. "Groam <noreply@groam.app>".');
+}
+
 export function releaseTarget(
   environment: ReleaseEnvironment,
   settings: Environment
@@ -50,6 +65,7 @@ export function releaseTarget(
     throw new Error(
       'Set workersSubdomain to the account\'s workers.dev subdomain, e.g. "my-team".'
     );
+  assertEmailSender(settings.emailFrom);
   const cloud = hostedOrigin(settings.convexUrl, '.convex.cloud');
   const site = hostedOrigin(`https://${settings.web.host}`);
   const landing = hostedOrigin(`https://${settings.landing.host}`);
