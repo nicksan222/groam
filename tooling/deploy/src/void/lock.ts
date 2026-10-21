@@ -1,15 +1,15 @@
 import { copyFileSync, existsSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { repoRoot } from '@groam/devkit/repo-root';
-import type { FrontendApp } from '#src/environments';
+import type { FrontendApp, ReleaseEnvironment } from '#src/environments';
 import { git } from '#src/release/checkout';
 import type { ReleaseTarget } from '#src/release/target';
 
 export const frontendApps = ['web', 'landing'] as const satisfies readonly FrontendApp[];
 
 /** Void's record of each Worker, committed per environment under tooling/deploy/locks. */
-const lockPath = (target: ReleaseTarget, app: FrontendApp) =>
-  `tooling/deploy/locks/${target.environment}/${app}.void.lock.json`;
+export const lockPath = (environment: ReleaseEnvironment, app: FrontendApp) =>
+  `tooling/deploy/locks/${environment}/${app}.void.lock.json`;
 
 /** Void hardcodes this path, so the release only writes it for the duration of one deploy. */
 const appLockPath = (app: FrontendApp) => join(repoRoot, 'apps', app, 'void.lock.json');
@@ -30,9 +30,9 @@ export function assertVoidLock(source: string, expectedName: string, accountId: 
 
 export function assertCommittedLocks(target: ReleaseTarget): void {
   for (const app of frontendApps) {
-    git(['ls-files', '--error-unmatch', lockPath(target, app)]);
+    git(['ls-files', '--error-unmatch', lockPath(target.environment, app)]);
     assertVoidLock(
-      readFileSync(join(repoRoot, lockPath(target, app)), 'utf8'),
+      readFileSync(join(repoRoot, lockPath(target.environment, app)), 'utf8'),
       target.workers[app],
       target.cloudflareAccountId
     );
@@ -47,13 +47,15 @@ export function withEnvironmentLock(
   app: FrontendApp,
   deploy: () => void
 ): void {
-  const committed = join(repoRoot, lockPath(target, app));
+  const committed = join(repoRoot, lockPath(target.environment, app));
   const transient = appLockPath(app);
   copyFileSync(committed, transient);
   try {
     deploy();
     if (!readFileSync(committed).equals(readFileSync(transient)))
-      throw new Error(`Void resource state changed. Review and commit ${lockPath(target, app)}.`);
+      throw new Error(
+        `Void resource state changed. Review and commit ${lockPath(target.environment, app)}.`
+      );
   } finally {
     rmSync(transient, { force: true });
   }

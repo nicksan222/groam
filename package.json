@@ -58,6 +58,7 @@
     "deploy": "vp run deploy:production",
     "deploy:beta": "vp run --fail-if-no-match --filter @groam/deploy deploy:beta",
     "deploy:production": "vp run --fail-if-no-match --filter @groam/deploy deploy:production",
+    "deploy:setup": "vp run --fail-if-no-match --filter @groam/deploy setup",
     "dev": "vp run --fail-if-no-match --filter \"@groam/*\" --parallel --log labeled dev",
     "dev:web": "vp run --fail-if-no-match --filter @groam/web dev",
     "diagrams:render": "vp run --fail-if-no-match --filter @groam/diagrams render",

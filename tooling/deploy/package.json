@@ -25,6 +25,7 @@
   "scripts": {
     "deploy:beta": "GROAM_ENVIRONMENT=beta bun --no-env-file src/release.ts",
     "deploy:production": "GROAM_ENVIRONMENT=production bun --no-env-file src/release.ts",
+    "setup": "bun --no-env-file src/setup/checklist.ts",
     "test": "vp test run",
     "typecheck": "tsc --noEmit"
   },

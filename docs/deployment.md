@@ -21,19 +21,22 @@ data or credentials. Feature branches never receive release credentials.
 
 ## One-time setup per environment
 
-1. **Convex:** create the project in the dashboard, copy its production URL into that environment's `convexUrl`, and
-   create a production deploy key. The first release sets `SITE_URL` and generates `BETTER_AUTH_SECRET`.
-   Other backend secrets (AI, email, payments) are set with `convex env set`. If
-   `STRIPE_SECRET_KEY` is set, `STRIPE_WEBHOOK_SECRET` must be too.
-2. **Cloudflare:** add the zone for the hostnames and create an API token with *Workers Scripts:
-   Edit* and *Workers Routes: Edit* (custom domains). Set `cloudflareAccountId` only if the token
-   reaches several accounts.
-3. **GitHub:** create the `prod`/`beta` environment limited to `main`, with secrets
-   `CONVEX_DEPLOY_KEY` and `CLOUDFLARE_API_TOKEN`.
-4. **Void locks:** run the first `void deploy --platform cloudflare` locally in `apps/web` and
-   `apps/landing` with `GROAM_ENVIRONMENT` set, then commit each `void.lock.json` as
-   `tooling/deploy/locks/<environment>/{web,landing}.void.lock.json`.
-5. Set the repository opt-in variable. Do not enable a Cloudflare Git build; GitHub owns publishing.
+Everything an environment needs lives in one list,
+[`tooling/deploy/src/setup/requirements.ts`](../tooling/deploy/src/setup/requirements.ts). Run:
+
+```sh
+bun run deploy:setup
+```
+
+It prints, for each environment, every value grouped by where it lives (`environments.ts`, GitHub
+environment secrets, the Cloudflare token, Convex, committed Void locks, the release switch), how to
+get it, and whether it is done. It checks the config, the GitHub secrets and variables (through
+`gh`), and the committed locks; the release itself checks the Convex values. Releases also read this
+list, so a value can't be required without appearing in it.
+
+In short: create the Convex project and deploy key, a Cloudflare token, the GitHub environment with
+its two secrets, run the first `void deploy` per app and commit the locks, then flip the release
+switch. Do not enable a Cloudflare Git build; GitHub owns publishing.
 
 ## Releases
 
