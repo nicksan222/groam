@@ -10,15 +10,11 @@ import {
   type Requirement
 } from '#src/setup/requirements';
 
-const workflows = {
-  production: '.github/workflows/release-production.yml',
-  beta: '.github/workflows/deploy-beta.yml'
-} as const;
+const workflow = readFileSync(join(repoRoot, '.github/workflows/release.yml'), 'utf8');
 
-test.each(Object.entries(workflows) as [keyof typeof workflows, string][])(
-  'the %s workflow uses exactly the GitHub settings the checklist asks for',
-  (environment, path) => {
-    const workflow = readFileSync(join(repoRoot, path), 'utf8');
+test.each(['production', 'beta'] as const)(
+  'the release workflow uses exactly the %s settings the checklist asks for',
+  (environment) => {
     const listed = requirements(environment);
     for (const { name } of listed.filter((r) => r.location === 'GitHub environment secret'))
       expect(workflow).toContain(`secrets.${name}`);

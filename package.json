@@ -82,6 +82,7 @@
     "seed": "bun --env-file .env.local tooling/seeder/src/cli.ts",
     "test": "vp run test:quality && vp run --fail-if-no-match --filter \"@groam/*\" --cache --concurrency-limit 2 test",
     "test:browsers:install": "vp run --fail-if-no-match --filter @groam/vitest-config browsers:install",
+    "test:deployed": "vp run --fail-if-no-match --filter @groam/deploy test:deployed",
     "test:journeys": "vp run --fail-if-no-match --filter @groam/web journeys",
     "test:landing": "vp run --fail-if-no-match --filter @groam/landing test",
     "test:packages": "vp run test:quality && vp run --fail-if-no-match --filter \"@groam/*\" --filter \"!@groam/web\" --filter \"!@groam/landing\" --filter \"!@groam/ui\" --filter \"!@groam/ai\" --filter \"!@groam/auth\" --cache --concurrency-limit 2 test",

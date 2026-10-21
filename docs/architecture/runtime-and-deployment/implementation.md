@@ -144,13 +144,13 @@ Source: [`http.ts`](../../../packages/backend/convex/http.ts#L10),
 
 ## Hosted deployment and the CI deploy workflow
 
-Groam has one production release path. A push to `main` calls the private
-**Release Production** workflow only after the complete **Checks** workflow
-succeeds. The manually dispatched **Deploy Production** workflow reruns those
-checks and then calls the same release job. Callers and the release job require the
-original `nicksan222/groam` repository, the appropriate push or manual event,
-`refs/heads/main`, and the fail-closed `CONVEX_PRODUCTION_ENABLED == 'true'`
-opt-in.
+Every push to `main` is released automatically after the complete **Checks**
+workflow succeeds. The reusable **Release** workflow deploys beta, runs the
+end-to-end checks against the live beta, and only then deploys production; the
+manually dispatched **Release main** workflow reruns Checks and the same
+pipeline. Each deploy job requires the original `nicksan222/groam` repository, a
+push or manual event on `refs/heads/main`, and its fail-closed opt-in
+(`CONVEX_BETA_ENABLED`, `CONVEX_PRODUCTION_ENABLED`).
 
 The release checks out the immutable tested `github.sha` and installs the
 lockfile. Immediately before publishing, it verifies that the SHA is still the
@@ -167,11 +167,12 @@ its own credential, and builds receive public destinations only. Production
 jobs are serialized and never cancel one another.
 
 ```sh
-# CI push-main or manual Deploy Production
+# CI push-main or manual Release main
 uses test-reusable.yml
-uses release-production.yml
-git ls-remote origin refs/heads/main     # must still equal GITHUB_SHA
-CONVEX_DEPLOY_KEY=... bun run deploy:production
+uses release.yml
+  beta:       git ls-remote … ; bun run deploy:beta
+  e2e:        bun run test:deployed      # GROAM_ENVIRONMENT=beta, live browser checks
+  production: git ls-remote … ; bun run deploy:production
 # release.ts: convex deploy, then `void deploy --platform cloudflare`
 # from apps/web and then from apps/landing
 ```
@@ -182,14 +183,13 @@ Workers and their custom domains from them, and the release sets Convex `SITE_UR
 origin and generates `BETTER_AUTH_SECRET` once if it is missing. The backend HTTP origin is derived
 from the Convex URL. Frontend resource locks are committed under `tooling/deploy/locks/<environment>/`;
 the release runner copies the selected lock into each app temporarily and removes it afterward.
-Beta uses separate Convex, Cloudflare, and GitHub resources; **Deploy Beta** reruns Checks and
-accepts only manual releases from current main, guarded by `CONVEX_BETA_ENABLED`. Each GitHub
+Beta uses separate Convex, Cloudflare, and GitHub resources and receives every release first. Each GitHub
 environment holds only `CONVEX_DEPLOY_KEY` and `CLOUDFLARE_API_TOKEN`. See the [deployment runbook](../../deployment.md) for
 the exact setup and operating procedure.
 
 Source: [`ci.yml`](../../../.github/workflows/ci.yml),
-[`deploy-production.yml`](../../../.github/workflows/deploy-production.yml),
-[`release-production.yml`](../../../.github/workflows/release-production.yml),
+[`release.yml`](../../../.github/workflows/release.yml),
+[`release-main.yml`](../../../.github/workflows/release-main.yml),
 [`apps/web/void.config.ts`](../../../apps/web/void.config.ts),
 [`apps/landing/void.config.ts`](../../../apps/landing/void.config.ts),
 [`release.ts`](../../../tooling/deploy/src/release.ts), and

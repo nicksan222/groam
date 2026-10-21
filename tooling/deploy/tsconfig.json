@@ -1,4 +1,4 @@
 {
   "extends": "@groam/typescript-config/node.json",
-  "include": ["../../tooling/bun-globals.d.ts", "src/**/*.ts"]
+  "include": ["../../tooling/bun-globals.d.ts", "src/**/*.ts", "e2e/**/*.ts", "vite.config.ts"]
 }

@@ -328,6 +328,7 @@
         "@groam/typescript-config": "workspace:*",
         "@groam/vitest-config": "workspace:*",
         "@types/node": "^26.6.3",
+        "playwright": "^1.63.0",
         "typescript": "~7.0.2",
         "vite": "catalog:",
         "vite-plus": "catalog:",

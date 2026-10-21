@@ -110,7 +110,10 @@ export function requirements(environment: ReleaseEnvironment): Requirement[] {
       name: releaseSwitches[environment],
       location: 'GitHub repository variable',
       setBy: 'you',
-      how: 'Set to `true` once everything above is in place.'
+      how:
+        environment === 'production'
+          ? 'Set to `true` once everything above is in place. Production only releases after the same revision deployed to beta and passed its end-to-end checks, so beta must be on too.'
+          : 'Set to `true` once everything above is in place. Every main push then deploys here first and runs the end-to-end checks.'
     }
   ];
 }

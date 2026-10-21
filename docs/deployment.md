@@ -13,7 +13,7 @@ optional Cloudflare account. Void creates the Workers and custom domains from it
 | --- | --- | --- |
 | Convex | Separate project | Production project |
 | GitHub environment | `beta` | `prod` |
-| Release trigger | Manual from main | Main push or manual from main |
+| Release order | First, on every main push | After beta deploys and passes end-to-end checks |
 | Repository opt-in | `CONVEX_BETA_ENABLED=true` | `CONVEX_PRODUCTION_ENABLED=true` |
 
 Beta uses its own Convex project's **production-scoped** deploy key; it never shares production
@@ -40,8 +40,18 @@ switch. Do not enable a Cloudflare Git build; GitHub owns publishing.
 
 ## Releases
 
-A push to main runs Checks, then Release Production. Actions → Deploy Production or Deploy Beta
-reruns Checks and publishes main only. Direct local releases are rejected.
+Every push to main is released automatically, beta first:
+
+1. **Checks** run on the pushed revision.
+2. **Deploy beta** publishes it to beta.
+3. **End-to-end on beta** (`bun run test:deployed`) drives the live beta in a real browser as a
+   signed-out visitor: the sign-in screen and its legal links, deep links, static files and 404s,
+   the Convex auth backend, and the landing pages.
+4. **Deploy production** publishes the same revision, only if both beta steps passed.
+
+Actions → **Release main** reruns the whole pipeline for current main. A deploy refuses a revision
+that is no longer the tip of main, so a newer push supersedes an older one. Direct local releases
+are rejected.
 
 The runner checks the trusted publisher, tested SHA, clean checkout, committed Void locks, matching
 Convex key, and Cloudflare token. It syncs Convex `SITE_URL`, then deploys Convex followed by web and

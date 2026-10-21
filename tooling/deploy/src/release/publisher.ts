@@ -11,17 +11,15 @@ export type PublisherContext = {
 };
 
 /**
- * Only the trusted main-branch workflow may publish: production on push or manual dispatch,
- * beta on manual dispatch only, each with the deploy key of its own Convex deployment.
+ * Only the trusted main-branch workflow may publish, on a main push or a manual release, with the
+ * deploy key of the target environment's own Convex deployment.
  */
 export function assertTrustedPublisher(target: ReleaseTarget, context: PublisherContext): void {
   if (
     !context.isGitHubActions ||
     context.repository !== 'nicksan222/groam' ||
     context.ref !== 'refs/heads/main' ||
-    !(target.environment === 'beta'
-      ? context.eventName === 'workflow_dispatch'
-      : ['push', 'workflow_dispatch'].includes(context.eventName)) ||
+    !['push', 'workflow_dispatch'].includes(context.eventName) ||
     !/^[a-f0-9]{40}$/u.test(context.sha)
   )
     throw new Error(

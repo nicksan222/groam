@@ -9,6 +9,7 @@ src/
   release.ts           Entry point: verify, then publish Convex, web, and landing
   release/             Release target, trusted-publisher check, git checkout checks
   setup/               Everything an environment needs (requirements.ts) and `deploy:setup`
+e2e/                   Live checks against a deployed environment (`test:deployed`)
   convex/              Convex CLI wrapper, auth settings sync, backend deploy
   void/                Void lock handling, frontend build environment, frontend deploy
 locks/<environment>/   Committed Void locks (web.void.lock.json, landing.void.lock.json)
@@ -22,10 +23,11 @@ Run `bun run deploy:setup` to see what each environment still needs: config valu
 secrets and variables, Cloudflare token permissions, Convex variables, and Void locks. Each entry
 says where it lives and how to get it, and the command checks the ones it can.
 
-Use `deploy:production` or `deploy:beta` from the repository root. Production accepts trusted
-main pushes or manual releases; beta accepts only a manual release from main. Both require the
-production-scoped deploy key of their own Convex project, the GitHub environment's secrets, an
-immutable tested SHA, and a clean checkout.
+Every main push runs `deploy:beta`, then `test:deployed` (the live checks in `e2e/`, run against
+beta in a real browser), then `deploy:production` (`.github/workflows/release.yml`). Both deploys
+accept only the trusted main-branch workflow (a push or the manual **Release main**), and each
+requires its own Convex project's production-scoped deploy key, the GitHub environment's
+secrets, an immutable tested SHA, and a clean checkout.
 
 Before deploying Convex, the release sets its `SITE_URL` to the web origin and generates
 `BETTER_AUTH_SECRET` if the deployment has none. It never replaces or prints an existing secret.

@@ -10,6 +10,7 @@
     "@groam/typescript-config": "workspace:*",
     "@groam/vitest-config": "workspace:*",
     "@types/node": "^26.6.3",
+    "playwright": "^1.63.0",
     "typescript": "~7.0.2",
     "vite": "catalog:",
     "vite-plus": "catalog:"
@@ -27,6 +28,7 @@
     "deploy:production": "GROAM_ENVIRONMENT=production bun --no-env-file src/release.ts",
     "setup": "bun --no-env-file src/setup/checklist.ts",
     "test": "vp test run",
+    "test:deployed": "vp test run --config e2e/vite.config.ts",
     "typecheck": "tsc --noEmit"
   },
   "type": "module"

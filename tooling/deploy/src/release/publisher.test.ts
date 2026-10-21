@@ -37,15 +37,13 @@ describe('production publisher', () => {
   });
 });
 
-test('beta requires a manual trusted main release and its own backend key', () => {
-  const betaPublisher = {
-    ...publisher,
-    eventName: 'workflow_dispatch',
-    keyDeploymentName: 'groam-beta'
-  };
+test('beta releases from the same trusted main pushes, with its own backend key', () => {
+  const betaPublisher = { ...publisher, keyDeploymentName: 'groam-beta' };
   expect(() => assertTrustedPublisher(betaTarget, betaPublisher)).not.toThrow();
+  expect(() =>
+    assertTrustedPublisher(betaTarget, { ...betaPublisher, eventName: 'workflow_dispatch' })
+  ).not.toThrow();
   for (const override of [
-    { eventName: 'push' },
     { eventName: 'pull_request' },
     { ref: 'refs/heads/beta' },
     { keyDeploymentName: productionTarget.deploymentName }
