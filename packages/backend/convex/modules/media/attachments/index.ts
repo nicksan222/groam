@@ -5,8 +5,10 @@ import '#convex/modules/travel/targets/kinds/index';
 import type { Workspace } from '#convex/modules/auth/workspace';
 import { MediaAccess } from '#convex/modules/media/access';
 import { Files } from '#convex/modules/media/files/index';
+import type { MediaOrigins } from '#convex/modules/media/library/validators';
 import { TripTargetKind } from '#convex/modules/travel/targets/kind';
 import type { TripTargetValidators } from '#convex/modules/travel/targets/schema';
+import { findVisibleTrip } from '#convex/modules/travel/trips/visibility';
 
 type AttachmentTarget = Infer<typeof TripTargetValidators.attachable>;
 export type ReadCtx = MutationCtx | QueryCtx;
@@ -168,8 +170,8 @@ export class Attachments {
       workspace: Workspace;
     }
   ): Promise<AttachmentView[]> {
+    if (!(await findVisibleTrip(ctx, tripId, workspace))) throw new ConvexError('Trip not found');
     const references = await Attachments.forTarget(ctx, tripId, target, maximum);
-    const access = new MediaAccess(ctx, workspace);
     const rows = await Promise.all(
       references.map(async (reference) => {
         const [attachment, media] = await Promise.all([
@@ -180,7 +182,9 @@ export class Attachments {
           !attachment ||
           !media ||
           media.organizationId !== organizationId ||
-          !(await access.canRead(media._id))
+          reference.tripId !== tripId ||
+          attachment.tripId !== tripId ||
+          attachment.mediaId !== media._id
         )
           return null;
         return {
@@ -225,6 +229,7 @@ export class Attachments {
       tripId,
       target,
       mediaIds,
+      mediaOrigins = [],
       organizationId,
       workspace,
       maximum,
@@ -233,6 +238,7 @@ export class Attachments {
       tripId: Id<'trips'>;
       target: AttachmentTarget;
       mediaIds: Id<'media'>[] | undefined;
+      mediaOrigins?: MediaOrigins;
       organizationId: string;
       workspace: Workspace;
       maximum: number;
@@ -255,9 +261,19 @@ export class Attachments {
     if (media.some((item) => !item || item.organizationId !== organizationId)) {
       throw new ConvexError(`${singular} attachment not found`);
     }
+    if (mediaOrigins.length > ids.length) throw new ConvexError('Too many media origins');
     const access = new MediaAccess(ctx, workspace);
-    if (!(await Promise.all(ids.map((id) => access.canRead(id)))).every(Boolean))
-      throw new ConvexError(`${singular} attachment not found`);
+    const allowed = await Promise.all(
+      ids.map(async (id) => {
+        const origin = mediaOrigins.find((proof) => proof.mediaId === id)?.origin;
+        const current = existing.find((reference) => reference.mediaId === id);
+        return access.canRead(
+          id,
+          origin ?? (current ? { kind: 'attachment', id: current.attachmentId } : undefined)
+        );
+      })
+    );
+    if (!allowed.every(Boolean)) throw new ConvexError(`${singular} attachment not found`);
     if (
       existing.length === ids.length &&
       existing.every((reference, index) => reference.mediaId === ids[index])

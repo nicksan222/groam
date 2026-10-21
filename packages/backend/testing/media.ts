@@ -87,3 +87,28 @@ export async function seedDenseMediaOrigins(
   }
   return files;
 }
+
+/** Model a current seat revocation without changing the media's historical origins. */
+export async function setMediaOriginSeatPaid(
+  owner: Awaited<ReturnType<typeof setupGroup>>['owner'],
+  args: { tripId: Id<'trips'>; userId: string; paid: boolean }
+) {
+  await owner.test.run(async (ctx) => {
+    const payment = await ctx.db
+      .query('tripPayments')
+      .withIndex('by_tripId_and_userId', (q) =>
+        q.eq('tripId', args.tripId).eq('userId', args.userId)
+      )
+      .unique();
+    if (!payment) throw new Error('Expected an origin seat');
+    await ctx.db.patch('tripPayments', payment._id, { paid: args.paid });
+  });
+}
+
+/** Reproduce a pending file removed by concurrent organization cleanup. */
+export async function deletePendingMedia(
+  owner: Awaited<ReturnType<typeof setupGroup>>['owner'],
+  mediaId: Id<'media'>
+) {
+  await owner.test.run((ctx) => ctx.db.delete('media', mediaId));
+}

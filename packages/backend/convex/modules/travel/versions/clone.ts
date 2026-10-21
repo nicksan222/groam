@@ -31,14 +31,17 @@ async function copyTargetAttachments({
   organizationId: string;
   workspace: Workspace;
 }): Promise<boolean> {
-  const mediaIds = sourceContent.attachments
+  const files = sourceContent.attachments
     .filter((attachment) => targetKey(attachment.target) === targetKey(sourceTarget))
-    .sort((left, right) => left.position - right.position)
-    .map((attachment) => attachment.mediaId);
+    .sort((left, right) => left.position - right.position);
   return await Attachments.setTarget(ctx, {
     label: 'Version items',
     maximum: 10,
-    mediaIds,
+    mediaIds: files.map(({ mediaId }) => mediaId),
+    mediaOrigins: files.map(({ mediaId, attachmentId }) => ({
+      mediaId,
+      origin: { kind: 'attachment', id: attachmentId }
+    })),
     organizationId,
     workspace,
     target,

@@ -45,6 +45,7 @@ import {
   MAX_TITLE_LENGTH
 } from '#convex/modules/discussions/threads/limits';
 import type { DiscussionMember } from '#convex/modules/discussions/threads/schema';
+import type { MediaOrigins } from '#convex/modules/media/library/validators';
 import { PollCleanup } from '#convex/modules/polls/cleanup';
 import { insertWithShortId } from '#convex/modules/references/index';
 import { loadTripContext } from '#convex/modules/travel/trips/ctx';
@@ -180,7 +181,7 @@ export class Discussions {
 
   /** Agent message id → attachments, for the chat UI that lists files beside bubbles. */
   static async listMessageAttachments(ctx: QueryCtx, discussionId: Id<'discussions'>) {
-    const { workspace } = await DiscussionAccess.require(ctx, discussionId);
+    const access = await DiscussionAccess.require(ctx, discussionId);
     const receipts = await ctx.db
       .query('discussionMessages')
       .withIndex('by_discussionId', (query) => query.eq('discussionId', discussionId))
@@ -189,11 +190,7 @@ export class Discussions {
     const loaded = await Promise.all(
       receipts.map(async (receipt) => {
         if (!receipt.agentMessageId) return null;
-        const attachments = await DiscussionMedia.load(
-          ctx,
-          workspace,
-          await DiscussionMedia.idsForReceipt(ctx, receipt)
-        );
+        const attachments = await DiscussionMedia.load(ctx, access, receipt);
         if (attachments.length === 0) return null;
         return [receipt.agentMessageId, attachments] as const;
       })
@@ -219,7 +216,8 @@ export class Discussions {
   ) {
     // useUIMessages subscribes to stream deltas with an intentionally empty message page.
     DiscussionAccess.validatePagination(args.paginationOpts, args.streamArgs !== undefined);
-    const { discussion, workspace } = await DiscussionAccess.require(ctx, args.discussionId);
+    const access = await DiscussionAccess.require(ctx, args.discussionId);
+    const { discussion, workspace } = access;
     if (discussion.threadId !== args.threadId) throw new ConvexError('Discussion not found');
     const [messages, streams] = await Promise.all([
       listUIMessages(ctx, components.agent, args),
@@ -238,13 +236,7 @@ export class Discussions {
             .unique()
         : null;
     const attachmentsForReceipt = async (receipt: Awaited<ReturnType<typeof receiptForMessage>>) =>
-      receipt
-        ? await DiscussionMedia.load(
-            ctx,
-            workspace,
-            await DiscussionMedia.idsForReceipt(ctx, receipt)
-          )
-        : [];
+      receipt ? await DiscussionMedia.load(ctx, access, receipt) : [];
     const displayTextFor = (
       message: (typeof messages.page)[number],
       receipt: Awaited<ReturnType<typeof receiptForMessage>>,
@@ -497,13 +489,15 @@ export class Discussions {
       text,
       clientRequestId,
       requestedAssistantAgent,
-      mediaIds = []
+      mediaIds = [],
+      mediaOrigins = []
     }: {
       discussionId: Id<'discussions'>;
       text: string;
       clientRequestId: string;
       requestedAssistantAgent?: ChatAgentId;
       mediaIds?: Id<'media'>[];
+      mediaOrigins?: MediaOrigins;
     }
   ): Promise<DiscussionSendResult> {
     const access = await DiscussionAccess.require(ctx, discussionId);
@@ -515,7 +509,7 @@ export class Discussions {
     const normalizedMediaIds = DiscussionMedia.normalizeIds(mediaIds);
     const media =
       normalizedMediaIds.length > 0
-        ? await DiscussionMedia.require(ctx, workspace, normalizedMediaIds)
+        ? await DiscussionMedia.require(ctx, workspace, normalizedMediaIds, mediaOrigins)
         : [];
     const normalizedContent = Messages.normalizeContent(text, 'Message', {
       allowEmpty: media.length > 0

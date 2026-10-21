@@ -1429,7 +1429,9 @@ async function finishMerge({
     throw new ConvexError('This idea can no longer be applied');
   }
   const timestamp = operation.requestedAt;
-  await VersionApply.snapshot(ctx, source, mergedSnapshot);
+  await VersionApply.snapshot(ctx, source, mergedSnapshot, {
+    attachmentSourceTripId: proposal.workingTripId
+  });
   await Promise.all([
     ctx.db.delete('tripProposalOperations', operation._id),
     ctx.db.patch('tripProposals', proposalId, {
@@ -1737,7 +1739,8 @@ async function finishRebase({
   }
   const working = await loadTripContext(ctx, proposal.workingTripId, source.workspace);
   await VersionApply.snapshot(ctx, preserveIdeaReview(working), rebasedSnapshot, {
-    retainSourceKeys: true
+    retainSourceKeys: true,
+    attachmentSourceTripId: source.trip._id
   });
   const timestamp = Date.now();
   const ideaName = ideaNameFor(proposal);

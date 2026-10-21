@@ -2,6 +2,7 @@ import { v } from 'convex/values';
 import { mutation } from '#convex-generated/server';
 import { chatAgentValidator } from '#convex/modules/assistant/validators/index';
 import { Discussions } from '#convex/modules/discussions/threads/index';
+import { mediaOriginsValidator } from '#convex/modules/media/library/validators';
 
 /**
  * Post a group message. Returns the saved message id and any @mentioned assistant agent
@@ -12,6 +13,7 @@ export const run = mutation({
     assistantAgent: v.optional(chatAgentValidator),
     clientRequestId: v.string(),
     discussionId: v.id('discussions'),
+    mediaOrigins: v.optional(mediaOriginsValidator),
     mediaIds: v.optional(v.array(v.id('media'))),
     text: v.string()
   },
@@ -24,6 +26,7 @@ export const run = mutation({
       clientRequestId: args.clientRequestId,
       discussionId: args.discussionId,
       mediaIds: args.mediaIds,
+      mediaOrigins: args.mediaOrigins,
       requestedAssistantAgent: args.assistantAgent,
       text: args.text
     })

@@ -6,6 +6,8 @@ import { Files } from '#convex/modules/media/files/index';
 import { Media } from '#convex/modules/media/library/index';
 import {
   type SaveMediaResult,
+  type AccessOrigin,
+  accessOriginValidator,
   saveMediaResultValidator
 } from '#convex/modules/media/library/validators';
 
@@ -17,7 +19,12 @@ import {
 export class MediaCommit {
   static async saveFromUpload(
     ctx: ActionCtx,
-    args: { contentType: string; name: string; storageId: Id<'_storage'> }
+    args: {
+      contentType: string;
+      name: string;
+      storageId: Id<'_storage'>;
+      accessOrigin?: AccessOrigin;
+    }
   ): Promise<SaveMediaResult> {
     if (!(await ctx.auth.getUserIdentity())) throw new ConvexError('Not authenticated');
     const file = await Files.inspect(ctx, args.storageId, args.contentType);
@@ -25,6 +32,7 @@ export class MediaCommit {
       internal.modules.media.library.commit.save,
       {
         contentType: file.contentType,
+        accessOrigin: args.accessOrigin,
         name: args.name,
         signatureValid: file.signatureValid,
         storageId: args.storageId
@@ -37,11 +45,18 @@ export class MediaCommit {
 export const save = internalMutation({
   args: {
     contentType: v.string(),
+    accessOrigin: v.optional(accessOriginValidator),
     name: v.string(),
     signatureValid: v.boolean(),
     storageId: v.id('_storage')
   },
   returns: saveMediaResultValidator,
-  handler: (ctx, { contentType, name, signatureValid, storageId }) =>
-    Media.save(ctx, { name, signatureValid, storageId, uploadedContentType: contentType })
+  handler: (ctx, { contentType, name, signatureValid, storageId, accessOrigin }) =>
+    Media.save(ctx, {
+      name,
+      signatureValid,
+      storageId,
+      uploadedContentType: contentType,
+      accessOrigin
+    })
 });
