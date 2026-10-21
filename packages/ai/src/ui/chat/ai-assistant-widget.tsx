@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useEffectEvent,
   useLayoutEffect,
   useRef,
   useState,
@@ -100,31 +101,33 @@ function ContextualAssistantWidget({
     return () => document.documentElement.removeAttribute('data-ai-sidechat-open');
   }, [isOpen]);
 
+  const onShortcut = useEffectEvent((event: KeyboardEvent) => {
+    if (
+      !event.repeat &&
+      event.key === SHORTCUT_KEY &&
+      (event.metaKey || event.ctrlKey) &&
+      !event.altKey
+    ) {
+      event.preventDefault();
+      setOpen(!isOpen);
+    }
+  });
   useEffect(() => {
-    const onShortcut = (event: KeyboardEvent) => {
-      if (
-        !event.repeat &&
-        event.key === SHORTCUT_KEY &&
-        (event.metaKey || event.ctrlKey) &&
-        !event.altKey
-      ) {
-        event.preventDefault();
-        setOpen(!isOpen);
-      }
-    };
-    window.addEventListener('keydown', onShortcut);
-    return () => window.removeEventListener('keydown', onShortcut);
-  }, [isOpen, setOpen]);
+    const handleShortcut = (event: KeyboardEvent) => onShortcut(event);
+    window.addEventListener('keydown', handleShortcut);
+    return () => window.removeEventListener('keydown', handleShortcut);
+  }, []);
 
+  const onOpenRequest = useEffectEvent(() => {
+    externalLauncherRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setOpen(true);
+  });
   useEffect(() => {
-    const onOpenRequest = () => {
-      externalLauncherRef.current =
-        document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      setOpen(true);
-    };
-    window.addEventListener('groam:open-assistant', onOpenRequest);
-    return () => window.removeEventListener('groam:open-assistant', onOpenRequest);
-  }, [setOpen]);
+    const handleOpenRequest = () => onOpenRequest();
+    window.addEventListener('groam:open-assistant', handleOpenRequest);
+    return () => window.removeEventListener('groam:open-assistant', handleOpenRequest);
+  }, []);
 
   useEffect(() => {
     if (wasOpen.current && !isOpen && hasInteracted.current) {
