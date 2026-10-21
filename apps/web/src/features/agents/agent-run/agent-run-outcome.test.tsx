@@ -4,7 +4,7 @@ import { page } from 'vite-plus/test/browser';
 import type { AgentRun } from '@/features/agents/hooks/use-agent';
 import { AgentRunOutcome } from './agent-run-outcome';
 
-vi.mock('@tanstack/react-router', async (importOriginal) => {
+vi.mock('@/lib/navigation/router', async (importOriginal) => {
   const { mockRouter } = await import('@/lib/testing/router-mock');
   return mockRouter(importOriginal);
 });

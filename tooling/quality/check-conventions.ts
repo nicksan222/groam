@@ -225,7 +225,7 @@ const messages: Record<ConventionFinding['category'], string> = {
     'Use @groam/icons/astro for icons; mark decorative SVG illustrations with data-illustration',
   'raw-convex-access': 'Raw Convex database access must stay inside components, modules and routes',
   'route-imports':
-    'Web route files must only compose feature views and may import from @/features, @/lib, @tanstack/react-router, or @groam packages',
+    'Web page files must only compose feature views and may import from @/features, @/lib, @void/react, or @groam packages',
   'ui-imports':
     'Import UI through an exported @groam/ui/components/*, @groam/ui/hooks/*, @groam/ui/lib/*, or @groam/ui/styles entrypoint',
   'ui-internal-imports':

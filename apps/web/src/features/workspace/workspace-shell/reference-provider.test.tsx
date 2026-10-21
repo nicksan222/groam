@@ -9,8 +9,10 @@ import {
 import { ReferenceProvider } from './reference-provider';
 
 const state = vi.hoisted(() => ({
+  hash: '',
   params: {} as Record<string, string>,
   pathname: '/trips/long-id',
+  search: '',
   resolved: { ids: {}, loading: false, missing: false, shortIds: {} } as {
     ids: Record<string, string>;
     loading: boolean;
@@ -18,12 +20,18 @@ const state = vi.hoisted(() => ({
     shortIds: Record<string, string>;
   }
 }));
-const navigate = vi.hoisted(() => vi.fn());
+const visit = vi.hoisted(() => vi.fn(async () => undefined));
 
-vi.mock('@tanstack/react-router', () => ({
-  useLocation: () => ({ pathname: state.pathname }),
-  useNavigate: () => navigate,
-  useParams: () => state.params
+vi.mock('@/lib/navigation/router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/navigation/router')>()),
+  useLocation: () => ({
+    hash: state.hash,
+    pathname: state.pathname,
+    search: state.search,
+    searchParams: new URLSearchParams(state.search)
+  }),
+  useParams: () => state.params,
+  useVisit: () => visit
 }));
 vi.mock('@/features/workspace/hooks/use-reference-params', () => ({
   useReferenceParams: () => state.resolved
@@ -44,9 +52,11 @@ function Probe() {
 }
 
 beforeEach(() => {
-  navigate.mockClear();
+  visit.mockClear();
   state.params = { tripId: 'long-id' };
+  state.hash = '';
   state.pathname = '/trips/long-id';
+  state.search = '';
   state.resolved = {
     ids: { tripId: 'long-id' },
     loading: false,
@@ -70,8 +80,17 @@ describe('ReferenceProvider', () => {
   test('replaces the URL with the short reference once resolved', async () => {
     await render(<ReferenceProvider>content</ReferenceProvider>);
     await expect
-      .poll(() => navigate.mock.calls)
-      .toEqual([[{ hash: true, replace: true, search: true, to: '/trips/abc' }]]);
+      .poll(() => visit.mock.calls)
+      .toEqual([['/trips/abc', { replace: true, viewTransition: false }]]);
+  });
+
+  test('keeps the search and hash when replacing the URL', async () => {
+    state.search = '?focus=map';
+    state.hash = '#details';
+    await render(<ReferenceProvider>content</ReferenceProvider>);
+    await expect
+      .poll(() => visit.mock.calls)
+      .toEqual([['/trips/abc?focus=map#details', { replace: true, viewTransition: false }]]);
   });
 
   test.each([
@@ -81,14 +100,14 @@ describe('ReferenceProvider', () => {
     state.resolved = { ...state.resolved, ...flags };
     await render(<ReferenceProvider>content</ReferenceProvider>);
     await expect.element(page.getByText('content')).toBeVisible();
-    expect(navigate).not.toHaveBeenCalled();
+    expect(visit).not.toHaveBeenCalled();
   });
 
   test('does not navigate when the URL is already canonical', async () => {
     state.pathname = '/trips/abc';
     await render(<ReferenceProvider>content</ReferenceProvider>);
     await expect.element(page.getByText('content')).toBeVisible();
-    expect(navigate).not.toHaveBeenCalled();
+    expect(visit).not.toHaveBeenCalled();
   });
 
   test('exposes loading and missing flags', async () => {

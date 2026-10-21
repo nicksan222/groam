@@ -5,9 +5,12 @@ import { page } from 'vite-plus/test/browser';
 import { testIds } from '@/lib/test-ids';
 import { type InboxNotification, InboxNotificationList } from './inbox-notification-list';
 
-const navigate = vi.hoisted(() => vi.fn());
+const visit = vi.hoisted(() => vi.fn());
 
-vi.mock('@tanstack/react-router', () => ({ useNavigate: () => navigate }));
+vi.mock('@/lib/navigation/router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/navigation/router')>()),
+  useVisit: () => visit
+}));
 
 function makeNotification(overrides: Partial<InboxNotification> = {}): InboxNotification {
   return {
@@ -79,7 +82,7 @@ describe('InboxNotificationList', () => {
     );
     await page.getByText('Review requested').click();
     expect(markNotificationRead).toHaveBeenCalledWith('notification-1');
-    expect(navigate).toHaveBeenCalledWith({ to: '/ideas/lisbon' });
+    expect(visit).toHaveBeenCalledWith('/ideas/lisbon');
   });
 
   test('only navigates for an already read notification', async () => {
@@ -92,7 +95,7 @@ describe('InboxNotificationList', () => {
     );
     await page.getByText('Review requested').click();
     expect(markNotificationRead).not.toHaveBeenCalled();
-    expect(navigate).toHaveBeenCalledWith({ to: '/ideas/lisbon' });
+    expect(visit).toHaveBeenCalledWith('/ideas/lisbon');
   });
 });
 

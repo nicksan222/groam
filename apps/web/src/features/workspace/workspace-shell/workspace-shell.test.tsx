@@ -8,15 +8,19 @@ import { WorkspaceShell } from './workspace-shell';
 
 const route = vi.hoisted(() => ({ pathname: '/trips' }));
 
-vi.mock('@tanstack/react-router', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
+vi.mock('@/lib/navigation/router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/navigation/router')>()),
   Link: ({ children, to, ...props }: ComponentProps<'a'> & { to: string }) => (
     <a href={to} {...props}>
       {children}
     </a>
   ),
-  Outlet: () => <main>Page content</main>,
-  useLocation: () => ({ pathname: route.pathname })
+  useLocation: () => ({
+    hash: '',
+    pathname: route.pathname,
+    search: '',
+    searchParams: new URLSearchParams()
+  })
 }));
 
 vi.mock('./workspace-state', () => ({
@@ -36,6 +40,8 @@ vi.mock('@/features/workspace/workspace-command/command-palette', () => ({
   CommandPalette: () => null
 }));
 
+const pageContent = <main>Page content</main>;
+
 const areas = ['Home', 'Trips', 'Ideas', 'Chat'];
 
 const mobileNav = () => page.getByRole('navigation', { name: 'Mobile navigation' });
@@ -48,7 +54,7 @@ describe('mobile navigation on a phone', () => {
   beforeEach(() => useViewport(390, 844));
 
   test('offers the four planning areas, the assistant and a menu', async () => {
-    await render(<WorkspaceShell />);
+    await render(<WorkspaceShell>{pageContent}</WorkspaceShell>);
     for (const [label, href] of [
       ['Home', '/'],
       ['Trips', '/trips'],
@@ -75,7 +81,7 @@ describe('mobile navigation on a phone', () => {
     ['/trips-archive', null]
   ])('on %s the current area is %s', async (pathname, current) => {
     route.pathname = pathname;
-    await render(<WorkspaceShell />);
+    await render(<WorkspaceShell>{pageContent}</WorkspaceShell>);
     for (const label of areas) {
       const link = mobileNav().getByRole('link', { name: label });
       if (label === current) await expect.element(link).toHaveAttribute('aria-current', 'page');
@@ -85,13 +91,13 @@ describe('mobile navigation on a phone', () => {
 
   test('hides itself inside a chat thread so the composer owns the bottom edge', async () => {
     route.pathname = '/chat/thread-1';
-    await render(<WorkspaceShell />);
+    await render(<WorkspaceShell>{pageContent}</WorkspaceShell>);
     await expect.element(page.getByText('Page content')).toBeVisible();
     await expect.element(mobileNav()).not.toBeInTheDocument();
   });
 
   test('sits on the bottom edge across the full width without scrolling the page sideways', async () => {
-    await render(<WorkspaceShell />);
+    await render(<WorkspaceShell>{pageContent}</WorkspaceShell>);
     const box = mobileNav().element().getBoundingClientRect();
     expect(box.left).toBe(0);
     expect(box.width).toBe(document.documentElement.clientWidth);
@@ -102,7 +108,7 @@ describe('mobile navigation on a phone', () => {
   });
 
   test('"More" opens the sidebar menu', async () => {
-    await render(<WorkspaceShell />);
+    await render(<WorkspaceShell>{pageContent}</WorkspaceShell>);
     await expect.element(page.getByText('Sidebar closed')).toBeVisible();
     await mobileNav().getByRole('button', { name: 'More' }).click();
     await expect.element(page.getByText('Sidebar open')).toBeVisible();
@@ -111,7 +117,7 @@ describe('mobile navigation on a phone', () => {
   test('the AI button asks the shell to open the assistant', async () => {
     const opened = vi.fn();
     window.addEventListener('groam:open-assistant', opened);
-    await render(<WorkspaceShell />);
+    await render(<WorkspaceShell>{pageContent}</WorkspaceShell>);
     await mobileNav().getByRole('button', { name: 'Open Groam AI' }).click();
     window.removeEventListener('groam:open-assistant', opened);
     expect(opened).toHaveBeenCalledOnce();
@@ -119,7 +125,7 @@ describe('mobile navigation on a phone', () => {
 });
 
 test('the desktop shell has no bottom navigation', async () => {
-  await render(<WorkspaceShell />);
+  await render(<WorkspaceShell>{pageContent}</WorkspaceShell>);
   await expect.element(page.getByText('Page content')).toBeVisible();
   await expect.element(mobileNav()).not.toBeInTheDocument();
 });

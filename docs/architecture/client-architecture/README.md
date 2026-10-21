@@ -1,6 +1,6 @@
 # Client architecture
 
-The web client is a React application. Its routes select feature views,
+The web client is a React application served by Void. Its pages select feature views,
 features adapt backend operations into interactions, and shared packages supply
 presentation and cross-client contracts.
 
@@ -9,10 +9,15 @@ presentation and cross-client contracts.
 The application root provides theme and authentication integration. The
 authenticated workspace layout supplies the active organization, resource
 reference resolution and global shell. The shell owns navigation, shared dialogs,
-the assistant surface and the route outlet. Product views live in feature
-domains rather than being implemented inside route definitions.
+the assistant surface and the page outlet. Product views live in feature
+domains rather than being implemented inside page files.
 
-File-based routing defines the URL structure. Reference-aware navigation
+Void's file-based routing (`apps/web/pages`) defines the URL structure,
+serves the workspace from the origin root, and keeps nested layouts mounted while pages
+change; page transitions use view transitions. Pages are client-mounted
+(`ssr = false`) because Convex owns data and sessions in the browser. A typed
+navigation layer wraps Void's router so links and redirects name app-relative
+paths and params. Reference-aware navigation
 resolves compact resource references and canonical URLs through shared helpers.
 Navigation state identifies what the user is viewing; backend access checks
 determine whether that resource can actually be loaded.
@@ -68,7 +73,7 @@ built, with pseudocode traced from the source and the tests that enforce them.
 
 ## Source anchors
 
-- [Application root](../../../apps/web/src/app-root.tsx) and [workspace route](../../../apps/web/src/routes/_workspace.tsx)
+- [Application root](../../../apps/web/src/app-root.tsx) and [workspace layout](../../../apps/web/pages/(workspace)/layout.tsx)
 - [Workspace scope](../../../apps/web/src/features/workspace/workspace-shell/workspace-context.tsx)
 - [Reference resolution](../../../apps/web/src/features/workspace/workspace-shell/reference-provider.tsx)
 - [Screen context provider](../../../packages/ai/src/ui/context/agent-context.tsx)

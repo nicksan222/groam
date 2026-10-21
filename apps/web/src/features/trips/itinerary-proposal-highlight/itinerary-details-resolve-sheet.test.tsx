@@ -3,8 +3,8 @@ import { expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { ItineraryDetailsResolveSheet } from './itinerary-details-resolve-sheet';
 
-vi.mock('@tanstack/react-router', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
+vi.mock('@/lib/navigation/router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/navigation/router')>()),
   Link: ({ children }: { children: React.ReactNode }) => <a href="/compare">{children}</a>
 }));
 

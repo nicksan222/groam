@@ -4,10 +4,14 @@ const kebabName = /^[a-z0-9]+(?:-[a-z0-9]+)*(?:\.[a-z0-9]+(?:-[a-z0-9]+)*)*$/u;
 const kebabDirectory = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 const parentImport = /(?:from\s+|import\(\s*)['"]\.\.\//u;
 const generatedPath = /(?:^|\/)(?:_generated|\.astro)(?:\/|$)/u;
-const generatedFile = /(?:^|\/)routeTree\.gen\.ts$/u;
+const generatedFile = /(?:^|\/)\.void\//u;
 const astroDynamicRoute =
   /^apps\/landing\/src\/pages\/(?:[a-z0-9-]+\/)*\[(?:\.\.\.)?[a-z][a-z0-9-]*\]\.astro$/u;
-const tanstackRoute = /^apps\/web\/src\/routes\//u;
+const webPageRoute = /^apps\/web\/pages\//u;
+// Void page segments: `[tripId]`, `[...path]`, and `(workspace)` route groups.
+const voidRouteDirectory = /^(?:\[(?:\.\.\.)?[a-z][a-zA-Z0-9]*\]|\([a-z0-9]+(?:-[a-z0-9]+)*\))$/u;
+const voidRouteName =
+  /^(?:\[(?:\.\.\.)?[a-z][a-zA-Z0-9]*\]|[a-z0-9]+(?:-[a-z0-9]+)*)(?:\.server)?$/u;
 const hardcodedColor = /#[\da-f]{3,8}\b|(?:rgb|rgba|hsl|hsla|hwb|lab|lch|oklab|oklch|color)\(/giu;
 const importantStyle = /!\s*important\b/iu;
 const cssFile = /\.css$/u;
@@ -19,6 +23,8 @@ const backendTestSupport = /^packages\/backend\/(?:convex\/.*\.test\.ts|testing\
 const envPackage = /^packages\/env\//u;
 const importMetaEnv = /\bimport\.meta\.env\b/u;
 const importSpecifier = /(?:from\s+|import\(\s*)['"]([^'"]+)['"]|^import\s+['"]([^'"]+)['"]/gmu;
+// Browser chrome colors in the Void document head (theme-color) must be literal values.
+const documentHeadFiles = new Set(['apps/web/void.config.ts']);
 const designTokenFiles = new Set([
   'apps/landing/src/styles/tokens.css',
   'packages/ui/src/styles/globals.css',
@@ -29,10 +35,11 @@ const groamUiPrefix = '@groam/ui/';
 const groamAiPrefix = '@groam/ai/';
 const uiInternalSrcPrefix = '#src/';
 const allowedUiSubpaths = ['components/', 'hooks/', 'lib/', 'styles'] as const;
-const routePathAliases = ['@/features/', '@/lib/'] as const;
+// Pages compose features; the root layout also mounts the app shell from `@/app-layout`.
+const routePathAliases = ['@/features/', '@/lib/', '@/app-layout'] as const;
 const routeUiComposers = ['@groam/ai/ui'] as const;
 const allowedRouteSpecifiers = [
-  '@tanstack/react-router',
+  '@void/react',
   '@groam/ai',
   '@groam/auth',
   '@groam/backend',
@@ -115,13 +122,12 @@ export function packageExportPatternsFromMap(exportsMap: Record<string, unknown>
     });
 }
 
-/** `@groam/*` (except UI) and the router from the web app, plus local route aliases. */
+/** `@groam/*` (except UI) and Void's React adapter from the web app, plus local route aliases. */
 export function routePackageAllowlistFromWebDependencies(
   dependencies: Record<string, string>
 ): string[] {
   const fromPackage = Object.keys(dependencies).filter(
-    (name) =>
-      name === '@tanstack/react-router' || (name.startsWith('@groam/') && name !== '@groam/ui')
+    (name) => name === '@void/react' || (name.startsWith('@groam/') && name !== '@groam/ui')
   );
   return [...fromPackage, ...routePathAliases, ...routeUiComposers];
 }
@@ -144,7 +150,8 @@ export function invalidDirectoryNames(filePath: string): string[] {
       !directory.startsWith('.') &&
       directory !== '_generated' &&
       prefix !== '.github/ISSUE_TEMPLATE' &&
-      !kebabDirectory.test(directory)
+      !kebabDirectory.test(directory) &&
+      !(webPageRoute.test(`${prefix}/`) && voidRouteDirectory.test(directory))
     ) {
       invalid.push(prefix);
     }
@@ -174,9 +181,10 @@ export function inspectFile(
   findings.push(...inspectComponentFile(filePath, source));
   findings.push(...inspectAstroIcons(filePath, source));
 
-  if (!tanstackRoute.test(filePath) && !astroDynamicRoute.test(filePath)) {
+  if (!astroDynamicRoute.test(filePath)) {
     const baseName = filePath.slice(filePath.lastIndexOf('/') + 1).replace(sourceExtension, '');
-    if (!kebabName.test(baseName)) {
+    const validName = webPageRoute.test(filePath) ? voidRouteName : kebabName;
+    if (!validName.test(baseName)) {
       findings.push({ category: 'names', location: filePath });
     }
   }
@@ -260,7 +268,7 @@ function inspectStyle(filePath: string, source: string): ConventionFinding[] {
     if (rules) findings.push({ category: 'web-styles', location: filePath });
   }
 
-  const isDesignTokenFile = designTokenFiles.has(filePath);
+  const isDesignTokenFile = designTokenFiles.has(filePath) || documentHeadFiles.has(filePath);
   const isCss = cssFile.test(filePath);
 
   for (const [index, line] of withoutComments.split('\n').entries()) {
@@ -321,7 +329,7 @@ function inspectImportSpecifier({
   if (isInvalidUiInternalImport(filePath, specifier, options)) {
     findings.push({ category: 'ui-internal-imports', location });
   }
-  if (tanstackRoute.test(filePath) && !isAllowedRouteSpecifier(specifier, options)) {
+  if (webPageRoute.test(filePath) && !isAllowedRouteSpecifier(specifier, options)) {
     findings.push({ category: 'route-imports', location });
   }
   return findings;

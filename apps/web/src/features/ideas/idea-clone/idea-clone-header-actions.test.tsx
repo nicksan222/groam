@@ -6,8 +6,8 @@ import { IdeaCloneHeaderActions } from './idea-clone-header-actions';
 
 const navigate = vi.fn();
 
-vi.mock('@tanstack/react-router', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
+vi.mock('@/lib/navigation/router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/navigation/router')>()),
   useNavigate: () => navigate
 }));
 

@@ -3,11 +3,11 @@ import { FileDiff } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { EmptyScreen } from '@groam/ui/components/empty-screen';
 import { PageLoading } from '@groam/ui/components/page-loading';
-import { Navigate } from '@tanstack/react-router';
 import { ideaOpenHref } from '@/features/ideas/idea-href';
 import { useTripVersion } from '@/features/trips/hooks/use-trip-versions';
 import { Link } from '@/features/workspace/navigation/router';
 import { useOptionalWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
+import { Navigate } from '@/lib/navigation/router';
 
 export function IdeaDetailView({ proposalId }: { proposalId: Id<'tripProposals'> }) {
   const { proposal } = useTripVersion(proposalId);

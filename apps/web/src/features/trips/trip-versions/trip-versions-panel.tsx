@@ -2,7 +2,6 @@ import type { Id } from '@groam/backend/data-model';
 import { FileDiff, Plus } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import Shell from '@groam/ui/components/shell/client';
-import { useNavigate } from '@tanstack/react-router';
 import { type ReactNode, useCallback } from 'react';
 import { matchesIdeaStatus } from '@/features/ideas/hooks/idea-list-filter';
 import { ideaCreateCta, ideasListDescription } from '@/features/ideas/idea-glossary';
@@ -13,6 +12,7 @@ import { useTripVersions } from '@/features/trips/hooks/use-trip-versions';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { TripSectionPanel } from '@/features/trips/trip-detail/trip-section-panel';
 import { useOptionalWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
+import { useNavigate } from '@/lib/navigation/router';
 import { testIds } from '@/lib/test-ids';
 import { VersionRow } from './version-row';
 

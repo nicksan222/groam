@@ -20,7 +20,9 @@ starting point, then inspect the view's actual imports and hook return types.
   from the installed `vite-plus` test exports. The suite runs with app styles in
   a real browser, not jsdom or Testing Library.
 - Mock feature hooks, workspace state, router, and screen context at the view
-  boundary. Reset mutable mock state between tests. Do not start or call Convex.
+  boundary. Mock `@/lib/navigation/router` with `mockRouter` from
+  `@/lib/testing/router-mock` (see an existing test for the `vi.mock` call).
+  Reset mutable mock state between tests. Do not start or call Convex.
 - Find existing helpers in `apps/web/src/lib/testing/`, feature testing folders,
   and `tooling/app-actions/src/vitest/` before making new mocks or shared steps.
 - Drive roles, labels, or registry test ids and use retrying element assertions.

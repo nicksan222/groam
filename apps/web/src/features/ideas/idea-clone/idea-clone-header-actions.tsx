@@ -16,7 +16,6 @@ import {
   DropdownMenuTrigger
 } from '@groam/ui/components/dropdown-menu';
 import { Spinner } from '@groam/ui/components/spinner';
-import { useNavigate } from '@tanstack/react-router';
 import {
   ideaBackToEditing,
   ideaCloseWithoutApplying,
@@ -27,6 +26,7 @@ import {
   ideaResolveAndApply
 } from '@/features/ideas/idea-glossary';
 import { ideaCloneHref } from '@/features/ideas/idea-href';
+import { useNavigate } from '@/lib/navigation/router';
 import { testIds } from '@/lib/test-ids';
 import type { IdeaPrimaryAction, IdeaStatus } from '@/types/ideas';
 import type { IdeaCloneView } from './idea-sections';

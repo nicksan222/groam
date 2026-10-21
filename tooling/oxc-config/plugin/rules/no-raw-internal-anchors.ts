@@ -20,7 +20,7 @@ export default defineRule({
           context.report({
             node,
             message:
-              'Use TanStack Router Link for internal navigation. Raw anchors reload the app and discard client state.'
+              'Use Link from @/lib/navigation/router for internal navigation. Raw anchors reload the app and discard client state.'
           });
         }
       }

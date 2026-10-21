@@ -1,5 +1,4 @@
 import type { Id } from '@groam/backend/data-model';
-import { useNavigate } from '@tanstack/react-router';
 import { useCallback, useState } from 'react';
 import { findViewerDrafts } from '@/features/ideas/hooks/viewer-pending-idea';
 import { ideaCloneHref } from '@/features/ideas/idea-href';
@@ -10,6 +9,7 @@ import {
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { useOpenState } from '@/features/workspace/hooks/use-open-state';
 import { useOptionalWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
+import { useNavigate } from '@/lib/navigation/router';
 import { usePendingGearClaimStore } from '@/lib/stores/pending-gear-claim-store';
 import type { StartIdeaIntent, ViewerIdea } from '@/types/ideas';
 

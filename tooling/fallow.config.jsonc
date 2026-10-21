@@ -11,7 +11,7 @@
     "**/dist/**",
     "**/_generated/**",
     "**/generated.ts",
-    "**/routeTree.gen.ts"
+    "**/.void/**"
   ],
   // These packages are runtime-loaded by Vitest or the toolchain. vite-plus is the dev
   // toolchain; its only "production" importer is the Oxlint plugin entry below.
@@ -25,8 +25,10 @@
     "vite-plus"
   ],
   "entry": [
-    "apps/web/src/main.tsx",
-    "apps/web/src/routes/**/*.tsx",
+    // Void loads pages, layouts, middleware, and its config by convention.
+    "apps/web/pages/**/*.{ts,tsx}",
+    "apps/web/middleware/**/*.ts",
+    "apps/web/void.config.ts",
     "tooling/devkit/configure-auth.ts",
     "tooling/diagrams/src/render.ts",
     "packages/backend/scripts/generate-auth-schema.ts",

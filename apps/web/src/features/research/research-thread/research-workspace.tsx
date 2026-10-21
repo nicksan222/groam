@@ -1,9 +1,9 @@
 import type { Id } from '@groam/backend/data-model';
 import Shell from '@groam/ui/components/shell/client';
-import { useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { useResearchActions } from '@/features/research/hooks/use-research-actions';
 import { useResearchLinkOptions } from '@/features/research/hooks/use-research-links';
+import { useNavigate } from '@/lib/navigation/router';
 import type { ResearchDetail, ResearchLink } from '@/types/research';
 import { ResearchBrief } from './research-brief';
 import { ResearchHeader } from './research-header';

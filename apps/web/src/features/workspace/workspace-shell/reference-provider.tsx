@@ -1,4 +1,3 @@
-import { useLocation, useNavigate, useParams } from '@tanstack/react-router';
 import { type PropsWithChildren, useEffect, useState } from 'react';
 import {
   ReferenceCacheContext,
@@ -7,9 +6,10 @@ import {
 } from '@/features/workspace/hooks/reference-context';
 import { referenceEntries } from '@/features/workspace/hooks/reference-params';
 import { useReferenceParams } from '@/features/workspace/hooks/use-reference-params';
+import { useLocation, useParams, useVisit } from '@/lib/navigation/router';
 
 export function ReferenceProvider({ children }: PropsWithChildren) {
-  const params = useParams({ strict: false });
+  const params = useParams();
   const [cache] = useState(() => new Map());
   return (
     <ReferenceCacheContext value={cache}>
@@ -20,8 +20,8 @@ export function ReferenceProvider({ children }: PropsWithChildren) {
 
 function ReferenceResolution({ children, params }: PropsWithChildren<{ params: unknown }>) {
   const { ids, shortIds, loading, missing } = useReferenceParams(params);
-  const { pathname } = useLocation();
-  const navigate = useNavigate();
+  const { hash, pathname, search } = useLocation();
+  const visit = useVisit();
   const replacements = new Map(
     referenceEntries(params).map(({ key, reference }) => [reference, shortIds[key] ?? reference])
   );
@@ -31,9 +31,13 @@ function ReferenceResolution({ children, params }: PropsWithChildren<{ params: u
     .join('/');
   useEffect(() => {
     if (!loading && !missing && canonicalPath !== pathname) {
-      void navigate({ to: canonicalPath, search: true, hash: true, replace: true });
+      // Rewriting the URL to its short form is not a page change, so it skips the transition.
+      visit(`${canonicalPath}${search}${hash}`, {
+        replace: true,
+        viewTransition: false
+      }).catch(() => undefined);
     }
-  }, [canonicalPath, pathname, loading, missing, navigate]);
+  }, [canonicalPath, hash, pathname, loading, missing, search, visit]);
   return (
     <ReferenceContext value={ids}>
       <ReferenceStatusContext value={{ loading, missing }}>{children}</ReferenceStatusContext>

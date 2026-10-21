@@ -16,7 +16,7 @@ rules that Oxlint has no built-in equivalent for.
 | `no-raw-icons` | Keeps icon providers, types, and inline JSX SVG behind `@groam/icons` (brand artwork stays in `@groam/brand`) |
 | `no-direct-sonner-imports` | Keeps app notifications behind the shared UI facade |
 | `no-raw-test-ids` | Keeps production web locators in the shared `testIds` contract |
-| `no-raw-internal-anchors` | Keeps internal navigation in TanStack Router |
+| `no-raw-internal-anchors` | Keeps internal navigation in the typed Void router wrappers |
 | `no-raw-locator-test-ids` | Keeps journey, browser-mode driver, and film locators in the shared `ids` contract |
 | `no-native-browser-dialogs` | Routes browser prompts through the app dialog abstraction |
 | `no-direct-web-storage` | Routes persistence through feature stores or shared adapters |

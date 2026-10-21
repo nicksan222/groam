@@ -9,7 +9,7 @@ const state = vi.hoisted(() => ({ isLoading: false, waiting: [] as unknown[] }))
 vi.mock('@/features/dashboard/hooks/use-dashboard-runs', () => ({
   useDashboardRuns: () => ({ activity: [], isLoading: state.isLoading, waiting: state.waiting })
 }));
-vi.mock('@tanstack/react-router', async () => {
+vi.mock('@/lib/navigation/router', async () => {
   const { mockRouterTargets } = await import('@/lib/testing/router-mock');
   return mockRouterTargets();
 });

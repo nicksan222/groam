@@ -22,7 +22,7 @@ const state = vi.hoisted(() => ({
 }));
 
 vi.mock('@groam/ai/ui/context/agent-context', () => ({ useSetAgentContext: state.context }));
-vi.mock('@tanstack/react-router', () => ({ useNavigate: () => vi.fn() }));
+vi.mock('@/lib/navigation/router', () => ({ useNavigate: () => vi.fn() }));
 vi.mock('@/features/workspace/navigation/router', () => ({
   Link: ({ children, to }: { children?: ReactNode; to: string }) => <a href={to}>{children}</a>
 }));

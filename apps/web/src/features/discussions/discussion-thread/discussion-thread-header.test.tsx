@@ -19,8 +19,8 @@ const toast = vi.hoisted(() => ({
   success: vi.fn()
 }));
 
-vi.mock('@tanstack/react-router', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
+vi.mock('@/lib/navigation/router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/navigation/router')>()),
   Link: ({ children, to, ...props }: { children?: ReactNode; to: string }) => (
     <a href={to} {...props}>
       {children}

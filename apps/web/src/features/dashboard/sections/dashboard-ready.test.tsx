@@ -14,7 +14,7 @@ import type { TripListItem, WorkspaceTripProposal } from '@/features/trips/hooks
 import { testIds } from '@/lib/test-ids';
 import { DashboardReady } from './dashboard-ready';
 
-vi.mock('@tanstack/react-router', async (importOriginal) => {
+vi.mock('@/lib/navigation/router', async (importOriginal) => {
   const { mockRouter } = await import('@/lib/testing/router-mock');
   return mockRouter(importOriginal);
 });

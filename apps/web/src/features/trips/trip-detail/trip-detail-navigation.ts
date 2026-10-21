@@ -1,7 +1,7 @@
-import type { useNavigate } from '@tanstack/react-router';
 import type { useStartIdeaFlow } from '@/features/trips/hooks/use-start-idea-flow';
 import type { TripSection } from '@/features/trips/trip-sections';
 import type { useConfirm } from '@/features/workspace/workspace-shell/use-confirm-dialog';
+import type { useNavigate } from '@/lib/navigation/router';
 import type { LoadedTrip, TripNavigation } from './trip-detail-types';
 
 export function createTripNavigation({

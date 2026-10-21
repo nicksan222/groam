@@ -5,7 +5,7 @@ import { page } from 'vite-plus/test/browser';
 import { ReferenceContext } from '@/features/workspace/hooks/reference-context';
 import { Link } from './reference-link';
 
-vi.mock('@tanstack/react-router', () => ({
+vi.mock('@/lib/navigation/router', () => ({
   Link: ({ children, to }: ComponentProps<'a'> & { to: string }) => (
     <a data-kind="canonical" href={to}>
       {children}

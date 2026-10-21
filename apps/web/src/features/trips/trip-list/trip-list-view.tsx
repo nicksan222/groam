@@ -4,8 +4,8 @@ import { ListFilterSection, ListFilterToolbar } from '@groam/ui/components/list-
 import { PageLoading } from '@groam/ui/components/page-loading';
 import Shell from '@groam/ui/components/shell/client';
 import { dataTableFilterLabels } from '@groam/ui/lib/data-table';
-import { useNavigate } from '@tanstack/react-router';
 import { useMemo } from 'react';
+import { useNavigate } from '@/lib/navigation/router';
 
 import { useTripListAgentContext } from '@/features/trips/hooks/use-trip-list-agent-context';
 import {

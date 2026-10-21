@@ -12,8 +12,8 @@ description: >-
 Reusable client state belongs in `apps/web/src/features/<domain>/hooks/` with a
 colocated test. Inspect nearby hooks before introducing another query wrapper.
 
-- Read `apps/web/src/features/agents/hooks/use-agent.ts` and the relevant route
-  definitions for current query, pagination, and missing-id handling. Skip
+- Read `apps/web/src/features/agents/hooks/use-agent.ts` and the relevant page
+  files under `apps/web/pages/` for current query, pagination, and missing-id handling. Skip
   requests while required ids are unavailable; preserve loading/error semantics.
 - Import public API through `@groam/backend/api`. Derive shared inputs and
   outputs from generated function types, following `apps/web/src/types/`, rather

@@ -8,14 +8,19 @@ import { InboxSidebarNav } from './inbox-sidebar-nav';
 
 const state = vi.hoisted(() => ({ pathname: '/trips', unread: 0 }));
 
-vi.mock('@tanstack/react-router', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
+vi.mock('@/lib/navigation/router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/navigation/router')>()),
   Link: ({ children, to, ...props }: { children?: ReactNode; to: string }) => (
     <a href={to} {...props} onClick={(event) => event.preventDefault()}>
       {children}
     </a>
   ),
-  useLocation: () => ({ pathname: state.pathname }),
+  useLocation: () => ({
+    hash: '',
+    pathname: state.pathname,
+    search: '',
+    searchParams: new URLSearchParams()
+  }),
   useNavigate: () => vi.fn()
 }));
 

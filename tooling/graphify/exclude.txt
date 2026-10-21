@@ -13,7 +13,7 @@
 # Generated code is reproducible from its source definitions (covers the app
 # and every Convex component's _generated/ directory).
 _generated/
-apps/web/src/routeTree.gen.ts
+apps/web/.void/
 
 # Manifests and configs add script/dependency nodes ("check", "dev") that
 # hijack keyword matches; read package.json/tsconfig directly instead.

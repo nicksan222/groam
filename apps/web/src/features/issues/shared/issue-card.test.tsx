@@ -32,8 +32,8 @@ const issueListItem = (over: Partial<IssueListItem> = {}): IssueListItem => ({
   ...over
 });
 
-vi.mock('@tanstack/react-router', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
+vi.mock('@/lib/navigation/router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/navigation/router')>()),
   Link: ({ children, className, to }: { children?: ReactNode; className?: string; to: string }) => (
     <a className={className} href={to}>
       {children}

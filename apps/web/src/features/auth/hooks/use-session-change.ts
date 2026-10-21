@@ -1,6 +1,6 @@
 import { useConvexAuth } from 'convex/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-// oxlint-disable-next-line react-doctor/no-flush-sync -- The hidden workspace must commit, dropping its subscriptions, before the auth request starts; the app uses no View Transitions.
+// oxlint-disable-next-line react-doctor/no-flush-sync -- The hidden workspace must commit, dropping its subscriptions, before the auth request starts; it runs outside page navigations, which own the View Transitions.
 import { flushSync } from 'react-dom';
 import type { ChangeSession } from '@/types/account-security';
 

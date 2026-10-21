@@ -103,6 +103,13 @@ body {
   }
 }
 
+/* The workspace sidebar stays put while Void cross-fades the page beside it. */
+::view-transition-group(workspace-sidebar),
+::view-transition-old(workspace-sidebar),
+::view-transition-new(workspace-sidebar) {
+  animation: none;
+}
+
 /* ========== Auth card (smooth resize between steps/states) ========== */
 
 /* The shared `auth-card` element morphs its box (size + position) as the form

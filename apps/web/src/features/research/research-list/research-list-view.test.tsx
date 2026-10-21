@@ -13,7 +13,7 @@ const state = vi.hoisted(() => ({
   researches: [] as unknown[]
 }));
 
-vi.mock('@tanstack/react-router', () => ({ useNavigate: () => state.navigate }));
+vi.mock('@/lib/navigation/router', () => ({ useNavigate: () => state.navigate }));
 vi.mock('@/features/research/hooks/use-trip-researches', () => ({
   useTripResearches: () => ({ isLoading: state.isLoading, researches: state.researches })
 }));

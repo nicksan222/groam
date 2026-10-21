@@ -1,6 +1,6 @@
-import { Navigate } from '@tanstack/react-router';
 import type { PropsWithChildren } from 'react';
 import { useResearchChatRedirect } from '@/features/research/hooks/use-research-chat-redirect';
+import { Navigate } from '@/lib/navigation/router';
 
 /** `/chat/$id` for a research id lands on the trip's research page; any other chat renders. */
 export function ResearchChatRedirect({

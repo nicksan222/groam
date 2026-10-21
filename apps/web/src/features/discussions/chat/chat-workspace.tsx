@@ -4,13 +4,13 @@ import { Button } from '@groam/ui/components/button';
 import { Input } from '@groam/ui/components/input';
 import { PageLoading } from '@groam/ui/components/page-loading';
 import { cn } from '@groam/ui/lib/utils';
-import { useNavigate } from '@tanstack/react-router';
 import { type ReactNode, useState } from 'react';
 import { CreateDiscussionDialog } from '@/features/discussions/discussion-create/create-discussion-dialog';
 import { useDiscussions } from '@/features/discussions/hooks/use-discussions';
 import { useOpenState } from '@/features/workspace/hooks/use-open-state';
 import { useParams } from '@/features/workspace/navigation/router';
 import { useWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
+import { useNavigate } from '@/lib/navigation/router';
 import { testIds } from '@/lib/test-ids';
 import { ChatEmptyPane } from './chat-empty-pane';
 import { ChatList } from './chat-list';
@@ -29,7 +29,7 @@ export function ChatWorkspace({ children }: { children: ReactNode }) {
     ].some((value) => value?.toLocaleLowerCase().includes(query))
   );
   const navigate = useNavigate();
-  const params = useParams({ strict: false });
+  const params = useParams();
   const activeDiscussionId =
     typeof params.discussionId === 'string' ? params.discussionId : undefined;
   const hasChatOpen = Boolean(activeDiscussionId);

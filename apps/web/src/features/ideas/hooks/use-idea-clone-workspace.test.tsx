@@ -7,6 +7,7 @@ const deps = vi.hoisted(() => ({
   confirm: vi.fn(),
   navigate: vi.fn(),
   openPanel: vi.fn(),
+  params: {} as Record<string, string>,
   run: vi.fn(),
   useIdeaContext: vi.fn(),
   useOptionalWorkspace: vi.fn(),
@@ -17,9 +18,10 @@ const deps = vi.hoisted(() => ({
   useTripVersion: vi.fn()
 }));
 
-vi.mock('@tanstack/react-router', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
-  useNavigate: () => deps.navigate
+vi.mock('@/lib/navigation/router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/navigation/router')>()),
+  useNavigate: () => deps.navigate,
+  useParams: () => deps.params
 }));
 vi.mock('./use-idea-context', () => ({ useIdeaContext: () => deps.useIdeaContext() }));
 vi.mock('@/features/trips/hooks/use-proposal-action-runner', () => ({
@@ -53,6 +55,7 @@ const workingTripId = 'working-trip' as Id<'trips'>;
 
 beforeEach(() => {
   vi.clearAllMocks();
+  deps.params = {};
   deps.useOptionalWorkspace.mockReturnValue({ session: { user: { id: 'user-lea' } } });
   deps.useIdeaContext.mockReturnValue({
     proposal: undefined,
@@ -105,7 +108,7 @@ test('preserves route references when changing clone views and allows detail edi
 
   expect(deps.openPanel).toHaveBeenCalled();
   const navigation = deps.navigate.mock.calls[0]?.[0] as {
-    params: (current: { proposalId?: Id<'tripProposals'>; tripId?: Id<'trips'> }) => unknown;
+    params: unknown;
     search: unknown;
     to: string;
   };
@@ -113,7 +116,21 @@ test('preserves route references when changing clone views and allows detail edi
     search: { addDestination: true },
     to: '/trips/$tripId/ideas/$proposalId/$view'
   });
-  expect(navigation.params({})).toEqual({ proposalId, tripId: sharedTripId, view: 'itinerary' });
+  expect(navigation.params).toEqual({ proposalId, tripId: sharedTripId, view: 'itinerary' });
+});
+
+test('keeps the short route references of the current page when changing views', async () => {
+  deps.params = { proposalId: 'idea-short', tripId: 'trip-short' };
+  const { result } = await renderWorkspace('overview');
+  await act(() => {
+    result.current.openView('compare');
+  });
+
+  expect(deps.navigate).toHaveBeenCalledWith(
+    expect.objectContaining({
+      params: { proposalId: 'idea-short', tripId: 'trip-short', view: 'compare' }
+    })
+  );
 });
 
 test('marks a missing working trip as unavailable and keeps the page loading', async () => {
@@ -138,11 +155,11 @@ test('opens an additional destination directly when no return travel exists', as
 
   expect(deps.confirm).not.toHaveBeenCalled();
   const navigations = deps.navigate.mock.calls.map(([target]) => target) as Array<{
-    params: (current: Record<string, unknown>) => Record<string, unknown>;
+    params: Record<string, unknown>;
     search: Record<string, unknown>;
   }>;
   expect(navigations[0]).toMatchObject({ search: { addDestination: true } });
-  expect(navigations[1]?.params({})).toMatchObject({ view: 'itinerary' });
+  expect(navigations[1]?.params).toMatchObject({ view: 'itinerary' });
 });
 
 test('keeps loading while a present trip has not resolved', async () => {

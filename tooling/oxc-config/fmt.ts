@@ -16,7 +16,7 @@ export const fmt = {
     '**/*.{md,mdx,toml,yaml,yml}',
     '**/_generated/**',
     '**/generated.ts',
-    '**/routeTree.gen.ts',
+    '**/.void/**',
     '**/vendor/**',
     '.claude/**',
     '.agents/**',

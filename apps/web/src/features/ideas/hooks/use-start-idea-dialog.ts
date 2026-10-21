@@ -1,7 +1,7 @@
-import { useNavigate } from '@tanstack/react-router';
 import { useCallback } from 'react';
 import { useCreateIdea } from '@/features/ideas/hooks/use-workspace-ideas';
 import { ideaCloneHref } from '@/features/ideas/idea-href';
+import { useNavigate } from '@/lib/navigation/router';
 import { useStartIdeaDialogStore } from '@/lib/stores/trip-ui-stores';
 
 export function useStartIdeaDialog() {

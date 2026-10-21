@@ -1,10 +1,10 @@
 import { FileEdit } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { useNavigate } from '@tanstack/react-router';
 import { useOptionalIdeaContext } from '@/features/ideas/hooks/use-idea-context';
 import { ideaPackingNotice, ideaPackingSeeChanges } from '@/features/ideas/idea-glossary';
 import { ideaCloneHref } from '@/features/ideas/idea-href';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
+import { useNavigate } from '@/lib/navigation/router';
 import { testIds } from '@/lib/test-ids';
 
 /** Packing in an idea is a draft: it reaches the shared trip only once the idea is applied. */

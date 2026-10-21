@@ -26,8 +26,8 @@ const hooks = vi.hoisted(() => ({
   trips: vi.fn()
 }));
 
-vi.mock('@tanstack/react-router', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
+vi.mock('@/lib/navigation/router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/navigation/router')>()),
   useNavigate: () => navigate
 }));
 vi.mock('@/features/agents/hooks/use-agent-roster', () => ({

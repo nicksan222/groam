@@ -1,15 +1,15 @@
 ---
 name: place-feature-view
 description: >-
-  Place product UI in apps/web/src/features rather than routes or packages/ui.
+  Place product UI in apps/web/src/features rather than pages or packages/ui.
   Use when adding a page, panel, dialog, list, or domain-specific React view
   for trips, ideas, issues, chats, agents, settings, or group.
 ---
 
 # Place a feature view
 
-Product UI belongs in `apps/web/src/features/<domain>/`; route files compose
-views (`add-web-route`). Inspect the feature tree for the closest domain and
+Product UI belongs in `apps/web/src/features/<domain>/`; page files under
+`apps/web/pages/` compose views (`add-web-route`). Inspect the feature tree for the closest domain and
 screen before creating another area.
 
 - Group a screen's components and tests in a kebab-case area folder. Keep domain

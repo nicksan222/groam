@@ -19,8 +19,13 @@ const organizations = [
   { id: 'org-smith', logo: null, name: 'The Smiths' }
 ];
 
-vi.mock('@tanstack/react-router', () => ({
-  useLocation: () => ({ pathname: state.pathname }),
+vi.mock('@/lib/navigation/router', () => ({
+  useLocation: () => ({
+    hash: '',
+    pathname: state.pathname,
+    search: '',
+    searchParams: new URLSearchParams()
+  }),
   useNavigate: () => navigate
 }));
 vi.mock('@/features/workspace/navigation/router', () => ({

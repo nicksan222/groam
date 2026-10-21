@@ -8,7 +8,7 @@ description: >-
 
 # Register agent screen context
 
-Register context from the feature view, not its route. Read
+Register context from the feature view, not its page file under `apps/web/pages/`. Read
 `packages/ai/src/ui/context/agent-context.tsx` and `agent-screen-context.ts` for
 the current hook and serialized data contract. Find a comparable view using
 `useSetAgentContext` rather than copying a fixed object shape.

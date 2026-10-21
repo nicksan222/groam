@@ -7,7 +7,6 @@ import { EmptyScreen } from '@groam/ui/components/empty-screen';
 import { PageCrumbNav } from '@groam/ui/components/page-crumb-nav';
 import { PageLoading } from '@groam/ui/components/page-loading';
 import Shell from '@groam/ui/components/shell/client';
-import { useNavigate } from '@tanstack/react-router';
 import { useMemo } from 'react';
 import { type AgentRun, useAgentRecord } from '@/features/agents/hooks/use-agent';
 import {
@@ -18,6 +17,7 @@ import {
 } from '@/features/agents/hooks/use-agent-run';
 import { Link } from '@/features/workspace/navigation/router';
 import { useWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
+import { useNavigate } from '@/lib/navigation/router';
 import { testIds } from '@/lib/test-ids';
 import { AgentRunDetail } from './agent-run-detail';
 import { AgentRunHeader } from './agent-run-header';
