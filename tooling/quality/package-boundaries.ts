@@ -13,7 +13,8 @@ const allowedInternalDependencies = {
   // into a cycle.
   '@groam/ai': new Set(['@groam/icons', '@groam/ui']),
   '@groam/auth': new Set(['@groam/env']),
-  '@groam/backend': new Set(['@groam/ai']),
+  // Only @groam/env/deployment, the variable definitions (lint:conventions enforces the subpath).
+  '@groam/backend': new Set(['@groam/ai', '@groam/env']),
   '@groam/brand': new Set<string>(),
   '@groam/env': new Set<string>(),
   '@groam/icons': new Set<string>(),

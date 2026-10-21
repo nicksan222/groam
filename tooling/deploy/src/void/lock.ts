@@ -28,6 +28,15 @@ export function assertVoidLock(source: string, expectedName: string, accountId: 
   }
 }
 
+/** The Cloudflare account the committed lock of `app` records, or '' when there is none. */
+export function lockedAccountId(environment: ReleaseEnvironment, app: FrontendApp): string {
+  const path = join(repoRoot, lockPath(environment, app));
+  if (!existsSync(path)) return '';
+  const lock: unknown = JSON.parse(readFileSync(path, 'utf8'));
+  const accountId = isRecord(lock) && isRecord(lock.resolved) ? lock.resolved.account_id : '';
+  return typeof accountId === 'string' ? accountId : '';
+}
+
 export function assertCommittedLocks(target: ReleaseTarget): void {
   for (const app of frontendApps) {
     git(['ls-files', '--error-unmatch', lockPath(target.environment, app)]);

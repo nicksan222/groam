@@ -59,6 +59,7 @@
     "convex:dev": "vp exec convex dev --typecheck-components",
     "deploy": "vp run deploy:production",
     "deploy:beta": "vp run --fail-if-no-match --filter @groam/deploy deploy:beta",
+    "deploy:preflight": "vp run --fail-if-no-match --filter @groam/deploy preflight",
     "deploy:production": "vp run --fail-if-no-match --filter @groam/deploy deploy:production",
     "deploy:setup": "vp run --fail-if-no-match --filter @groam/deploy setup",
     "dev": "vp run --fail-if-no-match --filter \"@groam/*\" --parallel --log labeled dev",

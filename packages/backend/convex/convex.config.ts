@@ -3,18 +3,16 @@ import geospatial from '@convex-dev/geospatial/convex.config.js';
 import rateLimiter from '@convex-dev/rate-limiter/convex.config';
 import stripe from '@convex-dev/stripe/convex.config.js';
 import workflow from '@convex-dev/workflow/convex.config.js';
+import { schemaFor } from '@groam/env/deployment';
 import { defineApp } from 'convex/server';
 import { v } from 'convex/values';
 import betterAuth from './components/better-auth/convex.config';
 
 const app = defineApp({
+  // Optional here: the release preflight checks hosted deployments set the ones they need.
   env: {
     CONVEX_SITE_URL: v.optional(v.string()),
-    // Shared with the Void Worker, which sends authentication mail for Convex.
-    AUTH_EMAIL_RELAY_SECRET: v.optional(v.string()),
-    STRIPE_SECRET_KEY: v.optional(v.string()),
-    STRIPE_WEBHOOK_SECRET: v.optional(v.string()),
-    SITE_URL: v.optional(v.string())
+    ...schemaFor('convex', () => v.optional(v.string()))
   }
 });
 

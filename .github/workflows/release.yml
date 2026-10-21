@@ -1,7 +1,7 @@
 name: 🚀 Release
 
-# Every tested main revision goes to beta first, is checked end to end on beta, and only then
-# goes to production. Each job reads its environment's own secrets.
+# Every tested main revision is preflighted, goes to beta first, is checked end to end on beta,
+# and only then goes to production. Each job reads its environment's own secrets.
 on:
   workflow_call:
 
@@ -9,9 +9,70 @@ permissions:
   contents: read
 
 jobs:
+  preflight-beta:
+    name: 🔎 Preflight beta
+    if: >-
+      github.repository == 'nicksan222/groam' &&
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      vars.CONVEX_BETA_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GROAM_ENVIRONMENT: beta
+    environment:
+      name: beta
+    steps:
+      - name: Checkout tested revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+
+      - name: Setup workspace
+        uses: ./.github/actions/setup-workspace
+
+      - name: Check beta is ready to release
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: bun run deploy:preflight
+
+  preflight-production:
+    name: 🔎 Preflight production
+    if: >-
+      github.repository == 'nicksan222/groam' &&
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      vars.CONVEX_PRODUCTION_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GROAM_ENVIRONMENT: production
+    environment:
+      name: prod
+    steps:
+      - name: Checkout tested revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+
+      - name: Setup workspace
+        uses: ./.github/actions/setup-workspace
+
+      - name: Check production is ready to release
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: bun run deploy:preflight
+
   beta:
     name: 🧪 Deploy beta
+    # Waits for the production preflight too, so production gaps fail before beta changes.
+    needs: [preflight-beta, preflight-production]
     if: >-
+      !failure() && !cancelled() &&
       github.repository == 'nicksan222/groam' &&
       github.ref == 'refs/heads/main' &&
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
@@ -78,7 +139,7 @@ jobs:
 
   production:
     name: 🚀 Deploy production
-    needs: [beta, e2e]
+    needs: [preflight-production, beta, e2e]
     if: >-
       github.repository == 'nicksan222/groam' &&
       github.ref == 'refs/heads/main' &&

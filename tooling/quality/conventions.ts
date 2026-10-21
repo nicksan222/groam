@@ -65,6 +65,7 @@ const featureHookFile = /^apps\/web\/src\/features\/[^/]+\/hooks\/use-[^/]+\.(?:
 
 export type ConventionCategory =
   | 'ai-imports'
+  | 'backend-env-imports'
   | 'component-files'
   | 'directories'
   | 'export-targets'
@@ -324,6 +325,9 @@ function inspectImportSpecifier({
   if (specifier === '@halo' || specifier.startsWith('@halo/')) {
     findings.push({ category: 'halo-imports', location });
   }
+  if (isInvalidBackendEnvImport(filePath, specifier)) {
+    findings.push({ category: 'backend-env-imports', location });
+  }
   if (isInvalidUiImport(specifier, options)) findings.push({ category: 'ui-imports', location });
   if (isInvalidAiImport(specifier, options)) findings.push({ category: 'ai-imports', location });
   if (isInvalidUiInternalImport(filePath, specifier, options)) {
@@ -333,6 +337,15 @@ function inspectImportSpecifier({
     findings.push({ category: 'route-imports', location });
   }
   return findings;
+}
+
+/** Env targets validate `process.env` on import; Convex may only read the variable definitions. */
+function isInvalidBackendEnvImport(filePath: string, specifier: string): boolean {
+  return (
+    filePath.startsWith('packages/backend/') &&
+    (specifier === '@groam/env' || specifier.startsWith('@groam/env/')) &&
+    specifier !== '@groam/env/deployment'
+  );
 }
 
 function isInvalidUiImport(specifier: string, options?: InspectOptions): boolean {

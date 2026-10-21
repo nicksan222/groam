@@ -8,7 +8,7 @@ src/
   environments.ts      Public settings per environment: the single source of truth
   release.ts           Entry point: verify, then publish Convex, web, and landing
   release/             Release target, trusted-publisher check, git checkout checks
-  setup/               Everything an environment needs (requirements.ts) and `deploy:setup`
+  setup/               Setup checklist (`deploy:setup`) and release preflight (`deploy:preflight`)
 e2e/                   Live checks against a deployed environment (`test:deployed`)
   convex/              Convex CLI wrapper, auth settings sync, backend deploy
   void/                Void lock handling, frontend build environment, frontend deploy
@@ -20,7 +20,8 @@ workers.dev subdomain (Void's readiness checks use it because version preview UR
 the Worker name and custom domain of each app. Both `void.config.ts` files import it through
 `@groam/deploy/environments`, so Void creates the Workers and domains from the same values.
 
-Run `bun run deploy:setup` to see what each environment still needs: config values, GitHub
+`bun run deploy:preflight` checks one environment is ready (CI and every release run it first), and
+`bun run deploy:setup` shows what each environment still needs: config values, GitHub
 secrets and variables, Cloudflare token permissions, Convex variables, and Void locks. Each entry
 says where it lives and how to get it, and the command checks the ones it can.
 

@@ -31,6 +31,7 @@ type Env = {
   readonly CONVEX_CLOUD_URL: string;
   readonly CONVEX_SITE_URL: string;
   readonly AUTH_EMAIL_RELAY_SECRET: string | undefined;
+  readonly BETTER_AUTH_SECRET: string | undefined;
   readonly CONVEX_SITE_URL: string | undefined;
   readonly SITE_URL: string | undefined;
   readonly STRIPE_SECRET_KEY: string | undefined;

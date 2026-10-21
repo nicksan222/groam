@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
+import { variableNames } from '@groam/env/deployment';
 import { describe, expect, test } from 'vite-plus/test';
 
 const read = (path: string) => readFileSync(path, 'utf8');
@@ -43,13 +44,30 @@ describe('release workflows', () => {
     expect(checks).not.toContain('--component web');
   });
 
+  test('checks both environments are ready before anything deploys', () => {
+    for (const [environment, githubEnvironment, releaseSwitch] of [
+      ['beta', 'beta', 'CONVEX_BETA_ENABLED'],
+      ['production', 'prod', 'CONVEX_PRODUCTION_ENABLED']
+    ]) {
+      const block = job(`preflight-${environment}`);
+      expect(block).toContain('run: bun run deploy:preflight');
+      expect(block).toContain(`GROAM_ENVIRONMENT: ${environment}`);
+      expect(block).toContain(`name: ${githubEnvironment}`);
+      expect(block).toContain(`vars.${releaseSwitch} == 'true'`);
+      for (const name of variableNames('github'))
+        expect(block).toContain(`${name}: \${{ secrets.${name} }}`);
+    }
+    expect(job('beta')).toContain('needs: [preflight-beta, preflight-production]');
+    expect(job('beta')).toContain('!failure() && !cancelled()');
+    expect(job('production')).toContain('needs: [preflight-production, beta, e2e]');
+  });
+
   test('deploys beta, checks it end to end, and only then deploys production', () => {
     expect(release()).toContain('workflow_call:');
     expect(job('e2e')).toContain('needs: [beta]');
     expect(job('e2e')).toContain('run: bun run test:deployed');
     expect(job('e2e')).toContain('GROAM_ENVIRONMENT: beta');
     expect(job('e2e')).not.toContain('secrets.');
-    expect(job('production')).toContain('needs: [beta, e2e]');
   });
 
   test.each([

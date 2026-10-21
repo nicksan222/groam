@@ -92,11 +92,12 @@ as a subpath (`auth-client`, `web-client`, `landing`, `convex-tooling`, `seeder`
 browser bundle. The `web-client` target includes `VITE_LANDING_URL`, where the
 app links Terms and Privacy on the separate landing site. The Convex runtime is separate: it
 declares its variables with `defineApp({ env })` and reads them from the
-generated `env`. `BETTER_AUTH_SECRET`, `SITE_URL`, and `AUTH_EMAIL_RELAY_SECRET`
-are deployment variables set by `configure-auth.ts` locally, which also writes the
-relay secret to `apps/web/.env` for the Void Worker. The owner configures them directly in the
-Convex dashboard for production; CI cannot read or write them. They are not
-managed by `@groam/env`.
+generated `env`, whose names come from `@groam/env/deployment` (the definition of every
+hosted variable and secret, and the only `@groam/env` import allowed in the backend).
+`BETTER_AUTH_SECRET`, `SITE_URL`, and `AUTH_EMAIL_RELAY_SECRET` are set by `configure-auth.ts`
+locally, which also writes the relay secret to `apps/web/.env` for the Void Worker. Hosted
+releases set `SITE_URL` and `BETTER_AUTH_SECRET`; the owner sets the rest, and the release
+preflight checks they are present.
 
 ```ts
 // packages/env/src/apps/auth-client.ts

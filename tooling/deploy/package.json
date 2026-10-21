@@ -26,6 +26,7 @@
   "scripts": {
     "deploy:beta": "GROAM_ENVIRONMENT=beta bun --no-env-file src/release.ts",
     "deploy:production": "GROAM_ENVIRONMENT=production bun --no-env-file src/release.ts",
+    "preflight": "bun --no-env-file src/setup/preflight.ts",
     "setup": "bun --no-env-file src/setup/checklist.ts",
     "test": "vp test run",
     "test:deployed": "vp test run --config e2e/vite.config.ts",

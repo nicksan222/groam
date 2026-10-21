@@ -23,7 +23,9 @@ data or credentials. Feature branches never receive release credentials.
 ## One-time setup per environment
 
 Everything an environment needs lives in one list,
-[`tooling/deploy/src/setup/requirements.ts`](../tooling/deploy/src/setup/requirements.ts). Run:
+[`tooling/deploy/src/setup/requirements.ts`](../tooling/deploy/src/setup/requirements.ts); its
+variables and secrets are defined once in
+[`packages/env/src/deployment/variables.ts`](../packages/env/src/deployment/variables.ts). Run:
 
 ```sh
 bun run deploy:setup
@@ -32,8 +34,8 @@ bun run deploy:setup
 It prints, for each environment, every value grouped by where it lives (`environments.ts`, GitHub
 environment secrets, the Cloudflare token, Convex, committed Void locks, the release switch), how to
 get it, and whether it is done. It checks the config, the GitHub secrets and variables (through
-`gh`), and the committed locks; the release itself checks the Convex values. Releases also read this
-list, so a value can't be required without appearing in it.
+`gh`), and the committed locks; the release preflight also checks Convex and the web Worker.
+Releases also read this list, so a value can't be required without appearing in it.
 
 In short: create the Convex project and deploy key, a Cloudflare token, the GitHub environment with
 its two secrets, the email relay secret in Convex and the web Worker plus `void email setup` (see
@@ -46,19 +48,20 @@ Cloudflare Git build; GitHub owns publishing.
 Every push to main is released automatically, beta first:
 
 1. **Checks** run on the pushed revision.
-2. **Deploy beta** publishes it to beta.
-3. **End-to-end on beta** (`bun run test:deployed`) drives the live beta in a real browser as a
+2. **Preflight** (`bun run deploy:preflight`) checks that beta and production have everything
+   they need, reports every gap at once, and stops the run before any deploy.
+3. **Deploy beta** publishes it to beta.
+4. **End-to-end on beta** (`bun run test:deployed`) drives the live beta in a real browser as a
    signed-out visitor: the sign-in screen and its legal links, deep links, static files and 404s,
    the Convex auth backend, and the landing pages.
-4. **Deploy production** publishes the same revision, only if both beta steps passed.
+5. **Deploy production** publishes the same revision, only if both beta steps passed.
 
 Actions → **Release main** reruns the whole pipeline for current main. A deploy refuses a revision
 that is no longer the tip of main, so a newer push supersedes an older one. Direct local releases
 are rejected.
 
-The runner checks the trusted publisher, tested SHA, clean checkout, committed Void locks, matching
-Convex key, and Cloudflare token. It syncs Convex `SITE_URL`, then deploys Convex followed by web and
-landing. Void builds and checks each version before it takes traffic. Frontend deploys get public
+The runner checks the trusted publisher, tested SHA, the preflight, and a clean checkout. It syncs
+Convex `SITE_URL`, then deploys Convex followed by web and landing. Void builds and checks each version before it takes traffic. Frontend deploys get public
 URLs and the Cloudflare token only; Convex gets only its deploy key.
 
 The three publications are not atomic. A frontend failure after the Convex deploy leaves previous

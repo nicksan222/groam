@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import type { VariableName } from '@groam/env/deployment';
 import { localOrigins } from './constants';
 import { type ConvexSpawner, runConvex } from './run-convex';
 
@@ -20,6 +21,11 @@ const exitIfFailed = (result: { status: number | null; stderr: string }) => {
   process.exit(result.status ?? 1);
 };
 
+// Convex deployment variables, named as in @groam/env/deployment.
+const SITE_URL = 'SITE_URL' satisfies VariableName<'convex'>;
+const BETTER_AUTH_SECRET = 'BETTER_AUTH_SECRET' satisfies VariableName<'convex'>;
+const AUTH_EMAIL_RELAY_SECRET = 'AUTH_EMAIL_RELAY_SECRET' satisfies VariableName<'convex'>;
+
 const viteSiteUrlLine = /^VITE_SITE_URL=.*$/mu;
 
 export const upsertViteSiteUrl = (envPath: string, siteUrl: string) => {
@@ -37,7 +43,7 @@ export const upsertViteSiteUrl = (envPath: string, siteUrl: string) => {
   );
 };
 
-const relaySecretLine = /^AUTH_EMAIL_RELAY_SECRET=(.+)$/mu;
+const relaySecretLine = new RegExp(`^${AUTH_EMAIL_RELAY_SECRET}=(.+)$`, 'mu');
 
 /** The relay secret local Worker values already hold, if any. */
 const workerRelaySecret = (workerEnvPath: string) =>
@@ -50,7 +56,7 @@ const appendWorkerRelaySecret = (workerEnvPath: string, secret: string) => {
   const separator = workerEnv.length === 0 || workerEnv.endsWith('\n') ? '' : '\n';
   writeFileSync(
     workerEnvPath,
-    `${workerEnv}${separator}# Shared with Convex: lets it send authentication mail through the Void Worker\nAUTH_EMAIL_RELAY_SECRET=${secret}\n`
+    `${workerEnv}${separator}# Shared with Convex: lets it send authentication mail through the Void Worker\n${AUTH_EMAIL_RELAY_SECRET}=${secret}\n`
   );
 };
 
@@ -68,10 +74,10 @@ export const configureAuth = ({
 
   const deploymentVariables = new Set(envList.stdout.split(/\r?\n/u).filter(Boolean));
 
-  if (!deploymentVariables.has('BETTER_AUTH_SECRET')) {
+  if (!deploymentVariables.has(BETTER_AUTH_SECRET)) {
     exitIfFailed(
       run(
-        ['env', 'set', 'BETTER_AUTH_SECRET'],
+        ['env', 'set', BETTER_AUTH_SECRET],
         {
           input: `${randomSecret()}\n`,
           stdio: ['pipe', 'inherit', 'inherit']
@@ -81,15 +87,15 @@ export const configureAuth = ({
     );
   }
 
-  exitIfFailed(run(['env', 'set', 'SITE_URL', siteUrl], { stdio: 'inherit' }, spawn));
+  exitIfFailed(run(['env', 'set', SITE_URL, siteUrl], { stdio: 'inherit' }, spawn));
 
   // Convex and the local Void Worker share one relay secret; mail lands in Void's dev inbox.
   const existingRelaySecret = workerRelaySecret(workerEnvPath);
-  if (!existingRelaySecret || !deploymentVariables.has('AUTH_EMAIL_RELAY_SECRET')) {
+  if (!existingRelaySecret || !deploymentVariables.has(AUTH_EMAIL_RELAY_SECRET)) {
     const relaySecret = existingRelaySecret ?? randomSecret();
     exitIfFailed(
       run(
-        ['env', 'set', 'AUTH_EMAIL_RELAY_SECRET'],
+        ['env', 'set', AUTH_EMAIL_RELAY_SECRET],
         { input: `${relaySecret}\n`, stdio: ['pipe', 'inherit', 'inherit'] },
         spawn
       )

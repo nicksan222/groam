@@ -204,6 +204,8 @@ for (const finding of findings) {
 
 const messages: Record<ConventionFinding['category'], string> = {
   'ai-imports': 'Import AI contracts through an exported @groam/ai/* entrypoint',
+  'backend-env-imports':
+    'The backend may import only @groam/env/deployment; read Convex values from its generated env',
   'component-files':
     'Feature TSX files must export at most one component — split extra components into their own kebab-case files',
   directories: 'Folder names must use kebab-case',

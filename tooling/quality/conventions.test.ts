@@ -279,6 +279,17 @@ describe('inspectFile', () => {
     expect(inspectFile(page, `import { env } from '${groamEnv}';`)).toEqual([]);
   });
 
+  test('lets the backend import only the deployment variable definitions from @groam/env', () => {
+    const file = 'packages/backend/convex/convex.config.ts';
+    expect(inspectFile(file, `import { schemaFor } from '@groam/env/deployment';`)).toEqual([]);
+    expect(inspectFile(file, `import { env } from '@groam/env/production';`)).toEqual([
+      { category: 'backend-env-imports', location: `${file}:1` }
+    ]);
+    expect(
+      inspectFile('tooling/deploy/src/release.ts', `import { env } from '@groam/env/production';`)
+    ).toEqual([]);
+  });
+
   test('rejects leftover Halo package names', () => {
     expect(inspectFile('apps/web/src/app.tsx', `import { Button } from '${haloButton}';`)).toEqual([
       { category: 'halo-imports', location: 'apps/web/src/app.tsx:1' }
