@@ -35,16 +35,19 @@ pass their own tighter per-target maximums into `Attachments.setTarget`.
 
 ## Reading the organization library
 
-Use `api.routes.media.page.run({ paginationOpts: { numItems: 50, cursor: null } })`
-for a complete library browser. Each request inspects at most 50 raw organization
+Use `api.routes.media.page.run({ paginationOpts: { numItems: 20, cursor: null } })`
+for a complete library browser. Each request inspects at most 20 raw organization
 media rows, filters inaccessible files before issuing URLs, and preserves the
 pagination result's continuation metadata. A page can contain no visible files
 while `isDone` is false. Offer **Load more** in that state and pass
 `continueCursor` into the next request; do not treat an empty page as exhaustion
-or repeatedly fetch until enough visible items appear.
+or repeatedly fetch until enough visible items appear. File authorization runs
+sequentially because each file may have 20 pin origins and 20 message origins;
+these bounds cover the nested trip/payment reads as well as the outer page.
 
 `api.routes.media.list.run({ limit })` remains a compatibility reader for a
-bounded recent candidate window, with a limit of 1–50. It can return fewer items,
+bounded recent candidate window. Both readers accept requested sizes of 1–50 but
+inspect at most 20 raw candidates per request. It can return fewer items,
 including none, after permission filtering. It does not enumerate the entire
 library. The current web controls upload files directly; there is no saved-media
 library picker consuming this compatibility query.

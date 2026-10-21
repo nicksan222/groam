@@ -247,13 +247,13 @@ test('a paid reader may deliberately publish a file to an ordinary chat for the 
   ).toEqual(expect.any(String));
 });
 
-test('media pages retain a cursor through fifty protected candidates to older accessible uploads', async () => {
+test('media pages retain a cursor through twenty protected candidates to older accessible uploads', async () => {
   payments();
   const trip = await setupBillableTrip(1);
   const member = trip.users[0]!;
   const older = await upload(trip.owner.client, 'Older accessible upload.png');
   const protectedFiles = await Promise.all(
-    Array.from({ length: 50 }, (_, index) =>
+    Array.from({ length: 20 }, (_, index) =>
       upload(trip.owner.client, `Hidden itinerary ${index}.png`)
     )
   );

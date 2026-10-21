@@ -21,6 +21,9 @@ import type {
 const MAX_NAME_LENGTH = 120;
 const MEDIA_LIST_MIN = 1;
 const MEDIA_LIST_MAX = 50;
+// A file may require 163 indexed reads across its bounded origin windows. Twenty raw
+// candidates leave headroom under 4096 ranges, including workspace and URL resolution.
+const MEDIA_CANDIDATES = 20;
 
 /**
  * Organization file library: upload, list, delete, group logo.
@@ -127,7 +130,7 @@ export class Media {
         query.eq('organizationId', workspace.organizationId)
       )
       .order('desc')
-      .take(limit);
+      .take(Math.min(limit, MEDIA_CANDIDATES));
 
     return Media.visibleRows(ctx, workspace, media);
   }
@@ -152,7 +155,11 @@ export class Media {
         query.eq('organizationId', workspace.organizationId)
       )
       .order('desc')
-      .paginate({ ...paginationOpts, maximumRowsRead: MEDIA_LIST_MAX });
+      .paginate({
+        ...paginationOpts,
+        numItems: Math.min(paginationOpts.numItems, MEDIA_CANDIDATES),
+        maximumRowsRead: MEDIA_CANDIDATES
+      });
     return { ...result, page: await Media.visibleRows(ctx, workspace, result.page) };
   }
 
@@ -162,21 +169,23 @@ export class Media {
     media: Doc<'media'>[]
   ): Promise<ListedMedia[]> {
     const access = new MediaAccess(ctx, workspace);
-    const visible = await Promise.all(
-      media.map(async (item) => ((await access.canRead(item._id)) ? item : null))
-    );
+    const visible: Doc<'media'>[] = [];
+    // One file at a time bounds concurrent origin I/O to forty trip checks or twenty
+    // message chains, instead of multiplying either fanout by the entire page.
+    for (const item of media) {
+      // oxlint-disable-next-line react-doctor/async-await-in-loop -- Sequential file checks bound nested origin I/O.
+      if (await access.canRead(item._id)) visible.push(item);
+    }
     return await Promise.all(
-      visible
-        .filter((item) => item !== null)
-        .map(async (item) => ({
-          contentType: item.contentType,
-          createdAt: item._creationTime,
-          id: item._id,
-          name: item.name,
-          ...(item.purpose ? { purpose: item.purpose } : {}),
-          size: item.size,
-          url: await ctx.storage.getUrl(item.storageId)
-        }))
+      visible.map(async (item) => ({
+        contentType: item.contentType,
+        createdAt: item._creationTime,
+        id: item._id,
+        name: item.name,
+        ...(item.purpose ? { purpose: item.purpose } : {}),
+        size: item.size,
+        url: await ctx.storage.getUrl(item.storageId)
+      }))
     );
   }
 
