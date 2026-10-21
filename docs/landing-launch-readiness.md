@@ -14,8 +14,10 @@ the blockers below are resolved.
   `packages/backend/convex/components/better-auth/generated.ts`, and `packages/auth/README.md`.
 - Trip access requires organization membership and, for billable trips, payment participation.
   Unpaid members receive a limited invitation preview rather than the protected itinerary. The trip
-  creator is free, and trips created while billing is disabled remain free. An absent Stripe key
-  skips billing on all trips. RSVP status alone does not narrow access. Evidence:
+  creator is free. A nonblank Stripe API key requires payment from every other traveler on
+  every trip, including trips created before the key was configured. An absent or blank key
+  skips billing on all trips; a key without its webhook secret blocks Checkout creation.
+  RSVP status alone does not narrow access. Evidence:
   `packages/backend/convex/modules/travel/trips/{visibility,projection}.ts` and
   `packages/backend/convex/modules/payments/participation.ts`.
 - Deployment wiring publishes the landing and web frontends to Cloudflare Workers Static Assets;
