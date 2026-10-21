@@ -7,7 +7,8 @@ import { useAuthForm } from '@/features/auth/hooks/use-auth-form';
 
 export function AuthScreen() {
   const authForm = useAuthForm();
-  const resetToken = new URLSearchParams(window.location.search).get('token');
+  const search = new URLSearchParams(window.location.search);
+  const resetToken = search.get('auth') === 'reset-password' ? search.get('token') : null;
   const { isRecovery, isSignIn } = authForm;
 
   return (

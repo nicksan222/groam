@@ -45,6 +45,32 @@ describe('AuthScreen', () => {
     await expect.element(page.getByLabelText(/^Name/u)).not.toBeInTheDocument();
   });
 
+  test('signed-out users keep the sign-in form when a token has no reset marker', async () => {
+    const originalURL = window.location.href;
+    window.history.replaceState(null, '', '/app/?token=unmarked-token');
+    try {
+      await render(<AuthScreen />);
+      await expect.element(page.getByText('Welcome back')).toBeInTheDocument();
+      await expect.element(page.getByRole('button', { name: 'Sign in' })).toBeInTheDocument();
+      await expect.element(page.getByLabelText(/^New password/u)).not.toBeInTheDocument();
+    } finally {
+      window.history.replaceState(null, '', originalURL);
+    }
+  });
+
+  test('signed-out users open the reset form with both the marker and token', async () => {
+    const originalURL = window.location.href;
+    window.history.replaceState(null, '', '/app/?token=reset-token&auth=reset-password');
+    try {
+      await render(<AuthScreen />);
+      await expect.element(page.getByText('Reset your password')).toBeInTheDocument();
+      await expect.element(page.getByLabelText(/^New password/u)).toBeInTheDocument();
+      await expect.element(page.getByRole('button', { name: 'Sign in' })).not.toBeInTheDocument();
+    } finally {
+      window.history.replaceState(null, '', originalURL);
+    }
+  });
+
   test('switches to sign-up and shows the name field', async () => {
     await render(<AuthScreen />);
 
