@@ -1,7 +1,17 @@
+import { environments } from '@groam/deploy/environments';
+import { env } from '@groam/env/void';
 import { defineConfig } from 'void/config';
 
-// The landing site is its own Void project: Astro's static output on its own origin, separate
-// from the web app in apps/web.
+const { landing } = environments[env.environment];
+
+// The landing site's own Void deployment: Astro's static output, served from Cloudflare's edge.
+// The web app deploys separately from apps/web.
 export default defineConfig({
+  cloudflare: {
+    name: landing.worker,
+    routes: [{ custom_domain: true, pattern: landing.host }],
+    preview_urls: false,
+    workers_dev: true
+  },
   inference: { appType: 'static', build: 'astro build', outputDir: 'dist' }
 });

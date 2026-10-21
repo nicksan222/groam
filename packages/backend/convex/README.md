@@ -1,7 +1,6 @@
 # Convex backend
 
-- `convex.config.ts` mounts Better Auth, Agent, Workflow, Rate Limiter, the geospatial index,
-  and the `web` and `landing` Static Hosting instances.
+- `convex.config.ts` mounts Better Auth, Agent, Workflow, Rate Limiter and the geospatial index.
 - `components/better-auth/` owns Better Auth's isolated local component.
 - `modules/auth/`, `auth.config.ts`, and `http.ts` provide application auth integration and routing.
 - `routes/` owns public Convex functions for product domains. See `modules/README.md`.
@@ -11,18 +10,11 @@
 - Local development seeding is orchestrated by `tooling/seeder/src/seed-workspace.ts`
   and calls real product procedures.
 
-The production origin serves two separately uploaded static builds through
-`@convex-dev/static-hosting`: `landing` owns `/` and `web` owns `/app/`. Better Auth and
-the ChatGPT callback keep their existing exact root routes because `http.ts` registers them before
-the static catch-alls. `/app` redirects permanently to `/app/`; extensionless paths below `/app/`
-use the SPA fallback, while missing app assets return 404.
-
-The landing build is pre-rendered without an SPA fallback. Directory requests resolve to their
-`index.html`; known extensionless pages redirect to their trailing-slash URL. Unknown page paths
-serve `/404.html`, or `/it/404/index.html` below `/it`, with status 404. Upload both builds with
-their explicit base paths (`/` for `landing`, `/app/` for `web`) rather than asking the uploader to
-infer or run a build. Both builds use the same production site origin: the SPA's public site URL is
-that origin plus `/app/`, while its Convex site URL remains the origin.
+Void on Cloudflare hosts the frontends as two deployments at separate origins: the web
+application (served from its origin root) and the landing site. Convex serves backend procedures and HTTP endpoints, including
+Better Auth and the ChatGPT callback; it does not serve frontend assets. The web app
+origin and the Convex HTTP origin are separate. Keep the latter reachable for auth and
+callbacks. See [deployment](../../../docs/deployment.md) for setup and release steps.
 
 ## Procedure convention
 

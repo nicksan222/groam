@@ -17,10 +17,14 @@ independent of network services.
 
 ## Hosting and configuration
 
-Convex serves application procedures and HTTP routes; its static-hosting
-component can serve the built web application. Authentication and external
-authorization callbacks coexist with the SPA routes. During development, Vite
-serves frontend assets separately from the local backend.
+Cloudflare, through Void, is the sole production frontend host, with two
+separate deployments at separate origins: the web app (`apps/web`) is served
+from the root of its own origin, and the Astro landing site (`apps/landing`,
+static output) from another. Convex serves application procedures and backend
+HTTP routes, including authentication and external authorization callbacks.
+During development, `vp dev` serves the application at the root of
+`localhost:5173`, separately from the local backend and the landing site on
+`localhost:4321`.
 
 Validated environment targets define client and process configuration. Build-time
 configuration and local development bootstrap configure the backend and auth
@@ -46,9 +50,8 @@ domain layer.
 
 Backend integration tests cover real procedure and component boundaries with
 controlled external model responses. View tests and browser journeys cover
-client interactions and reactivity; delivery workflows additionally verify
-static hosting. These checks serve
-different boundaries and are not interchangeable.
+client interactions and reactivity; Void checks each new frontend version as part of `void deploy`. These checks
+serve different boundaries and are not interchangeable.
 
 Operational commands and connection
 setup remain in the linked guides rather than becoming architecture constants.
@@ -60,7 +63,7 @@ built, with pseudocode traced from the source and the tests that enforce them.
 
 ## Source anchors
 
-- [HTTP and hosting composition](../../../packages/backend/convex/http.ts)
+- [Backend HTTP composition](../../../packages/backend/convex/http.ts)
 - [Development and verification guide](../../../.github/CONTRIBUTING.md)
 - [Runtime helpers](../../../tooling/devkit/README.md), [test adapters](../../../tooling/app-actions/README.md) and [AI deployment constraints](../../../packages/backend/convex/README.md#ai-configuration)
 

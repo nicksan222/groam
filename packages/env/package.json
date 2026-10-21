@@ -19,7 +19,8 @@
     "./seeder": "./src/apps/seeder.ts",
     "./vitest": "./src/apps/vitest.ts",
     "./web-client": "./src/apps/web-client.ts",
-    "./production": "./src/apps/production.ts"
+    "./production": "./src/apps/production.ts",
+    "./void": "./src/apps/void.ts"
   },
   "files": [
     "src"

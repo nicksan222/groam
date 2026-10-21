@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@groam/app-actions": "workspace:*",
+    "@groam/deploy": "workspace:*",
     "@groam/typescript-config": "workspace:*",
     "@groam/vitest-config": "workspace:*",
     "@tailwindcss/vite": "^4.2.2",

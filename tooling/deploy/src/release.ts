@@ -1,54 +1,27 @@
-import { createHash } from 'node:crypto';
-import { readFileSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
-import type { ProductionTarget } from './target';
+import { env } from '@groam/env/production';
+import { deployBackend } from '#src/convex/deploy';
+import { syncBackendSettings } from '#src/convex/settings';
+import { environments } from '#src/environments';
+import { assertCleanCheckout, assertTestedCommit } from '#src/release/checkout';
+import { assertTrustedPublisher } from '#src/release/publisher';
+import { releaseTarget } from '#src/release/target';
+import { deployFrontends } from '#src/void/deploy';
+import { assertCommittedLocks } from '#src/void/lock';
 
-export const releaseManifestPath = 'dist/production-release.json';
-export const siteDirectories = { web: 'apps/web/dist', landing: 'apps/landing/dist' } as const;
+// Verify everything first, then publish Convex, the web app, and the landing site in that order.
+// The three publications are not atomic; a failure after Convex leaves earlier frontends live.
+if (import.meta.main) {
+  const target = releaseTarget(env.environment, environments[env.environment]);
 
-/** Bind both builds to one tested commit and detect changed or incomplete output. */
-export function siteDigest(directory: string): string {
-  const hash = createHash('sha256');
-  const visit = (folder: string, relative = '') => {
-    for (const entry of readdirSync(folder, { withFileTypes: true }).sort((a, b) =>
-      a.name.localeCompare(b.name)
-    )) {
-      const name = `${relative}${entry.name}`;
-      const path = join(folder, entry.name);
-      if (entry.isSymbolicLink())
-        throw new Error('Production build output must not contain symbolic links.');
-      if (entry.isDirectory()) visit(path, `${name}/`);
-      else {
-        hash.update(name);
-        hash.update('\0');
-        hash.update(readFileSync(path));
-        hash.update('\0');
-      }
-    }
-  };
-  visit(directory);
-  return hash.digest('hex');
-}
+  assertTrustedPublisher(target, env);
+  assertTestedCommit(env.sha);
+  assertCommittedLocks(target);
+  assertCleanCheckout();
 
-export type ProductionRelease = {
-  sha: string;
-  target: ProductionTarget;
-  web: string;
-  landing: string;
-};
+  syncBackendSettings(target);
+  deployBackend(target, env.sha);
+  deployFrontends(target);
 
-export function assertRelease(
-  release: ProductionRelease,
-  target: ProductionTarget,
-  sha: string,
-  root: string
-): void {
-  if (release.sha !== sha || JSON.stringify(release.target) !== JSON.stringify(target))
-    throw new Error(
-      'The production build does not match this tested commit and destination. Build it again.'
-    );
-  for (const site of ['web', 'landing'] as const) {
-    if (siteDigest(join(root, siteDirectories[site])) !== release[site])
-      throw new Error(`The ${site} build changed after verification. Build it again.`);
-  }
+  // Void records newly provisioned resources in its lock; a change must be committed first.
+  assertCleanCheckout();
 }
