@@ -99,9 +99,16 @@ test('malformed and expired email-change tokens cannot mutate the account', asyn
   }
 });
 
-test('the verification rollout marker cannot be changed through public update-user', async () => {
+test('public profile updates cannot forge verified email ownership', async () => {
   const fixture = await createAuthenticatedTest();
   const session = await fixture.authClient.getSession();
+  await fixture.test.mutation(components.betterAuth.adapter.updateOne, {
+    input: {
+      model: 'user',
+      where: [{ field: '_id', value: fixture.userId }],
+      update: { emailVerified: false }
+    }
+  });
   await fixture.test.fetch('/api/auth/update-user', {
     method: 'POST',
     headers: {
@@ -109,11 +116,11 @@ test('the verification rollout marker cannot be changed through public update-us
       'content-type': 'application/json',
       authorization: `Bearer ${session.data!.session.token}`
     },
-    body: JSON.stringify({ emailVerificationRequired: false })
+    body: JSON.stringify({ emailVerified: true })
   });
   const user = await fixture.test.query(components.betterAuth.adapter.findOne, {
     model: 'user',
     where: [{ field: '_id', value: fixture.userId }]
   });
-  expect(user).toMatchObject({ emailVerificationRequired: true });
+  expect(user).toMatchObject({ emailVerified: false });
 });
