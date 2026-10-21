@@ -42,6 +42,7 @@ const assistant = vi.hoisted(() => ({
   isStopping: false,
   loadMore: vi.fn(),
   messages: [],
+  // Records (page key, enabled) so tests can prove a closed page never enables useAssistant.
   observed: vi.fn(),
   open: vi.fn(),
   selectThread: vi.fn(),
@@ -89,7 +90,6 @@ afterEach(() => {
   vi.clearAllMocks();
   assistant.canStop = false;
   assistant.isResponding = false;
-  assistant.observed.mockClear();
   assistant.open.mockReset().mockResolvedValue(undefined);
   assistant.threadId = 'thread-1';
   assistant.unstableOpen = false;
@@ -112,13 +112,26 @@ function ContextRegistration({ value = context }: { value?: AgentScreenContext }
   return null;
 }
 
-async function renderWidget(withContext = true) {
-  return render(
+const nextPage: AgentScreenContext = { ...context, key: 'trip:trip-2:issues', title: 'Next trip' };
+
+function openAssistant() {
+  window.dispatchEvent(new Event('groam:open-assistant'));
+}
+
+function widgetTree(value: AgentScreenContext | null = context, showMobileLauncher = true) {
+  return (
     <AgentContextProvider>
-      {withContext && <ContextRegistration />}
-      <AiAssistantWidget api={api} />
+      {value && <ContextRegistration value={value} />}
+      <button onClick={openAssistant} type="button">
+        Ask AI
+      </button>
+      <AiAssistantWidget api={api} showMobileLauncher={showMobileLauncher} />
     </AgentContextProvider>
   );
+}
+
+async function renderWidget(value: AgentScreenContext | null = context) {
+  return render(widgetTree(value));
 }
 
 describe('AiAssistantWidget', () => {
@@ -180,12 +193,7 @@ describe('AiAssistantWidget', () => {
     await page.getByRole('button', { name: 'Open Groam AI' }).click();
     await vi.waitFor(() => expect(assistant.open).toHaveBeenCalledTimes(1));
 
-    await view.rerender(
-      <AgentContextProvider>
-        <ContextRegistration />
-        <AiAssistantWidget api={api} />
-      </AgentContextProvider>
-    );
+    await view.rerender(widgetTree());
     expect(assistant.open).toHaveBeenCalledTimes(1);
   });
 
@@ -213,29 +221,6 @@ describe('AiAssistantWidget', () => {
     await expect.element(page.getByRole('dialog', { name: 'Groam AI' })).not.toBeInTheDocument();
   });
 
-  test('closes when the registered page changes', async () => {
-    const view = await renderWidget();
-    await page.getByRole('button', { name: 'Open Groam AI' }).click();
-    await expect.element(page.getByRole('dialog', { name: 'Groam AI' })).toBeInTheDocument();
-
-    await view.rerender(
-      <AgentContextProvider>
-        <ContextRegistration
-          value={{
-            ...context,
-            key: 'trip:trip-1:itinerary',
-            target: { kind: 'trip', section: 'itinerary', tripId: 'trip-1' },
-            title: 'Portugal · Itinerary'
-          }}
-        />
-        <AiAssistantWidget api={api} />
-      </AgentContextProvider>
-    );
-
-    await expect.element(page.getByRole('dialog', { name: 'Groam AI' })).not.toBeInTheDocument();
-    await expect.element(page.getByRole('button', { name: 'Open Groam AI' })).toBeInTheDocument();
-  });
-
   test('can stop a streaming response from the composer', async () => {
     assistant.canStop = true;
     assistant.isResponding = true;
@@ -252,7 +237,7 @@ describe('AiAssistantWidget', () => {
   });
 
   test('waits for a page to register context', async () => {
-    await renderWidget(false);
+    await renderWidget(null);
     await page.getByRole('button', { name: 'Open Groam AI' }).click();
 
     await expect.element(page.getByText('No screen context registered')).toBeInTheDocument();
@@ -260,90 +245,78 @@ describe('AiAssistantWidget', () => {
       .element(page.getByRole('textbox', { name: 'Assistant prompt' }))
       .toHaveAttribute('contenteditable', 'false');
   });
-});
 
-test.each([1024, 1280])(
-  'preserves an explicit opening when the first page context arrives after the click at width %s',
-  async (width) => {
-    await useViewport(width, 800);
-    const panelRole = width >= 1280 ? 'region' : 'dialog';
-    assistant.threadId = null;
-    const view = await renderWidget(false);
+  test.each([1024, 1280])(
+    'keeps an opening made before the first page context at width %s',
+    async (width) => {
+      await useViewport(width, 800);
+      const panelRole = width >= 1280 ? 'region' : 'dialog';
+      assistant.threadId = null;
+      const view = await renderWidget(null);
+      await page.getByRole('button', { name: 'Open Groam AI' }).click();
+      await expect.element(page.getByRole(panelRole, { name: 'Groam AI' })).toBeVisible();
+      expect(assistant.open).not.toHaveBeenCalled();
+      await view.rerender(widgetTree());
+      await expect.element(page.getByRole(panelRole, { name: 'Groam AI' })).toBeVisible();
+      await vi.waitFor(() => expect(assistant.open).toHaveBeenCalledTimes(1));
+    }
+  );
+
+  test('returns focus to the opener after opening before the page context resolves', async () => {
+    await useViewport(390, 800);
+    const view = await render(widgetTree(null, false));
+    await page.getByRole('button', { name: 'Ask AI' }).click();
+    await view.rerender(widgetTree(context, false));
+    await expect.element(page.getByText('How can I help?')).toBeVisible();
+    await page.getByRole('button', { name: 'Close AI assistant' }).click();
+    await expect.element(page.getByRole('button', { name: 'Ask AI' })).toHaveFocus();
+  });
+
+  test('a page change closes the panel without moving focus', async () => {
+    await useViewport(1440, 900);
+    const view = await renderWidget();
     await page.getByRole('button', { name: 'Open Groam AI' }).click();
-    await expect.element(page.getByRole(panelRole, { name: 'Groam AI' })).toBeVisible();
-    expect(assistant.open).not.toHaveBeenCalled();
-    await view.rerender(
-      <AgentContextProvider>
-        <ContextRegistration />
-        <AiAssistantWidget api={api} />
-      </AgentContextProvider>
-    );
-    await expect.element(page.getByRole(panelRole, { name: 'Groam AI' })).toBeVisible();
-    await vi.waitFor(() => expect(assistant.open).toHaveBeenCalledTimes(1));
-  }
-);
+    await expect.element(page.getByRole('region', { name: 'Portugal planning' })).toBeVisible();
+    page.getByRole('button', { name: 'Ask AI' }).element().focus();
+    await view.rerender(widgetTree(nextPage));
+    await expect.element(page.getByRole('button', { name: 'Open Groam AI' })).toBeVisible();
+    await expect.element(page.getByRole('button', { name: 'Ask AI' })).toHaveFocus();
+  });
 
-test('returns focus to the opener after opening before the page context resolves', async () => {
-  await useViewport(390, 800);
-  const openAssistant = () => window.dispatchEvent(new Event('groam:open-assistant'));
-  const tree = (withContext: boolean) => (
-    <AgentContextProvider>
-      {withContext && <ContextRegistration />}
-      <button onClick={openAssistant} type="button">
-        Ask AI
-      </button>
-      <AiAssistantWidget api={api} showMobileLauncher={false} />
-    </AgentContextProvider>
-  );
-  const view = await render(tree(false));
-  await page.getByRole('button', { name: 'Ask AI' }).click();
-  await view.rerender(tree(true));
-  await expect.element(page.getByText('How can I help?')).toBeVisible();
-  await page.getByRole('button', { name: 'Close AI assistant' }).click();
-  await expect.element(page.getByRole('button', { name: 'Ask AI' })).toHaveFocus();
-});
-
-test('same-page context data updates preserve the opening without restarting the thread', async () => {
-  assistant.threadId = null;
-  const view = await renderWidget();
-  await page.getByRole('button', { name: 'Open Groam AI' }).click();
-  await vi.waitFor(() => expect(assistant.open).toHaveBeenCalledTimes(1));
-  await view.rerender(
-    <AgentContextProvider>
-      <ContextRegistration value={{ ...context, data: { approvalCount: 2 } }} />
-      <AiAssistantWidget api={api} />
-    </AgentContextProvider>
-  );
-  await expect.element(page.getByRole('dialog', { name: 'Groam AI' })).toBeVisible();
-  expect(assistant.open).toHaveBeenCalledTimes(1);
-});
-
-test.each([false, true])(
-  'real page changes close before enabling another context, including a missing-context gap: %s',
-  async (gap) => {
+  test('same-page context data updates keep the panel open without restarting the thread', async () => {
     assistant.threadId = null;
     const view = await renderWidget();
     await page.getByRole('button', { name: 'Open Groam AI' }).click();
     await vi.waitFor(() => expect(assistant.open).toHaveBeenCalledTimes(1));
-    if (gap) {
-      await view.rerender(
-        <AgentContextProvider>
-          <AiAssistantWidget api={api} />
-        </AgentContextProvider>
-      );
-      await expect.element(page.getByRole('dialog', { name: 'Groam AI' })).not.toBeInTheDocument();
-    }
-    const next = { ...context, key: 'trip:trip-2:issues', title: 'Next trip' };
-    await view.rerender(
-      <AgentContextProvider>
-        <ContextRegistration value={next} />
-        <AiAssistantWidget api={api} />
-      </AgentContextProvider>
-    );
-    await expect.element(page.getByRole('dialog', { name: 'Groam AI' })).not.toBeInTheDocument();
+    await view.rerender(widgetTree({ ...context, data: { approvalCount: 2 } }));
+    await expect.element(page.getByRole('dialog', { name: 'Groam AI' })).toBeVisible();
     expect(assistant.open).toHaveBeenCalledTimes(1);
-    const nextObservations = assistant.observed.mock.calls.filter(([key]) => key === next.key);
-    expect(nextObservations.length).toBeGreaterThan(0);
-    expect(nextObservations.every(([, enabled]) => enabled === false)).toBe(true);
-  }
-);
+  });
+
+  test.each([
+    { name: 'another page', before: [context], after: [nextPage] },
+    { name: 'a missing-context gap', before: [context], after: [null, nextPage] },
+    { name: 'a no-context page', before: [context, null], after: [nextPage] }
+  ])(
+    'leaving the opened page closes before the next page starts a thread: $name',
+    async ({ after, before }) => {
+      assistant.threadId = null;
+      const [first = null, ...rest] = before;
+      const view = await renderWidget(first);
+      for (const value of rest) await view.rerender(widgetTree(value));
+      await page.getByRole('button', { name: 'Open Groam AI' }).click();
+      await expect.element(page.getByRole('dialog', { name: 'Groam AI' })).toBeVisible();
+      for (const value of after) {
+        await view.rerender(widgetTree(value));
+        await expect
+          .element(page.getByRole('dialog', { name: 'Groam AI' }))
+          .not.toBeInTheDocument();
+      }
+      const nextObservations = assistant.observed.mock.calls.filter(
+        ([key]) => key === nextPage.key
+      );
+      expect(nextObservations.length).toBeGreaterThan(0);
+      expect(nextObservations.every(([, enabled]) => enabled === false)).toBe(true);
+    }
+  );
+});

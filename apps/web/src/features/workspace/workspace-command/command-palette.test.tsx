@@ -11,33 +11,31 @@ vi.mock('@/lib/navigation/router', async (importOriginal) => ({
   useNavigate: () => navigate
 }));
 
-vi.mock('@/features/trips/hooks/use-trips', () => ({
-  useTrips: () => ({ trips: [] })
+const data = vi.hoisted(() => ({
+  loadTrips: vi.fn(),
+  tripStatus: 'Exhausted' as 'CanLoadMore' | 'Exhausted' | 'LoadingMore',
+  trips: [] as Array<{ id: string; name: string }>
 }));
 
-const data = vi.hoisted(() => ({
-  ideas: [] as Array<{ id: string; sourceTripId: string; sourceTripName: string; title: string }>,
-  issues: [] as Array<{ id: string; tripName: string; title: string }>,
-  ideaStatus: 'Exhausted' as 'CanLoadMore' | 'Exhausted' | 'LoadingMore',
-  issueStatus: 'Exhausted' as 'CanLoadMore' | 'Exhausted' | 'LoadingMore',
-  loadIdeas: vi.fn(),
-  loadIssues: vi.fn()
+vi.mock('@/features/trips/hooks/use-trips', () => ({
+  useTrips: () => ({ loadMore: data.loadTrips, status: data.tripStatus, trips: data.trips })
 }));
 
 vi.mock('@/features/ideas/hooks/use-workspace-ideas', () => ({
   useWorkspaceIdeas: () => ({
-    proposals: data.ideas,
-    status: data.ideaStatus,
-    loadMore: data.loadIdeas
+    proposals: [
+      {
+        id: 'idea-1',
+        sourceTripId: 'trip-coast',
+        sourceTripName: 'Summer trip',
+        title: 'Coast day'
+      }
+    ]
   })
 }));
 
 vi.mock('@/features/issues/hooks/use-workspace-issues', () => ({
-  useWorkspaceIssues: () => ({
-    issues: data.issues,
-    status: data.issueStatus,
-    loadMore: data.loadIssues
-  })
+  useWorkspaceIssues: () => ({ issues: [] })
 }));
 
 vi.mock('@/features/discussions/hooks/use-discussions', () => ({
@@ -51,12 +49,8 @@ vi.mock('@/features/agents/hooks/use-agent-roster', () => ({
 beforeEach(() => {
   vi.clearAllMocks();
   useCommandPaletteChrome.getState().closeAndClear();
-  data.ideas = [
-    { id: 'idea-1', sourceTripId: 'trip-coast', sourceTripName: 'Summer trip', title: 'Coast day' }
-  ];
-  data.issues = [];
-  data.ideaStatus = 'Exhausted';
-  data.issueStatus = 'Exhausted';
+  data.tripStatus = 'Exhausted';
+  data.trips = [];
 });
 
 test('command palette jumps to the nested idea clone', async () => {
@@ -96,27 +90,32 @@ test('command palette explains when nothing matches', async () => {
   await expect.element(page.getByText('0 results')).toBeInTheDocument();
 });
 
-test('search can load more ideas and issues to reach an older match', async () => {
-  data.ideas = [];
-  data.ideaStatus = 'CanLoadMore';
-  data.issueStatus = 'CanLoadMore';
+test('search can load more results to reach an older match', async () => {
+  data.tripStatus = 'CanLoadMore';
   const view = await render(<CommandPalette />);
   await userEvent.keyboard('{Meta>}k{/Meta}');
-  await userEvent.type(page.getByRole('combobox', { name: 'Search' }), 'Older plan');
-  await expect.element(page.getByText('No loaded matches for “Older plan”')).toBeVisible();
+  const search = page.getByRole('combobox', { name: 'Search' });
+  await userEvent.type(search, 'Old Lisbon');
+  await expect.element(page.getByText('No loaded matches for “Old Lisbon”')).toBeVisible();
+  await expect.element(page.getByText('Load more to search older results.')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Load more' }).click();
-  expect(data.loadIdeas).toHaveBeenCalledExactlyOnceWith(25);
-  expect(data.loadIssues).toHaveBeenCalledExactlyOnceWith(25);
+  const loadMore = page.getByRole('button', { name: 'Load more' });
+  await userEvent.keyboard('{Tab}');
+  await expect.element(loadMore).toHaveFocus();
+  await userEvent.keyboard('{Enter}');
+  expect(data.loadTrips).toHaveBeenCalledExactlyOnceWith(25);
 
-  data.ideaStatus = 'LoadingMore';
-  data.issueStatus = 'Exhausted';
+  data.tripStatus = 'LoadingMore';
   await view.rerender(<CommandPalette />);
-  await expect.element(page.getByRole('button', { name: 'Load more' })).toBeDisabled();
+  await expect.element(loadMore).toHaveAttribute('aria-disabled', 'true');
+  await userEvent.keyboard('{Enter}');
+  expect(data.loadTrips).toHaveBeenCalledOnce();
+  await expect.element(loadMore).toHaveFocus();
 
-  data.issues = [{ id: 'older-issue', tripName: 'Old trip', title: 'Older plan' }];
-  data.ideaStatus = 'Exhausted';
+  data.tripStatus = 'Exhausted';
+  data.trips = [{ id: 'trip-old', name: 'Old Lisbon' }];
   await view.rerender(<CommandPalette />);
-  await expect.element(page.getByRole('option', { name: /Older plan/u })).toBeVisible();
-  await expect.element(page.getByRole('button', { name: 'Load more' })).not.toBeInTheDocument();
+  await expect.element(page.getByRole('option', { name: /Old Lisbon/u })).toBeVisible();
+  await expect.element(loadMore).not.toBeInTheDocument();
+  await expect.element(search).toHaveFocus();
 });

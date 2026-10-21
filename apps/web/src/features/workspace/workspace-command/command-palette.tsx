@@ -10,7 +10,7 @@ import {
 import { Input } from '@groam/ui/components/input';
 import { Kbd } from '@groam/ui/components/kbd';
 import { Spinner } from '@groam/ui/components/spinner';
-import { useId } from 'react';
+import { useCallback, useId, useRef } from 'react';
 import type { CommandPaletteMatch } from '@/features/workspace/hooks/command-palette-results';
 import { useCommandPalette } from '@/features/workspace/hooks/use-command-palette';
 import { testIds } from '@/lib/test-ids';
@@ -32,6 +32,14 @@ export function CommandPalette() {
     setActiveIndex,
     setQuery
   } = useCommandPalette();
+  const searchRef = useRef<HTMLInputElement>(null);
+  // Exhausting the results removes the focused button; hand focus back to the search field.
+  const returnFocusToSearch = useCallback(
+    (button: HTMLButtonElement | null) => () => {
+      if (button === document.activeElement) searchRef.current?.focus();
+    },
+    []
+  );
   const baseId = useId();
   const listId = `${baseId}-list`;
   const optionId = (index: number) => `${baseId}-option-${index}`;
@@ -60,6 +68,7 @@ export function CommandPalette() {
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={onInputKeyDown}
             placeholder="Jump to a trip, idea, issue, chat, or agent…"
+            ref={searchRef}
             role="combobox"
             spellCheck={false}
             value={query}
@@ -104,7 +113,14 @@ export function CommandPalette() {
         </div>
         {canLoadMore && (
           <div className="flex justify-center border-t px-4 py-2">
-            <Button disabled={isLoadingMore} onClick={loadMore} size="sm" variant="ghost">
+            <Button
+              aria-disabled={isLoadingMore}
+              className="aria-disabled:opacity-64"
+              onClick={loadMore}
+              ref={returnFocusToSearch}
+              size="sm"
+              variant="ghost"
+            >
               {isLoadingMore && <Spinner aria-hidden />} Load more
             </Button>
           </div>
@@ -116,33 +132,23 @@ export function CommandPalette() {
 }
 
 function EmptyResults({ canLoadMore, query }: { canLoadMore: boolean; query: string }) {
-  const { hint, title } = emptyResultsCopy(query.trim(), canLoadMore);
   return (
     <div className="flex flex-col items-center gap-1.5 px-6 py-10 text-center">
       <SearchX aria-hidden className="mb-1 size-5 text-muted-foreground" />
-      <p className="text-sm font-medium text-foreground">{title}</p>
-      <p className="text-xs text-muted-foreground">{hint}</p>
+      <p className="text-sm font-medium text-foreground">
+        {query.trim()
+          ? `${canLoadMore ? 'No loaded matches' : 'No matches'} for “${query.trim()}”`
+          : 'Nothing to jump to yet'}
+      </p>
+      <p className="text-xs text-muted-foreground">
+        {canLoadMore
+          ? 'Load more to search older results.'
+          : query.trim()
+            ? 'Try part of a trip, idea, issue, or chat name.'
+            : 'Trips, ideas, issues, and chats show up here as you create them.'}
+      </p>
     </div>
   );
-}
-
-function emptyResultsCopy(term: string, canLoadMore: boolean) {
-  if (canLoadMore) {
-    return {
-      hint: 'Load more to search older ideas and issues.',
-      title: term ? `No loaded matches for “${term}”` : 'No results loaded yet'
-    };
-  }
-  if (term) {
-    return {
-      hint: 'Try part of a trip, idea, issue, or chat name.',
-      title: `No matches for “${term}”`
-    };
-  }
-  return {
-    hint: 'Trips, ideas, issues, and chats show up here as you create them.',
-    title: 'Nothing to jump to yet'
-  };
 }
 
 function groupResults(results: CommandPaletteMatch[]) {

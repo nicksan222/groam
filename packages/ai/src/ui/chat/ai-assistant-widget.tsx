@@ -1,4 +1,5 @@
 import {
+  type RefObject,
   useEffect,
   useEffectEvent,
   useLayoutEffect,
@@ -9,7 +10,7 @@ import {
 import { assistantConversationContextKey } from '#ai/runtime/screen';
 import { AssistantSidechatPanel } from '#ai/ui/chat/assistant-sidechat-panel';
 import { AssistantSidechatRail } from '#ai/ui/chat/assistant-sidechat-rail';
-import { useCurrentAgentContext } from '#ai/ui/context/agent-context';
+import { type AgentScreenContext, useCurrentAgentContext } from '#ai/ui/context/agent-context';
 import type { AssistantBackendApi } from '#ai/ui/hooks/assistant-functions';
 import { useAssistant } from '#ai/ui/hooks/use-assistant';
 import { toggleContextTagReferences, useAssistantChats } from '#ai/ui/hooks/use-assistant-chats';
@@ -27,6 +28,15 @@ function isDockedViewport() {
   return window.matchMedia(DOCKED_MEDIA_QUERY).matches;
 }
 
+/** The page the panel was opened on; `firstPage` lets an opening made before any page registers adopt the first one. */
+type Opening = { firstPage: boolean; page: string | null } | null;
+
+/** Leaving the page closes the panel, so it never starts a thread for the next page. */
+function followPage(opening: Opening, page: string | null): Opening {
+  if (!opening || opening.page === page) return opening;
+  return opening.page === null && opening.firstPage ? { firstPage: false, page } : null;
+}
+
 export function AiAssistantWidget({
   api,
   showMobileLauncher = true
@@ -35,33 +45,25 @@ export function AiAssistantWidget({
   showMobileLauncher?: boolean;
 }) {
   const context = useCurrentAgentContext();
-  const pageKey = context?.key ?? null;
-  // The page the panel was opened on, or undefined while closed. An opening made before any
-  // page registers adopts the first page; leaving that page closes the panel in this render,
-  // so the assistant never starts a thread for the next page.
-  const [openedOn, setOpenedOn] = useState<string | null>();
-  if (openedOn !== undefined && openedOn !== pageKey) {
-    setOpenedOn(openedOn === null ? pageKey : undefined);
-  }
-  const isOpen = openedOn === null || openedOn === pageKey;
-  const [draftState, setDraftState] = useState<{ draft: string; threadId: string | null }>({
-    draft: '',
-    threadId: null
-  });
-  const isDocked = useSyncExternalStore(subscribeToDockedViewport, isDockedViewport, () => false);
-  const assistant = useAssistant(context, api, { enabled: isOpen });
-  const chats = useAssistantChats(api, isOpen);
-  const hasInteracted = useRef(false);
-  const openAttempted = useRef(false);
-  const [openFailed, setOpenFailed] = useState(false);
-  const wasOpen = useRef(false);
+  const page = context?.key ?? null;
+  const [storedOpening, setOpening] = useState<Opening>(null);
+  const opening = followPage(storedOpening, page);
+  if (opening !== storedOpening) setOpening(opening);
+  const isOpen = opening !== null;
+  const pageSeen = useRef(false);
+  const focusOnClose = useRef(false);
   const launcherRef = useRef<HTMLButtonElement>(null);
-  const externalLauncherRef = useRef<HTMLElement>(null);
+  const openerRef = useRef<HTMLElement>(null);
 
+  /** User-initiated only: a page change closes without moving focus. */
   const setOpen = (open: boolean) => {
-    hasInteracted.current = true;
-    setOpenedOn(open ? pageKey : undefined);
+    focusOnClose.current = !open;
+    setOpening(open ? { firstPage: !pageSeen.current, page } : null);
   };
+
+  useEffect(() => {
+    if (page !== null) pageSeen.current = true;
+  }, [page]);
 
   useLayoutEffect(() => {
     document.documentElement.toggleAttribute('data-ai-sidechat-open', isOpen);
@@ -86,7 +88,7 @@ export function AiAssistantWidget({
   }, []);
 
   const onOpenRequest = useEffectEvent(() => {
-    externalLauncherRef.current =
+    openerRef.current =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setOpen(true);
   });
@@ -97,12 +99,49 @@ export function AiAssistantWidget({
   }, []);
 
   useEffect(() => {
-    if (wasOpen.current && !isOpen && hasInteracted.current) {
-      (launcherRef.current ?? externalLauncherRef.current)?.focus();
-      externalLauncherRef.current = null;
-    }
-    wasOpen.current = isOpen;
+    if (isOpen) return;
+    if (focusOnClose.current) (launcherRef.current ?? openerRef.current)?.focus();
+    focusOnClose.current = false;
+    openerRef.current = null;
   }, [isOpen]);
+
+  return (
+    <ContextualAssistantWidget
+      api={api}
+      context={context}
+      isOpen={isOpen}
+      key={page ?? 'no-context'}
+      launcherRef={launcherRef}
+      onOpenChange={setOpen}
+      showMobileLauncher={showMobileLauncher}
+    />
+  );
+}
+
+function ContextualAssistantWidget({
+  api,
+  context,
+  isOpen,
+  launcherRef,
+  onOpenChange,
+  showMobileLauncher
+}: {
+  api: AssistantBackendApi;
+  context: AgentScreenContext | null;
+  isOpen: boolean;
+  launcherRef: RefObject<HTMLButtonElement | null>;
+  onOpenChange: (open: boolean) => void;
+  showMobileLauncher: boolean;
+}) {
+  const [draftState, setDraftState] = useState<{ draft: string; threadId: string | null }>({
+    draft: '',
+    threadId: null
+  });
+  const isDocked = useSyncExternalStore(subscribeToDockedViewport, isDockedViewport, () => false);
+  const assistant = useAssistant(context, api, { enabled: isOpen });
+  const chats = useAssistantChats(api, isOpen);
+  const openAttempted = useRef(false);
+  const [openFailed, setOpenFailed] = useState(false);
 
   const attemptOpen = () => {
     setOpenFailed(false);
@@ -158,7 +197,7 @@ export function AiAssistantWidget({
     return (
       <AssistantSidechatRail
         isResponding={assistant.isResponding}
-        onOpen={() => setOpen(true)}
+        onOpen={() => onOpenChange(true)}
         ref={launcherRef}
         showMobileLauncher={showMobileLauncher}
       />
@@ -175,7 +214,7 @@ export function AiAssistantWidget({
       contextChats={contextChats}
       draft={draft}
       isDocked={isDocked}
-      onClose={() => setOpen(false)}
+      onClose={() => onOpenChange(false)}
       onDraftChange={setDraft}
       onRetryOpen={() => void attemptOpen()}
       onStartNew={startNewChat}

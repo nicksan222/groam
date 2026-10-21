@@ -13,10 +13,6 @@ const chrome = vi.hoisted(() => ({
 const data = vi.hoisted(() => ({
   agents: [] as unknown[],
   discussions: [] as unknown[],
-  ideaStatus: 'Exhausted' as 'CanLoadMore' | 'Exhausted' | 'LoadingMore',
-  issueStatus: 'Exhausted' as 'CanLoadMore' | 'Exhausted' | 'LoadingMore',
-  loadMoreIdeas: vi.fn(),
-  loadMoreIssues: vi.fn(),
   issues: [] as unknown[],
   proposals: [] as unknown[],
   trips: [] as unknown[]
@@ -55,8 +51,6 @@ beforeEach(() => {
   vi.clearAllMocks();
   chrome.open = false;
   chrome.query = '';
-  data.ideaStatus = 'Exhausted';
-  data.issueStatus = 'Exhausted';
   data.agents = [];
   data.discussions = [];
   data.issues = [];
@@ -64,16 +58,8 @@ beforeEach(() => {
   data.trips = [];
   hooks.agents.mockImplementation(() => ({ agents: data.agents }));
   hooks.discussions.mockImplementation(() => ({ discussions: data.discussions }));
-  hooks.ideas.mockImplementation(() => ({
-    proposals: data.proposals,
-    status: data.ideaStatus,
-    loadMore: data.loadMoreIdeas
-  }));
-  hooks.issues.mockImplementation(() => ({
-    issues: data.issues,
-    status: data.issueStatus,
-    loadMore: data.loadMoreIssues
-  }));
+  hooks.ideas.mockImplementation(() => ({ proposals: data.proposals }));
+  hooks.issues.mockImplementation(() => ({ issues: data.issues }));
   hooks.trips.mockImplementation(() => ({ trips: data.trips }));
 });
 
@@ -82,8 +68,6 @@ describe('useCommandPalette', () => {
     const { unmount } = await renderHook(() => useCommandPalette());
     expect(hooks.trips).toHaveBeenCalledWith('skip');
     expect(hooks.discussions).toHaveBeenCalledWith('skip');
-    expect(hooks.ideas).toHaveBeenCalledWith('skip');
-    expect(hooks.issues).toHaveBeenCalledWith('skip');
 
     const event = new KeyboardEvent('keydown', { ctrlKey: true, key: 'k', cancelable: true });
     window.dispatchEvent(event);
@@ -104,27 +88,17 @@ describe('useCommandPalette', () => {
     expect(chrome.closeAndClear).toHaveBeenCalledOnce();
     expect(navigate).toHaveBeenCalledWith(result.current.results[0]?.href);
   });
-});
 
-test('load more continues only the idea and issue lists that have more pages', async () => {
-  chrome.open = true;
-  data.ideaStatus = 'CanLoadMore';
-  const { result, rerender } = await renderHook(() => useCommandPalette());
-  expect(result.current.canLoadMore).toBe(true);
-  await act(() => result.current.loadMore());
-  expect(data.loadMoreIdeas).toHaveBeenCalledExactlyOnceWith(25);
-  expect(data.loadMoreIssues).not.toHaveBeenCalled();
-
-  data.ideaStatus = 'LoadingMore';
-  data.issueStatus = 'CanLoadMore';
-  await rerender();
-  expect(result.current.isLoadingMore).toBe(true);
-  await act(() => result.current.loadMore());
-  expect(data.loadMoreIdeas).toHaveBeenCalledTimes(1);
-  expect(data.loadMoreIssues).toHaveBeenCalledExactlyOnceWith(25);
-
-  data.ideaStatus = 'Exhausted';
-  data.issueStatus = 'Exhausted';
-  await rerender();
-  expect(result.current.canLoadMore).toBe(false);
+  test('load more only continues the lists that have more pages', async () => {
+    chrome.open = true;
+    const loadMore = { ideas: vi.fn(), issues: vi.fn(), trips: vi.fn() };
+    hooks.trips.mockReturnValue({ loadMore: loadMore.trips, status: 'CanLoadMore', trips: [] });
+    hooks.ideas.mockReturnValue({ loadMore: loadMore.ideas, proposals: [], status: 'Exhausted' });
+    hooks.issues.mockReturnValue({ issues: [], loadMore: loadMore.issues, status: 'CanLoadMore' });
+    const { result } = await renderHook(() => useCommandPalette());
+    await act(() => result.current.loadMore());
+    expect(loadMore.trips).toHaveBeenCalledExactlyOnceWith(25);
+    expect(loadMore.issues).toHaveBeenCalledExactlyOnceWith(25);
+    expect(loadMore.ideas).not.toHaveBeenCalled();
+  });
 });

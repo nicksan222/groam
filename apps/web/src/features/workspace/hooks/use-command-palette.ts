@@ -17,12 +17,10 @@ export function useCommandPalette() {
   const [activeIndex, setActiveIndex] = useState(0);
   const navigate = useNavigate();
   const searchOpts = open ? { initialNumItems: PAGE_SIZE } : 'skip';
-  const { trips } = useTrips(
-    open ? { includeArchived: false, initialNumItems: PAGE_SIZE } : 'skip'
-  );
+  const trips = useTrips(open ? { includeArchived: false, initialNumItems: PAGE_SIZE } : 'skip');
   const ideas = useWorkspaceIdeas(searchOpts);
   const issues = useWorkspaceIssues(searchOpts);
-  const paginated = [ideas, issues];
+  const paginated = [trips, ideas, issues];
   const isLoadingMore = paginated.some((list) => list.status === 'LoadingMore');
   const { discussions } = useDiscussions(open ? undefined : 'skip');
   const { agents } = useAgentRoster();
@@ -48,7 +46,7 @@ export function useCommandPalette() {
           discussions,
           ideas: ideas.proposals,
           issues: issues.issues,
-          trips
+          trips: trips.trips
         },
         {
           agentHref: (agentId, runId) =>
@@ -62,7 +60,7 @@ export function useCommandPalette() {
             })
         }
       ),
-    [agents, discussions, ideas.proposals, issues.issues, query, trips]
+    [agents, discussions, ideas.proposals, issues.issues, query, trips.trips]
   );
 
   const go = useCallback(
@@ -104,6 +102,7 @@ export function useCommandPalette() {
     go,
     isLoadingMore,
     loadMore: () => {
+      if (isLoadingMore) return;
       for (const list of paginated) if (list.status === 'CanLoadMore') list.loadMore(PAGE_SIZE);
     },
     onInputKeyDown,
