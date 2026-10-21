@@ -47,9 +47,8 @@ configuration. Automatic retries are intentionally avoided because this send API
 has no documented idempotency key.
 
 
-Legacy `@users.invalid` accounts without the optional `emailVerificationRequired`
-marker retain password sign-in. The server marks all new accounts, rejects new
-placeholder addresses, and never accepts the marker from public signup or profile
-updates. All other hosted accounts require verification. Preserve this additive
-optional schema field during rollbacks. The next stack layer adds verified email
-changes so legacy accounts can migrate to a real inbox.
+Hosted password sign-in requires verified email ownership for both email and
+username identifiers. Better Auth owns the `emailVerified` state; signup cannot
+choose it. Addresses under `users.invalid` are rejected because they cannot
+receive verification mail. Password-reset links use both `token` and
+`auth=reset-password` to open the recovery screen, including for signed-in users.

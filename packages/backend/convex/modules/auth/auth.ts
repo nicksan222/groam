@@ -78,11 +78,6 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
     appName: 'Groam',
     baseURL: authBaseUrl,
     database: authComponent.adapter(ctx),
-    databaseHooks: {
-      user: {
-        create: { before: async (user) => ({ data: { ...user, emailVerificationRequired: true } }) }
-      }
-    },
     disabledPaths: ['/is-username-available'],
     emailAndPassword: {
       enabled: true,
@@ -129,11 +124,6 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
       convex({ authConfig }),
       emailVerificationPolicy()
     ],
-    user: {
-      additionalFields: {
-        emailVerificationRequired: { type: 'boolean', required: false, input: false }
-      }
-    },
     trustedOrigins: authTrustedOrigins
   }) satisfies BetterAuthOptions;
 

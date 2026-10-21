@@ -5,7 +5,6 @@ import { page } from 'vite-plus/test/browser';
 import App from './app';
 
 const session = vi.hoisted(() => ({ authenticated: true }));
-vi.mock('@groam/env/web-client', () => ({ env: { siteUrl: 'https://groam.example/app/' } }));
 vi.mock('convex/react', () => ({
   Authenticated: ({ children }: { children: ReactNode }) =>
     session.authenticated ? children : null,
@@ -45,19 +44,14 @@ test.each([true, false])(
   }
 );
 
-test('keeps legacy reset links working at the public app root', async () => {
-  window.history.replaceState(null, '', '/app/?token=legacy-reset-token');
+test.each([
+  '/app/trips/example/board?token=other-token',
+  '/app/?token=unmarked-token',
+  '/app/?auth=reset-password',
+  '/app/'
+])('keeps ordinary workspace URLs in the router: %s', async (path) => {
+  window.history.replaceState(null, '', path);
   await render(<App />);
-  await expect.element(page.getByText('Account recovery screen')).toBeInTheDocument();
-  await expect.element(page.getByText('Signed in workspace')).not.toBeInTheDocument();
+  await expect.element(page.getByText('Signed in workspace')).toBeInTheDocument();
+  await expect.element(page.getByText('Account recovery screen')).not.toBeInTheDocument();
 });
-
-test.each(['/app/trips/example/board?token=other-token', '/app/?auth=reset-password', '/app/'])(
-  'keeps ordinary workspace URLs in the router: %s',
-  async (path) => {
-    window.history.replaceState(null, '', path);
-    await render(<App />);
-    await expect.element(page.getByText('Signed in workspace')).toBeInTheDocument();
-    await expect.element(page.getByText('Account recovery screen')).not.toBeInTheDocument();
-  }
-);

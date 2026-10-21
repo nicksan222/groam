@@ -1,4 +1,3 @@
-import { env } from '@groam/env/web-client';
 import { Toaster } from '@groam/ui/components/sonner';
 import { Spinner } from '@groam/ui/components/spinner';
 import { Authenticated, AuthLoading, Unauthenticated } from 'convex/react';
@@ -32,11 +31,7 @@ export default function App() {
   const { changeSession, isChangingSession } = useSessionChange();
 
   const search = new URLSearchParams(window.location.search);
-  const atAppRoot =
-    window.location.pathname.replace(/\/$/u, '') ===
-    new URL(env.siteUrl).pathname.replace(/\/$/u, '');
-  const isPasswordReset =
-    Boolean(search.get('token')) && (search.get('auth') === 'reset-password' || atAppRoot);
+  const isPasswordReset = Boolean(search.get('token')) && search.get('auth') === 'reset-password';
   if (isPasswordReset) {
     return (
       <SessionChangeContext value={changeSession}>

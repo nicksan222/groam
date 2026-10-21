@@ -4,7 +4,7 @@ import { decodeJwt, jwtVerify } from 'jose';
 
 const isPlaceholder = (email: string) => email.toLowerCase().endsWith('@users.invalid');
 
-/** Only pre-rollout records can be grandfathered; public inputs never control this marker. */
+/** Reject unreachable signup addresses and secure replacement-email verification. */
 export function emailVerificationPolicy() {
   return {
     id: 'groam-email-verification-policy',
@@ -19,26 +19,6 @@ export function emailVerificationPolicy() {
                 message: 'Use an email address you can receive mail at.'
               });
             }
-          })
-        },
-        {
-          matcher: (ctx) => ctx.path === '/sign-in/email' || ctx.path === '/sign-in/username',
-          handler: createAuthMiddleware(async (ctx) => {
-            const field = ctx.path === '/sign-in/username' ? 'username' : 'email';
-            const identifier = ctx.body?.[field];
-            if (typeof identifier !== 'string') return;
-            const user = await ctx.context.adapter.findOne<{
-              email: string;
-              emailVerificationRequired?: boolean | null;
-            }>({
-              model: 'user',
-              where: [{ field, value: identifier.trim().toLowerCase() }]
-            });
-            if (!user || user.emailVerificationRequired === true || !isPlaceholder(user.email))
-              return;
-            // Every HTTP request gets its own Better Auth instance; never mutate shared options.
-            if (ctx.context.options.emailAndPassword)
-              ctx.context.options.emailAndPassword.requireEmailVerification = false;
           })
         },
         {
