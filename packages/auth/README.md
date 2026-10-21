@@ -46,10 +46,26 @@ unverified. Inspect Convex scheduled-action failures and resend after correcting
 configuration. Automatic retries are intentionally avoided because this send API
 has no documented idempotency key.
 
+### Existing accounts
 
-Legacy `@users.invalid` accounts without the optional `emailVerificationRequired`
-marker retain password sign-in. The server marks all new accounts, rejects new
-placeholder addresses, and never accepts the marker from public signup or profile
-updates. All other hosted accounts require verification. Preserve this additive
-optional schema field during rollbacks. The next stack layer adds verified email
-changes so legacy accounts can migrate to a real inbox.
+Old placeholder email addresses cannot receive verification or recovery messages.
+Settings → Profile → Account email lets signed-in users verify a real replacement
+address. The previous address remains until the new inbox is verified, including
+for placeholder addresses. Better Auth requires a fresh session for this change.
+Pre-rollout placeholder accounts have no `emailVerificationRequired` marker and retain
+password sign-in so they can migrate without an existing session or passkey. New
+accounts receive the readonly marker from the server's create hook; public signup
+and email-change requests cannot choose it. New `@users.invalid` addresses are
+rejected. All other hosted accounts still require verification. Once a legacy
+account verifies a real address, its normal verified-email flow applies.
+
+Change-email links open the frontend and verify through its authenticated client.
+The signed token must match a fresh session for the original account; an anonymous
+recipient or a different account cannot consume the link or gain a session.
+Existing registered passkeys continue to authenticate on their original
+relying-party domain; changing that domain requires registering new passkeys.
+
+The rollout marker is an optional additive schema field and requires no backfill.
+Older code can read existing records, but rolling the deployment back also removes
+the new signup verification policy; prefer a forward fix. Retain the field during
+any rollback, and never clear a newly created user's marker to simulate legacy data.
