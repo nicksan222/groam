@@ -10,9 +10,32 @@ import { TripDetailView } from './trip-detail-view';
 const state = vi.hoisted(() => ({
   agentContext: vi.fn(),
   exists: true as boolean | undefined,
+  checkout: vi.fn(),
+  paymentsEnabled: false,
+  sourceArchived: false,
+  sheetProps: vi.fn(),
+  paymentsLoading: false,
+  paymentTrips: vi.fn(),
+  paid: false,
+  free: false,
+  versions: vi.fn(),
+  issues: vi.fn(),
   proposals: undefined as unknown[] | undefined,
   start: vi.fn(),
   trip: undefined as TripDetail | undefined
+}));
+
+vi.mock('@/features/trips/hooks/use-trip-payments', () => ({
+  useTripPayments: (tripId: unknown) => {
+    state.paymentTrips(tripId);
+    return {
+      archived: state.sourceArchived,
+      checkout: state.checkout,
+      enabled: state.paymentsEnabled,
+      isLoading: state.paymentsLoading,
+      travelers: [{ userId: 'user-alex', paid: state.paid, free: state.free }]
+    };
+  }
 }));
 
 vi.mock('@/features/research/hooks/use-trip-researches', () => ({
@@ -37,7 +60,10 @@ vi.mock('@/features/trips/hooks/use-trips', () => ({
 
 vi.mock('@/features/trips/hooks/use-trip-versions', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/features/trips/hooks/use-trip-versions')>()),
-  useTripVersions: () => ({ createVersion: vi.fn(), proposals: state.proposals })
+  useTripVersions: (...args: unknown[]) => {
+    state.versions(...args);
+    return { createVersion: vi.fn(), proposals: state.proposals };
+  }
 }));
 
 vi.mock('@/features/trips/hooks/use-start-idea-flow', () => ({
@@ -57,15 +83,25 @@ vi.mock('@/features/trips/hooks/use-start-idea-flow', () => ({
 }));
 
 vi.mock('@/features/trips/hooks/use-trip-travelers', () => ({
-  useTripTravelers: () => ({ goingCount: 3, isLoading: false, travelers: [] })
+  useTripTravelers: () => ({
+    goingCount: 3,
+    isLoading: false,
+    travelers: [{ userId: 'user-alex', name: 'Alex' }]
+  })
 }));
 
 vi.mock('@/features/trips/trip-travelers/trip-travelers-sheet', () => ({
-  TripTravelersSheet: ({ open }: { open: boolean }) => (open ? <div>Roster open</div> : null)
+  TripTravelersSheet: (props: { open: boolean; archived: boolean; tripId: string }) => {
+    state.sheetProps(props);
+    return props.open ? <div>Roster open</div> : null;
+  }
 }));
 
 vi.mock('@/features/trips/hooks/use-trip-issues', () => ({
-  useTripIssues: () => ({ issues: [] })
+  useTripIssues: (...args: unknown[]) => {
+    state.issues(...args);
+    return { issues: [] };
+  }
 }));
 
 vi.mock('@/features/trips/hooks/use-trip-agent-context', () => ({
@@ -170,6 +206,16 @@ function sharedTrip(overrides: Partial<TripDetail> = {}) {
 }
 
 beforeEach(() => {
+  state.paymentsEnabled = false;
+  state.sourceArchived = false;
+  state.sheetProps.mockClear();
+  state.paymentsLoading = false;
+  state.paymentTrips.mockClear();
+  state.paid = false;
+  state.free = false;
+  state.checkout = vi.fn().mockResolvedValue({ skipped: true, url: null });
+  state.versions.mockClear();
+  state.issues.mockClear();
   state.exists = true;
   state.proposals = [
     {
@@ -185,7 +231,107 @@ beforeEach(() => {
   state.start.mockClear();
 });
 
+describe('TripDetailView payment access', () => {
+  test('waits for payment status before subscribing to participating content', async () => {
+    state.paymentsLoading = true;
+    await renderTrip('board', sharedTrip());
+    await expect.element(page.getByRole('status', { name: 'Loading trip…' })).toBeVisible();
+    expect(state.versions).not.toHaveBeenCalled();
+    expect(state.issues).not.toHaveBeenCalled();
+    expect(state.agentContext).not.toHaveBeenCalled();
+  });
+
+  test.each(['board', 'issues', 'ideas', 'research', 'polls', 'packing'] as const)(
+    'shows payment access without mounting protected %s content',
+    async (section) => {
+      state.paymentsEnabled = true;
+      await renderTrip(section, sharedTrip());
+      await expect.element(page.getByRole('heading', { name: 'Join this trip' })).toBeVisible();
+      await expect
+        .element(page.getByRole('navigation', { name: 'Trip sections' }))
+        .not.toBeInTheDocument();
+      await expect
+        .element(page.getByRole('button', { name: 'Pay €1 for your trip access' }))
+        .toBeEnabled();
+      expect(state.versions).not.toHaveBeenCalled();
+      expect(state.issues).not.toHaveBeenCalled();
+      expect(state.agentContext).toHaveBeenCalledWith(undefined, 'board');
+    }
+  );
+
+  test('opens travelers so an organizer can cover payment', async () => {
+    state.paymentsEnabled = true;
+    await renderTrip('board', sharedTrip());
+    await page.getByRole('button', { name: 'Travelers', exact: true }).click();
+    await expect.element(page.getByText('Roster open')).toBeVisible();
+  });
+
+  test('opens self checkout and unlocks participating content only after server confirmation', async () => {
+    state.paymentsEnabled = true;
+    const trip = sharedTrip();
+    const view = await renderTrip('board', trip);
+    await page.getByRole('button', { name: 'Pay €1 for your trip access' }).click();
+    expect(state.checkout).toHaveBeenCalledWith('user-alex');
+    await expect.element(page.getByText('Board section')).not.toBeInTheDocument();
+    state.paid = true;
+    await view.rerender(
+      <TripDetailView addDestinationOpen={false} section="board" tripId={trip.id} />
+    );
+    await expect.element(page.getByText('Board section')).toBeInTheDocument();
+  });
+
+  test('keeps free creators and payment-disabled trips fully accessible', async () => {
+    state.paymentsEnabled = true;
+    state.free = true;
+    await renderTrip('board', sharedTrip());
+    await expect.element(page.getByText('Board section')).toBeInTheDocument();
+    await expect
+      .element(page.getByRole('heading', { name: 'Join this trip' }))
+      .not.toBeInTheDocument();
+  });
+});
+
 describe('TripDetailView working copies', () => {
+  test('locks working-copy checkout and roster controls when only the source trip is archived', async () => {
+    state.paymentsEnabled = true;
+    state.sourceArchived = true;
+    const draft = tripDetail({ archivedAt: null });
+    await renderTrip('overview', draft);
+    await expect.element(page.getByRole('heading', { name: 'Join this trip' })).toBeVisible();
+    await expect
+      .element(page.getByRole('button', { name: 'Pay €1 for your trip access' }))
+      .toBeDisabled();
+    await expect
+      .element(page.getByText('Payments are locked while this trip is archived.'))
+      .toBeVisible();
+    await page.getByRole('button', { name: 'Travelers', exact: true }).click();
+    expect(state.sheetProps).toHaveBeenCalledWith(
+      expect.objectContaining({
+        archived: true,
+        open: true,
+        tripId: 'source-1'
+      })
+    );
+    expect(state.checkout).not.toHaveBeenCalled();
+  });
+  test('requires source-trip payment before mounting a directly linked working copy', async () => {
+    state.paymentsEnabled = true;
+    await renderTrip('overview');
+    await expect.element(page.getByRole('heading', { name: 'Join this trip' })).toBeVisible();
+    expect(state.paymentTrips).toHaveBeenCalledWith('source-1');
+    expect(state.paymentTrips).not.toHaveBeenCalledWith('working-1');
+    expect(state.versions).not.toHaveBeenCalled();
+    expect(state.issues).not.toHaveBeenCalled();
+    await expect.element(page.getByText(/navigate:/u)).not.toBeInTheDocument();
+  });
+
+  test('waits for source-trip payment status before redirecting a working copy', async () => {
+    state.paymentsLoading = true;
+    await renderTrip('overview');
+    await expect.element(page.getByRole('status', { name: 'Loading trip…' })).toBeVisible();
+    expect(state.paymentTrips).toHaveBeenCalledWith('source-1');
+    expect(state.versions).not.toHaveBeenCalled();
+  });
   test.each([
     ['overview', 'overview'],
     ['itinerary', 'itinerary'],
