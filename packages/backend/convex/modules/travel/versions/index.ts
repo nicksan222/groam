@@ -582,28 +582,6 @@ async function listWorkspace(ctx: QueryCtx, paginationOpts: PaginationOptions) {
   return { ...result, page: page.filter((idea) => idea !== null) };
 }
 
-async function listViewerOpen(ctx: QueryCtx) {
-  const workspace = await requireWorkspace(ctx);
-  const found = await Promise.all(
-    (['conflicted', 'draft', 'in_review'] as const).map((status) =>
-      ctx.db
-        .query('tripProposals')
-        .withIndex('by_organizationId_and_author_userId_and_status', (query) =>
-          query
-            .eq('organizationId', workspace.organizationId)
-            .eq('author.userId', workspace.userId)
-            .eq('status', status)
-        )
-        .take(MAX_PROPOSALS)
-    )
-  );
-  const proposals = found.flat().sort((left, right) => right.updatedAt - left.updatedAt);
-  const visible = await Promise.all(
-    proposals.map((proposal) => presentWorkspaceIdea(ctx, proposal, workspace))
-  );
-  return visible.filter((idea) => idea !== null);
-}
-
 async function listViewerOpenPage(ctx: QueryCtx, paginationOpts: PaginationOptions) {
   const workspace = await requireWorkspace(ctx);
   const result = await ctx.db
@@ -1969,7 +1947,6 @@ export class TripVersions {
   static get = get;
   static list = list;
   static listFeedback = listFeedback;
-  static listViewerOpen = listViewerOpen;
   static listViewerOpenPage = listViewerOpenPage;
   static listWorkspace = listWorkspace;
   static markConflict = markConflict;

@@ -62,7 +62,12 @@ test('workspace and personal idea lists filter unpaid sources while preserving a
   const { member, owner, accessible, privateIdea, formerDraft } = fixture;
   const list = () =>
     member.client.query(api.routes.trips.versions.workspace.list.run, paginationArgs);
-  const pending = () => member.client.query(api.routes.trips.versions.workspace.pending.run, {});
+  const pending = () =>
+    member.client
+      .query(api.routes.trips.versions.workspace.pending.page.run, {
+        paginationOpts: { cursor: null, numItems: 50 }
+      })
+      .then((result) => result.page);
   expect((await list()).page.map((idea) => idea.id)).toEqual([accessible.proposalId]);
   expect(await pending()).toEqual([]);
   expect(

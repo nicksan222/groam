@@ -5,21 +5,8 @@ import type { QueryCtx } from '#convex-generated/server';
 import type { Workspace } from '#convex/modules/auth/workspace';
 import { findVisibleTrip } from '#convex/modules/travel/trips/visibility';
 
-const WORKSPACE_LIMIT = 8;
 /** Rows scanned before filtering out removed researches and hidden trips. */
 const WORKSPACE_SCAN = 40;
-
-/** Recent research across every trip the viewer can see, newest activity first. */
-export async function listForWorkspace(ctx: QueryCtx, workspace: Workspace) {
-  const rows = await ctx.db
-    .query('discussions')
-    .withIndex('by_organizationId_and_kind_and_updatedAt', (query) =>
-      query.eq('organizationId', workspace.organizationId).eq('kind', 'research')
-    )
-    .order('desc')
-    .take(WORKSPACE_SCAN);
-  return (await presentWorkspaceRows(ctx, workspace, rows)).slice(0, WORKSPACE_LIMIT);
-}
 
 /** Candidate pagination preserves progress through hidden and deleting researches. */
 export async function pageForWorkspace(

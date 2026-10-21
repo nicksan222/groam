@@ -223,7 +223,9 @@ Media.save(ctx, ...):
   insert media { contentType, createdBy: tokenIdentifier, name (<= 120), organizationId, size, storageId }
 
 Media.delete(): refuse if group logo, pinned to a trip, or attached in a chat; then delete bytes and row
-Media.list(ctx, limit): 1..MEDIA_LIST_MAX (50), media.by_organizationId, desc
+Media.page(ctx, paginationOpts): page size 1..50, media.by_organizationId, desc
+  // scan at most 20 raw candidates, filter authorized media, retain continuation
+routes/media/discover: continue long source histories with bounded, revalidated origin proofs
 ```
 
 Source: [library/commit.ts](../../../packages/backend/convex/modules/media/library/commit.ts#L18),

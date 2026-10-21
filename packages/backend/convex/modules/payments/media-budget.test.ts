@@ -38,14 +38,6 @@ test('dense media origin windows stay bounded and preserve all cursor rows', asy
   expect(next.result.page).toEqual([
     expect.objectContaining({ id: older.mediaId, url: expect.any(String) })
   ]);
-  const compatibility = await member.client.run((ctx) =>
-    ctx.runQuery(
-      api.routes.media.list.run,
-      { limit: 50 },
-      { transactionLimits: { databaseQueries: 4096 } }
-    )
-  );
-  expect(compatibility).toEqual([]);
   await confirmFixtureSeats(owner, tripId, [member.userId]);
   const paidFirst = await page(null);
   const paidNext = await page(paidFirst.result.continueCursor);

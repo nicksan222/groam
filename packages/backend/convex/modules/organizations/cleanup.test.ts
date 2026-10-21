@@ -33,7 +33,11 @@ test('organization cleanup deletes leftover media without touching other groups'
     organizationId
   });
 
-  await expect(owner.client.query(api.routes.media.list.run, { limit: 50 })).resolves.toEqual([]);
+  await expect(
+    owner.client
+      .query(api.routes.media.page.run, { paginationOpts: { cursor: null, numItems: 50 } })
+      .then((result) => result.page)
+  ).resolves.toEqual([]);
   await expect(owner.client.run((ctx) => ctx.storage.get(own.storageId))).resolves.toBeNull();
   await expect(
     owner.client.run((ctx) => ctx.db.get('media', foreign.mediaId))
@@ -63,12 +67,18 @@ test('organization cleanup removes media in bounded batches', async () => {
   await owner.client.mutation(internal.modules.organizations.cleanup.removeOrganizationData, {
     organizationId
   });
-  await expect(owner.client.query(api.routes.media.list.run, { limit: 50 })).resolves.toHaveLength(
-    1
-  );
+  await expect(
+    owner.client
+      .query(api.routes.media.page.run, { paginationOpts: { cursor: null, numItems: 50 } })
+      .then((result) => result.page)
+  ).resolves.toHaveLength(1);
 
   await owner.client.mutation(internal.modules.organizations.cleanup.removeOrganizationData, {
     organizationId
   });
-  await expect(owner.client.query(api.routes.media.list.run, { limit: 50 })).resolves.toEqual([]);
+  await expect(
+    owner.client
+      .query(api.routes.media.page.run, { paginationOpts: { cursor: null, numItems: 50 } })
+      .then((result) => result.page)
+  ).resolves.toEqual([]);
 });

@@ -68,10 +68,18 @@ test('unpaid media library omits protected metadata and prevents guessed-ID reus
   const trip = await fixture();
   const { member, protectedFile, ordinary } = trip;
   expect(
-    (await member.client.query(api.routes.media.list.run, { limit: 50 })).map((file) => file.id)
+    (
+      await member.client
+        .query(api.routes.media.page.run, { paginationOpts: { cursor: null, numItems: 50 } })
+        .then((result) => result.page)
+    ).map((file) => file.id)
   ).toEqual([ordinary.mediaId]);
   expect(
-    (await trip.owner.client.query(api.routes.media.list.run, { limit: 50 })).map((file) => file.id)
+    (
+      await trip.owner.client
+        .query(api.routes.media.page.run, { paginationOpts: { cursor: null, numItems: 50 } })
+        .then((result) => result.page)
+    ).map((file) => file.id)
   ).toContain(protectedFile.mediaId);
   const chat = await member.client.mutation(api.routes.discussions.create.run, {
     clientRequestId: crypto.randomUUID(),
@@ -103,7 +111,11 @@ test('unpaid media library omits protected metadata and prevents guessed-ID reus
     })
   ).toEqual({ ok: false, error: 'The uploaded file is not available' });
   const outsider = await createOutsiderClient(trip.owner.test);
-  expect(await outsider.client.query(api.routes.media.list.run, { limit: 50 })).toEqual([]);
+  expect(
+    await outsider.client
+      .query(api.routes.media.page.run, { paginationOpts: { cursor: null, numItems: 50 } })
+      .then((result) => result.page)
+  ).toEqual([]);
   await expect(
     outsider.client.mutation(api.routes.media.logo.set.run, { mediaId: protectedFile.mediaId })
   ).rejects.toThrow('Media not found');
@@ -113,7 +125,9 @@ test.each(['paid', 'disabled'])(
   '%s readers retain protected media URLs and ordinary library media',
   async (access) => {
     const { member, protectedFile, ordinary } = await fixture(access);
-    const media = await member.client.query(api.routes.media.list.run, { limit: 50 });
+    const media = await member.client
+      .query(api.routes.media.page.run, { paginationOpts: { cursor: null, numItems: 50 } })
+      .then((result) => result.page);
     expect(new Set(media.map((file) => file.id))).toEqual(
       new Set([ordinary.mediaId, protectedFile.mediaId])
     );
@@ -148,12 +162,18 @@ test('working-copy attachments inherit the canonical source entitlement', async 
     mediaIds: [file.mediaId]
   });
   expect(
-    (await trip.member.client.query(api.routes.media.list.run, { limit: 50 })).map(
-      (item) => item.id
-    )
+    (
+      await trip.member.client
+        .query(api.routes.media.page.run, { paginationOpts: { cursor: null, numItems: 50 } })
+        .then((result) => result.page)
+    ).map((item) => item.id)
   ).not.toContain(file.mediaId);
   expect(
-    (await trip.owner.client.query(api.routes.media.list.run, { limit: 50 })).map((item) => item.id)
+    (
+      await trip.owner.client
+        .query(api.routes.media.page.run, { paginationOpts: { cursor: null, numItems: 50 } })
+        .then((result) => result.page)
+    ).map((item) => item.id)
   ).toContain(file.mediaId);
 });
 
@@ -173,9 +193,11 @@ test('discussion-only trip attachments cannot bypass the library gate or be reli
     mediaIds: [file.mediaId]
   });
   expect(
-    (await trip.member.client.query(api.routes.media.list.run, { limit: 50 })).map(
-      (item) => item.id
-    )
+    (
+      await trip.member.client
+        .query(api.routes.media.page.run, { paginationOpts: { cursor: null, numItems: 50 } })
+        .then((result) => result.page)
+    ).map((item) => item.id)
   ).not.toContain(file.mediaId);
   const free = await trip.member.client.mutation(api.routes.discussions.create.run, {
     clientRequestId: crypto.randomUUID(),
@@ -215,9 +237,11 @@ test('frequently reused ordinary chat files remain available beyond the bounded 
   };
   await postAgain(25);
   expect(
-    (await trip.member.client.query(api.routes.media.list.run, { limit: 50 })).find(
-      (file) => file.id === trip.ordinary.mediaId
-    )?.url
+    (
+      await trip.member.client
+        .query(api.routes.media.page.run, { paginationOpts: { cursor: null, numItems: 50 } })
+        .then((result) => result.page)
+    ).find((file) => file.id === trip.ordinary.mediaId)?.url
   ).toEqual(expect.any(String));
 });
 
@@ -225,7 +249,11 @@ test('a paid reader may deliberately publish a file to an ordinary chat for the 
   const trip = await fixture('paid');
   const unpaid = await trip.addUser('Unpaid reader');
   expect(
-    (await unpaid.client.query(api.routes.media.list.run, { limit: 50 })).map((file) => file.id)
+    (
+      await unpaid.client
+        .query(api.routes.media.page.run, { paginationOpts: { cursor: null, numItems: 50 } })
+        .then((result) => result.page)
+    ).map((file) => file.id)
   ).not.toContain(trip.protectedFile.mediaId);
   const discussionId = await trip.member.client.mutation(api.routes.discussions.create.run, {
     clientRequestId: crypto.randomUUID(),
@@ -239,9 +267,11 @@ test('a paid reader may deliberately publish a file to an ordinary chat for the 
     mediaIds: [trip.protectedFile.mediaId]
   });
   expect(
-    (await unpaid.client.query(api.routes.media.list.run, { limit: 50 })).find(
-      (file) => file.id === trip.protectedFile.mediaId
-    )?.url
+    (
+      await unpaid.client
+        .query(api.routes.media.page.run, { paginationOpts: { cursor: null, numItems: 50 } })
+        .then((result) => result.page)
+    ).find((file) => file.id === trip.protectedFile.mediaId)?.url
   ).toEqual(expect.any(String));
 });
 
@@ -272,7 +302,11 @@ test('media pages retain a cursor through twenty protected candidates to older a
     await attachBatch(index + 5);
   };
   await attachBatch(0);
-  expect(await member.client.query(api.routes.media.list.run, { limit: 50 })).toEqual([]);
+  expect(
+    await member.client
+      .query(api.routes.media.page.run, { paginationOpts: { cursor: null, numItems: 50 } })
+      .then((result) => result.page)
+  ).toEqual([]);
   const first = await member.client.query(api.routes.media.page.run, {
     paginationOpts: { numItems: 50, cursor: null }
   });

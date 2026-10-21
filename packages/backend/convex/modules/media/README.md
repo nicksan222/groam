@@ -47,8 +47,7 @@ payment changes should refresh previously visited results. Every returned file
 and reuse proof is checked against current permissions again.
 
 `media.page` retains genuine native pagination, requested sizes 1–50, and a
-20-candidate raw page cap. `media.list` is a compatibility reader for the same
-bounded recent window, not the entire library. Both readers throw
+20-candidate raw page cap. It throws
 `MEDIA_ACCESS_UNRESOLVED` when a file has more origins than their fast scan can
 resolve; continue with `media.discover` instead of interpreting that state as a
 denial. Bulk errors contain no file metadata. No current saved-library picker
