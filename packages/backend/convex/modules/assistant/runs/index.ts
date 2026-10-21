@@ -170,12 +170,12 @@ async function previewReference(ctx: RunReader, runId: Id<'agentRuns'>, workspac
   const run = await ctx.db.get('agentRuns', runId);
   if (!run || !(await canViewRun(ctx, run, workspace, true))) return null;
   const tripId = await linkedRunTrip(ctx, run);
-  if (!tripId) return { id: run._id, shortId: run.shortId };
+  if (!tripId) return { id: run._id, shortId: run.shortId, agentId: run.agentId };
   const trip = await findVisibleTrip(ctx, tripId, workspace, { allowUnpaid: true });
   if (!trip) return null;
   const sourceId = trip.proposal?.sourceTripId ?? trip._id;
   if (!(await findVisibleTrip(ctx, sourceId, workspace, { allowUnpaid: true }))) return null;
-  return { id: run._id, shortId: run.shortId, tripId: sourceId };
+  return { id: run._id, shortId: run.shortId, agentId: run.agentId, tripId: sourceId };
 }
 
 /** Drops runs the viewer may not see; one bounded index lookup per discussion run. */

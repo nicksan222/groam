@@ -60,7 +60,12 @@ test.each(['unpaid', 'paid', 'disabled'])(
       });
     }
     const reference = await member.client.query(resolve, { table: 'agentRuns', reference: runId });
-    expect(reference).toEqual({ id: runId, shortId: expect.any(String), tripId: fixture.tripId });
+    expect(reference).toEqual({
+      id: runId,
+      shortId: expect.any(String),
+      agentId: 'issue',
+      tripId: fixture.tripId
+    });
     expect(
       await member.client.query(resolve, { table: 'agentRuns', reference: reference!.shortId })
     ).toEqual(reference);
@@ -96,6 +101,7 @@ test('discussion-run preview preserves member audiences despite allowing unpaid 
   ).page[0]!;
   expect(await member.client.query(resolve, { table: 'agentRuns', reference: run.id })).toEqual({
     id: run.id,
+    agentId: 'groam',
     shortId: run.shortId,
     tripId: fixture.tripId
   });
@@ -135,7 +141,11 @@ test('private standalone research and assistant run references remain creator-on
       table: 'agentRuns',
       reference: runId
     });
-    expect(reference).toMatchObject({ id: runId, shortId: expect.any(String) });
+    expect(reference).toMatchObject({
+      id: runId,
+      shortId: expect.any(String),
+      agentId: runId === research ? 'researcher' : 'groam'
+    });
     expect(await member.client.query(resolve, { table: 'agentRuns', reference: runId })).toBeNull();
     await expect(member.client.query(api.routes.agents.runs.get.run, { runId })).rejects.toThrow(
       'Agent run not found'
@@ -169,7 +179,12 @@ test('a working-copy run preview points at its canonical shared trip', async () 
   });
   expect(
     await fixture.users[0]!.client.query(resolve, { table: 'agentRuns', reference: runId })
-  ).toEqual({ id: runId, shortId: expect.any(String), tripId: fixture.tripId });
+  ).toEqual({
+    id: runId,
+    shortId: expect.any(String),
+    agentId: 'researcher',
+    tripId: fixture.tripId
+  });
   await fixture.owner.client.mutation(api.routes.discussions.research.remove.run, { discussionId });
   expect(
     await fixture.users[0]!.client.query(resolve, { table: 'agentRuns', reference: runId })

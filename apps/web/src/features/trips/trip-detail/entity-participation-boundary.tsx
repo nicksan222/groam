@@ -7,6 +7,7 @@ import { TripParticipationBoundary } from './trip-participation-boundary';
 /** Resolve routing metadata before mounting any protected entity content hooks. */
 export function EntityParticipationBoundary({
   children,
+  expectedAgentId,
   expectedTripId,
   expectedKind,
   loadingLabel,
@@ -15,6 +16,7 @@ export function EntityParticipationBoundary({
   table
 }: {
   children: ReactNode;
+  expectedAgentId?: string;
   expectedTripId?: Id<'trips'>;
   expectedKind?: 'research';
   loadingLabel: string;
@@ -25,12 +27,14 @@ export function EntityParticipationBoundary({
   const resolved = useEntityTripReference(table, reference);
   if (resolved === undefined) return <PageLoading label={loadingLabel} />;
   if (!resolved) return missing;
-  if (expectedKind && (!('kind' in resolved) || resolved.kind !== expectedKind)) return missing;
-  if (expectedTripId && (!('tripId' in resolved) || resolved.tripId !== expectedTripId))
+  const tripId = 'tripId' in resolved ? resolved.tripId : undefined;
+  if (
+    expectedAgentId !== undefined &&
+    (!('agentId' in resolved) || resolved.agentId !== expectedAgentId)
+  )
     return missing;
-  if (!('tripId' in resolved) || !resolved.tripId)
-    return table === 'discussions' || table === 'agentRuns' ? children : missing;
-  return (
-    <TripParticipationBoundary tripId={resolved.tripId}>{() => children}</TripParticipationBoundary>
-  );
+  if (expectedKind && (!('kind' in resolved) || resolved.kind !== expectedKind)) return missing;
+  if (expectedTripId && tripId !== expectedTripId) return missing;
+  if (!tripId) return table === 'discussions' || table === 'agentRuns' ? children : missing;
+  return <TripParticipationBoundary tripId={tripId}>{() => children}</TripParticipationBoundary>;
 }

@@ -13,6 +13,8 @@ export const run = workspaceQuery({
   returns: v.union(
     v.object({
       id: v.string(),
+      /** Agent runs only: validate the agent/run URL pair before offering payment. */
+      agentId: v.optional(v.string()),
       /** Discussions only: lets the web app route a research to its trip page. */
       kind: v.optional(v.union(v.literal('group'), v.literal('assistant'), v.literal('research'))),
       shortId: v.string(),
