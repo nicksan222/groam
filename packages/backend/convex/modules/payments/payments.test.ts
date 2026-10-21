@@ -29,11 +29,22 @@ test('missing or blank Stripe key skips payment and keeps existing RSVP flow', a
   expect(await member.client.action(checkout, { tripId })).toEqual({ skipped: true, url: null });
 });
 
-test('enabling Stripe keeps legacy trips free', async () => {
+test('enabling Stripe applies payment requirements to trips created without a key', async () => {
+  vi.stubEnv('STRIPE_SECRET_KEY', '');
   const { owner, tripId, users } = await setupTrip(1);
+  const member = users[0]!;
   configureStripe();
-  expect((await owner.client.query(paymentStatus, { tripId })).enabled).toBe(false);
-  expect(await users[0]!.client.action(checkout, { tripId })).toEqual({ skipped: true, url: null });
+  const status = await owner.client.query(paymentStatus, { tripId });
+  expect(status.enabled).toBe(true);
+  expect(status.travelers.find((traveler) => traveler.userId === member.userId)?.free).toBe(false);
+  expect(status.travelers.find((traveler) => traveler.userId === owner.userId)?.free).toBe(true);
+  await expect(member.client.mutation(rsvp, { tripId, status: 'going' })).rejects.toThrow('Pay €1');
+  await expect(
+    member.client.mutation(api.routes.trips.versions.create.run, { tripId })
+  ).rejects.toThrow('Trip not found');
+  vi.stubEnv('STRIPE_SECRET_KEY', '');
+  expect(await member.client.action(checkout, { tripId })).toEqual({ skipped: true, url: null });
+  await member.client.mutation(rsvp, { tripId, status: 'going' });
 });
 
 test('billable trips exempt creator and refuse unpaid RSVP going', async () => {

@@ -5,16 +5,11 @@ import { hasOrganizationMembership } from '#convex/modules/auth/workspace';
 import { TripTravelers } from '#convex/modules/travel/travelers/index';
 import { isTripAdmin, loadSharedTripContext } from '#convex/modules/travel/trips/ctx';
 import { hasCredentialRejectionProof } from './credentials';
-import { paymentFor, paymentsEnabled, requiresTripPayment } from './index';
+import { paymentFor, paymentsReady, requiresTripPayment } from './index';
 import { attachDeletedSession, detachPayment } from './reconciliation';
 
 function expiredUnsent(row: Doc<'tripPayments'>): boolean {
-  return (
-    row.requestProtocol === 'persist-before-io-v1' &&
-    !row.checkoutBody &&
-    !row.sessionId &&
-    row.expiresAt <= Math.floor(Date.now() / 1000)
-  );
+  return !row.checkoutBody && !row.sessionId && row.expiresAt <= Math.floor(Date.now() / 1000);
 }
 
 /** A transaction reserves the traveler for one payer; retries reuse Stripe's idempotency key. */
@@ -43,12 +38,12 @@ export const prepare = internalMutation({
     if (!(await hasOrganizationMembership(ctx, loaded.trip.organizationId, targetId)))
       throw new ConvexError('Traveler not found');
     if (!requiresTripPayment(loaded.trip, targetId)) return null;
-    if (!envReady()) throw new ConvexError('Payments are not fully configured');
+    if (!paymentsReady()) throw new ConvexError('Payments are not fully configured');
     if (loaded.trip.archive || loaded.trip.proposal)
       throw new ConvexError('This trip cannot accept payments');
     const existing = await paymentFor(ctx, loaded.trip._id, targetId);
     if (existing?.paid) return null;
-    // Only protocol-marked, never-sent expired attempts can rotate without provider proof.
+    // Only never-sent expired attempts can rotate without provider proof.
     // recordRequest's attempt CAS prevents a stale action from sending the replaced attempt.
     if (
       existing &&
@@ -66,7 +61,6 @@ export const prepare = internalMutation({
       };
     }
     const fields = {
-      requestProtocol: 'persist-before-io-v1' as const,
       attempt: crypto.randomUUID(),
       expiresAt: Math.floor(Date.now() / 1000) + 3600,
       paid: false,
@@ -96,18 +90,13 @@ export const prepare = internalMutation({
   }
 });
 
-import { env } from '#convex-generated/server';
-function envReady() {
-  return paymentsEnabled() && Boolean(env.STRIPE_WEBHOOK_SECRET?.trim());
-}
-
 export const recordRequest = internalMutation({
   args: {
     id: v.id('tripPayments'),
     attempt: v.string(),
     body: v.string(),
     keyHash: v.string(),
-    requestToken: v.optional(v.string())
+    requestToken: v.string()
   },
   returns: v.union(v.string(), v.null()),
   handler: async (ctx, { id, attempt, body, keyHash, requestToken }) => {
@@ -126,7 +115,7 @@ export const recordRequest = internalMutation({
     await ctx.db.patch(id, {
       checkoutBody: body,
       providerKeyHash: keyHash,
-      firstRequestToken: row.requestProtocol === 'persist-before-io-v1' ? requestToken : undefined,
+      firstRequestToken: requestToken,
       creationRetried: false,
       credentialRejection: undefined
     });
@@ -143,7 +132,6 @@ export const recordCredentialRejection = internalMutation({
     if (
       !row ||
       row.attempt !== attempt ||
-      row.requestProtocol !== 'persist-before-io-v1' ||
       row.firstRequestToken !== requestToken ||
       row.creationRetried ||
       row.sessionId ||

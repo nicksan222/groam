@@ -1,7 +1,7 @@
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api } from '#convex-generated/api';
 import { setupBillableTrip } from '#testing/payments';
-import { setupTrip, openTripDraft } from '#testing/trips';
+import { openTripDraft } from '#testing/trips';
 
 import { changedTripDetails } from '#testing/versions';
 
@@ -14,8 +14,8 @@ function enablePayments() {
   vi.stubEnv('STRIPE_SECRET_KEY', 'sk_test_agents');
   vi.stubEnv('STRIPE_WEBHOOK_SECRET', 'whsec_agents');
 }
-async function protectedRuns(billable = true) {
-  const fixture = await (billable ? setupBillableTrip : setupTrip)(1);
+async function protectedRuns() {
+  const fixture = await setupBillableTrip(1);
   const issueId = await fixture.owner.client.mutation(api.routes.trips.issues.create.run, {
     tripId: fixture.tripId,
     title: 'Protected issue title',
@@ -97,15 +97,13 @@ test('unpaid members cannot read, control, or review protected agent runs throug
   ).rejects.toThrow('Idea trip not found');
 });
 
-test.each(['paid', 'disabled', 'legacy'])(
+test.each(['paid', 'disabled'])(
   '%s access keeps issue and idea agent runs readable',
   async (access) => {
-    if (access === 'legacy') vi.stubEnv('STRIPE_SECRET_KEY', '');
-    else enablePayments();
+    enablePayments();
     const { owner, member, tripId, issueId, issueRunId, reviewRunId, proposalId } =
-      await protectedRuns(access !== 'legacy');
+      await protectedRuns();
     if (access === 'disabled') vi.stubEnv('STRIPE_SECRET_KEY', '');
-    if (access === 'legacy') enablePayments();
     if (access === 'paid') {
       vi.stubGlobal(
         'fetch',

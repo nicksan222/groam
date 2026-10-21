@@ -1,6 +1,6 @@
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
-import { setupBillableWritableTrip } from '#testing/payments';
+import { confirmFixtureSeats, setupBillableWritableTrip } from '#testing/payments';
 import { openTripDraft, tripInput, tripLocationInput } from '#testing/trips';
 
 afterEach(() => vi.unstubAllEnvs());
@@ -73,8 +73,8 @@ test('nearest search fills its limit past inaccessible locations', async () => {
     input: { currency: 'EUR', name: 'Hidden nearest', destination: tripLocationInput(point) }
   });
   vi.stubEnv('STRIPE_SECRET_KEY', '');
-  const legacyTrip = await owner.client.action(api.routes.trips.create.run, { input: tripInput() });
-  const draft = await openTripDraft(owner, legacyTrip);
+  const paidTrip = await owner.client.action(api.routes.trips.create.run, { input: tripInput() });
+  const draft = await openTripDraft(owner, paidTrip);
   await owner.client.mutation(api.routes.trips.update.run, {
     tripId: draft.workingTripId,
     input: {
@@ -83,6 +83,7 @@ test('nearest search fills its limit past inaccessible locations', async () => {
       destination: tripLocationInput({ latitude: 38.73, longitude: -9.14 })
     }
   });
+  await confirmFixtureSeats(owner, paidTrip, [users[0]!.userId]);
   vi.stubEnv('STRIPE_SECRET_KEY', 'sk_test_locations');
   const results = await users[0]!.client.query(api.routes.trips.locations.nearest.run, {
     limit: 1,

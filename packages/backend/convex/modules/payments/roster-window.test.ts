@@ -6,7 +6,7 @@ import {
   seedRosterAuthorizationWindows,
   seedRosterIssueSources
 } from '#testing/agent-preview';
-import { confirmFixtureSeats, markTripBillable, setupBillableTrip } from '#testing/payments';
+import { confirmFixtureSeats, inviteFixtureTravelers, setupBillableTrip } from '#testing/payments';
 import { tripInput } from '#testing/trips';
 
 const roster = api.routes.agents.list.run;
@@ -167,7 +167,7 @@ test('a capped issue window reports an unknown assignment count instead of hidin
   const extraTrips = await Promise.all(
     [0, 1].map(() => group.owner.client.action(api.routes.trips.create.run, { input: tripInput() }))
   );
-  await Promise.all(extraTrips.map((tripId) => markTripBillable(group.owner, tripId)));
+  await Promise.all(extraTrips.map((tripId) => inviteFixtureTravelers(group.owner, tripId)));
   hiddenTrips.push(...extraTrips);
   for (let index = 0; index < 501; index += 1) {
     // oxlint-disable-next-line react-doctor/async-await-in-loop -- Newer protected issues must sort after the older accessible assignment.

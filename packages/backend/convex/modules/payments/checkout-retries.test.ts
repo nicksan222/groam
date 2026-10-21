@@ -1,6 +1,6 @@
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
-import { setupBillableTrip, legacyUnrecordedPayment } from '#testing/payments';
+import { setupBillableTrip } from '#testing/payments';
 
 const checkout = api.routes.trips.payments.checkout.run;
 afterEach(() => {
@@ -284,23 +284,9 @@ test.each(['self', 'sponsor'])(
         id: original.id,
         attempt: original.attempt,
         body: 'stale',
-        keyHash: 'stale'
+        keyHash: 'stale',
+        requestToken: 'stale-request'
       })
     ).toBeNull();
   }
 );
-
-test('legacy unsent-looking attempts remain ambiguous after the replay cutoff', async () => {
-  configure();
-  const { owner, tripId, users } = await setupBillableTrip(1);
-  const member = users[0]!;
-  const original = (await member.client.mutation(internal.modules.payments.storage.prepare, {
-    tripId
-  }))!;
-  await legacyUnrecordedPayment(owner.test, original.id);
-  vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 24 * 3600_000);
-  const provider = vi.fn();
-  vi.stubGlobal('fetch', provider);
-  await expect(member.client.action(checkout, { tripId })).rejects.toThrow('reconciliation');
-  expect(provider).not.toHaveBeenCalled();
-});

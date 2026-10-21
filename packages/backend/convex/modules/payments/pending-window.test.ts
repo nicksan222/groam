@@ -1,6 +1,6 @@
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
-import { markTripBillable } from '#testing/payments';
+import { confirmFixtureSeats, inviteFixtureTravelers } from '#testing/payments';
 import { setupTrip, tripInput } from '#testing/trips';
 
 const pending = api.routes.trips.versions.workspace.pending.page.run;
@@ -17,7 +17,8 @@ test(
     vi.stubEnv('STRIPE_SECRET_KEY', '');
     const fixture = await setupTrip(1);
     const member = fixture.users[0]!;
-    const legacy = await member.client.mutation(api.routes.trips.versions.create.run, {
+    await confirmFixtureSeats(fixture.owner, fixture.tripId, [member.userId]);
+    const accessible = await member.client.mutation(api.routes.trips.versions.create.run, {
       tripId: fixture.tripId,
       title: 'Older accessible draft'
     });
@@ -28,8 +29,8 @@ test(
       const tripId = await fixture.owner.client.action(api.routes.trips.create.run, {
         input: tripInput()
       });
-      // oxlint-disable-next-line react-doctor/async-await-in-loop -- Explicit activation keeps this fixture valid before the production rollout layer.
-      await markTripBillable(fixture.owner, tripId);
+      // oxlint-disable-next-line react-doctor/async-await-in-loop -- Seed the expected invited state for these unpaid travelers.
+      await inviteFixtureTravelers(fixture.owner, tripId);
       billableTrips.push(tripId);
       vi.stubEnv('STRIPE_SECRET_KEY', '');
       // oxlint-disable-next-line react-doctor/async-await-in-loop -- Ordered drafts must follow the older accessible draft in the author index.
@@ -48,7 +49,7 @@ test(
     const next = await member.client.query(pending, {
       paginationOpts: { cursor: first.continueCursor, numItems: 50 }
     });
-    expect(next.page.map((idea) => idea.id)).toEqual([legacy.proposalId]);
+    expect(next.page.map((idea) => idea.id)).toEqual([accessible.proposalId]);
     expect(next.isDone).toBe(true);
     const otherAuthor = await fixture.owner.client.query(pending, {
       paginationOpts: { cursor: null, numItems: 50 }

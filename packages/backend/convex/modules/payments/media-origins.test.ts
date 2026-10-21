@@ -10,7 +10,7 @@ import {
   seedDenseMediaOrigins,
   setMediaOriginSeatPaid
 } from '#testing/media';
-import { confirmFixtureSeats, markTripBillable, setupBillableTrip } from '#testing/payments';
+import { confirmFixtureSeats, inviteFixtureTravelers, setupBillableTrip } from '#testing/payments';
 import { openTripDraft, tripInput } from '#testing/trips';
 
 afterEach(() => vi.unstubAllEnvs());
@@ -125,7 +125,7 @@ test('a later paid trip pin renders directly, resolves through cursors, and cann
   const tripId = await group.owner.client.action(api.routes.trips.create.run, {
     input: tripInput()
   });
-  await markTripBillable(group.owner, tripId);
+  await inviteFixtureTravelers(group.owner, tripId);
   await confirmFixtureSeats(group.owner, tripId, [group.member.userId]);
   const draft = await openTripDraft(group.owner, tripId);
   await setTripAttachments(group.owner.client, {
@@ -254,7 +254,7 @@ test('merge and clone preserve later accessible origins through exact internal p
   const tripId = await group.member.client.action(api.routes.trips.create.run, {
     input: tripInput()
   });
-  await markTripBillable(group.owner, tripId);
+  await inviteFixtureTravelers(group.owner, tripId);
   await confirmFixtureSeats(group.owner, tripId, [group.owner.userId]);
   const draft = await openTripDraft(group.owner, tripId);
   await setTripAttachments(group.owner.client, {

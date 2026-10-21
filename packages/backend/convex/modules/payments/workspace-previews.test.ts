@@ -1,6 +1,6 @@
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
-import { markTripBillable } from '#testing/payments';
+import { confirmFixtureSeats, inviteFixtureTravelers } from '#testing/payments';
 import { setupTrip, paginationArgs, tripInput } from '#testing/trips';
 
 afterEach(() => vi.unstubAllEnvs());
@@ -8,6 +8,11 @@ afterEach(() => vi.unstubAllEnvs());
 async function mixedTrips() {
   vi.stubEnv('STRIPE_SECRET_KEY', '');
   const fixture = await setupTrip(1);
+  await confirmFixtureSeats(
+    fixture.owner,
+    fixture.tripId,
+    fixture.users.map((user) => user.userId)
+  );
   vi.stubEnv('STRIPE_SECRET_KEY', 'sk_test_workspace');
   vi.stubEnv('STRIPE_WEBHOOK_SECRET', 'whsec_workspace');
   const paidTripId = await fixture.owner.client.action(api.routes.trips.create.run, {
@@ -17,8 +22,8 @@ async function mixedTrips() {
       destination: { status: 'known', name: 'Private destination' }
     })
   });
-  await markTripBillable(fixture.owner, paidTripId);
-  return { ...fixture, legacyTripId: fixture.tripId, member: fixture.users[0]!, paidTripId };
+  await inviteFixtureTravelers(fixture.owner, paidTripId);
+  return { ...fixture, accessibleTripId: fixture.tripId, member: fixture.users[0]!, paidTripId };
 }
 
 async function confirmSeat(fixture: Awaited<ReturnType<typeof mixedTrips>>) {
@@ -36,7 +41,7 @@ async function confirmSeat(fixture: Awaited<ReturnType<typeof mixedTrips>>) {
 
 test('trip lists redact unpaid planning summaries on normal and favorite paths, preserving entitled access', async () => {
   const fixture = await mixedTrips();
-  const { owner, member, paidTripId, legacyTripId } = fixture;
+  const { owner, member, paidTripId, accessibleTripId } = fixture;
   const list = () => member.client.query(api.routes.trips.list.run, paginationArgs);
   const redacted = {
     id: paidTripId,
@@ -47,7 +52,7 @@ test('trip lists redact unpaid planning summaries on normal and favorite paths, 
     outstandingActionCount: 0
   };
   expect((await list()).page.find((trip) => trip.id === paidTripId)).toMatchObject(redacted);
-  expect((await list()).page.some((trip) => trip.id === legacyTripId)).toBe(true);
+  expect((await list()).page.some((trip) => trip.id === accessibleTripId)).toBe(true);
   const visible = {
     dateNotes: 'Secret departure window',
     destination: 'Private destination',
@@ -78,11 +83,11 @@ test('trip lists redact unpaid planning summaries on normal and favorite paths, 
 
 test('workspace issues skip unpaid trips before projecting facts and preserve pagination progress', async () => {
   const fixture = await mixedTrips();
-  const { owner, member, legacyTripId, paidTripId } = fixture;
-  const legacyIssue = await owner.client.mutation(api.routes.trips.issues.create.run, {
-    tripId: legacyTripId,
-    title: 'Visible legacy issue',
-    body: 'Legacy planning'
+  const { owner, member, accessibleTripId, paidTripId } = fixture;
+  const accessibleIssue = await owner.client.mutation(api.routes.trips.issues.create.run, {
+    tripId: accessibleTripId,
+    title: 'Visible accessible issue',
+    body: 'Paid planning'
   });
   const privateIssue = await owner.client.mutation(api.routes.trips.issues.create.run, {
     tripId: paidTripId,
@@ -92,8 +97,8 @@ test('workspace issues skip unpaid trips before projecting facts and preserve pa
   const list = () =>
     member.client.query(api.routes.trips.issues.workspace.list.run, paginationArgs);
   const visible = await list();
-  expect(visible.page.some((issue) => issue.id === legacyIssue)).toBe(true);
-  expect(visible.page.every((issue) => issue.tripId === legacyTripId)).toBe(true);
+  expect(visible.page.some((issue) => issue.id === accessibleIssue)).toBe(true);
+  expect(visible.page.every((issue) => issue.tripId === accessibleTripId)).toBe(true);
   expect(
     (
       await owner.client.query(api.routes.trips.issues.workspace.list.run, paginationArgs)
@@ -115,7 +120,7 @@ test('workspace issues skip unpaid trips before projecting facts and preserve pa
     if (result.isDone) break;
     cursor = result.continueCursor;
   }
-  expect(titles).toContain('Visible legacy issue');
+  expect(titles).toContain('Visible accessible issue');
   expect(titles).not.toContain('Private paid issue');
 
   vi.stubEnv('STRIPE_SECRET_KEY', '');

@@ -1,7 +1,6 @@
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api } from '#convex-generated/api';
 import { setupBillableTrip } from '#testing/payments';
-import { setupTrip } from '#testing/trips';
 
 const list = api.routes.discussions.list.run;
 afterEach(() => {
@@ -12,8 +11,8 @@ function enablePayments() {
   vi.stubEnv('STRIPE_SECRET_KEY', 'sk_test_chats');
   vi.stubEnv('STRIPE_WEBHOOK_SECRET', 'whsec_chats');
 }
-async function linkedChats(billable = true) {
-  const fixture = await (billable ? setupBillableTrip : setupTrip)(1);
+async function linkedChats() {
+  const fixture = await setupBillableTrip(1);
   const member = fixture.users[0]!;
   const linked = await fixture.owner.client.mutation(api.routes.discussions.create.run, {
     clientRequestId: crypto.randomUUID(),
@@ -55,13 +54,11 @@ test('global Chats omits protected trip-linked conversation previews for unpaid 
   ).rejects.toThrow('Discussion not found');
 });
 
-test.each(['paid', 'disabled', 'legacy'])(
+test.each(['paid', 'disabled'])(
   '%s members retain linked conversation previews',
   async (access) => {
-    if (access === 'legacy') vi.stubEnv('STRIPE_SECRET_KEY', '');
-    else enablePayments();
-    const { owner, member, linked, unlinked, tripId } = await linkedChats(access !== 'legacy');
-    if (access === 'legacy') enablePayments();
+    enablePayments();
+    const { owner, member, linked, unlinked, tripId } = await linkedChats();
     if (access === 'disabled') vi.stubEnv('STRIPE_SECRET_KEY', '');
     if (access === 'paid') {
       vi.stubGlobal(

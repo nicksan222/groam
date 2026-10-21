@@ -1,10 +1,6 @@
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
-import {
-  legacyUnrecordedPayment,
-  paymentReconciliationState,
-  setupBillableTrip
-} from '#testing/payments';
+import { paymentReconciliationState, setupBillableTrip } from '#testing/payments';
 
 const checkout = api.routes.trips.payments.checkout.run;
 const rejected = (status = 401, code?: string) =>
@@ -148,35 +144,13 @@ test('a stale rejection token cannot mark a replacement attempt as definitely re
   ).toBe(false);
 });
 
-test('an old unrecorded attempt cannot use a first observed 401 as creation proof', async () => {
-  configure();
-  const { owner, tripId, users } = await setupBillableTrip(1);
-  const member = users[0]!;
-  const original = (await member.client.mutation(internal.modules.payments.storage.prepare, {
-    tripId
-  }))!;
-  await legacyUnrecordedPayment(owner.test, original.id);
-  const provider = vi.fn(async () => rejected());
-  vi.stubGlobal('fetch', provider);
-  await expect(member.client.action(checkout, { tripId })).rejects.toThrow('credentials');
-  vi.stubEnv('STRIPE_SECRET_KEY', 'sk_test_corrected');
-  await expect(member.client.action(checkout, { tripId })).rejects.toThrow('reconciliation');
-  expect(provider).toHaveBeenCalledTimes(1);
-});
-
-test.each(['definite', 'ambiguous', 'legacy'] as const)(
+test.each(['definite', 'ambiguous'] as const)(
   'deletion keeps reconciliation only when credential rejection is %s',
   async (mode) => {
     configure();
     vi.useFakeTimers();
     const fixture = await setupBillableTrip(1);
     const member = fixture.users[0]!;
-    if (mode === 'legacy') {
-      const original = (await member.client.mutation(internal.modules.payments.storage.prepare, {
-        tripId: fixture.tripId
-      }))!;
-      await legacyUnrecordedPayment(fixture.owner.test, original.id);
-    }
     const provider = vi.fn(async () => rejected());
     if (mode === 'ambiguous') provider.mockRejectedValueOnce(new TypeError('response lost'));
     vi.stubGlobal('fetch', provider);

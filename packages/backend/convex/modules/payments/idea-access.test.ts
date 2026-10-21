@@ -1,6 +1,6 @@
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
-import { markTripBillable } from '#testing/payments';
+import { confirmFixtureSeats, inviteFixtureTravelers } from '#testing/payments';
 import { setupTrip, paginationArgs, tripInput } from '#testing/trips';
 
 import { changedTripDetails } from '#testing/versions';
@@ -15,15 +15,20 @@ function enablePayments() {
 async function setupIdeas() {
   vi.stubEnv('STRIPE_SECRET_KEY', '');
   const fixture = await setupTrip(2);
-  const legacy = await fixture.owner.client.mutation(api.routes.trips.versions.create.run, {
+  await confirmFixtureSeats(
+    fixture.owner,
+    fixture.tripId,
+    fixture.users.map((user) => user.userId)
+  );
+  const accessible = await fixture.owner.client.mutation(api.routes.trips.versions.create.run, {
     tripId: fixture.tripId,
-    title: 'Legacy idea'
+    title: 'Paid idea'
   });
   enablePayments();
   const paidTripId = await fixture.owner.client.action(api.routes.trips.create.run, {
     input: tripInput({ name: 'Paid source name' })
   });
-  await markTripBillable(fixture.owner, paidTripId);
+  await inviteFixtureTravelers(fixture.owner, paidTripId);
   const privateIdea = await fixture.owner.client.mutation(api.routes.trips.versions.create.run, {
     tripId: paidTripId,
     title: 'Private paid idea'
@@ -36,7 +41,7 @@ async function setupIdeas() {
     title: 'Formerly accessible draft'
   });
   enablePayments();
-  return { ...fixture, formerDraft, legacy, member, paidTripId, privateIdea };
+  return { ...fixture, formerDraft, accessible, member, paidTripId, privateIdea };
 }
 
 async function payFor(fixture: Awaited<ReturnType<typeof setupIdeas>>, userId: string) {
@@ -52,13 +57,13 @@ async function payFor(fixture: Awaited<ReturnType<typeof setupIdeas>>, userId: s
   });
 }
 
-test('workspace and personal idea lists filter unpaid sources while preserving legacy, creator, paid, and no-key access', async () => {
+test('workspace and personal idea lists filter unpaid sources while preserving accessible, creator, paid, and no-key access', async () => {
   const fixture = await setupIdeas();
-  const { member, owner, legacy, privateIdea, formerDraft } = fixture;
+  const { member, owner, accessible, privateIdea, formerDraft } = fixture;
   const list = () =>
     member.client.query(api.routes.trips.versions.workspace.list.run, paginationArgs);
   const pending = () => member.client.query(api.routes.trips.versions.workspace.pending.run, {});
-  expect((await list()).page.map((idea) => idea.id)).toEqual([legacy.proposalId]);
+  expect((await list()).page.map((idea) => idea.id)).toEqual([accessible.proposalId]);
   expect(await pending()).toEqual([]);
   expect(
     (
@@ -78,7 +83,7 @@ test('workspace and personal idea lists filter unpaid sources while preserving l
   const third = await member.client.query(api.routes.trips.versions.workspace.list.run, {
     paginationOpts: { cursor: second.continueCursor, numItems: 1 }
   });
-  expect(third.page.map((idea) => idea.id)).toEqual([legacy.proposalId]);
+  expect(third.page.map((idea) => idea.id)).toEqual([accessible.proposalId]);
 
   vi.stubEnv('STRIPE_SECRET_KEY', '');
   expect((await list()).page).toHaveLength(3);
@@ -94,7 +99,7 @@ test(
   { timeout: 15_000 },
   async () => {
     const fixture = await setupIdeas();
-    const { owner, member, users, formerDraft, privateIdea, legacy } = fixture;
+    const { owner, member, users, formerDraft, privateIdea, accessible } = fixture;
     const paidReviewer = users[1]!;
     await payFor(fixture, paidReviewer.userId);
     await owner.client.mutation(api.routes.trips.versions.close.run, {
@@ -139,17 +144,17 @@ test(
     });
     expect((await detail()).approvalCount).toBe(1);
 
-    // Legacy trips remain shared with the roster even while payments are enabled.
+    // Paid trips remain shared with the roster even while payments are enabled.
     await owner.client.mutation(api.routes.trips.update.run, {
-      tripId: legacy.workingTripId,
+      tripId: accessible.workingTripId,
       input: changedTripDetails
     });
     await owner.client.action(api.routes.trips.versions.submit.run, {
-      proposalId: legacy.proposalId
+      proposalId: accessible.proposalId
     });
     expect(await member.client.query(api.routes.notifications.list.run, {})).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ body: expect.stringContaining('Legacy idea') })
+        expect.objectContaining({ body: expect.stringContaining('Paid idea') })
       ])
     );
 
