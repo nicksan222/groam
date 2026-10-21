@@ -87,11 +87,16 @@ test('scopes context catalog to the signed-in workspace', async () => {
     screen: workspaceScreen
   });
 
-  const firstCatalog = await first.owner.client.query(api.routes.assistant.context.catalog.run, {});
-  const secondCatalog = await second.owner.client.query(
-    api.routes.assistant.context.catalog.run,
-    {}
-  );
+  const firstCatalog = await first.owner.client
+    .query(api.routes.assistant.context.catalog.page.run, {
+      paginationOpts: { cursor: null, numItems: 25 }
+    })
+    .then((result) => result.page);
+  const secondCatalog = await second.owner.client
+    .query(api.routes.assistant.context.catalog.page.run, {
+      paginationOpts: { cursor: null, numItems: 25 }
+    })
+    .then((result) => result.page);
 
   expect(firstCatalog.some((item) => item.label === uniqueName)).toBe(true);
   expect(secondCatalog.some((item) => item.label === uniqueName)).toBe(false);

@@ -250,7 +250,6 @@ import type * as routes_agents_waits_run from "../routes/agents/waits/run.js";
 import type * as routes_assistant_chats_create from "../routes/assistant/chats/create.js";
 import type * as routes_assistant_chats_list from "../routes/assistant/chats/list.js";
 import type * as routes_assistant_chats_tags from "../routes/assistant/chats/tags.js";
-import type * as routes_assistant_context_catalog from "../routes/assistant/context/catalog.js";
 import type * as routes_assistant_context_catalog_page from "../routes/assistant/context/catalog/page.js";
 import type * as routes_assistant_context_screen from "../routes/assistant/context/screen.js";
 import type * as routes_assistant_messages from "../routes/assistant/messages.js";
@@ -283,11 +282,9 @@ import type * as routes_discussions_research_list from "../routes/discussions/re
 import type * as routes_discussions_research_remove from "../routes/discussions/research/remove.js";
 import type * as routes_discussions_research_start from "../routes/discussions/research/start.js";
 import type * as routes_discussions_research_update from "../routes/discussions/research/update.js";
-import type * as routes_discussions_research_workspace from "../routes/discussions/research/workspace.js";
 import type * as routes_discussions_research_workspace_page from "../routes/discussions/research/workspace/page.js";
 import type * as routes_discussions_roster from "../routes/discussions/roster.js";
 import type * as routes_media_discover from "../routes/media/discover.js";
-import type * as routes_media_list from "../routes/media/list.js";
 import type * as routes_media_logo_clear from "../routes/media/logo/clear.js";
 import type * as routes_media_logo_set from "../routes/media/logo/set.js";
 import type * as routes_media_page from "../routes/media/page.js";
@@ -305,7 +302,6 @@ import type * as routes_polls_close from "../routes/polls/close.js";
 import type * as routes_polls_create from "../routes/polls/create.js";
 import type * as routes_polls_get from "../routes/polls/get.js";
 import type * as routes_polls_list_discussion from "../routes/polls/list/discussion.js";
-import type * as routes_polls_list_open from "../routes/polls/list/open.js";
 import type * as routes_polls_list_open_page from "../routes/polls/list/open/page.js";
 import type * as routes_polls_list_trip from "../routes/polls/list/trip.js";
 import type * as routes_polls_list_workspace from "../routes/polls/list/workspace.js";
@@ -399,7 +395,6 @@ import type * as routes_trips_versions_reviewers_agent_run from "../routes/trips
 import type * as routes_trips_versions_reviewers_set from "../routes/trips/versions/reviewers/set.js";
 import type * as routes_trips_versions_submit from "../routes/trips/versions/submit.js";
 import type * as routes_trips_versions_workspace_list from "../routes/trips/versions/workspace/list.js";
-import type * as routes_trips_versions_workspace_pending from "../routes/trips/versions/workspace/pending.js";
 import type * as routes_trips_versions_workspace_pending_page from "../routes/trips/versions/workspace/pending/page.js";
 
 import type {
@@ -651,7 +646,6 @@ declare const fullApi: ApiFromModules<{
   "routes/assistant/chats/create": typeof routes_assistant_chats_create;
   "routes/assistant/chats/list": typeof routes_assistant_chats_list;
   "routes/assistant/chats/tags": typeof routes_assistant_chats_tags;
-  "routes/assistant/context/catalog": typeof routes_assistant_context_catalog;
   "routes/assistant/context/catalog/page": typeof routes_assistant_context_catalog_page;
   "routes/assistant/context/screen": typeof routes_assistant_context_screen;
   "routes/assistant/messages": typeof routes_assistant_messages;
@@ -684,11 +678,9 @@ declare const fullApi: ApiFromModules<{
   "routes/discussions/research/remove": typeof routes_discussions_research_remove;
   "routes/discussions/research/start": typeof routes_discussions_research_start;
   "routes/discussions/research/update": typeof routes_discussions_research_update;
-  "routes/discussions/research/workspace": typeof routes_discussions_research_workspace;
   "routes/discussions/research/workspace/page": typeof routes_discussions_research_workspace_page;
   "routes/discussions/roster": typeof routes_discussions_roster;
   "routes/media/discover": typeof routes_media_discover;
-  "routes/media/list": typeof routes_media_list;
   "routes/media/logo/clear": typeof routes_media_logo_clear;
   "routes/media/logo/set": typeof routes_media_logo_set;
   "routes/media/page": typeof routes_media_page;
@@ -706,7 +698,6 @@ declare const fullApi: ApiFromModules<{
   "routes/polls/create": typeof routes_polls_create;
   "routes/polls/get": typeof routes_polls_get;
   "routes/polls/list/discussion": typeof routes_polls_list_discussion;
-  "routes/polls/list/open": typeof routes_polls_list_open;
   "routes/polls/list/open/page": typeof routes_polls_list_open_page;
   "routes/polls/list/trip": typeof routes_polls_list_trip;
   "routes/polls/list/workspace": typeof routes_polls_list_workspace;
@@ -800,7 +791,6 @@ declare const fullApi: ApiFromModules<{
   "routes/trips/versions/reviewers/set": typeof routes_trips_versions_reviewers_set;
   "routes/trips/versions/submit": typeof routes_trips_versions_submit;
   "routes/trips/versions/workspace/list": typeof routes_trips_versions_workspace_list;
-  "routes/trips/versions/workspace/pending": typeof routes_trips_versions_workspace_pending;
   "routes/trips/versions/workspace/pending/page": typeof routes_trips_versions_workspace_pending_page;
 }>;
 

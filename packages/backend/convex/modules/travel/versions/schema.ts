@@ -143,11 +143,6 @@ export const tripVersionTables = {
       'author.userId',
       'updatedAt'
     ])
-    .index('by_organizationId_and_author_userId_and_status', [
-      'organizationId',
-      'author.userId',
-      'status'
-    ])
     .index('by_sourceTripId_and_updatedAt', ['sourceTripId', 'updatedAt'])
     .index('by_sourceTripId_and_author_userId_and_status', [
       'sourceTripId',

@@ -49,27 +49,14 @@ async function fixture(memberCount: number, pollCount = 21) {
   return { owner, users, pollIds, readPage };
 }
 
-test('100-member private-trip poll feeds keep both read paths within the index-range budget', async () => {
-  const { owner, pollIds, readPage } = await fixture(100, 11);
+test('100-member private-trip poll pages stay within the index-range budget', async () => {
+  const { pollIds, readPage } = await fixture(100, 11);
   const first = await readPage(null);
   expect(first.result.page.map(({ id }) => id)).toEqual(pollIds.slice(0, 10));
   expect(first.result.isDone).toBe(false);
   expect(first.result.continueCursor).toBeTruthy();
   expect(first.result.page.every(({ votedCount }) => votedCount === 1)).toBe(true);
   expect(first.metrics.databaseQueries.used).toBeLessThan(4096);
-  const legacy = await owner.client.run(async (ctx) => {
-    const result = await ctx.runQuery(
-      api.routes.polls.list.open.run,
-      {},
-      {
-        transactionLimits: { databaseQueries: 4096 }
-      }
-    );
-    return { result, metrics: await ctx.meta.getTransactionMetrics() };
-  });
-  expect(legacy.result.map(({ id }) => id)).toEqual(pollIds.slice(0, 10));
-  expect(legacy.result.every(({ votedCount }) => votedCount === 1)).toBe(true);
-  expect(legacy.metrics.databaseQueries.used).toBeLessThan(4096);
 });
 
 test('poll cursors preserve every row, disabled payments, and private audiences', async () => {

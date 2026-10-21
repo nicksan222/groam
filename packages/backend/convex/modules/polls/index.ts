@@ -9,7 +9,6 @@ export class Polls {
   static closeScheduled = PollWrites.closeScheduled;
   static create = PollWrites.create;
   static get = PollReads.get;
-  static listOpen = PollOpenReads.listOpen;
   static pageOpen = PollOpenReads.pageOpen;
   static listForDiscussion = PollReads.listForDiscussion;
   static listForTrip = PollReads.listForTrip;

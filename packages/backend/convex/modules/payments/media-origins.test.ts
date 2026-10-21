@@ -263,9 +263,11 @@ test('merge and clone preserve later accessible origins through exact internal p
     mediaIds: [group.mediaId]
   });
   // The future merge actor's valid origin is beyond the generic fast scan.
-  await expect(group.member.client.query(api.routes.media.list.run, { limit: 20 })).rejects.toThrow(
-    'MEDIA_ACCESS_UNRESOLVED'
-  );
+  await expect(
+    group.member.client
+      .query(api.routes.media.page.run, { paginationOpts: { cursor: null, numItems: 20 } })
+      .then((result) => result.page)
+  ).rejects.toThrow('MEDIA_ACCESS_UNRESOLVED');
   await group.owner.client.action(api.routes.trips.versions.submit.run, {
     proposalId: draft.proposalId
   });

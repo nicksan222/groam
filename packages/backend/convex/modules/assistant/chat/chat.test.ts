@@ -32,7 +32,11 @@ test('creates native Agent chats and stores verified entity tags in thread metad
     ])
   );
 
-  const catalog = await owner.client.query(api.routes.assistant.context.catalog.run, {});
+  const catalog = await owner.client
+    .query(api.routes.assistant.context.catalog.page.run, {
+      paginationOpts: { cursor: null, numItems: 25 }
+    })
+    .then((result) => result.page);
   expect(catalog).toEqual(
     expect.arrayContaining([
       expect.objectContaining({ id: tripId, kind: 'trip' }),

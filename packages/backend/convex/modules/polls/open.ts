@@ -11,22 +11,6 @@ const OPEN_LIMIT = 10;
 /** Open polls scanned before visibility filtering; bounds the read when many are hidden. */
 const OPEN_SCAN = 50;
 
-/** Newest open polls across every scope the viewer can read: trips, the group, and chats. */
-async function listOpen(
-  ctx: QueryCtx,
-  workspace: Workspace,
-  limit: number = OPEN_LIMIT
-): Promise<PollOpenItem[]> {
-  const rows = await ctx.db
-    .query('polls')
-    .withIndex('by_organizationId_and_status', (query) =>
-      query.eq('organizationId', workspace.organizationId).eq('status', 'open')
-    )
-    .order('desc')
-    .take(OPEN_SCAN);
-  return presentOpen(ctx, workspace, rows, Math.min(limit, OPEN_LIMIT));
-}
-
 /** Raw candidate pages retain continuation even when no polls are readable. */
 async function pageOpen(ctx: QueryCtx, workspace: Workspace, paginationOpts: PaginationOptions) {
   if (
@@ -54,11 +38,10 @@ async function pageOpen(ctx: QueryCtx, workspace: Workspace, paginationOpts: Pag
 async function presentOpen(
   ctx: QueryCtx,
   workspace: Workspace,
-  rows: Doc<'polls'>[],
-  limit = rows.length
+  rows: Doc<'polls'>[]
 ): Promise<PollOpenItem[]> {
   const visible = await Promise.all(rows.map((poll) => canRead(ctx, poll, workspace)));
-  const readable = rows.filter((_, index) => visible[index]).slice(0, limit);
+  const readable = rows.filter((_, index) => visible[index]);
   const voters = voterLoader(ctx);
   const trips = new Map<Id<'trips'>, Promise<Doc<'trips'> | null>>();
   const tripOf = (tripId: Id<'trips'>) => {
@@ -100,4 +83,4 @@ async function presentOpen(
   return items;
 }
 
-export const PollOpenReads = { listOpen, pageOpen };
+export const PollOpenReads = { pageOpen };

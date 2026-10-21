@@ -21,7 +21,6 @@ import type {
 } from '#convex/modules/media/library/validators';
 
 const MAX_NAME_LENGTH = 120;
-const MEDIA_LIST_MIN = 1;
 const MEDIA_LIST_MAX = 50;
 // A file may require 163 indexed reads across its bounded origin windows. Twenty raw
 // candidates leave headroom under 4096 ranges, including workspace and URL resolution.
@@ -125,26 +124,7 @@ export class Media {
     return media.length === limit;
   }
 
-  /** Compatibility reader: only the most recent raw candidate window, never a complete library. */
-  static async list(ctx: QueryCtx, limit: number): Promise<ListedMedia[]> {
-    const workspace = await requireWorkspace(ctx);
-    if (!Number.isInteger(limit) || limit < MEDIA_LIST_MIN || limit > MEDIA_LIST_MAX) {
-      throw new ConvexError(
-        `Media list limit must be a whole number between ${MEDIA_LIST_MIN} and ${MEDIA_LIST_MAX}`
-      );
-    }
-    const media = await ctx.db
-      .query('media')
-      .withIndex('by_organizationId', (query) =>
-        query.eq('organizationId', workspace.organizationId)
-      )
-      .order('desc')
-      .take(Math.min(limit, MEDIA_CANDIDATES));
-
-    return Media.visibleRows(ctx, workspace, media);
-  }
-
-  /** Preferred library reader: an empty filtered page still retains its continuation cursor. */
+  /** Library reader: an empty filtered page still retains its continuation cursor. */
   static async page(
     ctx: QueryCtx,
     paginationOpts: PaginationOptions

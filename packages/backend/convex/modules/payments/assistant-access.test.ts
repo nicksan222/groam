@@ -11,7 +11,7 @@ const screen = {
   target: { kind: 'workspace' as const },
   title: 'Home'
 };
-const catalog = api.routes.assistant.context.catalog.run;
+const catalog = api.routes.assistant.context.catalog.page.run;
 const tags = api.routes.assistant.chats.tags.run;
 
 afterEach(() => vi.unstubAllEnvs());
@@ -26,7 +26,11 @@ test('assistant catalogs and explicit tags enforce paid seats and recheck stored
     input: tripLocationInput({ name: 'Protected draft destination', placeId: 'protected' })
   });
   const threadId = await member.client.action(api.routes.assistant.chats.create.run, { screen });
-  expect(await member.client.query(catalog, {})).toEqual([]);
+  expect(
+    await member.client
+      .query(catalog, { paginationOpts: { cursor: null, numItems: 25 } })
+      .then((result) => result.page)
+  ).toEqual([]);
   await expect(
     member.client.mutation(tags, { threadId, tags: [{ kind: 'destination', id: destinationId }] })
   ).rejects.toThrow('Tagged trip not found');
@@ -44,7 +48,11 @@ test('assistant catalogs and explicit tags enforce paid seats and recheck stored
         userId: member.userId
       })
   );
-  expect(await member.client.query(catalog, {})).toEqual(
+  expect(
+    await member.client
+      .query(catalog, { paginationOpts: { cursor: null, numItems: 25 } })
+      .then((result) => result.page)
+  ).toEqual(
     expect.arrayContaining([
       expect.objectContaining({ id: destinationId, label: 'Protected draft destination' })
     ])
@@ -73,9 +81,11 @@ test('assistant catalogs and explicit tags enforce paid seats and recheck stored
   expect(freePage.page).toEqual(
     expect.arrayContaining([expect.objectContaining({ id: destinationId })])
   );
-  expect(await member.client.query(catalog, {})).toEqual(
-    expect.arrayContaining([expect.objectContaining({ id: destinationId })])
-  );
+  expect(
+    await member.client
+      .query(catalog, { paginationOpts: { cursor: null, numItems: 25 } })
+      .then((result) => result.page)
+  ).toEqual(expect.arrayContaining([expect.objectContaining({ id: destinationId })]));
   await expect(
     member.client.mutation(tags, { threadId, tags: [{ kind: 'trip', id: tripId }] })
   ).resolves.toHaveLength(1);
@@ -88,7 +98,11 @@ test('enabling Stripe removes previously accessible trips from assistant catalog
   const threadId = await member.client.action(api.routes.assistant.chats.create.run, { screen });
   await member.client.mutation(tags, { threadId, tags: [{ kind: 'trip', id: tripId }] });
   vi.stubEnv('STRIPE_SECRET_KEY', 'sk_test_fixture');
-  expect(await member.client.query(catalog, {})).toEqual([]);
+  expect(
+    await member.client
+      .query(catalog, { paginationOpts: { cursor: null, numItems: 25 } })
+      .then((result) => result.page)
+  ).toEqual([]);
   await expect(
     member.client.mutation(tags, { threadId, tags: [{ kind: 'trip', id: tripId }] })
   ).rejects.toThrow('Tagged trip not found');
@@ -136,7 +150,6 @@ test('assistant catalogs find older paid trips beyond more than 25 newer unpaid 
   expect(nextPage.isDone).toBe(true);
   expect(nextPage.continueCursor).not.toBe(firstPage.continueCursor);
   const items = nextPage.page;
-  expect(await member.client.query(catalog, {})).toEqual([]);
   expect(items).toEqual(
     expect.arrayContaining([
       expect.objectContaining({ id: sharedTripId, kind: 'trip' }),
@@ -145,7 +158,9 @@ test('assistant catalogs find older paid trips beyond more than 25 newer unpaid 
     ])
   );
   expect(items.some((item) => item.label.startsWith('Newer unpaid trip'))).toBe(false);
-  const creatorItems = await owner.client.query(catalog, {});
+  const creatorItems = await owner.client
+    .query(catalog, { paginationOpts: { cursor: null, numItems: 25 } })
+    .then((result) => result.page);
   expect(creatorItems.filter((item) => item.kind === 'trip')).toHaveLength(25);
   expect(creatorItems.some((item) => item.id === sharedTripId)).toBe(false);
   const cappedPage = await owner.client.query(api.routes.assistant.context.catalog.page.run, {
