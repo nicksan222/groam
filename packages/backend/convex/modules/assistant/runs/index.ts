@@ -746,7 +746,7 @@ async function rosterWindow(
   ctx: QueryCtx,
   workspace: Workspace,
   agentId: Doc<'agentRuns'>['agentId'],
-  permissions: Map<string, Promise<boolean>>
+  authorization: { permissions: Map<string, Promise<boolean>>; remaining: number }
 ) {
   const candidates = ctx.db
     .query('agentRuns')
@@ -762,10 +762,14 @@ async function rosterWindow(
     if (inspected === ROSTER_CANDIDATES_PER_AGENT) return { runs, incomplete: true };
     inspected += 1;
     const key = rosterAudienceKey(run);
-    let permission = permissions.get(key);
+    let permission = authorization.permissions.get(key);
     if (!permission) {
+      // Reserve before starting I/O: all agent windows share one authorization budget.
+      // Cached audiences are free to reuse, but an unchecked audience means incomplete history.
+      if (authorization.remaining === 0) return { runs, incomplete: true };
+      authorization.remaining -= 1;
       permission = canViewRun(ctx, run, workspace);
-      permissions.set(key, permission);
+      authorization.permissions.set(key, permission);
     }
     // oxlint-disable-next-line react-doctor/async-await-in-loop -- Ordered authorization stops at 20 visible runs rather than checking the entire candidate budget.
     if (await permission) runs.push(run);
@@ -776,10 +780,15 @@ async function rosterWindow(
 
 async function roster(ctx: QueryCtx): Promise<AgentRosterItem[]> {
   const workspace = await requireWorkspace(ctx);
-  const permissions = new Map<string, Promise<boolean>>();
+  // Worst-case linked working-copy chat authorization uses nine reads. Across the roster,
+  // 200 checks plus 500 issue visibility checks (at most three each) stay below 4096 ranges.
+  const authorization = {
+    permissions: new Map<string, Promise<boolean>>(),
+    remaining: ROSTER_CANDIDATES_PER_AGENT
+  };
   const [windows, issueCandidates] = await Promise.all([
     Promise.all(
-      assistantAgentList.map((agent) => rosterWindow(ctx, workspace, agent.id, permissions))
+      assistantAgentList.map((agent) => rosterWindow(ctx, workspace, agent.id, authorization))
     ),
     ctx.db
       .query('tripIssues')
