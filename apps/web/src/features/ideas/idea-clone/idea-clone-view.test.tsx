@@ -15,8 +15,8 @@ vi.mock('@/features/ideas/hooks/use-idea-context', () => ({
   IdeaContextProvider: ({ children }: { children: ReactNode }) => <>{children}</>
 }));
 
-vi.mock('@tanstack/react-router', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
+vi.mock('@/lib/navigation/router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/navigation/router')>()),
   Navigate: ({ params, to }: { params: Record<string, string>; to: string }) => (
     <div>
       redirect:

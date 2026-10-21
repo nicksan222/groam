@@ -5,7 +5,7 @@ import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { testIds } from '@/lib/test-ids';
 import { TripHistoryPage } from './trip-history-page';
 
-vi.mock('@tanstack/react-router', async () => {
+vi.mock('@/lib/navigation/router', async () => {
   const { mockRouterTargets } = await import('@/lib/testing/router-mock');
   return mockRouterTargets();
 });

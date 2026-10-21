@@ -1,5 +1,4 @@
 import type { Id } from '@groam/backend/data-model';
-import { useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { useIdeaContext } from '@/features/ideas/hooks/use-idea-context';
 import type { IdeaCloneView } from '@/features/ideas/idea-clone/idea-sections';
@@ -14,6 +13,7 @@ import type { TripSection } from '@/features/trips/trip-sections';
 import { useOpenState } from '@/features/workspace/hooks/use-open-state';
 import { useConfirm } from '@/features/workspace/workspace-shell/use-confirm-dialog';
 import { useOptionalWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
+import { useNavigate, useParams } from '@/lib/navigation/router';
 import { useReadyValue } from '@/lib/use-ready-value';
 
 export function useIdeaCloneWorkspace({
@@ -39,6 +39,7 @@ export function useIdeaCloneWorkspace({
   const closingIdea = useOpenState(false);
   const confirm = useConfirm();
   const navigate = useNavigate();
+  const current = useParams<{ proposalId: string; tripId: string }>();
   const { pendingAction, run } = useProposalActionRunner();
   const [confirmingApply, setConfirmingApply] = useState(false);
   const planningSection: TripSection =
@@ -57,11 +58,11 @@ export function useIdeaCloneWorkspace({
     void navigate({
       ...target,
       // Keep the current references so opening a dialog does not reload the workspace.
-      params: (current) => ({
+      params: {
         ...target.params,
         tripId: current.tripId ?? sharedTripId,
         proposalId: current.proposalId ?? proposalId
-      })
+      }
     });
   };
   const editDetails = () => {

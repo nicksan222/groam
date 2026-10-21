@@ -186,7 +186,7 @@ describe('feature architecture boundaries', () => {
     for (const href of ['"/trips"', "'/trips'", "{'/trips'}", `{\`/trips/${interpolation}\`}`]) {
       const result = lint(`export const view = <a href=${href}>Trips</a>;`);
       expect(result.status).toBe(1);
-      expect(result.output).toContain('Use TanStack Router Link');
+      expect(result.output).toContain('Use Link from @/lib/navigation/router');
     }
   });
 

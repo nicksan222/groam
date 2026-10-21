@@ -13,8 +13,7 @@ import { env } from '@groam/env/seeder';
 | Target           | Variables                                                                        |
 | ---------------- | -------------------------------------------------------------------------------- |
 | `auth-client`    | `VITE_CONVEX_URL`, optional `VITE_CONVEX_SITE_URL`                               |
-| `web`            | `STATIC_HOSTING_BASE_PATH`                                                       |
-| `web-client`     | `VITE_CONVEX_URL`, `VITE_CONVEX_SITE_URL`, `VITE_SITE_URL`, Vite `BASE_URL`, optional `VITE_PHOTON_URL` (default Photon), optional `VITE_MAP_TILES_URL` (OpenStreetMap raster template) |
+| `web-client`     | `VITE_CONVEX_URL`, `VITE_CONVEX_SITE_URL`, `VITE_SITE_URL`, optional `VITE_PHOTON_URL` (default Photon), optional `VITE_MAP_TILES_URL` (OpenStreetMap raster template) |
 | `journeys`       | `VITE_CONVEX_URL` and `VITE_CONVEX_SITE_URL` (local backend the per-file journey accounts are created on; defaults to the local Convex ports). |
 | `seeder`         | `SEED_CONVEX_URL`, `SEED_SITE_URL`, `SEED_USER_EMAIL`, `SEED_USER_PASSWORD`, `VITE_CONVEX_URL`, `VITE_CONVEX_SITE_URL` |
 | `convex-tooling` | `CONVEX_AGENT_MODE` (default `anonymous`), `VITE_CONVEX_URL`, `GROAM_READY_TIMEOUT_SECONDS`, `GROAM_STARTUP_TIMEOUT_MS` (both default `0`) |

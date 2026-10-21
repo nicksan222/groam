@@ -35,5 +35,6 @@ GEMINI.local.md
 *.sln
 *.sw?
 
-# TanStack Router generator scratch
-.tanstack/
+# Void generated types, local state, and Cloudflare config
+.void/
+.void-wrangler.jsonc

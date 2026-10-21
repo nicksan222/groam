@@ -1,9 +1,9 @@
 import type { Id } from '@groam/backend/data-model';
-import { useNavigate } from '@tanstack/react-router';
 import { ideaSharedTripHref } from '@/features/ideas/idea-href';
 import type { useTripVersion } from '@/features/trips/hooks/use-trip-versions';
 import { ApplyIdeaDialog } from '@/features/trips/trip-versions/apply-idea-dialog';
 import { PassOnIdea } from '@/features/trips/trip-versions/pass-on-idea';
+import { useNavigate } from '@/lib/navigation/router';
 import type { ProposalActionRunner, ProposalDetail } from '@/types/trips';
 
 export function IdeaCloneLifecycleDialogs({

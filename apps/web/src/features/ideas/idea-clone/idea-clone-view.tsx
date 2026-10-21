@@ -2,11 +2,11 @@ import type { Id } from '@groam/backend/data-model';
 import { FileDiff } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { EmptyScreen } from '@groam/ui/components/empty-screen';
-import { Navigate } from '@tanstack/react-router';
 import { IdeaContextProvider } from '@/features/ideas/hooks/use-idea-context';
 import { ideaCloneHref } from '@/features/ideas/idea-href';
 import { useTripVersion } from '@/features/trips/hooks/use-trip-versions';
 import { Link } from '@/features/workspace/navigation/router';
+import { Navigate } from '@/lib/navigation/router';
 import { IdeaCloneWorkspace } from './idea-clone-workspace';
 import type { IdeaCloneView as CloneView } from './idea-sections';
 

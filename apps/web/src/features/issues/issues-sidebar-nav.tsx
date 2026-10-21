@@ -8,7 +8,6 @@ import {
 import { SidebarCollapsibleItem } from '@groam/ui/components/sidebar-collapsible-item';
 import { SidebarNestedLoadMore } from '@groam/ui/components/sidebar-nested-load-more';
 import { useSidebar } from '@groam/ui/hooks/use-sidebar';
-import { useLocation, useNavigate } from '@tanstack/react-router';
 import { CreateIssueDialog } from '@/features/issues/issue-list/create-issue-dialog';
 import { useCreatableTrips } from '@/features/trips/hooks/use-creatable-trips';
 import { useSidebarNestedPaging } from '@/features/workspace/hooks/use-sidebar-nested-paging';
@@ -16,6 +15,7 @@ import { useSidebarNestedVisible } from '@/features/workspace/hooks/use-sidebar-
 import { useSidebarSectionOpen } from '@/features/workspace/hooks/use-sidebar-section-open';
 import { Link, useParams } from '@/features/workspace/navigation/router';
 import { SIDEBAR_NESTED_PAGE_SIZE } from '@/features/workspace/workspace-sidebar/sidebar-nested-nav';
+import { useLocation, useNavigate } from '@/lib/navigation/router';
 import { testIds } from '@/lib/test-ids';
 import { useWorkspaceIssues } from './hooks/use-workspace-issues';
 import {
@@ -26,7 +26,7 @@ import {
 
 export function IssuesSidebarNav() {
   const { pathname } = useLocation();
-  const params = useParams({ strict: false });
+  const params = useParams();
   const { setOpenMobile } = useSidebar();
   const navigate = useNavigate();
   const { canExpandVisible, closeCreate, isCreateOpen, openCreate, showMore, visibleCount } =

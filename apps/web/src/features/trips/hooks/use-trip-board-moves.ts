@@ -1,7 +1,6 @@
 import { api } from '@groam/backend/api';
 import type { Id } from '@groam/backend/data-model';
 import { toast } from '@groam/ui/components/toast';
-import { useNavigate } from '@tanstack/react-router';
 import { useAction, useMutation } from 'convex/react';
 import { useCallback, useMemo, useRef } from 'react';
 import { ideaCloneHref } from '@/features/ideas/idea-href';
@@ -9,6 +8,7 @@ import { useCreateTripVersion } from '@/features/trips/hooks/use-trip-versions';
 import { decideMove } from '@/features/trips/trip-board/trip-board-moves';
 import { applyIssueMove } from '@/features/trips/trip-board/trip-board-order';
 import { attempt } from '@/lib/errors';
+import { useNavigate } from '@/lib/navigation/router';
 import type { IssueStatus } from '@/types/issues';
 import type { TripBoardDragItem, TripBoardDropTarget, TripBoardIssue } from '@/types/trip-board';
 

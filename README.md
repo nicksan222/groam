@@ -34,7 +34,7 @@ for setup and supported deployments.
 ## How it fits together
 
 ```text
-        TanStack Router + React web app
+         Void + React web app
                       |
               shared Groam UI
                       |

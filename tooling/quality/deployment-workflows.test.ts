@@ -4,9 +4,18 @@ import { describe, expect, test } from 'vite-plus/test';
 const read = (path: string) => readFileSync(path, 'utf8');
 
 describe('production deployment workflows', () => {
+  test('checks every pull request without introducing a separate product branch', () => {
+    for (const path of ['.github/workflows/ci.yml', '.github/workflows/codeql.yml']) {
+      const workflow = read(path);
+
+      expect(workflow).toContain('pull_request:\n  push:\n    branches: [main]');
+    }
+  });
+
   test('keeps automatic deployment behind successful CI on trusted main pushes', () => {
     const workflow = read('.github/workflows/ci.yml');
 
+    expect(workflow).toContain('pull_request:\n  push:\n    branches: [main]');
     expect(workflow).toContain("cancel-in-progress: ${{ github.event_name == 'pull_request' }}");
     expect(workflow).toContain('needs: [test]');
     expect(workflow).toContain('uses: ./.github/workflows/release-production.yml');
@@ -31,6 +40,8 @@ describe('production deployment workflows', () => {
     expect(workflow).toContain("github.ref == 'refs/heads/main'");
     expect(checks).toContain('name: Checks');
     expect(checks).not.toContain('name: Test\n');
+    expect(checks).not.toContain('hosting:upload');
+    expect(checks).not.toContain('--component web');
   });
 
   test('isolates the production key to the mutation step and deploys an immutable main SHA', () => {

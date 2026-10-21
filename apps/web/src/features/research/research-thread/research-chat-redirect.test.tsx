@@ -8,7 +8,7 @@ const state = vi.hoisted(() => ({ target: null as null | { researchId: string; t
 vi.mock('@/features/research/hooks/use-research-chat-redirect', () => ({
   useResearchChatRedirect: () => state.target
 }));
-vi.mock('@tanstack/react-router', () => ({
+vi.mock('@/lib/navigation/router', () => ({
   Navigate: ({ params, to }: { params: Record<string, string>; to: string }) => (
     <div data-testid="redirect">{`${to} ${JSON.stringify(params)}`}</div>
   )

@@ -1,8 +1,8 @@
 import type { Id } from '@groam/backend/data-model';
-import { Navigate } from '@tanstack/react-router';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { TripNotFound } from '@/features/trips/trip-detail/trip-not-found';
 import type { TripSection } from '@/features/trips/trip-sections';
+import { Navigate } from '@/lib/navigation/router';
 
 export function WorkingTripRedirect({
   addDestinationOpen,

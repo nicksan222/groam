@@ -1,8 +1,8 @@
 import type { Id } from '@groam/backend/data-model';
-import { Navigate } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { sharedTripSection, type TripSection } from '@/features/trips/trip-sections';
+import { Navigate } from '@/lib/navigation/router';
 import { TripNotFound } from './trip-not-found';
 import { WorkingTripRedirect } from './working-trip-redirect';
 

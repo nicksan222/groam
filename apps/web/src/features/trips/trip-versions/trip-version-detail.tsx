@@ -6,7 +6,6 @@ import Shell from '@groam/ui/components/shell/client';
 import { Skeleton } from '@groam/ui/components/skeleton';
 import { WorkspaceNotice } from '@groam/ui/components/workspace-notice';
 import { cn } from '@groam/ui/lib/utils';
-import { useNavigate } from '@tanstack/react-router';
 import { ideaOpenHref } from '@/features/ideas/idea-href';
 import { ideaDetailNotice } from '@/features/ideas/idea-list/idea-page-copy';
 import { LinkedResearches } from '@/features/research/research-links/linked-researches';
@@ -14,6 +13,7 @@ import { useProposalActionRunner } from '@/features/trips/hooks/use-proposal-act
 import { useTripVersion } from '@/features/trips/hooks/use-trip-versions';
 import { IdeaRebaseReconciliation } from '@/features/trips/trip-ideas/idea-rebase-reconciliation';
 import { TripIdeaBadge } from '@/features/trips/trip-ideas/trip-idea-name';
+import { useNavigate } from '@/lib/navigation/router';
 import { testIds } from '@/lib/test-ids';
 import { ChangeSummary } from './change-summary';
 import { PassOnIdea } from './pass-on-idea';

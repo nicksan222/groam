@@ -31,7 +31,7 @@ export const lint = {
     '**/dist/**',
     '**/_generated/**',
     '**/generated.ts',
-    '**/routeTree.gen.ts',
+    '**/.void/**',
     '**/vendor/**',
     '.claude/**',
     '.agents/**',
@@ -132,7 +132,8 @@ export const lint = {
   },
   overrides: [
     {
-      files: ['apps/web/src/routes/**'],
+      // Void page files are named after their route segments: `[tripId].tsx`, `(workspace)/`.
+      files: ['apps/web/pages/**'],
       rules: { 'unicorn/filename-case': 'off' }
     },
     {
@@ -175,7 +176,7 @@ export const lint = {
     },
     {
       files: webSource,
-      excludeFiles: ['**/apps/web/src/types/**', '**/apps/web/src/routeTree.gen.ts', ...webTests],
+      excludeFiles: ['**/apps/web/src/types/**', ...webTests],
       rules: { 'groam/no-local-type-definitions': 'error' }
     },
     {

@@ -2,7 +2,7 @@ import { Menu, Sparkles } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { SidebarProvider } from '@groam/ui/components/sidebar';
 import { useSidebar } from '@groam/ui/hooks/use-sidebar';
-import { Outlet, useLocation } from '@tanstack/react-router';
+import type { ReactNode } from 'react';
 import { Link } from '@/features/workspace/navigation/router';
 import { CommandPalette } from '@/features/workspace/workspace-command/command-palette';
 import {
@@ -10,6 +10,7 @@ import {
   mobileNavigation,
   navigationItemIsActive
 } from '@/features/workspace/workspace-sidebar/sidebar-nav';
+import { useLocation } from '@/lib/navigation/router';
 import { testIds } from '@/lib/test-ids';
 import type { SidebarNavItem } from '@/types/workspace';
 import { ReferenceContent } from './reference-content';
@@ -19,16 +20,15 @@ import { WorkspaceDialogs } from './workspace-dialogs';
 import { WorkspaceSidebar } from './workspace-sidebar';
 import { useWorkspace } from './workspace-state';
 
-export function WorkspaceShell() {
+/** The workspace chrome around the current page. */
+export function WorkspaceShell({ children }: { children: ReactNode }) {
   const { activeOrganization } = useWorkspace();
   return (
     <SidebarProvider className="h-svh min-h-0 overflow-hidden">
       <ConfirmDialogProvider>
         <WorkspaceSidebar />
         <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-          <ReferenceContent>
-            <Outlet />
-          </ReferenceContent>
+          <ReferenceContent>{children}</ReferenceContent>
           <MobileNavigation />
         </div>
         <WorkspaceAssistantWidget organizationId={activeOrganization.id} />

@@ -8,18 +8,18 @@ import {
 import { SidebarCollapsibleItem } from '@groam/ui/components/sidebar-collapsible-item';
 import { SidebarNestedLoadMore } from '@groam/ui/components/sidebar-nested-load-more';
 import { useSidebar } from '@groam/ui/hooks/use-sidebar';
-import { useLocation, useNavigate } from '@tanstack/react-router';
 import { CreateDiscussionDialog } from '@/features/discussions/discussion-create/create-discussion-dialog';
 import { useSidebarNestedPaging } from '@/features/workspace/hooks/use-sidebar-nested-paging';
 import { useSidebarNestedVisible } from '@/features/workspace/hooks/use-sidebar-nested-visible';
 import { useSidebarSectionOpen } from '@/features/workspace/hooks/use-sidebar-section-open';
 import { Link, useParams } from '@/features/workspace/navigation/router';
+import { useLocation, useNavigate } from '@/lib/navigation/router';
 import { testIds } from '@/lib/test-ids';
 import { useDiscussions } from './hooks/use-discussions';
 
 export function ChatsSidebarNav() {
   const { pathname } = useLocation();
-  const params = useParams({ strict: false });
+  const params = useParams();
   const { setOpenMobile } = useSidebar();
   const navigate = useNavigate();
   const { closeCreate, isCreateOpen, openCreate, showMore, visibleCount, canExpandVisible } =

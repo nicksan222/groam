@@ -9,7 +9,7 @@ import {
 } from '@/features/trips/testing/trip-workspace-fixtures';
 import { TripListView } from './trip-list-view';
 
-vi.mock('@tanstack/react-router', async () => {
+vi.mock('@/lib/navigation/router', async () => {
   const { mockRouterTargets } = await import('@/lib/testing/router-mock');
   return mockRouterTargets();
 });

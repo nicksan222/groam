@@ -6,7 +6,7 @@ import { ShortReferenceLink } from './short-reference-link';
 
 const state = vi.hoisted(() => ({ shortIds: {} as Record<string, string> }));
 
-vi.mock('@tanstack/react-router', () => ({
+vi.mock('@/lib/navigation/router', () => ({
   Link: ({ children, params }: { children?: ReactNode; params?: unknown }) => (
     <a data-params={JSON.stringify(params ?? null)} href="/x">
       {children}

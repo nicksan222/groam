@@ -3,8 +3,7 @@ set -e
 
 # Keep every generated contract synchronized before validating the commit.
 vp run codegen
-git add apps/web/src/routeTree.gen.ts \
-  packages/backend/convex/_generated \
+git add packages/backend/convex/_generated \
   packages/backend/convex/components/better-auth/_generated \
   packages/backend/convex/components/better-auth/generated.ts
 

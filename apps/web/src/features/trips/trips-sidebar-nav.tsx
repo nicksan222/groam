@@ -19,7 +19,6 @@ import { SidebarCollapsibleItem } from '@groam/ui/components/sidebar-collapsible
 import { SidebarNestedLoadMore } from '@groam/ui/components/sidebar-nested-load-more';
 import { toast } from '@groam/ui/components/toast';
 import { useSidebar } from '@groam/ui/hooks/use-sidebar';
-import { useLocation, useNavigate } from '@tanstack/react-router';
 import { useMemo } from 'react';
 import { useTripSidebarActions } from '@/features/trips/hooks/use-trip-sidebar-actions';
 import { type TripListItem, useTrips } from '@/features/trips/hooks/use-trips';
@@ -32,11 +31,12 @@ import {
   orderSidebarItems,
   SIDEBAR_NESTED_PAGE_SIZE
 } from '@/features/workspace/workspace-sidebar/sidebar-nested-nav';
+import { useLocation, useNavigate } from '@/lib/navigation/router';
 import { testIds } from '@/lib/test-ids';
 
 export function TripsSidebarNav() {
   const { pathname } = useLocation();
-  const params = useParams({ strict: false });
+  const params = useParams();
   const { setOpenMobile } = useSidebar();
   const navigate = useNavigate();
   const {

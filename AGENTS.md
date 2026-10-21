@@ -60,9 +60,9 @@ report unavailable verification clearly rather than fabricating results.
 Use existing, tested patterns and inspect a current neighbor before adding an
 abstraction. The relevant skills explain how to locate builders and examples.
 
-- Web route files compose feature views; keep product behavior in features and
-  reusable async state in feature hooks. Generate the route tree through its
-  owning command instead of editing generated files.
+- Web pages (Void file routes under `apps/web/pages`) compose feature views;
+  keep product behavior in features and reusable async state in feature hooks.
+  Register new page paths in `AppPath`; there is no generated route tree.
 - Backend public functions live under Convex routes. Inspect current custom
   builders, domain schemas, enriched contexts, and helpers before choosing
   handlers or argument shapes. Use the domain's current exports.

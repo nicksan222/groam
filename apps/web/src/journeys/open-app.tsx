@@ -5,6 +5,7 @@ import { render } from '@groam/vitest-config/react';
 import { ConvexReactClient } from 'convex/react';
 import { onTestFinished } from 'vite-plus/test';
 import { AppRoot } from '@/app-root';
+import { JourneyPages } from '@/journeys/journey-pages';
 import { settleWrites } from '@/journeys/settle-writes';
 import { useAuthFormStore } from '@/lib/stores/auth-form-store';
 
@@ -31,7 +32,10 @@ async function mountApp(path: string): Promise<void> {
   useAuthFormStore.getState().reset();
   history.replaceState(null, '', path);
   const client = new ConvexReactClient(env.convexUrl, { expectAuth: true });
-  mounted = { app: await render(<AppRoot client={client} />), client };
+  mounted = {
+    app: await render(<JourneyPages root={(page) => <AppRoot client={client}>{page}</AppRoot>} />),
+    client
+  };
   resetAuthClientCache();
   onTestFinished(unmountApp);
 }

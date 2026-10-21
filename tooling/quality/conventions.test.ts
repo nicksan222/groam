@@ -33,6 +33,15 @@ describe('invalidDirectoryNames', () => {
     expect(invalidDirectoryNames('.github/ISSUE_TEMPLATE/bug.yml')).toEqual([]);
   });
 
+  test('accepts Void route segments only in the web page tree', () => {
+    expect(
+      invalidDirectoryNames('apps/web/pages/(workspace)/trips/[tripId]/[section].tsx')
+    ).toEqual([]);
+    expect(invalidDirectoryNames('apps/web/src/features/[tripId]/view.tsx')).toEqual([
+      'apps/web/src/features/[tripId]'
+    ]);
+  });
+
   test('rejects PascalCase or snake_case folders', () => {
     expect(invalidDirectoryNames('apps/Web/src/app.tsx')).toEqual(['apps/Web']);
     expect(invalidDirectoryNames('packages/ui_kit/src/button.tsx')).toEqual(['packages/ui_kit']);
@@ -42,18 +51,28 @@ describe('invalidDirectoryNames', () => {
 describe('inspectFile', () => {
   test('skips generated contracts', () => {
     expect(
-      inspectFile('apps/web/src/routeTree.gen.ts', `import '${'..'}/features/trips/TripView'`)
+      inspectFile('apps/web/.void/routes.d.ts', `import '${'..'}/features/trips/TripView'`)
     ).toEqual([]);
     expect(
       inspectFile('packages/backend/convex/_generated/server.js', 'export const env = process.env;')
     ).toEqual([]);
   });
 
-  test('requires kebab-case source filenames except TanStack routes', () => {
+  test('requires kebab-case source filenames except Void route segments', () => {
     expect(inspectFile('apps/web/src/features/trips/TripView.tsx', 'export {}')).toEqual([
       { category: 'names', location: 'apps/web/src/features/trips/TripView.tsx' }
     ]);
-    expect(inspectFile('apps/web/src/routes/_workspace.trips.index.tsx', 'export {}')).toEqual([]);
+    for (const page of [
+      'apps/web/pages/(workspace)/trips/[tripId]/[section].tsx',
+      'apps/web/pages/(workspace)/trips/[tripId]/[section].server.ts',
+      'apps/web/pages/[...path].tsx',
+      'apps/web/pages/layout.tsx'
+    ]) {
+      expect(inspectFile(page, 'export {}')).toEqual([]);
+    }
+    expect(inspectFile('apps/web/pages/TripPage.tsx', 'export {}')).toEqual([
+      { category: 'names', location: 'apps/web/pages/TripPage.tsx' }
+    ]);
   });
 
   test('accepts Astro dynamic routes while checking ordinary page names', () => {
@@ -246,24 +265,18 @@ describe('inspectFile', () => {
     ).toEqual([{ category: 'ui-imports', location: 'apps/web/src/app.tsx:1' }]);
   });
 
-  test('keeps web routes composing feature views', () => {
+  test('keeps web pages composing feature views', () => {
+    const page = 'apps/web/pages/(workspace)/index.tsx';
     expect(
       inspectFile(
-        'apps/web/src/routes/_workspace.index.tsx',
-        "import { createFileRoute } from '@tanstack/react-router';\nimport { DashboardView } from '@/features/dashboard/dashboard-view';"
+        page,
+        "import { useParams } from '@/lib/navigation/router';\nimport { DashboardView } from '@/features/dashboard/dashboard-view';"
       )
     ).toEqual([]);
-    expect(
-      inspectFile(
-        'apps/web/src/routes/_workspace.index.tsx',
-        `import { Button } from '${groamUiButton}';`
-      )
-    ).toEqual([
-      { category: 'route-imports', location: 'apps/web/src/routes/_workspace.index.tsx:1' }
+    expect(inspectFile(page, `import { Button } from '${groamUiButton}';`)).toEqual([
+      { category: 'route-imports', location: `${page}:1` }
     ]);
-    expect(
-      inspectFile('apps/web/src/routes/_workspace.index.tsx', `import { env } from '${groamEnv}';`)
-    ).toEqual([]);
+    expect(inspectFile(page, `import { env } from '${groamEnv}';`)).toEqual([]);
   });
 
   test('rejects leftover Halo package names', () => {
@@ -395,21 +408,22 @@ describe('packageExportPatternsFromMap', () => {
 });
 
 describe('routePackageAllowlistFromWebDependencies', () => {
-  test('keeps groam packages except UI, plus the router and local aliases', () => {
+  test("keeps groam packages except UI, plus Void's React adapter and local aliases", () => {
     expect(
       routePackageAllowlistFromWebDependencies({
         '@groam/ai': 'workspace:*',
         '@groam/auth': 'workspace:*',
         '@groam/ui': 'workspace:*',
-        '@tanstack/react-router': '^1.0.0',
+        '@void/react': '^1.0.0',
         react: '^19.0.0'
       })
     ).toEqual([
       '@groam/ai',
       '@groam/auth',
-      '@tanstack/react-router',
+      '@void/react',
       '@/features/',
       '@/lib/',
+      '@/app-layout',
       '@groam/ai/ui'
     ]);
   });

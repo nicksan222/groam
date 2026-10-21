@@ -18,7 +18,10 @@ vi.mock('@groam/ai/ui/context/agent-context', () => ({
   useSetAgentContext: setContext
 }));
 
-vi.mock('@tanstack/react-router', () => ({ useNavigate: () => vi.fn() }));
+vi.mock('@/lib/navigation/router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/navigation/router')>()),
+  useVisit: () => vi.fn()
+}));
 
 vi.mock('@/features/workspace/workspace-shell/workspace-state', () => ({
   useWorkspace: () => ({ activeOrganization: { id: 'org-acme', name: 'Acme Labs' } })

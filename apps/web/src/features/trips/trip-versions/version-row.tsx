@@ -57,7 +57,6 @@ export function VersionRow({
     },
     viewerUserId
   );
-  const search = 'search' in href ? href.search : {};
   const primary = ideaPrimaryAction(
     { author: proposal.author, status: proposal.status },
     viewerUserId
@@ -78,13 +77,7 @@ export function VersionRow({
               {proposal.title}
             </Button>
           ) : (
-            <Link
-              className={recordListTitleClassName}
-              onClick={onOpen}
-              params={href.params}
-              search={search}
-              to={href.to}
-            >
+            <Link className={recordListTitleClassName} onClick={onOpen} {...href}>
               {proposal.title}
             </Link>
           )}
@@ -146,7 +139,7 @@ export function VersionRow({
             size="sm"
             variant="ghost"
           >
-            <Link onClick={onOpen} params={href.params} search={search} to={href.to}>
+            <Link {...href} onClick={onOpen}>
               {actionLabel}
               <ArrowRight aria-hidden />
             </Link>

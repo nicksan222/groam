@@ -4,7 +4,7 @@ import { page } from 'vite-plus/test/browser';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { WorkingTripRedirect } from './working-trip-redirect';
 
-vi.mock('@tanstack/react-router', () => ({
+vi.mock('@/lib/navigation/router', () => ({
   Navigate: (props: { params: unknown; search: unknown; to: string }) => (
     <output data-testid="navigate">{JSON.stringify(props)}</output>
   )

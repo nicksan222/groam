@@ -41,7 +41,7 @@ vi.mock('@/features/trips/hooks/use-trips', async () => {
   return tripsHookMock(trips);
 });
 
-vi.mock('@tanstack/react-router', async () => {
+vi.mock('@/lib/navigation/router', async () => {
   const { mockRouterTargets } = await import('@/lib/testing/router-mock');
   return mockRouterTargets();
 });

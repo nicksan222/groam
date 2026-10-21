@@ -2,40 +2,44 @@
 
 This file describes how `apps/web` realises the decisions in the
 [client architecture](README.md): boot, the workspace and reference layers
-around the router, and how features adapt Convex operations. The pseudocode is
+around Void's page tree, and how features adapt Convex operations. The pseudocode is
 simplified from the source and keeps the real identifiers; when the two
 disagree, the source wins.
 
 ## Boot and provider nesting
 
-`main.tsx` creates one `ConvexReactClient` with `expectAuth: true` and renders
-`AppRoot`, which journeys mount as well. Theme wraps authentication, which
-wraps the app. The router is created per mount; the root route adds the
-assistant screen-context provider and the route error and not-found views.
+Void renders the page tree under `apps/web/pages`; the root `layout.tsx`
+re-exports `AppLayout`, which creates the browser's `ConvexReactClient` and
+renders `AppRoot` around the routed page. Journeys mount `AppRoot` as well.
+Theme wraps authentication, which wraps the app. `App` adds the assistant
+screen-context provider and the route error boundary; the catch-all
+`[...path].tsx` page renders the not-found view.
 
 ```tsx
-<AppRoot client={new ConvexReactClient(env.convexUrl, { expectAuth: true })} />
+// pages/layout.tsx
+export { AppLayout as default } from '@/app-layout';
+// app-layout.tsx
+<AppRoot client={browserConvexClient()}>{children}</AppRoot>
 // app-root.tsx
-<StrictMode><UiThemeProvider><GroamAuthProvider client={client}><App /></GroamAuthProvider></UiThemeProvider></StrictMode>
-// router.tsx
-createRouter({ basepath: env.baseUrl, defaultPreload: 'intent', defaultPreloadStaleTime: 30_000, routeTree, scrollRestoration: true });
-// routes/__root.tsx
-createRootRoute({ component: () => <AgentContextProvider><Outlet /></AgentContextProvider>,
-                  errorComponent: RouteError, notFoundComponent: RouteNotFound });
+<StrictMode><UiThemeProvider><GroamAuthProvider client={client}><App>{children}</App></GroamAuthProvider></UiThemeProvider></StrictMode>
+// app.tsx
+<AgentContextProvider><RouteErrorBoundary location={pathname}><Suspense>{children}</Suspense></RouteErrorBoundary></AgentContextProvider>
+// pages/[...path].tsx
+export { RouteNotFound as default } from '@/features/errors/route-error/route-not-found';
 ```
 
-Source: [`main.tsx`](../../../apps/web/src/main.tsx),
+Source: [`layout.tsx`](../../../apps/web/pages/layout.tsx),
+[`app-layout.tsx`](../../../apps/web/src/app-layout.tsx),
 [`app-root.tsx`](../../../apps/web/src/app-root.tsx),
-[`router.tsx`](../../../apps/web/src/router.tsx),
-[`__root.tsx`](../../../apps/web/src/routes/__root.tsx),
+[`[...path].tsx`](../../../apps/web/pages/[...path].tsx),
 [`provider.tsx`](../../../packages/auth/src/provider.tsx).
 
 ## Session gate
 
 `App` renders a spinner while Convex auth loads, the lazily loaded
-`AuthScreen` when signed out, and the lazily loaded router when signed in.
+`AuthScreen` when signed out, and the routed page when signed in.
 Requests that end or replace the session go through `changeSession` from
-`SessionChangeContext`. It hides the router with React `Activity` before the
+`SessionChangeContext`. It hides the page with React `Activity` before the
 request starts, so mounted subscriptions cannot rerun against a dropped session
 and throw "Not authenticated". A failed request shows the workspace again and
 returns focus to the control that started it.
@@ -51,40 +55,55 @@ if (isChangingSession && (isLoading || !isAuthenticated)) setChangingSession(fal
 
 <Authenticated>
   {isChangingSession && <LoadingSession />}
-  <Activity mode={isChangingSession ? 'hidden' : 'visible'}><AppRouter /></Activity>
+  <Activity mode={isChangingSession ? 'hidden' : 'visible'}>{children}</Activity>
 </Authenticated>
 ```
 
 Source: [`app.tsx`](../../../apps/web/src/app.tsx#L30),
 [`use-session-change.ts`](../../../apps/web/src/features/auth/hooks/use-session-change.ts#L12).
 
-## File-based routes and thin route files
+## File-based pages and thin page files
 
-TanStack Router generates `routeTree.gen.ts` from one file per route; the
-pathless `_workspace` layout wraps every product route. A route file reads
+Void routes `apps/web/pages/**` by file name: `[tripId]` is a param,
+`[...path]` a catch-all, and the `(workspace)` group wraps every product page
+in one `layout.tsx` without adding a URL segment. Each page has a sibling
+`.server.ts` with `export const ssr = false`, so the Worker serves a
+client-mounted shell. Nested layouts (such as `chat/layout.tsx`) stay mounted
+while their pages change, and the app enables view transitions through
+`voidReact({ viewTransitions: true })`. Void writes its generated types to
+`.void/` (ignored); there is no route tree to edit.
+
+Navigation goes through `@/lib/navigation/router`, a typed layer over Void's
+router. `AppPath` in `types/navigation.ts` lists every page pattern, and
+`Link`, `useNavigate` and `Navigate` take `{ to, params, search, hash }`.
+`href()` in `lib/navigation/paths.ts` returns the plain path. A page file reads
 params and search, applies legacy redirects and renders one feature view. The
-conventions linter reports `route-imports` when a route file imports anything
-other than the router, `@groam/*` packages except `@groam/ui`, `@groam/ai/ui`,
-`@/features/` or `@/lib/`.
+conventions linter reports `route-imports` when a page file imports anything
+outside its allowlist (`@void/react`, `@groam/ai`, `@groam/auth`,
+`@groam/backend`, `@groam/env`, `@/features/`, `@/lib/` and `@/app-layout`).
 
 ```tsx
-export const Route = createFileRoute('/_workspace/trips/$tripId/$section')({
-  component: TripSectionRoute, validateSearch: parseTripRouteSearch });
-function TripSectionRoute() {
-  const params = Route.useParams();
+// pages/(workspace)/trips/[tripId]/[section].tsx
+export default function TripSectionPage() {
+  const params = useParams<{ section: string; tripId: string }>();
   const { section, tripId } = useResolvedParams(params);        // long ids from ReferenceProvider
   if (!isTripSection(section)) return <Navigate params={{ section: 'board', tripId: params.tripId }} replace to="/trips/$tripId/$section" />;
   return <TripDetailView section={section} tripId={tripId as Id<'trips'>} tripReference={params.tripId} />;
 }
+// [section].server.ts
+export const ssr = false;
 ```
 
-Source: [`routes/`](../../../apps/web/src/routes),
-[`_workspace.trips.$tripId.$section.tsx`](../../../apps/web/src/routes/_workspace.trips.$tripId.$section.tsx),
-[`conventions.ts`](../../../tooling/quality/conventions.ts#L312).
+Source: [`pages/`](../../../apps/web/pages),
+[`[section].tsx`](../../../apps/web/pages/(workspace)/trips/[tripId]/[section].tsx),
+[`navigation/`](../../../apps/web/src/lib/navigation),
+[`navigation.ts`](../../../apps/web/src/types/navigation.ts),
+[`void.config.ts`](../../../apps/web/void.config.ts),
+[`conventions.ts`](../../../tooling/quality/conventions.ts#L38).
 
 ## Workspace provider and group switch
 
-`_workspace.tsx` nests `WorkspaceProvider`, `ReferenceProvider` and
+The `(workspace)` layout nests `WorkspaceProvider`, `ReferenceProvider` and
 `WorkspaceShell`. `useWorkspaceData` combines the Better Auth session,
 organization list and active organization, and yields a value only when the
 active organization equals `session.activeOrganizationId`, so a group cached
@@ -111,7 +130,8 @@ const isSwitchingGroup = activatingId !== null && activatingId !== activeId;
 </WorkspaceContext>
 ```
 
-Source: [`workspace-context.tsx`](../../../apps/web/src/features/workspace/workspace-shell/workspace-context.tsx#L25),
+Source: [`(workspace)/layout.tsx`](../../../apps/web/pages/(workspace)/layout.tsx),
+[`workspace-context.tsx`](../../../apps/web/src/features/workspace/workspace-shell/workspace-context.tsx#L25),
 [`use-workspace-data.ts`](../../../apps/web/src/features/workspace/hooks/use-workspace-data.ts),
 [`use-organization-activation.ts`](../../../apps/web/src/features/workspace/hooks/use-organization-activation.ts#L84).
 
@@ -136,7 +156,7 @@ for (const { key, table, reference } of referenceEntries(params)) {
   else { ids[key] = result.id; shortIds[key] = result.shortId; }
 }
 if (!loading && !missing && canonicalPath !== pathname)
-  navigate({ to: canonicalPath, search: true, hash: true, replace: true });
+  visit(appUrl(`${canonicalPath}${search}${hash}`), { replace: true });
 ```
 
 Source: [`reference-provider.tsx`](../../../apps/web/src/features/workspace/workspace-shell/reference-provider.tsx),
@@ -147,14 +167,14 @@ Source: [`reference-provider.tsx`](../../../apps/web/src/features/workspace/work
 ## Shell-owned behaviour
 
 `WorkspaceShell` composes `packages/ui` layout primitives (`SidebarProvider`,
-`useSidebar`) with product behaviour: the sidebar, the reference-gated outlet,
+`useSidebar`) with product behaviour: the sidebar, the reference-gated page,
 mobile navigation, the assistant widget (keyed and error-bounded by
 organization id), shared workspace dialogs and the command palette.
 
 ```tsx
 <SidebarProvider><ConfirmDialogProvider>
   <WorkspaceSidebar />
-  <ReferenceContent><Outlet /></ReferenceContent><MobileNavigation />
+  <ReferenceContent>{children}</ReferenceContent><MobileNavigation />
   <WorkspaceAssistantWidget organizationId={activeOrganization.id} />
   <WorkspaceDialogs />  {/* create-organization | invite | join */}  <CommandPalette />
 </ConfirmDialogProvider></SidebarProvider>
@@ -277,7 +297,7 @@ Source: [`agent-context.tsx`](../../../packages/ai/src/ui/context/agent-context.
   [`use-reference-params.test.tsx`](../../../apps/web/src/features/workspace/hooks/use-reference-params.test.tsx);
   short ids keep access checks:
   [`references.test.ts`](../../../packages/backend/convex/modules/references/references.test.ts).
-- Route files stay thin:
+- Page files stay thin and import only allowed modules:
   [`conventions.test.ts`](../../../tooling/quality/conventions.test.ts).
 - Optimistic moves touch only a loaded list; slow board actions run one at a
   time:
@@ -289,7 +309,8 @@ Source: [`agent-context.tsx`](../../../packages/ai/src/ui/context/agent-context.
 
 ## Extending
 
-- New page: one route file plus a feature view
+- New page: a Void page and `.server.ts` under `apps/web/pages`, an
+  `AppPath` entry, and a feature view
   ([add-web-route](../../../.agents/skills/add-web-route/SKILL.md),
   [place-feature-view](../../../.agents/skills/place-feature-view/SKILL.md)).
   Name resource params after a key in `referenceTables` so they resolve.

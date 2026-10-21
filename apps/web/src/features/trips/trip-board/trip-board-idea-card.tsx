@@ -128,6 +128,7 @@ export const TripBoardIdeaCard = memo(function TripBoardIdeaCard({
             </span>
           ) : null}
           <Link
+            {...href}
             className={cn(
               cardChip,
               cardChipInteractive,
@@ -137,9 +138,6 @@ export const TripBoardIdeaCard = memo(function TripBoardIdeaCard({
               cardStretchedLink
             )}
             data-testid={draft ? testIds.ideaContinue : testIds.ideaView}
-            params={href.params}
-            search={'search' in href ? href.search : {}}
-            to={href.to}
           >
             {draft ? pendingIdeaContinueLabel('draft') : actionLabel}
           </Link>

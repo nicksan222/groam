@@ -9,7 +9,7 @@ import { IdeaList } from './idea-list';
 
 const navigate = vi.hoisted(() => vi.fn());
 
-vi.mock('@tanstack/react-router', async (importOriginal) => {
+vi.mock('@/lib/navigation/router', async (importOriginal) => {
   const { mockRouter } = await import('@/lib/testing/router-mock');
   return mockRouter(importOriginal, navigate);
 });

@@ -1,4 +1,3 @@
-import { useNavigate } from '@tanstack/react-router';
 import { type KeyboardEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { agentRunHref } from '@/features/agents/agent-run/agent-run-href';
 import { useAgentRoster } from '@/features/agents/hooks/use-agent-roster';
@@ -7,6 +6,7 @@ import { useWorkspaceIdeas } from '@/features/ideas/hooks/use-workspace-ideas';
 import { ideaCloneHref } from '@/features/ideas/idea-href';
 import { useWorkspaceIssues } from '@/features/issues/hooks/use-workspace-issues';
 import { useTrips } from '@/features/trips/hooks/use-trips';
+import { useNavigate } from '@/lib/navigation/router';
 import { useCommandPaletteChrome } from './command-palette-chrome';
 import { buildCommandPaletteMatches, type CommandPaletteMatch } from './command-palette-results';
 

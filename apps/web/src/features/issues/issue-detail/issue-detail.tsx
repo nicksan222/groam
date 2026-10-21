@@ -1,11 +1,11 @@
 import Shell from '@groam/ui/components/shell/client';
 import Timeline from '@groam/ui/components/timeline';
-import { useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { ideaCloneHref } from '@/features/ideas/idea-href';
 import { useIssueMutations } from '@/features/issues/hooks/use-issue-mutations';
 import type { useTripIssue } from '@/features/trips/hooks/use-trip-issues';
 import { useAsyncPending } from '@/features/workspace/hooks/use-async-pending';
+import { useNavigate } from '@/lib/navigation/router';
 import { groupIssueTimeline } from './group-issue-timeline';
 import { IssueAutoStatusEvent } from './issue-auto-status-event';
 import { IssueComment } from './issue-comment';

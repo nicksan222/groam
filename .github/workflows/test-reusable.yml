@@ -175,7 +175,6 @@ jobs:
     env:
       CI: 'true'
       CONVEX_AGENT_MODE: anonymous
-      STATIC_SITE_URL: http://localhost:3211
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -192,10 +191,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          bunx convex dev --typecheck-components --tail-logs disable > /tmp/convex.log 2>&1 &
+          rm -f /tmp/convex-ready
+          bunx convex dev --typecheck-components --tail-logs disable --start 'touch /tmp/convex-ready && sleep infinity' > /tmp/convex.log 2>&1 &
           echo "$!" > /tmp/convex.pid
           timeout 600 bash -c '
-            until [ -f .env.local ] && bunx convex run --component web lib:getUrls "{}" >/dev/null 2>&1; do
+            until [ -f .env.local ] && [ -f /tmp/convex-ready ]; do
               sleep 2
             done
           '
@@ -212,21 +212,6 @@ jobs:
       # A failing journey keeps its Playwright trace (network, console, DOM) in the failure artifact.
       - name: Journeys
         run: bun run test:journeys -- --browser.trace=retain-on-failure
-
-      # Publish the same two static components and route layout used in production.
-      - name: Publish local static sites
-        run: |
-          bun run hosting:upload:web
-          bun run hosting:upload:landing
-
-      - name: Verify static routes
-        shell: bash
-        run: |
-          curl --fail --show-error --silent "$STATIC_SITE_URL/" >/dev/null
-          curl --fail --show-error --silent "$STATIC_SITE_URL/it/features/ai/" >/dev/null
-          curl --fail --show-error --silent "$STATIC_SITE_URL/app/" >/dev/null
-          curl --fail --show-error --silent "$STATIC_SITE_URL/app/settings" >/dev/null
-          test "$(curl --output /dev/null --silent --write-out '%{http_code}' "$STATIC_SITE_URL/missing.js")" = "404"
 
       - name: Upload failure artifacts
         if: failure()

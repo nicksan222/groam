@@ -17,14 +17,7 @@ export function IdeaWorkspaceLink({
 }) {
   const href = ideaWorkspaceHref(proposal);
   return (
-    <Link
-      className={className}
-      onClick={onClick}
-      params={href.params}
-      search={'search' in href ? href.search : undefined}
-      title={title}
-      to={href.to}
-    >
+    <Link {...href} className={className} onClick={onClick} title={title}>
       {children}
     </Link>
   );

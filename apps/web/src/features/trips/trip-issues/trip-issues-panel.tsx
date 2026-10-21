@@ -1,7 +1,6 @@
 import { isResolved } from '@groam/backend/convex/modules/travel/issues/status';
 import { MessageSquareText, Plus } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
-import { useNavigate } from '@tanstack/react-router';
 import { CreateIssueDialog } from '@/features/issues/issue-list/create-issue-dialog';
 import { IssueList } from '@/features/issues/issue-list/issue-list';
 import { useTripIssues } from '@/features/trips/hooks/use-trip-issues';
@@ -9,6 +8,7 @@ import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { TripSectionPanel } from '@/features/trips/trip-detail/trip-section-panel';
 import { useOpenState } from '@/features/workspace/hooks/use-open-state';
 import { Link } from '@/features/workspace/navigation/router';
+import { useNavigate } from '@/lib/navigation/router';
 import { testIds } from '@/lib/test-ids';
 import type { IssueStatusFilter } from '@/types/issues';
 

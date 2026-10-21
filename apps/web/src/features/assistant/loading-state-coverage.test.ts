@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vite-plus/test';
 
-const routeSources = import.meta.glob('../../routes/*.tsx', {
+const routeSources = import.meta.glob('../../../pages/**/*.tsx', {
   eager: true,
   import: 'default',
   query: '?raw'
@@ -16,8 +16,11 @@ const LOADING_STATE_PATTERN =
   /useReadyValue\s*\(|(?:^|[^\w])showLoading\b|(?:^|[^\w])pageLoading\b|(?:^|[^\w])proposalLoading\b|presentation\.kind\s*===\s*['"]loading['"]|(?:^|[^\w])isLoading(?:\s*[=?:{]|\s*\|\||\s*&&)|<[A-Z][\w]*Loading\b|function [A-Z][\w]*Loading\b|role=\{[^}]*['"]status['"]|role=["']status["']|aria-busy=\{?\s*true|aria-busy=["']true["']|LoadingPlaceholder|from ['"][^'"]*-loading(?:-shell)?['"]/u;
 
 function routeNameFromPath(routePath: string): string {
-  return routePath.split('/').at(-1) ?? routePath;
+  return routePath.slice(routePath.indexOf('/pages/') + '/pages/'.length);
 }
+
+// The not-found page is a static message with nothing to load.
+const staticPages = new Set(['[...path].tsx']);
 
 function importedFeatureNames(source: string): string[] {
   const names: string[] = [];
@@ -39,16 +42,13 @@ function importedFeatureNames(source: string): string[] {
 
 function usesIdentifierAsView(source: string, name: string): boolean {
   const token = name.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
-  return (
-    new RegExp(`(?:^|[\\s,{])component:\\s*${token}\\b`, 'u').test(source) ||
-    new RegExp(`<${token}\\b`, 'u').test(source)
-  );
+  return new RegExp(`<${token}\\b`, 'u').test(source);
 }
 
-/** Product pages compose a feature view. Layouts, outlets, and redirects do not. */
+/** Product pages compose a feature view, or are one. Layouts and redirects do not. */
 function isProductPage(routeSource: string): boolean {
-  if (/(?:^|[\s,{])component:\s*Outlet\b/u.test(routeSource)) return false;
-  if (/(?:^|[\s,{])component:\s*\(\)\s*=>\s*null/u.test(routeSource)) return false;
+  if (/export\s*\{\s*\w+\s+as\s+default\s*\}\s*from\s*['"]@\/features\//u.test(routeSource))
+    return true;
   return importedFeatureNames(routeSource).some((name) => usesIdentifierAsView(routeSource, name));
 }
 
@@ -95,16 +95,19 @@ function featureFilesForRoute(
 }
 
 describe('page loading state coverage', () => {
-  const productPages = Object.entries(routeSources).filter(([, source]) => isProductPage(source));
-  const skipped = Object.keys(routeSources).filter(
-    (path) => !isProductPage(routeSources[path] ?? '')
+  const pageSources = Object.fromEntries(
+    Object.entries(routeSources).filter(([path]) => !staticPages.has(routeNameFromPath(path)))
+  );
+  const productPages = Object.entries(pageSources).filter(([, source]) => isProductPage(source));
+  const skipped = Object.keys(pageSources).filter(
+    (path) => !isProductPage(pageSources[path] ?? '')
   );
 
   test('classifies every route file as a product page or as layout/redirect', () => {
-    expect(Object.keys(routeSources).length).toBe(productPages.length + skipped.length);
+    expect(Object.keys(pageSources).length).toBe(productPages.length + skipped.length);
     expect(productPages.length).toBeGreaterThan(0);
     expect(
-      skipped.every((path) => !isProductPage(routeSources[path] ?? '')),
+      skipped.every((path) => !isProductPage(pageSources[path] ?? '')),
       `non-pages must not render a feature view: ${skipped.map(routeNameFromPath).join(', ')}`
     ).toBe(true);
   });

@@ -1,5 +1,4 @@
 import { cn } from '@groam/ui/lib/utils';
-import { useNavigate } from '@tanstack/react-router';
 import { useMemo } from 'react';
 import { CreateIssueDialog } from '@/features/issues/issue-list/create-issue-dialog';
 import { useTripBoardFullscreen } from '@/features/trips/hooks/use-trip-board-fullscreen';
@@ -9,6 +8,7 @@ import { useTripVersions } from '@/features/trips/hooks/use-trip-versions';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
 import { useOpenState } from '@/features/workspace/hooks/use-open-state';
 import { useOptionalWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
+import { useNavigate } from '@/lib/navigation/router';
 import { agreedCardCount, agreedDays } from './agreed-days';
 import { TripBoardAgreedLane } from './trip-board-agreed-lane';
 import { TripBoardContext } from './trip-board-context';

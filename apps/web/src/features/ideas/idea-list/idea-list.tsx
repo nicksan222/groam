@@ -1,6 +1,5 @@
 import { PageLoading } from '@groam/ui/components/page-loading';
 import { RecordList } from '@groam/ui/components/record-list';
-import { useNavigate } from '@tanstack/react-router';
 import { type ReactNode, useCallback, useMemo } from 'react';
 import {
   type IdeaListItem,
@@ -15,6 +14,7 @@ import type { WorkspaceIdea } from '@/features/ideas/hooks/use-workspace-ideas';
 import { ideaOpenHref } from '@/features/ideas/idea-href';
 import { ListStatusFilterSelect } from '@/features/workspace/workspace-list/list-status-filter-select';
 import { recordListSorts } from '@/features/workspace/workspace-list/record-list-sorts';
+import { useNavigate } from '@/lib/navigation/router';
 import { IdeaListRow } from './idea-list-row';
 
 const IDEA_LIST_RESOURCE = { plural: 'ideas', singular: 'idea' } as const;

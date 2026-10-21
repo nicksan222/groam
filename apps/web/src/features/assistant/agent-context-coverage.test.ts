@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vite-plus/test';
 
-const routeSources = import.meta.glob('../../routes/*.tsx', {
+const routeSources = import.meta.glob('../../../pages/**/*.tsx', {
   eager: true,
   import: 'default',
   query: '?raw'
@@ -11,21 +11,19 @@ const featureSources = import.meta.glob('../**/*.{ts,tsx}', {
   query: '?raw'
 }) as Record<string, string>;
 
+// Layouts, redirects, and the not-found page render no product page of their own.
 const infrastructureRoutes = new Set([
-  '__root.tsx',
-  '_workspace.tsx',
-  '_workspace.agents.$agentId.tsx',
-  '_workspace.chat.index.tsx',
-  '_workspace.group.$section.tsx',
-  '_workspace.group.index.tsx',
-  '_workspace.group.tsx',
-  '_workspace.ideas.$proposalId.tsx',
-  '_workspace.settings.index.tsx',
-  '_workspace.settings.tsx',
-  '_workspace.trips.$tripId.ideas.$proposalId.index.tsx',
-  '_workspace.trips.$tripId.ideas.$proposalId.tsx',
-  '_workspace.trips.$tripId.index.tsx',
-  '_workspace.trips.$tripId.tsx'
+  'layout.tsx',
+  '[...path].tsx',
+  '(workspace)/layout.tsx',
+  '(workspace)/chat/layout.tsx',
+  '(workspace)/chat/index.tsx',
+  '(workspace)/group/[section].tsx',
+  '(workspace)/group/index.tsx',
+  '(workspace)/ideas/[proposalId].tsx',
+  '(workspace)/settings/index.tsx',
+  '(workspace)/trips/[tripId]/ideas/[proposalId]/index.tsx',
+  '(workspace)/trips/[tripId]/index.tsx'
 ]);
 
 function featurePageFor(
@@ -62,8 +60,7 @@ function hasAgentContext(source: string): boolean {
 
 describe('agent page context coverage', () => {
   for (const [routePath, routeSource] of Object.entries(routeSources)) {
-    const segments = routePath.split('/');
-    const routeName = segments[segments.length - 1] ?? routePath;
+    const routeName = routePath.slice(routePath.indexOf('/pages/') + '/pages/'.length);
     if (infrastructureRoutes.has(routeName)) continue;
 
     test(`${routeName} forwards page context to Groam AI`, () => {

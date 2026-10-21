@@ -18,7 +18,6 @@
     "./landing": "./src/apps/landing.ts",
     "./seeder": "./src/apps/seeder.ts",
     "./vitest": "./src/apps/vitest.ts",
-    "./web": "./src/apps/web.ts",
     "./web-client": "./src/apps/web-client.ts",
     "./production": "./src/apps/production.ts"
   },

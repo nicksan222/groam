@@ -24,7 +24,6 @@ import {
 } from '@groam/ui/components/sidebar';
 import { toast } from '@groam/ui/components/toast';
 import { useSidebar } from '@groam/ui/hooks/use-sidebar';
-import { useLocation, useNavigate } from '@tanstack/react-router';
 import { AgentsSidebarNav } from '@/features/agents/agents-sidebar-nav';
 import { ChatsSidebarNav } from '@/features/discussions/chats-sidebar-nav';
 import { IdeasSidebarNav } from '@/features/ideas/ideas-sidebar-nav';
@@ -38,6 +37,7 @@ import {
   primaryNavigation
 } from '@/features/workspace/workspace-sidebar/sidebar-nav';
 import { errorMessage } from '@/lib/errors';
+import { useLocation, useNavigate } from '@/lib/navigation/router';
 import { testIds } from '@/lib/test-ids';
 import type { SidebarNavItem } from '@/types/workspace';
 import { AccountMenu } from './account-menu';
@@ -47,7 +47,7 @@ import { useWorkspace } from './workspace-state';
 
 export function WorkspaceSidebar() {
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar className="[view-transition-name:workspace-sidebar]" collapsible="icon">
       <SidebarHeader className="gap-2 border-b border-sidebar-border/70 p-3 group-data-[collapsible=icon]:p-2">
         <OrganizationMenu />
         <SidebarSearchButton />

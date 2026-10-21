@@ -6,13 +6,11 @@ const DEFAULT_MAP_TILES_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
 const validated = cleanEnv(
   {
-    BASE_URL: import.meta.env.BASE_URL,
     VITE_MAP_TILES_URL: clientEnvString(import.meta.env.VITE_MAP_TILES_URL),
     VITE_PHOTON_URL: clientEnvString(import.meta.env.VITE_PHOTON_URL),
     VITE_SITE_URL: clientEnvString(import.meta.env.VITE_SITE_URL)
   },
   {
-    BASE_URL: str({ default: '/' }),
     VITE_MAP_TILES_URL: str({
       default: DEFAULT_MAP_TILES_URL,
       desc: 'Raster tile URL template. Defaults to the public OpenStreetMap tiles (no API key). Point at a self-hosted or keyed provider for heavy use.'
@@ -30,7 +28,6 @@ const validated = cleanEnv(
 
 export const env = {
   ...authEnv,
-  baseUrl: validated.BASE_URL,
   mapTilesUrl: validated.VITE_MAP_TILES_URL,
   photonUrl: validated.VITE_PHOTON_URL,
   siteUrl: validated.VITE_SITE_URL

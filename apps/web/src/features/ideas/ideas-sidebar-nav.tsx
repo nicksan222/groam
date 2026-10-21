@@ -9,7 +9,6 @@ import { SidebarCollapsibleItem } from '@groam/ui/components/sidebar-collapsible
 import { SidebarNestedLoadMore } from '@groam/ui/components/sidebar-nested-load-more';
 import { useSidebar } from '@groam/ui/hooks/use-sidebar';
 import { cn } from '@groam/ui/lib/utils';
-import { useLocation } from '@tanstack/react-router';
 import { useViewerOpenIdeas, useWorkspaceIdeas } from '@/features/ideas/hooks/use-workspace-ideas';
 import {
   isViewerDraft,
@@ -23,6 +22,7 @@ import { useSidebarSectionOpen } from '@/features/workspace/hooks/use-sidebar-se
 import { Link, useParams } from '@/features/workspace/navigation/router';
 import { useOptionalWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
 import { SIDEBAR_NESTED_PAGE_SIZE } from '@/features/workspace/workspace-sidebar/sidebar-nested-nav';
+import { useLocation } from '@/lib/navigation/router';
 import { testIds } from '@/lib/test-ids';
 import { ideaWorkspaceHref } from './idea-href';
 import {
@@ -35,7 +35,7 @@ import {
 export function IdeasSidebarNav() {
   const workspace = useOptionalWorkspace();
   const { pathname } = useLocation();
-  const params = useParams({ strict: false });
+  const params = useParams();
   const { setOpenMobile } = useSidebar();
   const { canExpandVisible, showMore, visibleCount } = useSidebarNestedVisible('ideas');
 
@@ -110,13 +110,7 @@ export function IdeasSidebarNav() {
                   data-viewer-draft={draft || undefined}
                   isActive={active}
                 >
-                  <Link
-                    onClick={() => setOpenMobile(false)}
-                    params={href.params}
-                    search={'search' in href ? href.search : undefined}
-                    title={title}
-                    to={href.to}
-                  >
+                  <Link {...href} onClick={() => setOpenMobile(false)} title={title}>
                     <span>{label}</span>
                   </Link>
                 </SidebarMenuSubButton>

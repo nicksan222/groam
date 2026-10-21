@@ -34,7 +34,7 @@ Codespace, use the shorter commands shown below directly.
 just dev
 ```
 
-That starts the Convex API on `:3210`, the Vite app on `:5173`, and the Convex
+That starts the Convex API on `:3210`, the Void web app on `:5173`, and the Convex
 dashboard on `:6790`. Set `CONVEX_AGENT_MODE=anonymous` for every `convex` /
 `vp exec convex` command so the CLI never prompts for a cloud login.
 
@@ -86,8 +86,9 @@ Run `just graphify-refresh` after changing source files. The generated
 Graphify and its isolated Python environment are part of the container image;
 nothing is installed into the host or the Bun workspace.
 
-Do not hand-edit `apps/web/src/routeTree.gen.ts`. Add routes as files under
-`apps/web/src/routes` and run `just codegen`.
+Add web pages as files under `apps/web/pages` and list their path in `AppPath`
+(`apps/web/src/types/navigation.ts`); Void discovers pages from the file tree, so
+there is no route tree to generate. See the `add-web-route` skill.
 
 ## Conventions
 

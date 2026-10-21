@@ -4,8 +4,8 @@ import { RecordListBadge } from '@groam/ui/components/record-list-badge';
 import { RecordListItem } from '@groam/ui/components/record-list-item';
 import { Skeleton } from '@groam/ui/components/skeleton';
 import { recordListTitleClassName } from '@groam/ui/lib/record-list';
-import { useNavigate } from '@tanstack/react-router';
 import { relativeIssueDate } from '@/features/issues/hooks/issue-relative-date';
+import { useVisit } from '@/lib/navigation/router';
 import { testIds } from '@/lib/test-ids';
 import type { InboxNotification } from '@/types/inbox';
 
@@ -27,7 +27,7 @@ export function InboxNotificationList({
   markNotificationRead: (id: InboxNotification['id']) => void;
   notifications: InboxNotification[];
 }) {
-  const navigate = useNavigate();
+  const visit = useVisit();
 
   if (isLoading) {
     return (
@@ -77,7 +77,7 @@ export function InboxNotificationList({
                 className={recordListTitleClassName}
                 onClick={() => {
                   if (item.readAt === null) void markNotificationRead(item.id);
-                  void navigate({ to: item.href as never });
+                  void visit(item.href);
                 }}
                 type="button"
                 unstyled

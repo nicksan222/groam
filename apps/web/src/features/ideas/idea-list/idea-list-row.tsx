@@ -37,7 +37,6 @@ export function IdeaListRow({
 }) {
   const draft = isViewerDraft(proposal, viewerUserId);
   const href = ideaOpenHref(proposal, viewerUserId);
-  const search = 'search' in href ? href.search : {};
   return (
     <RecordListItem
       wrapTitle
@@ -57,12 +56,7 @@ export function IdeaListRow({
               {proposal.title}
             </Button>
           ) : (
-            <Link
-              className={recordListWrappedTitleClassName}
-              params={href.params}
-              search={search}
-              to={href.to}
-            >
+            <Link className={recordListWrappedTitleClassName} {...href}>
               {proposal.title}
             </Link>
           )}
@@ -136,7 +130,7 @@ export function IdeaListRow({
                 size="sm"
                 variant="ghost"
               >
-                <Link params={href.params} search={search} to={href.to}>
+                <Link {...href}>
                   {ideaOpen}
                   <ArrowRight aria-hidden />
                 </Link>

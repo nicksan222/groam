@@ -4,7 +4,7 @@ import { page } from 'vite-plus/test/browser';
 import type { TripListItem } from '@/features/trips/hooks/use-trips';
 import { FeaturedTrips } from './featured-trips';
 
-vi.mock('@tanstack/react-router', async (importOriginal) => {
+vi.mock('@/lib/navigation/router', async (importOriginal) => {
   const { mockRouter } = await import('@/lib/testing/router-mock');
   return mockRouter(importOriginal);
 });
