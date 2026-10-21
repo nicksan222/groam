@@ -8,7 +8,13 @@ vi.mock('@/features/settings/hooks/use-email-settings', () => ({
   useEmailSettings: () => ({
     save,
     setEmail,
-    state: { email: 'real@example.com', error: null, message: null, pending: false }
+    state: {
+      email: 'real@example.com',
+      error: null,
+      isConfirming: false,
+      isPending: false,
+      message: null
+    }
   })
 }));
 
@@ -19,4 +25,9 @@ test('shows the current address and offers verified replacement without changing
   expect(setEmail).toHaveBeenCalledWith('new@example.com');
   await page.getByRole('button', { name: 'Verify new email' }).click();
   expect(save).toHaveBeenCalled();
+});
+
+test('does not show a placeholder address as the current email', async () => {
+  await render(<EmailSettings email="legacy@users.invalid" />);
+  await expect.element(page.getByText('No email on file')).toBeVisible();
 });

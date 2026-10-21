@@ -10,13 +10,16 @@ import {
 
 export function EmailSettings({ email }: { email: string }) {
   const { state, setEmail, save } = useEmailSettings();
+  const busy = state.isConfirming || state.isPending;
   return (
     <SettingsPanel>
       <SettingsPanelHeading
         title="Account email"
         description="Use an address you can access for sign-in and password recovery."
       />
-      <p className="break-all text-sm text-muted-foreground">Current address: {email}</p>
+      <p className="break-all text-sm text-muted-foreground">
+        {email.endsWith('@users.invalid') ? 'No email on file' : `Current address: ${email}`}
+      </p>
       <form
         className="mt-4 flex flex-col gap-4"
         noValidate
@@ -30,14 +33,18 @@ export function EmailSettings({ email }: { email: string }) {
             type="email"
             autoComplete="email"
             value={state.email}
-            disabled={state.pending}
+            disabled={busy}
             onChange={(event) => setEmail(event.target.value)}
             required
           />
         </FormField>
         <FormFeedback error={state.error} message={state.message} />
-        <Button type="submit" disabled={state.pending || !state.email.trim()}>
-          {state.pending ? 'Sending verification…' : 'Verify new email'}
+        <Button type="submit" disabled={busy || !state.email.trim()}>
+          {state.isConfirming
+            ? 'Confirming…'
+            : state.isPending
+              ? 'Sending verification…'
+              : 'Verify new email'}
         </Button>
       </form>
     </SettingsPanel>

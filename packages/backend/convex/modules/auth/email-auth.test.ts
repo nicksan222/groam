@@ -1,5 +1,6 @@
 import { expectConsole } from '@groam/vitest-config/console';
 import { expect, test, vi } from 'vite-plus/test';
+import { mailLink, scheduledMail } from '#testing/auth/mail';
 import { createTest } from '#testing/factory';
 
 vi.hoisted(() => {
@@ -27,15 +28,7 @@ test('hosted signup cannot create a session until email ownership is verified', 
   expect((await signup.json()).token).toBeNull();
   const login = await post(convex, 'sign-in/email', { email: 'new@example.com', password });
   expect(login.status).toBe(403);
-  const scheduled = await convex.run(
-    async (ctx) => await ctx.db.system.query('_scheduled_functions').take(10)
-  );
-  expect(scheduled.length).toBeGreaterThan(0);
-  const text = scheduled[0]?.args[0]?.text;
-  expect(typeof text).toBe('string');
-  const verificationUrl = new URL(
-    String(text).match(/https?:\/\/\S+/u)?.[0] ?? 'https://invalid.invalid'
-  );
+  const verificationUrl = await mailLink(convex, (mail) => mail.to === 'new@example.com');
   const verified = await convex.fetch(verificationUrl.pathname + verificationUrl.search, {
     headers: { origin: 'https://app.example.com' }
   });
@@ -49,13 +42,7 @@ test('hosted signup cannot create a session until email ownership is verified', 
     redirectTo: 'https://app.example.com/app/'
   });
   expect(requested.status).toBe(200);
-  const pending = await convex.run(
-    async (ctx) => await ctx.db.system.query('_scheduled_functions').take(10)
-  );
-  const resetMail = pending.find((job) => job.args[0]?.subject === 'Reset your Groam password');
-  const resetUrl = new URL(
-    String(resetMail?.args[0]?.text).match(/https?:\/\/\S+/u)?.[0] ?? 'https://invalid.invalid'
-  );
+  const resetUrl = await mailLink(convex, (mail) => mail.subject === 'Reset your Groam password');
   const resetToken = resetUrl.pathname.split('/').at(-1);
   const reset = await post(convex, 'reset-password', {
     token: resetToken,
@@ -111,18 +98,10 @@ test.each(['email', 'username'])(
       callbackURL
     });
     expect(login.status).toBe(403);
-    const scheduled = await convex.run(
-      async (ctx) => await ctx.db.system.query('_scheduled_functions').take(20)
+    const automaticMail = await mailLink(convex, (mail) =>
+      mail.text.includes(encodeURIComponent(callbackURL))
     );
-    const verificationURLs = scheduled.flatMap((job) => {
-      const match = String(job.args[0]?.text).match(/https?:\/\/\S+/u)?.[0];
-      return match ? [new URL(match)] : [];
-    });
-    const automaticMail = verificationURLs.find(
-      (url) => url.searchParams.get('callbackURL') === callbackURL
-    );
-    expect(automaticMail).toBeDefined();
-    const verified = await convex.fetch(automaticMail!.pathname + automaticMail!.search, {
+    const verified = await convex.fetch(automaticMail.pathname + automaticMail.search, {
       headers: { origin: 'https://app.example.com' }
     });
     expect(verified.status).toBe(302);
@@ -175,8 +154,5 @@ test('auth mail is capped per recipient without changing the public response', a
     });
     expect(reset.status).toBe(200);
   }
-  const scheduled = await convex.run(
-    async (ctx) => await ctx.db.system.query('_scheduled_functions').take(20)
-  );
-  expect(scheduled.filter((job) => job.args[0]?.to === email)).toHaveLength(5);
+  expect((await scheduledMail(convex)).filter((mail) => mail.to === email)).toHaveLength(5);
 });
