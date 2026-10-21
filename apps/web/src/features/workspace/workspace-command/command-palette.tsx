@@ -1,4 +1,5 @@
 import { Search, SearchX } from '@groam/icons';
+import { Button } from '@groam/ui/components/button';
 import {
   Dialog,
   DialogContent,
@@ -8,6 +9,7 @@ import {
 } from '@groam/ui/components/dialog';
 import { Input } from '@groam/ui/components/input';
 import { Kbd } from '@groam/ui/components/kbd';
+import { Spinner } from '@groam/ui/components/spinner';
 import { useId } from 'react';
 import type { CommandPaletteMatch } from '@/features/workspace/hooks/command-palette-results';
 import { useCommandPalette } from '@/features/workspace/hooks/use-command-palette';
@@ -18,7 +20,10 @@ import { CommandPaletteOption } from './command-palette-option';
 export function CommandPalette() {
   const {
     activeIndex,
+    canLoadMore,
     go,
+    isLoadingMore,
+    loadMore,
     onInputKeyDown,
     onOpenChange,
     open,
@@ -68,7 +73,7 @@ export function CommandPalette() {
           role="listbox"
         >
           {results.length === 0 ? (
-            <EmptyResults query={query} />
+            <EmptyResults canLoadMore={canLoadMore} query={query} />
           ) : (
             groupResults(results).map((section) => (
               <div
@@ -97,26 +102,47 @@ export function CommandPalette() {
             ))
           )}
         </div>
+        {canLoadMore && (
+          <div className="flex justify-center border-t px-4 py-2">
+            <Button disabled={isLoadingMore} onClick={loadMore} size="sm" variant="ghost">
+              {isLoadingMore && <Spinner aria-hidden />} Load more
+            </Button>
+          </div>
+        )}
         <CommandPaletteFooter count={results.length} />
       </DialogContent>
     </Dialog>
   );
 }
 
-function EmptyResults({ query }: { query: string }) {
+function EmptyResults({ canLoadMore, query }: { canLoadMore: boolean; query: string }) {
+  const { hint, title } = emptyResultsCopy(query.trim(), canLoadMore);
   return (
     <div className="flex flex-col items-center gap-1.5 px-6 py-10 text-center">
       <SearchX aria-hidden className="mb-1 size-5 text-muted-foreground" />
-      <p className="text-sm font-medium text-foreground">
-        {query.trim() ? `No matches for “${query.trim()}”` : 'Nothing to jump to yet'}
-      </p>
-      <p className="text-xs text-muted-foreground">
-        {query.trim()
-          ? 'Try part of a trip, idea, issue, or chat name.'
-          : 'Trips, ideas, issues, and chats show up here as you create them.'}
-      </p>
+      <p className="text-sm font-medium text-foreground">{title}</p>
+      <p className="text-xs text-muted-foreground">{hint}</p>
     </div>
   );
+}
+
+function emptyResultsCopy(term: string, canLoadMore: boolean) {
+  if (canLoadMore) {
+    return {
+      hint: 'Load more to search older ideas and issues.',
+      title: term ? `No loaded matches for “${term}”` : 'No results loaded yet'
+    };
+  }
+  if (term) {
+    return {
+      hint: 'Try part of a trip, idea, issue, or chat name.',
+      title: `No matches for “${term}”`
+    };
+  }
+  return {
+    hint: 'Trips, ideas, issues, and chats show up here as you create them.',
+    title: 'Nothing to jump to yet'
+  };
 }
 
 function groupResults(results: CommandPaletteMatch[]) {

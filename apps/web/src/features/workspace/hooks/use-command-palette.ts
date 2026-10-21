@@ -10,14 +10,20 @@ import { useNavigate } from '@/lib/navigation/router';
 import { useCommandPaletteChrome } from './command-palette-chrome';
 import { buildCommandPaletteMatches, type CommandPaletteMatch } from './command-palette-results';
 
+const PAGE_SIZE = 25;
+
 export function useCommandPalette() {
   const { closeAndClear, onOpenChange, open, query, setQuery, toggle } = useCommandPaletteChrome();
   const [activeIndex, setActiveIndex] = useState(0);
   const navigate = useNavigate();
-  const searchOpts = open ? { initialNumItems: 25 } : 'skip';
-  const { trips } = useTrips(open ? { includeArchived: false, initialNumItems: 25 } : 'skip');
-  const { proposals } = useWorkspaceIdeas(searchOpts);
-  const { issues } = useWorkspaceIssues(searchOpts);
+  const searchOpts = open ? { initialNumItems: PAGE_SIZE } : 'skip';
+  const { trips } = useTrips(
+    open ? { includeArchived: false, initialNumItems: PAGE_SIZE } : 'skip'
+  );
+  const ideas = useWorkspaceIdeas(searchOpts);
+  const issues = useWorkspaceIssues(searchOpts);
+  const paginated = [ideas, issues];
+  const isLoadingMore = paginated.some((list) => list.status === 'LoadingMore');
   const { discussions } = useDiscussions(open ? undefined : 'skip');
   const { agents } = useAgentRoster();
 
@@ -40,8 +46,8 @@ export function useCommandPalette() {
         {
           agents: agents ?? [],
           discussions,
-          ideas: proposals,
-          issues,
+          ideas: ideas.proposals,
+          issues: issues.issues,
           trips
         },
         {
@@ -56,7 +62,7 @@ export function useCommandPalette() {
             })
         }
       ),
-    [agents, discussions, issues, proposals, query, trips]
+    [agents, discussions, ideas.proposals, issues.issues, query, trips]
   );
 
   const go = useCallback(
@@ -94,7 +100,12 @@ export function useCommandPalette() {
 
   return {
     activeIndex: active,
+    canLoadMore: isLoadingMore || paginated.some((list) => list.status === 'CanLoadMore'),
     go,
+    isLoadingMore,
+    loadMore: () => {
+      for (const list of paginated) if (list.status === 'CanLoadMore') list.loadMore(PAGE_SIZE);
+    },
     onInputKeyDown,
     onOpenChange: (next: boolean) => {
       setActiveIndex(0);

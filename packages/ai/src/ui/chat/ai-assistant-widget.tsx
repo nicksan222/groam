@@ -1,6 +1,6 @@
 import {
-  useCallback,
   useEffect,
+  useEffectEvent,
   useLayoutEffect,
   useRef,
   useState,
@@ -9,7 +9,7 @@ import {
 import { assistantConversationContextKey } from '#ai/runtime/screen';
 import { AssistantSidechatPanel } from '#ai/ui/chat/assistant-sidechat-panel';
 import { AssistantSidechatRail } from '#ai/ui/chat/assistant-sidechat-rail';
-import { type AgentScreenContext, useCurrentAgentContext } from '#ai/ui/context/agent-context';
+import { useCurrentAgentContext } from '#ai/ui/context/agent-context';
 import type { AssistantBackendApi } from '#ai/ui/hooks/assistant-functions';
 import { useAssistant } from '#ai/ui/hooks/use-assistant';
 import { toggleContextTagReferences, useAssistantChats } from '#ai/ui/hooks/use-assistant-chats';
@@ -35,26 +35,15 @@ export function AiAssistantWidget({
   showMobileLauncher?: boolean;
 }) {
   const context = useCurrentAgentContext();
-  return (
-    <ContextualAssistantWidget
-      api={api}
-      context={context}
-      key={context?.key ?? 'no-context'}
-      showMobileLauncher={showMobileLauncher}
-    />
-  );
-}
-
-function ContextualAssistantWidget({
-  api,
-  context,
-  showMobileLauncher
-}: {
-  api: AssistantBackendApi;
-  context: AgentScreenContext | null;
-  showMobileLauncher: boolean;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
+  const pageKey = context?.key ?? null;
+  // The page the panel was opened on, or undefined while closed. An opening made before any
+  // page registers adopts the first page; leaving that page closes the panel in this render,
+  // so the assistant never starts a thread for the next page.
+  const [openedOn, setOpenedOn] = useState<string | null>();
+  if (openedOn !== undefined && openedOn !== pageKey) {
+    setOpenedOn(openedOn === null ? pageKey : undefined);
+  }
+  const isOpen = openedOn === null || openedOn === pageKey;
   const [draftState, setDraftState] = useState<{ draft: string; threadId: string | null }>({
     draft: '',
     threadId: null
@@ -69,41 +58,43 @@ function ContextualAssistantWidget({
   const launcherRef = useRef<HTMLButtonElement>(null);
   const externalLauncherRef = useRef<HTMLElement>(null);
 
-  const setOpen = useCallback((open: boolean) => {
+  const setOpen = (open: boolean) => {
     hasInteracted.current = true;
-    setIsOpen(open);
-  }, []);
+    setOpenedOn(open ? pageKey : undefined);
+  };
 
   useLayoutEffect(() => {
     document.documentElement.toggleAttribute('data-ai-sidechat-open', isOpen);
     return () => document.documentElement.removeAttribute('data-ai-sidechat-open');
   }, [isOpen]);
 
+  const onShortcut = useEffectEvent((event: KeyboardEvent) => {
+    if (
+      !event.repeat &&
+      event.key === SHORTCUT_KEY &&
+      (event.metaKey || event.ctrlKey) &&
+      !event.altKey
+    ) {
+      event.preventDefault();
+      setOpen(!isOpen);
+    }
+  });
   useEffect(() => {
-    const onShortcut = (event: KeyboardEvent) => {
-      if (
-        !event.repeat &&
-        event.key === SHORTCUT_KEY &&
-        (event.metaKey || event.ctrlKey) &&
-        !event.altKey
-      ) {
-        event.preventDefault();
-        setOpen(!isOpen);
-      }
-    };
-    window.addEventListener('keydown', onShortcut);
-    return () => window.removeEventListener('keydown', onShortcut);
-  }, [isOpen, setOpen]);
+    const handleShortcut = (event: KeyboardEvent) => onShortcut(event);
+    window.addEventListener('keydown', handleShortcut);
+    return () => window.removeEventListener('keydown', handleShortcut);
+  }, []);
 
+  const onOpenRequest = useEffectEvent(() => {
+    externalLauncherRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setOpen(true);
+  });
   useEffect(() => {
-    const onOpenRequest = () => {
-      externalLauncherRef.current =
-        document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      setOpen(true);
-    };
-    window.addEventListener('groam:open-assistant', onOpenRequest);
-    return () => window.removeEventListener('groam:open-assistant', onOpenRequest);
-  }, [setOpen]);
+    const handleOpenRequest = () => onOpenRequest();
+    window.addEventListener('groam:open-assistant', handleOpenRequest);
+    return () => window.removeEventListener('groam:open-assistant', handleOpenRequest);
+  }, []);
 
   useEffect(() => {
     if (wasOpen.current && !isOpen && hasInteracted.current) {
@@ -131,10 +122,6 @@ function ContextualAssistantWidget({
     void attemptOpen();
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- depends on the members it reads, not the whole assistant object
   }, [assistant.open, assistant.threadId, context, isOpen]);
-
-  useEffect(() => {
-    openAttempted.current = false;
-  }, []);
 
   const draft = draftState.threadId === assistant.threadId ? draftState.draft : '';
   const setDraft = (nextDraft: string) => {
