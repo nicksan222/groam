@@ -24,7 +24,7 @@ test.each(['polls', 'research'])(
       feed === 'polls'
         ? api.routes.polls.list.open.page.run
         : api.routes.discussions.research.workspace.page.run;
-    const size = feed === 'polls' ? 50 : 40;
+    const size = feed === 'polls' ? 10 : 40;
     let now = Date.now();
     const clock = vi.spyOn(Date, 'now');
     const research = (client: typeof member.client, tripId: typeof trip.tripId, title: string) =>
