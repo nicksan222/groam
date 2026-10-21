@@ -36,10 +36,10 @@ describe('AuthScreen', () => {
     await expect.element(page.getByRole('link', { name: 'Groam home' })).toBeInTheDocument();
     await expect
       .element(page.getByRole('link', { name: 'Terms of Service' }))
-      .toHaveAttribute('href', new URL('/terms/', env.siteUrl).href);
+      .toHaveAttribute('href', new URL('/terms/', env.landingUrl).href);
     await expect
       .element(page.getByRole('link', { name: 'Privacy Policy' }))
-      .toHaveAttribute('href', new URL('/privacy/', env.siteUrl).href);
+      .toHaveAttribute('href', new URL('/privacy/', env.landingUrl).href);
     await expect.element(page.getByText('Welcome back')).toBeInTheDocument();
     await expect.element(page.getByRole('button', { name: 'Sign in' })).toBeInTheDocument();
     await expect.element(page.getByLabelText(/^Name/u)).not.toBeInTheDocument();

@@ -42,7 +42,7 @@ function AuthLegal() {
       By continuing, you agree to our{' '}
       <a
         className="underline underline-offset-2"
-        href={new URL('/terms/', env.siteUrl).href}
+        href={new URL('/terms/', env.landingUrl).href}
         rel="noreferrer"
         target="_blank"
       >
@@ -51,7 +51,7 @@ function AuthLegal() {
       and{' '}
       <a
         className="underline underline-offset-2"
-        href={new URL('/privacy/', env.siteUrl).href}
+        href={new URL('/privacy/', env.landingUrl).href}
         rel="noreferrer"
         target="_blank"
       >
