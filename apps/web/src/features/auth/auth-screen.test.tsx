@@ -85,13 +85,15 @@ describe('AuthScreen', () => {
 
     await page.getByRole('button', { name: 'Sign up' }).click();
     await page.getByLabelText(/^Name/u).fill('Traveler');
+    await page.getByLabelText(/^Email/u).fill('traveler@example.com');
     await page.getByLabelText(/^Username/u).fill('traveler');
     await page.getByLabelText(/^Password/u).fill('password123');
     await page.getByRole('button', { name: 'Create account' }).click();
 
     await vi.waitFor(() =>
       expect(auth.signUp).toHaveBeenCalledWith({
-        email: expect.stringMatching(/@users\.invalid$/u),
+        callbackURL: window.location.origin + window.location.pathname,
+        email: 'traveler@example.com',
         name: 'Traveler',
         password: 'password123',
         username: 'traveler'

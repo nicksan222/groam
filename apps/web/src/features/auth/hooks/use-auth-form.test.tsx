@@ -34,7 +34,11 @@ describe('useAuthForm', () => {
       result.current.updateState({ identifier: 'traveler', password: 'password123' })
     );
     await act(() => result.current.submit());
-    expect(auth.signIn).toHaveBeenCalledWith({ password: 'password123', username: 'traveler' });
+    expect(auth.signIn).toHaveBeenCalledWith({
+      callbackURL: window.location.origin + window.location.pathname,
+      password: 'password123',
+      username: 'traveler'
+    });
     expect(result.current.state).toMatchObject({ error: null, isPending: false });
   });
 
@@ -45,15 +49,36 @@ describe('useAuthForm', () => {
     );
     await act(() => result.current.submit());
     expect(auth.signInEmail).toHaveBeenCalledWith({
+      callbackURL: window.location.origin + window.location.pathname,
       email: 'traveler@example.com',
       password: 'password123'
     });
   });
 
-  test('signs up with a username and internal placeholder email', async () => {
+  test.each(['traveler', 'traveler@example.com'])(
+    'preserves the hosted app path when signing in as %s',
+    async (identifier) => {
+      const originalURL = window.location.href;
+      window.history.replaceState(null, '', '/app/');
+      try {
+        const { result } = await renderHook(() => useAuthForm());
+        await act(() => result.current.updateState({ identifier, password: 'password123' }));
+        await act(() => result.current.submit());
+        const signIn = identifier.includes('@') ? auth.signInEmail : auth.signIn;
+        expect(signIn).toHaveBeenCalledWith(
+          expect.objectContaining({ callbackURL: window.location.origin + '/app/' })
+        );
+      } finally {
+        window.history.replaceState(null, '', originalURL);
+      }
+    }
+  );
+
+  test('signs up with a real email and username', async () => {
     const { result } = await renderHook(() => useAuthForm());
     await act(() =>
       result.current.updateState({
+        email: 'traveler@example.com',
         flow: 'signUp',
         identifier: 'traveler',
         name: '  Traveler  ',
@@ -62,11 +87,29 @@ describe('useAuthForm', () => {
     );
     await act(() => result.current.submit());
     expect(auth.signUp).toHaveBeenCalledWith({
-      email: expect.stringMatching(/^[0-9a-f-]+@users\.invalid$/u),
+      callbackURL: window.location.origin + window.location.pathname,
+      email: 'traveler@example.com',
       name: 'Traveler',
       password: 'password123',
       username: 'traveler'
     });
+  });
+
+  test('explains the verification step when signup does not create a session', async () => {
+    auth.signUp.mockResolvedValue({ data: { token: null }, error: null });
+    const { result } = await renderHook(() => useAuthForm());
+    await act(() =>
+      result.current.updateState({
+        flow: 'signUp',
+        email: 'traveler@example.com',
+        identifier: 'traveler',
+        name: 'Traveler',
+        password: 'password123'
+      })
+    );
+    await act(() => result.current.submit());
+    expect(result.current.state.message).toContain('Check your email');
+    expect(result.current.state.password).toBe('');
   });
 
   test('rejects incomplete fields without calling auth', async () => {
@@ -91,6 +134,7 @@ describe('useAuthForm', () => {
     const { result } = await renderHook(() => useAuthForm());
     await act(() =>
       result.current.updateState({
+        email: 'traveler@example.com',
         flow: 'signUp',
         identifier: 'not valid',
         name: 'Traveler',
