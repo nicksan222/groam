@@ -4,7 +4,7 @@ import { TripCoverValidators } from '#convex/modules/travel/covers/schema';
 import { TripDestinationValidators } from '#convex/modules/travel/destinations/schema';
 import { TripTransferValidators } from '#convex/modules/travel/transfers/schema';
 import { tripCostSplitValidator } from '#convex/modules/travel/trips/costs';
-import { tripQuery } from '#convex/modules/travel/trips/ctx';
+import { previewTripQuery } from '#convex/modules/travel/trips/ctx';
 import { getTrip } from '#convex/modules/travel/trips/index';
 import { TripValidators } from '#convex/modules/travel/trips/schema';
 
@@ -56,6 +56,8 @@ export const tripDetailValidator = v.object({
   ),
   archivedAt: nullableNumber,
   arrivalTransfer: boundaryTransfer,
+  /** False for an unpaid member, who sees only a redacted preview and the paywall. */
+  canParticipate: v.boolean(),
   coverAttribution: v.union(
     v.object({
       creator: v.union(v.string(), v.null()),
@@ -193,7 +195,7 @@ export const tripDetailValidator = v.object({
   totalPlannedCost: v.number()
 });
 
-export const run = tripQuery({
+export const run = previewTripQuery({
   args: {},
   returns: tripDetailValidator,
   handler: (ctx) => getTrip(ctx, ctx.trip._id)

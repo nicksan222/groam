@@ -2,7 +2,7 @@ import type { PaginationOptions } from 'convex/server';
 import { ConvexError } from 'convex/values';
 import type { Doc, Id } from '#convex-generated/dataModel';
 import type { QueryCtx } from '#convex-generated/server';
-import { requireWorkspace } from '#convex/modules/auth/workspace';
+import { requireWorkspace, type Workspace } from '#convex/modules/auth/workspace';
 import { TripPreferences } from '#convex/modules/travel/preferences/index';
 import { projectTripListItem } from '#convex/modules/travel/trips/projection';
 
@@ -43,7 +43,7 @@ function buildTripListQuery(
 
 async function listFavoriteTrips(
   ctx: QueryCtx,
-  organizationId: string,
+  workspace: Workspace,
   includeArchived: boolean,
   favoriteIds: Set<Id<'trips'>>
 ) {
@@ -52,8 +52,8 @@ async function listFavoriteTrips(
   );
   const favorites = await Promise.all(
     favoriteDocs.flatMap((data) =>
-      data && isSidebarListableTrip(data, organizationId, includeArchived)
-        ? [projectTripListItem(ctx, data, favoriteIds)]
+      data && isSidebarListableTrip(data, workspace.organizationId, includeArchived)
+        ? [projectTripListItem(ctx, data, favoriteIds, workspace.userId)]
         : []
     )
   );
@@ -84,7 +84,7 @@ export async function listTrips(
   const isFirstPage = paginationOpts.cursor === null || paginationOpts.cursor === '';
   const favorites =
     isFirstPage && favoriteIds.size > 0
-      ? await listFavoriteTrips(ctx, workspace.organizationId, includeArchived, favoriteIds)
+      ? await listFavoriteTrips(ctx, workspace, includeArchived, favoriteIds)
       : [];
 
   // One `.paginate()` only — Convex rejects multiple paginate calls per query.
@@ -104,7 +104,9 @@ export async function listTrips(
 
   const page = [
     ...favorites,
-    ...(await Promise.all(pageDocs.map((data) => projectTripListItem(ctx, data, favoriteIds))))
+    ...(await Promise.all(
+      pageDocs.map((data) => projectTripListItem(ctx, data, favoriteIds, workspace.userId))
+    ))
   ];
 
   return { continueCursor, isDone, page };

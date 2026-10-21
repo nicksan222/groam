@@ -18,6 +18,7 @@ import { useReadyValue } from '@/lib/use-ready-value';
 import { createTripNavigation } from './trip-detail-navigation';
 import { tripDetailRedirect } from './trip-detail-redirect';
 import type { LoadedTrip, TripState } from './trip-detail-types';
+import { TripJoinPaywall } from './trip-join-paywall';
 import { TripSectionNav } from './trip-section-nav';
 import { TripToolbar } from './trip-toolbar';
 import { TripToolbarSkeleton } from './trip-toolbar-skeleton';
@@ -41,12 +42,14 @@ export function TripDetailView({
     tripState.exists === false ? undefined : tripState.trip,
     tripId
   );
+  // Unpaid members only see the paywall; skip every planning subscription for them.
+  const participating = tripState.trip?.canParticipate === true;
   const sourceTripId = trip?.proposal?.sourceTripId ?? tripId;
-  const { createVersion, proposals } = useTripVersions(sourceTripId, tripState.exists === true);
+  const { createVersion, proposals } = useTripVersions(sourceTripId, participating);
   const editing = useOpenState(false);
   const confirm = useConfirm();
   const navigate = useNavigate();
-  useTripAgentContext(trip, section);
+  useTripAgentContext(participating ? trip : undefined, section);
 
   const ideaFlow = useStartIdeaFlow({
     createVersion: async (title) => {
@@ -57,6 +60,8 @@ export function TripDetailView({
     proposals,
     trip
   });
+
+  if (trip && !trip.canParticipate) return <TripJoinPaywall trip={trip} tripState={tripState} />;
 
   const redirect = tripDetailRedirect({
     addDestinationOpen,

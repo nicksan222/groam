@@ -5,6 +5,10 @@ import { page } from 'vite-plus/test/browser';
 import { TripTravelersSheet } from '@/features/trips/trip-travelers/trip-travelers-sheet';
 import { testIds } from '@/lib/test-ids';
 
+vi.mock('@/features/trips/trip-travelers/trip-payments-panel', () => ({
+  TripPaymentsPanel: () => null
+}));
+
 vi.mock('@/features/workspace/workspace-shell/workspace-state', () => ({
   useWorkspace: () => ({ session: { user: { id: 'user-alex' } } })
 }));
@@ -86,6 +90,14 @@ test('lets a plain member change only their own RSVP', async () => {
   const selects = page.getByRole('combobox');
   await expect.element(selects.nth(0)).toBeEnabled();
   await expect.element(selects.nth(1)).toBeDisabled();
+});
+
+test('labels travelers who have not joined yet as invited', async () => {
+  roster.travelers[1]!.status = 'invited';
+  await renderSheet({});
+  await expect
+    .element(page.getByRole('combobox', { name: 'RSVP for Maya' }))
+    .toHaveTextContent('Invited');
 });
 
 test('lets an organizer change every RSVP', async () => {

@@ -17,6 +17,7 @@ import {
   runActorArgs,
   type Workspace
 } from '#convex/modules/auth/workspace';
+import { canParticipateInTrip } from '#convex/modules/payments/index';
 import { affectsConditions, syncTripConditions } from '#convex/modules/travel/issues/sync';
 import {
   assertMutable,
@@ -79,11 +80,17 @@ export function attachTrip<Ctx extends TripReadCtx>(
 export async function loadTripContext<Ctx extends AuthContext & TripReadCtx>(
   ctx: Ctx,
   tripId: Id<'trips'>,
-  workspace?: Workspace
+  workspace?: Workspace,
+  options: { allowUnpaid?: boolean } = {}
 ): Promise<TripCtx<Ctx>> {
   const resolvedWorkspace = workspace ?? (await requireWorkspace(ctx));
   const data = await findVisibleTrip(ctx, tripId, resolvedWorkspace);
-  if (!data) throw new ConvexError('Trip not found');
+  // Trip pages require a seat; preview builders opt out to show joining and checkout.
+  if (
+    !data ||
+    (!options.allowUnpaid && !(await canParticipateInTrip(ctx, data, resolvedWorkspace.userId)))
+  )
+    throw new ConvexError('Trip not found');
   const role = roleFor(data, resolvedWorkspace.userId, resolvedWorkspace.organizationRole);
   return attachTrip(ctx, data, resolvedWorkspace, role);
 }
@@ -95,12 +102,13 @@ export function sharedTripId(trip: Doc<'trips'>): Id<'trips'> {
 export async function loadSharedTripContext<Ctx extends AuthContext & TripReadCtx>(
   ctx: Ctx,
   tripId: Id<'trips'>,
-  workspace?: Workspace
+  workspace?: Workspace,
+  options: { allowUnpaid?: boolean } = {}
 ): Promise<TripCtx<Ctx>> {
-  const loaded = await loadTripContext(ctx, tripId, workspace);
+  const loaded = await loadTripContext(ctx, tripId, workspace, options);
   const sourceId = sharedTripId(loaded.trip);
   if (sourceId === loaded.trip._id) return loaded;
-  return loadTripContext(ctx, sourceId, loaded.workspace);
+  return loadTripContext(ctx, sourceId, loaded.workspace, options);
 }
 
 export async function loadMutableTrip(
@@ -363,4 +371,31 @@ export const internalDestinationMutation = customMutation(internalMutation, {
   args: { ...destinationArgs, ...runActorArgs },
   input: async (ctx, { asRun, destinationId, tripId }) =>
     await destinationArgsInput(ctx, tripId, destinationId, await requireActor(ctx, asRun))
+});
+
+/** Unpaid members may preview a trip only to see who is going, RSVP for themselves, and pay. */
+const preview = { allowUnpaid: true };
+
+export const previewTripQuery = customQuery(query, {
+  args: tripIdArgs,
+  input: async (ctx, { tripId }) => ({
+    args: {},
+    ctx: boundTrip(await loadTripContext(ctx, tripId, undefined, preview))
+  })
+});
+
+export const previewSharedTripQuery = customQuery(query, {
+  args: tripIdArgs,
+  input: async (ctx, { tripId }) => ({
+    args: {},
+    ctx: boundTrip(await loadSharedTripContext(ctx, tripId, undefined, preview))
+  })
+});
+
+export const previewSharedTripMutation = customMutation(mutation, {
+  args: tripIdArgs,
+  input: async (ctx, { tripId }) => ({
+    args: {},
+    ctx: boundTrip(await loadSharedTripContext(ctx, tripId, undefined, preview))
+  })
 });

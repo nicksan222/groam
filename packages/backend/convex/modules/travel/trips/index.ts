@@ -1,4 +1,5 @@
 import { ConvexError, type Infer } from 'convex/values';
+import { internal } from '#convex-generated/api';
 import type { Doc, Id, TableNames } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import { AgentRuns } from '#convex/modules/assistant/runs/index';
@@ -6,6 +7,7 @@ import { AgentWaits } from '#convex/modules/assistant/waits/index';
 import { requireWorkspace, workspaceRoster } from '#convex/modules/auth/workspace';
 import { linkTargetKey, removeLinksForTargetKey } from '#convex/modules/discussions/links/cascade';
 import { Discussions } from '#convex/modules/discussions/threads/index';
+import { paymentsReady } from '#convex/modules/payments/index';
 import { PollCleanup } from '#convex/modules/polls/cleanup';
 import { insertWithShortId } from '#convex/modules/references/index';
 import { ItineraryActivity } from '#convex/modules/travel/activities/index';
@@ -284,6 +286,23 @@ async function deleteBatch(ctx: MutationCtx, trip: Doc<'trips'>): Promise<void> 
   if (await TripPreferences.deleteForTrip(ctx, trip._id, DELETE_BATCH_SIZE)) {
     return;
   }
+  const payments = await ctx.db
+    .query('tripPayments')
+    .withIndex('by_tripId_and_userId', (query) => query.eq('tripId', trip._id))
+    .take(DELETE_BATCH_SIZE);
+  if (payments.length) {
+    await Promise.all(
+      payments.map(async (row) => {
+        // A late payment on an expired or deleted seat is refunded by its webhook.
+        if (row.sessionId && !row.paid)
+          await ctx.scheduler.runAfter(0, internal.modules.payments.stripe.expire, {
+            sessionId: row.sessionId
+          });
+        await ctx.db.delete('tripPayments', row._id);
+      })
+    );
+    return;
+  }
   if (await deleteHistoryRows(ctx, trip._id)) return;
 
   await TripLocations.removeTrip(ctx, trip._id);
@@ -428,6 +447,7 @@ async function create(
     duration: details.duration,
     name: details.name,
     organizationId: workspace.organizationId,
+    ...(paymentsReady() ? { paymentRequired: true } : {}),
     ...(details.startDate ? { startDate: details.startDate } : {}),
     updatedAt
   });
@@ -449,14 +469,14 @@ async function create(
 }
 
 async function get(ctx: QueryCtx, tripId: Id<'trips'>) {
-  return projectTrip(ctx, await loadTripContext(ctx, tripId));
+  return projectTrip(ctx, await loadTripContext(ctx, tripId, undefined, { allowUnpaid: true }));
 }
 
 async function find(ctx: QueryCtx, tripId: Id<'trips'>) {
   const workspace = await requireWorkspace(ctx);
   const data = await ctx.db.get('trips', tripId);
   if (!data || data.organizationId !== workspace.organizationId) return null;
-  return projectTrip(ctx, await loadTripContext(ctx, tripId, workspace));
+  return projectTrip(ctx, await loadTripContext(ctx, tripId, workspace, { allowUnpaid: true }));
 }
 
 async function groupMemberCount(ctx: QueryCtx, tripId: Id<'trips'>): Promise<number> {

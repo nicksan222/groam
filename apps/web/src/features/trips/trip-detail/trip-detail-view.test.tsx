@@ -101,6 +101,10 @@ vi.mock('@/features/trips/trip-packing/trip-packing-panel', () => ({
   TripPackingPanel: () => <div>Packing list</div>
 }));
 
+vi.mock('@/features/trips/trip-travelers/trip-payments-panel', () => ({
+  TripPaymentsPanel: ({ tripId }: { tripId: string }) => <div>Payments for {tripId}</div>
+}));
+
 vi.mock('@/features/trips/trip-detail/trip-details-editor', () => ({
   TripDetailsEditor: () => null
 }));
@@ -110,6 +114,7 @@ function tripDetail(overrides: Partial<TripDetail> = {}): TripDetail {
     activity: [],
     archivedAt: null,
     arrivalTransfer: null,
+    canParticipate: true,
     coverAttribution: null,
     coverStatus: 'ready',
     coverUrl: null,
@@ -289,4 +294,12 @@ describe('TripDetailView shared trip', () => {
     expect(page.getByRole('status').elements()).toHaveLength(1);
     await expect.element(page.getByTestId(testIds.tripHeading)).not.toBeInTheDocument();
   });
+});
+
+test('shows unpaid members the paywall without subscribing to planning data', async () => {
+  await renderTrip('board', sharedTrip({ canParticipate: false }));
+  await expect.element(page.getByRole('heading', { name: 'Join this trip' })).toBeVisible();
+  await expect.element(page.getByText('Payments for source-1')).toBeVisible();
+  await expect.element(page.getByText('Board section')).not.toBeInTheDocument();
+  expect(state.agentContext).toHaveBeenLastCalledWith(undefined, 'board');
 });

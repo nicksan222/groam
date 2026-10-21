@@ -7,6 +7,7 @@ import { discussionTables } from './modules/discussions/threads/schema';
 import { mediaTables } from './modules/media/library/schema';
 import { notificationTables } from './modules/notifications/schema';
 import { organizationInvitationTables } from './modules/organizations/invitations/schema';
+import { paymentTables } from './modules/payments/schema';
 import { pollTables } from './modules/polls/schema';
 import { tripActivityTables } from './modules/travel/activities/schema';
 import { tripAuditTables } from './modules/travel/audit/schema';
@@ -21,6 +22,7 @@ import { tripTables } from './modules/travel/trips/schema';
 import { tripVersionTables } from './modules/travel/versions/schema';
 
 export default defineSchema({
+  ...paymentTables,
   ...chatGptTables,
   ...assistantRunTables,
   ...agentWaitTables,

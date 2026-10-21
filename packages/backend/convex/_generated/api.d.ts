@@ -98,6 +98,11 @@ import type * as modules_media_library_validators from "../modules/media/library
 import type * as modules_notifications_index from "../modules/notifications/index.js";
 import type * as modules_organizations_cleanup from "../modules/organizations/cleanup.js";
 import type * as modules_organizations_invitations_index from "../modules/organizations/invitations/index.js";
+import type * as modules_payments_checkout from "../modules/payments/checkout.js";
+import type * as modules_payments_index from "../modules/payments/index.js";
+import type * as modules_payments_storage from "../modules/payments/storage.js";
+import type * as modules_payments_stripe from "../modules/payments/stripe.js";
+import type * as modules_payments_webhook from "../modules/payments/webhook.js";
 import type * as modules_polls_access from "../modules/polls/access.js";
 import type * as modules_polls_cleanup from "../modules/polls/cleanup.js";
 import type * as modules_polls_eligibility from "../modules/polls/eligibility.js";
@@ -354,6 +359,8 @@ import type * as routes_trips_packing_personal_remove from "../routes/trips/pack
 import type * as routes_trips_packing_personal_update from "../routes/trips/packing/personal/update.js";
 import type * as routes_trips_packing_remove from "../routes/trips/packing/remove.js";
 import type * as routes_trips_packing_update from "../routes/trips/packing/update.js";
+import type * as routes_trips_payments_checkout from "../routes/trips/payments/checkout.js";
+import type * as routes_trips_payments_status from "../routes/trips/payments/status.js";
 import type * as routes_trips_preferences_favorite from "../routes/trips/preferences/favorite.js";
 import type * as routes_trips_restore from "../routes/trips/restore.js";
 import type * as routes_trips_seed_enrich from "../routes/trips/seed/enrich.js";
@@ -481,6 +488,11 @@ declare const fullApi: ApiFromModules<{
   "modules/notifications/index": typeof modules_notifications_index;
   "modules/organizations/cleanup": typeof modules_organizations_cleanup;
   "modules/organizations/invitations/index": typeof modules_organizations_invitations_index;
+  "modules/payments/checkout": typeof modules_payments_checkout;
+  "modules/payments/index": typeof modules_payments_index;
+  "modules/payments/storage": typeof modules_payments_storage;
+  "modules/payments/stripe": typeof modules_payments_stripe;
+  "modules/payments/webhook": typeof modules_payments_webhook;
   "modules/polls/access": typeof modules_polls_access;
   "modules/polls/cleanup": typeof modules_polls_cleanup;
   "modules/polls/eligibility": typeof modules_polls_eligibility;
@@ -737,6 +749,8 @@ declare const fullApi: ApiFromModules<{
   "routes/trips/packing/personal/update": typeof routes_trips_packing_personal_update;
   "routes/trips/packing/remove": typeof routes_trips_packing_remove;
   "routes/trips/packing/update": typeof routes_trips_packing_update;
+  "routes/trips/payments/checkout": typeof routes_trips_payments_checkout;
+  "routes/trips/payments/status": typeof routes_trips_payments_status;
   "routes/trips/preferences/favorite": typeof routes_trips_preferences_favorite;
   "routes/trips/restore": typeof routes_trips_restore;
   "routes/trips/seed/enrich": typeof routes_trips_seed_enrich;
@@ -797,6 +811,7 @@ export declare const internal: FilterApi<
 export declare const components: {
   betterAuth: import("../components/better-auth/_generated/component.js").ComponentApi<"betterAuth">;
   agent: import("@convex-dev/agent/_generated/component.js").ComponentApi<"agent">;
+  stripe: import("@convex-dev/stripe/_generated/component.js").ComponentApi<"stripe">;
   geospatial: import("@convex-dev/geospatial/_generated/component.js").ComponentApi<"geospatial">;
   rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
   workflow: import("@convex-dev/workflow/_generated/component.js").ComponentApi<"workflow">;

@@ -9,6 +9,7 @@
     "@convex-dev/better-auth": "0.12.5",
     "@convex-dev/geospatial": "0.2.1",
     "@convex-dev/rate-limiter": "^0.4.0",
+    "@convex-dev/stripe": "^0.1.7",
     "@convex-dev/workflow": "^0.4.10",
     "@convex-dev/workpool": "^0.4.13",
     "@groam/ai": "workspace:*",

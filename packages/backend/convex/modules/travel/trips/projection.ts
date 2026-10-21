@@ -1,6 +1,7 @@
 import type { Doc, Id } from '#convex-generated/dataModel';
 import type { QueryCtx } from '#convex-generated/server';
 import { Attachments } from '#convex/modules/media/attachments/index';
+import { canParticipateInTrip } from '#convex/modules/payments/index';
 import { ItineraryActivity } from '#convex/modules/travel/activities/index';
 import { TripDestination } from '#convex/modules/travel/destinations/index';
 import { TripStay } from '#convex/modules/travel/stays/index';
@@ -24,21 +25,26 @@ import {
 export async function projectTripListItem(
   ctx: QueryCtx,
   data: Doc<'trips'>,
-  favoriteIds: Set<Id<'trips'>>
+  favoriteIds: Set<Id<'trips'>>,
+  viewerId: string
 ) {
+  const canParticipate = await canParticipateInTrip(ctx, data, viewerId);
   const coverStorageId =
     data.cover && 'asset' in data.cover ? data.cover.asset?.storageId : undefined;
   return {
     archivedAt: data.archive?.at ?? null,
     coverUrl: coverStorageId ? await ctx.storage.getUrl(coverStorageId) : null,
-    dateNotes: data.dateNotes ?? null,
-    destination: data.destination.status === 'known' ? data.destination.name : null,
+    dateNotes: canParticipate ? (data.dateNotes ?? null) : null,
+    destination:
+      canParticipate && data.destination.status === 'known' ? data.destination.name : null,
     favorite: favoriteIds.has(data._id),
     id: data._id,
     shortId: data.shortId,
     lastUpdatedAt: data.updatedAt,
     name: data.name,
-    ...nextActionFor(data)
+    ...(canParticipate
+      ? nextActionFor(data)
+      : { nextAction: 'Join this trip to start planning', outstandingActionCount: 0 })
   };
 }
 
@@ -316,7 +322,51 @@ async function goingTravelerCount(ctx: QueryCtx, trip: TripQueryCtx): Promise<nu
   return TripTravelers.goingCount(await loadSharedTripContext(ctx, trip.trip._id, trip.workspace));
 }
 
+/** An unpaid preview is an explicit allowlist, built without loading plan rows or media URLs. */
+async function projectUnpaidPreview(ctx: QueryCtx, trip: TripQueryCtx) {
+  const cover = await projectCover(ctx, trip);
+  return {
+    activity: [],
+    archivedAt: trip.trip.archive?.at ?? null,
+    arrivalTransfer: null,
+    canParticipate: false,
+    departureTransfer: null,
+    coverAttribution: cover.attribution,
+    coverStatus: trip.trip.cover?.status ?? null,
+    coverUrl: cover.url,
+    currency: trip.trip.currency,
+    dateNotes: null,
+    destination: { status: 'undecided' as const },
+    destinations: [],
+    id: trip.trip._id,
+    idealDurationDays: null,
+    initialBudget: null,
+    lastUpdatedAt: trip.trip.updatedAt,
+    minimumDurationDays: null,
+    name: trip.trip.name,
+    permissions: {
+      canArchive: false,
+      canEdit: false,
+      canEditCover: false,
+      canPropose: false,
+      canRestore: false,
+      isReadOnly: true
+    },
+    proposal: null,
+    role: trip.role,
+    startDate: null,
+    totalDurationDays: null,
+    totalPlannedCost: 0
+  };
+}
+
 export async function projectTrip(ctx: QueryCtx, trip: TripQueryCtx) {
+  if (!(await canParticipateInTrip(ctx, trip.trip, trip.workspace.userId))) {
+    const source = trip.trip.proposal
+      ? await loadSharedTripContext(ctx, trip.trip._id, trip.workspace, { allowUnpaid: true })
+      : trip;
+    return projectUnpaidPreview(ctx, source);
+  }
   const tripId = trip.trip._id;
   const [
     activity,
@@ -365,6 +415,7 @@ export async function projectTrip(ctx: QueryCtx, trip: TripQueryCtx) {
     })),
     archivedAt: trip.trip.archive?.at ?? null,
     arrivalTransfer: projectBoundaryTransfer('arrival', boundaryTransfers, attachments),
+    canParticipate: true,
     coverAttribution: cover.attribution,
     coverStatus: trip.trip.cover?.status ?? null,
     coverUrl: cover.url,

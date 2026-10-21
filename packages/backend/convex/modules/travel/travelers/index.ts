@@ -1,16 +1,17 @@
 import { ConvexError } from 'convex/values';
-import type { Id } from '#convex-generated/dataModel';
+import type { Doc, Id } from '#convex-generated/dataModel';
 import type { MutationCtx } from '#convex-generated/server';
-import { workspaceRoster } from '#convex/modules/auth/workspace';
+import { systemWorkspace, workspaceRoster } from '#convex/modules/auth/workspace';
+import { assertTripPaid, participantsForTrip } from '#convex/modules/payments/index';
 import { PollSignals } from '#convex/modules/polls/signals';
 import { syncTripConditions } from '#convex/modules/travel/issues/sync';
 import {
-  rsvpStatus,
+  entitledStatus,
   statusesForTrip,
   type TravelerStatus,
   travelersForTrip
 } from '#convex/modules/travel/travelers/statuses';
-import { isTripAdmin, type TripCtx } from '#convex/modules/travel/trips/ctx';
+import { attachTrip, isTripAdmin, type TripCtx } from '#convex/modules/travel/trips/ctx';
 
 export type { TravelerStatus };
 
@@ -22,6 +23,11 @@ export async function listTravelers(ctx: TripCtx) {
     roster.members.map((member) => member.userId)
   );
   const byUserId = new Map(rows.flatMap((row) => (row.userId ? [[row.userId, row] as const] : [])));
+  const entitled = await participantsForTrip(
+    ctx,
+    ctx.trip,
+    roster.members.map((member) => member.userId)
+  );
   return roster.members
     .map((member) => {
       const row = byUserId.get(member.userId);
@@ -31,7 +37,7 @@ export async function listTravelers(ctx: TripCtx) {
         image: member.image ?? null,
         invitationId: row?.invitationId ?? null,
         name: member.name,
-        status: rsvpStatus(row?.status),
+        status: entitledStatus(row?.status, entitled.has(member.userId)),
         userId: member.userId
       };
     })
@@ -66,6 +72,7 @@ export async function setTravelerStatus(
   if (userId !== ctx.workspace.userId && !isTripAdmin(ctx)) {
     throw new ConvexError('You can only update your own RSVP');
   }
+  if (status === 'going') await assertTripPaid(ctx, userId);
   const roster = await workspaceRoster(ctx, ctx.workspace);
   const member = roster.members.find((item) => item.userId === userId);
   if (!member) throw new ConvexError('Traveler not found in this group');
@@ -89,6 +96,12 @@ export async function setTravelerStatus(
       userId
     });
   }
+  await refreshTravelerSignals(ctx);
+  return null;
+}
+
+/** Effective RSVPs changed (a status or a seat), so rules and waits over them re-check. */
+async function refreshTravelerSignals(ctx: TripCtx<MutationCtx>) {
   // RSVPs change the shared trip directly, so "done when" rules over them re-check here.
   await syncTripConditions(ctx);
   // RSVP waits and trip-poll eligibility (not going travelers cannot vote) re-check after.
@@ -96,7 +109,6 @@ export async function setTravelerStatus(
     organizationId: ctx.trip.organizationId,
     tripId: ctx.trip._id
   });
-  return null;
 }
 
 export async function claimInvitation(
@@ -126,12 +138,20 @@ export async function goingCount(ctx: TripCtx): Promise<number> {
   return (await listTravelers(ctx)).filter((traveler) => traveler.status === 'going').length;
 }
 
+/** A new seat reveals the traveler's stored RSVP, so rules and waits over it re-check. */
+export async function seatConfirmed(ctx: MutationCtx, trip: Doc<'trips'>) {
+  await refreshTravelerSignals(
+    attachTrip(ctx, trip, systemWorkspace(trip.organizationId), 'organizer')
+  );
+}
+
 /** Per-trip RSVP overlay on the workspace roster. */
 // oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class TripTravelers {
   static claimInvitation = claimInvitation;
   static goingCount = goingCount;
   static list = listTravelers;
+  static seatConfirmed = seatConfirmed;
   static seed = seedTravelers;
   static setStatus = setTravelerStatus;
   static statusesForTrip = statusesForTrip;

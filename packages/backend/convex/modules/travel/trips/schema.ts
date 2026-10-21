@@ -79,6 +79,8 @@ export const tripTables = {
     destination: TripDestinationValidators.destination,
     duration: v.optional(duration),
     name: v.string(),
+    /** Set when payments were ready at creation; older trips stay free. */
+    paymentRequired: v.optional(v.boolean()),
     organizationId: v.string(),
     proposal: v.optional(TripVersionValidators.proposalMetadata),
     startDate: v.optional(v.string()),

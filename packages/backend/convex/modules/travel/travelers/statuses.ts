@@ -2,6 +2,7 @@ import type { Infer } from 'convex/values';
 import type { Id } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import { type OrganizationRoster, systemRoster } from '#convex/modules/auth/workspace';
+import { participantsForTrip } from '#convex/modules/payments/index';
 import type { TripTravelerValidators } from '#convex/modules/travel/travelers/schema';
 
 export type TravelerStatus = Infer<typeof TripTravelerValidators.status>;
@@ -30,6 +31,12 @@ export function rsvpStatus(status: TravelerStatus | undefined): Exclude<Traveler
   return 'going';
 }
 
+/** Travelers without a seat read as invited unless they hedged or declined. */
+export function entitledStatus(status: TravelerStatus | undefined, entitled: boolean) {
+  const rsvp = rsvpStatus(status);
+  return entitled || rsvp !== 'going' ? rsvp : ('invited' as const);
+}
+
 /**
  * RSVP per current member, without a session (scheduled code, waits, polls). Members with no
  * row yet read as going; invited people without an account never appear.
@@ -47,9 +54,12 @@ export async function statusesForTrip(
     roster.members.map((member) => member.userId)
   );
   const byUserId = new Map(rows.flatMap((row) => (row.userId ? [[row.userId, row] as const] : [])));
+  const trip = await ctx.db.get('trips', tripId);
+  const userIds = roster.members.map((member) => member.userId);
+  const entitled = trip ? await participantsForTrip(ctx, trip, userIds) : new Set(userIds);
   return roster.members.map((member) => ({
     name: member.name,
-    status: rsvpStatus(byUserId.get(member.userId)?.status),
+    status: entitledStatus(byUserId.get(member.userId)?.status, entitled.has(member.userId)),
     userId: member.userId
   }));
 }
