@@ -23,6 +23,7 @@ import { initials } from '@groam/ui/lib/avatar';
 import { useTripTravelers } from '@/features/trips/hooks/use-trip-travelers';
 import { useWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
 import { testIds } from '@/lib/test-ids';
+import { TripPaymentsPanel } from './trip-payments-panel';
 
 const ASSIGNABLE_STATUSES = [
   { id: 'going', label: 'Going' },
@@ -107,6 +108,11 @@ export function TripTravelersSheet({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
+                      {traveler.status === 'invited' && (
+                        <SelectItem disabled value="invited">
+                          Invited
+                        </SelectItem>
+                      )}
                       {ASSIGNABLE_STATUSES.map((status) => (
                         <SelectItem key={status.id} value={status.id}>
                           {status.label}
@@ -117,6 +123,15 @@ export function TripTravelersSheet({
                 </div>
               );
             })
+          )}
+          {!isLoading && travelers.length > 0 && (
+            <TripPaymentsPanel
+              archived={archived}
+              canManageOthers={canManageOthers}
+              travelers={travelers}
+              tripId={tripId}
+              viewerId={session.user.id}
+            />
           )}
         </div>
       </SheetContent>
