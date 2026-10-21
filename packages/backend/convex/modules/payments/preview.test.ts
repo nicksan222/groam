@@ -1,7 +1,7 @@
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api } from '#convex-generated/api';
 import { setupBillableTrip } from '#testing/payments';
-import { setupTrip, openTripDraft, tripActivityInput, tripLocationInput } from '#testing/trips';
+import { openTripDraft, tripActivityInput, tripLocationInput } from '#testing/trips';
 
 const findTrip = api.routes.trips.find.run;
 const getTrip = api.routes.trips.get.run;
@@ -16,8 +16,8 @@ function enablePayments() {
   vi.stubEnv('STRIPE_WEBHOOK_SECRET', 'whsec_preview');
 }
 
-async function protectedPlan(billable = true) {
-  const fixture = await (billable ? setupBillableTrip : setupTrip)(1);
+async function protectedPlan() {
+  const fixture = await setupBillableTrip(1);
   const version = await openTripDraft(fixture.owner, fixture.tripId);
   const tripId = version.workingTripId;
   await fixture.owner.client.mutation(api.routes.trips.update.run, {
@@ -96,14 +96,12 @@ test('unpaid find/get responses redact protected plans and proposal contents bef
   expect((await users[0]!.client.query(findTrip, { tripId }))!.id).toBe(tripId);
 });
 
-test.each(['disabled', 'legacy', 'paid'])(
+test.each(['disabled', 'paid'])(
   '%s payment access retains full protected projections',
   async (access) => {
-    if (access === 'legacy') vi.stubEnv('STRIPE_SECRET_KEY', '');
-    else enablePayments();
-    const { owner, users, tripId, previewTripId } = await protectedPlan(access !== 'legacy');
+    enablePayments();
+    const { owner, users, tripId, previewTripId } = await protectedPlan();
     if (access === 'disabled') vi.stubEnv('STRIPE_SECRET_KEY', '');
-    if (access === 'legacy') enablePayments();
     if (access === 'paid') {
       vi.stubGlobal(
         'fetch',

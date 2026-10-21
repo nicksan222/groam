@@ -1,6 +1,6 @@
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api } from '#convex-generated/api';
-import { markTripBillable, setupBillableTrip, paymentCleanupState } from '#testing/payments';
+import { inviteFixtureTravelers, setupBillableTrip, paymentCleanupState } from '#testing/payments';
 
 import { tripInput } from '#testing/trips';
 
@@ -84,7 +84,7 @@ test('organization deletion preserves another organization payment rows', async 
   const otherTripId = await owner.client.action(api.routes.trips.create.run, {
     input: tripInput()
   });
-  await markTripBillable(owner, otherTripId);
+  await inviteFixtureTravelers(owner, otherTripId);
   await owner.client.action(api.routes.trips.payments.checkout.run, {
     tripId: otherTripId,
     userId: member.userId

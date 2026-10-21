@@ -3,8 +3,7 @@ import { api, internal } from '#convex-generated/api';
 import {
   setupBillableTrip,
   paymentCleanupState,
-  paymentReconciliationState,
-  legacyUnrecordedPayment
+  paymentReconciliationState
 } from '#testing/payments';
 
 import { removeMember } from '#testing/waits';
@@ -582,29 +581,23 @@ test('verified external remedies leave financial evidence and cannot be retried'
   ).rejects.toThrow('changed');
 });
 
-test.each(['new', 'legacy'])(
-  'a %s reservation without a persisted request uses only proven no-I/O cleanup',
-  async (protocol) => {
-    const { mock } = provider();
-    vi.useFakeTimers();
-    const fixture = await setupBillableTrip(1);
-    const reserved = await fixture.users[0]!.client.mutation(
-      internal.modules.payments.storage.prepare,
-      { tripId: fixture.tripId }
-    );
-    expect(reserved).not.toBeNull();
-    if (protocol === 'legacy') await legacyUnrecordedPayment(fixture.owner.test, reserved!.id);
-    await deleteOrganization(fixture);
-    expect(mock).not.toHaveBeenCalled();
-    expect(await paymentCleanupState(fixture.owner.test, fixture.tripId)).toEqual({
-      tripExists: false,
-      payments: []
-    });
-    expect(await paymentReconciliationState(fixture.owner.test)).toHaveLength(
-      protocol === 'new' ? 0 : 1
-    );
-  }
-);
+test('a reservation without a persisted request is deleted without provider I/O', async () => {
+  const { mock } = provider();
+  vi.useFakeTimers();
+  const fixture = await setupBillableTrip(1);
+  const reserved = await fixture.users[0]!.client.mutation(
+    internal.modules.payments.storage.prepare,
+    { tripId: fixture.tripId }
+  );
+  expect(reserved).not.toBeNull();
+  await deleteOrganization(fixture);
+  expect(mock).not.toHaveBeenCalled();
+  expect(await paymentCleanupState(fixture.owner.test, fixture.tripId)).toEqual({
+    tripExists: false,
+    payments: []
+  });
+  expect(await paymentReconciliationState(fixture.owner.test)).toHaveLength(0);
+});
 
 test.each(['self', 'sponsor'])(
   'a removed traveler’s %s-paid Checkout is refunded without granting a seat',

@@ -29,9 +29,8 @@ async function upload(
   return { mediaId: saved.mediaId, storageId };
 }
 async function fixture(access = 'unpaid') {
-  if (access === 'legacy') vi.stubEnv('STRIPE_SECRET_KEY', '');
-  else payments();
-  const trip = await (access === 'legacy' ? setupTrip : setupBillableTrip)(1);
+  payments();
+  const trip = await setupBillableTrip(1);
   const member = trip.users[0]!;
   const protectedFile = await upload(member.client, 'Protected passport.png');
   const ordinary = await upload(member.client, 'Ordinary upload.png');
@@ -41,7 +40,6 @@ async function fixture(access = 'unpaid') {
     target: { type: 'trip', id: draft.workingTripId },
     mediaIds: [protectedFile.mediaId]
   });
-  if (access === 'legacy') payments();
   if (access === 'disabled') vi.stubEnv('STRIPE_SECRET_KEY', '');
   if (access === 'paid') {
     vi.stubGlobal(
@@ -111,7 +109,7 @@ test('unpaid media library omits protected metadata and prevents guessed-ID reus
   ).rejects.toThrow('Media not found');
 });
 
-test.each(['paid', 'disabled', 'legacy'])(
+test.each(['paid', 'disabled'])(
   '%s readers retain protected media URLs and ordinary library media',
   async (access) => {
     const { member, protectedFile, ordinary } = await fixture(access);

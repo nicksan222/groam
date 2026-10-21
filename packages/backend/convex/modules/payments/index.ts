@@ -8,8 +8,13 @@ export function paymentsEnabled() {
   return Boolean(env.STRIPE_SECRET_KEY?.trim());
 }
 
+/** Checkout needs both provider access and signed webhook confirmation. */
+export function paymentsReady() {
+  return paymentsEnabled() && Boolean(env.STRIPE_WEBHOOK_SECRET?.trim());
+}
+
 export function requiresTripPayment(trip: TripCtx['trip'], userId: string) {
-  return paymentsEnabled() && trip.paymentsRequired === true && trip.creator.userId !== userId;
+  return paymentsEnabled() && trip.creator.userId !== userId;
 }
 
 export function paymentFor(ctx: QueryCtx | MutationCtx, tripId: Id<'trips'>, userId: string) {
@@ -30,7 +35,7 @@ export async function assertTripPaid(ctx: TripCtx, userId: string) {
 
 export async function paymentStatus(ctx: TripCtx) {
   const roster = await workspaceRoster(ctx, ctx.workspace);
-  const enabled = paymentsEnabled() && ctx.trip.paymentsRequired === true;
+  const enabled = paymentsEnabled();
   const travelers = await Promise.all(
     roster.members.map(async ({ userId }) => ({
       userId,
