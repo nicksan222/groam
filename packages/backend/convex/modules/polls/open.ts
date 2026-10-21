@@ -69,32 +69,35 @@ async function presentOpen(
     }
     return trip;
   };
-  return await Promise.all(
-    readable.map(async (poll) => {
-      const [tally, mine, trip] = await Promise.all([
-        pollTally(ctx, poll, voters),
-        ctx.db
-          .query('pollVotes')
-          .withIndex('by_pollId_and_userId', (query) =>
-            query.eq('pollId', poll._id).eq('userId', workspace.userId)
-          )
-          .unique(),
-        poll.tripId ? tripOf(poll.tripId) : null
-      ]);
-      return {
-        closesAt: poll.closesAt ?? null,
-        createdAt: poll._creationTime,
-        discussionId: poll.discussionId ?? null,
-        id: poll._id,
-        optionCount: poll.options.length,
-        question: poll.question,
-        tripId: poll.tripId ?? null,
-        tripName: trip?.name ?? null,
-        viewerHasVoted: (mine?.optionIds.length ?? 0) > 0,
-        votedCount: tally.votedCount
-      };
-    })
-  );
+  const items: PollOpenItem[] = [];
+  // Each tally may fan out to 100 roster reads. Present polls sequentially to stay below
+  // the concurrent database-I/O limit even when ten polls belong to distinct trips.
+  for (const poll of readable) {
+    // oxlint-disable-next-line react-doctor/async-await-in-loop -- One poll at a time bounds concurrent roster I/O to 100 members.
+    const [tally, mine, trip] = await Promise.all([
+      pollTally(ctx, poll, voters),
+      ctx.db
+        .query('pollVotes')
+        .withIndex('by_pollId_and_userId', (query) =>
+          query.eq('pollId', poll._id).eq('userId', workspace.userId)
+        )
+        .unique(),
+      poll.tripId ? tripOf(poll.tripId) : null
+    ]);
+    items.push({
+      closesAt: poll.closesAt ?? null,
+      createdAt: poll._creationTime,
+      discussionId: poll.discussionId ?? null,
+      id: poll._id,
+      optionCount: poll.options.length,
+      question: poll.question,
+      tripId: poll.tripId ?? null,
+      tripName: trip?.name ?? null,
+      viewerHasVoted: (mine?.optionIds.length ?? 0) > 0,
+      votedCount: tally.votedCount
+    });
+  }
+  return items;
 }
 
 export const PollOpenReads = { listOpen, pageOpen };

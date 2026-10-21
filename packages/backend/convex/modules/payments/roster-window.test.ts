@@ -1,8 +1,12 @@
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api, internal } from '#convex-generated/api';
 import { AgentRuns } from '#convex/modules/assistant/runs/index';
-import { queuePreviewDiscussionRun } from '#testing/agent-preview';
-import { markTripBillable, setupBillableTrip } from '#testing/payments';
+import {
+  queuePreviewDiscussionRun,
+  seedRosterAuthorizationWindows,
+  seedRosterIssueSources
+} from '#testing/agent-preview';
+import { confirmFixtureSeats, markTripBillable, setupBillableTrip } from '#testing/payments';
 import { tripInput } from '#testing/trips';
 
 const roster = api.routes.agents.list.run;
@@ -187,4 +191,30 @@ test('an exactly exhausted 200-candidate history is complete rather than unknown
     runWindowIncomplete: false,
     latestRun: { id: group.latestVisible }
   });
+});
+
+test('roster shares a bounded authorization budget across all agent windows', async () => {
+  const group = await fixture(0);
+  await confirmFixtureSeats(group.owner, group.tripId, [group.member.userId]);
+  const idea = await group.owner.client.mutation(api.routes.trips.versions.create.run, {
+    tripId: group.tripId
+  });
+  await seedRosterAuthorizationWindows(group.owner.test, {
+    seedRunId: group.latestVisible,
+    workingTripId: idea.workingTripId,
+    countPerAgent: 201
+  });
+  await seedRosterIssueSources(group.owner.test, group.tripId);
+  const { agents, metrics } = await group.member.client.run(async (ctx) => {
+    const agents = await ctx.runQuery(roster, {}, { transactionLimits: { databaseQueries: 4096 } });
+    return { agents, metrics: await ctx.meta.getTransactionMetrics() };
+  });
+  // Measured 2804 ranges with 200 worst-case conversation checks and 500 distinct issue trips.
+  expect(metrics.databaseQueries.used).toBeLessThan(3400);
+  expect(
+    agents.every(
+      (agent) =>
+        agent.runWindowIncomplete && agent.activeRunCount === null && agent.status === 'unknown'
+    )
+  ).toBe(true);
 });
