@@ -35,10 +35,25 @@ export function AiAssistantWidget({
   showMobileLauncher?: boolean;
 }) {
   const context = useCurrentAgentContext();
+  const contextKey = context?.key ?? null;
+  const [openState, setOpenState] = useState({ contextKey, isOpen: false });
+  // Preserve a click made before the initial context arrives. A real page change
+  // closes synchronously, before the keyed child can start a thread for that page.
+  const isOpen =
+    openState.isOpen && (openState.contextKey === contextKey || openState.contextKey === null);
+  if (openState.contextKey !== contextKey) setOpenState({ contextKey, isOpen });
+  const onOpenChange = useCallback(
+    (open: boolean) => {
+      setOpenState({ contextKey, isOpen: open });
+    },
+    [contextKey]
+  );
   return (
     <ContextualAssistantWidget
       api={api}
       context={context}
+      isOpen={isOpen}
+      onOpenChange={onOpenChange}
       key={context?.key ?? 'no-context'}
       showMobileLauncher={showMobileLauncher}
     />
@@ -48,13 +63,16 @@ export function AiAssistantWidget({
 function ContextualAssistantWidget({
   api,
   context,
+  isOpen,
+  onOpenChange,
   showMobileLauncher
 }: {
   api: AssistantBackendApi;
   context: AgentScreenContext | null;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
   showMobileLauncher: boolean;
 }) {
-  const [isOpen, setIsOpen] = useState(false);
   const [draftState, setDraftState] = useState<{ draft: string; threadId: string | null }>({
     draft: '',
     threadId: null
@@ -69,10 +87,13 @@ function ContextualAssistantWidget({
   const launcherRef = useRef<HTMLButtonElement>(null);
   const externalLauncherRef = useRef<HTMLElement>(null);
 
-  const setOpen = useCallback((open: boolean) => {
-    hasInteracted.current = true;
-    setIsOpen(open);
-  }, []);
+  const setOpen = useCallback(
+    (open: boolean) => {
+      hasInteracted.current = true;
+      onOpenChange(open);
+    },
+    [onOpenChange]
+  );
 
   useLayoutEffect(() => {
     document.documentElement.toggleAttribute('data-ai-sidechat-open', isOpen);

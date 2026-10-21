@@ -42,6 +42,7 @@ const assistant = vi.hoisted(() => ({
   isStopping: false,
   loadMore: vi.fn(),
   messages: [],
+  observed: vi.fn(),
   open: vi.fn(),
   selectThread: vi.fn(),
   send: vi.fn().mockResolvedValue(true),
@@ -53,10 +54,14 @@ const assistant = vi.hoisted(() => ({
 }));
 
 vi.mock('#ai/ui/hooks/use-assistant', () => ({
-  useAssistant: () => ({
-    ...assistant,
-    open: assistant.unstableOpen ? () => assistant.open() : assistant.open
-  })
+  useAssistant: (
+    context: AgentScreenContext | null,
+    _api: unknown,
+    options: { enabled: boolean }
+  ) => {
+    assistant.observed(context?.key ?? null, options.enabled);
+    return { ...assistant, open: assistant.unstableOpen ? () => assistant.open() : assistant.open };
+  }
 }));
 
 vi.mock('#ai/ui/hooks/use-assistant-chats', () => ({
@@ -84,6 +89,7 @@ afterEach(() => {
   vi.clearAllMocks();
   assistant.canStop = false;
   assistant.isResponding = false;
+  assistant.observed.mockClear();
   assistant.open.mockReset().mockResolvedValue(undefined);
   assistant.threadId = 'thread-1';
   assistant.unstableOpen = false;
@@ -255,3 +261,69 @@ describe('AiAssistantWidget', () => {
       .toHaveAttribute('contenteditable', 'false');
   });
 });
+
+test.each([1024, 1280])(
+  'preserves an explicit opening when the first page context arrives after the click at width %s',
+  async (width) => {
+    await useViewport(width, 800);
+    const panelRole = width >= 1280 ? 'region' : 'dialog';
+    assistant.threadId = null;
+    const view = await renderWidget(false);
+    await page.getByRole('button', { name: 'Open Groam AI' }).click();
+    await expect.element(page.getByRole(panelRole, { name: 'Groam AI' })).toBeVisible();
+    expect(assistant.open).not.toHaveBeenCalled();
+    await view.rerender(
+      <AgentContextProvider>
+        <ContextRegistration />
+        <AiAssistantWidget api={api} />
+      </AgentContextProvider>
+    );
+    await expect.element(page.getByRole(panelRole, { name: 'Groam AI' })).toBeVisible();
+    await vi.waitFor(() => expect(assistant.open).toHaveBeenCalledTimes(1));
+  }
+);
+
+test('same-page context data updates preserve the opening without restarting the thread', async () => {
+  assistant.threadId = null;
+  const view = await renderWidget();
+  await page.getByRole('button', { name: 'Open Groam AI' }).click();
+  await vi.waitFor(() => expect(assistant.open).toHaveBeenCalledTimes(1));
+  await view.rerender(
+    <AgentContextProvider>
+      <ContextRegistration value={{ ...context, data: { approvalCount: 2 } }} />
+      <AiAssistantWidget api={api} />
+    </AgentContextProvider>
+  );
+  await expect.element(page.getByRole('dialog', { name: 'Groam AI' })).toBeVisible();
+  expect(assistant.open).toHaveBeenCalledTimes(1);
+});
+
+test.each([false, true])(
+  'real page changes close before enabling another context, including a missing-context gap: %s',
+  async (gap) => {
+    assistant.threadId = null;
+    const view = await renderWidget();
+    await page.getByRole('button', { name: 'Open Groam AI' }).click();
+    await vi.waitFor(() => expect(assistant.open).toHaveBeenCalledTimes(1));
+    if (gap) {
+      await view.rerender(
+        <AgentContextProvider>
+          <AiAssistantWidget api={api} />
+        </AgentContextProvider>
+      );
+      await expect.element(page.getByRole('dialog', { name: 'Groam AI' })).not.toBeInTheDocument();
+    }
+    const next = { ...context, key: 'trip:trip-2:issues', title: 'Next trip' };
+    await view.rerender(
+      <AgentContextProvider>
+        <ContextRegistration value={next} />
+        <AiAssistantWidget api={api} />
+      </AgentContextProvider>
+    );
+    await expect.element(page.getByRole('dialog', { name: 'Groam AI' })).not.toBeInTheDocument();
+    expect(assistant.open).toHaveBeenCalledTimes(1);
+    const nextObservations = assistant.observed.mock.calls.filter(([key]) => key === next.key);
+    expect(nextObservations.length).toBeGreaterThan(0);
+    expect(nextObservations.every(([, enabled]) => enabled === false)).toBe(true);
+  }
+);
