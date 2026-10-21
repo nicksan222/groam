@@ -2,7 +2,6 @@ import type { Id } from '@groam/backend/data-model';
 import { PageLoading } from '@groam/ui/components/page-loading';
 import Shell from '@groam/ui/components/shell/client';
 import { cn } from '@groam/ui/lib/utils';
-import { useNavigate } from '@tanstack/react-router';
 import { useStartIdeaFlow } from '@/features/trips/hooks/use-start-idea-flow';
 import { useTripAgentContext } from '@/features/trips/hooks/use-trip-agent-context';
 import { useTripVersions } from '@/features/trips/hooks/use-trip-versions';
@@ -13,6 +12,7 @@ import { CreateTripIdeaDialog } from '@/features/trips/trip-ideas/create-trip-id
 import type { TripSection } from '@/features/trips/trip-sections';
 import { useOpenState } from '@/features/workspace/hooks/use-open-state';
 import { useConfirm } from '@/features/workspace/workspace-shell/use-confirm-dialog';
+import { useNavigate } from '@/lib/navigation/router';
 import { useReadyValue } from '@/lib/use-ready-value';
 import { createTripNavigation } from './trip-detail-navigation';
 import { tripDetailRedirect } from './trip-detail-redirect';
