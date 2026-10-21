@@ -3,6 +3,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { repoRoot } from '@groam/devkit/repo-root';
 import { env } from '@groam/env/production';
+import { prepareCloudflare, cloudflareDirectory } from './cloudflare';
 import {
   releaseManifestPath,
   siteDigest,
@@ -12,7 +13,12 @@ import {
 import { productionTarget, buildEnvironment } from './target';
 
 if (import.meta.main) {
-  const target = productionTarget(env.convexUrl, env.siteUrl);
+  const target = productionTarget(
+    env.convexUrl,
+    env.siteUrl,
+    env.cloudflareAccountId,
+    env.cloudflareWorkerName
+  );
   const sha = execFileSync('git', ['rev-parse', 'HEAD'], {
     cwd: repoRoot,
     encoding: 'utf8'
@@ -26,9 +32,11 @@ if (import.meta.main) {
       env: childEnv,
       stdio: 'inherit'
     });
+  prepareCloudflare(repoRoot, target);
   const release: ProductionRelease = {
     sha,
     target,
+    cloudflare: siteDigest(join(repoRoot, cloudflareDirectory)),
     web: siteDigest(join(repoRoot, siteDirectories.web)),
     landing: siteDigest(join(repoRoot, siteDirectories.landing))
   };

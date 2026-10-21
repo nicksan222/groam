@@ -2,10 +2,7 @@ import { expect, test } from 'vite-plus/test';
 import { smokeProduction } from './smoke';
 import { productionTarget } from './target';
 
-const target = productionTarget(
-  'https://groam-demo.convex.cloud',
-  'https://groam-demo.convex.site'
-);
+const target = productionTarget('https://groam-demo.convex.cloud', 'https://groam.example');
 const html = (body: string, language = 'en', status = 200) =>
   new Response(`<html lang="${language}">${body}</html>`, {
     status,
@@ -36,7 +33,7 @@ test('checks the production entry points without credentials or data mutations',
   });
   expect(calls).toContain(`${target.siteUrl}/it/features/ai/`);
   expect(calls).toContain(`${target.siteUrl}/app/settings`);
-  expect(calls).toContain(`${target.siteUrl}/api/auth/get-session`);
+  expect(calls).toContain(`${target.backendSiteUrl}/api/auth/get-session`);
 });
 
 test.each(['auth', 'missing-asset', 'language', 'app-base'])(

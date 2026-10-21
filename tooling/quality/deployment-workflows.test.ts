@@ -7,8 +7,10 @@ describe('production deployment workflows', () => {
   test('keeps automatic deployment behind successful CI on trusted main pushes', () => {
     const workflow = read('.github/workflows/ci.yml');
 
+    expect(workflow).toContain("branches: [main, 'saas/**']");
     expect(workflow).toContain("cancel-in-progress: ${{ github.event_name == 'pull_request' }}");
     expect(workflow).toContain('needs: [test]');
+    expect(workflow).toContain('CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}');
     expect(workflow).toContain('uses: ./.github/workflows/release-production.yml');
     expect(workflow).toContain('CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}');
     expect(workflow).toContain("github.repository == 'nicksan222/groam'");
@@ -30,7 +32,11 @@ describe('production deployment workflows', () => {
     expect(workflow).toContain("github.event_name == 'workflow_dispatch'");
     expect(workflow).toContain("github.ref == 'refs/heads/main'");
     expect(checks).toContain('name: Checks');
+    expect(checks).toContain('wrangler deploy --config dist/cloudflare/wrangler.json --dry-run');
     expect(checks).not.toContain('name: Test\n');
+    expect(checks).toContain('wrangler dev --config dist/cloudflare/wrangler.json --local');
+    expect(checks).not.toContain('hosting:upload');
+    expect(checks).not.toContain('--component web');
   });
 
   test('isolates the production key to the mutation step and deploys an immutable main SHA', () => {
@@ -62,6 +68,8 @@ describe('production deployment workflows', () => {
     expect(workflow).toContain('CONVEX_URL: ${{ vars.CONVEX_URL }}');
     expect(workflow).toContain('SITE_URL: ${{ vars.SITE_URL }}');
     expect(deployKeyOccurrences).toHaveLength(3);
+    expect(workflow.match(/CLOUDFLARE_API_TOKEN/g)).toHaveLength(3);
+    expect(workflow).toContain('CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}');
   });
 
   test('removes legacy beta, bootstrap, site-only, and access-token deployment paths', () => {

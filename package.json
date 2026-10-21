@@ -14,7 +14,6 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@convex-dev/static-hosting": "0.2.1",
     "@types/node": "^26.6.3",
     "fallow": "3.30.0",
     "jiti": "^2.7.0",
@@ -67,8 +66,6 @@
     "fallow:strict": "vp exec fallow -c tooling/fallow.config.jsonc --fail-on-issues --type-aware-require complete && vp exec fallow -c tooling/fallow.config.jsonc health --css --type-aware-require complete",
     "format": "vp exec syncpack format --config tooling/syncpack.config.json && vp check --fix",
     "format:check": "vp exec syncpack format --check --config tooling/syncpack.config.json && vp fmt --check",
-    "hosting:upload:landing": "vp exec static-hosting upload --component landing --dist apps/landing/dist --no-spa --build-command 'vp run build:landing'",
-    "hosting:upload:web": "vp exec static-hosting upload --component web --dist apps/web/dist --build-command 'STATIC_HOSTING_BASE_PATH=/app/ vp run build:web'",
     "lint": "vp run lint:conventions && vp run lint:agents && vp run lint:packages && vp check",
     "lint:agents": "bun tooling/quality/check-agent-tooling.ts",
     "lint:claude": "vp run lint:agents",

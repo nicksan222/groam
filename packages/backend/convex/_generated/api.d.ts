@@ -9,7 +9,6 @@
  */
 
 import type * as crons from "../crons.js";
-import type * as hosting from "../hosting.js";
 import type * as http from "../http.js";
 import type * as modules_ai_chatgpt_actions from "../modules/ai/chatgpt/actions.js";
 import type * as modules_ai_chatgpt_callback from "../modules/ai/chatgpt/callback.js";
@@ -389,7 +388,6 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   crons: typeof crons;
-  hosting: typeof hosting;
   http: typeof http;
   "modules/ai/chatgpt/actions": typeof modules_ai_chatgpt_actions;
   "modules/ai/chatgpt/callback": typeof modules_ai_chatgpt_callback;
@@ -794,6 +792,4 @@ export declare const components: {
   geospatial: import("@convex-dev/geospatial/_generated/component.js").ComponentApi<"geospatial">;
   rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
   workflow: import("@convex-dev/workflow/_generated/component.js").ComponentApi<"workflow">;
-  web: import("@convex-dev/static-hosting/_generated/component.js").ComponentApi<"web">;
-  landing: import("@convex-dev/static-hosting/_generated/component.js").ComponentApi<"landing">;
 };

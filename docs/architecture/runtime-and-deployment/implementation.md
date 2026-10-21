@@ -37,7 +37,7 @@ Source: [`Dockerfile`](../../../.devcontainer/Dockerfile),
 lifecycle script runs `tooling/devkit/prepare-convex.ts` first; then `vp run`
 starts every workspace `dev` script in parallel with labeled output. Only two
 workspaces define one: `@groam/backend` runs `convex dev --typecheck-components
---start 'convex dashboard'` (API on 3210, HTTP and hosting on 3211, dashboard
+--start 'convex dashboard'` (API on 3210, HTTP on 3211, dashboard
 on 6790), and `@groam/web` runs `vp dev --host 0.0.0.0` on 5173. The local
 backend is anonymous and self-hosted; its state lives in the git-ignored
 `.convex/local/` directory and persists across restarts.
@@ -117,11 +117,9 @@ Source: [`packages/env/README.md`](../../../packages/env/README.md),
 
 ## HTTP router composition and auth origins
 
-The Convex HTTP router serves three things on one origin: Better Auth routes,
-the ChatGPT OAuth callback, and the static-hosting catch-all for the SPA. Exact
-routes are registered first so the catch-all never shadows them. The static
-host is the `@convex-dev/static-hosting` component mounted as `web`. Better
-Auth trusts the `SITE_URL` origin; when either `SITE_URL` or `CONVEX_SITE_URL`
+The Convex HTTP router serves backend HTTP endpoints: Better Auth routes and
+the ChatGPT OAuth callback. Cloudflare serves the frontend on a separate origin;
+there is no frontend catch-all in Convex. Better Auth trusts the `SITE_URL` origin; when either `SITE_URL` or `CONVEX_SITE_URL`
 is local, it also trusts the Vite origins on ports 5173 (app) and 5174
 (journeys) for `localhost`, `127.0.0.1` and `[::1]`.
 
@@ -130,7 +128,6 @@ is local, it also trusts the Vite origins on ports 5173 (app) and 5174
 const http = httpRouter();
 authComponent.registerRoutesLazy(http, createAuth, { cors: true, trustedOrigins: authTrustedOrigins });
 http.route({ path: '/auth/chatgpt/callback', method: 'GET', handler: chatGptCallback });
-registerStaticRoutes(http, components.web);   // SPA assets and fallback
 
 // modules/auth/auth.ts and origins.ts
 const authBaseUrl = env.CONVEX_SITE_URL ?? 'http://127.0.0.1:3211';
@@ -157,8 +154,9 @@ The release checks out the immutable tested `github.sha`, installs and builds
 without a credential, and records both static builds, public destinations and
 the commit in a release manifest. Immediately before publishing, it verifies
 that the SHA is still the remote `main` tip. Only the deploy command receives
-the production-scoped `CONVEX_DEPLOY_KEY`; that command deploys the backend and
-uploads the root landing component plus the `/app/` web component. Public smoke
+the production-scoped `CONVEX_DEPLOY_KEY`; publishing deploys the backend, then
+uploads one Cloudflare Worker and asset release using `CLOUDFLARE_API_TOKEN`.
+Each child command receives only its own credential. Public smoke
 checks then cover English and Italian landing routes, the app, auth, assets and
 404 behavior without a key. Production jobs are serialized and never cancel
 one another.
@@ -176,8 +174,8 @@ bun run smoke:production                 # public URLs only
 The owner provisions the Convex deployment, `BETTER_AUTH_SECRET`, and Convex
 `SITE_URL` outside CI. GitHub reuses the protected `prod` environment, limited
 to selected branch `main` with no tags; it stores the matching deploy key.
-The public GitHub variables identify matching `*.convex.cloud` and
-`*.convex.site` origins. See the [production runbook](../../deployment.md) for
+The public GitHub variables identify the Convex API and Cloudflare frontend
+origins; the backend HTTP origin is derived from the Convex API URL. See the [production runbook](../../deployment.md) for
 the exact setup and operating procedure.
 
 Source: [`ci.yml`](../../../.github/workflows/ci.yml),
@@ -242,11 +240,12 @@ createWebVitestConfig(dir, { browser: { commands: journeyCommands, port: 5174, i
 // backend-session.ts assertLocalDevelopmentUrl throws unless localhost over HTTP(S)
 ```
 
-In CI, the `journeys` job starts `convex dev`, waits for `lib:getUrls`, runs
-`configure-auth.ts`, verifies that `bun run codegen` leaves no diff, and runs
-the journeys. It then uploads the landing and `/app/` web builds to the local
-static host and checks `/`, an Italian landing route, `/app/`,
-`/app/settings`, and a 404 for `/missing.js` on port 3211.
+In CI, the `journeys` job initializes the local Convex backend successfully before
+starting its watcher, runs `configure-auth.ts`, verifies that `bun run codegen`
+leaves no diff, and runs the journeys. A credential-free production build then
+assembles the Cloudflare Worker and assets. Wrangler's local runtime checks the
+artifact's landing routes, `/app/` deep links and missing-asset 404 behavior.
+Convex component upload commands are not part of frontend verification.
 
 Source: [`vitest convex.ts`](../../../tooling/vitest-config/src/convex.ts),
 [`factory.ts`](../../../packages/backend/testing/factory.ts#L62),
@@ -337,7 +336,7 @@ Source: [`pre-commit`](../../../tooling/hooks/pre-commit),
   [`settings.test.ts`](../../../packages/backend/convex/modules/ai/chatgpt/settings.test.ts).
 - App actions and seed resets cannot target remote deployments:
   [`backend-session.test.ts`](../../../tooling/app-actions/src/backend/backend-session.test.ts).
-- Static hosting serves the root landing pages and `/app/` SPA while returning
+- The Cloudflare artifact serves the root landing pages and `/app/` SPA while returning
   404 for missing assets, locally in
   [`test-reusable.yml`](../../../.github/workflows/test-reusable.yml) and in
   production through

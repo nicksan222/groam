@@ -151,12 +151,11 @@ export default defineSchema({ ...chatGptTables, ...assistantRunTables, ...tripTa
 
 // convex.config.ts
 app.use(betterAuth); app.use(agent); app.use(geospatial)
-app.use(rateLimiter); app.use(workflow); app.use(staticHosting, { name: 'web' })
+app.use(rateLimiter); app.use(workflow)
 
-// http.ts: exact routes before the static catch-all
+// http.ts: backend HTTP endpoints; frontend files are hosted by Cloudflare
 authComponent.registerRoutesLazy(http, createAuth, { cors: true, trustedOrigins })
 http.route({ path: '/auth/chatgpt/callback', method: 'GET', handler: chatGptCallback })
-registerStaticRoutes(http, components.web)
 ```
 
 Better Auth owns users, sessions, organizations and memberships in its local
