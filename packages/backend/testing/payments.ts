@@ -59,3 +59,25 @@ export async function setupBillableWritableTrip(additionalMemberCount = 3) {
   await markTripBillable(fixture.owner, fixture.sharedTripId);
   return fixture;
 }
+
+/** Confirm seats for a bounded, explicit payment/read-budget fixture. */
+export async function confirmFixtureSeats(
+  owner: Awaited<ReturnType<typeof setupTrip>>['owner'],
+  tripId: Id<'trips'>,
+  userIds: string[]
+) {
+  await owner.test.run(async (ctx) => {
+    await Promise.all(
+      userIds.map((userId) =>
+        ctx.db.insert('tripPayments', {
+          attempt: 'confirmed-budget-fixture',
+          expiresAt: 1,
+          paid: true,
+          payerId: userId,
+          tripId,
+          userId
+        })
+      )
+    );
+  });
+}

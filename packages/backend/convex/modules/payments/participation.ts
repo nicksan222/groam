@@ -8,8 +8,23 @@ export async function canParticipateInTrip(
   trip: Doc<'trips'>,
   userId: string
 ): Promise<boolean> {
+  return (await participantsForTrip(ctx, trip, [userId])).has(userId);
+}
+
+/** Resolves the canonical source once when checking a bounded roster. */
+export async function participantsForTrip(
+  ctx: QueryCtx | MutationCtx,
+  trip: Doc<'trips'>,
+  userIds: string[]
+): Promise<Set<string>> {
   const source = trip.proposal ? await ctx.db.get('trips', trip.proposal.sourceTripId) : trip;
-  if (!source || source.organizationId !== trip.organizationId) return false;
-  if (!requiresTripPayment(source, userId)) return true;
-  return Boolean((await paymentFor(ctx, source._id, userId))?.paid);
+  if (!source || source.organizationId !== trip.organizationId) return new Set();
+  const permitted = await Promise.all(
+    userIds.map(
+      async (userId) =>
+        !requiresTripPayment(source, userId) ||
+        Boolean((await paymentFor(ctx, source._id, userId))?.paid)
+    )
+  );
+  return new Set(userIds.filter((_, index) => permitted[index]));
 }

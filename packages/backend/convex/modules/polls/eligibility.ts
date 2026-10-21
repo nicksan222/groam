@@ -2,9 +2,9 @@ import type { Doc } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import { type OrganizationRoster, systemRoster } from '#convex/modules/auth/workspace';
 import { kindPolicy } from '#convex/modules/discussions/kinds/index';
-import { canParticipateInTrip } from '#convex/modules/payments/participation';
+import { participantsForTrip } from '#convex/modules/payments/participation';
 import { type PollTally, type PollVoter, tallyPoll } from '#convex/modules/polls/tally';
-import { statusesForTrip } from '#convex/modules/travel/travelers/statuses';
+import { travelersForTrip } from '#convex/modules/travel/travelers/statuses';
 
 export type Ctx = QueryCtx | MutationCtx;
 export type PollScope = Pick<Doc<'polls'>, 'discussionId' | 'organizationId' | 'tripId'>;
@@ -27,20 +27,29 @@ export function voterLoader(ctx: Ctx) {
   };
   const load = async (poll: PollScope): Promise<PollVoter[]> => {
     if (poll.tripId) {
-      const statuses = await statusesForTrip(
-        ctx,
-        poll.tripId,
-        poll.organizationId,
-        await roster(poll.organizationId)
-      );
-      const trip = await ctx.db.get('trips', poll.tripId);
+      const members = (await roster(poll.organizationId)).members;
+      const [rows, trip] = await Promise.all([
+        travelersForTrip(
+          ctx,
+          poll.tripId,
+          members.map(({ userId }) => userId)
+        ),
+        ctx.db.get('trips', poll.tripId)
+      ]);
       if (!trip) return [];
-      const candidates = statuses.filter((traveler) => traveler.status !== 'not_going');
-      const permitted = await Promise.all(
-        candidates.map(({ userId }) => canParticipateInTrip(ctx, trip, userId))
+      const declined = new Set(
+        rows.filter(({ status }) => status === 'not_going').map(({ userId }) => userId)
+      );
+      const candidates = members.filter(({ userId }) => !declined.has(userId));
+      // Display statuses already project payment eligibility. Polls need raw RSVP plus exactly
+      // one entitlement check per member, including maybe/invited travelers.
+      const permitted = await participantsForTrip(
+        ctx,
+        trip,
+        candidates.map(({ userId }) => userId)
       );
       return candidates
-        .filter((_, index) => permitted[index])
+        .filter(({ userId }) => permitted.has(userId))
         .map(({ name, userId }) => ({ name, userId }));
     }
     return (await roster(poll.organizationId)).members.map(({ name, userId }) => ({

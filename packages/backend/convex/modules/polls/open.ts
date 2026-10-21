@@ -24,7 +24,7 @@ async function listOpen(
     )
     .order('desc')
     .take(OPEN_SCAN);
-  return presentOpen(ctx, workspace, rows, limit);
+  return presentOpen(ctx, workspace, rows, Math.min(limit, OPEN_LIMIT));
 }
 
 /** Raw candidate pages retain continuation even when no polls are readable. */
@@ -41,7 +41,13 @@ async function pageOpen(ctx: QueryCtx, workspace: Workspace, paginationOpts: Pag
       q.eq('organizationId', workspace.organizationId).eq('status', 'open')
     )
     .order('desc')
-    .paginate({ ...paginationOpts, maximumRowsRead: OPEN_SCAN });
+    // At most ten distinct 100-member trips may require RSVP, payment and private-chat
+    // membership reads. Keep this bound on raw rows so filtering never discards cursor progress.
+    .paginate({
+      ...paginationOpts,
+      numItems: Math.min(paginationOpts.numItems, OPEN_LIMIT),
+      maximumRowsRead: OPEN_LIMIT
+    });
   return { ...result, page: await presentOpen(ctx, workspace, result.page) };
 }
 
