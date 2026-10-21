@@ -32,3 +32,11 @@ addresses and cannot use password sign-in on hosted deployments.
 
 Locally, `just dev` writes one relay secret to Convex and `apps/web/.env`; mail appears in
 Void's dev inbox. After pulling this change, run `just dev` once so `apps/web/.env` gets it.
+
+## Changing an account email
+
+Settings → Profile → Account email verifies a replacement address before it takes effect. Links
+return to the frontend as `emailChangeToken` and are confirmed by the signed-in original account,
+whose session must be newer than Better Auth's `freshAge` (24h); the old address gets a notice.
+Accounts with placeholder `@users.invalid` addresses recover by changing to a real address while
+signed in with a fresh session (or a passkey). Policy: `packages/backend/convex/modules/auth/verification.ts`.

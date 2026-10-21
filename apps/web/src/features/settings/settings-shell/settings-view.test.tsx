@@ -60,6 +60,10 @@ vi.mock('@/features/settings/settings-panels/organization-settings', () => ({
   OrganizationSettings: () => <p>Group settings</p>
 }));
 
+vi.mock('@/features/settings/settings-panels/email-settings', () => ({
+  EmailSettings: () => <p>Email settings</p>
+}));
+
 vi.mock('@/features/settings/settings-panels/profile-settings', () => ({
   ProfileSettings: () => <p>Profile settings</p>
 }));

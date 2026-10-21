@@ -3,6 +3,7 @@ import { type AuthFunctions, createClient, type GenericCtx } from '@convex-dev/b
 import { convex, crossDomain } from '@convex-dev/better-auth/plugins';
 import { type BetterAuthOptions, betterAuth } from 'better-auth/minimal';
 import { organization, twoFactor, username } from 'better-auth/plugins';
+import { decodeJwt } from 'jose';
 import { components, internal } from '#convex-generated/api';
 import type { DataModel } from '#convex-generated/dataModel';
 import { env } from '#convex-generated/server';
@@ -97,12 +98,30 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
       sendOnSignUp: verifiesEmail,
       sendOnSignIn: verifiesEmail,
       autoSignInAfterVerification: false,
-      sendVerificationEmail: async ({ user, url }) => {
+      sendVerificationEmail: async ({ user, url, token }) => {
+        const { email: previousEmail, updateTo } = decodeJwt(token);
+        if (!updateTo) {
+          await scheduleAuthEmail(
+            ctx,
+            user.email,
+            'Verify your Groam email',
+            `Verify your email using this link: ${url}\n\nIf you did not create this account, ignore this email.`
+          );
+          return;
+        }
+        // The signed-in original account confirms the change from Settings, not the auth server.
+        const link = new URL(`/settings/profile?emailChangeToken=${token}`, authSiteUrl).href;
         await scheduleAuthEmail(
           ctx,
           user.email,
-          'Verify your Groam email',
-          `Verify your email using this link: ${url}\n\nIf you did not create this account, ignore this email.`
+          'Confirm your new Groam email',
+          `Confirm this address for your Groam account using this link: ${link}\n\nIf you did not request this change, ignore this email.`
+        );
+        await scheduleAuthEmail(
+          ctx,
+          String(previousEmail),
+          'Your Groam email is changing',
+          `Someone signed in to your Groam account asked to change its email to ${user.email}. It changes only after that address is confirmed.\n\nIf this was not you, sign in and change your password.`
         );
       }
     },
@@ -125,6 +144,7 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
       convex({ authConfig }),
       emailVerificationPolicy()
     ],
+    user: { changeEmail: { enabled: true } },
     trustedOrigins: authTrustedOrigins
   }) satisfies BetterAuthOptions;
 
