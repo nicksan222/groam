@@ -1,5 +1,6 @@
 import { environments } from '@groam/deploy/environments';
 import { env } from '@groam/env/void';
+import { env as webEnv } from '@groam/env/web';
 import { defineConfig } from 'void/config';
 
 const { web } = environments[env.environment];
@@ -13,6 +14,9 @@ export default defineConfig({
     preview_urls: false,
     workers_dev: true
   },
+  // Authentication mail (routes/api/email.ts). Local development captures it in Void's inbox;
+  // releases set AUTH_EMAIL_FROM from the environment's emailFrom.
+  email: { from: webEnv.authEmailFrom },
   head: {
     htmlAttrs: { lang: 'en' },
     link: [

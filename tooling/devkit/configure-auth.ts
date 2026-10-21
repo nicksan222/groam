@@ -9,6 +9,8 @@ export type ConfigureAuthOptions = {
   run?: typeof runConvex;
   siteUrl: string;
   spawn?: ConvexSpawner;
+  /** Local values for the Void Worker (apps/web/.env), which sends authentication mail. */
+  workerEnvPath?: string;
   writeViteSiteUrl?: boolean;
 };
 
@@ -35,12 +37,30 @@ export const upsertViteSiteUrl = (envPath: string, siteUrl: string) => {
   );
 };
 
+const relaySecretLine = /^AUTH_EMAIL_RELAY_SECRET=(.+)$/mu;
+
+/** The relay secret local Worker values already hold, if any. */
+const workerRelaySecret = (workerEnvPath: string) =>
+  existsSync(workerEnvPath)
+    ? relaySecretLine.exec(readFileSync(workerEnvPath, 'utf8'))?.[1]?.trim()
+    : undefined;
+
+const appendWorkerRelaySecret = (workerEnvPath: string, secret: string) => {
+  const workerEnv = existsSync(workerEnvPath) ? readFileSync(workerEnvPath, 'utf8') : '';
+  const separator = workerEnv.length === 0 || workerEnv.endsWith('\n') ? '' : '\n';
+  writeFileSync(
+    workerEnvPath,
+    `${workerEnv}${separator}# Shared with Convex: lets it send authentication mail through the Void Worker\nAUTH_EMAIL_RELAY_SECRET=${secret}\n`
+  );
+};
+
 export const configureAuth = ({
   envPath = '.env.local',
   randomSecret = () => randomBytes(32).toString('base64url'),
   run = runConvex,
   siteUrl,
   spawn,
+  workerEnvPath = 'apps/web/.env',
   writeViteSiteUrl = false
 }: ConfigureAuthOptions) => {
   const envList = run(['env', 'list', '--names-only'], {}, spawn);
@@ -62,6 +82,20 @@ export const configureAuth = ({
   }
 
   exitIfFailed(run(['env', 'set', 'SITE_URL', siteUrl], { stdio: 'inherit' }, spawn));
+
+  // Convex and the local Void Worker share one relay secret; mail lands in Void's dev inbox.
+  const existingRelaySecret = workerRelaySecret(workerEnvPath);
+  if (!existingRelaySecret || !deploymentVariables.has('AUTH_EMAIL_RELAY_SECRET')) {
+    const relaySecret = existingRelaySecret ?? randomSecret();
+    exitIfFailed(
+      run(
+        ['env', 'set', 'AUTH_EMAIL_RELAY_SECRET'],
+        { input: `${relaySecret}\n`, stdio: ['pipe', 'inherit', 'inherit'] },
+        spawn
+      )
+    );
+    if (!existingRelaySecret) appendWorkerRelaySecret(workerEnvPath, relaySecret);
+  }
 
   if (writeViteSiteUrl) {
     upsertViteSiteUrl(envPath, siteUrl);

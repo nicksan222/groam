@@ -19,6 +19,8 @@ export type Environment = {
    * each new version there before it takes traffic.
    */
   workersSubdomain: string;
+  /** Sender of authentication mail; Void sets up Cloudflare Email for its domain. */
+  emailFrom: string;
 } & Record<FrontendApp, Frontend>;
 
 /**
@@ -31,6 +33,7 @@ export const environments: Record<ReleaseEnvironment, Environment> = {
     convexUrl: '',
     cloudflareAccountId: '',
     workersSubdomain: '',
+    emailFrom: 'Groam <noreply@groam.app>',
     web: { worker: 'groam-app', host: 'app.groam.app' },
     landing: { worker: 'groam-landing', host: 'groam.app' }
   },
@@ -38,6 +41,7 @@ export const environments: Record<ReleaseEnvironment, Environment> = {
     convexUrl: '',
     cloudflareAccountId: '',
     workersSubdomain: '',
+    emailFrom: 'Groam Beta <noreply@beta.groam.app>',
     web: { worker: 'groam-app-beta', host: 'app.beta.groam.app' },
     landing: { worker: 'groam-landing-beta', host: 'beta.groam.app' }
   }

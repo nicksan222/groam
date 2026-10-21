@@ -10,6 +10,7 @@ describe('release target', () => {
     expect(productionTarget.deploymentName).toBe('groam-demo');
     expect(productionTarget.workers).toEqual({ web: 'groam-app', landing: 'groam-landing' });
     expect(productionTarget.workersSubdomain).toBe('groam');
+    expect(productionTarget.emailFrom).toBe('Groam <noreply@mail.groam.app>');
   });
 
   test('accepts regional origins without confusing the region with the deployment', () => {
@@ -33,7 +34,12 @@ describe('release target', () => {
     { cloudflareAccountId: 'not-an-account' },
     { workersSubdomain: '' },
     { workersSubdomain: 'https://groam.workers.dev' },
-    { workersSubdomain: 'Groam Team' }
+    { workersSubdomain: 'Groam Team' },
+    { emailFrom: '' },
+    { emailFrom: 'Groam <noreply@groam.localhost>' },
+    { emailFrom: 'noreply' },
+    { emailFrom: 'Groam <a@b>' },
+    { emailFrom: 'x@mail.example' }
   ])('rejects an ambiguous or incomplete environment: %j', (override) => {
     expect(() => releaseTarget('production', { ...productionSettings, ...override })).toThrow();
   });

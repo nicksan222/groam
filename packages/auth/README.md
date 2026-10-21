@@ -22,30 +22,36 @@ Password-reset links expire according to Better Auth's default one-hour lifetime
 a successful reset consumes the token and revokes existing sessions.
 
 The public auth screen includes password-reset requests and verification resends.
-Both preserve the current frontend path, including `/app/` deployments. Better Auth
-stores users, sessions, passkeys and verification tokens in its Convex component.
-Email delivery runs as an internal scheduled Convex action, keeping external-provider
-latency out of account-existence responses. No separate application backend or
-email Worker is used.
+Both preserve the current frontend path under `/app`. Better Auth stores users,
+sessions, passkeys and verification tokens in its Convex component. Better Auth
+schedules an internal Convex action for each message, keeping delivery latency out
+of account-existence responses.
 
-Configure these **Convex deployment** environment variables before publishing a
-hosted signup flow:
+That action hands the message to the Void Worker at the frontend origin
+(`POST {SITE_URL}/api/email`, `apps/web/routes/api/email.ts`), which sends it with
+`void/email`. Requests are signed (HMAC-SHA256 over a timestamp and the body) with a
+secret Convex and the Worker share, and expire after five minutes; the Worker sends
+nothing for unsigned, stale or malformed requests and never echoes provider details.
+The signing helpers live in `packages/backend/convex/modules/auth/relay.ts`.
 
-- `SITE_URL`: the public frontend origin used for trusted origins and the passkey relying party.
-- `CLOUDFLARE_ACCOUNT_ID`: the Cloudflare account with Email Sending access.
-- `CLOUDFLARE_EMAIL_API_TOKEN`: a narrowly scoped token with Email Sending permission.
-- `AUTH_EMAIL_FROM`: an address on the verified Cloudflare sending domain.
+Configure before publishing a hosted signup flow:
 
-These are backend values; never expose the email token through Vite or Worker assets.
-Enable Cloudflare Email Sending and complete its domain authentication first. Email
-Routing alone is insufficient. Cloudflare's [outbound REST API](https://developers.cloudflare.com/email-service/api/send-emails/rest-api/)
-is called directly from Convex. Cloudflare may require beta access/entitlement;
-confirm delivery with a real mailbox before launch. Missing sender credentials do
-**not** bypass hosted verification: scheduled delivery fails and users remain
-unverified. Inspect Convex scheduled-action failures and resend after correcting
-configuration. Automatic retries are intentionally avoided because this send API
-has no documented idempotency key.
+- Convex: `SITE_URL` (the public frontend origin, also used for trusted origins and the
+  passkey relying party) and `AUTH_EMAIL_RELAY_SECRET`.
+- Void Worker: the same `AUTH_EMAIL_RELAY_SECRET`, set with `void secret put` from
+  `apps/web` (declared in `apps/web/env.ts`, so `void deploy` refuses to publish without it).
+- Sender: `AUTH_EMAIL_FROM` (GitHub variable), an address on your Cloudflare email
+  domain. `void deploy --require-email` sets up Email Routing and Sending for it; run
+  `void email setup --platform cloudflare` locally once and commit `apps/web/void.lock.json`.
+  Sending to arbitrary recipients needs Workers Paid and Email Sending onboarding.
 
+Locally, `tooling/devkit/configure-auth.ts` (run by `bun run dev`) writes one relay
+secret to the Convex deployment and `apps/web/.env`, so mail Convex sends appears in
+Void's dev inbox (its URL is printed when the web dev server starts). Missing relay
+configuration does **not** bypass hosted verification: scheduled delivery fails and
+users remain unverified. Inspect Convex scheduled-action failures and resend after
+correcting configuration. Automatic retries are intentionally avoided so a slow
+provider cannot send duplicate links.
 
 Hosted password sign-in requires verified email ownership for both email and
 username identifiers. Better Auth owns the `emailVerified` state; signup cannot

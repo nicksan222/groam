@@ -28,6 +28,8 @@
     // Void loads pages, layouts, middleware, and its config by convention.
     "apps/web/pages/**/*.{ts,tsx}",
     "apps/web/middleware/**/*.ts",
+    "apps/web/routes/**/*.ts",
+    "apps/web/env.ts",
     "apps/web/void.config.ts",
     "apps/landing/void.config.ts",
     "tooling/devkit/configure-auth.ts",

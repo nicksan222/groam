@@ -11,15 +11,11 @@ export const send = internalAction({
   },
   returns: v.null(),
   handler: async (_ctx, message) => {
-    if (!env.CLOUDFLARE_ACCOUNT_ID || !env.CLOUDFLARE_EMAIL_API_TOKEN || !env.AUTH_EMAIL_FROM) {
+    if (!env.SITE_URL || !env.AUTH_EMAIL_RELAY_SECRET) {
       throw new Error('Authentication email is not configured');
     }
     await deliverAuthEmail(
-      {
-        accountId: env.CLOUDFLARE_ACCOUNT_ID,
-        apiToken: env.CLOUDFLARE_EMAIL_API_TOKEN,
-        from: env.AUTH_EMAIL_FROM
-      },
+      { siteUrl: env.SITE_URL, relaySecret: env.AUTH_EMAIL_RELAY_SECRET },
       message
     );
     return null;

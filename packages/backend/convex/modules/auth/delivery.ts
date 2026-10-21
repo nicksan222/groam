@@ -1,48 +1,40 @@
 import { z } from 'zod';
+import { emailRelayHeaders, emailRelayPath, signEmailRelay } from './relay';
 
-const deliveryResponse = z.object({
-  success: z.boolean(),
-  result: z
-    .object({
-      delivered: z.array(z.string()),
-      queued: z.array(z.string()),
-      permanent_bounces: z.array(z.string())
-    })
-    .nullable()
-    .optional()
-});
+const relayResponse = z.object({ ok: z.literal(true) });
 
-/** Send only from a Convex action. Never include provider responses or links in errors. */
+/**
+ * Send only from a Convex action. The Void Worker at the frontend origin sends the message with
+ * `void/email`. Never include relay responses or links in errors.
+ */
 export async function deliverAuthEmail(
-  configuration: { accountId: string; apiToken: string; from: string },
+  configuration: { siteUrl: string; relaySecret: string },
   message: { to: string; subject: string; text: string }
 ) {
-  if (!/^[a-f0-9]{32}$/u.test(configuration.accountId))
-    throw new Error('Invalid Cloudflare account ID');
-  const endpoint = new URL('https://api.cloudflare.com/client/v4/accounts/');
-  endpoint.pathname += `${configuration.accountId}/email/sending/send`;
-  // fallow-ignore-next-line security-sink -- fixed HTTPS Cloudflare origin, validated account ID path, redirects refused
+  const endpoint = new URL(emailRelayPath, configuration.siteUrl);
+  if (endpoint.origin !== new URL(configuration.siteUrl).origin)
+    throw new Error('Invalid email relay origin');
+  const body = JSON.stringify(message);
+  const timestamp = Date.now();
+  // fallow-ignore-next-line security-sink -- fixed path on the configured frontend origin, redirects refused
   const response = await fetch(endpoint.href, {
     method: 'POST',
     redirect: 'error',
     headers: {
-      authorization: `Bearer ${configuration.apiToken}`,
-      'content-type': 'application/json'
+      'content-type': 'application/json',
+      [emailRelayHeaders.signature]: await signEmailRelay(
+        configuration.relaySecret,
+        body,
+        timestamp
+      ),
+      [emailRelayHeaders.timestamp]: String(timestamp)
     },
-    body: JSON.stringify({ ...message, from: configuration.from }),
+    body,
     signal: AbortSignal.timeout(15_000)
   });
   if (!response.ok) throw new Error('Authentication email delivery failed');
-  const parsed = deliveryResponse.safeParse(await response.json());
-  if (
-    !parsed.success ||
-    !parsed.data.success ||
-    !parsed.data.result ||
-    parsed.data.result.permanent_bounces.length > 0 ||
-    ![...parsed.data.result.delivered, ...parsed.data.result.queued].includes(message.to)
-  ) {
+  if (!relayResponse.safeParse(await response.json().catch(() => null)).success)
     throw new Error('Authentication email delivery failed');
-  }
 }
 
 export function requiresVerifiedEmail(siteUrl: string) {

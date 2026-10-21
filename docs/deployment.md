@@ -36,8 +36,10 @@ get it, and whether it is done. It checks the config, the GitHub secrets and var
 list, so a value can't be required without appearing in it.
 
 In short: create the Convex project and deploy key, a Cloudflare token, the GitHub environment with
-its two secrets, run the first `void deploy` per app and commit the locks, then flip the release
-switch. Do not enable a Cloudflare Git build; GitHub owns publishing.
+its two secrets, the email relay secret in Convex and the web Worker plus `void email setup` (see
+[authentication email](../packages/auth/README.md#hosted-authentication-and-email)), run the first
+`void deploy` per app and commit the locks, then flip the release switch. Do not enable a
+Cloudflare Git build; GitHub owns publishing.
 
 ## Releases
 

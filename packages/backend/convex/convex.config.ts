@@ -9,9 +9,8 @@ import betterAuth from './components/better-auth/convex.config';
 const app = defineApp({
   env: {
     CONVEX_SITE_URL: v.optional(v.string()),
-    CLOUDFLARE_ACCOUNT_ID: v.optional(v.string()),
-    CLOUDFLARE_EMAIL_API_TOKEN: v.optional(v.string()),
-    AUTH_EMAIL_FROM: v.optional(v.string()),
+    // Shared with the Void Worker, which sends authentication mail for Convex.
+    AUTH_EMAIL_RELAY_SECRET: v.optional(v.string()),
     SITE_URL: v.optional(v.string())
   }
 });
