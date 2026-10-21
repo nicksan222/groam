@@ -5,10 +5,25 @@ import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { IdeaCloneView } from './idea-clone-view';
 
-const state = vi.hoisted(() => ({ proposal: undefined as unknown }));
+const state = vi.hoisted(() => ({
+  canParticipate: true,
+  proposal: undefined as unknown,
+  useTripVersion: vi.fn()
+}));
 
 vi.mock('@/features/trips/hooks/use-trip-versions', () => ({
-  useTripVersion: () => ({ proposal: state.proposal })
+  useTripVersion: () => {
+    state.useTripVersion();
+    return { proposal: state.proposal };
+  }
+}));
+
+vi.mock('@/features/trips/hooks/use-trips', () => ({
+  useTrip: () => ({ exists: true, trip: { canParticipate: state.canParticipate, name: 'Lisbon' } })
+}));
+
+vi.mock('@/features/trips/trip-detail/trip-join-paywall', () => ({
+  TripJoinPaywall: ({ trip }: { trip: { name: string } }) => <div>Join {trip.name}</div>
 }));
 
 vi.mock('@/features/ideas/hooks/use-idea-context', () => ({
@@ -53,10 +68,19 @@ function renderView(view: 'compare' | 'overview' = 'compare') {
 }
 
 beforeEach(() => {
+  state.canParticipate = true;
   state.proposal = undefined;
+  state.useTripVersion.mockClear();
 });
 
 describe('IdeaCloneView', () => {
+  test('shows the trip paywall without loading the idea for members without a seat', async () => {
+    state.canParticipate = false;
+    await renderView();
+    await expect.element(page.getByText('Join Lisbon')).toBeVisible();
+    expect(state.useTripVersion).not.toHaveBeenCalled();
+  });
+
   test('shows a not-found screen when the idea is gone', async () => {
     state.proposal = null;
     await renderView();

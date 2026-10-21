@@ -63,10 +63,13 @@ const toc = [
     <section id="groups">
       <h2>Groups and shared trips</h2>
       <p>
-        Trips live in groups. A group member can access the group’s trips even if they are not going
-        on a particular trip. Members can suggest changes and discuss trips, while organizers have
-        additional controls. Activity may be recorded with its author. Group roles and access can
-        change, so review the group roster and think about what you share.
+        Trips live in groups. Group members can always see content shared with the whole
+        group, such as ideas and issues, even if they are not going on a particular trip.
+        When a trip charges for seats, only that trip’s pages require a seat: members see an
+        invitation to join until they pay or an organizer covers them. The trip creator is
+        free. Members can suggest changes and discuss trips, while organizers have
+        additional controls. Activity may be recorded with its author. Group roles and
+        access can change, so review the group roster and think about what you share.
       </p>
     </section>
 
@@ -95,11 +98,14 @@ const toc = [
     <section id="pricing">
       <h2>Pricing</h2>
       <p>
-        Planning on your own is free. Inviting travelers will cost €1 per invited traveler,
-        for each trip they join, paid by the traveler or covered by the person who invites them.
-        Paid invites are not live yet and nobody is charged today. Before payments start, the final
-        terms must state when a charge is due, who takes payment, taxes, receipts, failed payments,
-        cancellation and refund rules, and any consumer withdrawal rights.
+        Planning on your own is free. Invited travelers pay €1 per trip through Stripe
+        Checkout, or a trip organizer covers them. The trip creator is free. Payments start
+        only once Stripe is fully configured and apply only to trips created after that;
+        existing trips stay free. A payment that cannot grant a seat, for example because
+        the seat was already paid or the trip was archived, is refunded automatically. The
+        final terms still need owner and legal review of when a charge is due, who takes
+        payment, taxes, receipts, failed payments, cancellation and other refund rules, and
+        any consumer withdrawal rights.
       </p>
     </section>
 
