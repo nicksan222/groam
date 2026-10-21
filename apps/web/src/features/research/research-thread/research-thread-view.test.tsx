@@ -12,6 +12,7 @@ const state = vi.hoisted(() => ({
     unlink: vi.fn(),
     updateBrief: vi.fn()
   },
+  canParticipate: true,
   context: vi.fn(),
   hook: {
     isLoading: false,
@@ -45,6 +46,12 @@ vi.mock('@/features/research/hooks/use-research-run', () => ({
   })
 }));
 vi.mock('@/features/research/hooks/use-research', () => ({ useResearch: () => state.hook }));
+vi.mock('@/features/trips/hooks/use-trips', () => ({
+  useTrip: () => ({ exists: true, trip: { canParticipate: state.canParticipate, name: 'Rome' } })
+}));
+vi.mock('@/features/trips/trip-detail/trip-join-paywall', () => ({
+  TripJoinPaywall: ({ trip }: { trip: { name: string } }) => <div>Join {trip.name}</div>
+}));
 vi.mock('@/features/research/hooks/use-research-actions', () => ({
   useResearchActions: () => state.actions
 }));
@@ -75,10 +82,22 @@ const research: ResearchDetail = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  state.canParticipate = true;
   state.hook = { isLoading: false, research, threadId: 'thread-1', writable: true };
 });
 
-const view = () => render(<ResearchThreadView researchId={'r1' as Id<'discussions'>} />);
+const view = () =>
+  render(
+    <ResearchThreadView researchId={'r1' as Id<'discussions'>} tripId={'t1' as Id<'trips'>} />
+  );
+
+test('shows the trip paywall to members without a seat', async () => {
+  state.canParticipate = false;
+  await view();
+  await expect.element(page.getByText('Join Rome')).toBeVisible();
+  await expect.element(page.getByText('Hotels in Rome')).not.toBeInTheDocument();
+  expect(state.context).not.toHaveBeenCalled();
+});
 
 test('shows a loading state', async () => {
   state.hook = { ...state.hook, isLoading: true, research: undefined };
@@ -163,7 +182,9 @@ test('keeps topic drafts scoped to their research when navigating between topics
   const screen = await view();
   await page.getByRole('textbox', { name: 'Research topic' }).fill('An unfinished hotel question');
   state.hook = { ...state.hook, research: { ...research, id: 'r2', title: 'Train routes' } };
-  await screen.rerender(<ResearchThreadView researchId={'r2' as Id<'discussions'>} />);
+  await screen.rerender(
+    <ResearchThreadView researchId={'r2' as Id<'discussions'>} tripId={'t1' as Id<'trips'>} />
+  );
   await expect
     .element(page.getByRole('textbox', { name: 'Research topic' }))
     .toHaveValue('Train routes');

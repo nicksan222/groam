@@ -91,11 +91,13 @@ const toc = [
     <section id="sharing">
       <h2>How sharing works</h2>
       <p>
-        A trip belongs to a group. Signed-in members of that group can access the group’s trips and
-        shared material, even when a particular traveler has replied “not going” to a trip. Group
-        members can see authorship and activity associated with the shared plan. Some assistant
-        conversations are private to the person who opens them; trip conversations are shared with
-        their participants.
+        A trip belongs to a group. Signed-in members of that group can always see content
+        shared with the whole group, such as ideas and issues, even when they have replied
+        “not going” to a trip. When a trip charges for seats, only that trip’s pages require
+        a seat: members see an invitation to join until they pay or an organizer covers
+        them. The trip creator is free. Group members can see authorship and activity
+        associated with the shared plan. Some assistant conversations are private to the
+        person who opens them; trip conversations are shared with their participants.
       </p>
       <p>
         Invitation emails disclose the invitee’s address to the service so the invitation can be
@@ -139,10 +141,13 @@ const toc = [
     <section id="payments">
       <h2>Payments</h2>
       <p>
-        Planning on your own is free. Inviting travelers will cost €1 per invited traveler,
-        for each trip they join, paid by the traveler or covered by the person who invites them. Paid invites are not live yet, so Groam is not collecting payment details
-        today. Groam therefore does not collect card or payment-account details today. The privacy
-        notice and payment terms must be completed before paid invitations are enabled.
+        Planning on your own is free. Invited travelers pay €1 per trip through Stripe
+        Checkout, or a trip organizer covers them. The trip creator is free. Payments start
+        only once Stripe is fully configured and apply only to trips created after that;
+        existing trips stay free. Stripe Checkout handles the payment form, and Groam stores
+        payment confirmation records in Convex. A payment that cannot grant a seat is
+        refunded automatically. The privacy notice and payment terms still need owner and
+        legal review before accepting live payments.
       </p>
     </section>
 

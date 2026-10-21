@@ -5,10 +5,25 @@ import { Button } from '@groam/ui/components/button';
 import { EmptyScreen } from '@groam/ui/components/empty-screen';
 import { PageLoading } from '@groam/ui/components/page-loading';
 import { useResearch } from '@/features/research/hooks/use-research';
+import { TripSeatGate } from '@/features/trips/trip-detail/trip-seat-gate';
 import { Link } from '@/features/workspace/navigation/router';
 import { ResearchWorkspace } from './research-workspace';
 
-export function ResearchThreadView({ researchId }: { researchId: Id<'discussions'> }) {
+export function ResearchThreadView({
+  researchId,
+  tripId
+}: {
+  researchId: Id<'discussions'>;
+  tripId: Id<'trips'>;
+}) {
+  return (
+    <TripSeatGate loadingLabel="Opening research…" tripId={tripId}>
+      <ResearchThread researchId={researchId} />
+    </TripSeatGate>
+  );
+}
+
+function ResearchThread({ researchId }: { researchId: Id<'discussions'> }) {
   const { isLoading, research, threadId, writable } = useResearch(researchId);
 
   useSetAgentContext(

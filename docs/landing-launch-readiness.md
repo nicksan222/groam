@@ -12,7 +12,9 @@ the blockers below are resolved.
   `packages/backend/convex/modules/auth/auth.ts` and
   `packages/backend/convex/components/better-auth/generated.ts`.
 - A trip is visible to signed-in members of its organization. Trip RSVP status does not narrow that
-  access. Evidence: `packages/backend/convex/modules/travel/trips/visibility.ts` and
+  access. On a trip that charges for seats, only the trip's own pages require a seat; members
+  without one see the trip paywall, while organization-wide content stays visible. Evidence:
+  `packages/backend/convex/modules/travel/trips/{visibility,ctx,projection}.ts` and
   `packages/backend/convex/modules/travel/travelers/index.ts`.
 - AI uses the selected user’s ChatGPT grant. Groam sends requests to OpenAI’s Responses API and sets
   `store: false`; Groam separately stores conversations, agent runs, and trip activity needed by the
@@ -22,8 +24,12 @@ the blockers below are resolved.
   unreferenced files, but there is no product-wide retention schedule. Evidence:
   `packages/backend/convex/modules/travel/covers/index.ts` and
   `packages/backend/convex/modules/discussions/media/index.ts`.
-- No payment processor or paid-invite implementation was found. The landing pricing copy explicitly
-  says paid invites are not live yet.
+- Stripe Checkout sells a one-time €1 seat per invited traveler per trip. The trip creator is free;
+  organizers can cover other members. Payments are on only when `STRIPE_SECRET_KEY` and
+  `STRIPE_WEBHOOK_SECRET` are both set, and apply only to trips created while they are on. Every
+  paid Checkout session yields a seat or an automatic refund. These technical rules do not establish
+  the customer cancellation and refund terms. Evidence: `packages/backend/convex/modules/payments/`
+  and `docs/payments.md`.
 - No optional analytics, advertising tracker, or landing-site cookie use was found. The web app uses
   authentication/session cookies through Better Auth.
 
@@ -45,9 +51,10 @@ the blockers below are resolved.
    complaint handling, and regional rights language.
 7. **Children and age:** minimum age, parental-consent approach if relevant, and whether the service
    is offered to children.
-8. **Payments:** payment processor, merchant of record, charge trigger, taxes, receipts, failed
-   payments, cancellation, refunds, statutory withdrawal rights, and the exact responsibility split
-   between inviter and traveler.
+8. **Payments:** confirm the production Stripe account and merchant identity; finalize
+   charge-trigger disclosures, taxes, receipts, failed payments, cancellation, refunds beyond the
+   automatic ones, statutory withdrawal rights, and the responsibility split between organizer,
+   payer, and traveler.
 9. **Terms framework:** acceptance event, governing law and forum, consumer protections, suspension
    and appeal, termination effects, content-license duration, warranty language, liability allocation,
    indemnity if appropriate, and change-notice procedure.

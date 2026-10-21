@@ -8,8 +8,8 @@ export default {
   'Plan a trip': 'Organizza un viaggio',
   'Invite a traveler': 'Invita una persona',
   'Planning on your own is free.': 'Organizzare un viaggio da soli è gratis.',
-  'EUR 1 for each invited traveler, for each trip they join, paid by the traveler or covered by the person who invites them. Paid invites are not live yet.':
-    '1 EUR per ogni persona invitata, per ogni viaggio a cui partecipa. Può pagare la persona invitata o chi la invita. Gli inviti a pagamento non sono ancora attivi.',
+  'EUR 1 per invited traveler per trip through Stripe Checkout. The trip creator is free, organizers can cover other travelers, and trips created before payments started stay free.':
+    '1 EUR per ogni persona invitata e per ogni viaggio tramite Stripe Checkout. Chi crea il viaggio non paga, gli organizzatori possono pagare per gli altri e i viaggi creati prima dell’attivazione dei pagamenti restano gratuiti.',
   'Idea applied': 'Idea applicata',
   'Play the issue board': 'Riprendi la bacheca dei problemi',
   Play: 'Riprendi',

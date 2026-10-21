@@ -8,7 +8,7 @@ export const pricingMeta = {
 
 export const pricingIntro = {
   title: 'Free to\u00a0plan. €1\u00a0per traveler, per\u00a0trip.',
-  lede: 'Plan on your own for free. Each traveler you invite is €1 for each trip they join. They pay their own, or you cover it. You never pay for yourself, and there’s no subscription.'
+  lede: 'Plan on your own for free. Each invited traveler is €1 for each trip they join. They pay their own, or an organizer covers it. The trip creator’s place is free, and there’s no subscription.'
 } as const;
 
 export const plan = {
@@ -16,11 +16,11 @@ export const plan = {
   points: [
     {
       title: 'Planning on your own is free.',
-      body: 'Create trips, build the itinerary, and use every feature. A solo trip costs nothing, and the organizer never pays for themselves.'
+      body: 'Create trips, build the itinerary, and use every feature. A solo trip costs nothing, and the trip creator never pays for their own place.'
     },
     {
       title: '€1 for each traveler who joins.',
-      body: 'Each traveler pays their own €1 for the trip they join. Or you cover them when you invite.'
+      body: 'Each traveler pays their own €1 for the trip they join. Or you cover them from Travelers.'
     },
     {
       title: 'A new trip is a new €1.',
@@ -36,7 +36,7 @@ export const plan = {
 export const example = {
   heading: 'A trip for four costs €3',
   paragraphs: [
-    'Maya plans a long weekend in Lisbon and invites Jonas, Priya, and Sam. Maya is the organizer, so she plans free. Jonas, Priya, and Sam pay €1 each. That’s 4 people on the trip for €3.',
+    'Maya creates a long weekend in Lisbon and invites Jonas, Priya, and Sam. Maya is the trip creator, so her place is free. Jonas, Priya, and Sam pay €1 each. That’s 4 people on the trip for €3.',
     'The next spring, Maya plans Porto with Jonas and a new friend, Lena. Jonas and Lena pay €1 each again. That trip costs €2.'
   ]
 } as const;
@@ -57,7 +57,7 @@ export const calculator = {
   heading: 'Work out your trip',
   invited: {
     label: 'Travelers you’re inviting',
-    hint: 'Don’t count yourself. Organizers plan free. Press “I’ll pay” under a traveler to cover their\u00a0€1.'
+    hint: 'Don’t count the trip creator. Their place is free. Press “I’ll pay” under a traveler to cover their\u00a0€1.'
   },
   footnote: 'Totals are per trip. Each traveler counts once they join.'
 } as const;
@@ -82,7 +82,7 @@ export function resultCopy(n: number, you = 0): { total: string; rest: string } 
 
 export const lane = {
   heading: 'Every trip, €1 per traveler',
-  lede: 'The same friends, trip after trip. Each traveler is €1 for each trip they join, paid by them or by you. A solo trip is free.',
+  lede: 'The same friends, trip after trip. Each invited traveler is €1 for each trip they join, paid by them or covered by an organizer. The trip creator’s own place is free.',
   endcap: 'Every trip after that is €1 per traveler.'
 } as const;
 
@@ -98,8 +98,8 @@ export const faq = {
       a: 'Yes, €1 per trip. Every trip is priced on its own, so going again with the same friends is €1 each again. A solo trip stays free.'
     },
     {
-      q: 'Does the organizer count as a traveler?',
-      a: 'No. Planning on your own is free, so the person who starts the trip never pays for themselves. A trip for four, counting you, costs €3.'
+      q: 'Does every organizer get a free place?',
+      a: 'Only the trip creator’s own place is free. Other organizers pay €1 per trip like other invited travelers, or another organizer covers them. A trip for four, including its creator, costs €3.'
     },
     {
       q: 'What about AI costs?',
@@ -107,11 +107,11 @@ export const faq = {
     },
     {
       q: 'Who pays?',
-      a: 'Whoever you choose. Each traveler pays their own €1, or you cover them when you invite. Invite three friends and cover nobody. Each pays €1 and you pay nothing.'
+      a: 'Each invited traveler pays their own €1, or an organizer covers them from Travelers. Create a trip and invite three friends without covering anyone: each pays €1, while your own place as the trip creator is free.'
     },
     {
       q: 'Can I pay for my friends?',
-      a: 'Yes. When you invite someone, choose to pay their €1 yourself. It’s still €1 per traveler for the trip. You pick who pays, traveler by traveler.'
+      a: 'Yes. Open Travelers and choose whose €1 to cover. It’s still €1 per traveler for the trip. You pick who pays, traveler by traveler.'
     },
     {
       q: 'What if someone never joins?',
@@ -119,7 +119,7 @@ export const faq = {
     },
     {
       q: 'When do I pay?',
-      a: 'Not yet. Paid invites are coming soon, and nobody is charged today. Plan and invite your group as usual.'
+      a: 'On a trip that charges for seats, pay €1 through Stripe Checkout to open the trip, or ask an organizer to cover you. Trips created before payments started stay free. If a payment can’t give you a seat, it’s refunded automatically.'
     },
     {
       q: 'Do invited travelers get fewer features?',
@@ -166,7 +166,7 @@ const init: Record<Id, string> = {
 const org = (id: Id) => ({ id, initial: init[id], state: 'organizer' as const });
 const paid = (id: Id) => ({ id, initial: init[id], state: 'paid' as const });
 
-/** One organizer over six trips: the fare is €1 for each invited traveler, every time. */
+/** One trip creator over six trips: the fare is €1 for each invited traveler, every time. */
 export const laneTrips: LaneTrip[] = [
   {
     name: 'Lisbon long weekend',
