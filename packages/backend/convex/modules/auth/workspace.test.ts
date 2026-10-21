@@ -16,17 +16,13 @@ test('distinguishes missing Better Auth sessions from missing active organizatio
     subject: 'missing-user',
     tokenIdentifier: 'missing-session|missing-user'
   });
-  await expect(
-    withoutSession
-      .query(api.routes.media.page.run, { paginationOpts: { cursor: null, numItems: 1 } })
-      .then((result) => result.page)
-  ).rejects.toThrow('Not authenticated');
+  await expect(withoutSession.query(api.routes.media.list.run, { limit: 1 })).rejects.toThrow(
+    'Not authenticated'
+  );
 
   const withoutOrganization = await createAuthenticatedTest();
   await expect(
-    withoutOrganization.client
-      .query(api.routes.media.page.run, { paginationOpts: { cursor: null, numItems: 1 } })
-      .then((result) => result.page)
+    withoutOrganization.client.query(api.routes.media.list.run, { limit: 1 })
   ).rejects.toThrow('No active organization');
 });
 
@@ -34,35 +30,27 @@ test('denies callers who are no longer members of the active organization', asyn
   const revoked = await createAuthenticatedTest({
     organization: { membership: 'revoked', name: 'Former Group' }
   });
-  await expect(
-    revoked.client
-      .query(api.routes.media.page.run, { paginationOpts: { cursor: null, numItems: 1 } })
-      .then((result) => result.page)
-  ).rejects.toThrow(/Organization access denied|No active organization/u);
+  await expect(revoked.client.query(api.routes.media.list.run, { limit: 1 })).rejects.toThrow(
+    /Organization access denied|No active organization/u
+  );
 });
 
 test('denies sessions that were signed out or have expired', async () => {
   const signedOut = await createAuthenticatedTest({ organization: { name: 'Signed Out Group' } });
   await signedOut.authClient.signOut();
-  await expect(
-    signedOut.client
-      .query(api.routes.media.page.run, { paginationOpts: { cursor: null, numItems: 1 } })
-      .then((result) => result.page)
-  ).rejects.toThrow('Not authenticated');
+  await expect(signedOut.client.query(api.routes.media.list.run, { limit: 1 })).rejects.toThrow(
+    'Not authenticated'
+  );
 
   const expired = await createAuthenticatedTest({ organization: { name: 'Expired Group' } });
   await expect(
-    expired.client
-      .query(api.routes.media.page.run, { paginationOpts: { cursor: null, numItems: 1 } })
-      .then((result) => result.page)
+    expired.client.query(api.routes.media.list.run, { limit: 1 })
   ).resolves.toBeDefined();
   const aYearLater = vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 365 * 24 * 60 * 60 * 1000);
   onTestFinished(() => aYearLater.mockRestore());
-  await expect(
-    expired.client
-      .query(api.routes.media.page.run, { paginationOpts: { cursor: null, numItems: 1 } })
-      .then((result) => result.page)
-  ).rejects.toThrow('Not authenticated');
+  await expect(expired.client.query(api.routes.media.list.run, { limit: 1 })).rejects.toThrow(
+    'Not authenticated'
+  );
 });
 
 test('ignores a session that belongs to someone else', async () => {

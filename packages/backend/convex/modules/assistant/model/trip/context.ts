@@ -1,14 +1,12 @@
 import type { Id } from '#convex-generated/dataModel';
 import type { QueryCtx } from '#convex-generated/server';
 import type { TripAssistantContext } from '#convex/modules/assistant/model/schema';
-import { loadTripContext } from '#convex/modules/travel/trips/ctx';
 import { getTrip, groupMemberCount } from '#convex/modules/travel/trips/index';
 
 /** Compact trip snapshot the assistant tools use as tagged context. */
 // oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
 export class AssistantTripContext {
   static async load(ctx: QueryCtx, tripId: Id<'trips'>): Promise<TripAssistantContext> {
-    await loadTripContext(ctx, tripId);
     const [trip, memberCount] = await Promise.all([
       getTrip(ctx, tripId),
       groupMemberCount(ctx, tripId)

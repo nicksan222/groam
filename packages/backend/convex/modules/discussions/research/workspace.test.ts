@@ -20,17 +20,13 @@ test('workspace research lists newest activity first with trip names', async () 
   await owner.test.run(async (ctx) => {
     await ctx.db.patch('discussions', older, { updatedAt: Date.now() + 10_000 });
   });
-  const items = await member.client
-    .query(api.routes.discussions.research.workspace.page.run, {
-      paginationOpts: { cursor: null, numItems: 8 }
-    })
-    .then((result) => result.page);
+  const items = await member.client.query(api.routes.discussions.research.workspace.run, {});
   expect(items.map((item) => item.id)).toEqual([older, newer]);
   expect(items[0]).toMatchObject({ title: 'Older', tripId });
   expect(items[0]?.tripName).toEqual(expect.any(String));
 });
 
-test('research pages continue after eight candidates while hiding removed rows and other groups', async () => {
+test('removed research is hidden, the list is capped at 8, other groups see nothing', async () => {
   const { owner, tripId } = await setupTrip(0);
   const removed = await owner.client.mutation(api.routes.discussions.research.create.run, {
     clientRequestId: requestId(),
@@ -59,33 +55,14 @@ test('research pages continue after eight candidates while hiding removed rows a
       });
     }
   });
-  const firstPage = await owner.client.query(api.routes.discussions.research.workspace.page.run, {
-    paginationOpts: { cursor: null, numItems: 8 }
-  });
-  const items = firstPage.page;
-  expect(firstPage.isDone).toBe(false);
-  const nextPage = await owner.client.query(api.routes.discussions.research.workspace.page.run, {
-    paginationOpts: { cursor: firstPage.continueCursor, numItems: 8 }
-  });
-  expect(nextPage.isDone).toBe(true);
-  expect(nextPage.page).toHaveLength(1);
-  expect(nextPage.page[0]?.title).toBe('R0');
-  expect(nextPage.page.some((item) => item.id === removed)).toBe(false);
+  const items = await owner.client.query(api.routes.discussions.research.workspace.run, {});
   expect(items).toHaveLength(8);
   expect(items.some((item) => item.id === removed)).toBe(false);
   const outsider = await createOutsiderClient(owner.test);
   await expect(
-    outsider.client
-      .query(api.routes.discussions.research.workspace.page.run, {
-        paginationOpts: { cursor: null, numItems: 8 }
-      })
-      .then((result) => result.page)
+    outsider.client.query(api.routes.discussions.research.workspace.run, {})
   ).resolves.toEqual([]);
   await expect(
-    owner.test
-      .query(api.routes.discussions.research.workspace.page.run, {
-        paginationOpts: { cursor: null, numItems: 8 }
-      })
-      .then((result) => result.page)
+    owner.test.query(api.routes.discussions.research.workspace.run, {})
   ).rejects.toThrow();
 });

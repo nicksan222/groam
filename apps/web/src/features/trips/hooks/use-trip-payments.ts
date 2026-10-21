@@ -8,7 +8,7 @@ export function useTripPayments(tripId: Id<'trips'> | undefined) {
   const checkoutAction = useAction(api.routes.trips.payments.checkout.run);
   const checkout = useCallback(
     async (userId: string) => {
-      if (!tripId) return { skipped: true, url: null };
+      if (!tripId) return { url: null };
       return checkoutAction({ tripId, userId });
     },
     [checkoutAction, tripId]

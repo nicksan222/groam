@@ -1,7 +1,6 @@
 import type { StreamArgs, SyncStreamsReturnValue } from '@convex-dev/agent';
 import type { UIMessage } from '@convex-dev/agent/react';
 import type { FunctionReference, PaginationOptions, PaginationResult } from 'convex/server';
-import type { AssistantAttachmentOption } from '#ai/ui/attachments/assistant-attachment-types';
 
 /**
  * The slice of the backend api object assistant UI may call, injected by the
@@ -25,16 +24,7 @@ export type AssistantBackendApi = {
         tags: { run: FunctionReference<'mutation', 'public'> };
       };
       context: {
-        catalog: {
-          page: {
-            run: FunctionReference<
-              'query',
-              'public',
-              { paginationOpts: PaginationOptions },
-              PaginationResult<AssistantAttachmentOption>
-            >;
-          };
-        };
+        catalog: { run: FunctionReference<'query', 'public'> };
         screen: { run: FunctionReference<'mutation', 'public'> };
       };
       messages: {

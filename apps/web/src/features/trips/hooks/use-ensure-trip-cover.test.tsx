@@ -26,7 +26,6 @@ describe('useEnsureTripCover', () => {
     await renderHook(() =>
       useEnsureTripCover(tripId, {
         coverStatus: null,
-        permissions: { canEditCover: true, canPropose: false },
         destinations: [{ id: 'destination-1' }]
       } as unknown as TripDetail)
     );
@@ -40,37 +39,16 @@ describe('useEnsureTripCover', () => {
 
     const { rerender } = await renderHook(({ trip }) => useEnsureTripCover(tripId, trip), {
       initialProps: {
-        trip: {
-          coverStatus: null,
-          destinations: [],
-          permissions: { canEditCover: true }
-        } as unknown as TripDetail
+        trip: { coverStatus: null, destinations: [] } as unknown as TripDetail
       }
     });
     await rerender({
       trip: {
         coverStatus: 'ready',
-        permissions: { canEditCover: true },
         destinations: [{ id: 'destination-1' }]
       } as unknown as TripDetail
     });
 
     expect(ensure).not.toHaveBeenCalled();
   });
-
-  test.each([true, false])(
-    'only shared-trip participants request automatic covers: canPropose=%s',
-    async (canPropose) => {
-      const ensure = vi.fn().mockResolvedValue(null);
-      convex.useMutation.mockReturnValue(ensure);
-      await renderHook(() =>
-        useEnsureTripCover(tripId, {
-          coverStatus: null,
-          destinations: [{ id: 'destination-1' }],
-          permissions: { canEditCover: false, canPropose }
-        } as unknown as TripDetail)
-      );
-      expect(ensure).toHaveBeenCalledTimes(canPropose ? 1 : 0);
-    }
-  );
 });

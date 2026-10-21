@@ -1,27 +1,17 @@
 import { api } from '@groam/backend/api';
-import { usePaginatedQuery } from 'convex/react';
-import { useCallback, useMemo } from 'react';
+import { useQuery } from 'convex/react';
+import { useMemo } from 'react';
 
-const PAGE_SIZE = 4;
+const RESEARCH_LIMIT = 4;
 
-/** Keep candidate-page continuation even when every current result is hidden. */
+/** Recent research threads across the group's trips, newest activity first. */
 export function useDashboardResearch() {
-  const page = usePaginatedQuery(
-    api.routes.discussions.research.workspace.page.run,
-    {},
-    { initialNumItems: PAGE_SIZE }
-  );
-  const loadMore = useCallback(() => {
-    if (page.status === 'CanLoadMore') page.loadMore(PAGE_SIZE);
-  }, [page]);
+  const research = useQuery(api.routes.discussions.research.workspace.run, {});
   return useMemo(
     () => ({
-      canLoadMore: page.status === 'CanLoadMore',
-      isLoadingMore: page.status === 'LoadingMore',
-      isLoading: page.status === 'LoadingFirstPage',
-      loadMore,
-      research: page.results
+      isLoading: research === undefined,
+      research: (research ?? []).slice(0, RESEARCH_LIMIT)
     }),
-    [loadMore, page.results, page.status]
+    [research]
   );
 }

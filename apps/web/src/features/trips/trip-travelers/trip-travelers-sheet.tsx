@@ -125,13 +125,7 @@ export function TripTravelersSheet({
             })
           )}
           {!isLoading && travelers.length > 0 && (
-            <TripPaymentsPanel
-              archived={archived}
-              canManageOthers={canManageOthers}
-              travelers={travelers}
-              tripId={tripId}
-              viewerId={session.user.id}
-            />
+            <TripPaymentsPanel canManageOthers={canManageOthers} tripId={tripId} />
           )}
         </div>
       </SheetContent>

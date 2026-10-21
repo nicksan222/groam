@@ -14,7 +14,7 @@ const api: AssistantBackendApi = {
         tags: { run: undefined as never }
       },
       context: {
-        catalog: { page: { run: undefined as never } },
+        catalog: { run: undefined as never },
         screen: { run: undefined as never }
       },
       messages: { run: undefined as never },
@@ -48,20 +48,14 @@ const mocks = vi.hoisted(() => ({
   ],
   create: vi.fn(),
   error: vi.fn(),
-  loadMore: vi.fn(),
-  status: 'CanLoadMore',
+  queryIndex: 0,
   setTags: vi.fn()
 }));
 
 vi.mock('convex/react', () => ({
   useAction: () => mocks.create,
   useMutation: () => mocks.setTags,
-  useQuery: () => mocks.chats,
-  usePaginatedQuery: vi.fn(() => ({
-    results: mocks.catalog,
-    status: mocks.status,
-    loadMore: mocks.loadMore
-  }))
+  useQuery: () => (mocks.queryIndex++ % 2 === 0 ? mocks.chats : mocks.catalog)
 }));
 
 vi.mock('@groam/ui/components/toast', () => ({
@@ -69,7 +63,7 @@ vi.mock('@groam/ui/components/toast', () => ({
 }));
 
 beforeEach(() => {
-  mocks.status = 'CanLoadMore';
+  mocks.queryIndex = 0;
   vi.clearAllMocks();
   mocks.create.mockResolvedValue('thread-2');
   mocks.setTags.mockResolvedValue([]);
@@ -128,25 +122,4 @@ test('projects and toggles stored context attachments', async () => {
   expect(toggleContextTagReferences(tags, { id: 'activity-1', kind: 'activity' }, false)).toEqual(
     []
   );
-});
-
-test('loads catalog pages explicitly and ignores repeated loads while loading or disabled', async () => {
-  const { result, rerender } = await renderHook(({ enabled }) => useAssistantChats(api, enabled), {
-    initialProps: { enabled: true }
-  });
-  expect(result.current.canLoadMoreCatalog).toBe(true);
-  expect(mocks.loadMore).not.toHaveBeenCalled();
-  await act(() => result.current.loadMoreCatalog());
-  expect(mocks.loadMore).toHaveBeenCalledExactlyOnceWith(25);
-  mocks.status = 'LoadingMore';
-  await rerender({ enabled: true });
-  expect(result.current.isLoadingCatalog).toBe(true);
-  expect(result.current.canLoadMoreCatalog).toBe(false);
-  await act(() => result.current.loadMoreCatalog());
-  expect(mocks.loadMore).toHaveBeenCalledTimes(1);
-  mocks.status = 'CanLoadMore';
-  await rerender({ enabled: false });
-  expect(result.current.canLoadMoreCatalog).toBe(false);
-  await act(() => result.current.loadMoreCatalog());
-  expect(mocks.loadMore).toHaveBeenCalledTimes(1);
 });

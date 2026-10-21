@@ -1,12 +1,8 @@
 import { ConvexError } from 'convex/values';
-import type { Doc, Id } from '#convex-generated/dataModel';
+import type { Id } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
-import type { Workspace } from '#convex/modules/auth/workspace';
-import type { DiscussionAccess } from '#convex/modules/discussions/threads/entity';
 import type { DiscussionMessageMedia } from '#convex/modules/discussions/threads/schema';
-import { MediaAccess } from '#convex/modules/media/access';
 import { Files } from '#convex/modules/media/files/index';
-import type { MediaOrigins } from '#convex/modules/media/library/validators';
 
 export type { DiscussionMessageMedia } from '#convex/modules/discussions/threads/schema';
 
@@ -58,23 +54,13 @@ export class DiscussionMedia {
 
   static async require(
     ctx: MutationCtx | QueryCtx,
-    workspace: Workspace,
-    mediaIds: Id<'media'>[],
-    origins: MediaOrigins = []
+    organizationId: string,
+    mediaIds: Id<'media'>[]
   ): Promise<DiscussionMessageMedia[]> {
-    if (origins.length > mediaIds.length) throw new ConvexError('Too many media origins');
-    const access = new MediaAccess(ctx, workspace);
     return await Promise.all(
       mediaIds.map(async (mediaId) => {
         const media = await ctx.db.get('media', mediaId);
-        if (
-          !media ||
-          media.organizationId !== workspace.organizationId ||
-          !(await access.canRead(
-            mediaId,
-            origins.find((proof) => proof.mediaId === mediaId)?.origin
-          ))
-        ) {
+        if (!media || media.organizationId !== organizationId) {
           throw new ConvexError('Media not found');
         }
         if (!Files.supportedContentTypes.has(Files.normalizeContentType(media.contentType))) {
@@ -93,19 +79,14 @@ export class DiscussionMedia {
 
   static async load(
     ctx: MutationCtx | QueryCtx,
-    access: DiscussionAccess,
-    receipt: Doc<'discussionMessages'>
+    organizationId: string,
+    mediaIds: Id<'media'>[]
   ): Promise<DiscussionMessageMedia[]> {
-    if (
-      receipt.discussionId !== access.discussion._id ||
-      receipt.organizationId !== access.workspace.organizationId
-    )
-      return [];
-    const mediaIds = await DiscussionMedia.idsForReceipt(ctx, receipt);
+    if (mediaIds.length === 0) return [];
     const attachments = await Promise.all(
       mediaIds.map(async (mediaId) => {
         const item = await ctx.db.get('media', mediaId);
-        if (!item || item.organizationId !== receipt.organizationId) return null;
+        if (!item || item.organizationId !== organizationId) return null;
         return {
           contentType: item.contentType,
           id: item._id,

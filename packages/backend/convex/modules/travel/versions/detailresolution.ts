@@ -71,12 +71,7 @@ export async function applyDetailResolution(
     await Attachments.setTarget(ctx, {
       maximum: Attachments.limitFor(target),
       mediaIds: files.map(({ mediaId }) => mediaId),
-      mediaOrigins: files.map(({ mediaId, attachmentId }) => ({
-        mediaId,
-        origin: { kind: 'attachment', id: attachmentId }
-      })),
       organizationId: ctx.workspace.organizationId,
-      workspace: ctx.workspace,
       target: { id: ctx.trip._id, type: 'trip' },
       tripId: ctx.trip._id
     });

@@ -1,24 +1,22 @@
 import type { Id } from '@groam/backend/data-model';
 import { useState } from 'react';
 import { useTripPayments } from '@/features/trips/hooks/use-trip-payments';
+import { useTripTravelers } from '@/features/trips/hooks/use-trip-travelers';
+import { useWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
 import { errorMessage } from '@/lib/errors';
 import { TripPaymentRow } from './trip-payment-row';
 
 export function TripPaymentsPanel({
-  archived,
   canManageOthers,
-  travelers,
-  tripId,
-  viewerId
+  tripId
 }: {
-  archived: boolean;
   canManageOthers: boolean;
-  travelers: Array<{ name: string; userId: string }>;
   tripId: Id<'trips'>;
-  viewerId: string;
 }) {
   const payments = useTripPayments(tripId);
-  const paymentsLocked = archived || payments.archived;
+  const { travelers } = useTripTravelers(tripId);
+  const viewerId = useWorkspace().session.user.id;
+  const paymentsLocked = payments.archived;
   const [pendingUserId, setPendingUserId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -39,11 +37,7 @@ export function TripPaymentsPanel({
         // fallow-ignore-next-line security-sink -- HTTPS Stripe Checkout origin and absence of credentials checked above
         window.location.assign(url.href);
       } else {
-        setNotice(
-          result.skipped
-            ? 'No payment is needed. Your trip status will update automatically.'
-            : 'Waiting for payment confirmation. Your trip status will update automatically.'
-        );
+        setNotice('No payment is needed. Your trip status will update automatically.');
       }
     } catch (cause: unknown) {
       setError(errorMessage(cause, 'Unable to open checkout. Please try again.'));

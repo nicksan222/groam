@@ -1,6 +1,5 @@
 import { useSetAgentContext } from '@groam/ai/ui/context/agent-context';
 import { Plus } from '@groam/icons';
-import { Button } from '@groam/ui/components/button';
 import { PageLoading } from '@groam/ui/components/page-loading';
 import Shell from '@groam/ui/components/shell/client';
 import { useStartIdeaDialog } from '@/features/ideas/hooks/use-start-idea-dialog';
@@ -17,8 +16,7 @@ import { ideasListDescription, ideasListDescriptionShort, startIdeaCta } from '.
 
 export function IdeaListView() {
   const { isLoading, loadMore, proposals, status } = useWorkspaceIdeas();
-  const viewerPending = useViewerOpenIdeas();
-  const viewerOpenIdeas = viewerPending.proposals;
+  const { proposals: viewerOpenIdeas } = useViewerOpenIdeas();
   const { trips, isLoading: tripsLoading } = useTrips({ includeArchived: false });
   const { activeOrganization, session } = useWorkspace();
   const {
@@ -32,12 +30,6 @@ export function IdeaListView() {
   } = useStartIdeaDialog();
   const creatableTrips = trips.filter((trip) => trip.archivedAt === null);
   const listedProposals = mergeViewerOpenIdeas(proposals, viewerOpenIdeas);
-  const hasUnloadedIdeas =
-    status === 'CanLoadMore' ||
-    status === 'LoadingMore' ||
-    viewerPending.isLoading ||
-    viewerPending.canLoadMore ||
-    viewerPending.isLoadingMore;
 
   useSetAgentContext({
     capabilities: [],
@@ -86,41 +78,26 @@ export function IdeaListView() {
           selectedTripId={selectedTripId}
           trips={creatableTrips.map((trip) => ({ id: trip.id, name: trip.name }))}
         />
-        {(viewerPending.canLoadMore || viewerPending.isLoadingMore) && (
-          <Button
-            disabled={viewerPending.isLoadingMore}
-            onClick={viewerPending.loadMore}
-            variant="outline"
-          >
-            {viewerPending.isLoadingMore
-              ? 'Loading your open ideas…'
-              : 'Load more of your open ideas'}
-          </Button>
-        )}
         <PaginatedListContent
           empty={<IdeaEmptyState canStart onStart={openDialog} />}
-          isEmpty={!isLoading && !hasUnloadedIdeas && listedProposals.length === 0}
+          isEmpty={!isLoading && listedProposals.length === 0}
           loadMoreLabel="Load more ideas"
           onLoadMore={loadMore}
           status={status}
         >
-          {listedProposals.length > 0 ? (
-            <IdeaList
-              emptyFilterMessage={(filter) =>
-                hasUnloadedIdeas
-                  ? 'No matching ideas on the loaded pages.'
-                  : filter === 'pending'
-                    ? 'No open ideas.'
-                    : filter === 'merged'
-                      ? 'No settled ideas.'
-                      : 'No ideas yet.'
-              }
-              isLoading={isLoading}
-              proposals={listedProposals}
-              showTripName
-              viewerUserId={session.user.id}
-            />
-          ) : null}
+          <IdeaList
+            emptyFilterMessage={(filter) =>
+              filter === 'pending'
+                ? 'No open ideas.'
+                : filter === 'merged'
+                  ? 'No settled ideas.'
+                  : 'No ideas yet.'
+            }
+            isLoading={isLoading}
+            proposals={listedProposals}
+            showTripName
+            viewerUserId={session.user.id}
+          />
         </PaginatedListContent>
       </Shell.Content>
     </Shell>

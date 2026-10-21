@@ -33,7 +33,6 @@ const MAX_ASSIGNED_ISSUES = 200;
 const MAX_EVENT_PAGE = 50;
 const MAX_RUN_PAGE = 25;
 const ROSTER_RUNS_PER_AGENT = 20;
-const ROSTER_CANDIDATES_PER_AGENT = 200;
 
 function requireRunPageSize(paginationOpts: PaginationOptions) {
   if (
@@ -131,31 +130,34 @@ async function nextSeq(ctx: RunWriter, runId: Id<'agentRuns'>): Promise<number> 
   return (last?.seq ?? 0) + 1;
 }
 
-async function linkedRunTrip(ctx: RunReader, run: Doc<'agentRuns'>) {
-  if (run.tripId) return run.tripId;
-  if (run.issueId) return (await ctx.db.get('tripIssues', run.issueId))?.tripId ?? null;
-  if (run.proposalId)
-    return (await ctx.db.get('tripProposals', run.proposalId))?.sourceTripId ?? null;
-  return null;
-}
-
-/** Every linked trip requires participation; discussion logs also require their audience grant. */
+/** Org match, plus discussion membership for discussion runs (their log carries the chat). */
 async function canViewRun(
   ctx: RunReader,
   run: Doc<'agentRuns'>,
   workspace: Workspace
 ): Promise<boolean> {
   if (run.organizationId !== workspace.organizationId) return false;
-  const tripId = await linkedRunTrip(ctx, run);
-  if ((run.tripId || run.issueId || run.proposalId || run.researchTask) && !tripId) return false;
-  if (tripId && !(await findVisibleTrip(ctx, tripId, workspace))) return false;
-  if (!run.discussionId) return !run.researchTask || run.createdBy.userId === workspace.userId;
-  try {
-    await DiscussionAccess.forWorkspace(ctx, run.discussionId, workspace);
+  const discussionId = run.discussionId;
+  if (run.researchTask) {
+    if (!run.tripId || !(await findVisibleTrip(ctx, run.tripId, workspace))) return false;
+    if (!discussionId && run.createdBy.userId !== workspace.userId) return false;
+    if (discussionId) {
+      try {
+        await DiscussionAccess.forWorkspace(ctx, discussionId, workspace);
+      } catch {
+        return false;
+      }
+    }
     return true;
-  } catch {
-    return false;
   }
+  if (!discussionId) return true;
+  const membership = await ctx.db
+    .query('discussionMembers')
+    .withIndex('by_discussionId_and_userId', (query) =>
+      query.eq('discussionId', discussionId).eq('userId', workspace.userId)
+    )
+    .unique();
+  return membership !== null;
 }
 
 /** Drops runs the viewer may not see; one bounded index lookup per discussion run. */
@@ -732,63 +734,23 @@ async function appendStepEvents(
   return null;
 }
 
-/** Stable authorization inputs only; titles/status never affect audience permission. */
-function rosterAudienceKey(run: Doc<'agentRuns'>): string {
-  return JSON.stringify([
-    run.tripId ?? run.issueId ?? run.proposalId ?? null,
-    run.discussionId ?? null,
-    Boolean(run.researchTask),
-    run.researchTask ? run.createdBy.userId : null
-  ]);
-}
-
-async function rosterWindow(
-  ctx: QueryCtx,
-  workspace: Workspace,
-  agentId: Doc<'agentRuns'>['agentId'],
-  authorization: { permissions: Map<string, Promise<boolean>>; remaining: number }
-) {
-  const candidates = ctx.db
-    .query('agentRuns')
-    .withIndex('by_organizationId_and_agentId_and_updatedAt', (query) =>
-      query.eq('organizationId', workspace.organizationId).eq('agentId', agentId)
-    )
-    .order('desc');
-  const runs: Doc<'agentRuns'>[] = [];
-  let inspected = 0;
-  for await (const run of candidates) {
-    // This single sentinel read distinguishes true exhaustion from a truncated window.
-    // At most 201 raw rows are read, and only the first 200 receive authorization checks.
-    if (inspected === ROSTER_CANDIDATES_PER_AGENT) return { runs, incomplete: true };
-    inspected += 1;
-    const key = rosterAudienceKey(run);
-    let permission = authorization.permissions.get(key);
-    if (!permission) {
-      // Reserve before starting I/O: all agent windows share one authorization budget.
-      // Cached audiences are free to reuse, but an unchecked audience means incomplete history.
-      if (authorization.remaining === 0) return { runs, incomplete: true };
-      authorization.remaining -= 1;
-      permission = canViewRun(ctx, run, workspace);
-      authorization.permissions.set(key, permission);
-    }
-    // oxlint-disable-next-line react-doctor/async-await-in-loop -- Ordered authorization stops at 20 visible runs rather than checking the entire candidate budget.
-    if (await permission) runs.push(run);
-    if (runs.length === ROSTER_RUNS_PER_AGENT) return { runs, incomplete: false };
-  }
-  return { runs, incomplete: false };
-}
-
 async function roster(ctx: QueryCtx): Promise<AgentRosterItem[]> {
   const workspace = await requireWorkspace(ctx);
-  // Worst-case linked working-copy chat authorization uses nine reads. Across the roster,
-  // 200 checks plus 500 issue visibility checks (at most three each) stay below 4096 ranges.
-  const authorization = {
-    permissions: new Map<string, Promise<boolean>>(),
-    remaining: ROSTER_CANDIDATES_PER_AGENT
-  };
-  const [windows, issueCandidates] = await Promise.all([
+  const [runsByAgent, issues] = await Promise.all([
     Promise.all(
-      assistantAgentList.map((agent) => rosterWindow(ctx, workspace, agent.id, authorization))
+      assistantAgentList.map(async (agent) =>
+        visibleRuns(
+          ctx,
+          await ctx.db
+            .query('agentRuns')
+            .withIndex('by_organizationId_and_agentId_and_updatedAt', (query) =>
+              query.eq('organizationId', workspace.organizationId).eq('agentId', agent.id)
+            )
+            .order('desc')
+            .take(ROSTER_RUNS_PER_AGENT),
+          workspace
+        )
+      )
     ),
     ctx.db
       .query('tripIssues')
@@ -796,49 +758,28 @@ async function roster(ctx: QueryCtx): Promise<AgentRosterItem[]> {
         query.eq('organizationId', workspace.organizationId)
       )
       .order('desc')
-      .take(501)
+      .take(500)
   ]);
-  const issueWindowIncomplete = issueCandidates.length > 500;
-  const allIssues = issueCandidates.slice(0, 500);
-  const tripAccess = new Map<Id<'trips'>, Promise<Doc<'trips'> | null>>();
-  const issueVisibility = await Promise.all(
-    allIssues.map((issue) => {
-      let visible = tripAccess.get(issue.tripId);
-      if (!visible) {
-        visible = findVisibleTrip(ctx, issue.tripId, workspace);
-        tripAccess.set(issue.tripId, visible);
-      }
-      return visible;
-    })
-  );
-  const issues = allIssues.filter((_, index) => issueVisibility[index] !== null);
   return assistantAgentList.map((agent, index) => {
-    const window = windows[index] ?? { runs: [], incomplete: false };
-    const agentRuns = window.runs;
-    const activeRunCount = countActiveAgentRuns(agentRuns);
+    const agentRuns = runsByAgent[index] ?? [];
     const assignedIssueCount = isIssueAssignableAgentId(agent.id)
-      ? issueWindowIncomplete
-        ? null
-        : issues.filter(
-            (issue) =>
-              !isResolved(issue.status) &&
-              issue.assignee?.kind === 'agent' &&
-              issue.assignee.agentId === agent.id
-          ).length
+      ? issues.filter(
+          (issue) =>
+            !isResolved(issue.status) &&
+            issue.assignee?.kind === 'agent' &&
+            issue.assignee.agentId === agent.id
+        ).length
       : 0;
     const latest = agentRuns[0];
     return {
-      activeRunCount: window.incomplete ? null : activeRunCount,
-      runWindowIncomplete: window.incomplete,
-      issueWindowIncomplete: isIssueAssignableAgentId(agent.id) && issueWindowIncomplete,
+      activeRunCount: countActiveAgentRuns(agentRuns),
       assignedIssueCount,
       description: agent.description,
       id: agent.id,
       label: agent.label,
       lastActivityAt: latest?.updatedAt ?? null,
       latestRun: latest ? presentLatestRun(latest) : null,
-      status:
-        window.incomplete && activeRunCount === 0 ? 'unknown' : rosterStatusFromRuns(agentRuns),
+      status: rosterStatusFromRuns(agentRuns),
       surface: agent.surface
     };
   });
@@ -945,11 +886,7 @@ async function assignedIssueIdForActivity(
   }
   if (!activity.proposalId) return null;
   const proposal = await ctx.db.get('tripProposals', activity.proposalId);
-  if (
-    !proposal ||
-    proposal.organizationId !== workspace.organizationId ||
-    !(await findVisibleTrip(ctx, proposal.sourceTripId, workspace))
-  ) {
+  if (!proposal || proposal.organizationId !== workspace.organizationId) {
     return null;
   }
   return proposal.issueId ?? null;
@@ -964,8 +901,7 @@ async function assignedIssues(ctx: QueryCtx, agentId: string, activity: Assigned
     if (
       !issue ||
       issue.organizationId !== workspace.organizationId ||
-      !isAssignedActiveIssue(issue, agentId) ||
-      !(await findVisibleTrip(ctx, issue.tripId, workspace))
+      !isAssignedActiveIssue(issue, agentId)
     ) {
       return [];
     }
@@ -973,7 +909,7 @@ async function assignedIssues(ctx: QueryCtx, agentId: string, activity: Assigned
     return [presentAssignedIssue(issue)];
   }
   const tripId = activity.tripId;
-  if (!tripId || !(await findVisibleTrip(ctx, tripId, workspace))) return [];
+  if (!tripId) return [];
   const issues = await ctx.db
     .query('tripIssues')
     .withIndex('by_tripId_and_updatedAt', (query) => query.eq('tripId', tripId))
@@ -992,18 +928,13 @@ async function latestIssueRun(
 ): Promise<AgentRunView | null> {
   const workspace = await requireWorkspace(ctx);
   const issue = await ctx.db.get('tripIssues', issueId);
-  if (
-    !issue ||
-    issue.organizationId !== workspace.organizationId ||
-    !(await findVisibleTrip(ctx, issue.tripId, workspace))
-  )
-    return null;
+  if (!issue || issue.organizationId !== workspace.organizationId) return null;
   const run = await ctx.db
     .query('agentRuns')
     .withIndex('by_issueId_and_updatedAt', (query) => query.eq('issueId', issueId))
     .order('desc')
     .first();
-  return run && (await canViewRun(ctx, run, workspace)) ? presentRun(run) : null;
+  return run ? presentRun(run) : null;
 }
 
 async function latestProposalRun(
@@ -1012,12 +943,7 @@ async function latestProposalRun(
 ): Promise<AgentRunView | null> {
   const workspace = await requireWorkspace(ctx);
   const proposal = await ctx.db.get('tripProposals', proposalId);
-  if (
-    !proposal ||
-    proposal.organizationId !== workspace.organizationId ||
-    !(await findVisibleTrip(ctx, proposal.sourceTripId, workspace))
-  )
-    return null;
+  if (!proposal || proposal.organizationId !== workspace.organizationId) return null;
   const runs = await ctx.db
     .query('agentRuns')
     .withIndex('by_proposalId_and_updatedAt', (query) => query.eq('proposalId', proposalId))
@@ -1027,7 +953,7 @@ async function latestProposalRun(
     (candidate) =>
       candidate.agentId === 'reviewer' && candidate.organizationId === workspace.organizationId
   );
-  return run && (await canViewRun(ctx, run, workspace)) ? presentRun(run) : null;
+  return run ? presentRun(run) : null;
 }
 
 async function retryIssueRun(ctx: RunWriter, runId: Id<'agentRuns'>): Promise<Id<'agentRuns'>> {

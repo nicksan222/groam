@@ -1,4 +1,5 @@
 import { ConvexError, type Infer } from 'convex/values';
+import { internal } from '#convex-generated/api';
 import type { Doc, Id, TableNames } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
 import { AgentRuns } from '#convex/modules/assistant/runs/index';
@@ -6,7 +7,7 @@ import { AgentWaits } from '#convex/modules/assistant/waits/index';
 import { requireWorkspace, workspaceRoster } from '#convex/modules/auth/workspace';
 import { linkTargetKey, removeLinksForTargetKey } from '#convex/modules/discussions/links/cascade';
 import { Discussions } from '#convex/modules/discussions/threads/index';
-import { detachPayment } from '#convex/modules/payments/reconciliation';
+import { paymentsReady } from '#convex/modules/payments/index';
 import { PollCleanup } from '#convex/modules/polls/cleanup';
 import { insertWithShortId } from '#convex/modules/references/index';
 import { ItineraryActivity } from '#convex/modules/travel/activities/index';
@@ -290,7 +291,16 @@ async function deleteBatch(ctx: MutationCtx, trip: Doc<'trips'>): Promise<void> 
     .withIndex('by_tripId_and_userId', (query) => query.eq('tripId', trip._id))
     .take(DELETE_BATCH_SIZE);
   if (payments.length) {
-    await Promise.all(payments.map((row) => detachPayment(ctx, row)));
+    await Promise.all(
+      payments.map(async (row) => {
+        // A late payment on an expired or deleted seat is refunded by its webhook.
+        if (row.sessionId && !row.paid)
+          await ctx.scheduler.runAfter(0, internal.modules.payments.stripe.expire, {
+            sessionId: row.sessionId
+          });
+        await ctx.db.delete('tripPayments', row._id);
+      })
+    );
     return;
   }
   if (await deleteHistoryRows(ctx, trip._id)) return;
@@ -437,6 +447,7 @@ async function create(
     duration: details.duration,
     name: details.name,
     organizationId: workspace.organizationId,
+    ...(paymentsReady() ? { paymentRequired: true } : {}),
     ...(details.startDate ? { startDate: details.startDate } : {}),
     updatedAt
   });
@@ -469,7 +480,7 @@ async function find(ctx: QueryCtx, tripId: Id<'trips'>) {
 }
 
 async function groupMemberCount(ctx: QueryCtx, tripId: Id<'trips'>): Promise<number> {
-  const trip = await loadTripContext(ctx, tripId, undefined, { allowUnpaid: true });
+  const trip = await loadTripContext(ctx, tripId);
   return (await workspaceRoster(ctx, trip.workspace)).members.length;
 }
 

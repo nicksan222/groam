@@ -18,9 +18,11 @@ export function AssistantAttachmentPicker({ attachments }: { attachments: Assist
   const [query, setQuery] = useState('');
   const selected = new Set(attachments.tags.map((tag) => `${tag.kind}:${tag.id}`));
   const normalizedQuery = query.trim().toLocaleLowerCase();
-  const options = attachments.catalog.filter((item) =>
-    `${item.label} ${item.description}`.toLocaleLowerCase().includes(normalizedQuery)
-  );
+  const options = attachments.catalog
+    .filter((item) =>
+      `${item.label} ${item.description}`.toLocaleLowerCase().includes(normalizedQuery)
+    )
+    .slice(0, 100);
   return (
     <DropdownMenu
       onOpenChange={(nextOpen) => {
@@ -66,13 +68,7 @@ export function AssistantAttachmentPicker({ attachments }: { attachments: Assist
         <DropdownMenuSeparator />
         {options.length === 0 ? (
           <div className="px-2 py-5 text-center text-xs text-muted-foreground">
-            {attachments.isLoadingCatalog
-              ? 'Loading trip context…'
-              : normalizedQuery
-                ? 'No matching trip context.'
-                : attachments.canLoadMoreCatalog
-                  ? 'No accessible trip context on the loaded pages.'
-                  : 'No trip context is available yet.'}
+            {normalizedQuery ? 'No matching trip context.' : 'No trip context is available yet.'}
           </div>
         ) : (
           options.map((item) => {
@@ -98,18 +94,6 @@ export function AssistantAttachmentPicker({ attachments }: { attachments: Assist
               </DropdownMenuCheckboxItem>
             );
           })
-        )}
-        {(attachments.canLoadMoreCatalog || attachments.isLoadingCatalog) && (
-          <Button
-            className="mt-2 w-full"
-            disabled={attachments.disabled || attachments.isLoadingCatalog}
-            onClick={attachments.loadMoreCatalog}
-            size="sm"
-            type="button"
-            variant="ghost"
-          >
-            {attachments.isLoadingCatalog ? 'Loading more…' : 'Load more trip context'}
-          </Button>
         )}
       </DropdownMenuContent>
     </DropdownMenu>

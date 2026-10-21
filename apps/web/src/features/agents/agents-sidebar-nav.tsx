@@ -13,9 +13,8 @@ export function AgentsSidebarNav() {
   const { pathname } = useLocation();
   const { setOpenMobile } = useSidebar();
   const { agents } = useAgentRoster();
-  const activeCount = (agents ?? []).reduce((sum, agent) => sum + (agent.activeRunCount ?? 0), 0);
-  const incomplete = agents?.some((agent) => agent.activeRunCount === null) ?? false;
-  const unreadLabel = incomplete ? '?' : activeCount > 9 ? '9+' : String(activeCount);
+  const activeCount = (agents ?? []).reduce((sum, agent) => sum + agent.activeRunCount, 0);
+  const unreadLabel = activeCount > 9 ? '9+' : String(activeCount);
 
   return (
     <SidebarMenuItem>
@@ -27,12 +26,8 @@ export function AgentsSidebarNav() {
         <Link data-testid={testIds.navAgents} onClick={() => setOpenMobile(false)} to="/agents">
           <Bot />
           <span>Agents</span>
-          {activeCount > 0 || incomplete ? (
-            <Badge
-              aria-label={incomplete ? 'Active run count unavailable; open agent runs' : undefined}
-              className={SIDEBAR_COUNT_BADGE_CLASS}
-              variant="secondary"
-            >
+          {activeCount > 0 ? (
+            <Badge className={SIDEBAR_COUNT_BADGE_CLASS} variant="secondary">
               {unreadLabel}
             </Badge>
           ) : null}

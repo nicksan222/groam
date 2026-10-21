@@ -1,7 +1,7 @@
 import type { Doc, Id } from '#convex-generated/dataModel';
 import type { QueryCtx } from '#convex-generated/server';
 import { Attachments } from '#convex/modules/media/attachments/index';
-import { canParticipateInTrip } from '#convex/modules/payments/participation';
+import { canParticipateInTrip } from '#convex/modules/payments/index';
 import { ItineraryActivity } from '#convex/modules/travel/activities/index';
 import { TripDestination } from '#convex/modules/travel/destinations/index';
 import { TripStay } from '#convex/modules/travel/stays/index';
@@ -319,9 +319,7 @@ function projectedDuration({
 async function goingTravelerCount(ctx: QueryCtx, trip: TripQueryCtx): Promise<number> {
   const sourceId = sharedTripId(trip.trip);
   if (sourceId === trip.trip._id) return TripTravelers.goingCount(trip);
-  return TripTravelers.goingCount(
-    await loadSharedTripContext(ctx, trip.trip._id, trip.workspace, { allowUnpaid: true })
-  );
+  return TripTravelers.goingCount(await loadSharedTripContext(ctx, trip.trip._id, trip.workspace));
 }
 
 /** An unpaid preview is an explicit allowlist, built without loading plan rows or media URLs. */
@@ -331,6 +329,7 @@ async function projectUnpaidPreview(ctx: QueryCtx, trip: TripQueryCtx) {
     activity: [],
     archivedAt: trip.trip.archive?.at ?? null,
     arrivalTransfer: null,
+    canParticipate: false,
     departureTransfer: null,
     coverAttribution: cover.attribution,
     coverStatus: trip.trip.cover?.status ?? null,
@@ -416,6 +415,7 @@ export async function projectTrip(ctx: QueryCtx, trip: TripQueryCtx) {
     })),
     archivedAt: trip.trip.archive?.at ?? null,
     arrivalTransfer: projectBoundaryTransfer('arrival', boundaryTransfers, attachments),
+    canParticipate: true,
     coverAttribution: cover.attribution,
     coverStatus: trip.trip.cover?.status ?? null,
     coverUrl: cover.url,

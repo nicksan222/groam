@@ -8,7 +8,6 @@ import { AgentRuns } from '#convex/modules/assistant/runs/index';
 import { AgentWaits } from '#convex/modules/assistant/waits/index';
 import { requireWorkspace, workspaceRoster } from '#convex/modules/auth/workspace';
 import { Notifications } from '#convex/modules/notifications/index';
-import { canParticipateInTrip } from '#convex/modules/payments/participation';
 import { insertWithShortId } from '#convex/modules/references/index';
 import { TripIssues } from '#convex/modules/travel/issues/index';
 import {
@@ -243,12 +242,7 @@ async function feedbackForProposal(ctx: QueryCtx, proposalId: Id<'tripProposals'
 
 async function eligibleVoters(source: TripCtx) {
   const roster = await workspaceRoster(source, source.workspace);
-  const eligible = await Promise.all(
-    roster.members.map(async (member) =>
-      (await canParticipateInTrip(source, source.trip, member.userId)) ? member : null
-    )
-  );
-  return eligible.filter((member) => member !== null);
+  return roster.members;
 }
 
 async function notifyIdeaAudience(
@@ -263,7 +257,6 @@ async function notifyIdeaAudience(
   }
 ) {
   const voters = await eligibleVoters(source);
-  const eligibleIds = new Set(voters.map((voter) => voter.userId));
   const reviewerIds = [];
   for (const reviewer of proposal.reviewers) {
     if (reviewer.kind === 'user') reviewerIds.push(reviewer.userId);
@@ -282,9 +275,7 @@ async function notifyIdeaAudience(
     kind: input.kind,
     organizationId: source.workspace.organizationId,
     title: input.title,
-    userIds: audience.filter(
-      (userId) => userId !== source.workspace.userId && eligibleIds.has(userId)
-    )
+    userIds: audience.filter((userId) => userId !== source.workspace.userId)
   });
 }
 
@@ -533,12 +524,8 @@ async function presentWorkspaceIdea(
   workspace: { organizationId: string; userId: string }
 ) {
   const source = await ctx.db.get('trips', proposal.sourceTripId);
-  if (
-    !source ||
-    source.organizationId !== workspace.organizationId ||
-    !(await canParticipateInTrip(ctx, source, workspace.userId))
-  ) {
-    return null;
+  if (!source || source.organizationId !== workspace.organizationId) {
+    throw new ConvexError('Idea source trip not found');
   }
   return {
     author: proposal.author,
@@ -579,32 +566,26 @@ async function listWorkspace(ctx: QueryCtx, paginationOpts: PaginationOptions) {
   const page = await Promise.all(
     result.page.map((proposal) => presentWorkspaceIdea(ctx, proposal, workspace))
   );
-  return { ...result, page: page.filter((idea) => idea !== null) };
+  return { ...result, page };
 }
 
-async function listViewerOpenPage(ctx: QueryCtx, paginationOpts: PaginationOptions) {
+async function listViewerOpen(ctx: QueryCtx) {
   const workspace = await requireWorkspace(ctx);
-  const result = await ctx.db
-    .query('tripProposals')
-    .withIndex('by_organizationId_and_author_userId_and_updatedAt', (query) =>
-      query.eq('organizationId', workspace.organizationId).eq('author.userId', workspace.userId)
+  const found = await Promise.all(
+    (['conflicted', 'draft', 'in_review'] as const).map((status) =>
+      ctx.db
+        .query('tripProposals')
+        .withIndex('by_organizationId_and_author_userId_and_status', (query) =>
+          query
+            .eq('organizationId', workspace.organizationId)
+            .eq('author.userId', workspace.userId)
+            .eq('status', status)
+        )
+        .take(MAX_PROPOSALS)
     )
-    .order('desc')
-    .paginate({
-      ...paginationOpts,
-      numItems: Math.min(paginationOpts.numItems, 50),
-      maximumRowsRead: 50
-    });
-  const candidates = result.page.filter(
-    (proposal) =>
-      proposal.status === 'draft' ||
-      proposal.status === 'in_review' ||
-      proposal.status === 'conflicted'
   );
-  const page = await Promise.all(
-    candidates.map((proposal) => presentWorkspaceIdea(ctx, proposal, workspace))
-  );
-  return { ...result, page: page.filter((idea) => idea !== null) };
+  const proposals = found.flat().sort((left, right) => right.updatedAt - left.updatedAt);
+  return Promise.all(proposals.map((proposal) => presentWorkspaceIdea(ctx, proposal, workspace)));
 }
 
 async function get(ctx: QueryCtx, proposalId: Id<'tripProposals'>) {
@@ -1407,9 +1388,7 @@ async function finishMerge({
     throw new ConvexError('This idea can no longer be applied');
   }
   const timestamp = operation.requestedAt;
-  await VersionApply.snapshot(ctx, source, mergedSnapshot, {
-    attachmentSourceTripId: proposal.workingTripId
-  });
+  await VersionApply.snapshot(ctx, source, mergedSnapshot);
   await Promise.all([
     ctx.db.delete('tripProposalOperations', operation._id),
     ctx.db.patch('tripProposals', proposalId, {
@@ -1717,8 +1696,7 @@ async function finishRebase({
   }
   const working = await loadTripContext(ctx, proposal.workingTripId, source.workspace);
   await VersionApply.snapshot(ctx, preserveIdeaReview(working), rebasedSnapshot, {
-    retainSourceKeys: true,
-    attachmentSourceTripId: source.trip._id
+    retainSourceKeys: true
   });
   const timestamp = Date.now();
   const ideaName = ideaNameFor(proposal);
@@ -1947,7 +1925,7 @@ export class TripVersions {
   static get = get;
   static list = list;
   static listFeedback = listFeedback;
-  static listViewerOpenPage = listViewerOpenPage;
+  static listViewerOpen = listViewerOpen;
   static listWorkspace = listWorkspace;
   static markConflict = markConflict;
   static prepareMerge = prepareMerge;

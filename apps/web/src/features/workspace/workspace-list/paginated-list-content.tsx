@@ -25,14 +25,14 @@ export function PaginatedListContent({
   pageSize?: number;
   status: PaginatedListStatus;
 }) {
-  if (isEmpty && status === 'Exhausted') {
+  if (isEmpty) {
     return <Shell.PageStack>{empty}</Shell.PageStack>;
   }
 
   const canLoadMore = status === 'CanLoadMore' || status === 'LoadingMore';
   return (
     <Shell.PageStack>
-      {isEmpty ? null : children}
+      {children}
       {canLoadMore ? (
         <div className="flex justify-center">
           <Button

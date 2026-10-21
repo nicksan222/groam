@@ -90,22 +90,16 @@ import type * as modules_discussions_threads_cleanup from "../modules/discussion
 import type * as modules_discussions_threads_entity from "../modules/discussions/threads/entity.js";
 import type * as modules_discussions_threads_index from "../modules/discussions/threads/index.js";
 import type * as modules_discussions_threads_limits from "../modules/discussions/threads/limits.js";
-import type * as modules_media_access from "../modules/media/access.js";
 import type * as modules_media_attachments_index from "../modules/media/attachments/index.js";
 import type * as modules_media_files_index from "../modules/media/files/index.js";
 import type * as modules_media_library_commit from "../modules/media/library/commit.js";
-import type * as modules_media_library_discovery from "../modules/media/library/discovery.js";
 import type * as modules_media_library_index from "../modules/media/library/index.js";
 import type * as modules_media_library_validators from "../modules/media/library/validators.js";
 import type * as modules_notifications_index from "../modules/notifications/index.js";
 import type * as modules_organizations_cleanup from "../modules/organizations/cleanup.js";
 import type * as modules_organizations_invitations_index from "../modules/organizations/invitations/index.js";
 import type * as modules_payments_checkout from "../modules/payments/checkout.js";
-import type * as modules_payments_credentials from "../modules/payments/credentials.js";
 import type * as modules_payments_index from "../modules/payments/index.js";
-import type * as modules_payments_participation from "../modules/payments/participation.js";
-import type * as modules_payments_reconciliation from "../modules/payments/reconciliation.js";
-import type * as modules_payments_refunds from "../modules/payments/refunds.js";
 import type * as modules_payments_storage from "../modules/payments/storage.js";
 import type * as modules_payments_stripe from "../modules/payments/stripe.js";
 import type * as modules_payments_webhook from "../modules/payments/webhook.js";
@@ -251,7 +245,7 @@ import type * as routes_agents_waits_run from "../routes/agents/waits/run.js";
 import type * as routes_assistant_chats_create from "../routes/assistant/chats/create.js";
 import type * as routes_assistant_chats_list from "../routes/assistant/chats/list.js";
 import type * as routes_assistant_chats_tags from "../routes/assistant/chats/tags.js";
-import type * as routes_assistant_context_catalog_page from "../routes/assistant/context/catalog/page.js";
+import type * as routes_assistant_context_catalog from "../routes/assistant/context/catalog.js";
 import type * as routes_assistant_context_screen from "../routes/assistant/context/screen.js";
 import type * as routes_assistant_messages from "../routes/assistant/messages.js";
 import type * as routes_assistant_open from "../routes/assistant/open.js";
@@ -283,12 +277,11 @@ import type * as routes_discussions_research_list from "../routes/discussions/re
 import type * as routes_discussions_research_remove from "../routes/discussions/research/remove.js";
 import type * as routes_discussions_research_start from "../routes/discussions/research/start.js";
 import type * as routes_discussions_research_update from "../routes/discussions/research/update.js";
-import type * as routes_discussions_research_workspace_page from "../routes/discussions/research/workspace/page.js";
+import type * as routes_discussions_research_workspace from "../routes/discussions/research/workspace.js";
 import type * as routes_discussions_roster from "../routes/discussions/roster.js";
-import type * as routes_media_discover from "../routes/media/discover.js";
+import type * as routes_media_list from "../routes/media/list.js";
 import type * as routes_media_logo_clear from "../routes/media/logo/clear.js";
 import type * as routes_media_logo_set from "../routes/media/logo/set.js";
-import type * as routes_media_page from "../routes/media/page.js";
 import type * as routes_media_remove from "../routes/media/remove.js";
 import type * as routes_media_save from "../routes/media/save.js";
 import type * as routes_media_upload from "../routes/media/upload.js";
@@ -303,7 +296,7 @@ import type * as routes_polls_close from "../routes/polls/close.js";
 import type * as routes_polls_create from "../routes/polls/create.js";
 import type * as routes_polls_get from "../routes/polls/get.js";
 import type * as routes_polls_list_discussion from "../routes/polls/list/discussion.js";
-import type * as routes_polls_list_open_page from "../routes/polls/list/open/page.js";
+import type * as routes_polls_list_open from "../routes/polls/list/open.js";
 import type * as routes_polls_list_trip from "../routes/polls/list/trip.js";
 import type * as routes_polls_list_workspace from "../routes/polls/list/workspace.js";
 import type * as routes_polls_remove from "../routes/polls/remove.js";
@@ -396,7 +389,7 @@ import type * as routes_trips_versions_reviewers_agent_run from "../routes/trips
 import type * as routes_trips_versions_reviewers_set from "../routes/trips/versions/reviewers/set.js";
 import type * as routes_trips_versions_submit from "../routes/trips/versions/submit.js";
 import type * as routes_trips_versions_workspace_list from "../routes/trips/versions/workspace/list.js";
-import type * as routes_trips_versions_workspace_pending_page from "../routes/trips/versions/workspace/pending/page.js";
+import type * as routes_trips_versions_workspace_pending from "../routes/trips/versions/workspace/pending.js";
 
 import type {
   ApiFromModules,
@@ -487,22 +480,16 @@ declare const fullApi: ApiFromModules<{
   "modules/discussions/threads/entity": typeof modules_discussions_threads_entity;
   "modules/discussions/threads/index": typeof modules_discussions_threads_index;
   "modules/discussions/threads/limits": typeof modules_discussions_threads_limits;
-  "modules/media/access": typeof modules_media_access;
   "modules/media/attachments/index": typeof modules_media_attachments_index;
   "modules/media/files/index": typeof modules_media_files_index;
   "modules/media/library/commit": typeof modules_media_library_commit;
-  "modules/media/library/discovery": typeof modules_media_library_discovery;
   "modules/media/library/index": typeof modules_media_library_index;
   "modules/media/library/validators": typeof modules_media_library_validators;
   "modules/notifications/index": typeof modules_notifications_index;
   "modules/organizations/cleanup": typeof modules_organizations_cleanup;
   "modules/organizations/invitations/index": typeof modules_organizations_invitations_index;
   "modules/payments/checkout": typeof modules_payments_checkout;
-  "modules/payments/credentials": typeof modules_payments_credentials;
   "modules/payments/index": typeof modules_payments_index;
-  "modules/payments/participation": typeof modules_payments_participation;
-  "modules/payments/reconciliation": typeof modules_payments_reconciliation;
-  "modules/payments/refunds": typeof modules_payments_refunds;
   "modules/payments/storage": typeof modules_payments_storage;
   "modules/payments/stripe": typeof modules_payments_stripe;
   "modules/payments/webhook": typeof modules_payments_webhook;
@@ -648,7 +635,7 @@ declare const fullApi: ApiFromModules<{
   "routes/assistant/chats/create": typeof routes_assistant_chats_create;
   "routes/assistant/chats/list": typeof routes_assistant_chats_list;
   "routes/assistant/chats/tags": typeof routes_assistant_chats_tags;
-  "routes/assistant/context/catalog/page": typeof routes_assistant_context_catalog_page;
+  "routes/assistant/context/catalog": typeof routes_assistant_context_catalog;
   "routes/assistant/context/screen": typeof routes_assistant_context_screen;
   "routes/assistant/messages": typeof routes_assistant_messages;
   "routes/assistant/open": typeof routes_assistant_open;
@@ -680,12 +667,11 @@ declare const fullApi: ApiFromModules<{
   "routes/discussions/research/remove": typeof routes_discussions_research_remove;
   "routes/discussions/research/start": typeof routes_discussions_research_start;
   "routes/discussions/research/update": typeof routes_discussions_research_update;
-  "routes/discussions/research/workspace/page": typeof routes_discussions_research_workspace_page;
+  "routes/discussions/research/workspace": typeof routes_discussions_research_workspace;
   "routes/discussions/roster": typeof routes_discussions_roster;
-  "routes/media/discover": typeof routes_media_discover;
+  "routes/media/list": typeof routes_media_list;
   "routes/media/logo/clear": typeof routes_media_logo_clear;
   "routes/media/logo/set": typeof routes_media_logo_set;
-  "routes/media/page": typeof routes_media_page;
   "routes/media/remove": typeof routes_media_remove;
   "routes/media/save": typeof routes_media_save;
   "routes/media/upload": typeof routes_media_upload;
@@ -700,7 +686,7 @@ declare const fullApi: ApiFromModules<{
   "routes/polls/create": typeof routes_polls_create;
   "routes/polls/get": typeof routes_polls_get;
   "routes/polls/list/discussion": typeof routes_polls_list_discussion;
-  "routes/polls/list/open/page": typeof routes_polls_list_open_page;
+  "routes/polls/list/open": typeof routes_polls_list_open;
   "routes/polls/list/trip": typeof routes_polls_list_trip;
   "routes/polls/list/workspace": typeof routes_polls_list_workspace;
   "routes/polls/remove": typeof routes_polls_remove;
@@ -793,7 +779,7 @@ declare const fullApi: ApiFromModules<{
   "routes/trips/versions/reviewers/set": typeof routes_trips_versions_reviewers_set;
   "routes/trips/versions/submit": typeof routes_trips_versions_submit;
   "routes/trips/versions/workspace/list": typeof routes_trips_versions_workspace_list;
-  "routes/trips/versions/workspace/pending/page": typeof routes_trips_versions_workspace_pending_page;
+  "routes/trips/versions/workspace/pending": typeof routes_trips_versions_workspace_pending;
 }>;
 
 /**

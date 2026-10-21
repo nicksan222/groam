@@ -17,7 +17,7 @@ export type AgentRunKickoff = (typeof agentRunKickoffIds)[number];
 export const agentRunEventKindIds = ['status', 'thought', 'tool', 'report', 'error'] as const;
 export type AgentRunEventKind = (typeof agentRunEventKindIds)[number];
 
-export type AgentRosterStatus = 'failed' | 'idle' | 'working' | 'unknown';
+export type AgentRosterStatus = 'failed' | 'idle' | 'working';
 
 export const RUN_STATUS_LABEL = {
   aborted: 'Stopped',
@@ -31,6 +31,5 @@ export const RUN_STATUS_LABEL = {
 export const ROSTER_STATUS_LABEL = {
   failed: 'Needs attention',
   idle: 'Idle',
-  unknown: 'Activity incomplete',
   working: 'Working'
 } as const satisfies Record<AgentRosterStatus, string>;

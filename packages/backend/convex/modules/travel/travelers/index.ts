@@ -2,17 +2,16 @@ import { ConvexError } from 'convex/values';
 import type { Doc, Id } from '#convex-generated/dataModel';
 import type { MutationCtx } from '#convex-generated/server';
 import { systemWorkspace, workspaceRoster } from '#convex/modules/auth/workspace';
-import { assertTripPaid, paymentFor, requiresTripPayment } from '#convex/modules/payments/index';
+import { assertTripPaid, participantsForTrip } from '#convex/modules/payments/index';
 import { PollSignals } from '#convex/modules/polls/signals';
 import { syncTripConditions } from '#convex/modules/travel/issues/sync';
 import {
-  rsvpStatus,
+  entitledStatus,
   statusesForTrip,
   type TravelerStatus,
   travelersForTrip
 } from '#convex/modules/travel/travelers/statuses';
-import { attachTrip } from '#convex/modules/travel/trips/ctx';
-import { isTripAdmin, type TripCtx } from '#convex/modules/travel/trips/ctx';
+import { attachTrip, isTripAdmin, type TripCtx } from '#convex/modules/travel/trips/ctx';
 
 export type { TravelerStatus };
 
@@ -24,17 +23,10 @@ export async function listTravelers(ctx: TripCtx) {
     roster.members.map((member) => member.userId)
   );
   const byUserId = new Map(rows.flatMap((row) => (row.userId ? [[row.userId, row] as const] : [])));
-  const unpaid = new Set(
-    (
-      await Promise.all(
-        roster.members.map(async (member) =>
-          requiresTripPayment(ctx.trip, member.userId) &&
-          !(await paymentFor(ctx, ctx.trip._id, member.userId))?.paid
-            ? member.userId
-            : null
-        )
-      )
-    ).filter((id) => id !== null)
+  const entitled = await participantsForTrip(
+    ctx,
+    ctx.trip,
+    roster.members.map((member) => member.userId)
   );
   return roster.members
     .map((member) => {
@@ -45,10 +37,7 @@ export async function listTravelers(ctx: TripCtx) {
         image: member.image ?? null,
         invitationId: row?.invitationId ?? null,
         name: member.name,
-        status:
-          unpaid.has(member.userId) && row?.status !== 'maybe' && row?.status !== 'not_going'
-            ? ('invited' as const)
-            : rsvpStatus(row?.status),
+        status: entitledStatus(row?.status, entitled.has(member.userId)),
         userId: member.userId
       };
     })
@@ -64,7 +53,7 @@ export async function seedTravelers(ctx: MutationCtx, trip: TripCtx<MutationCtx>
         handle: member.handle,
         name: member.name,
         organizationId: trip.workspace.organizationId,
-        status: requiresTripPayment(trip.trip, member.userId) ? 'invited' : 'going',
+        status: 'going',
         tripId: trip.trip._id,
         updatedAt: now,
         userId: member.userId
@@ -107,6 +96,12 @@ export async function setTravelerStatus(
       userId
     });
   }
+  await refreshTravelerSignals(ctx);
+  return null;
+}
+
+/** Effective RSVPs changed (a status or a seat), so rules and waits over them re-check. */
+async function refreshTravelerSignals(ctx: TripCtx<MutationCtx>) {
   // RSVPs change the shared trip directly, so "done when" rules over them re-check here.
   await syncTripConditions(ctx);
   // RSVP waits and trip-poll eligibility (not going travelers cannot vote) re-check after.
@@ -114,7 +109,6 @@ export async function setTravelerStatus(
     organizationId: ctx.trip.organizationId,
     tripId: ctx.trip._id
   });
-  return null;
 }
 
 export async function claimInvitation(
@@ -127,14 +121,9 @@ export async function claimInvitation(
     .withIndex('by_invitationId', (query) => query.eq('invitationId', invitationId))
     .unique();
   if (!traveler || traveler.organizationId !== workspace.organizationId) return null;
-  const trip = await ctx.db.get('trips', traveler.tripId);
-  const unpaid =
-    trip &&
-    requiresTripPayment(trip, workspace.userId) &&
-    !(await paymentFor(ctx, trip._id, workspace.userId))?.paid;
   await ctx.db.patch('tripTravelers', traveler._id, {
     name: workspace.viewerName,
-    status: unpaid ? 'invited' : 'going',
+    status: 'going',
     updatedAt: Date.now(),
     userId: workspace.userId
   });
@@ -149,9 +138,11 @@ export async function goingCount(ctx: TripCtx): Promise<number> {
   return (await listTravelers(ctx)).filter((traveler) => traveler.status === 'going').length;
 }
 
-export async function markPaidGoing(ctx: MutationCtx, trip: Doc<'trips'>, userId: string) {
-  const workspace = systemWorkspace(trip.organizationId);
-  await setTravelerStatus(attachTrip(ctx, trip, workspace, 'organizer'), userId, 'going');
+/** A new seat reveals the traveler's stored RSVP, so rules and waits over it re-check. */
+export async function seatConfirmed(ctx: MutationCtx, trip: Doc<'trips'>) {
+  await refreshTravelerSignals(
+    attachTrip(ctx, trip, systemWorkspace(trip.organizationId), 'organizer')
+  );
 }
 
 /** Per-trip RSVP overlay on the workspace roster. */
@@ -160,7 +151,7 @@ export class TripTravelers {
   static claimInvitation = claimInvitation;
   static goingCount = goingCount;
   static list = listTravelers;
-  static markPaidGoing = markPaidGoing;
+  static seatConfirmed = seatConfirmed;
   static seed = seedTravelers;
   static setStatus = setTravelerStatus;
   static statusesForTrip = statusesForTrip;

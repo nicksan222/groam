@@ -1,5 +1,3 @@
-import type { PaginationOptions } from 'convex/server';
-import { ConvexError } from 'convex/values';
 import type { Doc, Id } from '#convex-generated/dataModel';
 import type { QueryCtx } from '#convex-generated/server';
 import type { Workspace } from '#convex/modules/auth/workspace';
@@ -11,37 +9,21 @@ const OPEN_LIMIT = 10;
 /** Open polls scanned before visibility filtering; bounds the read when many are hidden. */
 const OPEN_SCAN = 50;
 
-/** Raw candidate pages retain continuation even when no polls are readable. */
-async function pageOpen(ctx: QueryCtx, workspace: Workspace, paginationOpts: PaginationOptions) {
-  if (
-    !Number.isInteger(paginationOpts.numItems) ||
-    paginationOpts.numItems < 1 ||
-    paginationOpts.numItems > OPEN_SCAN
-  )
-    throw new ConvexError(`Poll page size must be between 1 and ${OPEN_SCAN}`);
-  const result = await ctx.db
-    .query('polls')
-    .withIndex('by_organizationId_and_status', (q) =>
-      q.eq('organizationId', workspace.organizationId).eq('status', 'open')
-    )
-    .order('desc')
-    // At most ten distinct 100-member trips may require RSVP, payment and private-chat
-    // membership reads. Keep this bound on raw rows so filtering never discards cursor progress.
-    .paginate({
-      ...paginationOpts,
-      numItems: Math.min(paginationOpts.numItems, OPEN_LIMIT),
-      maximumRowsRead: OPEN_LIMIT
-    });
-  return { ...result, page: await presentOpen(ctx, workspace, result.page) };
-}
-
-async function presentOpen(
+/** Newest open polls across every scope the viewer can read: trips, the group, and chats. */
+async function listOpen(
   ctx: QueryCtx,
   workspace: Workspace,
-  rows: Doc<'polls'>[]
+  limit: number = OPEN_LIMIT
 ): Promise<PollOpenItem[]> {
+  const rows = await ctx.db
+    .query('polls')
+    .withIndex('by_organizationId_and_status', (query) =>
+      query.eq('organizationId', workspace.organizationId).eq('status', 'open')
+    )
+    .order('desc')
+    .take(OPEN_SCAN);
   const visible = await Promise.all(rows.map((poll) => canRead(ctx, poll, workspace)));
-  const readable = rows.filter((_, index) => visible[index]);
+  const readable = rows.filter((_, index) => visible[index]).slice(0, limit);
   const voters = voterLoader(ctx);
   const trips = new Map<Id<'trips'>, Promise<Doc<'trips'> | null>>();
   const tripOf = (tripId: Id<'trips'>) => {
@@ -52,35 +34,32 @@ async function presentOpen(
     }
     return trip;
   };
-  const items: PollOpenItem[] = [];
-  // Each tally may fan out to 100 roster reads. Present polls sequentially to stay below
-  // the concurrent database-I/O limit even when ten polls belong to distinct trips.
-  for (const poll of readable) {
-    // oxlint-disable-next-line react-doctor/async-await-in-loop -- One poll at a time bounds concurrent roster I/O to 100 members.
-    const [tally, mine, trip] = await Promise.all([
-      pollTally(ctx, poll, voters),
-      ctx.db
-        .query('pollVotes')
-        .withIndex('by_pollId_and_userId', (query) =>
-          query.eq('pollId', poll._id).eq('userId', workspace.userId)
-        )
-        .unique(),
-      poll.tripId ? tripOf(poll.tripId) : null
-    ]);
-    items.push({
-      closesAt: poll.closesAt ?? null,
-      createdAt: poll._creationTime,
-      discussionId: poll.discussionId ?? null,
-      id: poll._id,
-      optionCount: poll.options.length,
-      question: poll.question,
-      tripId: poll.tripId ?? null,
-      tripName: trip?.name ?? null,
-      viewerHasVoted: (mine?.optionIds.length ?? 0) > 0,
-      votedCount: tally.votedCount
-    });
-  }
-  return items;
+  return await Promise.all(
+    readable.map(async (poll) => {
+      const [tally, mine, trip] = await Promise.all([
+        pollTally(ctx, poll, voters),
+        ctx.db
+          .query('pollVotes')
+          .withIndex('by_pollId_and_userId', (query) =>
+            query.eq('pollId', poll._id).eq('userId', workspace.userId)
+          )
+          .unique(),
+        poll.tripId ? tripOf(poll.tripId) : null
+      ]);
+      return {
+        closesAt: poll.closesAt ?? null,
+        createdAt: poll._creationTime,
+        discussionId: poll.discussionId ?? null,
+        id: poll._id,
+        optionCount: poll.options.length,
+        question: poll.question,
+        tripId: poll.tripId ?? null,
+        tripName: trip?.name ?? null,
+        viewerHasVoted: (mine?.optionIds.length ?? 0) > 0,
+        votedCount: tally.votedCount
+      };
+    })
+  );
 }
 
-export const PollOpenReads = { pageOpen };
+export const PollOpenReads = { listOpen };

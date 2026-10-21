@@ -11,9 +11,6 @@ export type AssistantAttachmentOption = AssistantContextTag & {
 
 export type AssistantAttachments = {
   catalog: AssistantAttachmentOption[];
-  canLoadMoreCatalog?: boolean;
-  isLoadingCatalog?: boolean;
-  loadMoreCatalog?: () => void;
   disabled: boolean;
   onChange: (reference: AssistantAttachmentReference, checked: boolean) => void;
   tags: AssistantContextTag[];

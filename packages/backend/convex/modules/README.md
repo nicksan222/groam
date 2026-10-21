@@ -38,6 +38,13 @@ Scheduled jobs have no user. Keep those on raw `internalAction` /
 | `mutableTripMutation` | same, plus mutability checks | `tripId` |
 | `sharedTripQuery` / `sharedTripMutation` | same, for the shared trip view | `tripId` |
 | `destinationMutation` | same, plus `destination` | `tripId`, `destinationId` |
+| `previewTripQuery` / `previewSharedTripQuery` / `previewSharedTripMutation` | same, without a paid seat | `tripId` |
+
+Trip builders require a seat when the trip charges for one (`modules/payments`): payments are on
+only when `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` are both set, apply to trips created
+while they were on, and never to the creator. Preview builders serve the paywall: the redacted
+trip, the roster, the viewer's own RSVP, and payment status. Organization-wide reads stay
+ungated. Every paid Checkout session yields exactly a seat or a scheduled, idempotent refund.
 
 Trip builders live in `modules/travel/trips/ctx.ts`. Stack by composing `input` helpers there, not by inventing
 new entity classes or `(ctx, trip, workspace, role)` argument bags.
@@ -59,6 +66,7 @@ modules/media/
   library/  files/  attachments/
 modules/organizations/
   invitations/
+modules/payments/            # trip seats, Stripe Checkout, webhook, refunds
 modules/polls/               # polls and votes; writes signal poll waits
 routes/<domain>/             # public run — api.routes.<domain>.* stays stable
 ```

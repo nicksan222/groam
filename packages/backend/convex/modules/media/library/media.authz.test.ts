@@ -47,16 +47,12 @@ test('media lists stay inside the caller’s active organization', async () => {
   const outsider = await createSecondOrganization(owner, 'Organization B');
   await savePng(owner.client, 'private.png');
 
-  await expect(
-    owner.client
-      .query(api.routes.media.page.run, { paginationOpts: { cursor: null, numItems: 50 } })
-      .then((result) => result.page)
-  ).resolves.toEqual([expect.objectContaining({ name: 'private.png' })]);
-  await expect(
-    outsider.client
-      .query(api.routes.media.page.run, { paginationOpts: { cursor: null, numItems: 50 } })
-      .then((result) => result.page)
-  ).resolves.toEqual([]);
+  await expect(owner.client.query(api.routes.media.list.run, { limit: 50 })).resolves.toEqual([
+    expect.objectContaining({ name: 'private.png' })
+  ]);
+  await expect(outsider.client.query(api.routes.media.list.run, { limit: 50 })).resolves.toEqual(
+    []
+  );
 });
 
 test('another organization cannot claim an already saved upload', async () => {
@@ -85,20 +81,16 @@ test('a teammate cannot claim another member’s saved upload', async () => {
       storageId
     })
   ).resolves.toEqual({ error: 'The uploaded file is not available', ok: false });
-  await expect(
-    owner.client
-      .query(api.routes.media.page.run, { paginationOpts: { cursor: null, numItems: 10 } })
-      .then((result) => result.page)
-  ).resolves.toEqual([expect.objectContaining({ id: mediaId })]);
+  await expect(owner.client.query(api.routes.media.list.run, { limit: 10 })).resolves.toEqual([
+    expect.objectContaining({ id: mediaId })
+  ]);
 });
 
 test('revoked members cannot read organization media', async () => {
   const revoked = await createAuthenticatedTest({
     organization: { membership: 'revoked', name: 'Locked Out' }
   });
-  await expect(
-    revoked.client
-      .query(api.routes.media.page.run, { paginationOpts: { cursor: null, numItems: 1 } })
-      .then((result) => result.page)
-  ).rejects.toThrow(/Organization access denied|No active organization/u);
+  await expect(revoked.client.query(api.routes.media.list.run, { limit: 1 })).rejects.toThrow(
+    /Organization access denied|No active organization/u
+  );
 });

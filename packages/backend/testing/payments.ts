@@ -1,154 +1,144 @@
+import { vi } from 'vite-plus/test';
 import type { Id } from '#convex-generated/dataModel';
-import { insertWithShortId } from '#convex/modules/references/index';
 import type { createTest } from '#testing/factory';
-import { setupTrip, setupWritableTrip } from '#testing/trips';
 
-/** Inspect persisted cleanup results without routing through a deleted organization's auth. */
-export function paymentCleanupState(test: ReturnType<typeof createTest>, tripId: Id<'trips'>) {
-  return test.run(async (ctx) => ({
-    tripExists: (await ctx.db.get('trips', tripId)) !== null,
-    payments: await ctx.db
+const WEBHOOK_SECRET = 'whsec_fixture';
+
+export function enablePayments() {
+  vi.stubEnv('STRIPE_SECRET_KEY', 'sk_test_fixture');
+  vi.stubEnv('STRIPE_WEBHOOK_SECRET', WEBHOOK_SECRET);
+}
+
+export type FakeSession = {
+  id: string;
+  url: string | null;
+  status: 'open' | 'complete' | 'expired';
+  payment_status: 'paid' | 'unpaid';
+  amount_total: number;
+  currency: string;
+  metadata: Record<string, string>;
+  payment_intent: string | null;
+  mode: 'payment';
+};
+
+function metadataOf(body: URLSearchParams) {
+  return Object.fromEntries(
+    [...body].flatMap(([name, value]) => {
+      const field = /^metadata\[(.+)\]$/u.exec(name)?.[1];
+      return field ? [[field, value]] : [];
+    })
+  );
+}
+
+/** An in-memory Stripe Checkout API: sessions, expiry, and idempotent refunds. */
+export function stubStripe() {
+  const sessions = new Map<string, FakeSession>();
+  const created = new Map<string, FakeSession>();
+  const state = { failRefunds: false, sessions, refundKeys: [] as string[] };
+
+  const refund = (key: string | null) => {
+    if (state.failRefunds) return Response.json({ error: {} }, { status: 500 });
+    if (key && !state.refundKeys.includes(key)) state.refundKeys.push(key);
+    return Response.json({ id: `re_${state.refundKeys.length}`, status: 'succeeded' });
+  };
+  const create = (body: URLSearchParams, key: string | null) => {
+    const id = `cs_test_${sessions.size + 1}`;
+    const session: FakeSession = (key && created.get(key)) || {
+      id,
+      url: `https://checkout.stripe.com/c/pay/${id}`,
+      status: 'open',
+      payment_status: 'unpaid',
+      amount_total: Number(body.get('line_items[0][price_data][unit_amount]')),
+      currency: body.get('line_items[0][price_data][currency]') ?? '',
+      metadata: metadataOf(body),
+      payment_intent: null,
+      mode: 'payment'
+    };
+    sessions.set(session.id, session);
+    if (key) created.set(key, session);
+    return Response.json(session);
+  };
+  const existing = (path: string) => {
+    const [, , , id, action] = path.split('/');
+    const session = sessions.get(decodeURIComponent(id ?? ''));
+    if (!session) return Response.json({ error: {} }, { status: 404 });
+    if (action !== 'expire') return Response.json(session);
+    if (session.status !== 'open') return Response.json({ error: {} }, { status: 400 });
+    Object.assign(session, { status: 'expired', url: null });
+    return Response.json(session);
+  };
+
+  vi.stubGlobal('fetch', async (input: string | URL | Request, init?: RequestInit) => {
+    const path = new URL(String(input)).pathname.replace('/v1', '');
+    const key = new Headers(init?.headers).get('Idempotency-Key');
+    if (path === '/refunds') return refund(key);
+    if (path === '/checkout/sessions') return create(new URLSearchParams(String(init?.body)), key);
+    return existing(path);
+  });
+  return state;
+}
+
+/** Marks a fake session paid, as Stripe does once the traveler completes checkout. */
+export function pay(session: FakeSession) {
+  Object.assign(session, {
+    status: 'complete',
+    payment_status: 'paid',
+    url: null,
+    payment_intent: `pi_${session.id}`
+  });
+  return session;
+}
+
+async function sign(payload: string, timestamp: number, secret: string) {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const bytes = await crypto.subtle.sign(
+    'HMAC',
+    key,
+    new TextEncoder().encode(`${timestamp}.${payload}`)
+  );
+  return Array.from(new Uint8Array(bytes), (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/** Delivers a signed `checkout.session.completed` event to the deployment's webhook. */
+export async function deliverCompleted(
+  test: ReturnType<typeof createTest>,
+  session: Partial<FakeSession> & { id: string },
+  { secret = WEBHOOK_SECRET, tamper = false } = {}
+) {
+  const timestamp = Math.floor(Date.now() / 1000);
+  const payload = JSON.stringify({
+    id: `evt_${crypto.randomUUID()}`,
+    object: 'event',
+    api_version: '2026-04-22.dahlia',
+    type: 'checkout.session.completed',
+    data: { object: session },
+    created: timestamp,
+    livemode: false,
+    pending_webhooks: 1,
+    request: null
+  });
+  const signature = await sign(payload, timestamp, secret);
+  return test.fetch('/stripe/webhook', {
+    method: 'POST',
+    body: tamper ? payload.replace('checkout', 'Checkout') : payload,
+    headers: {
+      'stripe-signature': `t=${timestamp},v1=${signature}`,
+      'content-type': 'application/json'
+    }
+  });
+}
+
+export function paymentRows(test: ReturnType<typeof createTest>, tripId: Id<'trips'>) {
+  return test.run((ctx) =>
+    ctx.db
       .query('tripPayments')
       .withIndex('by_tripId_and_userId', (query) => query.eq('tripId', tripId))
-      .take(101)
-  }));
-}
-
-export function paymentReconciliationState(test: ReturnType<typeof createTest>) {
-  return test.run((ctx) => ctx.db.query('paymentReconciliations').take(101));
-}
-
-/** Explicitly seed invited travelers independently of the current Stripe configuration. */
-export async function inviteFixtureTravelers(
-  owner: Awaited<ReturnType<typeof setupTrip>>['owner'],
-  tripId: Id<'trips'>
-) {
-  await owner.test.run(async (ctx) => {
-    const trip = await ctx.db.get('trips', tripId);
-    if (!trip) throw new Error('Expected a fixture trip');
-    const travelers = await ctx.db
-      .query('tripTravelers')
-      .withIndex('by_tripId', (q) => q.eq('tripId', tripId))
-      .collect();
-    await Promise.all(
-      travelers.map((traveler) =>
-        ctx.db.patch('tripTravelers', traveler._id, {
-          status: traveler.userId === trip.creator.userId ? 'going' : 'invited'
-        })
-      )
-    );
-  });
-}
-
-export async function setupBillableTrip(additionalMemberCount = 3) {
-  const fixture = await setupTrip(additionalMemberCount);
-  await inviteFixtureTravelers(fixture.owner, fixture.tripId);
-  return fixture;
-}
-
-export async function setupBillableWritableTrip(additionalMemberCount = 3) {
-  const fixture = await setupWritableTrip(additionalMemberCount);
-  await inviteFixtureTravelers(fixture.owner, fixture.sharedTripId);
-  return fixture;
-}
-
-/** Confirm seats for a bounded, explicit payment/read-budget fixture. */
-export async function confirmFixtureSeats(
-  owner: Awaited<ReturnType<typeof setupTrip>>['owner'],
-  tripId: Id<'trips'>,
-  userIds: string[]
-) {
-  await owner.test.run(async (ctx) => {
-    await Promise.all(
-      userIds.map((userId) =>
-        ctx.db.insert('tripPayments', {
-          attempt: 'confirmed-budget-fixture',
-          expiresAt: 1,
-          paid: true,
-          payerId: userId,
-          tripId,
-          userId
-        })
-      )
-    );
-  });
-}
-
-/** Copy a real public poll seed into bounded, distinct historical trip/chat scopes. */
-export async function seedPrivateTripPollHistory(
-  owner: Awaited<ReturnType<typeof setupTrip>>['owner'],
-  seedPollId: Id<'polls'>,
-  additionalCount: number,
-  memberCount = 100
-) {
-  const seed = await owner.test.run(async (ctx) => {
-    const poll = await ctx.db.get('polls', seedPollId);
-    if (!poll?.tripId || !poll.discussionId) throw new Error('Expected a private trip poll');
-    const tripId = poll.tripId;
-    const discussionId = poll.discussionId;
-    const trip = await ctx.db.get('trips', poll.tripId);
-    const discussion = await ctx.db.get('discussions', poll.discussionId);
-    const travelers = await ctx.db
-      .query('tripTravelers')
-      .withIndex('by_tripId', (q) => q.eq('tripId', tripId))
-      .take(101);
-    const seats = await ctx.db
-      .query('tripPayments')
-      .withIndex('by_tripId_and_userId', (q) => q.eq('tripId', tripId))
-      .take(100);
-    const memberships = await ctx.db
-      .query('discussionMembers')
-      .withIndex('by_discussionId_and_userId', (q) => q.eq('discussionId', discussionId))
-      .take(26);
-    const votes = await ctx.db
-      .query('pollVotes')
-      .withIndex('by_pollId_and_userId', (q) => q.eq('pollId', seedPollId))
-      .take(2);
-    if (
-      !trip ||
-      discussion?.kind !== 'group' ||
-      travelers.length !== memberCount ||
-      seats.length !== memberCount - 1 ||
-      memberships.length !== Math.min(25, memberCount - 1) ||
-      votes.length !== 1 ||
-      !votes[0]
-    ) {
-      throw new Error(
-        'Expected the complete roster, paid seats, private audience and one real vote'
-      );
-    }
-    return { trip, discussion, poll, travelers, seats, memberships, vote: votes[0] };
-  });
-  const pollIds = [seedPollId];
-  for (let index = 0; index < additionalCount; index += 1) {
-    // oxlint-disable-next-line react-doctor/async-await-in-loop -- Each ordered transaction seeds only one 100-member trip, keeping fixture I/O bounded.
-    const pollId = await owner.test.run(async (ctx) => {
-      const { _id: _tripId, _creationTime: _tripTime, ...trip } = seed.trip;
-      const tripId = await insertWithShortId(ctx, 'trips', trip);
-      const { _id: _chatId, _creationTime: _chatTime, ...discussion } = seed.discussion;
-      const discussionId = await insertWithShortId(ctx, 'discussions', {
-        ...discussion,
-        clientRequestId: crypto.randomUUID(),
-        tripId
-      });
-      const { _id: _pollId, _creationTime: _pollTime, ...poll } = seed.poll;
-      const pollId = await ctx.db.insert('polls', { ...poll, discussionId, tripId });
-      const { _id: _voteId, _creationTime: _voteTime, ...vote } = seed.vote;
-      await Promise.all([
-        ...seed.travelers.map(({ _id, _creationTime, ...row }) =>
-          ctx.db.insert('tripTravelers', { ...row, tripId })
-        ),
-        ...seed.seats.map(({ _id, _creationTime, ...row }) =>
-          ctx.db.insert('tripPayments', { ...row, tripId })
-        ),
-        ...seed.memberships.map(({ _id, _creationTime, ...row }) =>
-          ctx.db.insert('discussionMembers', { ...row, discussionId })
-        ),
-        ctx.db.insert('pollVotes', { ...vote, pollId })
-      ]);
-      return pollId;
-    });
-    pollIds.unshift(pollId);
-  }
-  return pollIds;
+      .take(10)
+  );
 }

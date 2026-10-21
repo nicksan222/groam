@@ -31,10 +31,6 @@ export class TripLocations {
     return key('destination', destinationId);
   }
 
-  static async tripForKey(ctx: QueryCtx, key: string) {
-    return (await index.get(ctx, key))?.filterKeys ?? null;
-  }
-
   static async nearest(
     ctx: QueryCtx,
     {

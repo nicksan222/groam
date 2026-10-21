@@ -29,12 +29,10 @@ export type DashboardPresentation =
   | { kind: 'loading' }
   | { buckets: DashboardBuckets; kind: 'ready' };
 
-export type DashboardPoll = FunctionReturnType<
-  typeof api.routes.polls.list.open.page.run
->['page'][number];
+export type DashboardPoll = FunctionReturnType<typeof api.routes.polls.list.open.run>[number];
 
 export type DashboardResearch = FunctionReturnType<
-  typeof api.routes.discussions.research.workspace.page.run
->['page'][number];
+  typeof api.routes.discussions.research.workspace.run
+>[number];
 
 export type DashboardSeeAllTarget = { label: string; to: '/agents' | '/issues' };

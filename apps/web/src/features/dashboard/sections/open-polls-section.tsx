@@ -1,6 +1,5 @@
 import { agentRunTime } from '@groam/ai/backend/runs/time';
 import { ArrowRight } from '@groam/icons';
-import { Button } from '@groam/ui/components/button';
 import Shell from '@groam/ui/components/shell/client';
 import { useDashboardPolls } from '@/features/dashboard/hooks/use-dashboard-polls';
 import { Link } from '@/features/workspace/navigation/router';
@@ -69,8 +68,8 @@ function PollRow({ poll }: { poll: DashboardPoll }) {
 
 /** Zone A: open polls the viewer has not answered. */
 export function OpenPollsSection() {
-  const { canLoadMore, isLoadingMore, loadMore, isLoading, polls } = useDashboardPolls();
-  if (isLoading || (polls.length === 0 && !canLoadMore && !isLoadingMore)) return null;
+  const { isLoading, polls } = useDashboardPolls();
+  if (isLoading || polls.length === 0) return null;
 
   return (
     <Shell.Section
@@ -83,18 +82,11 @@ export function OpenPollsSection() {
         id="dashboard-open-polls-heading"
         title="Polls to vote on"
       />
-      {polls.length > 0 ? (
-        <div className="overflow-hidden rounded-lg border border-border bg-card">
-          {polls.map((poll) => (
-            <PollRow key={poll.id} poll={poll} />
-          ))}
-        </div>
-      ) : null}
-      {canLoadMore || isLoadingMore ? (
-        <Button disabled={isLoadingMore} onClick={loadMore} size="sm" variant="outline">
-          {isLoadingMore ? 'Loading polls…' : 'Load more polls'}
-        </Button>
-      ) : null}
+      <div className="overflow-hidden rounded-lg border border-border bg-card">
+        {polls.map((poll) => (
+          <PollRow key={poll.id} poll={poll} />
+        ))}
+      </div>
     </Shell.Section>
   );
 }

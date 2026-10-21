@@ -3,7 +3,6 @@ import {
   assistantThreadSummary,
   parseAssistantThreadSummary
 } from '@groam/ai/runtime/thread-summary';
-import { paginationOptsValidator, paginationResultValidator } from 'convex/server';
 import { ConvexError, v } from 'convex/values';
 import { components } from '#convex-generated/api';
 import { AgentRuns } from '#convex/modules/assistant/runs/index';
@@ -112,27 +111,7 @@ export const contextCatalog = internalWorkspaceQuery({
       )
       .order('desc')
       .take(MAX_CATALOG_TRIPS);
-    return await TripTargets.contextCatalog(ctx, trips, ctx.workspace);
-  }
-});
-
-/** Candidate pages retain their cursor even when all trips require payment. */
-export const contextCatalogPage = internalWorkspaceQuery({
-  args: { paginationOpts: paginationOptsValidator },
-  returns: paginationResultValidator(assistantContextCatalogItemValidator),
-  handler: async (ctx, { paginationOpts }) => {
-    const result = await ctx.db
-      .query('trips')
-      .withIndex('by_organizationId_and_updatedAt', (query) =>
-        query.eq('organizationId', ctx.workspace.organizationId)
-      )
-      .order('desc')
-      .paginate({
-        ...paginationOpts,
-        maximumRowsRead: MAX_CATALOG_TRIPS,
-        numItems: Math.min(paginationOpts.numItems, MAX_CATALOG_TRIPS)
-      });
-    return { ...result, page: await TripTargets.contextCatalog(ctx, result.page, ctx.workspace) };
+    return await TripTargets.contextCatalog(ctx, trips);
   }
 });
 
@@ -151,11 +130,15 @@ export const taggedContext = internalWorkspaceQuery({
     }
     return await Promise.all(
       references.map(async (reference) => {
-        const resolved = await TripTargets.resolveContextTag(ctx, workspace, reference);
+        const resolved = await TripTargets.resolveContextTag(
+          ctx,
+          workspace.organizationId,
+          reference
+        );
         const details =
           reference.kind === 'trip'
             ? await AssistantTripContext.load(ctx, reference.id)
-            : await TripTargets.contextDetails(ctx, workspace, reference);
+            : await TripTargets.contextDetails(ctx, workspace.organizationId, reference);
         return { ...resolved, details: JSON.stringify(details) };
       })
     );
@@ -199,7 +182,7 @@ export const setContextTags = internalWorkspaceMutation({
         index
     );
     const resolved = await Promise.all(
-      unique.map((tag) => TripTargets.resolveContextTag(ctx, workspace, tag))
+      unique.map((tag) => TripTargets.resolveContextTag(ctx, workspace.organizationId, tag))
     );
     await updateThreadMetadata(ctx, components.agent, {
       patch: {

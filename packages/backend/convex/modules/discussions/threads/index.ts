@@ -45,11 +45,9 @@ import {
   MAX_TITLE_LENGTH
 } from '#convex/modules/discussions/threads/limits';
 import type { DiscussionMember } from '#convex/modules/discussions/threads/schema';
-import type { MediaOrigins } from '#convex/modules/media/library/validators';
 import { PollCleanup } from '#convex/modules/polls/cleanup';
 import { insertWithShortId } from '#convex/modules/references/index';
 import { loadTripContext } from '#convex/modules/travel/trips/ctx';
-import { findVisibleTrip } from '#convex/modules/travel/trips/visibility';
 
 export type { DiscussionMessageMedia } from '#convex/modules/discussions/media/index';
 export type { DiscussionAccess } from '#convex/modules/discussions/threads/entity';
@@ -181,7 +179,7 @@ export class Discussions {
 
   /** Agent message id → attachments, for the chat UI that lists files beside bubbles. */
   static async listMessageAttachments(ctx: QueryCtx, discussionId: Id<'discussions'>) {
-    const access = await DiscussionAccess.require(ctx, discussionId);
+    const { discussion } = await DiscussionAccess.require(ctx, discussionId);
     const receipts = await ctx.db
       .query('discussionMessages')
       .withIndex('by_discussionId', (query) => query.eq('discussionId', discussionId))
@@ -190,7 +188,11 @@ export class Discussions {
     const loaded = await Promise.all(
       receipts.map(async (receipt) => {
         if (!receipt.agentMessageId) return null;
-        const attachments = await DiscussionMedia.load(ctx, access, receipt);
+        const attachments = await DiscussionMedia.load(
+          ctx,
+          discussion.organizationId,
+          await DiscussionMedia.idsForReceipt(ctx, receipt)
+        );
         if (attachments.length === 0) return null;
         return [receipt.agentMessageId, attachments] as const;
       })
@@ -216,8 +218,7 @@ export class Discussions {
   ) {
     // useUIMessages subscribes to stream deltas with an intentionally empty message page.
     DiscussionAccess.validatePagination(args.paginationOpts, args.streamArgs !== undefined);
-    const access = await DiscussionAccess.require(ctx, args.discussionId);
-    const { discussion, workspace } = access;
+    const { discussion, workspace } = await DiscussionAccess.require(ctx, args.discussionId);
     if (discussion.threadId !== args.threadId) throw new ConvexError('Discussion not found');
     const [messages, streams] = await Promise.all([
       listUIMessages(ctx, components.agent, args),
@@ -236,7 +237,13 @@ export class Discussions {
             .unique()
         : null;
     const attachmentsForReceipt = async (receipt: Awaited<ReturnType<typeof receiptForMessage>>) =>
-      receipt ? await DiscussionMedia.load(ctx, access, receipt) : [];
+      receipt
+        ? await DiscussionMedia.load(
+            ctx,
+            discussion.organizationId,
+            await DiscussionMedia.idsForReceipt(ctx, receipt)
+          )
+        : [];
     const displayTextFor = (
       message: (typeof messages.page)[number],
       receipt: Awaited<ReturnType<typeof receiptForMessage>>,
@@ -402,24 +409,14 @@ export class Discussions {
     if (memberships.length > MAX_MEMBERSHIP_ROWS) {
       throw new ConvexError(`Discussion limit of ${MAX_MEMBERSHIP_ROWS} exceeded`);
     }
-    // Multiple Chats rows may reference one trip; share its entitlement read within this query.
-    const trips = new Map<Id<'trips'>, Promise<Doc<'trips'> | null>>();
-    const visibleTrip = (tripId: Id<'trips'>) => {
-      let trip = trips.get(tripId);
-      if (!trip) {
-        trip = findVisibleTrip(ctx, tripId, workspace);
-        trips.set(tripId, trip);
-      }
-      return trip;
-    };
     const discussions = await Promise.all(
       memberships.map(async (membership) => {
         const discussion = await ctx.db.get('discussions', membership.discussionId);
         if (!discussion || discussion.organizationId !== workspace.organizationId) return null;
         // The literal narrows to the variant that carries members and an optional trip.
         if (discussion.kind !== 'group') return null;
-        const trip = discussion.tripId ? await visibleTrip(discussion.tripId) : null;
-        if (discussion.tripId && !trip) return null;
+        const tripDoc = discussion.tripId ? await ctx.db.get('trips', discussion.tripId) : null;
+        const trip = tripDoc?.organizationId === workspace.organizationId ? tripDoc : null;
         return {
           createdBy: discussion.createdBy,
           id: discussion._id,
@@ -489,15 +486,13 @@ export class Discussions {
       text,
       clientRequestId,
       requestedAssistantAgent,
-      mediaIds = [],
-      mediaOrigins = []
+      mediaIds = []
     }: {
       discussionId: Id<'discussions'>;
       text: string;
       clientRequestId: string;
       requestedAssistantAgent?: ChatAgentId;
       mediaIds?: Id<'media'>[];
-      mediaOrigins?: MediaOrigins;
     }
   ): Promise<DiscussionSendResult> {
     const access = await DiscussionAccess.require(ctx, discussionId);
@@ -509,7 +504,7 @@ export class Discussions {
     const normalizedMediaIds = DiscussionMedia.normalizeIds(mediaIds);
     const media =
       normalizedMediaIds.length > 0
-        ? await DiscussionMedia.require(ctx, workspace, normalizedMediaIds, mediaOrigins)
+        ? await DiscussionMedia.require(ctx, workspace.organizationId, normalizedMediaIds)
         : [];
     const normalizedContent = Messages.normalizeContent(text, 'Message', {
       allowEmpty: media.length > 0

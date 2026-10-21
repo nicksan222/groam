@@ -99,7 +99,6 @@ export class ItineraryActivity {
       maximum: ItineraryActivity.MAX_ATTACHMENTS,
       mediaIds: input.attachmentIds,
       organizationId: trip.workspace.organizationId,
-      workspace: trip.workspace,
       target: { id: activityId, type: 'activity' },
       tripId
     });
@@ -209,7 +208,6 @@ export class ItineraryActivity {
       maximum: ItineraryActivity.MAX_ATTACHMENTS,
       mediaIds: input.attachmentIds,
       organizationId: this.trip.workspace.organizationId,
-      workspace: this.trip.workspace,
       target: { id: this.data._id, type: 'activity' },
       tripId: this.trip.trip._id
     });

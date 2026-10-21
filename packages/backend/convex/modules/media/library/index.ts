@@ -1,4 +1,3 @@
-import type { PaginationOptions, PaginationResult } from 'convex/server';
 import { ConvexError } from 'convex/values';
 import type { Doc, Id } from '#convex-generated/dataModel';
 import type { MutationCtx, QueryCtx } from '#convex-generated/server';
@@ -9,11 +8,8 @@ import {
   type Workspace
 } from '#convex/modules/auth/workspace';
 import { Discussions } from '#convex/modules/discussions/threads/index';
-import { MediaAccess } from '#convex/modules/media/access';
 import { Attachments } from '#convex/modules/media/attachments/index';
 import { Files } from '#convex/modules/media/files/index';
-import { presentMedia } from '#convex/modules/media/library/discovery';
-import type { AccessOrigin } from '#convex/modules/media/library/validators';
 import type {
   GroupLogoResult,
   ListedMedia,
@@ -21,10 +17,8 @@ import type {
 } from '#convex/modules/media/library/validators';
 
 const MAX_NAME_LENGTH = 120;
+const MEDIA_LIST_MIN = 1;
 const MEDIA_LIST_MAX = 50;
-// A file may require 163 indexed reads across its bounded origin windows. Twenty raw
-// candidates leave headroom under 4096 ranges, including workspace and URL resolution.
-const MEDIA_CANDIDATES = 20;
 
 /**
  * Organization file library: upload, list, delete, group logo.
@@ -37,14 +31,10 @@ export class Media {
     private readonly workspace: Workspace
   ) {}
 
-  static async find(ctx: MutationCtx, mediaId: Id<'media'>, origin?: AccessOrigin): Promise<Media> {
+  static async find(ctx: MutationCtx, mediaId: Id<'media'>): Promise<Media> {
     const workspace = await requireWorkspace(ctx);
     const media = await ctx.db.get('media', mediaId);
-    if (
-      !media ||
-      media.organizationId !== workspace.organizationId ||
-      !(await new MediaAccess(ctx, workspace).canRead(mediaId, origin))
-    ) {
+    if (!media || media.organizationId !== workspace.organizationId) {
       throw new ConvexError('Media not found');
     }
     return new Media(ctx, media, workspace);
@@ -65,23 +55,16 @@ export class Media {
       storageId,
       name,
       uploadedContentType,
-      signatureValid,
-      accessOrigin
+      signatureValid
     }: {
       storageId: Id<'_storage'>;
       name: string;
       uploadedContentType: string;
       signatureValid: boolean;
-      accessOrigin?: AccessOrigin;
     }
   ): Promise<SaveMediaResult> {
     const workspace = await requireWorkspace(ctx);
-    const existingResult = await Media.resultForExistingStorage(
-      ctx,
-      workspace,
-      storageId,
-      accessOrigin
-    );
+    const existingResult = await Media.resultForExistingStorage(ctx, workspace, storageId);
     if (existingResult) return existingResult;
 
     const metadata = await ctx.db.system.get('_storage', storageId);
@@ -124,53 +107,32 @@ export class Media {
     return media.length === limit;
   }
 
-  /** Library reader: an empty filtered page still retains its continuation cursor. */
-  static async page(
-    ctx: QueryCtx,
-    paginationOpts: PaginationOptions
-  ): Promise<PaginationResult<ListedMedia>> {
+  static async list(ctx: QueryCtx, limit: number): Promise<ListedMedia[]> {
     const workspace = await requireWorkspace(ctx);
-    if (
-      !Number.isInteger(paginationOpts.numItems) ||
-      paginationOpts.numItems < 1 ||
-      paginationOpts.numItems > MEDIA_LIST_MAX
-    )
+    if (!Number.isInteger(limit) || limit < MEDIA_LIST_MIN || limit > MEDIA_LIST_MAX) {
       throw new ConvexError(
-        `Media page size must be a whole number between 1 and ${MEDIA_LIST_MAX}`
+        `Media list limit must be a whole number between ${MEDIA_LIST_MIN} and ${MEDIA_LIST_MAX}`
       );
-    const result = await ctx.db
+    }
+    const media = await ctx.db
       .query('media')
       .withIndex('by_organizationId', (query) =>
         query.eq('organizationId', workspace.organizationId)
       )
       .order('desc')
-      .paginate({
-        ...paginationOpts,
-        numItems: Math.min(paginationOpts.numItems, MEDIA_CANDIDATES),
-        maximumRowsRead: MEDIA_CANDIDATES
-      });
-    return { ...result, page: await Media.visibleRows(ctx, workspace, result.page) };
-  }
+      .take(limit);
 
-  private static async visibleRows(
-    ctx: QueryCtx,
-    workspace: Workspace,
-    media: Doc<'media'>[]
-  ): Promise<ListedMedia[]> {
-    const access = new MediaAccess(ctx, workspace);
-    const visible: ListedMedia[] = [];
-    for (const item of media) {
-      // oxlint-disable-next-line react-doctor/async-await-in-loop -- Bound nested history work to one file at a time.
-      const result = await access.inspect(item._id);
-      if (result.status === 'unresolved')
-        throw new ConvexError({
-          code: 'MEDIA_ACCESS_UNRESOLVED',
-          message: 'Use media.discover to resolve an access origin'
-        });
-      // oxlint-disable-next-line react-doctor/async-await-in-loop -- Issue URLs only after discovering an actual grant.
-      if (result.status === 'allowed') visible.push(await presentMedia(ctx, item, result.origin));
-    }
-    return visible;
+    return await Promise.all(
+      media.map(async (item) => ({
+        contentType: item.contentType,
+        createdAt: item._creationTime,
+        id: item._id,
+        name: item.name,
+        ...(item.purpose ? { purpose: item.purpose } : {}),
+        size: item.size,
+        url: await ctx.storage.getUrl(item.storageId)
+      }))
+    );
   }
 
   static async clearGroupLogo(ctx: MutationCtx): Promise<null> {
@@ -232,8 +194,7 @@ export class Media {
   private static async resultForExistingStorage(
     ctx: MutationCtx,
     workspace: Workspace,
-    storageId: Id<'_storage'>,
-    accessOrigin?: AccessOrigin
+    storageId: Id<'_storage'>
   ): Promise<SaveMediaResult | null> {
     const [existing, existingCover] = await Promise.all([
       ctx.db
@@ -253,8 +214,7 @@ export class Media {
       }
       const reusable =
         existing.organizationId === workspace.organizationId &&
-        existing.createdBy === workspace.tokenIdentifier &&
-        (await new MediaAccess(ctx, workspace).canRead(existing._id, accessOrigin));
+        existing.createdBy === workspace.tokenIdentifier;
       return reusable
         ? { mediaId: existing._id, ok: true }
         : { error: 'The uploaded file is not available', ok: false };

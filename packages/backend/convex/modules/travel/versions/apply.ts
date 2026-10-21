@@ -16,13 +16,12 @@ import {
 
 const MAX_TARGET_ATTACHMENTS = 10;
 type Target = Exclude<Doc<'attachmentReferences'>['target'], { type: 'comment' }>;
-type ApplyOptions = { retainSourceKeys?: boolean; attachmentSourceTripId?: Id<'trips'> };
-type ApplyingTrip = MutableTripCtx & { attachmentSourceTripId?: Id<'trips'> };
+type ApplyOptions = { retainSourceKeys?: boolean };
 type ReconcileOptions = {
   ctx: MutationCtx;
   retainSourceKeys?: boolean;
   snapshot: ParsedVersionSnapshot;
-  source: ApplyingTrip;
+  source: MutableTripCtx;
   sourceContent: Awaited<ReturnType<typeof VersionContent.load>>;
 };
 
@@ -63,34 +62,15 @@ async function removeTarget(ctx: MutationCtx, tripId: Id<'trips'>, target: Targe
 
 async function setAttachments(
   ctx: MutationCtx,
-  source: ApplyingTrip,
+  source: MutableTripCtx,
   target: Target,
   mediaIds: Id<'media'>[]
 ): Promise<boolean> {
-  if (mediaIds.length > MAX_TARGET_ATTACHMENTS)
-    throw new ConvexError('Version attachment limit exceeded');
-  const originTripId = source.attachmentSourceTripId;
-  const pins = originTripId
-    ? await Promise.all(
-        mediaIds.map((mediaId) =>
-          ctx.db
-            .query('attachments')
-            .withIndex('by_tripId_and_mediaId', (q) =>
-              q.eq('tripId', originTripId).eq('mediaId', mediaId)
-            )
-            .unique()
-        )
-      )
-    : [];
   return await Attachments.setTarget(ctx, {
     label: 'Version items',
     maximum: MAX_TARGET_ATTACHMENTS,
     mediaIds,
-    mediaOrigins: pins.flatMap((pin) =>
-      pin ? [{ mediaId: pin.mediaId, origin: { kind: 'attachment' as const, id: pin._id } }] : []
-    ),
     organizationId: source.workspace.organizationId,
-    workspace: source.workspace,
     target,
     tripId: source.trip._id
   });
@@ -427,15 +407,11 @@ async function applyVersionSnapshot(
     { bringers: sourceContent.packingBringers, items: sourceContent.packingItems },
     options?.retainSourceKeys
   );
-  const applyingSource: ApplyingTrip = {
-    ...source,
-    attachmentSourceTripId: options?.attachmentSourceTripId
-  };
   const reconcileOptions: ReconcileOptions = {
     ctx,
     retainSourceKeys: options?.retainSourceKeys,
     snapshot,
-    source: applyingSource,
+    source,
     sourceContent
   };
   const destinations = await reconcileDestinations(reconcileOptions);
@@ -488,7 +464,7 @@ async function applyVersionSnapshot(
 
   const { attachments, budget, cover, dateNotes, duration, startDate, ...tripDetails } =
     snapshot.trip;
-  await setAttachments(ctx, applyingSource, { id: source.trip._id, type: 'trip' }, attachments);
+  await setAttachments(ctx, source, { id: source.trip._id, type: 'trip' }, attachments);
   await patchTrip(source, {
     ...tripDetails,
     budget: budget ?? undefined,

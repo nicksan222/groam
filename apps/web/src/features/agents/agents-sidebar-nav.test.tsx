@@ -6,7 +6,7 @@ import { page } from 'vite-plus/test/browser';
 import { AgentsSidebarNav } from './agents-sidebar-nav';
 
 const state = vi.hoisted(() => ({
-  agents: [] as Array<{ activeRunCount: number | null }>,
+  agents: [] as Array<{ activeRunCount: number }>,
   pathname: '/agents'
 }));
 
@@ -52,12 +52,4 @@ test('shows an active-run count when workers are busy', async () => {
   state.agents = [{ activeRunCount: 2 }, { activeRunCount: 1 }];
   await renderNav();
   await expect.element(page.getByText('3')).toBeInTheDocument();
-});
-
-test('shows an unknown count instead of zero when a roster window is incomplete', async () => {
-  state.agents = [{ activeRunCount: null }];
-  await renderNav();
-  await expect
-    .element(page.getByLabelText('Active run count unavailable; open agent runs'))
-    .toHaveTextContent('?');
 });

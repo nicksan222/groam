@@ -35,9 +35,7 @@ test('an owner can reference Convex media as the group logo', async () => {
   const secondResult = await owner.client.mutation(api.routes.media.logo.set.run, {
     mediaId: second.mediaId
   });
-  const media = await owner.client
-    .query(api.routes.media.page.run, { paginationOpts: { cursor: null, numItems: 10 } })
-    .then((result) => result.page);
+  const media = await owner.client.query(api.routes.media.list.run, { limit: 10 });
   expect(media.find((item) => item.id === first.mediaId)?.purpose).toBeUndefined();
   expect(media.find((item) => item.id === second.mediaId)?.purpose).toBe('groupLogo');
 

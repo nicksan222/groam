@@ -82,7 +82,6 @@ export class DiscussionAccess {
     if ('deletingAt' in discussion && discussion.deletingAt !== undefined) {
       throw new ConvexError('Discussion not found');
     }
-    const linkedTrip = await visibleLinkedTrip(ctx, discussion, workspace);
     const { audience } = kindPolicy(discussion.kind);
     if (audience === 'owner') {
       if (discussion.createdBy.userId !== workspace.userId) {
@@ -91,8 +90,10 @@ export class DiscussionAccess {
       return new DiscussionAccess(discussion, workspace);
     }
     if (audience === 'trip') {
-      if (!linkedTrip) throw new ConvexError('Discussion not found');
-      return new DiscussionAccess(discussion, workspace, linkedTrip);
+      const tripId = 'tripId' in discussion ? discussion.tripId : undefined;
+      const trip = tripId ? await findVisibleTrip(ctx, tripId, workspace) : null;
+      if (!trip) throw new ConvexError('Discussion not found');
+      return new DiscussionAccess(discussion, workspace, trip);
     }
     const membership = await ctx.db
       .query('discussionMembers')
@@ -171,16 +172,4 @@ export class DiscussionAccess {
     }
     return access;
   }
-}
-
-async function visibleLinkedTrip(
-  ctx: DiscussionCtx,
-  discussion: Doc<'discussions'>,
-  workspace: Workspace
-) {
-  const tripId = 'tripId' in discussion ? discussion.tripId : undefined;
-  if (!tripId) return null;
-  const trip = await findVisibleTrip(ctx, tripId, workspace);
-  if (!trip) throw new ConvexError('Discussion not found');
-  return trip;
 }

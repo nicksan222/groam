@@ -1,27 +1,17 @@
 import { api } from '@groam/backend/api';
-import { usePaginatedQuery } from 'convex/react';
-import { useCallback, useMemo } from 'react';
+import { useQuery } from 'convex/react';
+import { useMemo } from 'react';
 
-const PAGE_SIZE = 4;
+const POLL_LIMIT = 4;
 
-/** Keep candidate-page continuation even when every current result is hidden. */
+/** Open polls the viewer has not voted in yet: a to-do for "Needs you". */
 export function useDashboardPolls() {
-  const page = usePaginatedQuery(
-    api.routes.polls.list.open.page.run,
-    {},
-    { initialNumItems: PAGE_SIZE }
-  );
-  const loadMore = useCallback(() => {
-    if (page.status === 'CanLoadMore') page.loadMore(PAGE_SIZE);
-  }, [page]);
+  const open = useQuery(api.routes.polls.list.open.run, {});
   return useMemo(
     () => ({
-      canLoadMore: page.status === 'CanLoadMore',
-      isLoadingMore: page.status === 'LoadingMore',
-      isLoading: page.status === 'LoadingFirstPage',
-      loadMore,
-      polls: page.results.filter((poll) => !poll.viewerHasVoted)
+      isLoading: open === undefined,
+      polls: (open ?? []).filter((poll) => !poll.viewerHasVoted).slice(0, POLL_LIMIT)
     }),
-    [loadMore, page.results, page.status]
+    [open]
   );
 }

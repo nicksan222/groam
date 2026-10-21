@@ -22,7 +22,7 @@ test('skips the query and checkout when the trip is unavailable', async () => {
   const { result } = await renderHook(() => useTripPayments(undefined));
   expect(backend.query).toHaveBeenCalledWith(expect.anything(), 'skip');
   await act(async () => {
-    expect(await result.current.checkout('alex')).toEqual({ skipped: true, url: null });
+    expect(await result.current.checkout('alex')).toEqual({ url: null });
   });
   expect(backend.checkout).not.toHaveBeenCalled();
   expect(result.current.enabled).toBe(false);
@@ -34,10 +34,7 @@ test('uses server payment status and forwards the selected traveler to checkout'
     enabled: true,
     travelers: [{ free: false, paid: true, userId: 'alex' }]
   });
-  backend.checkout.mockResolvedValue({
-    skipped: false,
-    url: 'https://checkout.stripe.com/example'
-  });
+  backend.checkout.mockResolvedValue({ url: 'https://checkout.stripe.com/example' });
   const { result } = await renderHook(() => useTripPayments('trip-1' as Id<'trips'>));
   expect(result.current.travelers[0]?.paid).toBe(true);
   expect(result.current.enabled).toBe(true);
@@ -45,7 +42,6 @@ test('uses server payment status and forwards the selected traveler to checkout'
   expect(result.current.isLoading).toBe(false);
   await act(async () => {
     expect(await result.current.checkout('alex')).toEqual({
-      skipped: false,
       url: 'https://checkout.stripe.com/example'
     });
   });

@@ -26,7 +26,6 @@ import {
   viewerOf
 } from '#convex/modules/travel/issues/guard';
 import { loadTripContext } from '#convex/modules/travel/trips/ctx';
-import { findVisibleTrip } from '#convex/modules/travel/trips/visibility';
 
 async function linkedProposal(ctx: QueryCtx, issueId: Id<'tripIssues'>) {
   const proposal = await ctx.db
@@ -126,20 +125,9 @@ export async function listWorkspace(ctx: QueryCtx, paginationOpts: PaginationOpt
     )
     .order('desc')
     .paginate(paginationOpts);
-  // Filter inaccessible trips before reading their conditions or projecting protected facts.
-  // Keep the underlying cursor so an all-hidden page can still advance to visible issues.
-  const tripIds = [...new Set(result.page.map((issue) => issue.tripId))];
-  const visibleTripIds = new Set(
-    await Promise.all(
-      tripIds.map(async (tripId) =>
-        (await findVisibleTrip(ctx, tripId, workspace)) ? tripId : null
-      )
-    )
-  );
-  const visibleIssues = result.page.filter((issue) => visibleTripIds.has(issue.tripId));
   // One condition read per issue: at most 25 a page, so this stays cheap. A larger page would
   // want the by-trip batch (`tripConditions`) instead.
-  const issues = await Promise.all(visibleIssues.map((issue) => withCondition(ctx, issue)));
+  const issues = await Promise.all(result.page.map((issue) => withCondition(ctx, issue)));
 
   const views = new Map<Id<'trips'>, ReturnType<typeof loadTripView>>();
   const tripViewOf = (tripId: Id<'trips'>) => {

@@ -72,7 +72,6 @@ export class TripStay {
       maximum: TripStay.MAX_ATTACHMENTS,
       mediaIds: input.attachmentIds,
       organizationId: trip.workspace.organizationId,
-      workspace: trip.workspace,
       target: { id: stayId, type: 'stay' },
       tripId
     });
@@ -112,7 +111,6 @@ export class TripStay {
       maximum: TripStay.MAX_ATTACHMENTS,
       mediaIds: input.attachmentIds,
       organizationId: this.trip.workspace.organizationId,
-      workspace: this.trip.workspace,
       target: { id: this.data._id, type: 'stay' },
       tripId: this.trip.trip._id
     });

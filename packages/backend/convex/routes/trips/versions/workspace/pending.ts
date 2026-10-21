@@ -1,4 +1,3 @@
-import { paginationOptsValidator, paginationResultValidator } from 'convex/server';
 import { v } from 'convex/values';
 import { workspaceQuery } from '#convex/modules/auth/workspace';
 import { TripVersions } from '#convex/modules/travel/versions/index';
@@ -18,7 +17,7 @@ const proposalListItem = v.object({
 });
 
 export const run = workspaceQuery({
-  args: { paginationOpts: paginationOptsValidator },
-  returns: paginationResultValidator(proposalListItem),
-  handler: (ctx, { paginationOpts }) => TripVersions.listViewerOpenPage(ctx, paginationOpts)
+  args: {},
+  returns: v.array(proposalListItem),
+  handler: (ctx) => TripVersions.listViewerOpen(ctx)
 });

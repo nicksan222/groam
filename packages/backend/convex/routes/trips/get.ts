@@ -56,6 +56,8 @@ export const tripDetailValidator = v.object({
   ),
   archivedAt: nullableNumber,
   arrivalTransfer: boundaryTransfer,
+  /** False for an unpaid member, who sees only a redacted preview and the paywall. */
+  canParticipate: v.boolean(),
   coverAttribution: v.union(
     v.object({
       creator: v.union(v.string(), v.null()),

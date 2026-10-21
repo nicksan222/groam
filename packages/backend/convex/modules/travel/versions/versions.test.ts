@@ -339,11 +339,7 @@ test(
       })
     ]);
     await expect(
-      author.client
-        .query(api.routes.trips.versions.workspace.pending.page.run, {
-          paginationOpts: { cursor: null, numItems: 50 }
-        })
-        .then((result) => result.page)
+      author.client.query(api.routes.trips.versions.workspace.pending.run, {})
     ).resolves.toEqual([
       expect.objectContaining({
         id: version.proposalId,
@@ -354,11 +350,7 @@ test(
       })
     ]);
     await expect(
-      owner.client
-        .query(api.routes.trips.versions.workspace.pending.page.run, {
-          paginationOpts: { cursor: null, numItems: 50 }
-        })
-        .then((result) => result.page)
+      owner.client.query(api.routes.trips.versions.workspace.pending.run, {})
     ).resolves.toEqual([]);
   }
 );

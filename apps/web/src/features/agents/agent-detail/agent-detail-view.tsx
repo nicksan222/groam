@@ -29,8 +29,6 @@ export function AgentDetailView({ agentId }: { agentId: string }) {
             activeGroup: activeOrganization.name,
             agentId: agent.id,
             status: agent.status,
-            runWindowIncomplete: agent.runWindowIncomplete ?? false,
-            issueWindowIncomplete: agent.issueWindowIncomplete ?? false,
             surface: agent.surface
           },
           description: 'Browse this agent’s runs and open one for its log and assigned issue.',

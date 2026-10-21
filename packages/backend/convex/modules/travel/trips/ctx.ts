@@ -17,6 +17,7 @@ import {
   runActorArgs,
   type Workspace
 } from '#convex/modules/auth/workspace';
+import { canParticipateInTrip } from '#convex/modules/payments/index';
 import { affectsConditions, syncTripConditions } from '#convex/modules/travel/issues/sync';
 import {
   assertMutable,
@@ -83,8 +84,13 @@ export async function loadTripContext<Ctx extends AuthContext & TripReadCtx>(
   options: { allowUnpaid?: boolean } = {}
 ): Promise<TripCtx<Ctx>> {
   const resolvedWorkspace = workspace ?? (await requireWorkspace(ctx));
-  const data = await findVisibleTrip(ctx, tripId, resolvedWorkspace, options);
-  if (!data) throw new ConvexError('Trip not found');
+  const data = await findVisibleTrip(ctx, tripId, resolvedWorkspace);
+  // Trip pages require a seat; preview builders opt out to show joining and checkout.
+  if (
+    !data ||
+    (!options.allowUnpaid && !(await canParticipateInTrip(ctx, data, resolvedWorkspace.userId)))
+  )
+    throw new ConvexError('Trip not found');
   const role = roleFor(data, resolvedWorkspace.userId, resolvedWorkspace.organizationRole);
   return attachTrip(ctx, data, resolvedWorkspace, role);
 }
@@ -367,12 +373,22 @@ export const internalDestinationMutation = customMutation(internalMutation, {
     await destinationArgsInput(ctx, tripId, destinationId, await requireActor(ctx, asRun))
 });
 
-/** Preview access is restricted to joining, billing, and the public trip shell. */
+/** Unpaid members may preview a trip only to see who is going, RSVP for themselves, and pay. */
+const preview = { allowUnpaid: true };
+
+export const previewTripQuery = customQuery(query, {
+  args: tripIdArgs,
+  input: async (ctx, { tripId }) => ({
+    args: {},
+    ctx: boundTrip(await loadTripContext(ctx, tripId, undefined, preview))
+  })
+});
+
 export const previewSharedTripQuery = customQuery(query, {
   args: tripIdArgs,
   input: async (ctx, { tripId }) => ({
     args: {},
-    ctx: boundTrip(await loadSharedTripContext(ctx, tripId, undefined, { allowUnpaid: true }))
+    ctx: boundTrip(await loadSharedTripContext(ctx, tripId, undefined, preview))
   })
 });
 
@@ -380,14 +396,6 @@ export const previewSharedTripMutation = customMutation(mutation, {
   args: tripIdArgs,
   input: async (ctx, { tripId }) => ({
     args: {},
-    ctx: boundTrip(await loadSharedTripContext(ctx, tripId, undefined, { allowUnpaid: true }))
-  })
-});
-
-export const previewTripQuery = customQuery(query, {
-  args: tripIdArgs,
-  input: async (ctx, { tripId }) => ({
-    args: {},
-    ctx: boundTrip(await loadTripContext(ctx, tripId, undefined, { allowUnpaid: true }))
+    ctx: boundTrip(await loadSharedTripContext(ctx, tripId, undefined, preview))
   })
 });

@@ -203,7 +203,10 @@ export const startStandalone = internalMutation({
   returns: v.null(),
   handler: async (ctx, { runId }) => {
     const workspace = await requireWorkspace(ctx);
-    const stored = await AgentRuns.requireVisible(ctx, runId, workspace);
+    const stored = await ctx.db.get('agentRuns', runId);
+    if (!stored || stored.organizationId !== workspace.organizationId) {
+      throw new ConvexError('Agent run not found');
+    }
     if (stored.surface !== 'standalone') {
       throw new ConvexError('Only standalone runs start from the agent monitor');
     }

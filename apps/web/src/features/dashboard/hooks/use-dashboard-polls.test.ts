@@ -3,66 +3,28 @@ import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { dashboardPoll } from '@/features/dashboard/testing/dashboard-activity-fixtures';
 import { useDashboardPolls } from './use-dashboard-polls';
 
-const convex = vi.hoisted(() => ({ usePaginatedQuery: vi.fn(), loadMore: vi.fn() }));
-vi.mock('convex/react', async (original) => ({
-  ...(await original<typeof import('convex/react')>()),
-  usePaginatedQuery: convex.usePaginatedQuery
+const convex = vi.hoisted(() => ({ useQuery: vi.fn() }));
+vi.mock('convex/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('convex/react')>()),
+  ...convex
 }));
+
 beforeEach(() => {
-  convex.loadMore.mockClear();
-  convex.usePaginatedQuery.mockReturnValue({
-    results: [],
-    status: 'Exhausted',
-    loadMore: convex.loadMore
-  });
+  convex.useQuery.mockReturnValue([]);
 });
 
-test('first-page loading remains explicit', async () => {
-  convex.usePaginatedQuery.mockReturnValue({
-    results: [],
-    status: 'LoadingFirstPage',
-    loadMore: convex.loadMore
-  });
+test('is loading until the query resolves', async () => {
+  convex.useQuery.mockReturnValue(undefined);
   const { result } = await renderHook(() => useDashboardPolls());
-  expect(result.current.isLoading).toBe(true);
-  expect(result.current.polls).toEqual([]);
+  expect(result.current).toEqual({ isLoading: true, polls: [] });
 });
 
-test('an empty filtered page can explicitly continue without an automatic crawl', async () => {
-  convex.usePaginatedQuery.mockReturnValue({
-    results: [],
-    status: 'CanLoadMore',
-    loadMore: convex.loadMore
-  });
+test('keeps only unvoted polls, capped at 4', async () => {
+  convex.useQuery.mockReturnValue([
+    dashboardPoll({ id: 'voted' as never, viewerHasVoted: true }),
+    ...Array.from({ length: 6 }, (_, index) => dashboardPoll({ id: `p${index}` as never }))
+  ]);
   const { result } = await renderHook(() => useDashboardPolls());
-  expect(result.current.canLoadMore).toBe(true);
-  expect(convex.loadMore).not.toHaveBeenCalled();
-  result.current.loadMore();
-  expect(convex.loadMore).toHaveBeenCalledExactlyOnceWith(4);
-});
-
-test('all accumulated accessible results remain reachable', async () => {
-  const items = Array.from({ length: 6 }, (_, index) =>
-    dashboardPoll({ id: `item${index}` as never })
-  );
-  convex.usePaginatedQuery.mockReturnValue({
-    results: items,
-    status: 'LoadingMore',
-    loadMore: convex.loadMore
-  });
-  const { result } = await renderHook(() => useDashboardPolls());
-  expect(result.current.polls).toHaveLength(6);
-  expect(result.current.isLoadingMore).toBe(true);
-  result.current.loadMore();
-  expect(convex.loadMore).not.toHaveBeenCalled();
-});
-
-test('voted polls are omitted without dropping other accessible polls', async () => {
-  convex.usePaginatedQuery.mockReturnValue({
-    results: [dashboardPoll({ viewerHasVoted: true }), dashboardPoll({ id: 'unvoted' as never })],
-    status: 'Exhausted',
-    loadMore: convex.loadMore
-  });
-  const { result } = await renderHook(() => useDashboardPolls());
-  expect(result.current.polls.map((poll) => poll.id)).toEqual(['unvoted']);
+  expect(result.current.isLoading).toBe(false);
+  expect(result.current.polls.map((poll) => poll.id)).toEqual(['p0', 'p1', 'p2', 'p3']);
 });
