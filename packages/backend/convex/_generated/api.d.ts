@@ -94,6 +94,7 @@ import type * as modules_media_access from "../modules/media/access.js";
 import type * as modules_media_attachments_index from "../modules/media/attachments/index.js";
 import type * as modules_media_files_index from "../modules/media/files/index.js";
 import type * as modules_media_library_commit from "../modules/media/library/commit.js";
+import type * as modules_media_library_discovery from "../modules/media/library/discovery.js";
 import type * as modules_media_library_index from "../modules/media/library/index.js";
 import type * as modules_media_library_validators from "../modules/media/library/validators.js";
 import type * as modules_notifications_index from "../modules/notifications/index.js";
@@ -286,6 +287,7 @@ import type * as routes_discussions_research_update from "../routes/discussions/
 import type * as routes_discussions_research_workspace from "../routes/discussions/research/workspace.js";
 import type * as routes_discussions_research_workspace_page from "../routes/discussions/research/workspace/page.js";
 import type * as routes_discussions_roster from "../routes/discussions/roster.js";
+import type * as routes_media_discover from "../routes/media/discover.js";
 import type * as routes_media_list from "../routes/media/list.js";
 import type * as routes_media_logo_clear from "../routes/media/logo/clear.js";
 import type * as routes_media_logo_set from "../routes/media/logo/set.js";
@@ -494,6 +496,7 @@ declare const fullApi: ApiFromModules<{
   "modules/media/attachments/index": typeof modules_media_attachments_index;
   "modules/media/files/index": typeof modules_media_files_index;
   "modules/media/library/commit": typeof modules_media_library_commit;
+  "modules/media/library/discovery": typeof modules_media_library_discovery;
   "modules/media/library/index": typeof modules_media_library_index;
   "modules/media/library/validators": typeof modules_media_library_validators;
   "modules/notifications/index": typeof modules_notifications_index;
@@ -686,6 +689,7 @@ declare const fullApi: ApiFromModules<{
   "routes/discussions/research/workspace": typeof routes_discussions_research_workspace;
   "routes/discussions/research/workspace/page": typeof routes_discussions_research_workspace_page;
   "routes/discussions/roster": typeof routes_discussions_roster;
+  "routes/media/discover": typeof routes_media_discover;
   "routes/media/list": typeof routes_media_list;
   "routes/media/logo/clear": typeof routes_media_logo_clear;
   "routes/media/logo/set": typeof routes_media_logo_set;

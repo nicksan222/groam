@@ -12,6 +12,8 @@ import { Discussions } from '#convex/modules/discussions/threads/index';
 import { MediaAccess } from '#convex/modules/media/access';
 import { Attachments } from '#convex/modules/media/attachments/index';
 import { Files } from '#convex/modules/media/files/index';
+import { presentMedia } from '#convex/modules/media/library/discovery';
+import type { AccessOrigin } from '#convex/modules/media/library/validators';
 import type {
   GroupLogoResult,
   ListedMedia,
@@ -36,13 +38,13 @@ export class Media {
     private readonly workspace: Workspace
   ) {}
 
-  static async find(ctx: MutationCtx, mediaId: Id<'media'>): Promise<Media> {
+  static async find(ctx: MutationCtx, mediaId: Id<'media'>, origin?: AccessOrigin): Promise<Media> {
     const workspace = await requireWorkspace(ctx);
     const media = await ctx.db.get('media', mediaId);
     if (
       !media ||
       media.organizationId !== workspace.organizationId ||
-      !(await new MediaAccess(ctx, workspace).canRead(mediaId))
+      !(await new MediaAccess(ctx, workspace).canRead(mediaId, origin))
     ) {
       throw new ConvexError('Media not found');
     }
@@ -64,16 +66,23 @@ export class Media {
       storageId,
       name,
       uploadedContentType,
-      signatureValid
+      signatureValid,
+      accessOrigin
     }: {
       storageId: Id<'_storage'>;
       name: string;
       uploadedContentType: string;
       signatureValid: boolean;
+      accessOrigin?: AccessOrigin;
     }
   ): Promise<SaveMediaResult> {
     const workspace = await requireWorkspace(ctx);
-    const existingResult = await Media.resultForExistingStorage(ctx, workspace, storageId);
+    const existingResult = await Media.resultForExistingStorage(
+      ctx,
+      workspace,
+      storageId,
+      accessOrigin
+    );
     if (existingResult) return existingResult;
 
     const metadata = await ctx.db.system.get('_storage', storageId);
@@ -169,24 +178,19 @@ export class Media {
     media: Doc<'media'>[]
   ): Promise<ListedMedia[]> {
     const access = new MediaAccess(ctx, workspace);
-    const visible: Doc<'media'>[] = [];
-    // One file at a time bounds concurrent origin I/O to forty trip checks or twenty
-    // message chains, instead of multiplying either fanout by the entire page.
+    const visible: ListedMedia[] = [];
     for (const item of media) {
-      // oxlint-disable-next-line react-doctor/async-await-in-loop -- Sequential file checks bound nested origin I/O.
-      if (await access.canRead(item._id)) visible.push(item);
+      // oxlint-disable-next-line react-doctor/async-await-in-loop -- Bound nested history work to one file at a time.
+      const result = await access.inspect(item._id);
+      if (result.status === 'unresolved')
+        throw new ConvexError({
+          code: 'MEDIA_ACCESS_UNRESOLVED',
+          message: 'Use media.discover to resolve an access origin'
+        });
+      // oxlint-disable-next-line react-doctor/async-await-in-loop -- Issue URLs only after discovering an actual grant.
+      if (result.status === 'allowed') visible.push(await presentMedia(ctx, item, result.origin));
     }
-    return await Promise.all(
-      visible.map(async (item) => ({
-        contentType: item.contentType,
-        createdAt: item._creationTime,
-        id: item._id,
-        name: item.name,
-        ...(item.purpose ? { purpose: item.purpose } : {}),
-        size: item.size,
-        url: await ctx.storage.getUrl(item.storageId)
-      }))
-    );
+    return visible;
   }
 
   static async clearGroupLogo(ctx: MutationCtx): Promise<null> {
@@ -248,7 +252,8 @@ export class Media {
   private static async resultForExistingStorage(
     ctx: MutationCtx,
     workspace: Workspace,
-    storageId: Id<'_storage'>
+    storageId: Id<'_storage'>,
+    accessOrigin?: AccessOrigin
   ): Promise<SaveMediaResult | null> {
     const [existing, existingCover] = await Promise.all([
       ctx.db
@@ -269,7 +274,7 @@ export class Media {
       const reusable =
         existing.organizationId === workspace.organizationId &&
         existing.createdBy === workspace.tokenIdentifier &&
-        (await new MediaAccess(ctx, workspace).canRead(existing._id));
+        (await new MediaAccess(ctx, workspace).canRead(existing._id, accessOrigin));
       return reusable
         ? { mediaId: existing._id, ok: true }
         : { error: 'The uploaded file is not available', ok: false };
