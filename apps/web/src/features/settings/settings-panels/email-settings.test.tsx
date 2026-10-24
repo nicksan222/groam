@@ -18,6 +18,11 @@ vi.mock('@/features/settings/hooks/use-email-settings', () => ({
   })
 }));
 
+const emailDelivery = vi.hoisted(() => ({ value: true as boolean | undefined }));
+vi.mock('@/features/auth/hooks/use-email-delivery', () => ({
+  useEmailDelivery: () => emailDelivery.value
+}));
+
 test('shows the current address and offers verified replacement without changing the displayed account', async () => {
   await render(<EmailSettings email="current@example.com" />);
   await expect.element(page.getByText('Current address: current@example.com')).toBeVisible();
@@ -30,4 +35,12 @@ test('shows the current address and offers verified replacement without changing
 test('does not show a placeholder address as the current email', async () => {
   await render(<EmailSettings email="legacy@users.invalid" />);
   await expect.element(page.getByText('No email on file')).toBeVisible();
+});
+
+test('explains that email change is unavailable when the deployment cannot send email', async () => {
+  emailDelivery.value = false;
+  await render(<EmailSettings email="current@example.com" />);
+  await expect.element(page.getByText(/cannot send email/u)).toBeVisible();
+  await expect.element(page.getByLabelText(/^New email address/u)).not.toBeInTheDocument();
+  emailDelivery.value = true;
 });

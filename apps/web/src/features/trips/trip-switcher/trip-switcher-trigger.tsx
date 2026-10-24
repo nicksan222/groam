@@ -7,6 +7,7 @@ import { dayCountLabel } from '@/features/trips/trip-duration';
 import { windowValue } from '@/features/trips/trip-overview/trip-window-value';
 import { testIds } from '@/lib/test-ids';
 import type { CurrentTrip } from '@/types/trips';
+import { roleLabel } from './role-label';
 import { TripThumbnail } from './trip-thumbnail';
 
 /** When the trip is: its dates, else its date notes, else its length. The place is Plan's to say. */
@@ -15,11 +16,6 @@ function tripDetail(trip: NonNullable<CurrentTrip>) {
     windowValue(trip) ??
     (trip.totalDurationDays === null ? null : dayCountLabel(trip.totalDurationDays))
   );
-}
-
-/** "Owner", "Admin", "Member": the role as the menu writes it. */
-export function roleLabel(role: string) {
-  return role.charAt(0).toUpperCase() + role.slice(1);
 }
 
 /**

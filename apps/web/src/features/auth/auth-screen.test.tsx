@@ -18,6 +18,11 @@ vi.mock('@groam/auth/client', async () => {
   return authClientMock(doubles);
 });
 
+const emailDelivery = vi.hoisted(() => ({ value: true as boolean | undefined }));
+vi.mock('@/features/auth/hooks/use-email-delivery', () => ({
+  useEmailDelivery: () => emailDelivery.value
+}));
+
 beforeEach(() => {
   vi.clearAllMocks();
   resolveAuthDoubles(doubles);

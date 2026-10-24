@@ -86,7 +86,7 @@ declares its variables with `defineApp({ env })` and reads them from the
 generated `env`, whose names come from `@groam/env/deployment` (the definition of every
 hosted variable and secret, and the only `@groam/env` import allowed in the backend).
 `BETTER_AUTH_SECRET` and `SITE_URL` are set by `just configure-local-auth`
-locally; without `RESEND_API_KEY`, auth mail is logged by Convex. Hosted
+locally; without `RESEND_API_KEY`, auth mail is logged by Convex and hosted sign-up skips email verification. Hosted
 releases set `SITE_URL`, `AUTH_EMAIL_FROM`, and `BETTER_AUTH_SECRET`; the owner sets the rest, and the release
 preflight checks they are present.
 

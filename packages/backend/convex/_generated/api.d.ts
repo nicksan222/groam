@@ -267,6 +267,7 @@ import type * as routes_assistant_open from "../routes/assistant/open.js";
 import type * as routes_assistant_resend from "../routes/assistant/resend.js";
 import type * as routes_assistant_send from "../routes/assistant/send.js";
 import type * as routes_assistant_stop from "../routes/assistant/stop.js";
+import type * as routes_auth_email from "../routes/auth/email.js";
 import type * as routes_dev_reset from "../routes/dev/reset.js";
 import type * as routes_discussions_create from "../routes/discussions/create.js";
 import type * as routes_discussions_list from "../routes/discussions/list.js";
@@ -663,6 +664,7 @@ declare const fullApi: ApiFromModules<{
   "routes/assistant/resend": typeof routes_assistant_resend;
   "routes/assistant/send": typeof routes_assistant_send;
   "routes/assistant/stop": typeof routes_assistant_stop;
+  "routes/auth/email": typeof routes_auth_email;
   "routes/dev/reset": typeof routes_dev_reset;
   "routes/discussions/create": typeof routes_discussions_create;
   "routes/discussions/list": typeof routes_discussions_list;

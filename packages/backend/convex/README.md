@@ -2,7 +2,7 @@
 
 - `convex.config.ts` mounts Better Auth, Agent, Workflow, Rate Limiter, Resend and the geospatial index. Resend
   (`@convex-dev/resend`) sends authentication email when `RESEND_API_KEY` is set; otherwise
-  `modules/auth/email.ts` logs the message on local sites only. The default sender
+  `modules/auth/email.ts` logs the message on local sites only. Without a key hosted sign-up needs no email verification, and password reset and email change are refused (`routes/auth/email.ts` tells the web app). The default sender
   `onboarding@resend.dev` only delivers to the Resend account owner, so set `AUTH_EMAIL_FROM` on a
   verified domain (the release sets it from `emailFrom` in `environments.json`).
 - `components/better-auth/` owns Better Auth's isolated local component.

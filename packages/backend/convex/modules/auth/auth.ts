@@ -19,7 +19,6 @@ import { emailVerificationPolicy, isPlaceholderEmail, requiresVerifiedEmail } fr
 const authBaseUrl = resolveAuthBaseUrl();
 export const authSiteUrl = resolveAuthSiteUrl();
 export const authTrustedOrigins = resolveAuthTrustedOrigins(authSiteUrl, authBaseUrl);
-const verifiesEmail = requiresVerifiedEmail(authSiteUrl);
 const passkeyRpId = new URL(authSiteUrl).hostname;
 // A passkey belongs to one relying party: accept every trusted origin on its host (locally the
 // app on 5173 and the browser journeys on 5174).
@@ -76,8 +75,10 @@ export const authComponent = createClient<DataModel, typeof authSchema>(componen
 
 export const { onCreate, onDelete } = authComponent.triggersApi();
 
-export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
-  ({
+export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
+  // Hosted without a Resend key nobody could receive the link, so verification is not required.
+  const verifiesEmail = requiresVerifiedEmail(authSiteUrl);
+  return {
     appName: 'Groam',
     baseURL: authBaseUrl,
     database: authComponent.adapter(ctx),
@@ -148,7 +149,8 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
     ],
     user: { changeEmail: { enabled: true } },
     trustedOrigins: authTrustedOrigins
-  }) satisfies BetterAuthOptions;
+  } satisfies BetterAuthOptions;
+};
 
 export const createAuth = (ctx: GenericCtx<DataModel>) => betterAuth(createAuthOptions(ctx));
 

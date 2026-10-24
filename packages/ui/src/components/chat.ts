@@ -5,9 +5,9 @@ export {
 } from '#tsx/components/chat/chat-bubble';
 export {
   ChatCollapsibleMessage,
-  type ChatCollapsibleMessageProps,
-  splitChatMessagePreview
+  type ChatCollapsibleMessageProps
 } from '#tsx/components/chat/chat-collapsible-message';
+export { splitChatMessagePreview } from '#src/components/chat/lib/split-chat-message-preview';
 export {
   ChatConversation,
   type ChatConversationProps

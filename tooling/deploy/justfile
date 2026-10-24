@@ -56,9 +56,9 @@ preflight environment:
       convex_names="$(convex env list --prod --names-only)"
       missing="$({{ self }} _missing convex $convex_names)"
       [[ -z $missing ]] || problems+=("The Convex deployment is missing $missing.")
-      # Email is optional like Stripe, but without it hosted users cannot verify their address.
+      # Email is optional like Stripe: without it sign-up skips verification and password reset is off.
       if ! grep -qx RESEND_API_KEY <<<"$(tr -s '[:space:]' '\n' <<<"$convex_names")"; then
-        warning="RESEND_API_KEY is not set on the Convex deployment: users cannot receive verification email."
+        warning="RESEND_API_KEY is not set on the Convex deployment: sign-up skips email verification and password reset is unavailable."
         if [[ ${GITHUB_ACTIONS:-} == true ]]; then echo "::warning::$warning"; else echo "warning: $warning" >&2; fi
       fi
     else

@@ -14,7 +14,7 @@ transport. Server configuration stays beside the official local component in
 
 ## Hosted authentication and email
 
-Hosted sites require a verified email before password sign-in; localhost skips it. Convex
+Hosted sites with a Resend key require a verified email before password sign-in; localhost, and hosted sites without a key, skip it. Convex
 schedules each message (`packages/backend/convex/modules/auth/email.ts`, rate-limited per
 recipient) and either queues it on the official Resend Convex component (`@convex-dev/resend`:
 batching, retries, idempotency) or, when no key is set, logs it.
@@ -33,8 +33,12 @@ Resend is optional, like Stripe:
   recipient domain and subject is logged, never the text or its links.
 - A daily cron (`crons.ts`) deletes delivered emails older than a week from the component.
 
-A hosted deployment without a key still requires verified email, so its users cannot finish signing
-up until a key is set. Accounts created before email sign-in hold placeholder `@users.invalid`
+A hosted deployment without a key is fully usable: sign-up and sign-in do not require verification,
+since nobody could receive the link (`canSendEmail` in `modules/auth/verification.ts` decides).
+Password reset, the verification resend, and email change are unavailable there: Better Auth
+refuses them with a 503, `api.routes.auth.email` reports the capability, and the web app hides the
+reset/verification request and explains in Settings. Setting a key later makes verification required
+again for new sign-ins. Accounts created before email sign-in hold placeholder `@users.invalid`
 addresses and cannot use password sign-in on hosted deployments. Errors from delivery never include
 the key or the message.
 

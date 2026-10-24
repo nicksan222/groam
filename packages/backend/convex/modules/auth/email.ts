@@ -4,7 +4,7 @@ import { v } from 'convex/values';
 import { components } from '#convex-generated/api';
 import { env, internalMutation } from '#convex-generated/server';
 import { resolveAuthSiteUrl } from './site';
-import { requiresVerifiedEmail } from './verification';
+import { isHostedSite } from './verification';
 
 /** Public signup, verification, and reset endpoints all mail one address; cap it per recipient. */
 export const authEmailRateLimiter = new RateLimiter(components.rateLimiter, {
@@ -35,7 +35,7 @@ export async function queueAuthEmail(
   const apiKey = env.RESEND_API_KEY;
   if (!apiKey) {
     // Only local sites may print the text: on a hosted deployment the log would hold working links.
-    if (requiresVerifiedEmail(resolveAuthSiteUrl())) {
+    if (isHostedSite(resolveAuthSiteUrl())) {
       console.error(
         `Authentication email is not configured (set RESEND_API_KEY), so it was not sent. Recipient domain: ${message.to.split('@').pop()}. Subject: ${message.subject}`
       );

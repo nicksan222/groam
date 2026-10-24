@@ -31,7 +31,8 @@ checkout.
 Before deploying Convex, the release sets its `SITE_URL` to `https://<host or deployment origin>/app` and `AUTH_EMAIL_FROM` to
 `emailFrom`, and generates `BETTER_AUTH_SECRET` if the deployment has none. It never replaces or
 prints an existing secret. `RESEND_API_KEY` is optional and set by hand; without it, auth mail is
-logged by Convex instead of sent.
+logged by Convex instead of sent, hosted sign-up needs no email verification, and password reset
+and email change are unavailable.
 
 Each frontend is built with public URLs (the web build also gets `STATIC_HOSTING_BASE_PATH=/app/`),
 then `static-hosting upload --prod --component <landing|web>` publishes its `dist` into that

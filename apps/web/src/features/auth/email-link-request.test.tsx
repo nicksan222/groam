@@ -12,6 +12,11 @@ vi.mock('@groam/auth/client', () => ({
   authClient: { requestPasswordReset, sendVerificationEmail }
 }));
 
+const emailDelivery = vi.hoisted(() => ({ value: true as boolean | undefined }));
+vi.mock('@/features/auth/hooks/use-email-delivery', () => ({
+  useEmailDelivery: () => emailDelivery.value
+}));
+
 beforeEach(() => {
   vi.clearAllMocks();
   requestPasswordReset.mockResolvedValue({ data: { status: true }, error: null });
@@ -65,4 +70,13 @@ test('opens on an invalid link and stays open after the error clears', async () 
   } finally {
     window.history.replaceState(null, '', window.location.pathname);
   }
+});
+
+test('offers no reset or verification email when the deployment cannot send email', async () => {
+  emailDelivery.value = false;
+  await render(<EmailLinkRequest />);
+  await expect
+    .element(page.getByText('Forgot your password or need a verification email?'))
+    .not.toBeInTheDocument();
+  emailDelivery.value = true;
 });

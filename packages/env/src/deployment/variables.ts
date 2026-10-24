@@ -33,7 +33,7 @@ export const deploymentVariables = {
     RESEND_API_KEY: {
       setBy: 'you',
       optional: true,
-      how: 'Only to send authentication email: a Resend API key, set with `convex env set RESEND_API_KEY`. Without it, mail is written to the Convex function log instead.'
+      how: 'Only to send authentication email: a Resend API key, set with `convex env set RESEND_API_KEY`. Optional: without it the deployment stays fully usable (sign-up needs no email verification) but password reset and email change are unavailable.'
     },
     STRIPE_SECRET_KEY: {
       setBy: 'you',
