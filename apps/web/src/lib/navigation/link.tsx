@@ -1,8 +1,26 @@
-import { Link as VoidLink } from '@void/react';
-import { href } from '@/lib/navigation/paths';
-import type { LinkProps, RouteTarget } from '@/types/navigation';
+import { Link as RouterLink } from '@tanstack/react-router';
+import type { LinkProps } from '@/types/navigation';
 
-/** Void's client-side link to a typed workspace destination. */
-export function Link({ hash, params, search, to, ...rest }: LinkProps) {
-  return <VoidLink href={href({ hash, params, search, to } as RouteTarget)} {...rest} />;
+/** The router's client-side link to a typed workspace destination. */
+export function Link({
+  hash,
+  params,
+  preserveScroll,
+  search,
+  to,
+  viewTransition,
+  ...rest
+}: LinkProps) {
+  return (
+    <RouterLink
+      activeOptions={{ exact: true }}
+      {...rest}
+      hash={hash}
+      params={params}
+      resetScroll={preserveScroll ? false : undefined}
+      search={search}
+      to={to}
+      viewTransition={viewTransition}
+    />
+  );
 }

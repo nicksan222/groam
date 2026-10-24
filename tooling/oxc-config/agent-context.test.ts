@@ -6,13 +6,13 @@ const lint = (rule: string, source: string, file: string) =>
 
 describe('groam/page-renders-view', () => {
   const rule = 'page-renders-view';
-  const page = 'apps/web/pages/(workspace)/example/index.tsx';
+  const page = 'apps/web/pages/(workspace)/example.tsx';
   const view = `import { ExampleView } from '@/features/example/example-view';\n`;
 
   test('allows a View re-export, a rendered View, a View in a wrapper, and a pure redirect', () => {
     for (const source of [
       `export { InboxView as default } from '@/features/inbox/inbox-view';`,
-      `${view}import { Navigate } from '@void/react';
+      `${view}import { Navigate } from '@/lib/navigation/router';
 export default function Page({ ok }: { ok: boolean }) {
   if (!ok) return <Navigate to="/" />;
   return <ExampleView />;
@@ -20,7 +20,7 @@ export default function Page({ ok }: { ok: boolean }) {
       `import { ThreadView } from '@/features/discussions/discussion-thread/discussion-thread-view';
 const Page = () => <Redirect><ThreadView /></Redirect>;
 export default Page;`,
-      `import { Navigate } from '@void/react';\nexport default () => <Navigate to="/" />;`
+      `import { Navigate } from '@/lib/navigation/router';\nexport default () => <Navigate to="/" />;`
     ]) {
       expect(lint(rule, source, page).status).toBe(0);
     }
@@ -50,7 +50,7 @@ export default function Page() { return <><AView /><BView /></>; }`
   test('ignores layouts and tests', () => {
     const source = `export default function Layout() { return null; }`;
     expect(lint(rule, source, 'apps/web/pages/(workspace)/layout.tsx').status).toBe(0);
-    expect(lint(rule, source, 'apps/web/pages/(workspace)/example/page.test.tsx').status).toBe(0);
+    expect(lint(rule, source, 'apps/web/pages/(workspace)/example.test.tsx').status).toBe(0);
   });
 });
 
@@ -208,7 +208,7 @@ export function Panel() { useScreen({}); return null; }`;
   });
 
   test('reports a page that registers a context itself, but lets it render its View', () => {
-    const page = 'apps/web/pages/(workspace)/example/index.tsx';
+    const page = 'apps/web/pages/(workspace)/example.tsx';
     const view = `import { ExampleView } from '@/features/example/example-view';\n`;
     expect(
       lint(rule, `${view}export default function Page() { return <ExampleView />; }`, page).status

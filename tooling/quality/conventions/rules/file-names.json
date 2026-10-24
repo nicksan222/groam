@@ -1,15 +1,11 @@
 {
   "$schema": "../rule.schema.json",
   "harness": "path-names",
-  "message": "Source file names must use kebab-case (Void page files may name route segments)",
+  "message": "Source file names must use kebab-case",
   "target": "files",
   "include": ["**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}", "**/*.astro"],
   "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*(?:\\.[a-z0-9]+(?:-[a-z0-9]+)*)*$",
   "exceptions": [
-    {
-      "within": "apps/web/pages/**",
-      "pattern": "^\\[(?:\\.\\.\\.)?[a-z][a-zA-Z0-9]*\\](?:\\.server)?$"
-    },
     {
       "within": "apps/landing/src/pages/**",
       "pattern": "^\\[(?:\\.\\.\\.)?[a-z][a-z0-9-]*\\]$"
@@ -19,9 +15,6 @@
     {
       "files": {
         "apps/web/src/features/trips/trip-view.test.tsx": "",
-        "apps/web/pages/(workspace)/trips/[tripId]/[section].tsx": "",
-        "apps/web/pages/(workspace)/trips/[tripId]/[section].server.ts": "",
-        "apps/web/pages/[...path].tsx": "",
         "apps/landing/src/pages/it/[...page].astro": "",
         "apps/landing/src/pages/[slug].astro": ""
       },

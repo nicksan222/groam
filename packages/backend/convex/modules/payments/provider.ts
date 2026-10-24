@@ -2,6 +2,7 @@ import { paymentProvider } from '@groam/payments';
 import { v } from 'convex/values';
 import { internal } from '#convex-generated/api';
 import { env, internalAction } from '#convex-generated/server';
+import { authSiteLink } from '#convex/modules/auth/site';
 
 /** The only price Groam sells: one traveler, one trip. */
 export const TRIP_PRICE = { amount: 100, currency: 'eur' } as const;
@@ -26,10 +27,10 @@ export function idempotencyKey(...parts: string[]) {
 
 /** Where Stripe sends a traveler back to: the trip's People section, where seats live. */
 export function tripReturnUrl(shortId: string): string {
-  const site = new URL(env.SITE_URL ?? 'http://localhost:5173');
-  const local = ['localhost', '127.0.0.1'].includes(site.hostname);
-  const base = site.pathname === '/' ? (local ? '' : '/app') : site.pathname.replace(/\/$/u, '');
-  return new URL(`${base}/trips/${encodeURIComponent(shortId)}/people`, site.origin).href;
+  return authSiteLink(
+    `/trips/${encodeURIComponent(shortId)}/people`,
+    env.SITE_URL ?? 'http://localhost:5173'
+  );
 }
 
 export const expire = internalAction({

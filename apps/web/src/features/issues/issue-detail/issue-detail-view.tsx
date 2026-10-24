@@ -10,13 +10,14 @@ import { useRememberTrip } from '@/features/trips/hooks/use-remember-trip';
 import { useTripIssue } from '@/features/trips/hooks/use-trip-issues';
 import { useTripRecord } from '@/features/trips/hooks/use-trip-record';
 import { Link } from '@/features/workspace/navigation/router';
+import { absoluteHref } from '@/lib/navigation/base-path';
 import { testIds } from '@/lib/test-ids';
 import { IssueAgentBanner } from './issue-agent-banner';
 import { IssueDetail } from './issue-detail';
 import { IssueDetailMeta } from './issue-detail-meta';
 
 async function copyIssueLink(shortId: string) {
-  const url = new URL(`/issues/${shortId}`, window.location.origin).toString();
+  const url = absoluteHref(`/issues/${shortId}`);
   try {
     await navigator.clipboard.writeText(url);
     toast.success('Issue link copied');

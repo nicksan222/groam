@@ -1,7 +1,6 @@
-import type { Link as VoidLink } from '@void/react';
 import type { ComponentProps, ReactNode } from 'react';
 
-/** Every workspace route as written in links; each is a page under apps/web/pages. */
+/** Every workspace route as written in links; each is a route in apps/web/src/routes. */
 export type AppPath =
   | '/'
   | '/agents/$agentId'
@@ -46,7 +45,10 @@ export type NavigateOptions = {
 
 export type NavigateTarget = RouteTarget & NavigateOptions;
 
-export type LinkProps = RouteTarget & Omit<ComponentProps<typeof VoidLink>, 'href'>;
+export type LinkProps = RouteTarget & NavigateOptions & Omit<ComponentProps<'a'>, 'href'>;
 
-/** Props Void passes to a `layout.tsx`: the page (and inner layouts) it wraps. */
+/** Props of a layout route component: the page (and inner layouts) it wraps. */
 export type LayoutProps = { children: ReactNode };
+
+/** What the root route renders around the matched page; journeys supply their own client. */
+export type AppRouterContext = { renderRoot: (page: ReactNode) => ReactNode };

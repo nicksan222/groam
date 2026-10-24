@@ -1,6 +1,6 @@
 # Client architecture
 
-The web client is a React application served by Void. Its pages select feature views,
+The web client is a React application a client-only SPA, served as static assets. Its pages select feature views,
 features adapt backend operations into interactions, and shared packages supply
 presentation and cross-client contracts.
 
@@ -12,11 +12,11 @@ reference resolution and global shell. The shell owns navigation, shared dialogs
 the assistant surface and the page outlet. Product views live in feature
 domains rather than being implemented inside page files.
 
-Void's file-based routing (`apps/web/pages`) defines the URL structure,
-serves the workspace from the origin root, and keeps nested layouts mounted while pages
+TanStack Router's code-based route tree (`apps/web/src/routes/route-tree.tsx`) defines the URL
+structure, serves the workspace from the origin root, and keeps layout routes mounted while pages
 change; page transitions use view transitions. Pages are client-mounted
-(`ssr = false`) because Convex owns data and sessions in the browser. A typed
-navigation layer wraps Void's router so links and redirects name app-relative
+because Convex owns data and sessions in the browser. A typed
+navigation layer wraps TanStack Router so links and redirects name app-relative
 paths and params. Reference-aware navigation
 resolves compact resource references and canonical URLs through shared helpers.
 Navigation state identifies what the user is viewing; backend access checks

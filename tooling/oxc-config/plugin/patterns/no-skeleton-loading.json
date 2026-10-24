@@ -72,7 +72,7 @@
       "reports": false
     },
     {
-      "file": "apps/web/pages/trips.tsx",
+      "file": "apps/web/pages/(workspace)/trip-list.tsx",
       "source": "import { Skeleton } from '@groam/ui/components/skeleton';\nexport const v = Skeleton;",
       "reports": true
     },

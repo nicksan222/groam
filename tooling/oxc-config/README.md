@@ -52,7 +52,7 @@ validates every definition when it loads.
 | Rule | Guardrail |
 | --- | --- |
 | `no-raw-icons` | Keeps icon providers, types, and inline JSX SVG behind `@groam/icons` (brand artwork stays in `@groam/brand`) |
-| `no-raw-internal-anchors` | Keeps internal navigation in the typed Void router wrappers |
+| `no-raw-internal-anchors` | Keeps internal navigation in the typed TanStack router wrappers |
 | `shell-columns` | Protects shared page-column composition and geometry |
 | `planning-page-body` | Protects the shared planning page canvas |
 | `cognitive-complexity` | Keeps functions at or below a cognitive complexity of 15 |

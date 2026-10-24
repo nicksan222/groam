@@ -1,6 +1,12 @@
 import { render } from '@groam/vitest-config/react';
-import { ParamsContext, RouterContext } from '@void/react';
-import { type PropsWithChildren, useMemo, useSyncExternalStore } from 'react';
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+  RouterProvider
+} from '@tanstack/react-router';
+import type { ReactNode } from 'react';
 import { beforeEach, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { ReferenceContext, useResolvedParams } from '@/features/workspace/hooks/reference-context';
@@ -33,55 +39,19 @@ vi.mock('convex/react', async (importOriginal) => ({
   useQueries: mocks.useQueries
 }));
 
-/** A minimal Void router whose location can be read and visited from the test. */
-function createFakeRouter(path: string) {
-  let url = new URL(path, 'http://localhost');
-  const listeners = new Set<() => void>();
-  const visit = vi.fn(async (next: string | URL) => {
-    url = new URL(next, url);
-    for (const listener of listeners) listener();
+/** A real router on memory history whose root route renders the given UI, as the app's layout does. */
+function createTestRouter(path: string, ui: ReactNode) {
+  const root = createRootRoute({ component: () => ui });
+  const at = (routePath: string) => createRoute({ getParentRoute: () => root, path: routePath });
+  return createRouter({
+    history: createMemoryHistory({ initialEntries: [path] }),
+    routeTree: root.addChildren([at('/'), at('/trips/$tripId'), at('/trips/$tripId/$section')])
   });
-  return {
-    get url() {
-      return url;
-    },
-    subscribe: (listener: () => void) => {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
-    visit
-  };
 }
 
-type FakeRouter = ReturnType<typeof createFakeRouter>;
+type TestRouter = ReturnType<typeof createTestRouter>;
 
-function FakeVoidPage({ children, fake }: PropsWithChildren<{ fake: FakeRouter }>) {
-  const url = useSyncExternalStore(fake.subscribe, () => fake.url);
-  const params = useMemo(
-    () => ({ tripId: /^\/trips\/([^/]+)/u.exec(url.pathname)?.[1] ?? '' }),
-    [url.pathname]
-  );
-  const router = useMemo(
-    () => ({
-      _hoverDelay: 0,
-      flush: vi.fn(),
-      flushAll: vi.fn(),
-      params,
-      path: url.pathname,
-      prefetch: vi.fn(async () => undefined),
-      query: url.searchParams,
-      refresh: vi.fn(async () => undefined),
-      url,
-      visit: fake.visit
-    }),
-    [fake.visit, params, url]
-  );
-  return (
-    <RouterContext value={router}>
-      <ParamsContext value={params}>{children}</ParamsContext>
-    </RouterContext>
-  );
-}
+const hrefOf = (router: TestRouter) => router.history.location;
 
 function TripPage() {
   const { tripId = '' } = useResolvedParams(useParams<{ tripId: string }>());
@@ -96,18 +66,17 @@ function TripPage() {
 }
 
 async function mount(path: string) {
-  const fake = createFakeRouter(path);
-  await render(
-    <FakeVoidPage fake={fake}>
-      <ReferenceProvider>
-        <aside aria-label="Workspace navigation">Your workspace</aside>
-        <ReferenceContent>
-          <TripPage />
-        </ReferenceContent>
-      </ReferenceProvider>
-    </FakeVoidPage>
+  const router = createTestRouter(
+    path,
+    <ReferenceProvider>
+      <aside aria-label="Workspace navigation">Your workspace</aside>
+      <ReferenceContent>
+        <TripPage />
+      </ReferenceContent>
+    </ReferenceProvider>
   );
-  return fake;
+  await render(<RouterProvider router={router} />);
+  return router;
 }
 
 test('loads a short URL using the internal ID and renders short links', async () => {
@@ -121,13 +90,11 @@ test('loads a short URL using the internal ID and renders short links', async ()
 test('canonicalizes an existing long link without losing search or hash', async () => {
   const router = await mount('/trips/long-trip-id?focus=map#details');
   await expect.element(page.getByText('Record: long-trip-id')).toBeInTheDocument();
-  await vi.waitFor(() => expect(router.url.pathname).toBe('/trips/abcdef'));
-  expect(router.url.search).toContain('focus=map');
-  expect(router.url.hash).toBe('#details');
-  expect(router.visit).toHaveBeenCalledWith(expect.any(String), {
-    replace: true,
-    viewTransition: false
-  });
+  await vi.waitFor(() => expect(hrefOf(router).pathname).toBe('/trips/abcdef'));
+  expect(hrefOf(router).search).toContain('focus=map');
+  expect(hrefOf(router).hash).toBe('#details');
+  // The canonical URL replaces the long one rather than adding a history entry.
+  expect(router.history.length).toBe(1);
 });
 
 test('does not render a record when its short reference is unavailable', async () => {
@@ -148,15 +115,15 @@ test('keeps workspace navigation mounted while an idea reference loads', async (
 });
 
 test('renders a known canonical reference without resolving it again', async () => {
-  await render(
-    <FakeVoidPage fake={createFakeRouter('/')}>
-      <ReferenceContext value={{ tripId: 'long-trip-id' }}>
-        <CanonicalLink params={{ tripId: 'abcdef' }} to="/trips/$tripId">
-          Canonical trip
-        </CanonicalLink>
-      </ReferenceContext>
-    </FakeVoidPage>
+  const router = createTestRouter(
+    '/',
+    <ReferenceContext value={{ tripId: 'long-trip-id' }}>
+      <CanonicalLink params={{ tripId: 'abcdef' }} to="/trips/$tripId">
+        Canonical trip
+      </CanonicalLink>
+    </ReferenceContext>
   );
+  await render(<RouterProvider router={router} />);
 
   await expect
     .element(page.getByRole('link', { name: 'Canonical trip' }))
@@ -166,16 +133,15 @@ test('renders a known canonical reference without resolving it again', async () 
 
 test('keeps the rendered page mounted when moving between known references', async () => {
   const defaults = mocks.useQueries.getMockImplementation();
-  const fake = createFakeRouter('/trips/long-trip-id');
-  await render(
-    <FakeVoidPage fake={fake}>
-      <ReferenceProvider>
-        <ReferenceContent>
-          <h1 data-testid="trip-header">Trip header</h1>
-        </ReferenceContent>
-      </ReferenceProvider>
-    </FakeVoidPage>
+  const router = createTestRouter(
+    '/trips/long-trip-id',
+    <ReferenceProvider>
+      <ReferenceContent>
+        <h1 data-testid="trip-header">Trip header</h1>
+      </ReferenceContent>
+    </ReferenceProvider>
   );
+  await render(<RouterProvider router={router} />);
   const header = page.getByTestId('trip-header');
   await expect.element(header).toBeInTheDocument();
   const node = header.element();
@@ -188,7 +154,7 @@ test('keeps the rendered page mounted when moving between known references', asy
       ])
     )
   );
-  await fake.visit('/trips/abcdef');
+  await router.navigate({ to: '/trips/$tripId', params: { tripId: 'abcdef' } });
   await expect.element(page.getByTestId('trip-header')).toBeInTheDocument();
   expect(page.getByTestId('trip-header').element()).toBe(node);
   expect(page.getByRole('status', { name: 'Opening page…' }).query()).toBeNull();

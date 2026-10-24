@@ -44,31 +44,22 @@ describe('release workflows', () => {
     expect(checks).not.toContain('--component web');
   });
 
-  test('checks both environments are ready before anything deploys', () => {
-    for (const [environment, githubEnvironment, releaseSwitch] of [
-      ['beta', 'beta', 'CONVEX_BETA_ENABLED'],
-      ['production', 'prod', 'CONVEX_PRODUCTION_ENABLED']
-    ]) {
-      const block = job(`preflight-${environment}`);
-      expect(block).toContain(`run: bunx just deploy preflight ${environment}`);
-      expect(block).toContain(`name: ${githubEnvironment}`);
-      expect(block).toContain(`vars.${releaseSwitch} == 'true'`);
-      for (const name of variableNames('github'))
-        expect(block).toContain(`${name}: \${{ secrets.${name} }}`);
-    }
-    expect(job('beta')).toContain('needs: [preflight-beta, preflight-production]');
-    expect(job('beta')).toContain('!failure() && !cancelled()');
-    expect(job('production')).toContain('needs: [preflight-production, beta]');
+  test('checks production is ready before anything deploys', () => {
+    const block = job('preflight-production');
+    expect(release()).not.toMatch(/beta/iu);
+    expect(block).toContain('run: bunx just deploy preflight production');
+    expect(block).toContain('name: prod');
+    expect(block).toContain("vars.CONVEX_PRODUCTION_ENABLED == 'true'");
+    for (const name of variableNames('github'))
+      expect(block).toContain(`${name}: \${{ secrets.${name} }}`);
+    expect(job('production')).toContain('needs: [preflight-production]');
   });
 
   test('is a reusable workflow that CI and Release main call', () => {
     expect(release()).toContain('workflow_call:');
   });
 
-  test.each([
-    ['beta', 'beta', 'CONVEX_BETA_ENABLED', 'beta-deployment'],
-    ['production', 'prod', 'CONVEX_PRODUCTION_ENABLED', 'production-deployment']
-  ])(
+  test.each([['production', 'prod', 'CONVEX_PRODUCTION_ENABLED', 'production-deployment']])(
     'the %s deploy is guarded, serialized, and publishes an immutable current main SHA',
     (environment, githubEnvironment, releaseSwitch, group) => {
       const block = job(environment);
@@ -82,9 +73,8 @@ describe('release workflows', () => {
       expect(block).toContain('ref: ${{ github.sha }}');
       expect(block).toContain('git ls-remote --exit-code origin refs/heads/main');
       expect(block).toContain(`run: bunx just deploy release ${environment}`);
-      // The deploy key and Cloudflare token reach only the deploy step.
+      // The deploy key reaches only the deploy step.
       expect(block.match(/CONVEX_DEPLOY_KEY/g)).toHaveLength(2);
-      expect(block.match(/CLOUDFLARE_API_TOKEN/g)).toHaveLength(2);
       // Public destinations come from the committed environment settings.
       expect(block).not.toContain('vars.SITE_URL');
       expect(block).not.toContain('vars.CONVEX_URL');

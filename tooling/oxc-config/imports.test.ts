@@ -10,7 +10,7 @@ describe('import boundaries', () => {
     for (const file of [
       'apps/web/src/features/trips/hooks/use-trips.ts',
       'packages/backend/convex/modules/trips/index.ts',
-      'apps/web/pages/(workspace)/index.tsx'
+      'apps/web/pages/(workspace)/dashboard.tsx'
     ]) {
       expect(restricted("import { value } from '../sections';", file)).toBe(true);
       expect(restricted("import { value } from '../../shared/sections';", file)).toBe(true);
@@ -31,12 +31,11 @@ describe('import boundaries', () => {
   });
 
   test('keeps web pages composing feature views', () => {
-    const page = 'apps/web/pages/(workspace)/trips/[tripId]/index.tsx';
+    const page = 'apps/web/pages/(workspace)/trip-index.tsx';
     for (const allowed of [
       '@/features/dashboard/dashboard-view',
       '@/lib/navigation/router',
       '@/app-layout',
-      '@void/react',
       '@groam/ai/ui',
       '@groam/env/web-client'
     ])

@@ -19,9 +19,9 @@ function routeNameFromPath(routePath: string): string {
   return routePath.slice(routePath.indexOf('/pages/') + '/pages/'.length);
 }
 
-// The not-found page is a static message with nothing to load, and the chat inbox is an empty
+// The chat inbox is an empty
 // pane beside the chat layout's rail, which owns the loading state.
-const staticPages = new Set(['[...path].tsx', '(workspace)/chat/index.tsx']);
+const staticPages = new Set(['(workspace)/chat-inbox.tsx']);
 
 function importedFeatureNames(source: string): string[] {
   const names: string[] = [];

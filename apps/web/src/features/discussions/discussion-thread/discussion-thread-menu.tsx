@@ -12,6 +12,7 @@ import { DiscussionDetailsSheet } from '@/features/discussions/discussion-sheets
 import { DiscussionParticipantsSheet } from '@/features/discussions/discussion-sheets/discussion-participants-sheet';
 import { DiscussionRenameDialog } from '@/features/discussions/discussion-sheets/discussion-rename-dialog';
 import type { DiscussionListItem } from '@/features/discussions/hooks/use-discussions';
+import { absoluteHref } from '@/lib/navigation/base-path';
 import { testIds } from '@/lib/test-ids';
 
 // oxlint-disable-next-line groam/no-local-type-definitions -- local implementation shape
@@ -34,7 +35,7 @@ export function DiscussionThreadMenu({
   const [panel, setPanel] = useState<ThreadPanel | null>(null);
 
   const copyLink = async () => {
-    const url = new URL(`/chat/${discussion.shortId}`, window.location.origin).toString();
+    const url = absoluteHref(`/chat/${discussion.shortId}`);
     try {
       await navigator.clipboard.writeText(url);
       toast.success('Chat link copied');

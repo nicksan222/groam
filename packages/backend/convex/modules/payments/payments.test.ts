@@ -1,6 +1,7 @@
 import { expectConsole } from '@groam/vitest-config/console';
 import { afterEach, expect, test, vi } from 'vite-plus/test';
 import { api } from '#convex-generated/api';
+import { tripReturnUrl } from '#convex/modules/payments/provider';
 import { createOutsiderClient } from '#testing/factory';
 import { deliverCompleted, enablePayments, pay, paymentRows, stubStripe } from '#testing/payments';
 import { setupTrip } from '#testing/trips';
@@ -94,6 +95,15 @@ test("checkout returns the traveler to the trip's People section", async () => {
   const session = await openSession(trip);
   const returnUrl = new URL(session.success_url ?? '');
   expect(returnUrl.pathname).toMatch(/\/trips\/[a-z]+\/people$/u);
+});
+
+test.each([
+  ['https://groam.app/app', 'https://groam.app/app/trips/abc/people'],
+  ['https://groam.app/app/', 'https://groam.app/app/trips/abc/people'],
+  ['http://localhost:5173', 'http://localhost:5173/trips/abc/people']
+])('the return URL for SITE_URL %s is %s', (siteUrl, expected) => {
+  vi.stubEnv('SITE_URL', siteUrl);
+  expect(tripReturnUrl('abc')).toBe(expected);
 });
 
 test('checkout enforces membership and sponsor permissions', async () => {

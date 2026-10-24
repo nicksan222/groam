@@ -18,13 +18,12 @@ const backendEnvImports = {
   message:
     'The backend may import only @groam/env/deployment; read Convex values from its generated env.'
 };
-// Pages compose feature views: features, lib, the app layout, Void's React adapter, and @groam
+// Pages compose feature views: features, lib, and the app layout, and @groam
 // packages other than UI.
 const pageImports = {
   group: [
     '*',
     ...[
-      '@void/react',
       '@groam/ai',
       '@groam/auth',
       '@groam/backend',
@@ -66,7 +65,6 @@ export const lint = {
     '**/dist/**',
     '**/_generated/**',
     '**/generated.ts',
-    '**/.void/**',
     '**/vendor/**',
     '.claude/**',
     '.agents/**',
@@ -232,7 +230,7 @@ export const lint = {
     {
       // Every workspace page forwards its screen context to the assistant, once (the
       // register-agent-screen-context skill).
-      files: ['**/apps/web/pages/(workspace)/**/*.tsx'],
+      files: ['**/apps/web/pages/**/*.tsx'],
       excludeFiles: ['**/layout.tsx', ...tests],
       rules: { 'groam/page-renders-view': 'error' }
     },

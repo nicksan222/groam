@@ -6,8 +6,7 @@
   "exclude": [
     "apps/landing/src/styles/tokens.css",
     "packages/ui/src/styles/globals.css",
-    "packages/ui/src/styles/tokens.css",
-    "apps/web/void.config.ts"
+    "packages/ui/src/styles/tokens.css"
   ],
   "pattern": "#[\\da-f]{3,8}\\b|(?:rgb|rgba|hsl|hsla|hwb|lab|lch|oklab|oklch|color)\\(",
   "ignoreCase": true,

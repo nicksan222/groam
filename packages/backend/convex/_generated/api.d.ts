@@ -58,13 +58,12 @@ import type * as modules_assistant_waits_functions from "../modules/assistant/wa
 import type * as modules_assistant_waits_index from "../modules/assistant/waits/index.js";
 import type * as modules_auth_actor from "../modules/auth/actor.js";
 import type * as modules_auth_auth from "../modules/auth/auth.js";
-import type * as modules_auth_delivery from "../modules/auth/delivery.js";
 import type * as modules_auth_email from "../modules/auth/email.js";
 import type * as modules_auth_lengths from "../modules/auth/lengths.js";
 import type * as modules_auth_limits from "../modules/auth/limits.js";
 import type * as modules_auth_origins from "../modules/auth/origins.js";
 import type * as modules_auth_recovery from "../modules/auth/recovery.js";
-import type * as modules_auth_relay from "../modules/auth/relay.js";
+import type * as modules_auth_site from "../modules/auth/site.js";
 import type * as modules_auth_verification from "../modules/auth/verification.js";
 import type * as modules_auth_workspace from "../modules/auth/workspace.js";
 import type * as modules_dev_enrich from "../modules/dev/enrich.js";
@@ -92,6 +91,7 @@ import type * as modules_discussions_threads_entity from "../modules/discussions
 import type * as modules_discussions_threads_index from "../modules/discussions/threads/index.js";
 import type * as modules_discussions_threads_lengths from "../modules/discussions/threads/lengths.js";
 import type * as modules_discussions_threads_limits from "../modules/discussions/threads/limits.js";
+import type * as modules_hosting_site from "../modules/hosting/site.js";
 import type * as modules_media_attachments_index from "../modules/media/attachments/index.js";
 import type * as modules_media_files_index from "../modules/media/files/index.js";
 import type * as modules_media_library_commit from "../modules/media/library/commit.js";
@@ -454,13 +454,12 @@ declare const fullApi: ApiFromModules<{
   "modules/assistant/waits/index": typeof modules_assistant_waits_index;
   "modules/auth/actor": typeof modules_auth_actor;
   "modules/auth/auth": typeof modules_auth_auth;
-  "modules/auth/delivery": typeof modules_auth_delivery;
   "modules/auth/email": typeof modules_auth_email;
   "modules/auth/lengths": typeof modules_auth_lengths;
   "modules/auth/limits": typeof modules_auth_limits;
   "modules/auth/origins": typeof modules_auth_origins;
   "modules/auth/recovery": typeof modules_auth_recovery;
-  "modules/auth/relay": typeof modules_auth_relay;
+  "modules/auth/site": typeof modules_auth_site;
   "modules/auth/verification": typeof modules_auth_verification;
   "modules/auth/workspace": typeof modules_auth_workspace;
   "modules/dev/enrich": typeof modules_dev_enrich;
@@ -488,6 +487,7 @@ declare const fullApi: ApiFromModules<{
   "modules/discussions/threads/index": typeof modules_discussions_threads_index;
   "modules/discussions/threads/lengths": typeof modules_discussions_threads_lengths;
   "modules/discussions/threads/limits": typeof modules_discussions_threads_limits;
+  "modules/hosting/site": typeof modules_hosting_site;
   "modules/media/attachments/index": typeof modules_media_attachments_index;
   "modules/media/files/index": typeof modules_media_files_index;
   "modules/media/library/commit": typeof modules_media_library_commit;
@@ -825,5 +825,8 @@ export declare const components: {
   agent: import("@convex-dev/agent/_generated/component.js").ComponentApi<"agent">;
   geospatial: import("@convex-dev/geospatial/_generated/component.js").ComponentApi<"geospatial">;
   rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
+  resend: import("@convex-dev/resend/_generated/component.js").ComponentApi<"resend">;
   workflow: import("@convex-dev/workflow/_generated/component.js").ComponentApi<"workflow">;
+  landing: import("@convex-dev/static-hosting/_generated/component.js").ComponentApi<"landing">;
+  web: import("@convex-dev/static-hosting/_generated/component.js").ComponentApi<"web">;
 };

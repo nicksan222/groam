@@ -1,6 +1,10 @@
 # Convex backend
 
-- `convex.config.ts` mounts Better Auth, Agent, Workflow, Rate Limiter and the geospatial index.
+- `convex.config.ts` mounts Better Auth, Agent, Workflow, Rate Limiter, Resend and the geospatial index. Resend
+  (`@convex-dev/resend`) sends authentication email when `RESEND_API_KEY` is set; otherwise
+  `modules/auth/email.ts` logs the message on local sites only. The default sender
+  `onboarding@resend.dev` only delivers to the Resend account owner, so set `AUTH_EMAIL_FROM` on a
+  verified domain (the release sets it from `emailFrom` in `environments.json`).
 - `components/better-auth/` owns Better Auth's isolated local component.
 - `modules/auth/`, `auth.config.ts`, and `http.ts` provide application auth integration and routing.
 - `routes/` owns public Convex functions for product domains. See `modules/README.md`.
@@ -10,11 +14,11 @@
 - Local development seeding is orchestrated by `tooling/seeder/src/seed-workspace.ts`
   and calls real product procedures.
 
-Void on Cloudflare hosts the frontends as two deployments at separate origins: the web
-application (served from its origin root) and the landing site. Convex serves backend procedures and HTTP endpoints, including
-Better Auth and the ChatGPT callback; it does not serve frontend assets. The web app
-origin and the Convex HTTP origin are separate. Keep the latter reachable for auth and
-callbacks. See [deployment](../../../docs/deployment.md) for setup and release steps.
+Two `@convex-dev/static-hosting` instances (`landing`, `web`) host the frontends on the deployment's HTTP origin:
+the landing site at `/` and the web app under `/app/`. The app owns HTTP routing (`http.ts`), so Better Auth,
+the payment webhook and the ChatGPT callback keep their URLs and win over the frontend catch-alls
+(`modules/hosting/site.ts`). On a hosted environment the frontends share the custom domain; locally they
+run on their Vite and Astro dev servers. See [deployment](../../../docs/deployment.md) for setup and release steps.
 
 ## Procedure convention
 
@@ -115,7 +119,7 @@ Deployment variables are defined in `@groam/env/deployment`; locally,
 ## Testing
 
 `../testing/factory.ts` loads the Convex function graph once and registers the
-local Better Auth, Agent, Geospatial, Rate Limiter, and Workflow components. Authenticated fixtures
+local Better Auth, Agent, Geospatial, Rate Limiter, Resend, and Workflow components. Authenticated fixtures
 use Better Auth's browser client against the real `convex-test` HTTP router, so
 users, sessions, organizations, memberships, JWTs, agent threads, and tool calls
 all pass through production handlers and component adapters. Do not mock
