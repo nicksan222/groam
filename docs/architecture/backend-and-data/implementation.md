@@ -152,8 +152,9 @@ export default defineSchema({ ...chatGptTables, ...assistantRunTables, ...tripTa
 // convex.config.ts
 app.use(betterAuth); app.use(agent); app.use(geospatial)
 app.use(rateLimiter); app.use(workflow)
+app.use(staticHosting, { name: 'landing' }); app.use(staticHosting, { name: 'web' })
 
-// http.ts: backend HTTP endpoints; the Void frontend is hosted by Cloudflare
+// http.ts: backend HTTP endpoints first, then the frontend catch-alls (registerSiteRoutes)
 authComponent.registerRoutesLazy(http, createAuth, { cors: true, trustedOrigins })
 http.route({ path: '/auth/chatgpt/callback', method: 'GET', handler: chatGptCallback })
 ```

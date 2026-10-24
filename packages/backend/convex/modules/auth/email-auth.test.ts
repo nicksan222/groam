@@ -5,6 +5,8 @@ import { createTest } from '#testing/factory';
 
 vi.hoisted(() => {
   vi.stubEnv('SITE_URL', 'https://app.example.com');
+  // Verification is required only where mail can be delivered.
+  vi.stubEnv('RESEND_API_KEY', 're_test_key');
 });
 
 const password = 'Safe-password-1234';

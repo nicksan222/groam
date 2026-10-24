@@ -103,7 +103,7 @@ body {
   }
 }
 
-/* The workspace sidebar stays put while Void cross-fades the page beside it. */
+/* The workspace sidebar stays put while the router cross-fades the page beside it. */
 ::view-transition-group(workspace-sidebar),
 ::view-transition-old(workspace-sidebar),
 ::view-transition-new(workspace-sidebar) {

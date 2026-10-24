@@ -18,7 +18,7 @@ export type Rule = {
   check(repository: Repository): string[];
 };
 
-const generated = /(?:^|\/)(?:_generated|\.astro|\.void)\//u;
+const generated = /(?:^|\/)(?:_generated|\.astro)\//u;
 const vendored = /(?:^|\/)vendor\/|^\.(?:agents|claude)\/skills\/impeccable\//u;
 
 const owned = (file: string) => Boolean(file) && !generated.test(file) && !vendored.test(file);

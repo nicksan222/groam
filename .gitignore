@@ -23,11 +23,5 @@ AGENTS.local.md
 .DS_Store
 *.sw?
 
-# Void generated types, local state, Cloudflare config, and local Worker values
-.void/
-.void-wrangler.jsonc
+# Local web env values
 apps/web/.env
-
-# Void writes app-local locks during a deploy; committed copies live in tooling/deploy/locks.
-apps/web/void.lock.json
-apps/landing/void.lock.json

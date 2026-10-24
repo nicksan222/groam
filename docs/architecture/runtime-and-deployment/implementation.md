@@ -29,7 +29,7 @@ Source: [`Dockerfile`](../../../.devcontainer/Dockerfile),
 ## Local process orchestration with `just start-convex` and `just dev`
 
 Convex and the web app start separately. `just dev` runs `vp run dev`, which starts
-only `@groam/web` (`vp dev --host 0.0.0.0` on 5173; Void serves the app at the origin
+only `@groam/web` (`vp dev --host 0.0.0.0` on 5173; Vite serves the app at the origin
 root). `just landing` runs the marketing site on 4321. `just dev` neither starts nor
 bootstraps Convex.
 
@@ -63,8 +63,6 @@ just configure-local-auth --write-vite-site-url
 # Justfile: configure-local-auth (CI runs it too)
 has BETTER_AUTH_SECRET || secret | bunx convex env set BETTER_AUTH_SECRET
 bunx convex env set SITE_URL http://localhost:5173
-# One AUTH_EMAIL_RELAY_SECRET in Convex and apps/web/.env (reused if the Worker file holds it),
-# so local auth mail reaches Void's dev inbox.
 # --write-vite-site-url: one VITE_SITE_URL= line in .env.local
 ```
 
@@ -80,16 +78,16 @@ Source: [`Justfile`](../../../Justfile),
 
 `@groam/env` exposes one Envalid-validated target per runtime, each exported
 as a subpath (`auth-client`, `web-client`, `landing`, `seeder`,
-`journeys`, `vitest`, `void`). Client targets read only `import.meta.env`
+`journeys`, `vitest`). Client targets read only `import.meta.env`
 `VITE_*` keys, so provider tokens and server secrets have no path into the
 browser bundle. The `web-client` target includes `VITE_LANDING_URL`, where the
 app links Terms and Privacy on the separate landing site. The Convex runtime is separate: it
 declares its variables with `defineApp({ env })` and reads them from the
 generated `env`, whose names come from `@groam/env/deployment` (the definition of every
 hosted variable and secret, and the only `@groam/env` import allowed in the backend).
-`BETTER_AUTH_SECRET`, `SITE_URL`, and `AUTH_EMAIL_RELAY_SECRET` are set by `just configure-local-auth`
-locally, which also writes the relay secret to `apps/web/.env` for the Void Worker. Hosted
-releases set `SITE_URL` and `BETTER_AUTH_SECRET`; the owner sets the rest, and the release
+`BETTER_AUTH_SECRET` and `SITE_URL` are set by `just configure-local-auth`
+locally; without `RESEND_API_KEY`, auth mail is logged by Convex and hosted sign-up skips email verification. Hosted
+releases set `SITE_URL`, `AUTH_EMAIL_FROM`, and `BETTER_AUTH_SECRET`; the owner sets the rest, and the release
 preflight checks they are present.
 
 ```ts
@@ -117,8 +115,8 @@ Source: [`packages/env/README.md`](../../../packages/env/README.md),
 ## HTTP router composition and auth origins
 
 The Convex HTTP router serves backend HTTP endpoints: Better Auth routes and
-the ChatGPT OAuth callback. The Void Worker on Cloudflare serves the web app on a separate origin;
-there is no frontend catch-all in Convex. Better Auth trusts the `SITE_URL` origin; when either `SITE_URL` or `CONVEX_SITE_URL`
+the ChatGPT OAuth callback. After those routes, `registerSiteRoutes` adds the frontend catch-alls: the web SPA under `/app/` and the
+landing site at `/` (longer and exact routes win). Better Auth trusts the `SITE_URL` origin; when either `SITE_URL` or `CONVEX_SITE_URL`
 is local, it also trusts the Vite origins on ports 5173 (app) and 5174
 (journeys) for `localhost`, `127.0.0.1` and `[::1]`.
 
@@ -142,52 +140,42 @@ Source: [`http.ts`](../../../packages/backend/convex/http.ts#L10),
 ## Hosted deployment and the CI deploy workflow
 
 Every push to `main` is released automatically after the complete **Checks**
-workflow succeeds. The reusable **Release** workflow deploys beta and only
-then deploys production; the manually dispatched **Release main** workflow
+workflow succeeds. The reusable **Release** workflow preflights and then
+deploys production; the manually dispatched **Release main** workflow
 reruns Checks and the same pipeline. Each deploy job requires the original
 `nicksan222/groam` repository, a push or manual event on `refs/heads/main`, and
 its fail-closed opt-in
-(`CONVEX_BETA_ENABLED`, `CONVEX_PRODUCTION_ENABLED`).
+(`CONVEX_PRODUCTION_ENABLED`).
 
 The release checks out the immutable tested `github.sha` and installs the
 lockfile. Immediately before publishing, it verifies that the SHA is still the
 remote `main` tip. `just deploy release production` checks the publisher, the clean checkout,
-and that both environment-specific frontend locks in `tooling/deploy/locks/production/` are
-committed. It runs the Convex environment preflight, deploys the Convex backend
+It runs the Convex environment preflight, deploys the Convex backend
 with the production-scoped `CONVEX_DEPLOY_KEY`, and then runs
-`void deploy --platform cloudflare` with `CLOUDFLARE_API_TOKEN` in `apps/web`
-and in `apps/landing`. The web app and the landing site are separate Void
-projects (`groam-app`, `groam-landing`) at separate origins. Each `void deploy`
-builds its app and Void checks the new version before it takes traffic, so no
-separate build, preview, or smoke step remains. Each child command receives only
-its own credential, and builds receive public destinations only. Production
+builds the landing site and the web app, and uploads each with the static-hosting CLI
+into its component instance (`landing`, `web`). The web app uses SPA fallback, the landing
+site its 404 page. Builds receive public destinations only; the deploy key reaches only the
+Convex and upload commands. Production
 jobs are serialized and never cancel one another.
 
 ```sh
 # CI push-main or manual Release main
 uses test-reusable.yml
 uses release.yml
-  beta:       git ls-remote … ; bunx just deploy release beta
   production: git ls-remote … ; bunx just deploy release production
-# tooling/deploy/justfile: convex deploy, then `void deploy --platform cloudflare`
-# from apps/web and then from apps/landing
+# tooling/deploy/justfile: convex deploy, then build and `static-hosting upload`
+# for apps/landing and then apps/web
 ```
 
-Each environment's public settings (Convex URL, Worker names, hostnames, optional Cloudflare
-account) live in [`environments.json`](../../../tooling/deploy/environments.json). Void creates the
-Workers and their custom domains from them, and the release sets Convex `SITE_URL` to the web
-origin and generates `BETTER_AUTH_SECRET` once if it is missing. The backend HTTP origin is derived
-from the Convex URL. Frontend resource locks are committed under `tooling/deploy/locks/<environment>/`;
-the release runner copies the selected lock into each app temporarily and removes it afterward.
-Beta uses separate Convex, Cloudflare, and GitHub resources and receives every release first. Each GitHub
-environment holds only `CONVEX_DEPLOY_KEY` and `CLOUDFLARE_API_TOKEN`. See the [deployment runbook](../../deployment.md) for
+Production's public settings (Convex URL, optional custom domain, mail sender) live in [`environments.json`](../../../tooling/deploy/environments.json). The release sets Convex `SITE_URL` (`https://<host>/app`, or the deployment's `.convex.site` origin while `host` is empty) and
+`AUTH_EMAIL_FROM`, and generates `BETTER_AUTH_SECRET` once if it is missing. The backend HTTP origin is derived
+from the Convex URL. The GitHub `prod` environment holds only `CONVEX_DEPLOY_KEY`. See the [deployment runbook](../../deployment.md) for
 the exact setup and operating procedure.
 
 Source: [`ci.yml`](../../../.github/workflows/ci.yml),
 [`release.yml`](../../../.github/workflows/release.yml),
 [`release-main.yml`](../../../.github/workflows/release-main.yml),
-[`apps/web/void.config.ts`](../../../apps/web/void.config.ts),
-[`apps/landing/void.config.ts`](../../../apps/landing/void.config.ts),
+[`modules/hosting/site.ts`](../../../packages/backend/convex/modules/hosting/site.ts),
 and [`tooling/deploy/justfile`](../../../tooling/deploy/justfile).
 
 ## AI configuration constraints
@@ -248,7 +236,7 @@ createWebVitestConfig(dir, { browser: { commands: journeyCommands, port: 5174, i
 In CI, the `journeys` job initializes the local Convex backend successfully before
 starting its watcher, runs `bunx just configure-local-auth`, verifies that `bun run codegen`
 leaves no diff, and runs the journeys. Release builds are not rehearsed in CI;
-`void deploy` builds and checks each frontend during the release.
+the release builds each frontend.
 Convex component upload commands are not part of frontend verification.
 
 Source: [`vitest convex.ts`](../../../tooling/vitest-config/src/convex.ts),

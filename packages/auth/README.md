@@ -14,24 +14,33 @@ transport. Server configuration stays beside the official local component in
 
 ## Hosted authentication and email
 
-Hosted sites require a verified email before password sign-in; localhost skips it. Convex
+Hosted sites with a Resend key require a verified email before password sign-in; localhost, and hosted sites without a key, skip it. Convex
 schedules each message (`packages/backend/convex/modules/auth/email.ts`, rate-limited per
-recipient) and hands it to the Void Worker at `apps/web/routes/api/email.ts`, signed as in
-`packages/backend/convex/modules/auth/relay.ts`.
+recipient) and either queues it on the official Resend Convex component (`@convex-dev/resend`:
+batching, retries, idempotency) or, when no key is set, logs it.
 
-Setup for a hosted environment:
+Resend is optional, like Stripe:
 
-1. Set Convex `SITE_URL` (the frontend origin) and `AUTH_EMAIL_RELAY_SECRET`.
-2. Set the same secret on the Worker: `void secret put AUTH_EMAIL_RELAY_SECRET` in `apps/web`.
-3. Set `emailFrom` in `tooling/deploy/environments.json`, then run
-   `void email setup --platform cloudflare` in `apps/web`.
+- With `RESEND_API_KEY` set (`convex env set RESEND_API_KEY ...`), mail is queued for real
+  recipients (`testMode: false`) from `AUTH_EMAIL_FROM`, which every release sets from `emailFrom`
+  in `tooling/deploy/environments.json`. Without `AUTH_EMAIL_FROM` the sender is
+  `Groam <onboarding@resend.dev>`; verify your sending domain in Resend before using your own. That default sender only
+  delivers to the Resend account owner's own address, so real use needs `AUTH_EMAIL_FROM` on a
+  verified domain.
+- Without `RESEND_API_KEY`, nothing is sent. On a local site the recipient, subject, and text (with
+  its links) go to the Convex function log, so development reads verification and reset links there
+  (`just dashboard`, or the `convex dev` terminal). On a hosted site only an error naming the
+  recipient domain and subject is logged, never the text or its links.
+- A daily cron (`crons.ts`) deletes delivered emails older than a week from the component.
 
-A missing or mismatched relay secret does **not** skip verification: delivery fails and users
-stay unverified. Accounts created before email sign-in hold placeholder `@users.invalid`
-addresses and cannot use password sign-in on hosted deployments.
-
-Locally, `just start-convex` writes one relay secret to Convex and `apps/web/.env`; mail appears in
-Void's dev inbox. After pulling this change, run `just start-convex` once so `apps/web/.env` gets it.
+A hosted deployment without a key is fully usable: sign-up and sign-in do not require verification,
+since nobody could receive the link (`canSendEmail` in `modules/auth/verification.ts` decides).
+Password reset, the verification resend, and email change are unavailable there: Better Auth
+refuses them with a 503, `api.routes.auth.email` reports the capability, and the web app hides the
+reset/verification request and explains in Settings. Setting a key later makes verification required
+again for new sign-ins. Accounts created before email sign-in hold placeholder `@users.invalid`
+addresses and cannot use password sign-in on hosted deployments. Errors from delivery never include
+the key or the message.
 
 ## Changing an account email
 

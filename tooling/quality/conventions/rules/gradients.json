@@ -6,8 +6,7 @@
   "exclude": [
     "apps/landing/src/styles/tokens.css",
     "packages/ui/src/styles/globals.css",
-    "packages/ui/src/styles/tokens.css",
-    "apps/web/void.config.ts"
+    "packages/ui/src/styles/tokens.css"
   ],
   "pattern": "(?:linear|radial|conic)-gradient\\s*\\(|\\bbg-(?:gradient|linear|radial|conic)-",
   "ignoreCase": true,

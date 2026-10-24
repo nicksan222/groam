@@ -2,14 +2,17 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://groam.app/schemas/deploy-environments.json",
   "title": "Groam release environments",
-  "description": "Public settings for each hosted environment. Secrets never go here; they live in the matching GitHub environment. An empty string means not configured yet; `just deploy preflight` rejects it.",
+  "description": "Public settings for the hosted environment. Secrets never go here; they live in the matching GitHub environment. An empty convexUrl or emailFrom means not configured yet; `just deploy preflight` rejects it. An empty host is valid.",
   "type": "object",
   "properties": {
-    "$schema": { "type": "string" },
-    "production": { "$ref": "#/$defs/environment" },
-    "beta": { "$ref": "#/$defs/environment" }
+    "$schema": {
+      "type": "string"
+    },
+    "production": {
+      "$ref": "#/$defs/environment"
+    }
   },
-  "required": ["production", "beta"],
+  "required": ["production"],
   "additionalProperties": false,
   "$defs": {
     "environment": {
@@ -20,49 +23,18 @@
           "type": "string",
           "pattern": "^$|^https://[a-z0-9]+(-[a-z0-9]+)*(\\.[a-z]{2}-[a-z]+-[0-9]+)?\\.convex\\.cloud$"
         },
-        "cloudflareAccountId": {
-          "description": "Only needed when the Cloudflare token can reach several accounts.",
+        "host": {
+          "description": "Optional custom domain attached to the Convex deployment (intended: groam.app). Empty means the release serves from the deployment's own HTTP origin (the convexUrl with .convex.cloud replaced by .convex.site). When set it must be a bare hostname, never a Convex one; it serves the landing site at / and the web app at /app/.",
           "type": "string",
-          "pattern": "^$|^[a-f0-9]{32}$"
-        },
-        "workersSubdomain": {
-          "description": "The account's workers.dev subdomain (`my-team` or `my-team.workers.dev`). Version preview URLs are off, so Void checks each new version there before it takes traffic.",
-          "type": "string",
-          "pattern": "^$|^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.workers\\.dev)?$"
+          "pattern": "^$|^(?!.*\\.convex\\.(site|cloud)$)[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$"
         },
         "emailFrom": {
-          "description": "Sender of authentication mail, optionally with a display name; Void sets up Cloudflare Email for its domain.",
+          "description": "Sender of authentication mail, optionally with a display name; Resend sends from it, so its domain must be verified there.",
           "type": "string",
           "pattern": "^$|^(?!.*\\.(localhost|example)>?$)([^<>@]+ <[^<>\\s@]+@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)+>|[^<>\\s@]+@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)+)$"
-        },
-        "web": { "$ref": "#/$defs/frontend" },
-        "landing": { "$ref": "#/$defs/frontend" }
-      },
-      "required": [
-        "convexUrl",
-        "cloudflareAccountId",
-        "workersSubdomain",
-        "emailFrom",
-        "web",
-        "landing"
-      ],
-      "additionalProperties": false
-    },
-    "frontend": {
-      "type": "object",
-      "properties": {
-        "worker": {
-          "description": "The Cloudflare Worker that Void deploys this app to.",
-          "type": "string",
-          "pattern": "^[a-z0-9-]+$"
-        },
-        "host": {
-          "description": "The custom domain Void attaches to that Worker: a bare hostname, never a Convex one.",
-          "type": "string",
-          "pattern": "^(?!.*\\.convex\\.(site|cloud)$)[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$"
         }
       },
-      "required": ["worker", "host"],
+      "required": ["convexUrl", "host", "emailFrom"],
       "additionalProperties": false
     }
   }

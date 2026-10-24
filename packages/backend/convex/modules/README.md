@@ -47,6 +47,13 @@ an already-paid seat. Preview builders serve the paywall: the redacted trip, the
 viewer's own RSVP, and payment status. Organization-wide reads stay ungated. Every paid checkout
 yields exactly a seat or a scheduled, idempotent refund.
 
+Authentication email (`modules/auth/email.ts`) is optional the same way: with `RESEND_API_KEY` it is
+queued on the Resend component from `AUTH_EMAIL_FROM` (default `Groam <onboarding@resend.dev>`, which only delivers to the Resend account owner's address,
+so real use needs `AUTH_EMAIL_FROM` on a verified domain); without a key a local site writes the
+message, links included, to the Convex function log, and a hosted site logs only an error. Without a key a hosted site also skips email verification
+(`canSendEmail` in `modules/auth/verification.ts` is the single check) and rejects the mail-dependent
+endpoints (password reset, verification resend, email change).
+
 Trip builders live in `modules/travel/trips/ctx.ts`. Stack by composing `input` helpers there, not by inventing
 new entity classes or `(ctx, trip, workspace, role)` argument bags.
 

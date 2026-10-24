@@ -4,7 +4,7 @@ import { href } from '@/lib/navigation/paths';
 import type { NavigateTarget, RouteTarget } from '@/types/navigation';
 
 /**
- * Redirects to a typed destination once rendered; route pages use it for legacy URLs. A redirect
+ * Redirects to a typed destination once rendered; route pages use it for redirects. A redirect
  * is not a page change the person chose, so it skips the view transition unless asked.
  */
 export function Navigate({
@@ -16,7 +16,7 @@ export function Navigate({
   const visit = useVisit();
   const url = href(target as RouteTarget);
   useEffect(() => {
-    // A failed visit leaves the current page; Void reports the navigation error itself.
+    // A failed visit leaves the current page; the router reports the navigation error itself.
     visit(url, { preserveScroll, replace, viewTransition }).catch(() => undefined);
   }, [url, preserveScroll, replace, viewTransition, visit]);
   return null;

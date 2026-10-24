@@ -17,11 +17,11 @@ independent of network services.
 
 ## Hosting and configuration
 
-Cloudflare, through Void, is the sole production frontend host, with two
-separate deployments at separate origins: the web app (`apps/web`) is served
-from the root of its own origin, and the Astro landing site (`apps/landing`,
-static output) from another. Convex serves application procedures and backend
-HTTP routes, including authentication and external authorization callbacks.
+Convex static hosting (`@convex-dev/static-hosting`) is the sole production frontend host. One Convex
+deployment per environment serves both frontends from one custom-domain origin: the Astro landing site
+(`apps/landing`, static output) at `/`, and the web app (`apps/web`) under `/app/`. Convex also serves
+application procedures and backend HTTP routes, including authentication and external authorization
+callbacks, which keep their URLs.
 During development, `vp dev` serves the application at the root of
 `localhost:5173`, separately from the local backend and the landing site on
 `localhost:4321`.
@@ -50,7 +50,7 @@ domain layer.
 
 Backend integration tests cover real procedure and component boundaries with
 controlled external model responses. View tests and browser journeys cover
-client interactions and reactivity; Void checks each new frontend version as part of `void deploy`. These checks
+client interactions and reactivity; releases build each frontend. These checks
 serve different boundaries and are not interchangeable.
 
 Operational commands and connection

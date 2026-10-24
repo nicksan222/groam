@@ -1,7 +1,7 @@
 import { ListFilter, X } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import type { DataTableResourceLabel } from '#src/lib/data-table';
-import { listSearchCountText } from './list-search-footer';
+import { listSearchCountText } from './list-search-count';
 import { segmentListSearch, type ListSearchToken } from './list-search-query';
 
 /** The words of a query with where each starts, a key that stays put while later words change. */

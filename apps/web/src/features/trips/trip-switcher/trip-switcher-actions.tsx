@@ -7,13 +7,11 @@ import {
 import { toast } from '@groam/ui/components/toast';
 import { useTripSidebarActions } from '@/features/trips/hooks/use-trip-sidebar-actions';
 import { defaultTripSection } from '@/features/trips/trip-sections';
+import { absoluteHref } from '@/lib/navigation/base-path';
 import type { CurrentTrip } from '@/types/trips';
 
 async function copyTripLink(reference: string) {
-  const url = new URL(
-    `/trips/${reference}/${defaultTripSection}`,
-    window.location.origin
-  ).toString();
+  const url = absoluteHref(`/trips/${reference}/${defaultTripSection}`);
   try {
     await navigator.clipboard.writeText(url);
     toast.success('Trip link copied');

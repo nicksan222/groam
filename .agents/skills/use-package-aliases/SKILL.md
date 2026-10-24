@@ -18,7 +18,7 @@ Use kebab-case paths for repository-owned files and folders.
    package's `src/` directory. Add a needed export in its owning manifest.
 3. Follow nearby imports for app-local feature/lib paths and public UI, AI,
    backend, and env subpaths. Avoid stale aliases from previous package names.
-4. For Void page files under `apps/web/pages/`, read the `pageImports` pattern in `tooling/oxc-config/lint.ts`.
+4. For page files under `apps/web/pages/`, read the `pageImports` pattern in `tooling/oxc-config/lint.ts`.
    Pages compose feature views and must not import primitives to build product UI.
 5. Find current convention and package checks in the root scripts and run them
    after changing import paths or exports.

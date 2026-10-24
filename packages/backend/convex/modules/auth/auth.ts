@@ -6,7 +6,6 @@ import { organization, twoFactor, username } from 'better-auth/plugins';
 import { decodeJwt } from 'jose';
 import { components, internal } from '#convex-generated/api';
 import type { DataModel } from '#convex-generated/dataModel';
-import { env } from '#convex-generated/server';
 import authConfig from '#convex/auth.config';
 import authSchema from '#convex/components/better-auth/schema';
 import { authEmailRateLimiter } from './email';
@@ -14,13 +13,12 @@ import { MAX_USERNAME_LENGTH } from './lengths';
 import { fieldLimitsPolicy } from './limits';
 import { resolveAuthTrustedOrigins } from './origins';
 import { accountRecovery } from './recovery';
+import { authSiteLink, resolveAuthBaseUrl, resolveAuthSiteUrl } from './site';
 import { emailVerificationPolicy, isPlaceholderEmail, requiresVerifiedEmail } from './verification';
 
-const authBaseUrl = env.CONVEX_SITE_URL ?? 'http://127.0.0.1:3211';
-
-export const authSiteUrl = env.SITE_URL ?? authBaseUrl;
+const authBaseUrl = resolveAuthBaseUrl();
+export const authSiteUrl = resolveAuthSiteUrl();
 export const authTrustedOrigins = resolveAuthTrustedOrigins(authSiteUrl, authBaseUrl);
-const verifiesEmail = requiresVerifiedEmail(authSiteUrl);
 const passkeyRpId = new URL(authSiteUrl).hostname;
 // A passkey belongs to one relying party: accept every trusted origin on its host (locally the
 // app on 5173 and the browser journeys on 5174).
@@ -77,8 +75,10 @@ export const authComponent = createClient<DataModel, typeof authSchema>(componen
 
 export const { onCreate, onDelete } = authComponent.triggersApi();
 
-export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
-  ({
+export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
+  // Hosted without a Resend key nobody could receive the link, so verification is not required.
+  const verifiesEmail = requiresVerifiedEmail(authSiteUrl);
+  return {
     appName: 'Groam',
     baseURL: authBaseUrl,
     database: authComponent.adapter(ctx),
@@ -112,7 +112,7 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
           return;
         }
         // The signed-in original account confirms the change from Settings, not the auth server.
-        const link = new URL(`/settings/profile?emailChangeToken=${token}`, authSiteUrl).href;
+        const link = authSiteLink(`/settings/profile?emailChangeToken=${token}`, authSiteUrl);
         await scheduleAuthEmail(
           ctx,
           user.email,
@@ -149,7 +149,8 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
     ],
     user: { changeEmail: { enabled: true } },
     trustedOrigins: authTrustedOrigins
-  }) satisfies BetterAuthOptions;
+  } satisfies BetterAuthOptions;
+};
 
 export const createAuth = (ctx: GenericCtx<DataModel>) => betterAuth(createAuthOptions(ctx));
 

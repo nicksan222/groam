@@ -159,7 +159,7 @@ The command palette (Search in the sidebar header, `Cmd/Ctrl+K`) is trip-scoped.
 
 ### Assistant Dock
 
-Private contextual help uses a Cloudflare-inspired sidechat pattern: a header shows the active conversation title and opens chat history, with controls for new chat, widening, and closing. At viewports 1280px and wider it docks at 24rem by default and can widen to 40rem, capped at 40vw. Below 1280px it is an accessible sheet; on phones it fills the viewport height with safe-area padding. A quiet context bar sits above one composed input with attachments, stop/send states, and the AI notice. The controlled draft survives layout changes and thread selection. Its controls use the same all-sans, neutral-surface language as the workspace.
+Private contextual help uses a sidechat pattern: a header shows the active conversation title and opens chat history, with controls for new chat, widening, and closing. At viewports 1280px and wider it docks at 24rem by default and can widen to 40rem, capped at 40vw. Below 1280px it is an accessible sheet; on phones it fills the viewport height with safe-area padding. A quiet context bar sits above one composed input with attachments, stop/send states, and the AI notice. The controlled draft survives layout changes and thread selection. Its controls use the same all-sans, neutral-surface language as the workspace.
 
 ## Do's and Don'ts
 

@@ -7,7 +7,7 @@
     "packages/ui/src/components/**/*.test.ts",
     "packages/ui/src/components/**/*.test.tsx"
   ],
-  "searchIn": ["apps/*/src/**", "apps/*/pages/**", "packages/*/src/**"],
+  "searchIn": ["apps/*/src/**", "packages/*/src/**"],
   "ignore": ["**/*.test.ts", "**/*.test.tsx"],
   "examples": [
     {

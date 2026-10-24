@@ -14,7 +14,7 @@ const validated = cleanEnv(
   {
     VITE_LANDING_URL: url({
       default: 'http://localhost:4321',
-      desc: 'Public landing site origin (separate deployment) for terms, privacy, and pricing links'
+      desc: 'Public landing site origin for terms, privacy, and pricing links'
     }),
     VITE_MAP_TILES_URL: str({
       default: DEFAULT_MAP_TILES_URL,
@@ -33,6 +33,8 @@ const validated = cleanEnv(
 
 export const env = {
   ...authEnv,
+  /** Vite's public base: `/` locally, `/app/` when the release hosts the app under a path. */
+  basePath: import.meta.env.BASE_URL,
   landingUrl: validated.VITE_LANDING_URL,
   mapTilesUrl: validated.VITE_MAP_TILES_URL,
   photonUrl: validated.VITE_PHOTON_URL,

@@ -32,7 +32,7 @@ Codespace, use the shorter commands shown below directly.
 
 ```bash
 just start-convex   # asks: local backend or online Convex dev deployment
-just dev            # the Void web app on :5173 (`just landing` serves :4321)
+just dev            # the web app on :5173 (`just landing` serves :4321)
 ```
 
 `just start-convex` runs the Convex API on `:3210` and the dashboard on `:6790` for
@@ -71,9 +71,9 @@ Smaller loops:
 | `just test`      | Unit and view tests                                                           |
 | `just journeys`  | Browser journeys against the running local backend (start it with `just start-convex`) |
 
-Add web pages as files under `apps/web/pages` and list their path in `AppPath`
-(`apps/web/src/types/navigation.ts`); Void discovers pages from the file tree, so
-there is no route tree to generate. See the `add-web-route` skill.
+Add web pages under `apps/web/pages`, register them in
+`apps/web/src/routes/route-tree.tsx`, and list their path in `AppPath`
+(`apps/web/src/types/navigation.ts`). See the `add-web-route` skill.
 
 ## Conventions
 

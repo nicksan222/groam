@@ -11,10 +11,13 @@ import { FormField } from '@groam/ui/components/form-field';
 import { Input } from '@groam/ui/components/input';
 import { useFormSubmit } from '@groam/ui/hooks/use-form-submit';
 import { useState } from 'react';
+import { useEmailDelivery } from '@/features/auth/hooks/use-email-delivery';
 import { emailCallbackURL, isEmail } from '@/lib/email';
 
 /** Requests a password reset or verification email; links return to this same auth screen. */
 export function EmailLinkRequest() {
+  // Without a Resend key no link is ever mailed, so offering one would only mislead.
+  const emailDelivery = useEmailDelivery();
   const [email, setEmail] = useState('');
   const form = useFormSubmit({ fallbackError: 'Unable to send email. Try again.' });
   const resend = useFormSubmit({ fallbackError: 'Unable to send email. Try again.' });
@@ -53,6 +56,8 @@ export function EmailLinkRequest() {
         'If this address is eligible, an email is on its way. Check your inbox and spam folder.'
       );
     };
+
+  if (emailDelivery !== true) return null;
 
   return (
     <Collapsible className="mt-6 text-sm" onOpenChange={setExpanded} open={expanded}>

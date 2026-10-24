@@ -3,7 +3,7 @@ import { WorkspaceProvider } from '@/features/workspace/workspace-shell/workspac
 import { WorkspaceShell } from '@/features/workspace/workspace-shell/workspace-shell';
 import type { LayoutProps } from '@/lib/navigation/router';
 
-/** The signed-in workspace shell; Void keeps it mounted while its pages change. */
+/** The signed-in workspace shell; it stays mounted while its pages change. */
 export default function WorkspaceLayout({ children }: LayoutProps) {
   return (
     <WorkspaceProvider>

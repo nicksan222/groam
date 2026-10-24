@@ -18,8 +18,7 @@
     "./landing": "./src/apps/landing.ts",
     "./seeder": "./src/apps/seeder.ts",
     "./vitest": "./src/apps/vitest.ts",
-    "./web-client": "./src/apps/web-client.ts",
-    "./void": "./src/apps/void.ts"
+    "./web-client": "./src/apps/web-client.ts"
   },
   "files": [
     "src"

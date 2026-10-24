@@ -10,6 +10,7 @@
     // the `expect.element` types; resolving every `vitest` import to one copy joins them again.
     "paths": {
       "#ai/*": ["../../packages/ai/src/*"],
+      "#pages/*": ["./pages/*"],
       "@/*": ["./src/*"],
       "vitest": ["./node_modules/vitest"],
       "vitest/internal/browser": ["./node_modules/vitest/dist/browser.d.ts"]

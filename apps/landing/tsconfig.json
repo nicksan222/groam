@@ -9,12 +9,5 @@
     },
     "types": ["node"]
   },
-  "include": [
-    "astro.config.ts",
-    "vite.config.ts",
-    "void.config.ts",
-    "e2e/**/*.ts",
-    "src/**/*.ts",
-    "scripts/**/*.ts"
-  ]
+  "include": ["astro.config.ts", "vite.config.ts", "e2e/**/*.ts", "src/**/*.ts", "scripts/**/*.ts"]
 }

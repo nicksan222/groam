@@ -131,4 +131,4 @@ function ExpandableChatMessage({
   );
 }
 
-export { ChatCollapsibleMessage, splitChatMessagePreview };
+export { ChatCollapsibleMessage };

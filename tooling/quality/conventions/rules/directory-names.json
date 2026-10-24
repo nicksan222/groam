@@ -5,18 +5,12 @@
   "target": "directories",
   "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*|\\..*|_generated)$",
   "exclude": [".github/ISSUE_TEMPLATE"],
-  "exceptions": [
-    {
-      "within": "apps/web/pages/**",
-      "pattern": "^(?:\\[(?:\\.\\.\\.)?[a-z][a-zA-Z0-9]*\\]|\\([a-z0-9]+(?:-[a-z0-9]+)*\\))$"
-    }
-  ],
+  "exceptions": [{ "within": "apps/web/pages/**", "pattern": "^\\([a-z0-9]+(?:-[a-z0-9]+)*\\)$" }],
   "examples": [
     {
       "files": {
         "apps/web/src/features/trips/hooks/use-trips.ts": "",
-        ".github/ISSUE_TEMPLATE/bug.yml": "",
-        "apps/web/pages/(workspace)/trips/[tripId]/[section].tsx": ""
+        ".github/ISSUE_TEMPLATE/bug.yml": ""
       },
       "reports": []
     },

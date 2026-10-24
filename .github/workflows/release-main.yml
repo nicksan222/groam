@@ -1,6 +1,6 @@
 name: 🚀 Release main
 
-# Reruns Checks and the full release (beta, then production) for current main.
+# Reruns Checks and the full release (production) for current main.
 on:
   workflow_dispatch:
 

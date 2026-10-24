@@ -2,18 +2,17 @@
 
 This file describes how `apps/web` realises the decisions in the
 [client architecture](README.md): boot, the workspace and reference layers
-around Void's page tree, and how features adapt Convex operations. The pseudocode is
+around the TanStack route tree, and how features adapt Convex operations. The pseudocode is
 simplified from the source and keeps the real identifiers; when the two
 disagree, the source wins.
 
 ## Boot and provider nesting
 
-Void renders the page tree under `apps/web/pages`; the root `layout.tsx`
-re-exports `AppLayout`, which creates the browser's `ConvexReactClient` and
-renders `AppRoot` around the routed page. Journeys mount `AppRoot` as well.
+`main.tsx` mounts the router; the root route renders `AppLayout`, which creates the
+browser's `ConvexReactClient` and renders `AppRoot` around the routed page. Journeys mount `AppRoot` as well.
 Theme wraps authentication, which wraps the app. `App` adds the assistant
-screen-context provider and the route error boundary; the catch-all
-`[...path].tsx` page renders the not-found view.
+screen-context provider and the route error boundary; the root route's
+`notFoundComponent` renders the not-found view.
 
 ```tsx
 // pages/layout.tsx
@@ -62,28 +61,26 @@ if (isChangingSession && (isLoading || !isAuthenticated)) setChangingSession(fal
 Source: [`app.tsx`](../../../apps/web/src/app.tsx#L30),
 [`use-session-change.ts`](../../../apps/web/src/features/auth/hooks/use-session-change.ts#L12).
 
-## File-based pages and thin page files
+## Code-based routes and thin page files
 
-Void routes `apps/web/pages/**` by file name: `[tripId]` is a param,
-`[...path]` a catch-all, and the `(workspace)` group wraps every product page
-in one `layout.tsx` without adding a URL segment. Each page has a sibling
-`.server.ts` with `export const ssr = false`, so the Worker serves a
-client-mounted shell. Nested layouts (such as `chat/layout.tsx`) stay mounted
-while their pages change, and the app enables view transitions through
-`voidReact({ viewTransitions: true })`. Void writes its generated types to
-`.void/` (ignored); there is no route tree to edit.
+`apps/web/src/routes/route-tree.tsx` builds the route tree: `$tripId` is a param, the
+pathless `workspace` route wraps every product page in `WorkspaceLayout` without adding a URL
+segment, and each page in `apps/web/pages/(workspace)/*.tsx` (imported through `#pages/*`) is lazy-loaded. Convex static hosting serves
+`index.html` for every path under `/app/`, so the browser mounts a client-only shell. Layout routes (such as
+`chat`) stay mounted while their pages change, and the router enables view transitions through
+`defaultViewTransition`.
 
-Navigation goes through `@/lib/navigation/router`, a typed layer over Void's
-router. `AppPath` in `types/navigation.ts` lists every page pattern, and
+Navigation goes through `@/lib/navigation/router`, a typed layer over TanStack
+Router. `AppPath` in `types/navigation.ts` lists every page pattern, and
 `Link`, `useNavigate` and `Navigate` take `{ to, params, search, hash }`.
 `href()` in `lib/navigation/paths.ts` returns the plain path. A page file reads
-params and search, applies legacy redirects and renders one feature view.
+params and search, applies redirects and renders one feature view.
 Oxlint's `no-restricted-imports` rejects a page import outside its allowlist
-(`@void/react`, `@groam/*` packages other than UI, `@/features/`, `@/lib/` and
+(`@groam/*` packages other than UI, `@/features/`, `@/lib/` and
 `@/app-layout`).
 
 ```tsx
-// pages/(workspace)/trips/[tripId]/[section].tsx
+// pages/(workspace)/trip-section.tsx
 export default function TripSectionPage() {
   const params = useParams<{ section: string; tripId: string }>();
   const { section, tripId } = useResolvedParams(params);        // long ids from ReferenceProvider
@@ -91,20 +88,17 @@ export default function TripSectionPage() {
   if (!isTripSection(section)) return <Navigate params={{ section: defaultTripSection, tripId: params.tripId }} replace to="/trips/$tripId/$section" />;
   return <TripDetailView day={day} section={section} tripId={tripId as Id<'trips'>} />;
 }
-// [section].server.ts
-export const ssr = false;
 ```
 
-Source: [`pages/`](../../../apps/web/pages),
-[`[section].tsx`](../../../apps/web/pages/(workspace)/trips/[tripId]/[section].tsx),
+Source: [`route-tree.tsx`](../../../apps/web/src/routes/route-tree.tsx),
+[`trip-section.tsx`](../../../apps/web/pages/(workspace)/trip-section.tsx),
 [`navigation/`](../../../apps/web/src/lib/navigation),
 [`navigation.ts`](../../../apps/web/src/types/navigation.ts),
-[`void.config.ts`](../../../apps/web/void.config.ts),
 [`lint.ts`](../../../tooling/oxc-config/lint.ts).
 
 ## Workspace provider and group switch
 
-The `(workspace)` layout nests `WorkspaceProvider`, `ReferenceProvider` and
+The workspace layout nests `WorkspaceProvider`, `ReferenceProvider` and
 `WorkspaceShell`. `useWorkspaceData` combines the Better Auth session,
 organization list and active organization, and yields a value only when the
 active organization equals `session.activeOrganizationId`, so a group cached
@@ -345,7 +339,7 @@ Source: [`agent-context.tsx`](../../../packages/ai/src/ui/context/agent-context.
 
 ## Extending
 
-- New page: a Void page and `.server.ts` under `apps/web/pages`, an
+- New page: a page under `apps/web/pages`, a route in the tree, an
   `AppPath` entry, and a feature view
   ([add-web-route](../../../.agents/skills/add-web-route/SKILL.md),
   [place-feature-view](../../../.agents/skills/place-feature-view/SKILL.md)).

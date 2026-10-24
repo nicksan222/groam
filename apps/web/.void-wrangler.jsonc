@@ -1,0 +1,11 @@
+{
+  "name": "groam-app",
+  "routes": [
+    {
+      "custom_domain": true,
+      "pattern": "app.groam.app"
+    }
+  ],
+  "preview_urls": false,
+  "workers_dev": true
+}

@@ -15,9 +15,9 @@ App code imports a typed, validated target. Raw environment access belongs in
 1. Inspect `packages/env/src/apps/` and `packages/env/package.json` to find the
    target that owns the consumer. Follow its validator and exported `env` shape.
    For a new target, publish its subpath in the manifest.
-2. For hosted deployment values (Convex deployment, web Worker, GitHub
+2. For hosted deployment values (Convex deployment, GitHub
    environment secrets), add them to `packages/env/src/deployment/variables.ts`;
-   `convex.config.ts`, `apps/web/env.ts`, the setup checklist, and the release
+   `convex.config.ts`, the setup checklist, and the release
    preflight read that definition. `@groam/env/deployment` is the only
    `@groam/env` import allowed in the backend; Convex code reads values from the
    generated server `env`.

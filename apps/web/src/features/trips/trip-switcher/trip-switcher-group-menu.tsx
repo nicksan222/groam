@@ -14,7 +14,7 @@ import { useWorkspace } from '@/features/workspace/workspace-shell/workspace-sta
 import { useNavigate } from '@/lib/navigation/router';
 import { testIds } from '@/lib/test-ids';
 import { GroupAvatar } from './group-avatar';
-import { roleLabel } from './trip-switcher-trigger';
+import { roleLabel } from './role-label';
 
 /**
  * The group, with the viewer's role, at the bottom of the trip switcher: the other groups to switch to, then joining

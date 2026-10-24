@@ -21,7 +21,7 @@ const sessionLoading = (
   </main>
 );
 
-/** Session gating around the routed Void page: signed-in people see it, visitors sign in. */
+/** Session gating around the routed page: signed-in people see it, visitors sign in. */
 export default function App({ children }: PropsWithChildren) {
   const { changeSession, isChangingSession } = useSessionChange();
   // Any navigation, including a query change, starts the page over, as a page load would.

@@ -12,4 +12,11 @@ crons.interval(
   {}
 );
 
+crons.interval(
+  'remove old emails from the resend component',
+  { hours: 24 },
+  internal.modules.auth.email.cleanupResend,
+  {}
+);
+
 export default crons;

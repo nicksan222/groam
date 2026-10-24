@@ -1,7 +1,7 @@
 name: 🚀 Release
 
-# Every tested main revision is preflighted, goes to beta first, and only then goes to production.
-# Each job reads its environment's own secrets. The steps are recipes in tooling/deploy/justfile.
+# Every tested main revision is preflighted and then deployed to production (Convex, landing, web).
+# Jobs read the prod environment's secrets. The steps are recipes in tooling/deploy/justfile.
 on:
   workflow_call:
 
@@ -9,33 +9,6 @@ permissions:
   contents: read
 
 jobs:
-  preflight-beta:
-    name: 🔎 Preflight beta
-    if: >-
-      github.repository == 'nicksan222/groam' &&
-      github.ref == 'refs/heads/main' &&
-      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
-      vars.CONVEX_BETA_ENABLED == 'true'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    environment:
-      name: beta
-    steps:
-      - name: Checkout tested revision
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          ref: ${{ github.sha }}
-
-      - name: Setup workspace
-        uses: ./.github/actions/setup-workspace
-
-      - name: Check beta is ready to release
-        env:
-          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: bunx just deploy preflight beta
-
   preflight-production:
     name: 🔎 Preflight production
     if: >-
@@ -60,57 +33,11 @@ jobs:
       - name: Check production is ready to release
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: bunx just deploy preflight production
-
-  beta:
-    name: 🧪 Deploy beta
-    # Waits for the production preflight too, so production gaps fail before beta changes.
-    needs: [preflight-beta, preflight-production]
-    if: >-
-      !failure() && !cancelled() &&
-      github.repository == 'nicksan222/groam' &&
-      github.ref == 'refs/heads/main' &&
-      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
-      vars.CONVEX_BETA_ENABLED == 'true'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 25
-    concurrency:
-      group: beta-deployment
-      cancel-in-progress: false
-    environment:
-      name: beta
-    steps:
-      - name: Checkout tested revision
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          ref: ${{ github.sha }}
-
-      - name: Setup workspace
-        uses: ./.github/actions/setup-workspace
-
-      - name: Verify revision is still current main
-        shell: bash
-        run: |
-          set -euo pipefail
-          remote_main="$(git ls-remote --exit-code origin refs/heads/main | awk '{print $1}')"
-          if [ -z "$remote_main" ] || [ "$remote_main" != "$GITHUB_SHA" ]; then
-            echo "::error::Refusing to deploy because $GITHUB_SHA is no longer current main ($remote_main)."
-            exit 1
-          fi
-
-      # Deploys Convex, then `void deploy` builds and publishes the web app and the landing site,
-      # each as its own Void project. Void checks every new version before it takes traffic.
-      - name: 🚀 Deploy beta
-        env:
-          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: bunx just deploy release beta
 
   production:
     name: 🚀 Deploy production
-    needs: [preflight-production, beta]
+    needs: [preflight-production]
     if: >-
       github.repository == 'nicksan222/groam' &&
       github.ref == 'refs/heads/main' &&
@@ -143,10 +70,9 @@ jobs:
             exit 1
           fi
 
-      # Deploys Convex, then `void deploy` builds and publishes the web app and the landing site,
-      # each as its own Void project. Void checks every new version before it takes traffic.
+      # Deploys Convex, then builds the landing site and the web app and uploads each to Convex
+      # static hosting.
       - name: 🚀 Deploy production
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: bunx just deploy release production

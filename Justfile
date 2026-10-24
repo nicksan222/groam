@@ -205,14 +205,12 @@ prepare-convex:
 
 # Set the Convex auth variables (CI runs this too; local by default, online when
 # GROAM_CONVEX_MODE=online). Secrets go through stdin, never argv.
-# Convex and the local Void Worker (apps/web/.env) share one relay secret for auth mail.
 [private]
 configure-local-auth *flags:
     #!/usr/bin/env bash
     set -euo pipefail
     [[ ${GROAM_CONVEX_MODE:-local} == online ]] || export CONVEX_AGENT_MODE=anonymous
     site_url=http://localhost:5173
-    worker_env=apps/web/.env
     names="$(bunx convex env list --names-only)"
     has() { grep -qx "$1" <<<"$names"; }
     secret() { openssl rand -base64 32 | tr '+/' '-_' | tr -d '=\n'; }
@@ -221,15 +219,6 @@ configure-local-auth *flags:
 
     has BETTER_AUTH_SECRET || secret | bunx convex env set BETTER_AUTH_SECRET
     bunx convex env set SITE_URL "$site_url"
-
-    relay="$(sed -n 's/^AUTH_EMAIL_RELAY_SECRET=//p' "$worker_env" 2>/dev/null | tail -n 1 || true)"
-    if [[ -z $relay ]] || ! has AUTH_EMAIL_RELAY_SECRET; then
-      value="${relay:-$(secret)}"
-      printf %s "$value" | bunx convex env set AUTH_EMAIL_RELAY_SECRET
-      [[ -n $relay ]] || append "$worker_env" \
-        '# Shared with Convex: lets it send authentication mail through the Void Worker' \
-        "AUTH_EMAIL_RELAY_SECRET=$value"
-    fi
 
     if [[ " {{ flags }} " == *" --write-vite-site-url "* ]]; then
       if grep -q '^VITE_SITE_URL=' .env.local 2>/dev/null; then
@@ -241,7 +230,7 @@ configure-local-auth *flags:
 
 # ── Release ─────────────────────────────────────────────────────
 
-# Hosted releases: `just deploy setup`, `just deploy preflight <beta|production>`.
+# Hosted releases: `just deploy setup`, `just deploy preflight production`.
 mod deploy 'tooling/deploy'
 
 # Enable squash auto-merge for a pull request once its required checks pass.

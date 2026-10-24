@@ -133,7 +133,7 @@
       "reports": false
     },
     {
-      "file": "apps/web/pages/trips.tsx",
+      "file": "apps/web/pages/(workspace)/trip-list.tsx",
       "source": "export const v = <Skeleton />;",
       "reports": true
     },

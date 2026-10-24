@@ -89,8 +89,8 @@ wide widths. Build before running them because the suite serves `dist`.
 
 Catalogs reject conflicting translations of a shared phrase during the build.
 
-The landing site deploys as its own Void project (`apps/landing/void.config.ts`), which serves
-`404.html` with status 404 for unknown URLs. Unknown Italian URLs therefore get the English 404 page;
+The landing site is uploaded to the Convex deployment's static hosting at the root of the custom domain
+(`packages/backend/convex/modules/hosting/site.ts`), which serves `404.html` with status 404 for unknown URLs. Unknown Italian URLs therefore get the English 404 page;
 there is no localized 404 routing.
 
 `IdeaHeading` gives a highlighted heading one continuous card with its own line

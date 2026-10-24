@@ -13,15 +13,13 @@
     "parse5": "^8.0.1"
   },
   "devDependencies": {
-    "@groam/deploy": "workspace:*",
     "@groam/typescript-config": "workspace:*",
     "@types/node": "^26.6.3",
     "playwright": "^1.63.0",
     "typescript": "~7.0.2",
     "vite": "catalog:",
     "vite-plus": "catalog:",
-    "vitest": "catalog:",
-    "void": "1.1.12"
+    "vitest": "catalog:"
   },
   "license": "MIT",
   "private": true,
