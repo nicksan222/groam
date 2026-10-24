@@ -192,6 +192,11 @@ export const lint = {
 
     // Groam guardrails, scoped like the former Grit plugins.
     {
+      files: ['**/apps/web/src/**', '**/apps/web/pages/**', '**/packages/ai/src/ui/**'],
+      excludeFiles: tests,
+      rules: { 'groam/no-duplicate-issue-form': 'error' }
+    },
+    {
       files: ['**/apps/**', '**/packages/**'],
       excludeFiles: ['**/packages/icons/**'],
       rules: { 'groam/no-raw-icons': 'error' }
