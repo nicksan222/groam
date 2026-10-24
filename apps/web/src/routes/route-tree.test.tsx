@@ -4,9 +4,29 @@ import type { ReactNode } from 'react';
 import { beforeAll, expect, test, vi } from 'vite-plus/test';
 import { createAppRouter } from '@/routes/route-tree';
 
-// Overlapping view transitions reject with AbortError; these tests are about the tree, not motion.
+// Every transition behaves as one a newer navigation skipped: `ready` and `finished` reject. The
+// router must handle both, or Vitest reports them as unhandled rejections.
+const startViewTransition = vi.fn((update: () => Promise<void>) => {
+  const skipped = () => Promise.reject(new DOMException('Transition was skipped', 'AbortError'));
+  return { finished: skipped(), ready: skipped(), updateCallbackDone: update() };
+});
 beforeAll(() => {
-  Object.defineProperty(document, 'startViewTransition', { configurable: true, value: undefined });
+  Object.defineProperty(document, 'startViewTransition', {
+    configurable: true,
+    value: startViewTransition
+  });
+});
+
+test('navigations run through a view transition whose skipped promises are handled', async () => {
+  const router = createAppRouter({
+    history: createMemoryHistory({ initialEntries: ['/inbox'] }),
+    renderRoot: (page) => page
+  });
+  await router.load();
+  startViewTransition.mockClear();
+  await router.navigate({ to: '/issues/$issueId', params: { issueId: 'i1' } });
+  expect(startViewTransition).toHaveBeenCalledTimes(1);
+  expect(router.state.location.pathname).toBe('/issues/i1');
 });
 
 async function matched(path: string) {

@@ -122,7 +122,7 @@ export function createAppRouter({
   history,
   renderRoot
 }: AppRouterContext & { history?: RouterHistory }) {
-  return createRouter({
+  const router = createRouter({
     basepath: routerBasepath(),
     context: { renderRoot },
     defaultPendingComponent: RoutePending,
@@ -134,4 +134,24 @@ export function createAppRouter({
     scrollRestoration: true,
     stringifySearch: stringifyQuery
   });
+  router.startViewTransition = (update) => startHandledViewTransition(router, update);
+  return router;
+}
+
+/**
+ * TanStack's transition starter returns only `updateCallbackDone`. A transition that a newer
+ * navigation skips, or whose DOM update times out, also rejects `ready` and `finished`, which
+ * nothing awaits; mark them handled so a skipped animation never surfaces as an error.
+ */
+function startHandledViewTransition(
+  router: { options: { defaultViewTransition?: unknown }; shouldViewTransition?: unknown },
+  update: () => Promise<void>
+) {
+  const enabled = router.shouldViewTransition ?? router.options.defaultViewTransition;
+  router.shouldViewTransition = undefined;
+  if (!enabled || typeof document.startViewTransition !== 'function') return update();
+  const transition = document.startViewTransition(update);
+  transition.ready.catch(() => undefined);
+  transition.finished.catch(() => undefined);
+  return transition.updateCallbackDone;
 }
