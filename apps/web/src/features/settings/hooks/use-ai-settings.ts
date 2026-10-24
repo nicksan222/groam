@@ -27,12 +27,14 @@ export function useAiSettings() {
   const modelsAction = useAction(api.routes.settings.ai.models.run);
   const selectMutation = useMutation(api.routes.settings.ai.select.run);
   const acknowledgeMutation = useMutation(api.routes.settings.ai.acknowledge.run);
-  const { error, isPending, run, setError } = useAsyncAction({
+  const { error, isPending, run } = useAsyncAction({
     fallbackError: 'Unable to update your ChatGPT connection'
   });
   const [message, setMessage] = useState<string | null>(null);
   const [models, setModels] = useState<ChatGptModel[]>([]);
   const [modelsLoading, setModelsLoading] = useState(false);
+  // Kept apart from the action error: the next action clears that one, and this load is not retried.
+  const [modelsError, setModelsError] = useState<string | null>(null);
   const connection = remote?.connections.find((item) => item.id === remote.activeConnectionId);
   const connectionId = connection?.connected && !connection.needsReconnect ? connection.id : null;
 
@@ -40,6 +42,7 @@ export function useAiSettings() {
     let cancelled = false;
     setModels([]);
     setModelsLoading(false);
+    setModelsError(null);
     if (!connectionId) return;
     setModelsLoading(true);
     void modelsAction({ connectionId })
@@ -47,7 +50,7 @@ export function useAiSettings() {
         if (!cancelled) setModels(catalog);
       })
       .catch((cause: unknown) => {
-        if (!cancelled) setError(errorMessage(cause, 'Unable to load ChatGPT models'));
+        if (!cancelled) setModelsError(errorMessage(cause, 'Unable to load ChatGPT models'));
       })
       .finally(() => {
         if (!cancelled) setModelsLoading(false);
@@ -55,12 +58,13 @@ export function useAiSettings() {
     return () => {
       cancelled = true;
     };
-  }, [connectionId, modelsAction, setError]);
+  }, [connectionId, modelsAction]);
 
   // Takes a thunk, so a call the guard ignores never starts its request.
   const perform = async (operation: () => Promise<string | null>, success?: string) => {
-    setMessage(null);
     return run(async () => {
+      // Inside the thunk, so a call the guard ignores leaves the current message alone.
+      setMessage(null);
       const result = await operation();
       const successMessage = success ?? result;
       if (successMessage) setMessage(successMessage);
@@ -72,7 +76,8 @@ export function useAiSettings() {
     connection,
     models,
     modelsLoading,
-    error,
+    error: error ?? modelsError,
+    modelsError,
     message,
     isPending,
     isLoading: remote === undefined,

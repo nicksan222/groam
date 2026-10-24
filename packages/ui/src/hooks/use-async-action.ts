@@ -3,11 +3,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 /**
  * How one `run` ended. Tell `ignored` (a call made while another was in flight, so nothing ran)
- * apart from `error` (it threw, and the hook holds the message) and `ok` (its `value` may itself
- * be `undefined`). Restore a draft only on `error`, never on `ignored`.
+ * apart from `error` (it threw: `error` is the thrown value, for a caller that must rethrow or
+ * inspect it, and `message` is what the hook holds and `onError` received) and `ok` (its `value`
+ * may itself be `undefined`). Restore a draft only on `error`, never on `ignored`.
  */
 export type ActionOutcome<T> =
-  | { status: 'error' }
+  | { status: 'error'; error: unknown; message: string }
   | { status: 'ignored' }
   | { status: 'ok'; value: T };
 
@@ -61,7 +62,7 @@ export function useAsyncAction({
       const message = errorMessage(caught, options.current.fallbackError);
       setError(message);
       options.current.onError?.(message);
-      return { status: 'error' };
+      return { status: 'error', error: caught, message };
     } finally {
       inFlight.current = false;
       setPending(false);

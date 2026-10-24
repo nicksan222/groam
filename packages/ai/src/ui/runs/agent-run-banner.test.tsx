@@ -117,7 +117,7 @@ test('retries from zero only when the issue run failed', async () => {
 
 const runningRun = { headline: null, id: 'run-1', issueId: 'issue-1', status: 'running' } as const;
 
-test('disables Stop and marks it busy while stopping', async () => {
+test('keeps Stop focusable but inert and busy while stopping', async () => {
   let finish: () => void = () => undefined;
   const onStop = vi.fn(() => new Promise<void>((resolve) => (finish = resolve)));
   await render(
@@ -131,7 +131,7 @@ test('disables Stop and marks it busy while stopping', async () => {
   );
   await page.getByRole('button', { name: agentRunCopy.stop }).click();
   const stopping = page.getByRole('button', { name: agentRunCopy.stop });
-  await expect.element(stopping).toBeDisabled();
+  await expect.element(stopping).toHaveAttribute('aria-disabled', 'true');
   await expect.element(stopping).toHaveAttribute('aria-busy', 'true');
   finish();
   await expect.element(page.getByRole('button', { name: agentRunCopy.stop })).toBeEnabled();

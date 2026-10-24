@@ -32,10 +32,10 @@ describe('useFormSubmit', () => {
 
   test('captures a thrown error as a message and clears it on the next run', async () => {
     const { result } = await renderHook(() => useFormSubmit({ fallbackError: 'Could not save' }));
-    const first = await act(() =>
-      result.current.run(() => Promise.reject(new Error('Name taken')))
-    );
-    expect(first).toEqual({ status: 'error' });
+    const thrown = new Error('Name taken');
+    const first = await act(() => result.current.run(() => Promise.reject(thrown)));
+    // The outcome carries the thrown value itself, for a caller that rethrows it.
+    expect(first).toEqual({ status: 'error', error: thrown, message: 'Name taken' });
     expect(result.current.error).toBe('Name taken');
     await act(() => result.current.run(() => Promise.reject({})));
     expect(result.current.error).toBe('Could not save');

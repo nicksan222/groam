@@ -105,11 +105,13 @@ test('swaps send for stop while responding and calls onStop', async () => {
   await expect.element(submitButton()).not.toBeInTheDocument();
 });
 
-test('disables stop while the response is stopping', async () => {
+test('keeps stop inert while the response is stopping', async () => {
   await render(
     <AssistantComposer {...composerProps({ isSending: true, isStopping: true, onStop: vi.fn() })} />
   );
-  await expect.element(page.getByRole('button', { name: 'Stop response' })).toBeDisabled();
+  await expect
+    .element(page.getByRole('button', { name: 'Stop response' }))
+    .toHaveAttribute('aria-disabled', 'true');
 });
 
 test('keeps send available while responding without a stop handler', async () => {

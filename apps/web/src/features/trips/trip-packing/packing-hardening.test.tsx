@@ -101,6 +101,28 @@ describe('packing hardening', () => {
     await expect.element(name).toHaveValue('Tent');
   });
 
+  test('a refused name edit puts the saved name back', async () => {
+    const onUpdate = vi.fn(async () => false);
+    await render(
+      <GroupGearItemEditor
+        item={item({ bringers: [], brought: 0 })}
+        onBring={noop}
+        onRemove={noop}
+        onUpdate={onUpdate}
+        travelers={[]}
+        viewerUserId={undefined}
+      />
+    );
+    await page.getByRole('button', { name: 'Edit Tent' }).click();
+    const name = page.getByLabelText('Name of Tent');
+    await name.fill('Big tent');
+    await name
+      .element()
+      .dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'Enter' }));
+    expect(onUpdate).toHaveBeenCalledWith('item-1', { label: 'Big tent' });
+    await expect.element(name).toHaveValue('Tent');
+  });
+
   test('a removed bringer chip leaves in place before it is gone', async () => {
     const { rerender } = await render(
       <GroupGearItemEditor

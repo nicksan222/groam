@@ -82,6 +82,7 @@ test('marks a pending send as busy', async () => {
   await render(<Harness onSubmit={vi.fn()} pending />);
   await expect.element(send()).toHaveAttribute('aria-busy', 'true');
   await expect.element(send()).toHaveAttribute('data-pending', '');
+  expect(send().element().querySelector('svg.animate-spin')).not.toBeNull();
 });
 
 test('names the send button with a tooltip on hover', async () => {
@@ -101,11 +102,14 @@ test('stops without submitting the draft', async () => {
   await expect.element(textbox()).toHaveTextContent('Keep this');
 });
 
-test('disables stop while stopping', async () => {
-  await render(<Harness onStop={vi.fn()} onSubmit={vi.fn()} stopping />);
+test('keeps stop focusable but inert while stopping', async () => {
+  const onStop = vi.fn();
+  await render(<Harness onStop={onStop} onSubmit={vi.fn()} stopping />);
   const stop = page.getByRole('button', { name: 'Stop reply' });
-  await expect.element(stop).toBeDisabled();
   await expect.element(stop).toHaveAttribute('aria-busy', 'true');
+  await expect.element(stop).toHaveAttribute('aria-disabled', 'true');
+  await stop.click({ force: true });
+  expect(onStop).not.toHaveBeenCalled();
 });
 
 test('shows the stop label as text when asked', async () => {
