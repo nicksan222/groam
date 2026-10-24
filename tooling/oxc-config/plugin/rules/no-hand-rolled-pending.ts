@@ -5,11 +5,15 @@ import {
   calleeName,
   descendants,
   enclosingFunction,
+  isFunction,
   isPendingName
 } from './form-ast.ts';
 
 const effects = new Set(['useEffect', 'useLayoutEffect']);
 const setter = /^set[A-Z]/u;
+/** Pending names that hold *which* thing is in flight, so any value written to them means busy. */
+const IN_FLIGHT_TARGET = /(?:Id|Action|Target|Kind|Key)$/u;
+const TIMER_CALLEE = /^(?:delay|sleep|wait|timeout|setTimeout|nextTick|nextFrame)$/iu;
 
 type Flag = { kind: 'ref' | 'state'; name: string };
 
@@ -40,8 +44,9 @@ function writes(node: ESTree.Node | null | undefined, name: string): boolean | u
   if (flag !== undefined) return flag;
   if (isEmptyValue(node)) return false;
   if (node?.type === 'ObjectExpression') return objectFlag(node);
-  // `setPendingId(id)`: any non-empty value on a pending-named setter means busy.
-  return node && isPendingName(name) ? true : undefined;
+  // `setPendingId(id)`: a value on a setter named for what is in flight means busy. Other
+  // pending-named state (`setPendingChoice(option)`, an optimistic value) holds data, not a flag.
+  return node && isPendingName(name) && IN_FLIGHT_TARGET.test(name) ? true : undefined;
 }
 
 type Write = { busy: boolean; name: string; node: ESTree.Node };
@@ -72,9 +77,22 @@ function writeOf(node: ESTree.Node, flags: Map<string, Flag>): Write | undefined
   return undefined;
 }
 
+/** Waiting on a timer (`await delay(1500)`) ends a UI flourish such as "Copied", not an action. */
+function isTimerWait(node: ESTree.Node | null | undefined): boolean {
+  if (node?.type === 'CallExpression') return TIMER_CALLEE.test(calleeName(node) ?? '');
+  if (node?.type === 'NewExpression' && node.callee.type === 'Identifier')
+    return (
+      node.callee.name === 'Promise' &&
+      [...descendants(node.arguments)].some(
+        (inner) => inner.type === 'CallExpression' && calleeName(inner) === 'setTimeout'
+      )
+    );
+  return false;
+}
+
 /** `await x` or a `.then/.catch/.finally` call: the point after which the action has not finished. */
 function asyncPoint(node: ESTree.Node): number | undefined {
-  if (node.type === 'AwaitExpression') return node.start;
+  if (node.type === 'AwaitExpression') return isTimerWait(node.argument) ? undefined : node.start;
   if (
     node.type === 'CallExpression' &&
     node.callee.type === 'MemberExpression' &&
@@ -125,10 +143,23 @@ function isReleased(owner: ESTree.Node, on: Write, flags: Map<string, Flag>): bo
   return false;
 }
 
-/** A data fetch started by an effect is a loading state, not a user action. */
-function isEffectCallback(owner: AnyFunction): boolean {
-  const call = owner.parent;
-  return call?.type === 'CallExpression' && effects.has(calleeName(call) ?? '');
+/**
+ * A data fetch started by an effect is a loading state, not a user action. That includes an async
+ * helper declared inside the effect, so every enclosing function is checked.
+ */
+function isInEffect(owner: AnyFunction): boolean {
+  let current: ESTree.Node | null | undefined = owner;
+  while (current) {
+    const call = current.parent;
+    if (
+      isFunction(current) &&
+      call?.type === 'CallExpression' &&
+      effects.has(calleeName(call) ?? '')
+    )
+      return true;
+    current = current.parent as ESTree.Node | null | undefined;
+  }
+  return false;
 }
 
 /**
@@ -145,7 +176,7 @@ export default defineRule({
         for (const node of descendants(program)) {
           const on = writeOf(node, flags);
           const owner = on?.busy ? enclosingFunction(node) : undefined;
-          if (!on || !owner || isEffectCallback(owner) || !isReleased(owner, on, flags)) continue;
+          if (!on || !owner || isInEffect(owner) || !isReleased(owner, on, flags)) continue;
           context.report({
             node,
             message:

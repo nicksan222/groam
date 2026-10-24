@@ -12,7 +12,9 @@ export default defineRule({
       JSXOpeningElement(node) {
         if (jsxName(node.name) !== 'Spinner') return;
         let current = node.parent as ESTree.Node | null | undefined;
-        while (current && !isFunction(current)) {
+        // A callback passed to a call (`items.map(() => <Spinner />)`) still renders into the Button;
+        // a component or helper function defined on its own does not.
+        while (current && (!isFunction(current) || current.parent?.type === 'CallExpression')) {
           if (current.type === 'JSXElement' && BUTTONS.has(jsxName(current.openingElement.name))) {
             context.report({
               node,

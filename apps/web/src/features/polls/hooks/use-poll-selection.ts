@@ -18,7 +18,6 @@ export function usePollSelection(
     (next: string[]) => {
       latest.current += 1;
       const call = latest.current;
-      // oxlint-disable-next-line groam/no-hand-rolled-pending -- `pending` is the optimistic selection shown ahead of the server, not a busy flag
       setPending(next);
       void (next.length === 0 ? onRetract() : onVote(next)).finally(() => {
         if (latest.current === call) setPending(null);
