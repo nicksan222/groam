@@ -98,7 +98,10 @@ describe('groam/no-manual-draft-reset', () => {
           `useEffect(() => { if (open) form.reset(); }, [open]);`,
           `useEffect(() => { if (open) reset(); }, [open]);`,
           `useEffect(() => { if (open) dispatch({ type: 'reset' }); }, [open]);`,
-          `useEffect(() => setName(''), [open]);`
+          `useEffect(() => setName(''), [open]);`,
+          `useEffect(() => { setName(''); const unused = () => fetch('/data'); }, [open]);`,
+          `useEffect(() => { setName(''); void fetch('/data').then(setResults); }, [open]);`,
+          `useEffect(() => { setName(''); const t = setTimeout(run, 10); return () => clearTimeout(t); }, [open]);`
         ].map(wrap),
         file
       )
@@ -117,7 +120,8 @@ describe('groam/no-manual-draft-reset', () => {
           `useEffect(() => { const id = setInterval(tick, 10); return () => clearInterval(id); }, [open]);`,
           `useEffect(() => { if (open) void load().then((rows) => setRows(rows)); }, [open]);`,
           `useEffect(() => { if (open) dispatch({ type: 'focus' }); }, [open]);`,
-          `useEffect(() => { setName(''); }, [reopen]);`
+          `useEffect(() => { setName(''); }, [reopen]);`,
+          `useEffect(() => { const controller = new AbortController(); void search(controller.signal).then(setResults); return () => controller.abort(); }, [open]);`
         ].map(wrap),
         file
       )
@@ -173,6 +177,10 @@ describe('groam/no-hand-rolled-pending', () => {
           hook(
             'const [claiming, setClaiming] = useState(false);',
             'setClaiming(true);\n    void save().finally(() => setClaiming(false));'
+          ),
+          hook(
+            'const [pendingKind, setPendingKind] = useState<string | null>(null);',
+            "setPendingKind('edit');\n    await save();\n    setPendingKind(null);"
           )
         ],
         file
@@ -195,6 +203,35 @@ describe('groam/no-hand-rolled-pending', () => {
             'const [open, setOpen] = useState(false);',
             'setOpen(false);\n    await save();\n    setOpen(true);'
           ),
+          // Pending-named state that holds data (an optimistic choice) is not a busy flag.
+          hook(
+            'const [pendingChoice, setPendingChoice] = useState<string | null>(null);',
+            'setPendingChoice(option);\n    if (!(await save())) setPendingChoice(null);'
+          ),
+          hook(
+            'const [pending, setPending] = useState<string[] | null>(null);',
+            'setPending(next);\n    await save();\n    setPending(null);'
+          ),
+          // Waiting on a timer ends a flourish, not an action.
+          hook(
+            'const [copied, setCopied] = useState(false);',
+            'setCopied(true);\n    await delay(1500);\n    setCopied(false);'
+          ),
+          hook(
+            'const [copied, setCopied] = useState(false);',
+            'setCopied(true);\n    await new Promise((resolve) => setTimeout(resolve, 1500));\n    setCopied(false);'
+          ),
+          // A flag that starts true is not an idle busy flag, for state and refs alike.
+          hook(
+            'const [ready, setReady] = useState(true);',
+            'setReady(true);\n    await save();\n    setReady(false);'
+          ),
+          hook(
+            'const ready = useRef(true);',
+            'ready.current = true;\n    await save();\n    ready.current = false;'
+          ),
+          // An async helper inside an effect is still a data load.
+          `import { useEffect, useState } from 'react';\nexport function useRows() {\n  const [loading, setLoading] = useState(false);\n  useEffect(() => {\n    const load = async () => {\n      setLoading(true);\n      await fetchRows();\n      setLoading(false);\n    };\n    void load();\n  }, []);\n  return loading;\n}`,
           // Not declared with useState in this file (a prop setter): out of scope.
           `export function useExample(setBusy: (value: boolean) => void) {\n  return async () => {\n    setBusy(true);\n    await save();\n    setBusy(false);\n  };\n}`,
           // A data fetch started by an effect is a loading state, not an action.
@@ -218,7 +255,9 @@ describe('groam/no-pending-copy', () => {
         `export const view = (pending: boolean) => <AlertDialogAction>{pending ? 'Applying…' : 'Apply'}</AlertDialogAction>;`,
         `export const view = (pending: boolean) => { const label = pending ? 'Saving…' : 'Save'; return label; };`,
         `export const view = (isSaving: boolean) => <FormActions submitLabel={isSaving ? 'Saving…' : 'Save'} />;`,
-        `export const view = (status: string) => <Button>{status === 'applying' ? 'Adding to trip…' : 'Add'}</Button>;`
+        `export const view = (status: string) => <Button>{status === 'applying' ? 'Adding to trip…' : 'Add'}</Button>;`,
+        `export const view = (status: string) => { const label = status === 'LoadingMore' ? 'Loading more…' : 'Load more'; return <Button>{label}</Button>; };`,
+        `export const view = <Button>Adding the selected ideas to your trip…</Button>;`
       ])
     ).toEqual([]);
   });
@@ -248,7 +287,10 @@ describe('groam/no-optional-copy', () => {
         `export const view = <span>Optional: add a note</span>;`,
         `export const view = <FormField label="Optional note"><input /></FormField>;`,
         `export const view = <input placeholder={'Notes [optional]'} />;`,
-        `export const view = <p>{'Optional'}</p>;`
+        `export const view = <p>{'Optional'}</p>;`,
+        'export const view = <input placeholder={`Notes (optional)`} />;',
+        `export const view = (a: boolean) => <input placeholder={a ? 'Notes (optional)' : 'Notes'} />;`,
+        `export const view = (a: boolean) => <p>{a && 'Optional'}</p>;`
       ])
     ).toEqual([]);
   });
@@ -274,7 +316,8 @@ describe('groam/no-spinner-in-button', () => {
       missed(rule, [
         `export const view = <Button><Spinner />Save</Button>;`,
         `export const view = (pending: boolean) => <Button>{pending ? <Spinner /> : <Plus />}Add</Button>;`,
-        `export const view = (more: boolean) => <Button>{more && <Spinner aria-hidden />} Load more</Button>;`
+        `export const view = (more: boolean) => <Button>{more && <Spinner aria-hidden />} Load more</Button>;`,
+        `export const view = (rows: number[]) => <Button>{rows.map((row) => <Spinner key={row} />)}</Button>;`
       ])
     ).toEqual([]);
   });

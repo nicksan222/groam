@@ -35,7 +35,6 @@ export function AssistantChoiceReceipt({
   const form = useFormSubmit();
   const choose = async (option: string) => {
     if (!onChoose || disabled || selected) return;
-    // oxlint-disable-next-line groam/no-hand-rolled-pending -- the pending choice is shown as selected until the thread confirms it; it is not a busy flag
     setPendingChoice(option);
     if (!(await onChoose(option))) setPendingChoice(null);
   };
