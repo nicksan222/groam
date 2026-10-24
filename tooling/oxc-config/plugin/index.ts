@@ -5,6 +5,7 @@ import cognitiveComplexity from './rules/cognitive-complexity.ts';
 import maxLinesPerFunction from './rules/max-lines-per-function.ts';
 import maxLines from './rules/max-lines.ts';
 import noDelete from './rules/no-delete.ts';
+import noDuplicateIssueForm from './rules/no-duplicate-issue-form.ts';
 import noFormInRawDialog from './rules/no-form-in-raw-dialog.ts';
 import noHandRolledPending from './rules/no-hand-rolled-pending.ts';
 import noManualDraftReset from './rules/no-manual-draft-reset.ts';
@@ -31,6 +32,7 @@ export default definePlugin({
     'max-lines': maxLines,
     'max-lines-per-function': maxLinesPerFunction,
     'no-delete': noDelete,
+    'no-duplicate-issue-form': noDuplicateIssueForm,
     'no-form-in-raw-dialog': noFormInRawDialog,
     'no-hand-rolled-pending': noHandRolledPending,
     'no-manual-draft-reset': noManualDraftReset,
