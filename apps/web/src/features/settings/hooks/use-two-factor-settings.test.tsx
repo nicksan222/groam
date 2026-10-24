@@ -81,6 +81,20 @@ describe('useTwoFactorSettings', () => {
     expect(result.current).toMatchObject({ error: 'Invalid password', isPending: false });
   });
 
+  test('reports a request that throws synchronously with the failure message', async () => {
+    auth.enable.mockImplementation(() => {
+      throw new Error('');
+    });
+    const { result } = await renderHook(() => useTwoFactorSettings(false));
+
+    await act(() => result.current.startEnrollment('current-password'));
+
+    expect(result.current).toMatchObject({
+      error: 'Unable to start two-factor setup',
+      isPending: false
+    });
+  });
+
   test('keeps two-factor disabled when authenticator confirmation fails', async () => {
     auth.verifyTotp.mockResolvedValue({ data: null, error: { message: 'Invalid code' } });
     const { result } = await renderHook(() => useTwoFactorSettings(false));

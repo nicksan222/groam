@@ -1,5 +1,6 @@
 import { ChevronDown, Sparkles } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
+import { Heading } from '@groam/ui/components/heading';
 import { Markdown } from '@groam/ui/components/markdown';
 import { useState } from 'react';
 
@@ -22,13 +23,15 @@ export function ResearchCurrentAnswer({
       className="rounded-lg border border-primary/25 bg-primary/5 p-4"
     >
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-        <h2
-          className="inline-flex items-center gap-1 text-xs font-medium text-primary"
+        <Heading
+          level={2}
+          size="xs"
+          className="inline-flex items-center gap-1 text-primary"
           id="research-current-answer"
         >
           <Sparkles aria-hidden className="size-3.5" />
           {answer ? 'Current answer' : 'Latest report'}
-        </h2>
+        </Heading>
         {completedAt ? (
           <span className="text-xs text-muted-foreground">
             from the {runDate.format(completedAt)} run

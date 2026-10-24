@@ -5,6 +5,7 @@ import { Calendar } from '@groam/ui/components/calendar';
 import { Form } from '@groam/ui/components/form';
 import { FormActions } from '@groam/ui/components/form-actions';
 import { FormField } from '@groam/ui/components/form-field';
+import { Heading } from '@groam/ui/components/heading';
 import { IconTile } from '@groam/ui/components/icon-tile';
 import { PageLoading } from '@groam/ui/components/page-loading';
 import { Popover, PopoverContent, PopoverTrigger } from '@groam/ui/components/popover';
@@ -148,7 +149,9 @@ function TripDurationPlannerLoaded({
         </IconTile>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-sm font-semibold text-foreground">Trip dates</h2>
+            <Heading level={2} size="sm" className="text-foreground">
+              Trip dates
+            </Heading>
             {durationAccessBadge(canEdit, canPropose)}
           </div>
           <p className="mt-1 text-xs leading-4 text-muted-foreground">

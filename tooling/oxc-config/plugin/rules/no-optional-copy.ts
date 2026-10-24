@@ -14,8 +14,18 @@ const COPY_ATTRIBUTES = new Set([
 ]);
 
 /** Whether a string at this node is user-facing copy: JSX text, a copy attribute, or a JSX child. */
-function isCopy(node: ESTree.Node): boolean {
-  const parent = node.parent as ESTree.Node | null | undefined;
+function isCopy(start: ESTree.Node): boolean {
+  // Look through `cond ? 'a' : 'b'` and `x && 'a'`: the string lands where the expression does.
+  let node = start;
+  let wrapper = node.parent as ESTree.Node | null | undefined;
+  while (
+    (wrapper?.type === 'ConditionalExpression' && wrapper.test !== node) ||
+    wrapper?.type === 'LogicalExpression'
+  ) {
+    node = wrapper;
+    wrapper = node.parent as ESTree.Node | null | undefined;
+  }
+  const parent = wrapper;
   if (parent?.type === 'JSXAttribute') {
     return parent.name.type === 'JSXIdentifier' && COPY_ATTRIBUTES.has(parent.name.name);
   }
@@ -39,6 +49,10 @@ export default defineRule({
       Literal(node) {
         if (typeof node.value === 'string' && isCopy(node) && OPTIONAL_COPY.test(node.value))
           context.report({ node, message });
+      },
+      TemplateLiteral(node) {
+        const text = node.quasis.map((quasi) => quasi.value.cooked ?? '').join('');
+        if (OPTIONAL_COPY.test(text) && isCopy(node)) context.report({ node, message });
       }
     };
   }

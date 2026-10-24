@@ -3,7 +3,7 @@ import type { ESTree } from 'vite-plus/lint/plugins';
 import { isFunction, jsxName, mentionsPending } from './form-ast.ts';
 
 /** "Saving…", "Applying…", "Adding to trip…": a gerund, optionally more words, then an ellipsis. */
-const PENDING_TEXT = /^\s*[A-Z][a-z]+ing(?:\s[\w’'-]+){0,3}\s?(?:…|\.\.\.)\s*$/u;
+const PENDING_TEXT = /^\s*[A-Z][a-z]+ing(?:\s[\w’'-]+){0,7}\s?(?:…|\.\.\.)\s*$/u;
 const BUTTON_ELEMENTS = new Set(['Button', 'AlertDialogAction', 'DialogClose']);
 
 /**
@@ -44,6 +44,9 @@ function isLiveRegion(element: ESTree.JSXElement): boolean {
   );
 }
 
+/** Loading the next page is a button's action, unlike the data loading `mentionsPending` skips. */
+const LOADING_MORE = /[Ll]oadingMore/u;
+
 const PENDING_TEST = new WeakSet<ESTree.Node>();
 
 export default defineRule({
@@ -56,7 +59,8 @@ export default defineRule({
     };
     return {
       ConditionalExpression(node) {
-        if (mentionsPending(context.sourceCode.getText(node.test))) PENDING_TEST.add(node);
+        const test = context.sourceCode.getText(node.test);
+        if (mentionsPending(test) || LOADING_MORE.test(test)) PENDING_TEST.add(node);
       },
       JSXText(node) {
         check(node, node.value);

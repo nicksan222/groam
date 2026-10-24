@@ -1,3 +1,4 @@
+import { Heading } from '@groam/ui/components/heading';
 import { MutedCopy } from '@groam/ui/components/muted-copy';
 import { cn } from '@groam/ui/lib/utils';
 import type { ReactNode } from 'react';
@@ -22,9 +23,9 @@ export function IdeaSectionHeading({
       <div className="min-w-0">
         <div className="flex items-center gap-2">
           {icon}
-          <h3 className="text-sm font-semibold" id={titleId}>
+          <Heading level={3} size="sm" id={titleId}>
             {title}
-          </h3>
+          </Heading>
         </div>
         <MutedCopy size="xs" className="mt-1">
           {description}

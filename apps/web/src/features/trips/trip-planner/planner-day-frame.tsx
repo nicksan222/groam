@@ -1,3 +1,4 @@
+import { Heading } from '@groam/ui/components/heading';
 import { Panel } from '@groam/ui/components/panel';
 import { EditorDestinationPhoto } from '@/features/trips/itinerary-editor/editor-destination-photo';
 import type { PlannerDayFrameProps } from '@/types/trip-planner';
@@ -28,12 +29,16 @@ export function PlannerDayFrame({
           {day}
         </span>
         <div className="min-w-0 flex-1">
-          <h3 className="flex flex-wrap items-baseline gap-x-2 text-sm font-semibold tracking-tight">
+          <Heading
+            level={3}
+            size="sm"
+            className="flex flex-wrap items-baseline gap-x-2 tracking-tight"
+          >
             Day {day}
             {date ? (
               <span className="text-xs font-normal text-muted-foreground">{date}</span>
             ) : null}
-          </h3>
+          </Heading>
           <div className="min-w-0 truncate text-xs text-muted-foreground">{subtitle}</div>
         </div>
         {photo?.src ? (

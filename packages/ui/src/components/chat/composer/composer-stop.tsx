@@ -14,7 +14,7 @@ export type ComposerStopProps = {
   /** Shows the label beside the icon instead of in a tooltip. */
   showLabel?: boolean;
   size?: 'icon' | 'icon-sm';
-  /** Disables the control while a stop request is in flight. */
+  /** Marks the control busy (`Button pending`) while a stop request is in flight. */
   stopping?: boolean;
   testId?: string;
 };
@@ -33,18 +33,14 @@ export function ComposerStop({
   testId
 }: ComposerStopProps): ReactElement {
   const icon = (
-    <Square
-      aria-hidden="true"
-      className={cn('fill-current', showLabel && 'size-3.5', stopping && 'animate-pulse')}
-    />
+    <Square aria-hidden="true" className={cn('fill-current', showLabel && 'size-3.5')} />
   );
   const shared = {
-    'aria-busy': stopping || undefined,
     className: cn('touch-manipulation rounded-full shadow-none', className),
     'data-slot': 'composer-stop',
     'data-testid': testId,
-    disabled: stopping,
     onClick: () => void onStop(),
+    pending: stopping,
     type: 'button' as const
   };
   if (showLabel) {

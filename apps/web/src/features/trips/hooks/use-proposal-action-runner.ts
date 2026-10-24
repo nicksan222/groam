@@ -1,16 +1,22 @@
+import { useAsyncAction } from '@groam/ui/hooks/use-async-action';
 import { useState } from 'react';
 import type { ProposalActionRunner } from '@/types/trips';
 
+/**
+ * Runs one proposal action at a time and exposes which one (by label) is in flight. A rejection
+ * is rethrown to the caller, who owns reporting it; a call made while another runs does nothing
+ * and resolves `false`.
+ */
 export function useProposalActionRunner() {
-  const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const { isPending, run: runOne } = useAsyncAction();
+  const [target, setTarget] = useState<string | null>(null);
   const run: ProposalActionRunner = async (label, action) => {
-    // oxlint-disable-next-line groam/no-hand-rolled-pending -- keyed by which action runs, and a rejection must reach the caller (useAsyncAction would swallow it)
-    setPendingAction(label);
-    try {
-      return await action();
-    } finally {
-      setPendingAction(null);
-    }
+    const outcome = await runOne(() => {
+      setTarget(label);
+      return action();
+    });
+    if (outcome.status === 'error') throw outcome.error;
+    return outcome.status === 'ok' && outcome.value;
   };
-  return { pendingAction, run };
+  return { pendingAction: isPending ? target : null, run };
 }

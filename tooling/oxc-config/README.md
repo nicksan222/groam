@@ -35,6 +35,15 @@ features on `PageLoading` from `@groam/ui/components/page-loading` and ban skele
 `Shell.HeaderSkeleton`, `LoadingPlaceholder`, and `*Skeleton`/`*Loading` components and modules
 (a `Button` `pending` spinner and a pulsing live-status dot stay allowed).
 
+Pattern rules only see class strings written in JSX or `cn()` at the element. A class string
+stored in a variable, a `const` object, or a `.ts` constant is invisible to them, so a recipe
+hidden that way is not reported; keep class strings at the element.
+
+`no-copied-ui-slots` lists every literal `data-slot` in `packages/ui` by exact name (a name such as
+`button-row` stays free). `no-copied-ui-slots.test.ts` extracts the slots from the primitives and
+fails when the rule's list differs, so a new or renamed primitive slot needs the alternation in
+`plugin/patterns/no-copied-ui-slots.json` updated in the same change.
+
 [`pattern.schema.json`](plugin/pattern.schema.json) types the format for editors; the plugin
 validates every definition when it loads.
 
@@ -50,6 +59,7 @@ validates every definition when it loads.
 | `max-lines` | Keeps feature source files under 300 non-blank lines |
 | `max-lines-per-function` | Keeps TSX functions under 250 non-blank lines |
 | `no-form-in-raw-dialog` | Keeps modal forms on `FormDialog` instead of a `Form` nested in a `Dialog`/`AlertDialog` (imports are resolved, so aliases and `Dialog.Content` count; sheets are exempt; a form rendered from another file is invisible to the rule) |
+| `no-duplicate-issue-form` | Reserves `useCreateIssue` imports/re-exports for `CreateIssueDialog` and the title-only `QueueAddRow`; reserves the direct issue creation endpoint for `use-workspace-issues.ts` |
 | `no-hand-rolled-pending` | Keeps busy state on `useFormSubmit`/`useAsyncAction`: flags a `useState`/`useRef` flag set before an `await` (or `.then`/`.finally`) and cleared after it, whatever it is called |
 | `no-manual-draft-reset` | Keeps draft resets on `useOpenSession` instead of an effect keyed on `open`, `isOpen`, `*Open`, or `props.open` that resets state (`setX`, `reset()`, `dispatch({ type: 'reset' })`) directly in its body |
 | `no-optional-copy` | Keeps "(optional)", "[optional]", and copy opening with "Optional" out of JSX text, copy attributes, and string children; use the `optional` prop |
@@ -62,7 +72,7 @@ validates every definition when it loads.
 | `no-re-export-all` | Keeps public entrypoints on explicit exports |
 | `use-semantic-elements` | Prefers semantic DOM elements over ARIA roles |
 
-The form guardrails (the six form rows above) apply to `apps/web/src/features` and
+The shared form primitive guardrails apply to `apps/web/src/features` and
 `packages/ai/src/ui`, tests excluded; their fixtures are in `forms.test.ts`. They share the
 pending vocabulary in `plugin/rules/form-ast.ts`. See the `build-form` skill.
 
@@ -70,6 +80,16 @@ The rules in this table live in `plugin/rules/` and are scoped by hand in `lint.
 pattern definition cannot express the check; give its diagnostic an actionable replacement and
 add accepted and rejected fixtures beside the other `*.test.ts` files here. Suppress a single
 finding with `// oxlint-disable-next-line <rule> -- <reason>`.
+
+Issue form ownership applies to web source/pages and assistant UI, excluding tests. Its fixtures
+are in `form-ownership.test.ts`. New entry points render `CreateIssueDialog` and pass trip/subject
+context and completion callbacks; they do not import its creation hook. The rule recognizes
+relative hook imports, import aliases, namespace imports, re-exports, and static bracket access
+to the endpoint. It does not perform data-flow analysis through destructured or reassigned API
+objects. API bindings are resolved independently of import order and respect lexical shadowing.
+This is a specific ownership boundary, not a universal detector for equivalent forms.
+Fallow's existing duplication check complements it by finding copied implementations. Add
+ownership rules for other forms when their canonical component and permitted variants are known.
 
 Import boundaries use the built-in `no-restricted-imports` (`noParentImports`, `backendEnvImports`,
 `pageImports` in `lint.ts`; fixtures in `imports.test.ts`). Rules Oxlint cannot express (file and

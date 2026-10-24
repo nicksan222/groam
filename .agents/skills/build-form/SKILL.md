@@ -38,7 +38,7 @@ one's source and test before using it; the props documented there are the API.
    `event.preventDefault()`. Put validation messages in `form.setError` inside
    the action. Pass `run` a thunk (`run(() => request())`), never a request that
    has already started, so a guarded second call sends nothing. `run` resolves
-   to `{ status: 'ok', value } | { status: 'error' } | { status: 'ignored' }`:
+   to `{ status: 'ok', value } | { status: 'error', error, message } | { status: 'ignored' }`:
    restore a draft on `error` (or a falsy `value`), never on `ignored`.
 2. **Fields.** Every labeled control is a `FormField` child. Do not pair a raw
    `Label`/`<label>` with an input. Mark optional fields with `optional` (and
@@ -63,8 +63,9 @@ one's source and test before using it; the props documented there are the API.
    to `type="button"`; only the submit says `type="submit"`. `Form` skips
    native validation: the form's own checks decide. Pending is `pending` on the
    busy `Button` (`isPending` on `FormActions`, which passes it on): it covers
-   the button with a spinner without changing its width, disables it, sets
-   `aria-busy`, and announces a status to assistive tech. Never place a
+   the button with a spinner without changing its width, makes it `aria-busy` and
+   `aria-disabled` (still focusable; clicks and submits are swallowed), and adds to one
+   shared "Working…" status for assistive tech. Never place a
    `<Spinner>` in a button or swap its label for "Saving…".
 5. **Reset.** A create dialog starts empty each time it opens. Split it into an
    exported wrapper that calls `useOpenSession(open)` (`@groam/ui/hooks/use-open-session`)

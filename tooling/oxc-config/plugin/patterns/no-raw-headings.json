@@ -1,0 +1,56 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "node-text",
+  "nodes": ["JSXOpeningElement"],
+  "pattern": "<h[2-6](?:\\s|/|>).*",
+  "message": "Render a heading through the primitive that owns its look instead of a raw <h2>-<h6>: Heading (@groam/ui/components/heading) for a section or card heading (level sets the outline, size the look, id feeds aria-labelledby), Shell.SectionHeader for a page section, DetailSection for a titled detail block, FormSection or SettingsPanelHeading in forms and settings, DialogTitle or SheetTitle in overlays, EmptyScreen headline for an empty state. A page title is Shell.Header.",
+  "files": ["**/apps/web/src/features/**/*.tsx", "**/packages/ai/src/ui/**/*.tsx"],
+  "excludeFiles": ["**/*.test.tsx"],
+  "examples": [
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <h2 className=\"text-sm font-semibold\">Plan</h2>;",
+      "reports": true
+    },
+    {
+      "file": "packages/ai/src/ui/x/view.tsx",
+      "source": "export const v = <h3>Recap</h3>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <h6 className=\"sr-only\" id=\"a\">Timeline</h6>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "import { Heading } from \"@groam/ui/components/heading\";\nexport const v = <Heading level={2} size=\"sm\">Plan</Heading>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <header className=\"flex\">x</header>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <hr />;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <hgroup>x</hgroup>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <h7>x</h7>;",
+      "reports": false
+    },
+    {
+      "file": "packages/ui/src/components/x.tsx",
+      "source": "export const v = <h2>Plan</h2>;",
+      "reports": false
+    }
+  ]
+}

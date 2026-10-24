@@ -126,6 +126,14 @@ test('reports a model catalog failure', async () => {
   await vi.waitFor(() => expect(result.current.error).toBe('Catalog offline'));
   expect(result.current.modelsLoading).toBe(false);
 });
+test('keeps a model catalog failure through later successful actions', async () => {
+  convex.models.mockRejectedValue(new Error('Catalog offline'));
+  const { result } = await renderHook(() => useAiSettings());
+  await vi.waitFor(() => expect(result.current.modelsError).toBe('Catalog offline'));
+  await act(() => result.current.acknowledge());
+  expect(result.current.modelsError).toBe('Catalog offline');
+  expect(result.current.error).toBe('Catalog offline');
+});
 test('skips saving a model without a usable connection', async () => {
   convex.useQuery.mockReturnValue({ ...remote, connections: [{ ...account, connected: false }] });
   const { result } = await renderHook(() => useAiSettings());

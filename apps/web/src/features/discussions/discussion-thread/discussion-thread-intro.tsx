@@ -1,5 +1,7 @@
 import { AtSign, Paperclip, Slash } from '@groam/icons';
 import type { Icon } from '@groam/icons';
+import { Heading } from '@groam/ui/components/heading';
+import { IconTile } from '@groam/ui/components/icon-tile';
 import { ChatAvatar } from '@/features/discussions/chat/chat-avatar';
 import type { DiscussionListItem } from '@/features/discussions/hooks/use-discussions';
 
@@ -21,9 +23,13 @@ export function DiscussionThreadIntro({ discussion }: { discussion: DiscussionLi
     >
       <ChatAvatar discussion={discussion} face={discussion.members[0]} size="list" />
       <div className="space-y-2">
-        <h3 className="text-xl leading-7 font-semibold tracking-[-0.015em] text-balance text-foreground">
+        <Heading
+          level={3}
+          size="xl"
+          className="leading-7 tracking-[-0.015em] text-balance text-foreground"
+        >
           {discussion.title}
-        </h3>
+        </Heading>
         <p className="max-w-[56ch] text-sm leading-6 text-pretty text-muted-foreground">
           {discussion.createdBy.name} started this chat
           {discussion.tripName ? <> for {discussion.tripName}</> : null}. Everyone in it sees every
@@ -33,9 +39,14 @@ export function DiscussionThreadIntro({ discussion }: { discussion: DiscussionLi
       <ul className="m-0 flex list-none flex-col gap-2 p-0">
         {TIPS.map(({ icon: TipIcon, text }) => (
           <li className="flex items-center gap-3 text-[13px] text-muted-foreground" key={text}>
-            <span className="flex size-6 shrink-0 items-center justify-center rounded-md border border-border bg-muted/60 text-foreground/70">
+            <IconTile
+              className="border border-border bg-muted/60 text-foreground/70"
+              radius="md"
+              size="xs"
+              variant="plain"
+            >
               <TipIcon aria-hidden className="size-3.5" />
-            </span>
+            </IconTile>
             {text}
           </li>
         ))}

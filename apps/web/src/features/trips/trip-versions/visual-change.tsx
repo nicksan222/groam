@@ -1,5 +1,6 @@
 import { ChevronDown, MessageSquare, Minus, Pencil, Plus } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
+import { Heading } from '@groam/ui/components/heading';
 import { IconTile } from '@groam/ui/components/icon-tile';
 import { MutedCopy } from '@groam/ui/components/muted-copy';
 import Shell from '@groam/ui/components/shell/client';
@@ -72,9 +73,13 @@ function ChangeFields({
                 className="grid gap-3 p-4 sm:grid-cols-[minmax(6rem,0.6fr)_minmax(0,1fr)_minmax(0,1fr)] sm:gap-0 sm:p-0"
                 key={field.key}
               >
-                <span className="min-w-0 break-words text-xs font-medium leading-5 text-muted-foreground sm:px-4 sm:py-4">
+                <MutedCopy
+                  as="span"
+                  className="min-w-0 break-words font-medium sm:px-4 sm:py-4"
+                  size="xs"
+                >
                   {field.label}
-                </span>
+                </MutedCopy>
                 {(['before', 'after'] as const).map((side) => (
                   <div
                     className="min-w-0 break-words text-sm sm:border-l sm:border-border sm:px-4 sm:py-4"
@@ -173,7 +178,9 @@ export function VisualChange({
             <Icon className="size-4" />
           </IconTile>
           <span className="min-w-0 flex-1">
-            <h4 className="break-words text-sm font-semibold leading-5">{change.label}</h4>
+            <Heading level={4} size="sm" className="break-words leading-5">
+              {change.label}
+            </Heading>
             <span className="mt-1 block text-xs text-muted-foreground">
               {verb} {changeEntityLabel(change.entity)} · {visibleFieldCount}{' '}
               {visibleFieldCount === 1 ? 'detail' : 'details'}

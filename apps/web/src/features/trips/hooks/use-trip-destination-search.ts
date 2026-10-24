@@ -13,7 +13,7 @@ export function useTripDestinationSearch(alwaysActive = false) {
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // oxlint-disable-next-line groam/no-manual-draft-reset -- search results follow the query and clear when the picker closes; there is no form draft to reset
+  // oxlint-disable-next-line groam/no-manual-draft-reset -- query results, loading, and errors belong to this abortable search, not a form draft
   useEffect(() => {
     const normalized = query.trim();
     if ((!open && !alwaysActive) || normalized.length < MIN_QUERY_LENGTH) {

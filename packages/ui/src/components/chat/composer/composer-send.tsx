@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowUp, Loader2Icon } from '@groam/icons';
+import { ArrowUp } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { Tooltip, TooltipPopup, TooltipTrigger } from '@groam/ui/components/tooltip';
 import { cn } from '@groam/ui/lib/utils';
@@ -13,7 +13,7 @@ export type ComposerSendProps = {
   icon?: ReactNode;
   /** Accessible name and tooltip. */
   label?: string;
-  /** Swaps the icon for a spinner while the owner accepts the message. */
+  /** Covers the button with a spinner while the owner accepts the message (`Button pending`). */
   pending?: boolean;
   size?: 'icon' | 'icon-sm';
   testId?: string;
@@ -40,21 +40,17 @@ export function ComposerSend({
             data-testid={testId}
             render={
               <Button
-                aria-busy={pending || undefined}
                 aria-label={label}
                 className={cn('touch-manipulation rounded-full shadow-none', className)}
                 data-pending={pending ? '' : undefined}
+                pending={pending}
                 size={size}
               />
             }
           />
         }
       >
-        {pending ? (
-          <Loader2Icon aria-hidden="true" className="animate-spin" />
-        ) : (
-          (icon ?? <ArrowUp aria-hidden="true" />)
-        )}
+        {icon ?? <ArrowUp aria-hidden="true" />}
       </TooltipTrigger>
       <TooltipPopup>{label}</TooltipPopup>
     </Tooltip>

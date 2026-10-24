@@ -1,3 +1,4 @@
+import { Heading } from '@groam/ui/components/heading';
 import {
   compactChangeSummary,
   type ItineraryChange
@@ -9,7 +10,9 @@ export function RemovedItineraryItem({ change }: { change: ItineraryChange }) {
   return (
     <ItineraryProposalHighlight change={change}>
       <article>
-        <h3 className="text-sm font-semibold">{change.label}</h3>
+        <Heading level={3} size="sm">
+          {change.label}
+        </Heading>
         {summary ? <p className="mt-1 text-xs text-muted-foreground">{summary}</p> : null}
       </article>
     </ItineraryProposalHighlight>

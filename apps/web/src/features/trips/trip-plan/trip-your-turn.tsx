@@ -1,4 +1,5 @@
 import { Card } from '@groam/ui/components/card';
+import { Heading } from '@groam/ui/components/heading';
 import { List } from '@groam/ui/components/list';
 import { useTripYourTurn } from '@/features/trips/hooks/use-trip-your-turn';
 import type { TripDetail } from '@/features/trips/hooks/use-trips';
@@ -39,7 +40,9 @@ export function TripYourTurn({ trip }: { trip: TripDetail }) {
     >
       {items.length > 0 ? (
         <>
-          <h2 className="text-sm font-medium">Your turn · {total}</h2>
+          <Heading level={2} size="sm" className="font-medium">
+            Your turn · {total}
+          </Heading>
           <List bleed={false}>
             <List.Body>
               <List.Group aria-label="Your turn">

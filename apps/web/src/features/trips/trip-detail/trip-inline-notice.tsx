@@ -1,4 +1,5 @@
 import type { Icon } from '@groam/icons';
+import { MutedCopy } from '@groam/ui/components/muted-copy';
 import { cn } from '@groam/ui/lib/utils';
 import type { ReactNode } from 'react';
 
@@ -32,7 +33,9 @@ export function TripInlineNotice({
         <div className="min-w-0 text-sm">
           <p className="font-medium">{title}</p>
           {children ? (
-            <div className="mt-1 text-xs leading-5 text-muted-foreground">{children}</div>
+            <MutedCopy as="div" className="mt-1" size="xs">
+              {children}
+            </MutedCopy>
           ) : null}
         </div>
       </div>

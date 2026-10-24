@@ -26,7 +26,8 @@ export function useTwoFactorSettings(initiallyEnabled: boolean) {
   ): Promise<null | T> => {
     // A thunk, so a call the guard ignores never sends its request.
     const outcome = await perform(async () => {
-      const response = await request().catch((cause: unknown) => {
+      // `async () => request()` so a synchronous throw is caught like a rejection.
+      const response = await (async () => request())().catch((cause: unknown) => {
         throw new Error(errorMessage(cause, failureMessage));
       });
       if (response.error) throw new Error(response.error.message ?? failureMessage);

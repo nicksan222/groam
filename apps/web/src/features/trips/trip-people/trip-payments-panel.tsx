@@ -1,4 +1,5 @@
 import type { Id } from '@groam/backend/data-model';
+import { Heading } from '@groam/ui/components/heading';
 import { List } from '@groam/ui/components/list';
 import { useTripTravelers } from '@/features/trips/hooks/use-trip-travelers';
 import { useWorkspace } from '@/features/workspace/workspace-shell/workspace-state';
@@ -23,7 +24,9 @@ export function TripPaymentsPanel({
   return (
     <section aria-label="Trip payments" className="space-y-3">
       <div>
-        <h2 className="text-sm font-medium">Seats</h2>
+        <Heading level={2} size="sm" className="font-medium">
+          Seats
+        </Heading>
         <p className="mt-1 max-w-prose text-sm text-muted-foreground">
           Everyone needs a seat to join this trip: €1 per traveler for this trip, paid once. The
           trip creator is free.{' '}

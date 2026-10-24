@@ -1,5 +1,6 @@
 import { ArrowRight, Route, X } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
+import { Heading } from '@groam/ui/components/heading';
 import type { EditorTravelTarget } from '@/types/itinerary-editor';
 import type { TripDetail } from '@/types/trips';
 import { travelChoicesForDay } from './editor-travel-targets';
@@ -22,7 +23,9 @@ export function EditorTravelChoices({
       className="rounded-xl border border-border bg-card p-4"
     >
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h4 className="text-sm font-semibold">Add travel to Day {day}</h4>
+        <Heading level={4} size="sm">
+          Add travel to Day {day}
+        </Heading>
         <Button aria-label="Close travel choices" size="icon-sm" variant="ghost" onClick={onClose}>
           <X />
         </Button>

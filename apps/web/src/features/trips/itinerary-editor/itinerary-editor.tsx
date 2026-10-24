@@ -1,5 +1,6 @@
 import { CalendarDays, Plus } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
+import { Heading } from '@groam/ui/components/heading';
 import Shell from '@groam/ui/components/shell/client';
 import { useState } from 'react';
 import { destinationsForDay } from '@/features/trips/hooks/editor-day-destinations';
@@ -141,7 +142,9 @@ export function ItineraryEditor(props: ItineraryEditorProps) {
         ))}
         {toSchedule.length ? (
           <section className="space-y-3" aria-label="Destinations to schedule">
-            <h3 className="text-sm font-semibold">Destinations to schedule</h3>
+            <Heading level={3} size="sm">
+              Destinations to schedule
+            </Heading>
             {toSchedule.map((destination) => (
               <EditorRouteStop key={destination.id} {...props} destination={destination} />
             ))}

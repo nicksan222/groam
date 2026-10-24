@@ -9,7 +9,6 @@ import {
 } from '@groam/ui/components/dialog';
 import { Input } from '@groam/ui/components/input';
 import { Kbd } from '@groam/ui/components/kbd';
-import { Spinner } from '@groam/ui/components/spinner';
 import {
   COMMAND_DIALOG_CLASS_NAME,
   COMMAND_GROUP_HEADING_CLASS_NAME,
@@ -49,16 +48,13 @@ export function CommandPalette() {
   const loadMoreButton = (
     <div className="flex justify-center pt-1">
       <Button
-        aria-disabled={isLoadingMore}
-        className="aria-disabled:opacity-64"
         onClick={loadMore}
+        pending={isLoadingMore}
         ref={returnFocusToSearch}
         size="sm"
         variant="ghost"
       >
-        {/* aria-disabled, not `pending`: a disabled button would drop the focus returned to search. */}
-        {/* oxlint-disable-next-line groam/no-spinner-in-button -- keeps focus where `pending`'s disabled would lose it */}
-        {isLoadingMore && <Spinner aria-hidden />} Load more
+        Load more
       </Button>
     </div>
   );

@@ -1,6 +1,7 @@
 import { CheckCircle2, Circle } from '@groam/icons';
 import { MutedCopy } from '@groam/ui/components/muted-copy';
 
+import { Heading } from '@groam/ui/components/heading';
 import { allowsSelfApproval, decisionHeadline } from '@/features/trips/hooks/decision-helpers';
 import type { ProposalDetail } from './proposal-types';
 
@@ -34,7 +35,9 @@ export function DecisionStatus({
         <Circle className="mt-1 size-5 shrink-0 text-muted-foreground" />
       )}
       <div>
-        <h3 className="text-sm font-semibold">{title}</h3>
+        <Heading level={3} size="sm">
+          {title}
+        </Heading>
         <MutedCopy size="xs" className="mt-1">
           {description}
         </MutedCopy>

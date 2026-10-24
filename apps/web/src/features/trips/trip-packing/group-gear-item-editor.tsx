@@ -86,12 +86,14 @@ export function GroupGearItemEditor({
             await onRemove(item);
           });
         }}
-        onUpdate={(changes) =>
-          run(async () => {
+        onUpdate={async (changes) => {
+          const outcome = await run(async () => {
             setWriteKind('edit');
-            await onUpdate(item.id, changes);
-          })
-        }
+            return onUpdate(item.id, changes);
+          });
+          // The editor reverts its draft on `false`: a refused write and a dropped one both count.
+          return outcome.status === 'ok' ? outcome.value : false;
+        }}
         pending={pending}
         travelers={travelers}
         viewerUserId={viewerUserId}

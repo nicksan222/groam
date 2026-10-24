@@ -2,8 +2,8 @@
   "$schema": "../pattern.schema.json",
   "match": "node-text",
   "nodes": ["JSXOpeningElement"],
-  "pattern": "<p\\s(?:(?=.*(?<![\\w:\\[/-])text-sm(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])leading-relaxed(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])text-muted-foreground(?![\\w./\\[-]))|(?=.*(?<![\\w:\\[/-])text-xs(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])leading-5(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])text-muted-foreground(?![\\w./\\[-]))).*",
-  "message": "Supporting copy is MutedCopy (@groam/ui/components/muted-copy): the default is text-sm, size=\"xs\" is text-xs. Pass layout classes (margin, padding, max-width) through className.",
+  "pattern": "<(?:p|span|div)\\s(?:(?=.*(?<![\\w:\\[/-])text-sm(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])leading-relaxed(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])text-muted-foreground(?![\\w./\\[-]))|(?=.*(?<![\\w:\\[/-])text-xs(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])leading-5(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])text-muted-foreground(?![\\w./\\[-]))).*",
+  "message": "Supporting copy is MutedCopy (@groam/ui/components/muted-copy): the default is text-sm, size=\"xs\" is text-xs. Pass layout classes (margin, padding, max-width) through className. Use as=\"span\" or as=\"div\" when a paragraph is invalid HTML.",
   "files": ["**/apps/web/src/features/**/*.tsx", "**/packages/ai/src/ui/**/*.tsx"],
   "excludeFiles": ["**/*.test.tsx"],
   "examples": [
@@ -50,6 +50,36 @@
     {
       "file": "apps/web/src/features/x/view.tsx",
       "source": "import { MutedCopy } from \"@groam/ui/components/muted-copy\";\nexport const v = <MutedCopy size=\"xs\">x</MutedCopy>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <span className=\"text-xs leading-5 text-muted-foreground\">x</span>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div className=\"mt-1 text-sm leading-relaxed text-muted-foreground\">x</div>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <span className=\"text-xs leading-5.5 text-muted-foreground\">x</span>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div className=\"text-sm leading-relaxed text-foreground\">x</div>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <section className=\"text-xs leading-5 text-muted-foreground\">x</section>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "import { MutedCopy } from \"@groam/ui/components/muted-copy\";\nexport const v = <MutedCopy as=\"span\" size=\"xs\">x</MutedCopy>;",
       "reports": false
     }
   ]
