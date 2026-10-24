@@ -3,6 +3,7 @@ import { Pencil } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { Form } from '@groam/ui/components/form';
 import { FormActions } from '@groam/ui/components/form-actions';
+import { Heading } from '@groam/ui/components/heading';
 import { Markdown } from '@groam/ui/components/markdown';
 import { MutedCopy } from '@groam/ui/components/muted-copy';
 import { Textarea } from '@groam/ui/components/textarea';
@@ -31,9 +32,13 @@ export function ResearchBrief({
     <section aria-labelledby="research-brief-heading" className="space-y-1">
       <div className="-mt-1 flex items-center justify-between gap-3">
         <div className="text-xs leading-6 text-muted-foreground">
-          <h2 className="inline font-medium text-foreground" id="research-brief-heading">
+          <Heading
+            level={2}
+            className="inline font-medium text-foreground"
+            id="research-brief-heading"
+          >
             Research brief
-          </h2>{' '}
+          </Heading>{' '}
           <span>· the question we are answering</span>
         </div>
         {canEdit && !editing ? (

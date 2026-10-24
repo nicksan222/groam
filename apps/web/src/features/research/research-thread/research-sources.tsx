@@ -1,4 +1,5 @@
 import { ArrowUpRight } from '@groam/icons';
+import { Heading } from '@groam/ui/components/heading';
 import { MutedCopy } from '@groam/ui/components/muted-copy';
 import type { ResearchSource } from '@/types/research';
 
@@ -12,9 +13,9 @@ export function ResearchSources({
 }) {
   return (
     <section aria-labelledby="research-sources-heading" className="min-w-0 space-y-1">
-      <h2 className="text-xs font-medium text-muted-foreground" id="research-sources-heading">
+      <Heading level={2} size="xs" className="text-muted-foreground" id="research-sources-heading">
         Sources
-      </h2>
+      </Heading>
       {sources.length ? (
         <ol>
           {sources.map((source, index) => (

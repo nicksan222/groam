@@ -1,5 +1,6 @@
 import { ArrowLeftRight, Check } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
+import { Heading } from '@groam/ui/components/heading';
 import { MutedCopy } from '@groam/ui/components/muted-copy';
 import {
   ideaChooseWhatToKeep,
@@ -145,9 +146,9 @@ function IdeaUpdateScreen({
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold" id="idea-update-heading">
+          <Heading level={3} size="sm" id="idea-update-heading">
             {ideaChooseWhatToKeep}
-          </h3>
+          </Heading>
           <MutedCopy size="xs" className="mt-1">
             Choose the shared trip or this idea for each overlapping edit.
           </MutedCopy>

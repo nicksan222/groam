@@ -1,5 +1,6 @@
 import { MapPin, Plus } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
+import { Heading } from '@groam/ui/components/heading';
 import { MutedCopy } from '@groam/ui/components/muted-copy';
 import {
   destinationsForDay,
@@ -98,7 +99,9 @@ export function EditorDayCard(cardProps: EditorDayCardProps) {
       ) : day.day === 1 ? (
         <div className="border-t border-border px-6 py-12 text-center">
           <MapPin className="mx-auto size-8 text-primary" />
-          <h3 className="mt-4 text-sm font-semibold">A place to start. A day to fill.</h3>
+          <Heading level={3} size="sm" className="mt-4">
+            A place to start. A day to fill.
+          </Heading>
           <MutedCopy size="xs" className="mx-auto mt-2 max-w-sm">
             Choose your first destination, then turn this open day into a plan.
           </MutedCopy>

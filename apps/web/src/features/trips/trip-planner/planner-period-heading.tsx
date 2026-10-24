@@ -1,4 +1,5 @@
 import { Moon, Sun, Sunrise, Sunset } from '@groam/icons';
+import { Heading } from '@groam/ui/components/heading';
 import { Separator } from '@groam/ui/components/separator';
 import type { PlannerPeriod } from '@/types/trip-planner';
 
@@ -9,10 +10,10 @@ export function PlannerPeriodHeading({ label, period }: { label: string; period:
   const Icon = periodIcons[period];
   return (
     <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-      <h4 className="flex items-center gap-2">
+      <Heading level={4} className="flex items-center gap-2 font-medium">
         <Icon className="size-4" />
         {label}
-      </h4>
+      </Heading>
       <Separator className="flex-1" />
     </div>
   );

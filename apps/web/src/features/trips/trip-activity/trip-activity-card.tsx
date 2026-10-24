@@ -14,6 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@groam/ui/components/dropdown-menu';
+import { Heading } from '@groam/ui/components/heading';
 import { Markdown } from '@groam/ui/components/markdown';
 import Timeline from '@groam/ui/components/timeline';
 import { mutedMetaLabelClassName, mutedMetaLinkClassName } from '@groam/ui/lib/muted-meta';
@@ -69,7 +70,9 @@ export function TripActivityCard({
     >
       <Timeline.CardBody className="flex items-start gap-3 p-3">
         <div className="min-w-0 flex-1">
-          <h3 className="font-semibold leading-tight">{activity.title}</h3>
+          <Heading level={3} className="leading-tight">
+            {activity.title}
+          </Heading>
           <p className="mt-1 text-xs text-muted-foreground">
             {exactTiming ??
               `${activityDays(activity, tripStartDate)} · ${timeLabels[activity.timeBlock]}`}

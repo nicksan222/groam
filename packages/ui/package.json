@@ -94,6 +94,7 @@
     "./components/form-feedback": "./src/components/form-feedback.tsx",
     "./components/form-field": "./src/components/form-field.tsx",
     "./components/form-section": "./src/components/form-section.tsx",
+    "./components/heading": "./src/components/heading.tsx",
     "./components/icon-badge": "./src/components/icon-badge.tsx",
     "./components/icon-tile": "./src/components/icon-tile.tsx",
     "./components/inline-add-row": "./src/components/inline-add-row.tsx",

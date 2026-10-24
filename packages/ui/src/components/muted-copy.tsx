@@ -7,12 +7,14 @@ const sizeClass = {
 } as const;
 
 export type MutedCopyProps = React.ComponentProps<'p'> & {
+  /** `p` for a paragraph; `span` inside paragraphs, buttons, or inline text; `div` for block containers. */
+  as?: 'div' | 'p' | 'span';
   size?: keyof typeof sizeClass;
 };
 
-function MutedCopy({ className, size = 'sm', ...props }: MutedCopyProps) {
+function MutedCopy({ as: Tag = 'p', className, size = 'sm', ...props }: MutedCopyProps) {
   return (
-    <p
+    <Tag
       className={cn('text-muted-foreground', sizeClass[size], className)}
       data-slot="muted-copy"
       {...props}

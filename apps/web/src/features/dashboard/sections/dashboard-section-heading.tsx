@@ -1,3 +1,4 @@
+import { Heading } from '@groam/ui/components/heading';
 export function DashboardSectionHeading({
   description,
   id,
@@ -9,9 +10,9 @@ export function DashboardSectionHeading({
 }) {
   return (
     <div>
-      <h2 className="text-base font-semibold tracking-tight text-foreground" id={id}>
+      <Heading level={2} size="base" className="tracking-tight text-foreground" id={id}>
         {title}
-      </h2>
+      </Heading>
       {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
     </div>
   );

@@ -1,3 +1,4 @@
+import { Heading } from '@groam/ui/components/heading';
 import { useId } from 'react';
 import type { PeopleActions, SeatActions } from '@/types/trip-people';
 import type { TripTraveler } from '@/types/trips';
@@ -91,9 +92,9 @@ export function TripYourPass({
       <div className="flex min-w-0 flex-1 items-center gap-4 p-4 @3xl/people:px-6">
         <TripPersonAvatar size="lg" traveler={viewer} />
         <div className="min-w-0">
-          <h3 className="text-lg leading-snug font-semibold tracking-tight">
+          <Heading level={3} size="lg" className="leading-snug">
             <TitleFor place={place} viewer={viewer} />
-          </h3>
+          </Heading>
           {when ? <p className="text-sm text-foreground">{when}</p> : null}
           <p className="text-sm text-muted-foreground">{subtitleFor(viewer, actions)}</p>
         </div>

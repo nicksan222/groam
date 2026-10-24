@@ -2,6 +2,7 @@ import type { Id } from '@groam/backend/data-model';
 import { ArrowRight, CircleDot, Pencil, Users } from '@groam/icons';
 import { Badge } from '@groam/ui/components/badge';
 import { Button } from '@groam/ui/components/button';
+import { Heading } from '@groam/ui/components/heading';
 import { MutedCopy } from '@groam/ui/components/muted-copy';
 import { PageLoading } from '@groam/ui/components/page-loading';
 import Shell from '@groam/ui/components/shell/client';
@@ -152,7 +153,9 @@ function LinkedTripIssue({ issue }: { issue: NonNullable<ProposalDetail['issue']
     >
       <div className="flex items-center gap-2">
         <CircleDot className="size-4 text-primary" />
-        <h3 className="text-sm font-semibold">Linked issue</h3>
+        <Heading level={3} size="sm">
+          Linked issue
+        </Heading>
         <ArrowRight className="ml-auto size-4 text-muted-foreground" />
       </div>
       <MutedCopy size="xs" className="mt-1">

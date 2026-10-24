@@ -1,4 +1,5 @@
 import { Check, CircleDot } from '@groam/icons';
+import { Heading } from '@groam/ui/components/heading';
 import { Panel } from '@groam/ui/components/panel';
 import type { ResolutionRow } from '@/features/trips/hooks/detail-resolution-values';
 import type { DetailsResolveChoice } from '@/types/trips';
@@ -18,7 +19,9 @@ export function ResolveResultPreview({
   return (
     <Panel as="section" aria-label="Result preview">
       <div className="border-b border-border px-4 py-3">
-        <h3 className="text-sm font-semibold">This idea after applying</h3>
+        <Heading level={3} size="sm">
+          This idea after applying
+        </Heading>
         <p className="mt-1 text-xs text-muted-foreground">
           The exact values and files you selected. Other trip details and itinerary items stay as
           they are.

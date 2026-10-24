@@ -2,8 +2,8 @@
   "$schema": "../pattern.schema.json",
   "match": "node-text",
   "nodes": ["JSXAttribute"],
-  "pattern": "data-slot=\"(?:stacked-avatar|muted-copy|icon-tile|icon-badge|removable-chip|error-well|form-field|form-section|form-actions|form|menu-row|dashed-empty|cover-frame|detail-section|settings-[a-z-]+|(?:card|dialog|sheet|popover|select|table|avatar|alert-dialog|attachment|dropdown-menu|collapsible|tooltip|scroll-area|marker|separator|badge|button|input|textarea|switch|progress|skeleton|label|kbd)(?:-[a-z-]+)?)\"",
-  "message": "A data-slot names a @groam/ui primitive. Render the primitive instead of copying its slot onto a hand-built element, or choose a feature-specific slot name.",
+  "pattern": "data-slot=\\{?\\s*([\"'`])(?:alert-dialog|alert-dialog-content|alert-dialog-description|alert-dialog-footer|alert-dialog-header|alert-dialog-overlay|alert-dialog-portal|alert-dialog-title|alert-dialog-trigger|attachment|attachment-action|attachment-actions|attachment-content|attachment-description|attachment-group|attachment-media|attachment-title|attachment-trigger|aurora-background|auth-card|auth-shell|autocomplete-clear|autocomplete-empty|autocomplete-group|autocomplete-group-label|autocomplete-icon|autocomplete-input|autocomplete-input-group|autocomplete-item|autocomplete-list|autocomplete-popup|autocomplete-positioner|autocomplete-row|autocomplete-separator|autocomplete-start-addon|autocomplete-status|autocomplete-trigger|avatar|avatar-fallback|avatar-image|badge|button|button-content|button-loading-indicator|calendar|card|card-action|card-content|card-description|card-footer|card-header|card-title|chat-bubble-reactions|chat-collapsible-preview|chat-conversation|chat-date-pill|chat-delivery-indicator|chat-jump-to-latest|chat-member-list|chat-message-action-toolbar|chat-message-avatar|chat-message-bubble|chat-message-content|chat-message-footer|chat-message-header|chat-message-info|chat-reaction-chip|chat-reply-focus|chat-reply-reference|chat-typing-indicator|chat-unread-divider|check-state-icon|checkbox|checkbox-indicator|collapsible|collapsible-content|collapsible-panel|collapsible-trigger|command-dialog-backdrop|command-dialog-popup|command-dialog-trigger|command-dialog-viewport|command-empty|command-footer|command-group|command-group-label|command-item|command-list|command-panel|command-separator|command-shortcut|composer-action-group|composer-actions|composer-input|composer-popup|composer-positioner|composer-scroll-area|composer-token|composer-token-icon|composer-token-label|context-menu-checkbox-item|context-menu-group|context-menu-item|context-menu-label|context-menu-link-item|context-menu-popup|context-menu-positioner|context-menu-radio-group|context-menu-radio-item|context-menu-separator|context-menu-shortcut|context-menu-sub|context-menu-sub-content|context-menu-sub-trigger|context-menu-trigger|cover-frame|dashed-empty|data-table|data-table-toolbar|date-picker|detail-section|dialog|dialog-backdrop|dialog-close|dialog-content|dialog-description|dialog-footer|dialog-header|dialog-overlay|dialog-popup|dialog-portal|dialog-title|dialog-trigger|dialog-viewport|draft-bar|draft-label|dropdown-menu|dropdown-menu-checkbox-item|dropdown-menu-content|dropdown-menu-group|dropdown-menu-item|dropdown-menu-label|dropdown-menu-portal|dropdown-menu-radio-group|dropdown-menu-radio-item|dropdown-menu-separator|dropdown-menu-shortcut|dropdown-menu-sub|dropdown-menu-sub-content|dropdown-menu-sub-trigger|dropdown-menu-trigger|empty|empty-content|empty-description|empty-header|empty-media|empty-title|error-well|event-bar|event-time|form|form-actions|form-field|form-field-label|form-section|heading|icon-badge|icon-tile|inline-add-input|inline-add-row|input|input-control|input-group|input-group-addon|input-group-text|kbd|kbd-group|kbd-word|label|list|list-actions|list-age|list-aside|list-avatar|list-body|list-checkbox|list-controls|list-description|list-empty|list-expanded|list-filter-section|list-filter-toolbar|list-footer|list-group|list-hint|list-icon|list-inline|list-leading|list-main|list-meta|list-row|list-search|list-search-bar|list-search-chip|list-search-count|list-search-empty|list-search-field|list-search-footer|list-search-hints|list-search-mirror|list-search-token|list-sort|list-sort-dialog|list-title|list-toolbar|marker|marker-content|marker-icon|menu-checkbox-item|menu-group|menu-item|menu-label|menu-link-item|menu-popup|menu-positioner|menu-radio-group|menu-radio-item|menu-row|menu-separator|menu-shortcut|menu-sub|menu-sub-content|menu-sub-trigger|menu-trigger|muted-copy|number-field|number-field-decrement|number-field-group|number-field-increment|number-field-input|number-field-scrub-area|page-loading|page-loading-orbit|panel|popover|popover-anchor|popover-close|popover-content|popover-description|popover-header|popover-popup|popover-positioner|popover-title|popover-trigger|popover-viewport|progress|progress-indicator|radio|radio-group|radio-indicator|removable-chip|resource-gutter|rich-text-editor|scroll-area|scroll-area-content|scroll-area-corner|scroll-area-scrollbar|scroll-area-thumb|scroll-area-viewport|search-input|segmented-control|segmented-control-item|select|select-content|select-group|select-group-label|select-icon|select-item|select-label|select-list|select-popup|select-positioner|select-row|select-scroll-down-arrow|select-scroll-down-button|select-scroll-up-arrow|select-scroll-up-button|select-separator|select-trigger|select-value|separator|settings-aside|settings-footer|settings-panel|settings-panel-heading|settings-split-layout|settings-stack|sheet|sheet-close|sheet-content|sheet-description|sheet-footer|sheet-header|sheet-overlay|sheet-portal|sheet-title|sheet-trigger|shell|shell-card|shell-card-body|shell-card-footer|shell-card-header|shell-content|shell-desktop-right-column|shell-eyebrow|shell-header|shell-header-actions|shell-header-divider|shell-header-meta|shell-header-parent|shell-header-status|shell-left-column|shell-page-body|shell-reveal|shell-right-column|shell-stack|shell-two-columns|shell-underline-nav|sidebar|sidebar-container|sidebar-content|sidebar-footer|sidebar-gap|sidebar-group|sidebar-group-action|sidebar-group-content|sidebar-group-label|sidebar-header|sidebar-inner|sidebar-input|sidebar-inset|sidebar-menu|sidebar-menu-action|sidebar-menu-badge|sidebar-menu-button|sidebar-menu-item|sidebar-menu-skeleton|sidebar-menu-sub|sidebar-menu-sub-button|sidebar-menu-sub-item|sidebar-rail|sidebar-separator|sidebar-trigger|sidebar-wrapper|skeleton|slider-control|slider-indicator|slider-thumb|slider-track|slider-value|stacked-avatar|status-page|switch|switch-thumb|tab-indicator|table|table-body|table-caption|table-cell|table-container|table-footer|table-head|table-header|table-row|tabs|tabs-content|tabs-list|tabs-tab|textarea|textarea-control|timeline|timeline-badge|timeline-body|timeline-break|timeline-canvas|timeline-card|timeline-card-actions|timeline-card-body|timeline-card-header|timeline-days|timeline-header|timeline-item|timeline-lane|timeline-now|timeline-offhours|timeline-row|timeline-scroll|timeline-ticks|toggle|toggle-group|toolbar|toolbar-button|tooltip|tooltip-popup|tooltip-positioner|tooltip-trigger|tooltip-viewport)\\1\\s*\\}?",
+  "message": "A data-slot names a @groam/ui primitive. Render the primitive instead of copying its slot onto a hand-built element, or choose a feature-specific slot name. (The slot list is checked against packages/ui by no-copied-ui-slots.test.ts.)",
   "files": ["**/apps/web/src/features/**/*.tsx", "**/packages/ai/src/ui/**/*.tsx"],
   "excludeFiles": ["**/*.test.tsx"],
   "examples": [
@@ -24,6 +24,21 @@
     },
     {
       "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div data-slot={'card-title'}>x</div>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div data-slot={\"settings-panel\"}>x</div>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div data-slot='dialog-title'>x</div>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
       "source": "export const v = <div data-slot=\"queue-ledger\">x</div>;",
       "reports": false
     },
@@ -40,6 +55,26 @@
     {
       "file": "apps/web/src/features/x/view.tsx",
       "source": "export const v = <div data-slot=\"cardinal\">x</div>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div data-slot=\"card-footer-note\">x</div>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div data-slot=\"button-row\">x</div>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div data-slot={\"input-mask\"}>x</div>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div data-slot={slot}>x</div>;",
       "reports": false
     }
   ]

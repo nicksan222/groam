@@ -1,3 +1,4 @@
+import { Heading } from '@groam/ui/components/heading';
 import { cn } from '@groam/ui/lib/utils';
 import { type ComponentType, type ReactNode, useId } from 'react';
 import type { KanbanDropDecision } from '@/types/kanban';
@@ -88,9 +89,9 @@ export function KanbanLane<Lane extends string>({
               )}
             />
           ) : null}
-          <h2 className="text-sm font-semibold" id={headingId}>
+          <Heading level={2} size="sm" id={headingId}>
             {title}
-          </h2>
+          </Heading>
           <span className="text-sm text-muted-foreground tabular-nums">{count}</span>
         </div>
         {subtitle ? <p className="text-xs text-muted-foreground">{subtitle}</p> : null}

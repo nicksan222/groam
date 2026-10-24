@@ -1,4 +1,5 @@
 import { CheckCircle2, CircleAlert, Sparkles } from '@groam/icons';
+import { Heading } from '@groam/ui/components/heading';
 import { MutedCopy } from '@groam/ui/components/muted-copy';
 import type { BaseComponentProps } from '@json-render/react';
 
@@ -26,7 +27,9 @@ export function AssistantRecap({ props }: BaseComponentProps<RecapProps>) {
           <Icon className="size-3.5" />
         </span>
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold text-foreground">{props.title}</h3>
+          <Heading level={3} size="sm" className="text-foreground">
+            {props.title}
+          </Heading>
           <MutedCopy size="xs" className="mt-1">
             {props.summary}
           </MutedCopy>

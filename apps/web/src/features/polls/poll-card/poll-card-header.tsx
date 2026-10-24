@@ -1,5 +1,6 @@
 import { Vote } from '@groam/icons';
 import { Badge } from '@groam/ui/components/badge';
+import { Heading } from '@groam/ui/components/heading';
 import type { Poll } from '@/types/polls';
 
 /** Who asked and what; inline, the row already says both, so only a multi-select hint stays. */
@@ -15,7 +16,9 @@ export function PollCardHeader({ inline, poll }: { inline: boolean; poll: Poll }
           Asked by {poll.createdBy.name}
           {poll.multiSelect ? <span>· pick any</span> : null}
         </p>
-        <h3 className="mt-1 text-sm font-semibold text-foreground">{poll.question}</h3>
+        <Heading level={3} size="sm" className="mt-1 text-foreground">
+          {poll.question}
+        </Heading>
       </div>
       {poll.status === 'closed' ? <Badge variant="secondary">Closed</Badge> : null}
     </header>
