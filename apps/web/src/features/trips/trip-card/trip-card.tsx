@@ -1,5 +1,7 @@
 import { CalendarDays, MapPin } from '@groam/icons';
 import { CoverFrame } from '@groam/ui/components/cover-frame';
+import { Heading } from '@groam/ui/components/heading';
+import { IconTile } from '@groam/ui/components/icon-tile';
 import type { TripListItem } from '@/features/trips/hooks/use-trips';
 import { defaultTripSection } from '@/features/trips/trip-sections';
 import { Link } from '@/features/workspace/navigation/router';
@@ -108,15 +110,12 @@ export function TripCard({
               src={trip.coverUrl}
             />
           ) : (
-            <span
-              aria-hidden
-              className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-sm font-semibold text-muted-foreground"
-            >
+            <IconTile aria-hidden className="text-sm font-semibold" size="lg" variant="muted">
               {trip.name.trim().charAt(0).toUpperCase() || <MapPin className="size-4" />}
-            </span>
+            </IconTile>
           )}
           <div className="min-w-0">
-            <h3 className="truncate text-sm font-semibold text-foreground">
+            <Heading level={3} size="sm" className="truncate text-foreground">
               <Link
                 className="after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
                 params={{ section: defaultTripSection, tripId: reference }}
@@ -124,7 +123,7 @@ export function TripCard({
               >
                 {trip.name}
               </Link>
-            </h3>
+            </Heading>
             <span className="mt-1 flex min-w-0 flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
               <span className="inline-flex min-w-0 items-center gap-1">
                 <MapPin aria-hidden className="size-3 shrink-0" />

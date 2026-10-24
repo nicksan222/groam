@@ -1,4 +1,5 @@
 import { MapPin } from '@groam/icons';
+import { Heading } from '@groam/ui/components/heading';
 import Shell from '@groam/ui/components/shell/client';
 import { destinationMoveClearsTravel } from '@/features/trips/hooks/trip-destination-form-state';
 import { DestinationControls } from '@/features/trips/trip-destinations/destination-controls';
@@ -66,7 +67,9 @@ export function EditorRouteStop({
             <MapPin aria-hidden="true" className="size-3" />
             Stop {index + 1}
           </p>
-          <h3 className="mt-1 break-words text-sm font-semibold">{destination.name}</h3>
+          <Heading level={3} size="sm" className="mt-1 break-words">
+            {destination.name}
+          </Heading>
           <p className="mt-1 text-xs text-muted-foreground">
             {destination.startDay && destination.endDay
               ? destination.startDay === destination.endDay

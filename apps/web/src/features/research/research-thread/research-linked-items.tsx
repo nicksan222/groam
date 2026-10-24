@@ -3,6 +3,7 @@ import { Button } from '@groam/ui/components/button';
 import { Form } from '@groam/ui/components/form';
 import { FormActions } from '@groam/ui/components/form-actions';
 import { FormFeedback } from '@groam/ui/components/form-feedback';
+import { Heading } from '@groam/ui/components/heading';
 import { List } from '@groam/ui/components/list';
 import { MutedCopy } from '@groam/ui/components/muted-copy';
 import {
@@ -57,9 +58,9 @@ export function ResearchLinkedItems({
 
   return (
     <section aria-labelledby="research-linked-heading" className="space-y-2">
-      <h2 className="text-xs font-medium text-muted-foreground" id="research-linked-heading">
+      <Heading level={2} size="xs" className="text-muted-foreground" id="research-linked-heading">
         Linked trip items
-      </h2>
+      </Heading>
       {links.length ? (
         <List bleed={false}>
           <List.Body>

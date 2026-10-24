@@ -2,8 +2,8 @@
   "$schema": "../pattern.schema.json",
   "match": "node-text",
   "nodes": ["JSXOpeningElement"],
-  "pattern": "<div\\s(?=.*(?<![\\w:\\[/-])rounded-lg(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])border(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])border-border(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])bg-card(?![\\w./\\[-]))(?![\\s\\S]*\\bborder-dashed\\b)(?![\\s\\S]*\\boverflow-hidden\\b).*",
-  "message": "A bordered rounded-lg card surface is Card (@groam/ui/components/card): variant=\"plain\" for a static container with its own padding. A clipped frame is Panel (@groam/ui/components/panel).",
+  "pattern": "<div\\s(?=.*(?<![\\w:\\[/-])rounded-lg(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])border(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])border-border(?:/70)?(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])bg-card(?![\\w./\\[-]))(?![\\s\\S]*\\bborder-dashed\\b)(?![\\s\\S]*\\boverflow-hidden\\b).*",
+  "message": "A bordered rounded-lg card surface is Card (@groam/ui/components/card): variant=\"plain\" for a static container with its own padding, variant=\"inset\" for the padded row-like card (border-border/70, p-4, hover border; override gap and padding through className). A clipped frame is Panel (@groam/ui/components/panel).",
   "files": ["**/apps/web/src/features/**/*.tsx", "**/packages/ai/src/ui/**/*.tsx"],
   "excludeFiles": ["**/*.test.tsx"],
   "examples": [
@@ -20,11 +20,6 @@
     {
       "file": "apps/web/src/features/x/view.tsx",
       "source": "export const v = <div className=\"rounded-lg border border-dashed border-border bg-card p-4\">x</div>;",
-      "reports": false
-    },
-    {
-      "file": "apps/web/src/features/x/view.tsx",
-      "source": "export const v = <div className=\"rounded-lg border border-border/70 bg-card p-4\">x</div>;",
       "reports": false
     },
     {
@@ -50,6 +45,51 @@
     {
       "file": "apps/web/src/features/x/view.tsx",
       "source": "import { Card } from \"@groam/ui/components/card\";\nexport const v = <Card variant=\"plain\" className=\"p-4\">x</Card>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div className=\"flex min-w-0 flex-1 items-start gap-2 rounded-lg border border-border/70 bg-card p-2 transition-colors hover:border-border\">x</div>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div className=\"rounded-lg border border-border/70 bg-card p-4\">x</div>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div className=\"rounded-lg border border-border/50 bg-card p-4\">x</div>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div className=\"rounded-lg border border-border/70.5 bg-card p-4\">x</div>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div className=\"rounded-lg border border-border/70 bg-background p-4\">x</div>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <article className=\"rounded-xl border border-border/70 bg-card p-3\">x</article>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div className=\"overflow-hidden rounded-lg border border-border/70 bg-card\">x</div>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div className=\"rounded-lg border border-dashed border-border/70 bg-card p-4\">x</div>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "import { Card } from \"@groam/ui/components/card\";\nexport const v = <Card variant=\"inset\">x</Card>;",
       "reports": false
     }
   ]

@@ -1,6 +1,7 @@
 import { clauseLabel } from '@groam/backend/convex/modules/travel/issues/rules/index';
 import { X } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
+import { Card } from '@groam/ui/components/card';
 import { testIds } from '@/lib/test-ids';
 import type { ClauseKind, RuleClause } from '@/types/issues';
 import { RuleClauseFields } from './rule-clause-fields';
@@ -30,7 +31,7 @@ export function RuleClauseRow({
       data-testid={testIds.ruleClause}
     >
       <RuleJoiner word={joiner} />
-      <div className="flex min-w-0 flex-1 items-start gap-2 rounded-lg border border-border/70 bg-card p-2 shadow-xs/5 transition-colors hover:border-border">
+      <Card className="min-w-0 flex-1 flex-row items-start gap-2 p-2 shadow-xs/5" variant="inset">
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
             <RuleKindSelect disabled={disabled} onChange={onChangeKind} value={clause.kind} />
@@ -50,7 +51,7 @@ export function RuleClauseRow({
         >
           <X />
         </Button>
-      </div>
+      </Card>
     </li>
   );
 }

@@ -1,3 +1,4 @@
+import { Heading } from '@groam/ui/components/heading';
 import type { IssueFlagTarget } from '@/types/issues';
 import type { TripPlanner } from '@/types/trip-planner';
 import { PlanCardFromModel } from './plan-card-from-model';
@@ -21,7 +22,7 @@ export function PlannerUnscheduled({
       aria-label="Plans without a day"
       className="space-y-4 rounded-2xl border border-dashed border-border p-6"
     >
-      <h3 className="font-semibold">Still to place</h3>
+      <Heading level={3}>Still to place</Heading>
       <p className="text-sm text-muted-foreground">These plans do not have a day yet.</p>
       {planner.unscheduledDestinations.map((destination) => (
         <PlanCardFromModel

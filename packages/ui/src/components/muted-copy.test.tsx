@@ -27,3 +27,21 @@ test('className layout classes are appended', async () => {
 
   expect(page.getByText('Layout').element().className).toContain('mt-1');
 });
+
+test('as renders a span or div where a paragraph would be invalid', async () => {
+  await render(
+    <>
+      <MutedCopy as="span">Inline</MutedCopy>
+      <MutedCopy as="div" size="xs">
+        Block
+      </MutedCopy>
+    </>
+  );
+
+  const inline = page.getByText('Inline').element();
+  expect(inline.tagName).toBe('SPAN');
+  expect(inline.getAttribute('data-slot')).toBe('muted-copy');
+  const block = page.getByText('Block').element();
+  expect(block.tagName).toBe('DIV');
+  expect(block.className).toContain('text-xs');
+});

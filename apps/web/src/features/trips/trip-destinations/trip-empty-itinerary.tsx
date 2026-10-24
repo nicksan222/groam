@@ -1,5 +1,6 @@
 import { Compass, MapPin, Plus, Sun } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
+import { Heading } from '@groam/ui/components/heading';
 import { MutedCopy } from '@groam/ui/components/muted-copy';
 import { testIds } from '@/lib/test-ids';
 
@@ -24,11 +25,11 @@ export function TripEmptyItinerary({ onAddDestination }: { onAddDestination?: ()
           <Sun className="size-6" />
         </div>
       </div>
-      <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
+      <Heading level={2} size="xl" className="sm:text-2xl">
         {onAddDestination
           ? 'Start with your first destination'
           : 'The itinerary is still wide open'}
-      </h2>
+      </Heading>
       <MutedCopy className="mx-auto mt-3 max-w-sm">
         {onAddDestination
           ? 'Choose the first place to explore. Build the rest of your journey around it.'

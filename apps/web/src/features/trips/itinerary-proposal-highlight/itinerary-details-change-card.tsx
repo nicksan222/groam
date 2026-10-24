@@ -1,5 +1,6 @@
 import { ArrowRight, Paperclip, SlidersHorizontal } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
+import { Heading } from '@groam/ui/components/heading';
 import { IconTile } from '@groam/ui/components/icon-tile';
 import { MutedCopy } from '@groam/ui/components/muted-copy';
 import Shell from '@groam/ui/components/shell/client';
@@ -49,12 +50,14 @@ export function ItineraryDetailsChangeCard({
               <span className="inline-flex items-center rounded-full border border-warning/25 px-2 py-1 text-[11px] font-medium tracking-wide text-warning-foreground">
                 Conflict
               </span>
-              <h3
-                className="min-w-0 flex-1 basis-40 text-sm font-medium tracking-tight text-foreground"
+              <Heading
+                level={3}
+                size="sm"
+                className="min-w-0 flex-1 basis-40 font-medium tracking-tight text-foreground"
                 id="itinerary-details-change-title"
               >
                 {itineraryDetailsChangeTitle}
-              </h3>
+              </Heading>
               {canResolve && onResolve ? (
                 <Button
                   className="ms-auto shrink-0"

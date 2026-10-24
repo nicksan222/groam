@@ -1,4 +1,5 @@
 import { ChevronsUpDown, Plane } from '@groam/icons';
+import { IconTile } from '@groam/ui/components/icon-tile';
 import { SidebarMenuButton } from '@groam/ui/components/sidebar';
 import { cn } from '@groam/ui/lib/utils';
 import type { ComponentProps } from 'react';
@@ -60,9 +61,13 @@ export function TripSwitcherTrigger({
       {trip ? (
         <TripThumbnail coverUrl={trip.coverUrl} name={trip.name} size="trigger" />
       ) : (
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-sidebar-accent text-sidebar-foreground group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:rounded-md">
+        <IconTile
+          className="bg-sidebar-accent text-sidebar-foreground group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:rounded-md"
+          size="lg"
+          variant="plain"
+        >
           <Plane aria-hidden className="size-4" />
-        </span>
+        </IconTile>
       )}
       <span className="grid min-w-0 flex-1 text-left group-data-[collapsible=icon]:hidden">
         <span

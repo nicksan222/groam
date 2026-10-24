@@ -1,5 +1,6 @@
 import { Check, CircleDot, GitBranch } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
+import { Heading } from '@groam/ui/components/heading';
 import { Panel } from '@groam/ui/components/panel';
 import { cn } from '@groam/ui/lib/utils';
 import type { ResolutionRow } from '@/features/trips/hooks/detail-resolution-values';
@@ -27,10 +28,10 @@ export function ResolveDiffField({
   return (
     <Panel className={cn('scroll-mt-4', choice && 'border-primary/40')} id={`resolve-${row.key}`}>
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
-        <h3 className="flex items-center gap-2 text-sm font-semibold">
+        <Heading level={3} size="sm" className="flex items-center gap-2">
           <GitBranch className="size-4 text-muted-foreground" />
           {row.label}
-        </h3>
+        </Heading>
         <span
           className={cn(
             'flex items-center gap-2 text-[11px]',

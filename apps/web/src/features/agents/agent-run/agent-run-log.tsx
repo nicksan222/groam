@@ -1,5 +1,6 @@
 import type { Id } from '@groam/backend/data-model';
 import { CircleDashed } from '@groam/icons';
+import { Heading } from '@groam/ui/components/heading';
 import { PageLoading } from '@groam/ui/components/page-loading';
 import Timeline from '@groam/ui/components/timeline';
 import type { ReactNode } from 'react';
@@ -74,7 +75,9 @@ export function AgentRunLog({
 }) {
   return (
     <section aria-label="Run activity" className="min-w-0">
-      <h2 className="sr-only">Timeline</h2>
+      <Heading className="sr-only" level={2}>
+        Timeline
+      </Heading>
       <Timeline aria-label="Run log" clipSidebar variant="activity">
         {loadEarlier ? (
           <Timeline.Item condensed>

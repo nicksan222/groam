@@ -1,4 +1,5 @@
 import { Check } from '@groam/icons';
+import { Heading } from '@groam/ui/components/heading';
 import { cn } from '@groam/ui/lib/utils';
 import type { PersonalPackingItem } from '@/types/packing';
 import { PackingCount } from './packing-count';
@@ -33,9 +34,9 @@ export function PersonalPackingHeader({ items }: { items: readonly PersonalPacki
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-baseline justify-between gap-3">
-        <h3 className="text-sm font-semibold" id="my-packing-heading">
+        <Heading level={3} size="sm" id="my-packing-heading">
           My bag
-        </h3>
+        </Heading>
         {items.length > 0 ? (
           <p
             className={cn('text-xs text-muted-foreground', allPacked && 'text-success-foreground')}

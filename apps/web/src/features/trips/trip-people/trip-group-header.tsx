@@ -1,3 +1,4 @@
+import { Heading } from '@groam/ui/components/heading';
 import { cn } from '@groam/ui/lib/utils';
 import type { ComponentType } from 'react';
 
@@ -34,9 +35,9 @@ export function TripGroupHeader({
       >
         <Icon className="size-3.5" />
       </span>
-      <h3 className="text-base font-semibold" id={titleId}>
+      <Heading level={3} size="base" id={titleId}>
         {title}
-      </h3>
+      </Heading>
       <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-muted px-2 text-xs font-medium text-muted-foreground tabular-nums">
         {count}
       </span>

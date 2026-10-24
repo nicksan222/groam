@@ -2,6 +2,7 @@ import type { UIMessage } from '@convex-dev/agent/react';
 import { Button } from '@groam/ui/components/button';
 import { ChatMessage } from '@groam/ui/components/chat';
 import { ChatTimeline, type ChatTimelineItem } from '@groam/ui/components/chat-timeline';
+import { Heading } from '@groam/ui/components/heading';
 import { parseAssistantContextMessage } from '#ai/agents';
 import { isRecord } from '#ai/runtime/context-tag';
 import { AssistantChatMessage } from '#ai/ui/chat/assistant-chat-message';
@@ -104,9 +105,9 @@ function AssistantWelcome({
   return (
     <div className="my-auto">
       <div className="mx-auto flex w-full max-w-sm flex-col px-4 py-12">
-        <h2 className="text-base font-medium tracking-tight">
+        <Heading level={2} size="base" className="font-medium tracking-tight">
           {context ? 'How can I help?' : 'Waiting for this page'}
-        </h2>
+        </Heading>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
           {context
             ? context.description

@@ -6,6 +6,7 @@ import { Form } from '@groam/ui/components/form';
 import { FormActions } from '@groam/ui/components/form-actions';
 import { FormField } from '@groam/ui/components/form-field';
 import { FormSection } from '@groam/ui/components/form-section';
+import { Heading } from '@groam/ui/components/heading';
 import { Input } from '@groam/ui/components/input';
 import { RichTextEditor } from '@groam/ui/components/rich-text-editor';
 import Shell from '@groam/ui/components/shell/client';
@@ -153,9 +154,9 @@ export function TripTransferForm({
           <Shell.Eyebrow size="label" strong tone="primary">
             Travel connection
           </Shell.Eyebrow>
-          <h4 className="mt-2 text-base font-semibold tracking-tight">
+          <Heading level={4} size="base" className="mt-2 tracking-tight">
             {fromLabel} <span className="text-muted-foreground">→</span> {toLabel}
-          </h4>
+          </Heading>
         </div>
         <Button
           aria-label="Close travel editor"

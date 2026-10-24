@@ -35,6 +35,15 @@ features on `PageLoading` from `@groam/ui/components/page-loading` and ban skele
 `Shell.HeaderSkeleton`, `LoadingPlaceholder`, and `*Skeleton`/`*Loading` components and modules
 (a `Button` `pending` spinner and a pulsing live-status dot stay allowed).
 
+Pattern rules only see class strings written in JSX or `cn()` at the element. A class string
+stored in a variable, a `const` object, or a `.ts` constant is invisible to them, so a recipe
+hidden that way is not reported; keep class strings at the element.
+
+`no-copied-ui-slots` lists every literal `data-slot` in `packages/ui` by exact name (a name such as
+`button-row` stays free). `no-copied-ui-slots.test.ts` extracts the slots from the primitives and
+fails when the rule's list differs, so a new or renamed primitive slot needs the alternation in
+`plugin/patterns/no-copied-ui-slots.json` updated in the same change.
+
 [`pattern.schema.json`](plugin/pattern.schema.json) types the format for editors; the plugin
 validates every definition when it loads.
 

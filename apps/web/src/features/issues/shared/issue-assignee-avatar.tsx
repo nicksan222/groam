@@ -1,6 +1,7 @@
 import { Bot, UserRound } from '@groam/icons';
 import { Avatar } from '@groam/ui/components/avatar';
 import { AvatarFallback } from '@groam/ui/components/avatar-fallback';
+import { IconTile } from '@groam/ui/components/icon-tile';
 import { initials } from '@groam/ui/lib/avatar';
 import { cn } from '@groam/ui/lib/utils';
 import type { IssueCardData } from '@/types/issues';
@@ -29,15 +30,8 @@ export function IssueAssigneeAvatar({
   }
   const Icon = assignee ? Bot : UserRound;
   return (
-    <span
-      className={cn(
-        'flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground',
-        className
-      )}
-      title={name}
-      {...label}
-    >
+    <IconTile className={className} radius="full" size="xs" title={name} variant="muted" {...label}>
       <Icon aria-hidden className="size-3.5" />
-    </span>
+    </IconTile>
   );
 }

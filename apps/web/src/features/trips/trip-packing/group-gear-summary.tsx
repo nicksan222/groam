@@ -1,4 +1,5 @@
 import { Check } from '@groam/icons';
+import { Heading } from '@groam/ui/components/heading';
 import { cn } from '@groam/ui/lib/utils';
 import type { PackingItem } from '@/types/packing';
 import { PackingCount } from './packing-count';
@@ -53,9 +54,9 @@ export function GroupGearSummary({
   return (
     <div className="flex min-w-0 flex-col gap-1">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h3 className="text-sm font-semibold" id="group-gear-heading">
+        <Heading level={3} size="sm" id="group-gear-heading">
           Group gear
-        </h3>
+        </Heading>
         {items.length > 0 ? (
           <CoverageLine covered={coveredCount(items)} total={items.length} />
         ) : null}

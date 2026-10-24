@@ -3,6 +3,7 @@ import { Button } from '@groam/ui/components/button';
 import { Form } from '@groam/ui/components/form';
 import { FormActions } from '@groam/ui/components/form-actions';
 import { FormField } from '@groam/ui/components/form-field';
+import { Heading } from '@groam/ui/components/heading';
 import {
   Select,
   SelectContent,
@@ -123,9 +124,9 @@ export function EditorActivityForm({
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h5 className="text-base font-semibold">
+            <Heading level={5} size="base">
               {activity ? 'Edit activity' : 'Add activity'}
-            </h5>
+            </Heading>
             <p className="mt-1 text-xs text-muted-foreground">
               {activity && activity.endDayNumber !== activity.dayNumber
                 ? `Days ${activity.dayNumber}–${activity.endDayNumber}`
