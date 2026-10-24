@@ -1,0 +1,124 @@
+{
+  // Invoke from root package.json via `bunx fallow` (pinned workspace dep).
+  // Do not PATH-prepend /usr/bin: that shadows Cloud/Node 24 with /usr/bin/node v22.
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "ignorePatterns": [
+    ".claude/**",
+    ".agents/**",
+    ".codex/**",
+    "**/.astro/**",
+    "**/coverage/**",
+    "**/dist/**",
+    "**/_generated/**",
+    "**/generated.ts",
+    "**/.void/**",
+    "**/vendor/**"
+  ],
+  // These packages are runtime-loaded by Vitest or the toolchain. vite-plus is the dev
+  // toolchain; its only "production" importer is the Oxlint plugin entry below.
+  "ignoreDependencies": [
+    // tooling/diagrams serves this bundle to Chromium by resolved path, not import.
+    "@excalidraw/utils",
+    "@edge-runtime/vm",
+    // The Playwright provider behind vite-plus/test/browser-playwright.
+    "@vitest/browser-playwright",
+    "jiti",
+    // Run as CLIs (`vp exec fallow`, `vp exec syncpack`), never imported.
+    "fallow",
+    "syncpack",
+    // Run as a CLI (`vp exec react-doctor`) and configured by package.json#reactDoctor.
+    "react-doctor",
+    // Loaded by @tailwindcss/vite and the stylesheet's `@import "tailwindcss"`, not by a module.
+    "tailwindcss",
+    "vite-plus"
+  ],
+  "entry": [
+    // Void loads pages, layouts, middleware, and its config by convention.
+    "apps/web/pages/**/*.{ts,tsx}",
+    "apps/web/middleware/**/*.ts",
+    "apps/web/routes/**/*.ts",
+    "apps/web/env.ts",
+    "apps/web/void.config.ts",
+    "apps/landing/void.config.ts",
+    "tooling/diagrams/src/render.ts",
+    "packages/backend/scripts/generate-auth-schema.ts",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    // Oxlint loads the Groam lint plugin from tooling/oxc-config/lint.ts by path.
+    "tooling/oxc-config/plugin/index.ts",
+    // Vitest loads these by path from tooling/vitest-config/src/setup-files.ts.
+    "tooling/vitest-config/src/console-guard/setup.ts",
+    "tooling/vitest-config/src/fake-scheduler.ts",
+    // Browser-mode setups load these by path from each package's vite.config.ts.
+    "apps/web/src/journeys-setup.ts",
+    "apps/web/src/views-setup.ts",
+    "packages/*/src/browser-setup.ts",
+    "packages/ai/src/browser-setup.css"
+  ],
+  "health": {
+    "maxCyclomatic": 35,
+    "maxCognitive": 40,
+    "maxCrap": 700.0
+  },
+  "typeAware": {
+    // The type-aware sidecar currently exceeds its 120s timeout on this workspace.
+    "enabled": false,
+    // Workspace tsconfigs that exist today. Skip reference-only roots
+    // (apps/web/tsconfig.json, ./tsconfig.json), convex (covered by
+    // packages/backend).
+    // tooling/tsconfig.json covers convex and quality.
+    "projects": [
+      "apps/web/tsconfig.app.json",
+      "apps/web/tsconfig.node.json",
+      "packages/ai/tsconfig.json",
+      "packages/auth/tsconfig.json",
+      "packages/backend/tsconfig.json",
+      "packages/env/tsconfig.json",
+      "packages/icons/tsconfig.json",
+      "packages/payments/tsconfig.json",
+      "packages/ui/tsconfig.json",
+      "tooling/app-actions/tsconfig.json",
+      "tooling/tsconfig.json"
+    ],
+    // Including AI contracts can truncate type-coupling (evidence-limit). Keep the
+    // semantic pass; do not fail the default check on that advisory proof.
+    // Opt into `bun run fallow:strict` for `--type-aware-require complete`.
+    "require": "best-effort"
+  },
+  "rules": {
+    "css-broken-reference": "error",
+    "css-dead-surface": "error",
+    "css-duplicate-block": "error",
+    "css-selector-complexity": "error",
+    "css-token-drift": "error",
+    "private-type-leaks": "error"
+  },
+  "overrides": [
+    {
+      // Adapter members are the public @groam/app-actions contract.
+      "files": ["tooling/app-actions/src/**/*app-actions.ts"],
+      "rules": { "unused-class-members": "off" }
+    },
+    {
+      // Tests that read sources or register Convex modules with `import.meta.glob` match one
+      // another's files; those globs are not imports, so the cycles they form are not real.
+      "files": ["**/*.test.ts", "**/*.test.tsx", "packages/backend/testing/factory.ts"],
+      "rules": { "circular-dependencies": "off" }
+    }
+  ],
+  "duplicates": {
+    "mode": "mild",
+    // Near-identical Vitest router/sidebar stubs across feature suites sit under
+    // ~100 tokens; raise past that so mild mode focuses on real copy-paste.
+    "minTokens": 110,
+    "skipLocal": true,
+    // The oxlint plugin and the convention checker each load their own JSON
+    // rule files; the two tooling packages cannot share a module.
+    "ignore": [
+      "tooling/oxc-config/plugin/patterns.ts",
+      "tooling/quality/conventions/definitions.ts"
+    ],
+    "ignoreDefaults": false
+  },
+  "audit": {}
+}

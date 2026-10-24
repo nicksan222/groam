@@ -1,0 +1,23 @@
+{
+  "$schema": "../rule.schema.json",
+  "harness": "pattern",
+  "message": "Read environment variables from @groam/env/* instead of unvalidated Vite env access",
+  "include": ["**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}", "**/*.astro"],
+  "exclude": ["packages/env/**"],
+  "pattern": "\\bimport\\.meta\\.env\\b",
+  "report": "first",
+  "examples": [
+    {
+      "files": {
+        "packages/env/src/apps/web-client.ts": "const mode = import.meta.env.MODE;"
+      },
+      "reports": []
+    },
+    {
+      "files": {
+        "apps/web/src/main.tsx": "const a = 1;\nconst url = import.meta.env.VITE_CONVEX_URL;\nimport.meta.env.MODE;"
+      },
+      "reports": ["apps/web/src/main.tsx:2"]
+    }
+  ]
+}

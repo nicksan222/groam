@@ -1,0 +1,238 @@
+---
+import Icon from '@groam/icons/astro';
+import PageSection from '@/components/page-section.astro';
+import { ideaCopy } from '@/content/feature-conversations';
+---
+
+<PageSection tone="bill" layout="split" class="lift" aria-labelledby="lift-title" data-chat-to-idea>
+    <div class="intro">
+      <h2 id="lift-title" class="section-title">{ideaCopy.title}</h2>
+      <p class="section-lede">{ideaCopy.lede}</p>
+      <button class="btn btn-primary btn-lg" type="button" aria-expanded="false" data-lift>
+        <span class="when-chat">
+          <Icon name="idea" />
+          {ideaCopy.action}
+        </span>
+        <span class="when-idea">{ideaCopy.back}</span>
+      </button>
+    </div>
+
+    <div class="stage surface" role="group" aria-label="Example trip">
+      <span class="example-label">Example trip</span>
+      <div class="msg">
+        <span class="avatar avatar-maya" aria-hidden="true">M</span>
+        <div>
+          <p class="who"><b>Maya</b> <span class="time">Fri 20:05</span></p>
+          <p class="text">{ideaCopy.message}</p>
+        </div>
+      </div>
+      <div class="idea strip" data-idea aria-hidden="true">
+        <p class="head">
+          <span class="chip chip-idea">Idea</span>
+          <b>{ideaCopy.ideaTitle}</b>
+          <span class="byline">{ideaCopy.byline}</span>
+        </p>
+        <ul>
+          <li class="gone">
+            <span class="time">{ideaCopy.replaces.time}</span>
+            <s>{ideaCopy.replaces.title}</s>
+            <span class="chip">Removed</span>
+          </li>
+          <li class="row">
+            <span class="time">{ideaCopy.proposes.time}</span>
+            <span>{ideaCopy.proposes.title}</span>
+            <span class="chip">Added</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+</PageSection>
+
+<script>
+  for (const root of document.querySelectorAll<HTMLElement>('[data-chat-to-idea]')) {
+    const button = root.querySelector<HTMLButtonElement>('[data-lift]');
+    button?.addEventListener('click', () => {
+      const on = button.getAttribute('aria-expanded') !== 'true';
+      button.setAttribute('aria-expanded', String(on));
+      root.querySelector('[data-idea]')?.setAttribute('aria-hidden', String(!on));
+      root.toggleAttribute('data-on', on);
+    });
+  }
+</script>
+
+<style>
+  .intro .btn {
+    margin-top: 32px;
+  }
+  .btn :global(svg) {
+    width: 16px;
+    height: 16px;
+  }
+  .btn {
+    display: inline-grid;
+  }
+  .btn span {
+    grid-area: 1 / 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition:
+      opacity 0.24s linear 0.06s,
+      transform 0.3s var(--ease) 0.06s,
+      visibility 0s;
+  }
+  .btn .when-idea,
+  [data-on] .btn .when-chat {
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(6px);
+    transition:
+      opacity 0.2s linear,
+      transform 0.2s var(--ease),
+      visibility 0s 0.2s;
+  }
+  [data-on] .btn .when-idea {
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 0.24s linear 0.06s,
+      transform 0.3s var(--ease) 0.06s,
+      visibility 0s;
+  }
+  .stage {
+    position: relative;
+    display: grid;
+    gap: 22px;
+    padding: 52px 18px 28px;
+    min-height: 320px;
+    align-content: start;
+  }
+  .stage .example-label {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+  }
+  .msg {
+    display: grid;
+    grid-template-columns: 26px minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1.5px solid var(--ink);
+    border-bottom-style: dashed;
+    background: var(--paper);
+    transition: opacity 0.5s var(--ease);
+  }
+  .who {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+  }
+  .who b {
+    font-weight: 850;
+    font-stretch: 80%;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-size: 14px;
+  }
+  .text {
+    font-weight: 650;
+    font-size: 1.15rem;
+  }
+  [data-on] .msg {
+    opacity: 0.6;
+  }
+  .idea {
+    --on-soft: var(--ink-soft);
+    --on-line: var(--ink-line);
+    display: grid;
+    gap: 12px;
+    padding: 18px;
+    background: transparent;
+    color: inherit;
+    outline: 2px dashed currentColor;
+    outline-offset: -2px;
+    box-shadow: none;
+    transform: none;
+    transition:
+      background-color 0.4s ease,
+      transform 0.7s var(--ease),
+      box-shadow 0.7s var(--ease),
+      outline-color 0.4s ease;
+  }
+  [data-on] .idea {
+    --on-soft: color-mix(in srgb, var(--strip-ink) 72%, var(--strip));
+    --on-line: color-mix(in srgb, var(--strip-ink) 22%, var(--strip));
+    background: var(--strip);
+    color: var(--strip-ink);
+    outline-offset: -6px;
+    outline-color: color-mix(in srgb, var(--strip-ink) 45%, transparent);
+    box-shadow: var(--lift);
+    transform: rotate(-1.2deg) translateY(-4px);
+  }
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+  }
+  .head b {
+    font-weight: 850;
+    font-stretch: 66%;
+    word-spacing: var(--caps-space);
+    font-size: 1.7rem;
+    line-height: 0.95;
+    text-transform: uppercase;
+  }
+  .byline {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  [data-on] .idea .chip {
+    border-color: var(--strip-ink);
+    color: var(--strip-ink);
+  }
+  [data-on] .idea .head .chip {
+    background: var(--strip-ink);
+    color: var(--strip);
+  }
+  ul {
+    display: grid;
+  }
+  li {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 0;
+    border-top: 1.5px solid var(--on-line);
+    font-weight: 650;
+  }
+  li .time {
+    color: inherit;
+  }
+  @media (max-width: 480px) {
+    li {
+      grid-template-columns: 52px minmax(0, 1fr);
+    }
+    li .chip {
+      grid-column: 2;
+      justify-self: start;
+    }
+  }
+  .gone s {
+    text-decoration-thickness: 0.14em;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .msg,
+    .idea,
+    .btn span,
+    .btn .when-idea,
+    [data-on] .btn .when-chat,
+    [data-on] .btn .when-idea {
+      transition-duration: 0s;
+      transition-delay: 0s;
+    }
+  }
+</style>

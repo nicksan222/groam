@@ -1,0 +1,19 @@
+---
+type Props = { flush?: boolean };
+const { flush = false } = Astro.props;
+---
+
+<span class:list={['idea-heading', 'strip', { flush }]}><slot /></span>
+
+<style>
+  /* One continuous card keeps wrapped lines from painting over one another. */
+  .idea-heading {
+    display: inline-block;
+    max-width: 100%;
+    padding: 0.14em 0.22em 0.16em;
+    line-height: 1.06;
+    overflow-wrap: anywhere;
+    transform: none;
+    vertical-align: top;
+  }
+</style>

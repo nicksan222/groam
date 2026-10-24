@@ -1,0 +1,44 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "module-source",
+  "pattern": "@groam/ui/components/(?:page-crumb-nav|breadcrumb)|(?:.*/)?trip-page-header(?:-skeleton)?|(?:.*/)?header-skeleton",
+  "message": "Breadcrumbs, PageCrumbNav and TripPageHeader are gone. A page's parent crumb, status and actions are props of Shell.Header; its loading state is PageLoading from @groam/ui/components/page-loading.",
+  "files": ["**/apps/web/src/**"],
+  "examples": [
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "import { PageCrumbNav } from '@groam/ui/components/page-crumb-nav';\nexport const v = PageCrumbNav;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "import { Breadcrumb } from '@groam/ui/components/breadcrumb';\nexport const v = Breadcrumb;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "import { TripPageHeader } from './trip-page-header';\nexport const v = TripPageHeader;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "import { TripPageHeaderSkeleton } from '@/features/trips/trip-detail/trip-page-header-skeleton';\nexport const v = TripPageHeaderSkeleton;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "import { HeaderSkeleton } from '@groam/ui/components/shell/components/header-skeleton';\nexport const v = HeaderSkeleton;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "import Shell from '@groam/ui/components/shell/client';\nexport const v = Shell;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "import { TripSectionHeader } from './trip-section-header';\nexport const v = TripSectionHeader;",
+      "reports": false
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "../rule.schema.json",
+  "harness": "export-targets",
+  "message": "Package exports must point at files that exist",
+  "include": ["apps/*/package.json", "packages/*/package.json", "tooling/*/package.json"],
+  "examples": [
+    {
+      "files": {
+        "packages/ui/package.json": "{\"name\": \"@groam/ui\", \"exports\": {\"./components/button\": \"./src/components/button.tsx\", \"./styles\": {\"import\": \"./src/styles/globals.css\"}, \"./icons/*\": \"./src/icons/*.tsx\"}}",
+        "packages/ui/src/components/button.tsx": "",
+        "packages/ui/src/styles/globals.css": ""
+      },
+      "reports": []
+    },
+    {
+      "files": {
+        "packages/ui/package.json": "{\"name\": \"@groam/ui\", \"exports\": {\"./components/gone\": \"./src/components/gone.tsx\"}}"
+      },
+      "reports": ["packages/ui/package.json ./components/gone -> ./src/components/gone.tsx"]
+    }
+  ]
+}

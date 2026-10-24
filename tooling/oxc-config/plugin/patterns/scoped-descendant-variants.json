@@ -1,0 +1,41 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "node-text",
+  "nodes": ["JSXAttribute"],
+  "pattern": "className\\s*=.*(?:\\s|\\x22|\\x27|\\x60|:)has-data-\\[variant=.*",
+  "message": "Scope descendant variant selectors to a component data-slot. A generic has-data-[variant=...] selector also matches unrelated cards and can change the whole page.",
+  "files": ["**/packages/ui/src/**", "**/apps/web/src/**"],
+  "excludeFiles": ["**/*.test.ts", "**/*.test.tsx"],
+  "examples": [
+    {
+      "file": "packages/ui/src/components/example.tsx",
+      "source": "export const view = <div className=\"has-data-[variant=inset]:bg-sidebar\" />;",
+      "reports": true
+    },
+    {
+      "file": "packages/ui/src/components/example.tsx",
+      "source": "export const view = <div className={cn(\"flex\", active && \"has-data-[variant=inset]:bg-sidebar\")} />;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/layout-example.tsx",
+      "source": "export const view = <div className=\"has-data-[variant=inset]:bg-sidebar\" />;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/layout-example.tsx",
+      "source": "export const view = <div className={cn(\"flex\", active && \"has-data-[variant=inset]:bg-sidebar\")} />;",
+      "reports": true
+    },
+    {
+      "file": "packages/ui/src/components/example.tsx",
+      "source": "export const view = <div className=\"has-[[data-slot=sidebar][data-variant=inset]]:bg-sidebar group-data-[variant=inset]:m-2 group-has-data-[variant=ghost]/message:px-0\" />;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/layout-example.tsx",
+      "source": "export const view = <div className=\"has-[[data-slot=sidebar][data-variant=inset]]:bg-sidebar group-data-[variant=inset]:m-2 group-has-data-[variant=ghost]/message:px-0\" />;",
+      "reports": false
+    }
+  ]
+}

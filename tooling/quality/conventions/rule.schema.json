@@ -1,0 +1,337 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://groam.app/schemas/convention-rule.json",
+  "title": "Groam repository convention",
+  "description": "One rule for `vp run lint:conventions`. The file name is the rule name. `harness` selects the generic check that runs it (harnesses.ts); `examples` are its tests.",
+  "type": "object",
+  "oneOf": [
+    {
+      "type": "object",
+      "description": "Every directory or file name in scope matches `pattern`, or an exception that applies within its path.",
+      "properties": {
+        "$schema": true,
+        "harness": {
+          "const": "path-names"
+        },
+        "message": true,
+        "include": true,
+        "exclude": true,
+        "examples": true,
+        "target": {
+          "description": "`directories` checks each folder (as its path); `files` checks file names without their last extension.",
+          "enum": ["directories", "files"]
+        },
+        "pattern": {
+          "$ref": "#/$defs/regex"
+        },
+        "exceptions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "within": {
+                "$ref": "#/$defs/glob"
+              },
+              "pattern": {
+                "$ref": "#/$defs/regex"
+              }
+            },
+            "required": ["within", "pattern"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["harness", "message", "examples", "target", "pattern"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "description": "No file in scope may exist.",
+      "properties": {
+        "$schema": true,
+        "harness": {
+          "const": "forbidden-files"
+        },
+        "message": true,
+        "include": true,
+        "exclude": true,
+        "examples": true
+      },
+      "required": ["harness", "message", "examples", "include"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "description": "Every file in scope has at least one of the `requires` files.",
+      "properties": {
+        "$schema": true,
+        "harness": {
+          "const": "companion-files"
+        },
+        "message": true,
+        "include": true,
+        "exclude": true,
+        "examples": true,
+        "requires": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/template"
+          },
+          "minItems": 1
+        }
+      },
+      "required": ["harness", "message", "examples", "include", "requires"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "description": "For every file in scope, each of `files` contains `token`.",
+      "properties": {
+        "$schema": true,
+        "harness": {
+          "const": "mentioned-in"
+        },
+        "message": true,
+        "include": true,
+        "exclude": true,
+        "examples": true,
+        "token": {
+          "$ref": "#/$defs/template"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        }
+      },
+      "required": ["harness", "message", "examples", "include", "token", "files"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "description": "Every file in scope is reachable: imported (relative, or through an `aliases` prefix) by a file in `searchIn` (minus `ignore`) outside the scope, or by a scoped file that is itself reachable.",
+      "properties": {
+        "$schema": true,
+        "harness": {
+          "const": "referenced-elsewhere"
+        },
+        "message": true,
+        "include": true,
+        "exclude": true,
+        "examples": true,
+        "manifests": {
+          "type": "array",
+          "description": "package.json files whose `exports` resolve package imports (`@groam/ui/components/x`).",
+          "items": {
+            "$ref": "#/$defs/glob"
+          }
+        },
+        "aliases": {
+          "type": "object",
+          "description": "Import specifier prefix -> repository directory it resolves to.",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "searchIn": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/glob"
+          },
+          "minItems": 1
+        },
+        "ignore": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/glob"
+          }
+        }
+      },
+      "required": ["harness", "message", "examples", "include", "aliases", "searchIn"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "description": "Reports `pattern` matches in files in scope.",
+      "properties": {
+        "$schema": true,
+        "harness": {
+          "const": "pattern"
+        },
+        "message": true,
+        "include": true,
+        "exclude": true,
+        "examples": true,
+        "pattern": {
+          "$ref": "#/$defs/regex"
+        },
+        "ignoreCase": {
+          "type": "boolean"
+        },
+        "ignoreComments": {
+          "description": "Blank out /* */ and // comments before matching.",
+          "type": "boolean"
+        },
+        "onlyIfFileMatches": {
+          "description": "Check only files whose source matches this pattern.",
+          "$ref": "#/$defs/regex"
+        },
+        "report": {
+          "description": "`lines`: every matching line (default); `first`: the first one; `file`: the file once.",
+          "enum": ["lines", "first", "file"]
+        }
+      },
+      "required": ["harness", "message", "examples", "include", "pattern"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "description": "Files in scope may contain only `allowed` matches (comments and whitespace aside).",
+      "properties": {
+        "$schema": true,
+        "harness": {
+          "const": "only-allowed-content"
+        },
+        "message": true,
+        "include": true,
+        "exclude": true,
+        "examples": true,
+        "allowed": {
+          "$ref": "#/$defs/regex"
+        }
+      },
+      "required": ["harness", "message", "examples", "include", "allowed"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "description": "Files in scope match `pattern` at most `max` times; the first capture group names each match.",
+      "properties": {
+        "$schema": true,
+        "harness": {
+          "const": "max-matches"
+        },
+        "message": true,
+        "include": true,
+        "exclude": true,
+        "examples": true,
+        "pattern": {
+          "$ref": "#/$defs/regex"
+        },
+        "max": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": ["harness", "message", "examples", "include", "pattern", "max"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "description": "Each package manifest in scope depends (at runtime) only on the @groam packages `allowed` lists for it.",
+      "properties": {
+        "$schema": true,
+        "harness": {
+          "const": "dependency-boundaries"
+        },
+        "message": true,
+        "include": true,
+        "exclude": true,
+        "examples": true,
+        "allowed": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "required": ["harness", "message", "examples", "include", "allowed"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "description": "Each non-wildcard export of a package manifest in scope points at an existing file.",
+      "properties": {
+        "$schema": true,
+        "harness": {
+          "const": "export-targets"
+        },
+        "message": true,
+        "include": true,
+        "exclude": true,
+        "examples": true
+      },
+      "required": ["harness", "message", "examples", "include"],
+      "additionalProperties": false
+    }
+  ],
+  "properties": {
+    "message": {
+      "description": "What to do instead; printed above the violations.",
+      "type": "string",
+      "minLength": 1
+    },
+    "include": {
+      "description": "Globs of repository paths the rule checks (default: every file).",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/glob"
+      },
+      "minItems": 1
+    },
+    "exclude": {
+      "description": "Globs of repository paths the rule skips.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/glob"
+      }
+    },
+    "examples": {
+      "description": "Tests: each runs the rule on `files` and expects exactly `reports`. Include at least one example that reports.",
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "properties": {
+          "files": {
+            "description": "Repository path -> file content.",
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "minProperties": 1
+          },
+          "reports": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["files", "reports"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "glob": {
+      "type": "string",
+      "minLength": 1
+    },
+    "regex": {
+      "description": "A JavaScript regular expression source (Unicode mode).",
+      "type": "string",
+      "minLength": 1
+    },
+    "template": {
+      "description": "A path with placeholders for the checked file: {path}, {dir}, {base} (path without extension), {name} (file name without extension); add :camel to camelCase one, e.g. {name:camel}.",
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

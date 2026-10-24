@@ -1,0 +1,75 @@
+{
+  "name": "@groam/backend",
+  "version": "0.0.0",
+  "dependencies": {
+    "@ai-sdk/openai": "^4.0.80",
+    "@ai-sdk/provider": "^4.0.10",
+    "@better-auth/passkey": "1.6.33",
+    "@convex-dev/agent": "^0.7.3",
+    "@convex-dev/better-auth": "0.12.5",
+    "@convex-dev/geospatial": "0.2.1",
+    "@convex-dev/rate-limiter": "^0.4.0",
+    "@convex-dev/workflow": "^0.4.10",
+    "@convex-dev/workpool": "^0.4.13",
+    "@groam/ai": "workspace:*",
+    "@groam/env": "workspace:*",
+    "@groam/payments": "workspace:*",
+    "ai": "^7.0.122",
+    "better-auth": "1.6.33",
+    "convex": "^1.46.0",
+    "convex-helpers": "^0.1.127",
+    "isomorphic-git": "^1.42.3",
+    "jose": "^6.2.12",
+    "memfs": "^4.79.0",
+    "unique-names-generator": "^4.7.1",
+    "zod": "^4.6.6"
+  },
+  "devDependencies": {
+    "@edge-runtime/vm": "^5.0.0",
+    "@groam/auth": "workspace:*",
+    "@groam/vitest-config": "workspace:*",
+    "@types/node": "^26.6.3",
+    "@vitest/coverage-istanbul": "catalog:",
+    "convex-test": "^0.0.60",
+    "typescript": "~7.0.2",
+    "vite": "catalog:",
+    "vite-plus": "catalog:",
+    "vitest": "catalog:"
+  },
+  "exports": {
+    "./api": {
+      "types": "./convex/_generated/api.d.ts",
+      "default": "./convex/_generated/api.js"
+    },
+    "./auth-schema": "./convex/components/better-auth/auth.ts",
+    "./data-model": "./convex/_generated/dataModel.d.ts",
+    "./convex/*": "./convex/*.ts",
+    "./convex/_generated/api": {
+      "types": "./convex/_generated/api.d.ts",
+      "default": "./convex/_generated/api.js"
+    },
+    "./convex/_generated/dataModel": {
+      "types": "./convex/_generated/dataModel.d.ts"
+    }
+  },
+  "imports": {
+    "#backend/*": "./*.ts",
+    "#convex/*": "./convex/*.ts",
+    "#convex-generated/*": {
+      "types": "./convex/_generated/*.d.ts",
+      "default": "./convex/_generated/*.js"
+    },
+    "#testing/*": "./testing/*.ts"
+  },
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "auth:schema": "bun scripts/generate-auth-schema.ts",
+    "lint": "vp check convex testing",
+    "test": "vp test run",
+    "test:coverage": "vp test run --coverage",
+    "test:watch": "vp test",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "type": "module"
+}

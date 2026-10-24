@@ -1,0 +1,174 @@
+---
+import LegalDocument from '@/components/legal/legal-document.astro';
+import PageIntro from '@/components/page-intro.astro';
+import SubpageLayout from '@/layouts/subpage-layout.astro';
+
+const toc = [
+  { id: 'what-we-collect', title: 'What we collect' },
+  { id: 'how-we-use-it', title: 'How we use it' },
+  { id: 'ai', title: 'AI and your ChatGPT account' },
+  { id: 'sharing', title: 'How sharing works' },
+  { id: 'services', title: 'Services that process data' },
+  { id: 'storage', title: 'Storage and deletion' },
+  { id: 'cookies', title: 'Cookies and device storage' },
+  { id: 'payments', title: 'Payments' },
+  { id: 'your-rights', title: 'Your rights' },
+  { id: 'changes', title: 'Changes to this page' }
+];
+---
+
+<SubpageLayout
+  title="Privacy"
+  description="What Groam collects when you plan a trip, why, and the choices you have."
+>
+  <PageIntro
+    title="Privacy"
+    lede="What Groam collects when you plan a trip with us, why we need it, and the choices you have."
+  />
+  <LegalDocument
+    draftNote="This is not a complete privacy notice yet. The operator details, legal bases, service-provider list, transfer information, retention periods, and privacy contact still need to be added before launch."
+    toc={toc}
+    updated="18 October 2026"
+  >
+    <section id="what-we-collect">
+      <h2>What we collect</h2>
+      <p>
+        Groam stores information you provide and technical records needed to operate your account,
+        groups, and trips.
+      </p>
+      <ul>
+        <li>
+          <b>Your account and security.</b> Your name, email address, username, password record,
+          optional passkey and two-step-verification records, active sessions, and security details
+          such as session expiry, IP address, and browser or device information when available.
+        </li>
+        <li>
+          <b>Your groups and invitations.</b> The groups you create or join, membership and role
+          information, and invitations including the invitee’s email address and their status.
+        </li>
+        <li>
+          <b>Your trips and activity.</b> Destinations, dates, budgets, itineraries, traveler
+          responses, ideas, issues, polls, and conversations, including authorship and change
+          history.
+        </li>
+        <li>
+          <b>Files you add.</b> Covers, photos, and conversation attachments, together with file
+          names and types.
+        </li>
+        <li>
+          <b>AI activity.</b> Your ChatGPT connection, the models available to it, prompts,
+          selected trip context, tool activity, and answers or changes produced in Groam.
+        </li>
+      </ul>
+    </section>
+
+    <section id="how-we-use-it">
+      <h2>How we use it</h2>
+      <p>
+        We use this information to create and secure accounts; operate groups, invitations, and
+        shared trips; keep an authorship and change record; provide conversations and AI features;
+        store files you choose to add; and diagnose abuse or service problems. This draft does not
+        yet state the legal basis for each purpose.
+      </p>
+    </section>
+
+    <section id="ai">
+      <h2>AI and your ChatGPT account</h2>
+      <p>
+        AI is optional. If you connect ChatGPT, Groam stores connection credentials so it can use
+        your ChatGPT access when you ask an agent to work. Your prompt, selected parts of the trip,
+        and tool requests may be sent to OpenAI. Agents may also search the public web when a task
+        calls for it, so search queries and returned pages can involve other websites.
+      </p>
+      <p>
+        Groam asks OpenAI not to store Responses API requests on OpenAI’s side. Groam still stores
+        the conversation, agent run, answer, and resulting trip activity needed to show the work in
+        the product. OpenAI’s own terms and privacy policy apply to data it receives through your
+        connected account. You can disconnect ChatGPT; group planning does not require AI.
+      </p>
+    </section>
+
+    <section id="sharing">
+      <h2>How sharing works</h2>
+      <p>
+        A trip belongs to a group. Signed-in members of that group can always see content
+        shared with the whole group, such as ideas and issues, even when they have replied
+        “not going” to a trip. When a trip charges for seats, only that trip’s pages require
+        a seat: members see an invitation to join until they pay or an organizer covers
+        them. The trip creator is free. Group members can see authorship and activity
+        associated with the shared plan. Some assistant conversations are private to the
+        person who opens them; trip conversations are shared with their participants.
+      </p>
+      <p>
+        Invitation emails disclose the invitee’s address to the service so the invitation can be
+        created. Anyone you invite may gain access after joining the group, so only add information
+        you are comfortable sharing with the group. Access controls reduce who can open a trip;
+        they cannot stop a member from copying or sharing what they can see.
+      </p>
+    </section>
+
+    <section id="services">
+      <h2>Services that process data</h2>
+      <p>
+        Groam relies on hosting, database, authentication, file-storage, and operational services
+        to run the product. OpenAI receives data when you use connected AI features, as described
+        above. The final notice must name the service providers or categories of recipients and
+        explain any processing outside your country before this draft is published as final.
+      </p>
+    </section>
+
+    <section id="storage">
+      <h2>Storage and deletion</h2>
+      <p>
+        Groam stores account and trip information while it is needed to provide the product. A trip
+        can currently be archived, which makes it read-only; archiving is not deletion. Some files
+        are removed when their trip item is removed, and ChatGPT connection records are removed
+        when the associated user is deleted. The product does not yet publish complete account
+        deletion controls or retention periods, so this draft cannot promise a deletion timetable.
+      </p>
+    </section>
+
+    <section id="cookies">
+      <h2>Cookies and device storage</h2>
+      <p>
+        The app uses sign-in and session cookies needed to authenticate you and keep the correct
+        group open. The public landing site does not currently include advertising or optional
+        analytics trackers. If optional tracking is added, this section and any consent controls
+        must be updated before that tracking starts.
+      </p>
+    </section>
+
+    <section id="payments">
+      <h2>Payments</h2>
+      <p>
+        Planning on your own is free. Invited travelers pay €1 per trip through Stripe
+        Checkout, or a trip organizer covers them. The trip creator is free. Payments start
+        only once Stripe is fully configured and apply only to trips created after that;
+        existing trips stay free. Stripe Checkout handles the payment form, and Groam stores
+        payment confirmation records in Convex. A payment that cannot grant a seat is
+        refunded automatically. The privacy notice and payment terms still need owner and
+        legal review before accepting live payments.
+      </p>
+    </section>
+
+    <section id="your-rights">
+      <h2>Your rights</h2>
+      <p>
+        Depending on where you live, privacy law may give you rights over your personal data, such
+        as access, correction, deletion, restriction, portability, objection, or a right to complain
+        to a data-protection authority. The final notice must explain which rights apply, how to
+        exercise them, and where to send a request. No privacy contact is published in this draft
+        because the operator has not supplied one.
+      </p>
+    </section>
+
+    <section id="changes">
+      <h2>Changes to this page</h2>
+      <p>
+        The date at the top will change when this draft changes. Before a final notice is changed,
+        Groam must decide how people will be told about material changes before those changes take
+        effect when notice is required.
+      </p>
+    </section>
+  </LegalDocument>
+</SubpageLayout>

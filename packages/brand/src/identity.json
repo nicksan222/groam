@@ -1,0 +1,22 @@
+{
+  "name": "Groam",
+  "tagline": "Plan together. Go further.",
+  "size": 64,
+  "viewBox": "0 0 64 64",
+  "colors": {
+    "frame": "#2a6fdb",
+    "ink": "#2b2e38",
+    "maskCut": "#000000",
+    "maskKeep": "#ffffff",
+    "night": "#c0caf5",
+    "paper": "#ffffff",
+    "signal": "#7dcfff"
+  },
+  "geometry": {
+    "frameRadius": 15,
+    "agentPin": "M39 49.5C35 44.5 29 37.5 29 29.5A10 10 0 1 1 49 29.5C49 37.5 43 44.5 39 49.5Z",
+    "humanPin": "M26 47.5C21.6 42 15 34.3 15 25.5A11 11 0 1 1 37 25.5C37 34.3 30.4 42 26 47.5Z",
+    "humanHole": "M22 25.5A4 4 0 1 0 30 25.5A4 4 0 1 0 22 25.5Z",
+    "pinGap": 3.5
+  }
+}

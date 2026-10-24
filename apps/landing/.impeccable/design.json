@@ -1,0 +1,557 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-18T09:23:05+00:00",
+  "title": "Design System: Groam Landing",
+  "extensions": {
+    "colorMeta": {
+      "bill": {
+        "role": "primary",
+        "displayName": "Tour Bill Cobalt",
+        "canonical": "#1f45d4",
+        "tonalRamp": [
+          "#0a1643",
+          "#10246f",
+          "#17339c",
+          "#1f46d6",
+          "#4d6de5",
+          "#8299ed",
+          "#b8c5f5",
+          "#e9edfc"
+        ],
+        "note": "Night #2045cc; as text on dark paper #8ea6ff."
+      },
+      "bill-deep": {
+        "role": "primary",
+        "displayName": "Bill Deep",
+        "canonical": "#1636a8",
+        "tonalRamp": [
+          "#091644",
+          "#0f2471",
+          "#15339e",
+          "#1c46d8",
+          "#4b6de7",
+          "#8199ee",
+          "#b7c5f6",
+          "#e8edfc"
+        ],
+        "note": "Night #17359f."
+      },
+      "bill-ink": {
+        "role": "primary",
+        "displayName": "Bill Ink",
+        "canonical": "#f4f4ef",
+        "tonalRamp": [
+          "#2d2d1f",
+          "#4c4c34",
+          "#6a6a49",
+          "#919164",
+          "#acac86",
+          "#c5c5aa",
+          "#dedecf",
+          "#f5f5f0"
+        ]
+      },
+      "strip": {
+        "role": "secondary",
+        "displayName": "Paste-Strip Yellow",
+        "canonical": "#ffd23f",
+        "tonalRamp": [
+          "#4c3b00",
+          "#806200",
+          "#b28900",
+          "#f5bb00",
+          "#ffcf33",
+          "#ffde70",
+          "#ffecad",
+          "#fff9e5"
+        ]
+      },
+      "strip-deep": {
+        "role": "secondary",
+        "displayName": "Strip Deep",
+        "canonical": "#f2b705",
+        "tonalRamp": [
+          "#4b3902",
+          "#7d5e03",
+          "#af8404",
+          "#f0b505",
+          "#fbca37",
+          "#fcda73",
+          "#fdeaaf",
+          "#fef8e6"
+        ]
+      },
+      "strip-ink": {
+        "role": "secondary",
+        "displayName": "Strip Ink",
+        "canonical": "#16130a",
+        "tonalRamp": [
+          "#352d18",
+          "#584c28",
+          "#7b6a38",
+          "#a8914d",
+          "#bfac73",
+          "#d2c59d",
+          "#e5dec7",
+          "#f7f5ed"
+        ]
+      },
+      "agent": {
+        "role": "tertiary",
+        "displayName": "Agent Sky",
+        "canonical": "#94d6ff",
+        "tonalRamp": [
+          "#002f4c",
+          "#004f80",
+          "#006eb2",
+          "#0097f5",
+          "#33b1ff",
+          "#70c8ff",
+          "#ade0ff",
+          "#e5f5ff"
+        ],
+        "note": "Night #7cc9f5."
+      },
+      "agent-ink": {
+        "role": "tertiary",
+        "displayName": "Agent Ink",
+        "canonical": "#0a3954",
+        "tonalRamp": [
+          "#082e44",
+          "#0e4d72",
+          "#136ca0",
+          "#1a94db",
+          "#49afe9",
+          "#7fc7f0",
+          "#b6dff6",
+          "#e8f5fc"
+        ],
+        "note": "Night #072a3f."
+      },
+      "done": {
+        "role": "tertiary",
+        "displayName": "Done Green",
+        "canonical": "#127a52",
+        "tonalRamp": [
+          "#0a432d",
+          "#106f4b",
+          "#179c69",
+          "#1fd58f",
+          "#4de5aa",
+          "#83edc4",
+          "#b8f5dd",
+          "#e9fcf4"
+        ],
+        "note": "Night #5cd39b."
+      },
+      "gone": {
+        "role": "tertiary",
+        "displayName": "Gone Red",
+        "canonical": "#b3263a",
+        "tonalRamp": [
+          "#3f0d14",
+          "#691622",
+          "#931f30",
+          "#ca2b41",
+          "#db576a",
+          "#e68996",
+          "#f1bcc3",
+          "#fbeaec"
+        ],
+        "note": "Night #ff7a8c."
+      },
+      "tint-maya": {
+        "role": "tertiary",
+        "displayName": "Maya Pink",
+        "canonical": "#ff9ab8",
+        "tonalRamp": [
+          "#4c0017",
+          "#800026",
+          "#b20035",
+          "#f50049",
+          "#ff3370",
+          "#ff709b",
+          "#ffadc6",
+          "#ffe5ed"
+        ]
+      },
+      "tint-jonas": {
+        "role": "tertiary",
+        "displayName": "Jonas Green",
+        "canonical": "#79d394",
+        "tonalRamp": [
+          "#133a1f",
+          "#206033",
+          "#2c8647",
+          "#3db862",
+          "#65cd84",
+          "#93dca9",
+          "#c2ebce",
+          "#ecf9f0"
+        ]
+      },
+      "tint-priya": {
+        "role": "tertiary",
+        "displayName": "Priya Violet",
+        "canonical": "#bda4ff",
+        "tonalRamp": [
+          "#15004c",
+          "#230080",
+          "#3100b2",
+          "#4300f5",
+          "#6b33ff",
+          "#9770ff",
+          "#c4adff",
+          "#ede5ff"
+        ]
+      },
+      "tint-sam": {
+        "role": "tertiary",
+        "displayName": "Sam Orange",
+        "canonical": "#ffb276",
+        "tonalRamp": [
+          "#4c2200",
+          "#803800",
+          "#b24e00",
+          "#f56b00",
+          "#ff8c33",
+          "#ffaf70",
+          "#ffd1ad",
+          "#fff1e5"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Poster Paper",
+        "canonical": "#f1f1ec",
+        "tonalRamp": [
+          "#2c2c20",
+          "#494936",
+          "#67674c",
+          "#8d8d68",
+          "#a8a88a",
+          "#c2c2ad",
+          "#dcdcd0",
+          "#f4f4f0"
+        ],
+        "note": "Night #0f1116."
+      },
+      "paper-raised": {
+        "role": "neutral",
+        "displayName": "Raised Paper",
+        "canonical": "#fafaf7",
+        "tonalRamp": [
+          "#2f2f1d",
+          "#4e4e31",
+          "#6e6e45",
+          "#97975e",
+          "#b1b181",
+          "#c8c8a7",
+          "#e0e0cd",
+          "#f5f5ef"
+        ],
+        "note": "Night #171a21."
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#101318",
+        "tonalRamp": [
+          "#1f242e",
+          "#333d4c",
+          "#47556b",
+          "#627493",
+          "#8594ad",
+          "#a9b4c6",
+          "#ced4de",
+          "#f0f2f5"
+        ],
+        "note": "Night #ecede7."
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Soft Ink",
+        "canonical": "#474c58",
+        "tonalRamp": [
+          "#22252a",
+          "#393d47",
+          "#505563",
+          "#6d7587",
+          "#8e95a4",
+          "#b0b4bf",
+          "#d2d4db",
+          "#f1f2f4"
+        ],
+        "note": "Night #a6acb9."
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Hero, page intro, and closing-call headlines; condensed 850 uppercase. Price figures use the same setting at clamp(7rem, 17vw, 15rem)."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section titles, max 16ch."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Day-sheet tabs, strip names, trip names, footer line."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Reading text at normal width; ledes in soft ink, legal in 68ch."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Buttons, nav links, chips, example labels: condensed uppercase."
+      },
+      "time": {
+        "displayName": "Time",
+        "purpose": "Every clock time and price, tabular figures."
+      }
+    },
+    "shadows": [
+      {
+        "name": "lift",
+        "value": "0 14px 22px -12px color-mix(in srgb, var(--ink) 55%, transparent)",
+        "purpose": "The only shadow: a proposed strip lifted off the bill. Night: 0 14px 24px -12px black at 80%."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Every eased transition and animation."
+      },
+      {
+        "name": "hover",
+        "value": "0.15s ease",
+        "purpose": "Colour hovers on buttons, links, toggles."
+      },
+      {
+        "name": "crossfade",
+        "value": "0.35s–0.5s var(--ease)",
+        "purpose": "State labels and stacked states swapping in one grid cell."
+      },
+      {
+        "name": "rise",
+        "value": "0.5s–0.7s var(--ease)",
+        "purpose": "Rows and review lines arriving a few pixels up."
+      },
+      {
+        "name": "sheet-turn",
+        "value": "0.8s var(--ease)",
+        "purpose": "Day sheets turning over in the home pile."
+      },
+      {
+        "name": "paste",
+        "value": "0.6s–0.9s var(--ease)",
+        "purpose": "A strip sliding in lifted and pressing flush."
+      },
+      {
+        "name": "marquee",
+        "value": "80s linear infinite",
+        "purpose": "Example-trip ribbon and pricing lane."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "hero",
+        "value": "960px"
+      },
+      {
+        "name": "wide",
+        "value": "900px"
+      },
+      {
+        "name": "legal",
+        "value": "880px"
+      },
+      {
+        "name": "nav",
+        "value": "860px"
+      },
+      {
+        "name": "intro",
+        "value": "760px"
+      },
+      {
+        "name": "md",
+        "value": "640px"
+      },
+      {
+        "name": "sm",
+        "value": "560px"
+      },
+      {
+        "name": "xs",
+        "value": "480px"
+      },
+      {
+        "name": "xxs",
+        "value": "420px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button (on paper)",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Start a trip on paper: an ink block with paper text; lifts 2px on hover.",
+      "html": "<div class=\"ds-ground-paper\"><a class=\"ds-btn ds-btn-primary\" href=\"#\">Start a trip</a></div>",
+      "css": ".ds-btn { display:inline-flex; align-items:center; justify-content:center; gap:10px; min-height:2.5rem; padding:0 16px; border:2px solid currentColor; border-radius:0; font-family: var(--font-sans, 'Archivo Variable', ui-sans-serif, system-ui, sans-serif); font-weight:750; font-size:14px; line-height:1; font-stretch:86%; letter-spacing:0.04em; text-transform:uppercase; text-decoration:none; cursor:pointer; transition: background-color 0.15s ease, color 0.15s ease, transform 0.25s cubic-bezier(0.16,1,0.3,1); } .ds-btn:focus-visible { outline:3px solid currentColor; outline-offset:3px; } .ds-ground-paper { background: var(--paper); padding: 24px; } .ds-btn-primary { background: var(--ink); border-color: var(--ink); color: var(--paper); } .ds-btn-primary:hover { transform: translateY(-2px); }"
+    },
+    {
+      "name": "Primary Button (on bill)",
+      "kind": "button",
+      "refersTo": "button-primary-on-bill",
+      "description": "The primary inverts the cobalt bill: a bill-ink block with cobalt text.",
+      "html": "<div class=\"ds-ground-bill\"><a class=\"ds-btn ds-btn-bill\" href=\"#\">Start a trip</a> <a class=\"ds-btn ds-btn-outline-bill\" href=\"#\">See how it works</a></div>",
+      "css": ".ds-btn { display:inline-flex; align-items:center; justify-content:center; gap:10px; min-height:2.5rem; padding:0 16px; border:2px solid currentColor; border-radius:0; font-family: var(--font-sans, 'Archivo Variable', ui-sans-serif, system-ui, sans-serif); font-weight:750; font-size:14px; line-height:1; font-stretch:86%; letter-spacing:0.04em; text-transform:uppercase; text-decoration:none; cursor:pointer; transition: background-color 0.15s ease, color 0.15s ease, transform 0.25s cubic-bezier(0.16,1,0.3,1); } .ds-btn:focus-visible { outline:3px solid currentColor; outline-offset:3px; } .ds-ground-bill { background: var(--bill); color: var(--bill-ink); padding: 24px; display:flex; gap:12px; } .ds-btn-bill { background: var(--bill-ink); border-color: var(--bill-ink); color: var(--bill); } .ds-btn-bill:hover { transform: translateY(-2px); } .ds-btn-outline-bill { background: transparent; color: var(--bill-ink); } .ds-btn-outline-bill:hover { background: var(--bill-ink); color: var(--bill); }"
+    },
+    {
+      "name": "Primary Button (on ink bill)",
+      "kind": "button",
+      "refersTo": "button-primary-on-ink",
+      "description": "The closing ink bill's call to action: a yellow block.",
+      "html": "<div class=\"ds-ground-ink\"><a class=\"ds-btn ds-btn-ink\" href=\"#\">Start a trip</a></div>",
+      "css": ".ds-btn { display:inline-flex; align-items:center; justify-content:center; gap:10px; min-height:2.5rem; padding:0 16px; border:2px solid currentColor; border-radius:0; font-family: var(--font-sans, 'Archivo Variable', ui-sans-serif, system-ui, sans-serif); font-weight:750; font-size:14px; line-height:1; font-stretch:86%; letter-spacing:0.04em; text-transform:uppercase; text-decoration:none; cursor:pointer; transition: background-color 0.15s ease, color 0.15s ease, transform 0.25s cubic-bezier(0.16,1,0.3,1); } .ds-btn:focus-visible { outline:3px solid currentColor; outline-offset:3px; } .ds-ground-ink { background: var(--ink); color: var(--paper); padding: 24px; } .ds-btn-ink { background: var(--strip); border-color: var(--strip); color: var(--strip-ink); } .ds-btn-ink:hover { transform: translateY(-2px); }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Secondary route on paper; hover fills with ink.",
+      "html": "<div class=\"ds-ground-paper\"><a class=\"ds-btn ds-btn-outline\" href=\"#\">See pricing</a></div>",
+      "css": ".ds-btn { display:inline-flex; align-items:center; justify-content:center; gap:10px; min-height:2.5rem; padding:0 16px; border:2px solid currentColor; border-radius:0; font-family: var(--font-sans, 'Archivo Variable', ui-sans-serif, system-ui, sans-serif); font-weight:750; font-size:14px; line-height:1; font-stretch:86%; letter-spacing:0.04em; text-transform:uppercase; text-decoration:none; cursor:pointer; transition: background-color 0.15s ease, color 0.15s ease, transform 0.25s cubic-bezier(0.16,1,0.3,1); } .ds-btn:focus-visible { outline:3px solid currentColor; outline-offset:3px; } .ds-ground-paper { background: var(--paper); color: var(--ink); padding: 24px; } .ds-btn-outline { background: transparent; color: var(--ink); } .ds-btn-outline:hover { background: var(--ink); color: var(--paper); }"
+    },
+    {
+      "name": "Chips",
+      "kind": "chip",
+      "refersTo": "chip-idea",
+      "description": "Printed tags; colour carries meaning only: idea yellow, agent sky, done green.",
+      "html": "<div class=\"ds-row\"><span class=\"ds-chip\">Draft</span><span class=\"ds-chip ds-chip-idea\">Idea</span><span class=\"ds-chip ds-chip-agent\">Agent</span><span class=\"ds-chip ds-chip-done\">Applied</span></div>",
+      "css": ".ds-row { display:flex; gap:8px; padding:16px; background: var(--paper); } .ds-chip { display:inline-flex; align-items:center; padding:3px 8px; border:1.5px solid currentColor; color: var(--ink-soft); font-family: var(--font-sans, 'Archivo Variable', ui-sans-serif, system-ui, sans-serif); font-size:12px; font-weight:750; font-stretch:82%; letter-spacing:0.05em; text-transform:uppercase; } .ds-chip-idea { background: var(--strip); border-color: var(--strip); color: var(--strip-ink); } .ds-chip-agent { background: var(--agent); border-color: var(--agent); color: var(--agent-ink); } .ds-chip-done { border-color: var(--done); color: var(--done); }"
+    },
+    {
+      "name": "Paste-Over Strip",
+      "kind": "custom",
+      "refersTo": "strip",
+      "description": "An idea pasted over the plan: lifted, tilted, dashed while proposed; hover previews it pressed flush as when applied.",
+      "html": "<ol class=\"ds-sheet\"><li class=\"ds-row-t\"><b>09:30</b> Belém tower</li><li class=\"ds-strip\"><b>09:30</b> Train to Sintra from Rossio</li><li class=\"ds-row-t\"><b>21:00</b> Fado night</li></ol>",
+      "css": ".ds-sheet { list-style:none; margin:0; padding:24px 16px; background: var(--paper); color: var(--ink); box-shadow: 0 0 0 2px var(--ink); font-family: var(--font-sans, 'Archivo Variable', ui-sans-serif, system-ui, sans-serif); } .ds-row-t, .ds-strip { display:grid; grid-template-columns:3.6em 1fr; align-items:center; gap:10px; height:46px; padding:0 10px; border-bottom:1.5px solid var(--ink-line); font-size:15px; font-weight:550; } .ds-row-t b, .ds-strip b { font-weight:800; font-stretch:82%; font-variant-numeric: tabular-nums; } .ds-strip { background: var(--strip); color: var(--strip-ink); outline:2px dashed color-mix(in srgb, var(--strip-ink) 45%, transparent); outline-offset:-6px; box-shadow: var(--lift); transform: rotate(-1.2deg) translateY(-4px); transition: transform 0.7s cubic-bezier(0.16,1,0.3,1), box-shadow 0.7s cubic-bezier(0.16,1,0.3,1), outline-color 0.4s ease; } .ds-strip:hover { outline-color: transparent; box-shadow:none; transform:none; }"
+    },
+    {
+      "name": "Surface Panel",
+      "kind": "card",
+      "refersTo": "surface",
+      "description": "Raised paper with a 2px ink frame and square corners; carries the example label.",
+      "html": "<div class=\"ds-surface\"><div class=\"ds-head\"><b>Lisbon long weekend</b><span class=\"ds-example\">Example trip</span></div><p>Saturday is Sintra for everyone.</p></div>",
+      "css": ".ds-surface { background: var(--paper-raised); color: var(--ink); border:2px solid var(--ink); padding:16px; font-family: var(--font-sans, 'Archivo Variable', ui-sans-serif, system-ui, sans-serif); font-size:15px; } .ds-head { display:flex; align-items:center; gap:10px; padding-bottom:12px; margin-bottom:12px; border-bottom:3px solid var(--ink); } .ds-head b { margin-right:auto; font-weight:850; font-stretch:66%; font-size:1.5rem; text-transform:uppercase; line-height:1; } .ds-example { padding:3px 8px; border:1.5px dashed currentColor; font-size:11px; font-weight:700; font-stretch:80%; letter-spacing:0.06em; text-transform:uppercase; opacity:0.85; } .ds-surface p { margin:0; }"
+    },
+    {
+      "name": "Avatars",
+      "kind": "custom",
+      "refersTo": "avatar-agent",
+      "description": "People in flat poster inks; agents in sky with an inset ring.",
+      "html": "<div class=\"ds-row\"><span class=\"ds-av ds-maya\">M</span><span class=\"ds-av ds-jonas\">J</span><span class=\"ds-av ds-priya\">P</span><span class=\"ds-av ds-sam\">S</span><span class=\"ds-av ds-agent\">A</span></div>",
+      "css": ".ds-row { display:flex; gap:8px; padding:16px; background: var(--paper); } .ds-av { width:26px; height:26px; border-radius:50%; display:grid; place-items:center; font-family: var(--font-sans, 'Archivo Variable', ui-sans-serif, system-ui, sans-serif); font-size:12px; font-weight:800; font-stretch:80%; color: var(--tint-ink); } .ds-maya { background: var(--tint-maya); } .ds-jonas { background: var(--tint-jonas); } .ds-priya { background: var(--tint-priya); } .ds-sam { background: var(--tint-sam); } .ds-agent { background: var(--agent); color: var(--agent-ink); box-shadow: inset 0 0 0 1.5px var(--agent-ink); }"
+    },
+    {
+      "name": "Masthead Nav",
+      "kind": "nav",
+      "refersTo": "button-primary-on-bill",
+      "description": "Cobalt masthead with a 3px bill-ink rule; condensed caps links invert on hover.",
+      "html": "<nav class=\"ds-nav\"><b class=\"ds-brand\">Groam</b><a class=\"ds-link\" href=\"#\" aria-current=\"page\">Features</a><a class=\"ds-link\" href=\"#\">Pricing</a><span class=\"ds-sp\"></span><a class=\"ds-cta\" href=\"#\">Start a trip</a></nav>",
+      "css": ".ds-nav { display:flex; align-items:center; gap:8px; padding:18px 16px; background: var(--bill); color: var(--bill-ink); border-bottom:3px solid var(--bill-ink); font-family: var(--font-sans, 'Archivo Variable', ui-sans-serif, system-ui, sans-serif); } .ds-brand { font-weight:850; font-stretch:70%; font-size:24px; text-transform:uppercase; margin-right:16px; } .ds-link { padding:8px 10px; color: var(--bill-ink); font-weight:750; font-stretch:84%; font-size:15px; letter-spacing:0.05em; text-transform:uppercase; text-decoration:none; } .ds-link:hover { background: var(--bill-ink); color: var(--bill); } .ds-link[aria-current='page'] { text-decoration: underline; text-decoration-thickness:3px; text-underline-offset:7px; } .ds-link:focus-visible, .ds-cta:focus-visible { outline:3px solid currentColor; outline-offset:3px; } .ds-sp { flex:1; } .ds-cta { display:inline-flex; align-items:center; min-height:2.5rem; padding:0 16px; background: var(--bill-ink); color: var(--bill); font-weight:750; font-stretch:86%; font-size:14px; letter-spacing:0.04em; text-transform:uppercase; text-decoration:none; }"
+    },
+    {
+      "name": "Loop Toggle",
+      "kind": "button",
+      "refersTo": "loop-toggle",
+      "description": "Pause control every self-running loop carries.",
+      "html": "<div class=\"ds-ground-bill\"><button class=\"ds-toggle\" type=\"button\" aria-pressed=\"false\"><svg viewBox=\"0 0 24 24\" width=\"15\" height=\"15\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\"><path d=\"M9 5v14M15 5v14\"/></svg><span style=\"position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)\">Pause the example trip</span></button></div>",
+      "css": ".ds-ground-bill { background: var(--bill); color: var(--bill-ink); padding: 24px; } .ds-toggle { width:36px; height:36px; display:inline-grid; place-items:center; border:2px solid currentColor; background:transparent; color:inherit; cursor:pointer; transition: background-color 0.15s ease, color 0.15s ease; } .ds-toggle:hover { background: var(--bill-ink); color: var(--bill); } .ds-toggle:focus-visible { outline:3px solid currentColor; outline-offset:3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Tour Bill",
+    "overview": "The marketing site is a printed tour bill for one trip. Pages alternate between drenched cobalt bill fields and cool poster paper, and every page closes on an ink bill. The plan is printed in heavy condensed capitals and tabular timetable figures. An idea is a yellow strip pasted over the rows it would change: while it is proposed it sits lifted, tilted, and dashed at its paste edge; once someone applies it, it presses flush and becomes part of the bill. That paste is the reusable signature, and every demo on the site is a variation of it.\n\nEach viewport has one dominant printed object (a pile of day bills, a timetable, a price figure, a board) and the copy rides on it. State is drawn, not coloured: a dashed edge means proposed or illustrative, a flush strip means applied, a 3px rule means structure. Colour carries meaning only. Yellow is ideas and change, sky is agents, four flat poster inks are the four example travelers, green is done, red is what an idea removes. The landing owns this world; the web app keeps its own system, and the app's shared tokens are remapped onto bill roles so shared components print in it too.\n\nMotion is calm and physical. Sheets turn over, strips slide in and press down, labels crossfade in place, rows rise. One easing curve does all of it. Loops run only while visible and on demand, never shift layout, and rest on a finished, truthful still under reduced motion and without script.",
+    "keyCharacteristics": [
+      "Cobalt bill fields, poster paper, and an ink bill to close; no gradients anywhere.",
+      "One family, Archivo Variable, used on its width axis: condensed heavy caps to display, normal width to read, tabular figures for every time and price.",
+      "Yellow paste-over strips for ideas: lifted, tilted, and dashed while proposed; flush when applied.",
+      "Square corners, 3px printed rules, and one `--lift` shadow that belongs to proposed strips.",
+      "One example trip, \"Lisbon long weekend\", labelled \"Example trip\" everywhere it appears.",
+      "System theme only: the `.dark` class follows `prefers-color-scheme` before first paint."
+    ],
+    "rules": [
+      {
+        "name": "The Printed Inks Rule",
+        "body": "Raw colour values live only in `src/styles/tokens.css`. Every other landing style reads a role (`var(--bill)`, `var(--strip)`) or a `color-mix()` of two roles.",
+        "section": "colors"
+      },
+      {
+        "name": "The Yellow Is Change Rule",
+        "body": "Yellow marks an idea or a change in flight. If nothing is proposed, nothing is yellow (the closing CTA on the ink bill is the one deliberate exception).",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Authors Rule",
+        "body": "Sky belongs to agents and the four poster inks belong to people. A visitor can tell who wrote an entry from the avatar alone.",
+        "section": "colors"
+      },
+      {
+        "name": "The Grounds Set The Ink Rule",
+        "body": "A section declares its ground (`.bill`, `.bill-ink`, `.surface`, `.strip`), and the ground sets `--on`, `--on-soft`, `--on-line`, and the CTA pair. Components read those, never a fixed colour, so the same button and rule print correctly on any ground.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Family Rule",
+        "body": "Archivo Variable is the only typeface. Hierarchy comes from width, weight, case, and size, never from a second face.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Time Rule",
+        "body": "Every clock time and price is set with tabular figures so timetable columns align and changing figures never jitter.",
+        "section": "typography"
+      },
+      {
+        "name": "The No Eyebrow Rule",
+        "body": "A heading stands alone. No kicker, category line, or section number sits above it.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Lift Rule",
+        "body": "`--lift` is the only shadow, and it means \"proposed, not yet applied\". Anything flat is agreed.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** set each section on a declared ground (`.bill`, `.bill-ink`, paper, `.surface`, `.strip`) and let components read `--on`, `--on-soft`, `--on-line`, and the CTA pair from it.",
+      "**Do** keep raw colour values in `src/styles/tokens.css` only, with night values under `.dark`.",
+      "**Do** show an idea as a paste-over strip: lifted, tilted, and dashed while proposed; flush when applied.",
+      "**Do** set display type in Archivo at 62–72% width, 850, uppercase, and every time and price in tabular figures.",
+      "**Do** draw structure with 3px rules and 2px frames, and keep every corner square.",
+      "**Do** draw Lisbon demo data from `src/content/example-trip.ts` and label every illustrative surface \"Example trip\" or \"Example trips\".",
+      "**Do** give every loop a visible pause control, stop it off screen and in a hidden tab, and ship a finished, truthful still under reduced motion and without script.",
+      "**Do** use `cubic-bezier(0.16, 1, 0.3, 1)` for eased motion and keep transitions to calm crossfades, rises, turns, and pastes.",
+      "**Do** write internal hrefs with a trailing slash (`/features/`, `/pricing/`, `/features/ideas/`).",
+      "**Do** state pricing as published: free to plan on your own; €1 per invited traveler per trip, paid by the traveler or covered by whoever invites them; the organizer and solo trips are free; nobody is charged today.",
+      "**Do** say \"idea\" for a suggested change, \"traveler\" for a person on a trip, and \"Start a trip\" for the primary action."
+    ],
+    "donts": [
+      "**Don't** use gradients anywhere, on grounds, text, or borders.",
+      "**Don't** put an eyebrow, kicker, or category label above a heading, or number sections.",
+      "**Don't** round corners or add a second shadow; `--lift` belongs to proposed strips.",
+      "**Don't** use yellow for anything that is not an idea or change, or sky for anything that is not an agent.",
+      "**Don't** introduce a second typeface or set reading text condensed.",
+      "**Don't** fall back to a white SaaS page with a product card beside a headline.",
+      "**Don't** market open source, GitHub, or self-hosting; licensing is undecided.",
+      "**Don't** invent claims: no customer logos, user counts, ratings, or prices beyond the published ones.",
+      "**Don't** say \"proposal\", \"bots\", \"platform\", or \"workflow\" in visible copy."
+    ]
+  }
+}

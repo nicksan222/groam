@@ -1,0 +1,7 @@
+{
+  "optionId": "linear",
+  "steer": "",
+  "comp": ".impeccable/mocks/decision/saas-directions/linear.png",
+  "buildPath": "comp",
+  "buildPathFlipped": false
+}

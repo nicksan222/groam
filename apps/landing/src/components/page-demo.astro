@@ -1,0 +1,22 @@
+---
+// Every feature hero demonstrates the product on the same rails as its title.
+---
+
+<div class="wrap page-demo" data-page-demo>
+  <slot />
+</div>
+
+<style>
+  .page-demo {
+    position: relative;
+    z-index: 1;
+    margin-top: calc(var(--demo-overlap) * -1);
+    padding-bottom: calc(var(--section) / 2);
+  }
+  .page-demo > :global(figure) {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    margin-inline: 0;
+  }
+</style>

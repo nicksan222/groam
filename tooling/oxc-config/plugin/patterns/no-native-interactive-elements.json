@@ -1,0 +1,41 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "node-text",
+  "nodes": ["JSXOpeningElement"],
+  "pattern": "<(?:button|input|select|textarea)(?:\\s|/|>).*",
+  "message": "Use an exported @groam/ui component instead of a native interactive element. Shared controls centralize accessibility, states, styling, and test behavior.",
+  "files": ["**/apps/web/src/features/**/*.tsx"],
+  "excludeFiles": ["**/apps/web/src/features/**/*.test.tsx"],
+  "examples": [
+    {
+      "file": "apps/web/src/features/example/example-view.tsx",
+      "source": "export const view = <button type=\"button\">Save</button>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/example/example-view.tsx",
+      "source": "export const view = <input aria-label=\"Name\" />;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/example/example-view.tsx",
+      "source": "export const view = <select aria-label=\"Status\" />;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/example/example-view.tsx",
+      "source": "export const view = <textarea aria-label=\"Notes\" />;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/example/example-view.tsx",
+      "source": "import { Button } from '@groam/ui/components/button';\nexport const view = <Button>Save</Button>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/example/example-view.tsx",
+      "source": "export const view = <form><fieldset /></form>;",
+      "reports": false
+    }
+  ]
+}

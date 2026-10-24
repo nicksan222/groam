@@ -1,0 +1,514 @@
+---
+import AuthorAvatar from '@/components/author-avatar.astro';
+import Icon from '@groam/icons/astro';
+import PageSection from '@/components/page-section.astro';
+import SectionHeading from '@/components/section-heading.astro';
+import StepNavigation from '@/components/step-navigation.astro';
+import { aiBackground } from '@/content/ai-background';
+
+const finalIndex = aiBackground.steps.length - 1;
+const reportLabels = ['The plan', 'The source', 'The vote', 'The evening', 'The handoff'];
+const source = aiBackground.steps[1].source;
+---
+
+<PageSection aria-labelledby="ai-review" data-ai-background data-current={finalIndex}>
+  <SectionHeading title={aiBackground.title} body={aiBackground.body} headingId="ai-review" />
+
+  <div class="surface review-desk">
+    <header class="desk-head">
+      <span class="agent-mark"><Icon name="agent" /></span>
+      <div><b>Groam is on it.</b><span>Review the Sintra idea</span></div>
+      <span class="example-label">Example trip</span>
+      <button class="loop-toggle background-toggle" type="button" data-background-toggle hidden aria-pressed="false">
+        <Icon name="pause" class="i-pause" /><Icon name="play" class="i-play" />
+        <span class="visually-hidden">Pause the example</span>
+      </button>
+    </header>
+
+    <div class="assignment">
+      <span class="eyebrow">Your request</span>
+      <p>“Check Sintra before we commit. Is the palace open, which train did we vote for, and can we still make fado?”</p>
+    </div>
+
+    <StepNavigation
+      class="background-controls"
+      steps={aiBackground.steps.map((step) => ({ label: step.label, controls: 'ai-background-trail', attributes: { 'data-job': step.job } }))}
+      stepAttribute="data-background-step" active={finalIndex} label="Background work steps"
+    />
+
+    <div class="working-line" aria-live="off"><Icon name="agent" /><span data-background-job>{aiBackground.steps[finalIndex].job}</span></div>
+
+    <div class="workbench">
+      <div class="evidence">
+        <article class="evidence-card source-card" data-review-evidence="1">
+          <header><span class="eyebrow">01 / Web research</span><span class="evidence-indicator" aria-hidden="true"></span></header>
+          <h3>Go to the source.</h3>
+          <div class="source-window">
+            <div class="address"><span aria-hidden="true"></span>parquesdesintra.pt</div>
+            <b>Park and National Palace of Pena</b>
+            <p>Opening hours · timed entry · visitor information</p>
+            <a href={source.href} target="_blank" rel="noreferrer">Open the official page <Icon name="arrow-right" /></a>
+          </div>
+          <p class="evidence-note"><Icon name="issue" />Opening details need a live source check.</p>
+        </article>
+
+        <article class="evidence-card poll-card" data-review-evidence="2">
+          <header><span class="eyebrow">02 / Group decisions</span><span class="evidence-indicator" aria-hidden="true"></span></header>
+          <h3>The group already voted.</h3>
+          <div class="ballot">
+            <span class="time">09:30</span><div class="vote-track"><span></span></div><b>3 votes</b>
+          </div>
+          <div class="voters"><span class="faces"><AuthorAvatar author="maya" /><AuthorAvatar author="jonas" /><AuthorAvatar author="priya" /></span><span>3 of 4 answered</span></div>
+          <p class="evidence-note">Use the saved poll, then carry the choice into the draft.</p>
+        </article>
+
+        <article class="evidence-card timing-card" data-review-evidence="3">
+          <header><span class="eyebrow">03 / Timing &amp; connections</span><span class="evidence-indicator" aria-hidden="true"></span></header>
+          <h3>Keep the evening intact.</h3>
+          <div class="connection">
+            <div><time>17:30</time><b>Return train</b></div>
+            <span class="connection-line" aria-hidden="true"><Icon name="arrow-right" /></span>
+            <div><time>21:00</time><b>Fado night</b></div>
+          </div>
+          <p class="evidence-note">Compare the whole day. Flag the travel details that still need checking.</p>
+        </article>
+      </div>
+
+      <aside class="report strip" data-background-draft aria-label="Review report">
+        <header><span class="eyebrow">Back to your idea</span><Icon name="idea" /></header>
+        <h3>A clearer plan.<br />A few things to check.</h3>
+        <p class="report-intro">The findings stay with the idea, ready for the group.</p>
+        <ol id="ai-background-trail" class="tool-trail" tabindex="0">
+          {aiBackground.steps.map((step, index) => (
+            <li data-background-item={index} data-kind={step.kind}>
+              <span class="report-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+              <div><b>{reportLabels[index]}</b><p class="report-result">{step.result}</p></div>
+              <span class="report-check" aria-hidden="true"><Icon name="check" /></span>
+            </li>
+          ))}
+        </ol>
+        <footer><Icon name="issue" /><p>The shared plan stays unchanged. People review and apply.</p></footer>
+      </aside>
+    </div>
+
+    <footer class="desk-foot">
+      <span>Illustrative workflow. Not a live availability check.</span>
+      <button type="button" data-background-replay>Replay work <Icon name="arrow-right" /></button>
+    </footer>
+  </div>
+</PageSection>
+
+<script>
+  import { setupAiBackground } from '@/scripts/feature-ai-background';
+  document.querySelectorAll<HTMLElement>('[data-ai-background]').forEach(setupAiBackground);
+</script>
+
+<style>
+  .review-desk {
+    overflow: hidden;
+  }
+  .desk-head {
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:18px var(--panel-padding);
+    background:var(--agent);
+    color:var(--agent-ink);
+  }
+  .agent-mark {
+    display:grid;
+    place-items:center;
+    width:40px;
+    height:40px;
+    border:1.5px solid currentColor;
+    flex:none;
+  }
+  .agent-mark :global(svg) {
+    width:26px;
+    height:26px;
+  }
+  .desk-head b {
+    display:block;
+    font-size:1.5rem;
+    font-stretch:64%;
+    font-weight:850;
+    text-transform:uppercase;
+    line-height:1;
+  }
+  .desk-head div > span {
+    display:block;
+    margin-top:5px;
+    font-size:12px;
+  }
+  .desk-head .example-label {
+    margin-left:auto;
+  }
+  .background-toggle {
+    flex:none;
+  }
+  .background-toggle :global(.i-play), [data-paused] .background-toggle :global(.i-pause) {
+    display:none;
+  }
+  [data-paused] .background-toggle :global(.i-play) {
+    display:block;
+  }
+  .assignment {
+    display:grid;
+    grid-template-columns:120px minmax(0,1fr);
+    gap:16px;
+    padding:var(--panel-padding);
+    border-bottom:var(--rule) solid var(--ink);
+  }
+  .assignment p {
+    max-width:64ch;
+    font-size:clamp(18px,2vw,25px);
+    line-height:1.35;
+    font-weight:650;
+  }
+  .eyebrow {
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:.055em;
+    text-transform:uppercase;
+    line-height:1.4;
+  }
+  .working-line {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-height:72px;
+    padding:14px var(--panel-padding);
+    border-bottom:1.5px solid var(--ink-line);
+    font-size:13px;
+    line-height:1.4;
+    color:var(--ink-soft);
+  }
+  .working-line :global(svg) {
+    width:20px;
+    height:20px;
+    flex:none;
+    color:var(--ink);
+  }
+  .workbench {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(0,.9fr);
+    gap:var(--panel-padding);
+    align-items:start;
+    padding:var(--panel-padding);
+  }
+  .evidence {
+    display:grid;
+    gap:16px;
+    min-width:0;
+  }
+  .evidence-card {
+    padding:20px;
+    border:1.5px solid var(--ink-line);
+    background:var(--paper);
+    transition:border-color .4s var(--ease), background-color .4s var(--ease);
+  }
+  .evidence-card[data-state='current'] {
+    border-color:var(--ink);
+    background:var(--paper-raised);
+  }
+  .evidence-card > header, .report > header {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+  }
+  .evidence-indicator {
+    width:9px;
+    height:9px;
+    border:1.5px solid var(--ink-soft);
+    border-radius:50%;
+    transition:background-color .4s var(--ease);
+    flex:none;
+  }
+  [data-state='current'] .evidence-indicator {
+    background:var(--agent);
+    border-color:var(--agent-ink);
+  }
+  [data-state='done'] .evidence-indicator {
+    background:var(--ink);
+    border-color:var(--ink);
+  }
+  .evidence-card h3 {
+    margin-top:12px;
+    font-size:clamp(25px,2.8vw,36px);
+    line-height:1;
+    font-stretch:64%;
+    text-transform:uppercase;
+  }
+  .source-window {
+    margin-top:18px;
+    border:1.5px solid var(--ink-line);
+    padding:0 14px 14px;
+  }
+  .address {
+    display:flex;
+    gap:7px;
+    align-items:center;
+    margin:0 -14px 14px;
+    padding:8px 12px;
+    border-bottom:1.5px solid var(--ink-line);
+    font-size:11px;
+    overflow-wrap:anywhere;
+  }
+  .address > span {
+    width:6px;
+    height:6px;
+    border:1px solid currentColor;
+    border-radius:50%;
+  }
+  .source-window > b {
+    font-size:15px;
+  }
+  .source-window > p {
+    margin-top:5px;
+    color:var(--ink-soft);
+    font-size:12px;
+  }
+  .source-window a {
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    margin-top:14px;
+    font-size:12px;
+    font-weight:750;
+  }
+  .source-window a :global(svg), .evidence-note :global(svg) {
+    width:16px;
+    height:16px;
+    flex:none;
+  }
+  .evidence-note {
+    display:flex;
+    align-items:start;
+    gap:7px;
+    margin-top:14px;
+    font-size:12px;
+    line-height:1.45;
+    color:var(--ink-soft);
+  }
+  .ballot {
+    display:grid;
+    grid-template-columns:auto minmax(0,1fr) auto;
+    align-items:center;
+    gap:12px;
+    margin-top:20px;
+    font-size:13px;
+  }
+  .ballot .time {
+    font-size:23px;
+    font-weight:800;
+  }
+  .vote-track {
+    height:18px;
+    border:1.5px solid var(--ink);
+  }
+  .vote-track > span {
+    display:block;
+    height:100%;
+    width:75%;
+    background:var(--agent);
+    transform:scaleX(.12);
+    transform-origin:left;
+    transition:transform .7s var(--ease);
+  }
+  [data-state='current'] .vote-track > span, [data-state='done'] .vote-track > span {
+    transform:scaleX(1);
+  }
+  .voters {
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:10px;
+    margin-top:14px;
+    font-size:11px;
+    color:var(--ink-soft);
+  }
+  .faces {
+    display:flex;
+    gap:4px;
+  }
+  .connection {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);
+    gap:10px;
+    align-items:center;
+    margin-top:18px;
+  }
+  .connection time {
+    display:block;
+    font-size:32px;
+    font-stretch:70%;
+    font-weight:850;
+    line-height:1;
+  }
+  .connection b {
+    display:block;
+    margin-top:6px;
+    font-size:12px;
+  }
+  .connection-line {
+    display:grid;
+    place-items:center;
+    border-block:1.5px solid var(--ink-line);
+    padding-block:8px;
+  }
+  .connection-line :global(svg) {
+    width:24px;
+    height:24px;
+  }
+  .report {
+    padding:clamp(18px,2.6vw,30px);
+    transform:none;
+    min-width:0;
+  }
+  .report > header :global(svg) {
+    width:24px;
+    height:24px;
+    flex:none;
+  }
+  .report h3 {
+    margin-top:28px;
+    font-size:clamp(30px,3.7vw,48px);
+    font-stretch:62%;
+    line-height:1;
+    text-transform:uppercase;
+  }
+  .report-intro {
+    margin-top:14px;
+    max-width:36ch;
+    font-size:13px;
+    line-height:1.5;
+  }
+  .tool-trail {
+    margin-top:24px;
+    border-top:var(--rule) solid currentColor;
+  }
+  .tool-trail li {
+    display:grid;
+    grid-template-columns:24px minmax(0,1fr) 18px;
+    gap:8px;
+    padding-block:16px;
+    border-bottom:1.5px solid var(--on-line);
+  }
+  .report-number {
+    font-size:10px;
+    font-weight:800;
+    padding-top:3px;
+  }
+  .tool-trail b {
+    font-size:13px;
+    text-transform:uppercase;
+  }
+  .report-result {
+    margin-top:5px;
+    font-size:12px;
+    line-height:1.45;
+    transition:opacity .4s var(--ease), visibility 0s linear;
+  }
+  .report-check {
+    opacity:1;
+    transition:opacity .4s var(--ease), visibility 0s linear;
+  }
+  .report-check :global(svg) {
+    width:17px;
+    height:17px;
+  }
+  [data-state='pending'] .report-result, [data-state='pending'] .report-check {
+    opacity:0;
+    visibility:hidden;
+    transition-delay:0s, .4s;
+  }
+  [data-state='current'] .report-check {
+    opacity:.3;
+  }
+  .report > footer {
+    display:flex;
+    gap:10px;
+    margin-top:20px;
+    font-size:12px;
+    font-weight:750;
+    line-height:1.45;
+  }
+  .report > footer :global(svg) {
+    width:20px;
+    height:20px;
+    flex:none;
+  }
+  .desk-foot {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:16px;
+    padding:16px var(--panel-padding);
+    border-top:var(--rule) solid var(--ink);
+    font-size:11px;
+    line-height:1.5;
+    color:var(--ink-soft);
+  }
+  .desk-foot button {
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    flex:none;
+    padding:8px 0;
+    border:0;
+    background:transparent;
+    color:var(--ink);
+    font:inherit;
+    font-weight:800;
+    cursor:pointer;
+  }
+  .desk-foot button :global(svg) {
+    width:16px;
+    height:16px;
+  }
+  @media(max-width:800px) {
+    .workbench {
+      grid-template-columns:minmax(0,1fr);
+    }
+    .assignment {
+      grid-template-columns:minmax(0,1fr);
+      gap:10px;
+    }
+    .desk-head {
+      flex-wrap:wrap;
+    }
+    .desk-head .example-label {
+      display:none;
+    }
+    .background-toggle {
+      margin-left:auto;
+    }
+    .report h3 {
+      font-size:clamp(36px,7vw,48px);
+    }
+  }
+  @media(max-width:400px) {
+    .evidence-card {
+      padding:14px;
+    }
+    .ballot {
+      gap:8px;
+    }
+    .connection {
+      gap:6px;
+      grid-template-columns:minmax(0,1fr) 25px minmax(0,1fr);
+    }
+    .connection time {
+      font-size:28px;
+    }
+    .desk-foot {
+      align-items:start;
+    }
+  }
+  @media(prefers-reduced-motion:reduce) {
+    .evidence-card, .evidence-indicator, .vote-track > span, .report-result, .report-check {
+      transition:none;
+    }
+  }
+</style>

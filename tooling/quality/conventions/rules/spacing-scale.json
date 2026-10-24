@@ -1,0 +1,38 @@
+{
+  "$schema": "../rule.schema.json",
+  "harness": "pattern",
+  "message": "Use the fixed spacing scale (0, 1, 2, 3, 4, 6, 8, 12, 16) for padding, margin, gap, and space-*; see packages/ui/src/lib/spacing.ts",
+  "include": [
+    "apps/web/src/**/*.{ts,tsx}",
+    "packages/ui/src/**/*.{ts,tsx,css}",
+    "packages/ai/src/**/*.{ts,tsx}"
+  ],
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "packages/ui/src/styles/globals.css",
+    "packages/ui/src/styles/tokens.css"
+  ],
+  "pattern": "(?<![\\w-])-?(?:p[xytblrse]?|m[xytblrse]?|gap(?:-[xy])?|space-[xy])-(?:(?=[\\d])(?!(?:0|px|1|2|3|4|6|8|12|16)(?![\\w.\\[]))|\\[(?![^\\]]*(?:env\\(|var\\()))",
+  "ignoreComments": true,
+  "examples": [
+    {
+      "files": {
+        "apps/web/src/a.tsx": "const c = 'gap-2 px-4 -mt-1 sm:py-6 space-y-8 p-0 mx-auto mt-px pb-[max(1rem,env(safe-area-inset-bottom))]';"
+      },
+      "reports": []
+    },
+    {
+      "files": {
+        "apps/web/src/a.tsx": "const a = 'gap-1.5';\nconst b = 'py-2.5';\nconst c = 'p-5';\nconst d = 'mt-[7px]';\nconst e = '-mr-1.5';"
+      },
+      "reports": [
+        "apps/web/src/a.tsx:1",
+        "apps/web/src/a.tsx:2",
+        "apps/web/src/a.tsx:3",
+        "apps/web/src/a.tsx:4",
+        "apps/web/src/a.tsx:5"
+      ]
+    }
+  ]
+}

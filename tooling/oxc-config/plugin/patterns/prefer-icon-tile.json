@@ -1,0 +1,46 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "node-text",
+  "nodes": ["JSXOpeningElement"],
+  "pattern": "<[a-z][a-z0-9]*\\s(?=.*(?<![\\w:\\[/-])grid(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])place-items-center(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])shrink-0(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])size-(?:6|8|9|10)(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])rounded-(?:full|lg|md|xl)(?![\\w./\\[-])).*",
+  "message": "A square icon container is IconTile (@groam/ui/components/icon-tile): size (xs, sm, md, lg), radius, and variant (primary, muted, outline, outline-primary, plain, ...) cover the common tiles; pass anything else through className.",
+  "files": ["**/apps/web/src/features/**/*.tsx", "**/packages/ai/src/ui/**/*.tsx"],
+  "excludeFiles": ["**/*.test.tsx"],
+  "examples": [
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div className=\"grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10\">x</div>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div className={`grid size-10 shrink-0 place-items-center rounded-xl border ${tone}`}>x</div>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <span className=\"grid size-7 shrink-0 place-items-center rounded-md bg-muted\">x</span>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <span className=\"grid size-9.5 shrink-0 place-items-center rounded-lg bg-muted\">x</span>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <span className=\"grid size-4 shrink-0 place-items-center rounded-full border\">x</span>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <main className=\"grid min-h-dvh place-items-center p-6\">x</main>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "import { IconTile } from \"@groam/ui/components/icon-tile\";\nexport const v = <IconTile size=\"lg\">x</IconTile>;",
+      "reports": false
+    }
+  ]
+}

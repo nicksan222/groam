@@ -1,0 +1,15 @@
+export type IconName =
+  | 'agent'
+  | 'arrow-right'
+  | 'calendar'
+  | 'chat'
+  | 'check'
+  | 'chevron-down'
+  | 'chevron-up'
+  | 'close'
+  | 'idea'
+  | 'issue'
+  | 'menu'
+  | 'pause'
+  | 'play'
+  | 'users';

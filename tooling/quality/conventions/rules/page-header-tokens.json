@@ -1,0 +1,35 @@
+{
+  "$schema": "../rule.schema.json",
+  "harness": "pattern",
+  "message": "Header and title layout tokens belong to Shell.Header in packages/ui. Features pass title, parent, status, meta and actions instead (SHELL_HEADER_FACT may style a meta fact).",
+  "include": ["apps/web/src/**/*.{ts,tsx}"],
+  "exclude": ["**/*.test.ts", "**/*.test.tsx"],
+  "pattern": "\\bSHELL_(?:TITLE\\w*|HEADER_(?!FACT\\b)\\w+|TRIP_SWITCHER_\\w+|BANNER_\\w+|NOTICE_\\w+|UNDERLINE_NAV)\\b",
+  "ignoreComments": true,
+  "examples": [
+    {
+      "files": {
+        "apps/web/src/features/a/view.tsx": "import { SHELL_HEADER_FACT, SHELL_SECTION_TITLE, SHELL_PAGE_INSET } from '@groam/ui/lib/shell-layout';"
+      },
+      "reports": []
+    },
+    {
+      "files": {
+        "packages/ui/src/components/shell/components/header/index.tsx": "import { SHELL_HEADER_ROW } from '#src/lib/shell-layout';"
+      },
+      "reports": []
+    },
+    {
+      "files": {
+        "apps/web/src/features/a/view.tsx": "const a = SHELL_TITLE;\nconst b = SHELL_HEADER_PADDING;\nconst c = SHELL_TRIP_SWITCHER_HEIGHT_PX;\nconst d = SHELL_HEADER_ROW_STYLE;\nconst e = SHELL_BANNER_BAND;"
+      },
+      "reports": [
+        "apps/web/src/features/a/view.tsx:1",
+        "apps/web/src/features/a/view.tsx:2",
+        "apps/web/src/features/a/view.tsx:3",
+        "apps/web/src/features/a/view.tsx:4",
+        "apps/web/src/features/a/view.tsx:5"
+      ]
+    }
+  ]
+}

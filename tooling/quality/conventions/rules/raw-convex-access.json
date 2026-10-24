@@ -1,0 +1,30 @@
+{
+  "$schema": "../rule.schema.json",
+  "harness": "pattern",
+  "message": "Raw Convex database access must stay inside components, modules and routes",
+  "include": ["packages/backend/convex/**/*.{ts,tsx,js}"],
+  "exclude": [
+    "packages/backend/convex/components/**",
+    "packages/backend/convex/modules/**",
+    "packages/backend/convex/routes/**",
+    "packages/backend/convex/**/*.test.ts"
+  ],
+  "pattern": "\\b(?:ctx|this\\.ctx)\\s*\\.\\s*db\\b",
+  "examples": [
+    {
+      "files": {
+        "packages/backend/convex/routes/trips/create.ts": "export const run = async (ctx) => ctx.db.get(\"trips\", id);",
+        "packages/backend/convex/components/better-auth/workspace.ts": "export const run = async (ctx) => ctx.db.get(\"trips\", id);",
+        "packages/backend/convex/modules/travel/trips/ctx.ts": "export const run = async (ctx) => ctx.db.get(\"trips\", id);",
+        "packages/backend/convex/trips.test.ts": "export const run = async (ctx) => ctx.db.get(\"trips\", id);"
+      },
+      "reports": []
+    },
+    {
+      "files": {
+        "packages/backend/convex/http.ts": "export const run = async (ctx) => ctx.db.get(\"trips\", id);"
+      },
+      "reports": ["packages/backend/convex/http.ts:1"]
+    }
+  ]
+}

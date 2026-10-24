@@ -1,0 +1,104 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "node-text",
+  "nodes": ["JSXOpeningElement"],
+  "pattern": "<(?:Shell\\.(?:PageBody|BannerLayout|Content|Stack|Section)|TripSectionPanel)(?:\\s|/|>)(?=.*(?:\\bclass(?:Name)?=(?:\"[^\"]*?|'[^']*?|\\{[^}]*?)(?<=[\"'\\s`:])-?(?:[pm][xytblrse]?-[\\w\\[]|gap(?:-[xy])?-[\\w\\[]|space-[xy]-[\\w\\[]|max-w-[\\w\\[])|\\bmaxWidthClassName\\b)).*|<TripSectionPanel\\s(?=.*\\bstack=).*",
+  "message": "Page bodies, sections and panels take their insets, width and rhythm from Shell.PageBody (padded or bleed). Do not pass spacing or width classes.",
+  "files": ["**/apps/web/src/features/**/*.tsx"],
+  "excludeFiles": [
+    "**/apps/web/src/**/*.test.tsx",
+    "**/apps/web/src/features/trips/trip-detail/trip-page-shell.tsx"
+  ],
+  "examples": [
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <Shell.PageBody className=\"pt-2\" />;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <Shell.PageBody className=\"px-6\" />;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <Shell.PageBody maxWidthClassName=\"max-w-[1600px]\">x</Shell.PageBody>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <Shell.Stack className=\"space-y-3\">x</Shell.Stack>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <Shell.Section className=\"gap-2\">x</Shell.Section>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <TripSectionPanel className=\"mx-auto\" title=\"x\">x</TripSectionPanel>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <TripSectionPanel stack=\"sm\" title=\"x\">x</TripSectionPanel>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <Shell.Content className={cn('flex', open && 'md:-mt-2')}>x</Shell.Content>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <Shell.PageBody layout=\"bleed\" />;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <Shell.PageBody clearNav>x</Shell.PageBody>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <Shell.Stack className=\"dashboard-home\" stack=\"page\">x</Shell.Stack>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <Shell.Section stack=\"sm\">x</Shell.Section>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <div className=\"px-4 pt-2\">x</div>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <Shell.Card padding=\"sm\">x</Shell.Card>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <Shell.SectionHeader className=\"px-2\" />;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.test.tsx",
+      "source": "export const v = <Shell.PageBody className=\"pt-2\" />;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/trips/trip-detail/trip-page-shell.tsx",
+      "source": "export const v = <Shell.PageBody className=\"pt-2\" />;",
+      "reports": false
+    },
+    {
+      "file": "packages/ui/src/components/a.tsx",
+      "source": "export const v = <Shell.PageBody className=\"pt-2\" />;",
+      "reports": false
+    }
+  ]
+}

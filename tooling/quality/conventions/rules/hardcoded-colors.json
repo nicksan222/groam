@@ -1,0 +1,31 @@
+{
+  "$schema": "../rule.schema.json",
+  "harness": "pattern",
+  "message": "Use semantic color tokens instead of hardcoded colors",
+  "include": ["**/*.css", "**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}", "**/*.astro"],
+  "exclude": [
+    "apps/landing/src/styles/tokens.css",
+    "packages/ui/src/styles/globals.css",
+    "packages/ui/src/styles/tokens.css",
+    "apps/web/void.config.ts"
+  ],
+  "pattern": "#[\\da-f]{3,8}\\b|(?:rgb|rgba|hsl|hsla|hwb|lab|lch|oklab|oklch|color)\\(",
+  "ignoreCase": true,
+  "ignoreComments": true,
+  "examples": [
+    {
+      "files": {
+        "packages/ui/src/styles/tokens.css": "  --background: #0b0b0c;",
+        "apps/web/src/app.tsx": "// \"#fff\"\nconst ok = true; // #fff"
+      },
+      "reports": []
+    },
+    {
+      "files": {
+        "apps/web/src/app.tsx": "const color = \"#fff\";",
+        "packages/ui/src/styles/utilities.css": "\n  color: #0b0b0c;"
+      },
+      "reports": ["apps/web/src/app.tsx:1", "packages/ui/src/styles/utilities.css:2"]
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "node-text",
+  "nodes": ["JSXOpeningElement"],
+  "pattern": "<(?:details|summary)(?:\\s|>).*",
+  "message": "Use Collapsible (@groam/ui/components/collapsible) instead of <details>/<summary>: it owns the trigger, state, and accessibility.",
+  "files": ["**/apps/web/src/features/**/*.tsx", "**/packages/ai/src/ui/**/*.tsx"],
+  "excludeFiles": ["**/*.test.tsx"],
+  "examples": [
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <details><summary>More</summary>x</details>;",
+      "reports": true
+    },
+    {
+      "file": "packages/ai/src/ui/x/view.tsx",
+      "source": "export const v = <summary className=\"cursor-pointer\">More</summary>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "import { Collapsible } from \"@groam/ui/components/collapsible\";\nexport const v = <Collapsible>x</Collapsible>;",
+      "reports": false
+    }
+  ]
+}

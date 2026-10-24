@@ -1,0 +1,38 @@
+{
+  "$schema": "../rule.schema.json",
+  "harness": "path-names",
+  "message": "Folder names must use kebab-case",
+  "target": "directories",
+  "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*|\\..*|_generated)$",
+  "exclude": [".github/ISSUE_TEMPLATE"],
+  "exceptions": [
+    {
+      "within": "apps/web/pages/**",
+      "pattern": "^(?:\\[(?:\\.\\.\\.)?[a-z][a-zA-Z0-9]*\\]|\\([a-z0-9]+(?:-[a-z0-9]+)*\\))$"
+    }
+  ],
+  "examples": [
+    {
+      "files": {
+        "apps/web/src/features/trips/hooks/use-trips.ts": "",
+        ".github/ISSUE_TEMPLATE/bug.yml": "",
+        "apps/web/pages/(workspace)/trips/[tripId]/[section].tsx": ""
+      },
+      "reports": []
+    },
+    {
+      "files": {
+        "apps/web/src/features/[tripId]/view.tsx": ""
+      },
+      "reports": ["apps/web/src/features/[tripId]"]
+    },
+    {
+      "files": {
+        "apps/Web/src/app.tsx": "",
+        "apps/Web/src/b.tsx": "",
+        "packages/ui_kit/a.ts": ""
+      },
+      "reports": ["apps/Web", "packages/ui_kit"]
+    }
+  ]
+}

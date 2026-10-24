@@ -1,0 +1,31 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "node-text",
+  "nodes": ["JSXOpeningElement"],
+  "pattern": "<form(?:\\s|>).*",
+  "message": "Build forms from the shared shells: FormDialog for dialogs, Form + FormActions elsewhere, InlineAddRow for quick-add lines, CommentComposer for comments (see the build-form skill). They share submit, pending, error, and spacing behavior.",
+  "files": ["**/apps/web/src/features/**/*.tsx", "**/packages/ai/src/ui/**/*.tsx"],
+  "excludeFiles": ["**/apps/web/src/features/**/*.test.tsx", "**/packages/ai/src/ui/**/*.test.tsx"],
+  "examples": [
+    {
+      "file": "apps/web/src/features/example/example-form.tsx",
+      "source": "export const view = <form onSubmit={() => {}}><span /></form>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/example/example-form.tsx",
+      "source": "import { Form } from '@groam/ui/components/form';\nexport const view = <Form onSubmit={() => {}}><span /></Form>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/example/example-form.test.tsx",
+      "source": "export const view = <form><span /></form>;",
+      "reports": false
+    },
+    {
+      "file": "packages/ai/src/ui/example/example-card.tsx",
+      "source": "export const view = <form onSubmit={() => {}}><input maxLength={500} /></form>;",
+      "reports": true
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "node-text",
+  "nodes": ["JSXAttribute"],
+  "pattern": "data-testid\\s*=\\s*(?:\\x22[^\\x22]*\\x22|\\x27[^\\x27]*\\x27|\\{\\s*(?:\\x22[^\\x22]*\\x22|\\x27[^\\x27]*\\x27|\\x60.*\\x60)\\s*\\})\\s*",
+  "message": "Use testIds from @/lib/test-ids instead of an inline data-testid string. Centralized IDs keep component tests and browser actions in sync.",
+  "files": ["**/apps/web/src/**"],
+  "excludeFiles": ["**/apps/web/src/**/*.test.ts", "**/apps/web/src/**/*.test.tsx"],
+  "examples": [
+    {
+      "file": "apps/web/src/features/example/example-view.tsx",
+      "source": "export const view = <Button data-testid=\"save-trip\">Save</Button>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/example/example-view.tsx",
+      "source": "export const view = <Button data-testid='save-trip'>Save</Button>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/example/example-view.tsx",
+      "source": "export const view = <Button data-testid={\"save-trip\"}>Save</Button>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/example/example-view.tsx",
+      "source": "export const view = <Button data-testid={'save-trip'}>Save</Button>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/example/example-view.tsx",
+      "source": "export const view = <Button data-testid={`save-trip`}>Save</Button>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/example/example-view.tsx",
+      "source": "export const view = <Button data-testid={testIds.saveTrip}>Save</Button>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/example/example-view.tsx",
+      "source": "export const view = <Button data-testid={testId}>Save</Button>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/example/example-view.tsx",
+      "source": "export const view = <Button data-testid={'testId' in item ? item.testId : undefined}>Save</Button>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/example/example-view.test.tsx",
+      "source": "export const view = <Button data-testid=\"fixture\">Save</Button>;",
+      "reports": false
+    },
+    {
+      "file": "packages/ui/src/components/example.tsx",
+      "source": "export const Button = () => <button data-testid=\"primitive\" />;",
+      "reports": false
+    }
+  ]
+}

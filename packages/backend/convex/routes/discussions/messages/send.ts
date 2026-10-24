@@ -1,0 +1,30 @@
+import { v } from 'convex/values';
+import { mutation } from '#convex-generated/server';
+import { chatAgentValidator } from '#convex/modules/assistant/validators/index';
+import { Discussions } from '#convex/modules/discussions/threads/index';
+
+/**
+ * Post a group message. Returns the saved message id and any @mentioned assistant agent
+ * to pass into `messages/respond`. Requires discussion membership.
+ */
+export const run = mutation({
+  args: {
+    assistantAgent: v.optional(chatAgentValidator),
+    clientRequestId: v.string(),
+    discussionId: v.id('discussions'),
+    mediaIds: v.optional(v.array(v.id('media'))),
+    text: v.string()
+  },
+  returns: v.object({
+    assistantAgent: v.union(chatAgentValidator, v.null()),
+    messageId: v.string()
+  }),
+  handler: (ctx, args) =>
+    Discussions.send(ctx, {
+      clientRequestId: args.clientRequestId,
+      discussionId: args.discussionId,
+      mediaIds: args.mediaIds,
+      requestedAssistantAgent: args.assistantAgent,
+      text: args.text
+    })
+});

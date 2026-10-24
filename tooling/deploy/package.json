@@ -1,0 +1,10 @@
+{
+  "name": "@groam/deploy",
+  "version": "0.0.0",
+  "exports": {
+    "./environments": "./environments.json"
+  },
+  "license": "MIT",
+  "private": true,
+  "type": "module"
+}

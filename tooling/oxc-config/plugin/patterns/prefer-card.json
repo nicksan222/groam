@@ -1,0 +1,56 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "node-text",
+  "nodes": ["JSXOpeningElement"],
+  "pattern": "<div\\s(?=.*(?<![\\w:\\[/-])rounded-lg(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])border(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])border-border(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])bg-card(?![\\w./\\[-]))(?![\\s\\S]*\\bborder-dashed\\b)(?![\\s\\S]*\\boverflow-hidden\\b).*",
+  "message": "A bordered rounded-lg card surface is Card (@groam/ui/components/card): variant=\"plain\" for a static container with its own padding. A clipped frame is Panel (@groam/ui/components/panel).",
+  "files": ["**/apps/web/src/features/**/*.tsx", "**/packages/ai/src/ui/**/*.tsx"],
+  "excludeFiles": ["**/*.test.tsx"],
+  "examples": [
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div className=\"rounded-lg border border-border bg-card p-4\">x</div>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div className=\"space-y-3 rounded-lg border border-border bg-card p-3 shadow-xs/5\">x</div>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div className=\"rounded-lg border border-dashed border-border bg-card p-4\">x</div>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div className=\"rounded-lg border border-border/70 bg-card p-4\">x</div>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div className=\"rounded-lg border bg-card p-4\">x</div>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div className=\"rounded-xl border border-border bg-card p-4\">x</div>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div className=\"overflow-hidden rounded-lg border border-border bg-card\">x</div>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <li className=\"rounded-lg border border-border bg-card\">x</li>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "import { Card } from \"@groam/ui/components/card\";\nexport const v = <Card variant=\"plain\" className=\"p-4\">x</Card>;",
+      "reports": false
+    }
+  ]
+}

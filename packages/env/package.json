@@ -1,0 +1,38 @@
+{
+  "name": "@groam/env",
+  "version": "0.0.0",
+  "dependencies": {
+    "envalid": "^8.1.0"
+  },
+  "devDependencies": {
+    "@groam/typescript-config": "workspace:*",
+    "@types/node": "^26.6.3",
+    "typescript": "~7.0.2",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "exports": {
+    "./auth-client": "./src/apps/auth-client.ts",
+    "./deployment": "./src/deployment/variables.ts",
+    "./journeys": "./src/apps/journeys.ts",
+    "./landing": "./src/apps/landing.ts",
+    "./seeder": "./src/apps/seeder.ts",
+    "./vitest": "./src/apps/vitest.ts",
+    "./web-client": "./src/apps/web-client.ts",
+    "./void": "./src/apps/void.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "imports": {
+    "#src/*": "./src/*.ts"
+  },
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "lint": "vp check src",
+    "test": "vp test run",
+    "typecheck": "tsc --noEmit"
+  },
+  "type": "module"
+}

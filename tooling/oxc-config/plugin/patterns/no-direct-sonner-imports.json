@@ -1,0 +1,20 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "module-source",
+  "pattern": "sonner",
+  "message": "Import toast from @groam/ui/components/toast so the app depends on Groam's UI contract instead of Sonner directly.",
+  "files": ["**/apps/web/src/**"],
+  "excludeFiles": ["**/apps/web/src/**/*.test.ts", "**/apps/web/src/**/*.test.tsx"],
+  "examples": [
+    {
+      "file": "apps/web/src/features/example/example-view.tsx",
+      "source": "import { toast } from 'sonner';\nexport const notify = () => toast.success('Saved');",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/example/example-view.tsx",
+      "source": "import { toast } from '@groam/ui/components/toast';\nexport const notify = () => toast.success('Saved');",
+      "reports": false
+    }
+  ]
+}

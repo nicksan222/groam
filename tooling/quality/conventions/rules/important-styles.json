@@ -1,0 +1,24 @@
+{
+  "$schema": "../rule.schema.json",
+  "harness": "pattern",
+  "message": "Avoid !important in stylesheets; use cascade layers or specificity instead",
+  "include": ["**/*.css"],
+  "pattern": "!\\s*important\\b",
+  "ignoreCase": true,
+  "ignoreComments": true,
+  "examples": [
+    {
+      "files": {
+        "packages/ui/src/styles/globals.css": "  /* never !important */",
+        "apps/web/src/app.tsx": "const className = \"!p-0 !important\";"
+      },
+      "reports": []
+    },
+    {
+      "files": {
+        "packages/ui/src/styles/globals.css": "  color: var(--primary) !important;"
+      },
+      "reports": ["packages/ui/src/styles/globals.css:1"]
+    }
+  ]
+}

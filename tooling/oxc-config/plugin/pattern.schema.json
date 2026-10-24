@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://groam.app/schemas/oxlint-pattern-rule.json",
+  "title": "Groam Oxlint pattern rule",
+  "description": "One `groam/<file name>` Oxlint rule that reports syntax whose source text matches `pattern`, in the files it is scoped to. `examples` are its lint fixtures.",
+  "type": "object",
+  "properties": {
+    "$schema": { "type": "string" },
+    "match": {
+      "description": "`module-source`: import/export specifiers equal to the pattern; `node-text`: the full source text of the `nodes` kinds.",
+      "enum": ["module-source", "node-text"]
+    },
+    "nodes": {
+      "description": "ESTree node kinds to check (node-text only), e.g. CallExpression, JSXAttribute, JSXOpeningElement.",
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[A-Z][A-Za-z]+$" },
+      "minItems": 1
+    },
+    "pattern": {
+      "description": "A JavaScript regular expression source that must match the whole specifier or node text (`.` also matches newlines).",
+      "type": "string",
+      "minLength": 1
+    },
+    "message": {
+      "description": "The diagnostic: what to use instead, and why.",
+      "type": "string",
+      "minLength": 1
+    },
+    "files": {
+      "description": "Oxlint override globs the rule applies to. Prefix with **/ so lint fixtures in temporary directories match.",
+      "type": "array",
+      "items": { "type": "string", "pattern": "^\\*\\*/" },
+      "minItems": 1
+    },
+    "excludeFiles": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^\\*\\*/" }
+    },
+    "examples": {
+      "description": "Lint fixtures: `source` linted at repository path `file` must (or must not) report this rule. Include both kinds.",
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "properties": {
+          "file": { "type": "string", "minLength": 1 },
+          "source": { "type": "string" },
+          "reports": { "type": "boolean" }
+        },
+        "required": ["file", "source", "reports"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["match", "pattern", "message", "files", "examples"],
+  "additionalProperties": false
+}

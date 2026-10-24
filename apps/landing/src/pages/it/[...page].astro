@@ -1,0 +1,31 @@
+---
+import Home from '@/pages/index.astro';
+import Features from '@/pages/features/index.astro';
+import Itinerary from '@/pages/features/itinerary.astro';
+import Ideas from '@/pages/features/ideas.astro';
+import Issues from '@/pages/features/issues.astro';
+import Chat from '@/pages/features/conversations.astro';
+import Ai from '@/pages/features/ai.astro';
+import Pricing from '@/pages/pricing.astro';
+import Privacy from '@/pages/privacy.astro';
+import Terms from '@/pages/terms.astro';
+import NotFound from '@/pages/404.astro';
+import { publicPaths } from '@/i18n/locale';
+
+export function getStaticPaths() {
+  return [...publicPaths, '/404.html'].map((path) => ({
+    params: { page: path === '/' ? undefined : path === '/404.html' ? '404' : path.replace(/^\/|\/$/gu, '') },
+    props: { path }
+  }));
+}
+
+const pages = {
+  '/': Home, '/features/': Features, '/features/itinerary/': Itinerary,
+  '/features/ideas/': Ideas, '/features/issues/': Issues,
+  '/features/conversations/': Chat, '/features/ai/': Ai,
+  '/pricing/': Pricing, '/privacy/': Privacy, '/terms/': Terms, '/404.html': NotFound
+};
+const Page = pages[Astro.props.path as keyof typeof pages];
+---
+
+<Page />

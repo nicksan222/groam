@@ -1,0 +1,36 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "node-text",
+  "nodes": ["JSXOpeningElement"],
+  "pattern": "<[a-z][a-z0-9]*\\s(?:(?=.*(?<![\\w:\\[/-])h-px(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])flex-1(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])bg-border(?![\\w./\\[-]))|(?=.*(?<![\\w:\\[/-])w-px(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])bg-border(?![\\w./\\[-]))).*",
+  "message": "A hairline rule is Separator (@groam/ui/components/separator); a rule on both sides of a label is Marker variant=\"separator\" (@groam/ui/components/marker).",
+  "files": ["**/apps/web/src/features/**/*.tsx", "**/packages/ai/src/ui/**/*.tsx"],
+  "excludeFiles": ["**/*.test.tsx"],
+  "examples": [
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <span aria-hidden className=\"h-px flex-1 bg-border\" />;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div className=\"mx-1 h-[18px] w-px bg-border\" />;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div className=\"relative before:absolute before:left-3 before:w-px before:bg-border\" />;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div className=\"h-px flex-1 bg-border/70\">x</div>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "import { Separator } from \"@groam/ui/components/separator\";\nexport const v = <Separator orientation=\"vertical\" />;",
+      "reports": false
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "$schema": "../rule.schema.json",
+  "harness": "mentioned-in",
+  "message": "Register every app action in AppActions and BackendAppActions",
+  "include": ["tooling/app-actions/src/actions/*.ts"],
+  "token": "{name:camel}",
+  "files": [
+    "tooling/app-actions/src/app-actions.ts",
+    "tooling/app-actions/src/backend/backend-app-actions.ts"
+  ],
+  "examples": [
+    {
+      "files": {
+        "tooling/app-actions/src/actions/create-trip.ts": "",
+        "tooling/app-actions/src/app-actions.ts": "createTrip",
+        "tooling/app-actions/src/backend/backend-app-actions.ts": "createTrip"
+      },
+      "reports": []
+    },
+    {
+      "files": {
+        "tooling/app-actions/src/actions/archive-trip.ts": "",
+        "tooling/app-actions/src/app-actions.ts": "archiveTrip",
+        "tooling/app-actions/src/backend/backend-app-actions.ts": ""
+      },
+      "reports": [
+        "tooling/app-actions/src/actions/archive-trip.ts -> tooling/app-actions/src/backend/backend-app-actions.ts"
+      ]
+    }
+  ]
+}

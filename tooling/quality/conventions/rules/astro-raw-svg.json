@@ -1,0 +1,25 @@
+{
+  "$schema": "../rule.schema.json",
+  "harness": "pattern",
+  "message": "Use @groam/icons/astro for icons; mark decorative SVG illustrations with data-illustration",
+  "include": ["apps/**/*.astro", "packages/**/*.astro"],
+  "exclude": ["packages/icons/**", "packages/brand/**"],
+  "report": "file",
+  "pattern": "<svg\\b(?![^>]*\\sdata-illustration(?:\\s|=|>))[^>]*>",
+  "examples": [
+    {
+      "files": {
+        "apps/landing/src/components/example.astro": "<svg data-illustration viewBox=\"0 0 640 260\"><path /></svg>",
+        "packages/icons/src/icon.astro": "<svg />",
+        "packages/brand/src/mark.astro": "<svg />"
+      },
+      "reports": []
+    },
+    {
+      "files": {
+        "apps/landing/src/components/example.astro": "<svg data-illustration /><svg\n aria-hidden=\"true\"\n/>"
+      },
+      "reports": ["apps/landing/src/components/example.astro"]
+    }
+  ]
+}

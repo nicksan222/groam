@@ -1,0 +1,31 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "node-text",
+  "nodes": ["JSXOpeningElement"],
+  "pattern": "<button\\s(?=.*(?<![\\w:\\[/-])rounded-full(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])p-1(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])text-muted-foreground(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])hover:bg-background(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])hover:text-foreground(?![\\w./\\[-])).*",
+  "message": "A chip with a remove control is RemovableChip (@groam/ui/components/removable-chip), which owns the remove button and its label.",
+  "files": ["**/apps/web/src/features/**/*.tsx", "**/packages/ai/src/ui/**/*.tsx"],
+  "excludeFiles": ["**/*.test.tsx"],
+  "examples": [
+    {
+      "file": "packages/ai/src/ui/x/view.tsx",
+      "source": "export const v = <button className=\"rounded-full p-1 text-muted-foreground transition-colors hover:bg-background hover:text-foreground\" type=\"button\">x</button>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <button className=\"rounded-full p-1.5 text-muted-foreground hover:bg-background hover:text-foreground\">x</button>;",
+      "reports": false
+    },
+    {
+      "file": "packages/ai/src/ui/x/view.tsx",
+      "source": "export const v = <button className=\"rounded-full p-1 text-muted-foreground\" type=\"button\">x</button>;",
+      "reports": false
+    },
+    {
+      "file": "packages/ai/src/ui/x/view.tsx",
+      "source": "import { RemovableChip } from \"@groam/ui/components/removable-chip\";\nexport const v = <RemovableChip label=\"a\" onRemove={f} removeLabel=\"Remove a\" />;",
+      "reports": false
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "$schema": "../rule.schema.json",
+  "harness": "forbidden-files",
+  "message": "The page header is Shell.Header (packages/ui/src/components/shell/components/header). Banner, breadcrumb, notice-band, header-store and TripPageHeader files must not come back.",
+  "include": [
+    "packages/ui/src/components/page-crumb-nav.tsx",
+    "packages/ui/src/components/shell/components/{banner,banner-*,breadcrumb,back,description,action,steps,notice-banner,page-stack}.tsx",
+    "packages/ui/src/components/shell/components/header/{header-actions,header-slots}.tsx",
+    "packages/ui/src/components/shell/store.ts",
+    "packages/ui/src/components/shell/store/**",
+    "apps/web/src/features/trips/trip-detail/trip-page-header.tsx",
+    "apps/web/src/features/trips/trip-detail/trip-page-header-skeleton.tsx"
+  ],
+  "exclude": ["packages/ui/src/components/shell/components/banner-layout.tsx"],
+  "examples": [
+    {
+      "files": {
+        "packages/ui/src/components/shell/components/header/index.tsx": "",
+        "packages/ui/src/components/shell/components/banner-layout.tsx": ""
+      },
+      "reports": []
+    },
+    {
+      "files": {
+        "packages/ui/src/components/shell/components/banner-crumb.tsx": "",
+        "apps/web/src/features/trips/trip-detail/trip-page-header.tsx": ""
+      },
+      "reports": [
+        "packages/ui/src/components/shell/components/banner-crumb.tsx",
+        "apps/web/src/features/trips/trip-detail/trip-page-header.tsx"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+---
+import { env } from '@groam/env/landing';
+import DayPile from '@/components/home/day-pile.astro';
+import PageSection from '@/components/page-section.astro';
+---
+
+<PageSection tone="bill" class="hero">
+  <div class="grid">
+    <div class="copy">
+      <h1 class="display">Get the trip out of the group chat.</h1>
+      <p class="sub">
+        One plan for the whole group. Anyone can suggest a change, everyone sees it, and the plan only
+        moves when someone applies it. AI agents plan right beside you.
+      </p>
+      <div class="cta">
+        <a class="btn btn-primary btn-lg" href={env.appUrl}>Start a trip</a>
+        <a class="btn btn-outline btn-lg" href="/#tracked">See how it works</a>
+      </div>
+      <p class="fine">Free to plan on your own. AI runs on your own ChatGPT account.</p>
+    </div>
+
+    <DayPile />
+  </div>
+</PageSection>
+
+
+
+<style>
+  .hero {
+    overflow: hidden;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: var(--column-gap);
+    align-items: start;
+  }
+  h1 {
+    font-size: clamp(3.4rem, 8.2vw, 8.4rem);
+    max-width: 11ch;
+  }
+  .sub {
+    margin-top: clamp(22px, 2.6vw, 34px);
+    padding-top: 20px;
+    border-top: var(--rule) solid var(--bill-ink);
+    max-width: 40ch;
+    font-size: clamp(1.08rem, 1.45vw, 1.28rem);
+    line-height: 1.45;
+  }
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 30px;
+  }
+  .fine {
+    margin-top: 16px;
+  }
+  @media (max-width: 420px) {
+    .cta .btn {
+      flex: 1 1 100%;
+    }
+  }
+
+  @media (max-width: 960px) {
+    .grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    h1 {
+      font-size: clamp(3.2rem, 12vw, 7rem);
+    }
+    h1 {
+      max-width: 11ch;
+    }
+  }
+</style>

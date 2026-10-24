@@ -1,0 +1,41 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "node-text",
+  "nodes": ["JSXOpeningElement"],
+  "pattern": "<(?:span|p)\\s(?=.*(?<![\\w:\\[/-])uppercase(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])tracking-(?:wide|wider|widest|\\[0\\.\\d+em\\])(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])(?:text-muted-foreground|text-primary)(?![\\w./\\[-])).*",
+  "message": "An uppercase tracked label is Shell.Eyebrow (@groam/ui/components/shell): size dense (10px), default (11px), or label (12px), strong for semibold, tone primary for the accent; render a span with as=\"span\".",
+  "files": ["**/apps/web/src/features/**/*.tsx", "**/packages/ai/src/ui/**/*.tsx"],
+  "excludeFiles": ["**/*.test.tsx"],
+  "examples": [
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <p className=\"text-[10px] font-semibold uppercase tracking-widest text-muted-foreground\">x</p>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <span className=\"text-xs uppercase tracking-wide text-muted-foreground\">or</span>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <span className=\"text-xs uppercase text-muted-foreground\">or</span>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <span className=\"text-xs tracking-wide text-muted-foreground\">or</span>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div className=\"grid text-[10px] uppercase tracking-wider text-muted-foreground\">x</div>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "import { Shell } from \"@groam/ui/components/shell\";\nexport const v = <Shell.Eyebrow tone=\"dense\">x</Shell.Eyebrow>;",
+      "reports": false
+    }
+  ]
+}

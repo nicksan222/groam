@@ -1,0 +1,151 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "node-text",
+  "nodes": ["JSXOpeningElement", "FunctionDeclaration", "VariableDeclarator"],
+  "pattern": "<(?!(?:PageLoading|AuthLoading)(?:\\s|/|>))(?:[A-Za-z_$][\\w$]*\\.)*(?:\\w*Skeleton\\w*|\\w*Loading|LoadingPlaceholder)(?:\\s|/|>).*|(?:async\\s+)?function\\s*\\*?\\s*(?!PageLoading\\b)[A-Z]\\w*(?:Skeleton|Loading)\\b.*|(?!PageLoading\\b)[A-Z]\\w*(?:Skeleton|Loading)\\s*(?::[^=]*)?=.*",
+  "message": "Never draw skeletons or custom loading UI (Skeleton, List.Loading, Shell.HeaderSkeleton, LoadingPlaceholder, *Skeleton/*Loading components). While data loads, render <PageLoading label=\"...\" /> from @groam/ui/components/page-loading.",
+  "files": [
+    "**/apps/web/src/**/*.ts",
+    "**/apps/web/src/**/*.tsx",
+    "**/apps/web/pages/**/*.ts",
+    "**/apps/web/pages/**/*.tsx"
+  ],
+  "excludeFiles": ["**/*.test.ts", "**/*.test.tsx"],
+  "examples": [
+    {
+      "file": "apps/web/src/app.tsx",
+      "source": "export const v = <AuthLoading>{loading}</AuthLoading>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <Shell.HeaderSkeleton />;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <List.Loading rows={3} />;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <LoadingPlaceholder label=\"x\" />;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <Skeleton className=\"h-4 w-20\" />;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <Skeleton />;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <TripCardSkeleton count={3} />;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <ChatLoading>x</ChatLoading>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export function TripCardSkeleton() {\n  return null;\n}",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export default function ChatLoading() {\n  return null;\n}",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const TripCardSkeleton = () => null;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const ChatLoading: FC = memo(() => null);",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <div className=\"h-4 animate-pulse rounded\" />;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const c = cn('h-4', 'animate-pulse');",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const c = `h-4 animate-pulse ${x}`;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <PageLoading label=\"Loading trips\" />;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <PageLoading />;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <Spinner />;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <Button disabled={isLoading}>{isLoading ? <Spinner /> : 'Save'}</Button>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const isLoading = useQuery() === undefined;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export function useTripLoading() {\n  return true;\n}",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const loadingRows = [1, 2, 3];",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export function PageLoadingGate() {\n  return <PageLoading label=\"x\" />;\n}",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <div className=\"animate-spin\" />;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/pages/trips.tsx",
+      "source": "export const v = <Skeleton />;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.test.tsx",
+      "source": "export const v = <Skeleton />;",
+      "reports": false
+    },
+    {
+      "file": "packages/ui/src/components/skeleton.tsx",
+      "source": "export const v = <Skeleton />;",
+      "reports": false
+    }
+  ]
+}

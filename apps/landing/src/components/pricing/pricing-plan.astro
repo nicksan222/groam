@@ -1,0 +1,289 @@
+---
+import Icon from '@groam/icons/astro';
+import { example, included, plan, teaser } from '@/content/pricing';
+import PageSection from '@/components/page-section.astro';
+
+const [own, perTraveler, covered, none] = plan.points;
+const fare = [
+  { who: 'Maya', role: 'trip creator', price: '€0' },
+  { who: 'Jonas', role: 'invited', price: '€1' },
+  { who: 'Priya', role: 'invited', price: '€1' },
+  { who: 'Sam', role: 'invited', price: '€1' }
+];
+---
+
+<PageSection class="plan" aria-labelledby="plan-title">
+  <div class="plan-inner">
+    <h2 class="section-title" id="plan-title">{plan.heading}</h2>
+
+    <div class="figures">
+    <article class="fig">
+      <p class="amount" aria-hidden="true">€0</p>
+      <p class="cap">{teaser.free.label}</p>
+      <h3>{own.title}</h3>
+      <p class="body">{own.body}</p>
+    </article>
+    <article class="fig paid">
+      <p class="amount" aria-hidden="true">€1</p>
+      <p class="cap">{teaser.paid.label}</p>
+      <h3>{perTraveler.title}</h3>
+      <p class="body">{perTraveler.body}</p>
+      <h3>{covered.title}</h3>
+      <p class="body">{covered.body}</p>
+    </article>
+    </div>
+
+    <div class="none">
+      <h3>{none.title}</h3>
+      <p class="body">{none.body}</p>
+    </div>
+  </div>
+</PageSection>
+
+<PageSection class="split" aria-label="A worked example and what is included">
+  <div class="split-inner">
+    <article class="example" aria-labelledby="example-title">
+    <div class="surface slip">
+      <div class="slip-head">
+        <h2 class="slip-title" id="example-title">{example.heading}</h2>
+        <span class="example-label">Example trip</span>
+      </div>
+      <table class="fare">
+        <caption class="visually-hidden">Lisbon long weekend, fare per traveler</caption>
+        <tbody>
+          {
+            fare.map((row) => (
+              <tr>
+                <th scope="row">{row.who}<span class="role">{row.role}</span></th>
+                <td class="time">{row.price}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+        <tfoot>
+          <tr>
+            <th scope="row">4 people, one trip</th>
+            <td>€3</td>
+          </tr>
+        </tfoot>
+      </table>
+      <p class="fine">Each pays their own €1, or Maya covers them.</p>
+    </div>
+    <div class="story">
+      {example.paragraphs.map((text) => <p>{text}</p>)}
+    </div>
+    </article>
+
+    <div class="included" aria-labelledby="included-title">
+    <h2 class="section-title small" id="included-title">{included.heading}</h2>
+    <ul>
+      {
+        included.items.map((item) => (
+          <li>
+            <Icon name="check" />
+            <span>{item}</span>
+          </li>
+        ))
+      }
+    </ul>
+    </div>
+  </div>
+</PageSection>
+
+<style>
+  p,
+  li {
+    text-wrap: pretty;
+  }
+  .section-title {
+    text-wrap: balance;
+  }
+  .plan-inner {
+    display: grid;
+    gap: var(--content-gap);
+  }
+  .figures {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--column-gap);
+  }
+  .fig {
+    display: grid;
+    align-content: start;
+    gap: 10px;
+    padding-top: 10px;
+    border-top: var(--rule) solid var(--ink);
+  }
+  .amount {
+    font-weight: 850;
+    font-stretch: 62%;
+    font-size: clamp(7rem, 17vw, 15rem);
+    line-height: 0.8;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .paid .amount {
+    color: var(--bill-text);
+  }
+  .cap {
+    margin-bottom: 18px;
+    font-weight: 750;
+    font-stretch: 84%;
+    font-size: 15px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    word-spacing: var(--caps-space);
+  }
+  h3 {
+    margin-top: 10px;
+    padding-top: 14px;
+    border-top: 1.5px solid var(--ink-line);
+    font-weight: 800;
+    font-stretch: 78%;
+    font-size: 1.35rem;
+    line-height: 1.1;
+    text-transform: uppercase;
+    word-spacing: var(--caps-space);
+    letter-spacing: 0.01em;
+  }
+  .body {
+    max-width: 44ch;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .none {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px var(--column-gap);
+    align-items: baseline;
+    padding-block: 16px;
+    border-block: var(--rule) solid var(--ink);
+  }
+  .none h3 {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+  }
+  /* Same two columns and gap as the figures above, so the heavy rules start on one grid. */
+  .split-inner {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--content-gap) var(--column-gap);
+    align-items: start;
+  }
+  .example {
+    display: grid;
+    gap: 24px;
+  }
+  .slip {
+    padding: clamp(16px, 2.6vw, 28px);
+    display: grid;
+    gap: 14px;
+  }
+  .slip-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: start;
+    justify-content: space-between;
+    gap: 10px 16px;
+    padding-bottom: 12px;
+    border-bottom: var(--rule) solid var(--ink);
+  }
+  .slip-title {
+    font-weight: 850;
+    font-stretch: 64%;
+    font-size: clamp(2rem, 3.8vw, 3rem);
+    line-height: 0.9;
+    text-transform: uppercase;
+    word-spacing: var(--caps-space);
+    max-width: 14ch;
+  }
+  .fare {
+    width: 100%;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+  }
+  .fare th,
+  .fare td {
+    padding: 10px 0;
+    border-bottom: 1.5px solid var(--ink-line);
+    text-align: start;
+    font-weight: 700;
+    font-size: 1.05rem;
+  }
+  .fare td {
+    text-align: end;
+  }
+  .role {
+    margin-left: 10px;
+    font-weight: 600;
+    font-stretch: 84%;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    word-spacing: var(--caps-space);
+    color: var(--ink-soft);
+  }
+  .fare tfoot th,
+  .fare tfoot td {
+    border: 0;
+    padding-top: 14px;
+    font-weight: 850;
+    font-stretch: 70%;
+    font-size: 1.5rem;
+    text-transform: uppercase;
+    word-spacing: var(--caps-space);
+    color: var(--bill-text);
+  }
+  .fare tfoot td {
+    font-size: 2.6rem;
+    line-height: 0.9;
+  }
+  .story {
+    display: grid;
+    gap: 14px;
+    max-width: 56ch;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .included {
+    display: grid;
+    gap: 22px;
+    align-content: start;
+  }
+  .small {
+    font-size: clamp(2rem, 4vw, 3.4rem);
+  }
+  .included ul {
+    list-style: none;
+    display: grid;
+    border-top: var(--rule) solid var(--ink);
+  }
+  .included li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 14px;
+    align-items: start;
+    padding-block: 14px;
+    border-bottom: 1.5px solid var(--ink-line);
+    line-height: 1.4;
+  }
+  .included :global(svg) {
+    width: 20px;
+    height: 20px;
+    margin-top: 1px;
+    color: var(--done);
+  }
+  @media (max-width: 860px) {
+    .split-inner,
+    .none {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  @media (max-width: 560px) {
+    .figures {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

@@ -1,0 +1,133 @@
+{
+  "name": "groam-workspace",
+  "version": "0.0.0",
+  "catalog": {
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.3.0",
+    "vitest": "5.0.5",
+    "vite-plus": "1.3.0",
+    "@vitest/browser-playwright": "5.0.5",
+    "@vitest/coverage-istanbul": "5.0.5"
+  },
+  "dependencies": {
+    "@groam/env": "workspace:*",
+    "convex": "^1.46.0",
+    "zod": "^4.6.6"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "fallow": "3.34.0",
+    "jiti": "^2.7.0",
+    "react-doctor": "0.9.14",
+    "rust-just": "1.58.0",
+    "syncpack": "^15.3.3",
+    "typescript": "~7.0.2",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "license": "MIT",
+  "overrides": {
+    "@esbuild-kit/esm-loader": "npm:tsx@^4.21.0",
+    "brace-expansion": "^5.0.12",
+    "fast-uri": "^3.1.9",
+    "hono": "^4.13.5",
+    "nanoid": "^3.3.17",
+    "source-map-js": "^1.2.2",
+    "undici": "^7.30.1",
+    "zod": "^4.6.6",
+    "vite": "catalog:",
+    "vitest": "catalog:",
+    "@vitest/browser": "5.0.5",
+    "@vitest/ui": "5.0.5"
+  },
+  "packageManager": "bun@1.3.11",
+  "patchedDependencies": {
+    "playwright-core@1.63.0": "tooling/patches/playwright-core@1.63.0.patch"
+  },
+  "private": true,
+  "reactDoctor": {
+    "deadCode": false,
+    "supplyChain": {
+      "enabled": false
+    },
+    "rules": {
+      "react-doctor/exhaustive-deps": "off",
+      "react-doctor/rules-of-hooks": "off",
+      "react-doctor/button-has-type": "off",
+      "react-doctor/role-has-required-aria-props": "off",
+      "react-doctor/prefer-tag-over-role": "off",
+      "react-doctor/no-static-element-interactions": "off",
+      "react-doctor/no-noninteractive-element-interactions": "off",
+      "react-doctor/no-high-complexity-react-function": "off"
+    },
+    "ignore": {
+      "files": [
+        "**/.astro/**",
+        "**/dist/**",
+        "**/build/**",
+        "**/coverage/**",
+        "**/_generated/**",
+        "**/node_modules/**",
+        "**/vendor/**"
+      ]
+    }
+  },
+  "scripts": {
+    "audit": "vp pm audit",
+    "auth:schema": "vp run --fail-if-no-match --filter @groam/backend auth:schema",
+    "brand:generate": "vp run --fail-if-no-match --filter @groam/brand generate",
+    "build": "vp run --fail-if-no-match --filter \"@groam/*\" build",
+    "build:landing": "vp run --fail-if-no-match --filter @groam/landing build",
+    "build:web": "vp run --fail-if-no-match --filter @groam/web build",
+    "check": "vp run audit && vp run typecheck && vp run lint && vp run test && vp run react-doctor && vp run fallow",
+    "codegen": "vp run codegen:auth && vp run codegen:convex",
+    "codegen:auth": "vp run auth:schema",
+    "codegen:convex": "vp exec convex codegen",
+    "convex:dashboard": "vp exec convex dashboard",
+    "convex:deploy": "vp exec convex deploy --typecheck-components",
+    "convex:dev": "vp exec convex dev --typecheck-components",
+    "dev": "vp run --fail-if-no-match --filter @groam/web dev",
+    "dev:landing": "vp run --fail-if-no-match --filter @groam/landing dev",
+    "dev:web": "vp run --fail-if-no-match --filter @groam/web dev",
+    "diagrams:render": "vp run --fail-if-no-match --filter @groam/diagrams render",
+    "fallow": "vp exec fallow -c tooling/fallow.config.jsonc --fail-on-issues && vp exec fallow -c tooling/fallow.config.jsonc health --css",
+    "fallow:changed": "vp exec fallow audit -c tooling/fallow.config.jsonc --changed-since HEAD --gate all && vp exec fallow security -c tooling/fallow.config.jsonc --changed-since HEAD --gate new",
+    "fallow:strict": "vp exec fallow -c tooling/fallow.config.jsonc --fail-on-issues --type-aware-require complete && vp exec fallow -c tooling/fallow.config.jsonc health --css --type-aware-require complete",
+    "format": "vp exec syncpack format --config tooling/syncpack.config.json && vp check --fix",
+    "format:check": "vp exec syncpack format --check --config tooling/syncpack.config.json && vp fmt --check",
+    "lint": "vp run lint:conventions && vp run lint:agents && vp run lint:packages && vp check",
+    "lint:agents": "bun tooling/quality/agents/check.ts",
+    "lint:claude": "vp run lint:agents",
+    "lint:conventions": "bun tooling/quality/conventions/check.ts",
+    "lint:packages": "vp exec syncpack lint --config tooling/syncpack.config.json && vp exec syncpack format --check --config tooling/syncpack.config.json",
+    "prepare": "vp config --hooks-dir tooling/hooks --no-agent",
+    "preview": "vp run --fail-if-no-match --filter \"@groam/*\" --parallel preview",
+    "react-doctor": "vp exec react-doctor -y --blocking warning --no-dead-code --no-score .",
+    "react-doctor:changed": "vp exec react-doctor -y --blocking warning --scope changed --base origin/main --no-dead-code --no-score .",
+    "react-doctor:staged": "vp exec react-doctor --blocking warning --staged --no-dead-code --no-score .",
+    "seed": "bun --env-file .env.local tooling/seeder/src/cli.ts",
+    "start:convex": "just start-convex",
+    "test": "vp run test:quality && vp run --fail-if-no-match --filter \"@groam/*\" --cache --concurrency-limit 2 test",
+    "test:browsers:install": "vp run --fail-if-no-match --filter @groam/vitest-config browsers:install",
+    "test:journeys": "vp run --fail-if-no-match --filter @groam/web journeys",
+    "test:landing": "vp run --fail-if-no-match --filter @groam/landing test",
+    "test:packages": "vp run test:quality && vp run --fail-if-no-match --filter \"@groam/*\" --filter \"!@groam/web\" --filter \"!@groam/landing\" --filter \"!@groam/ui\" --filter \"!@groam/ai\" --filter \"!@groam/auth\" --cache --concurrency-limit 2 test",
+    "test:quality": "vp test run --dir tooling quality/ oxc-config/",
+    "test:ui": "vp run --fail-if-no-match --filter @groam/ui --filter @groam/ai --filter @groam/auth --cache --concurrency-limit 2 test",
+    "test:web": "vp run --fail-if-no-match --filter @groam/web --cache test",
+    "typecheck": "vp run --fail-if-no-match --filter \"@groam/*\" --cache typecheck && tsc --noEmit -p tooling/tsconfig.json"
+  },
+  "trustedDependencies": [
+    "fallow"
+  ],
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "tooling/app-actions",
+    "tooling/diagrams",
+    "tooling/seeder",
+    "tooling/typescript-config",
+    "tooling/vitest-config",
+    "tooling/deploy"
+  ]
+}

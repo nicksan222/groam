@@ -1,0 +1,90 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "module-source",
+  "pattern": "@groam/ui/components/(?:skeleton|loading-placeholder|list/list-loading)|(?:.*/)?(?!page-loading(?:\\.tsx?)?$)[\\w.-]*[-.](?:skeleton|loading)(?:\\.tsx?)?",
+  "message": "Never draw skeletons or custom loading UI. While data loads, render <PageLoading label=\"...\" /> from @groam/ui/components/page-loading.",
+  "files": [
+    "**/apps/web/src/**/*.ts",
+    "**/apps/web/src/**/*.tsx",
+    "**/apps/web/pages/**/*.ts",
+    "**/apps/web/pages/**/*.tsx"
+  ],
+  "excludeFiles": ["**/*.test.ts", "**/*.test.tsx"],
+  "examples": [
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "import { Skeleton } from '@groam/ui/components/skeleton';\nexport const v = Skeleton;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "import { LoadingPlaceholder } from '@groam/ui/components/loading-placeholder';\nexport const v = LoadingPlaceholder;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "import { ListLoading } from '@groam/ui/components/list/list-loading';\nexport const v = ListLoading;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "import { TripCardSkeleton } from './trip-card-skeleton';\nexport const v = TripCardSkeleton;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "import { TripCardSkeleton } from '@/features/trips/trip-card-skeleton.tsx';\nexport const v = TripCardSkeleton;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "import { ChatLoading } from '../chat/chat-loading';\nexport const v = ChatLoading;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export { TripSkeleton } from './trip-skeleton';",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "import { PageLoading } from '@groam/ui/components/page-loading';\nexport const v = PageLoading;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "import { PageLoading } from './page-loading';\nexport const v = PageLoading;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "import { Spinner } from '@groam/ui/components/spinner';\nexport const v = Spinner;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "import { useLoading } from './use-loading-state';\nexport const v = useLoading;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "import { Button } from '@groam/ui/components/button';\nexport const v = Button;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/pages/trips.tsx",
+      "source": "import { Skeleton } from '@groam/ui/components/skeleton';\nexport const v = Skeleton;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.test.tsx",
+      "source": "import { Skeleton } from '@groam/ui/components/skeleton';\nexport const v = Skeleton;",
+      "reports": false
+    },
+    {
+      "file": "packages/ui/src/components/a.tsx",
+      "source": "import { Skeleton } from '@groam/ui/components/skeleton';\nexport const v = Skeleton;",
+      "reports": false
+    }
+  ]
+}

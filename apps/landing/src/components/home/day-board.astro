@@ -1,0 +1,382 @@
+---
+import AuthorAvatar from '@/components/author-avatar.astro';
+import Icon from '@groam/icons/astro';
+import type { DayBoard } from '@/content/home-pile';
+
+// One printed day of the example week. Rows sit on a fixed pitch so an idea strip can be pasted
+// exactly over the rows it replaces. The markup ships the finished still: every event in, the
+// strip at its last stage, revised times, the final status and tab. The script rewinds it.
+type Props = { board: DayBoard; position: number };
+const { board, position } = Astro.props;
+const finalStage = [...board.events].reverse().find((event) => event.stage)?.stage ?? 'plan';
+const finalStatus =
+  [...board.events].reverse().find((event) => event.status)?.status ?? board.status;
+---
+
+<article
+  class="board"
+  data-board={board.id}
+  data-stage={finalStage}
+  data-front={position === 0 || undefined}
+  data-far={position > 2 || undefined}
+  aria-hidden={position !== 0 ? 'true' : undefined}
+  inert={position !== 0}
+  style={`--pos: ${position}`}
+  aria-label={`${board.day} ${board.date}, ${board.place}`}
+>
+  <header class="tab">
+    <h3>{board.day} <span>{board.date}</span></h3>
+    <span class="place">{board.place}</span>
+    <span class="tab-state" data-tab data-before={board.tab.before}>{board.tab.after}</span>
+  </header>
+
+  <div class="sheet-body">
+    <ol
+      class="rows"
+      style={board.strip ? `--start: ${board.strip.start}; --count: ${board.strip.count}` : undefined}
+    >
+      {
+        board.rows.map((row) =>
+          row.kind === 'blank' ? (
+            <li class="blank" aria-hidden="true" />
+          ) : (
+            <li class={row.kind}>
+              <span class="time">{row.time}</span>
+              <span class="title">
+                {row.kind === 'issue' && <Icon name="issue" />}
+                {row.title}
+              </span>
+            </li>
+          )
+        )
+      }
+      {
+        board.strip && (
+          <li class="strip paste" data-strip>
+            <ol class="adds">
+              {board.strip.rows.map((stop, index) => (
+                <li>
+                  <span class="time" data-strip-time>
+                    {stop.time}
+                  </span>
+                  <span class="title">{stop.title}</span>
+                  {index === 0 && (
+                    <span class="strip-tag" title={`${board.strip?.title}, ${board.strip?.by}`}>
+                      <AuthorAvatar author={board.strip.author} />
+                      <span class="strip-tag-text">{board.strip.kind}</span>
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </li>
+        )
+      }
+    </ol>
+
+    {
+      board.events.length > 0 && (
+        <ol class="events">
+          {board.events.map((event) => (
+            <li
+              class:list={['event', event.kind]}
+              data-event
+              data-stage={event.stage}
+              data-status={event.status}
+              data-revise={event.revise ? JSON.stringify(event.revise) : undefined}
+            >
+              <AuthorAvatar author={event.author} />
+              <span class="event-text">
+                {event.text}
+                {event.options && (
+                  <span class="options">
+                    {event.options.map((option) => (
+                      <span>{option}</span>
+                    ))}
+                  </span>
+                )}
+              </span>
+            </li>
+          ))}
+        </ol>
+      )
+    }
+
+    <p class="status">
+      <Icon name="check" />
+      <span data-status-text data-start={board.status}>{finalStatus}</span>
+    </p>
+  </div>
+</article>
+
+<style>
+  .board {
+    --row: 40px;
+    grid-area: 1 / 1;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    background: var(--paper);
+    color: var(--ink);
+    --on: var(--ink);
+    --on-soft: var(--ink-soft);
+    box-shadow: 0 0 0 2px var(--ink);
+    --depth: min(var(--pos), 2);
+    transform: translateY(calc(var(--depth) * -32px)) scale(calc(1 - var(--depth) * 0.03));
+    transform-origin: 50% 0;
+    z-index: calc(10 - var(--pos));
+    transition:
+      transform 0.8s var(--ease),
+      opacity 0.6s var(--ease);
+  }
+  /* Only the next two days show behind the front sheet; later days wait out of sight and fade in
+     as they slide up into the pile. */
+  /* A sheet leaving the visible pile fades first and only then moves, so it never shows past the
+     front sheet; a sheet joining it moves in place and fades in. */
+  .board[data-far] {
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity 0.28s ease,
+      transform 0s linear 0.3s;
+  }
+  .tab {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    height: 44px;
+    padding: 6px 14px 0;
+    border-bottom: var(--rule) solid var(--ink);
+  }
+  h3 {
+    font-weight: 850;
+    font-stretch: 64%;
+    word-spacing: var(--caps-space);
+    font-size: 1.45rem;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+  h3 span {
+    color: var(--ink-soft);
+  }
+  .place {
+    margin-right: auto;
+    font-size: 12px;
+    font-weight: 700;
+    font-stretch: 84%;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .tab-state {
+    margin-left: auto;
+    font-size: 11.5px;
+    font-weight: 800;
+    font-stretch: 84%;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* Behind the front sheet only the tab reads; the body eases in as a sheet comes to the top. */
+  .sheet-body {
+    display: flex;
+    flex-direction: column;
+    padding: 0 14px 12px;
+    transition: opacity 0.5s var(--ease);
+  }
+  .board:not([data-front]) .sheet-body {
+    opacity: 0;
+  }
+
+  .rows {
+    position: relative;
+    margin-top: 10px;
+  }
+  .rows > li:not(.strip),
+  .adds li {
+    display: grid;
+    grid-template-columns: 3.4em minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    height: var(--row);
+    border-bottom: 1.5px solid var(--ink-line);
+    font-size: 14.5px;
+    font-weight: 550;
+  }
+  .rows .time {
+    font-size: 15px;
+    font-weight: 800;
+    color: inherit;
+  }
+  .title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .issue .title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: underline dashed 1.5px;
+    text-underline-offset: 4px;
+  }
+  .issue :global(svg) {
+    width: 15px;
+    height: 15px;
+    flex: none;
+    stroke-width: 2.4;
+    color: var(--bill-text);
+  }
+
+  /* The idea strip, pasted exactly over the rows it replaces. */
+  .paste {
+    position: absolute;
+    top: calc(var(--start) * var(--row));
+    left: -10px;
+    right: -10px;
+    padding: 0 12px;
+    transform-origin: 70% 30%;
+    /* The strip turns opaque fast, so the rows it covers never read through it. */
+    transition:
+      opacity 0.16s ease,
+      transform 0.7s var(--ease),
+      box-shadow 0.7s var(--ease),
+      outline-color 0.4s ease;
+  }
+  /* The strip names its kind and author inside its first row, so nothing hangs off it. */
+  .adds li:first-child {
+    grid-template-columns: 3.4em minmax(0, 1fr) auto;
+  }
+  .strip-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 800;
+    font-stretch: 84%;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .strip-tag :global(.avatar),
+  .event :global(.avatar) {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+  }
+  .strip-tag :global(.avatar svg),
+  .event :global(.avatar svg) {
+    width: 12px;
+    height: 12px;
+  }
+  .adds li {
+    border-bottom-color: color-mix(in srgb, var(--strip-ink) 22%, var(--strip));
+  }
+  .adds li:last-child {
+    border-bottom: 0;
+  }
+
+  /* What happened on the day: plain lines, chat slips, and an agent's research. */
+  .events {
+    display: grid;
+    gap: 6px;
+    margin-block: 12px 10px;
+    font-size: 13px;
+    line-height: 1.3;
+  }
+  .event {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    transition:
+      opacity 0.5s var(--ease),
+      transform 0.5s var(--ease);
+  }
+  .event-text {
+    min-width: 0;
+  }
+  .comment .event-text {
+    padding: 2px 8px;
+    border: 1.5px solid var(--ink);
+    font-weight: 600;
+  }
+  .research .event-text {
+    display: grid;
+    gap: 4px;
+  }
+  .options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .options span {
+    padding: 1px 6px;
+    background: var(--agent);
+    color: var(--agent-ink);
+    font-size: 11.5px;
+    font-weight: 700;
+  }
+  .event:global(.pending) {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  /* Room for a two-line status, so a status that wraps never resizes the pile. */
+  .status {
+    display: flex;
+    align-items: center;
+    min-height: calc(2 * 1.3em + 9px + var(--rule));
+    line-height: 1.3;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 9px;
+    border-top: var(--rule) solid var(--ink);
+    font-weight: 750;
+    font-size: 13px;
+  }
+  .status :global(svg) {
+    width: 15px;
+    height: 15px;
+    flex: none;
+    stroke-width: 2.6;
+    color: var(--done);
+    transition:
+      opacity 0.4s var(--ease),
+      width 0.4s var(--ease),
+      margin 0.4s var(--ease);
+  }
+  .board:not([data-stage='applied']) .status :global(svg) {
+    opacity: 0;
+    width: 0;
+    margin-right: -8px;
+  }
+
+  /* Strip stages: hidden, lifted, tilted back while changes are asked for, flush once applied. */
+  .board[data-stage='plan'] .paste {
+    opacity: 0;
+    transform: translateY(-6px);
+    box-shadow: none;
+  }
+  .board .paste {
+    transform: rotate(-0.8deg) translateY(-3px);
+  }
+  .board[data-stage='changes'] .paste {
+    transform: rotate(0.8deg) translateY(-3px);
+  }
+  .board[data-stage='applied'] .paste {
+    outline-color: transparent;
+    box-shadow: none;
+    transform: none;
+  }
+
+  @media (max-width: 480px) {
+    .rows > li:not(.strip),
+    .adds li {
+      font-size: 13.5px;
+    }
+    .place,
+    .strip-tag-text {
+      display: none;
+    }
+  }
+</style>

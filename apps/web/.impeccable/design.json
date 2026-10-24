@@ -1,0 +1,61 @@
+{
+  "name": "Groam",
+  "description": "A calm shared workspace where people and agents turn trip ideas into agreed plans.",
+  "colors": {
+    "primary": "#285542",
+    "primary-hover": "#1f4435",
+    "background": "#ffffff",
+    "canvas": "#f7f8f7",
+    "foreground": "#181b19",
+    "card": "#ffffff",
+    "muted": "#f1f3f1",
+    "muted-foreground": "#5d635f",
+    "accent": "#e9eeeb",
+    "border": "#e1e5e2",
+    "input": "#d9dedb",
+    "ring": "#285542",
+    "destructive": "#ef4444",
+    "success": "#10b981",
+    "warning": "#f59e0b",
+    "info": "#3b82f6"
+  },
+  "typography": {
+    "display": {
+      "fontFamily": "Google Sans Flex Variable, ui-sans-serif, system-ui, sans-serif",
+      "fontWeight": 600
+    },
+    "body": {
+      "fontFamily": "Google Sans Flex Variable, ui-sans-serif, system-ui, sans-serif",
+      "fontWeight": 400
+    },
+    "label": {
+      "fontFamily": "Google Sans Flex Variable, ui-sans-serif, system-ui, sans-serif",
+      "fontWeight": 500
+    },
+    "mono": { "fontFamily": "Google Sans Code, ui-monospace, SFMono-Regular, monospace" }
+  },
+  "rounded": { "default": "0.5rem", "button": "0.5rem", "badge": "0.375rem" },
+  "spacing": { "base": "0.25rem" },
+  "components": {
+    "button-primary": {
+      "backgroundColor": "{colors.primary}",
+      "textColor": "#ffffff",
+      "rounded": "{rounded.button}",
+      "height": "2rem",
+      "padding": "0 0.75rem"
+    },
+    "button-secondary": {
+      "backgroundColor": "{colors.muted}",
+      "textColor": "#242825",
+      "rounded": "{rounded.button}",
+      "height": "2rem",
+      "padding": "0 0.75rem"
+    },
+    "card": {
+      "backgroundColor": "{colors.card}",
+      "textColor": "{colors.foreground}",
+      "rounded": "{rounded.default}",
+      "padding": "1rem"
+    }
+  }
+}

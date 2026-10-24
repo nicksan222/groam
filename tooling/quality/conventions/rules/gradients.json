@@ -1,0 +1,29 @@
+{
+  "$schema": "../rule.schema.json",
+  "harness": "pattern",
+  "message": "Use flat semantic colors instead of gradients",
+  "include": ["**/*.css", "**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}", "**/*.astro"],
+  "exclude": [
+    "apps/landing/src/styles/tokens.css",
+    "packages/ui/src/styles/globals.css",
+    "packages/ui/src/styles/tokens.css",
+    "apps/web/void.config.ts"
+  ],
+  "pattern": "(?:linear|radial|conic)-gradient\\s*\\(|\\bbg-(?:gradient|linear|radial|conic)-",
+  "ignoreCase": true,
+  "ignoreComments": true,
+  "examples": [
+    {
+      "files": {
+        "packages/ui/src/styles/globals.css": "  background-image: linear-gradient(90deg, transparent, currentColor);"
+      },
+      "reports": []
+    },
+    {
+      "files": {
+        "apps/web/src/app.tsx": "const a = 1;\nclassName=\"bg-gradient-to-r\""
+      },
+      "reports": ["apps/web/src/app.tsx:2"]
+    }
+  ]
+}

@@ -1,0 +1,612 @@
+---
+import Icon from '@groam/icons/astro';
+import { caption, proposal, screens, steps, trip } from '@/content/feature-ai';
+
+const [first] = screens;
+const firstQa = first?.qas[0];
+if (!first || !firstQa) throw new Error('feature-ai content is empty');
+---
+
+<figure class="demo" data-ai-demo>
+  <div class="surface workspace" role="group" aria-label="Example workspace with the assistant docked on the right">
+    <header class="bar">
+      <b>{trip}</b>
+      <span class="example-label">Example trip</span>
+      <button class="loop-toggle pause" type="button" data-toggle hidden aria-pressed="false">
+        <Icon name="pause" class="i-pause" />
+        <Icon name="play" class="i-play" />
+        <span class="visually-hidden">Pause the demo</span>
+      </button>
+    </header>
+
+    <div class="body">
+      <div class="nav" role="tablist" aria-label="Screen in view" aria-orientation="vertical">
+        {
+          screens.map((screen, n) => (
+            <button
+              class="tab"
+              type="button"
+              role="tab"
+              id={`ai-tab-${screen.id}`}
+              aria-controls={`ai-panel-${screen.id}`}
+              aria-selected={n === 0}
+              tabindex={n === 0 ? 0 : -1}
+              data-screen={screen.id}
+              data-context={screen.context}
+            >
+              {screen.label}
+            </button>
+          ))
+        }
+      </div>
+
+      <div class="main">
+        {
+          screens.map((screen, n) => (
+            <div
+              class="panel"
+              role="tabpanel"
+              id={`ai-panel-${screen.id}`}
+              aria-labelledby={`ai-tab-${screen.id}`}
+              data-panel={screen.id}
+              data-off={n !== 0 ? '' : undefined}
+            >
+              <ul class="rows" aria-label={screen.label}>
+                {screen.rows.map((row) => (
+                  <li class:list={['row', screen.id === 'ideas' && 'lead', n === 0 && firstQa.highlight.includes(row.id) && 'hl']} data-row={row.id} data-copy-label="Cited">
+                    {screen.id === 'ideas' && <span class="chip chip-idea">Idea</span>}
+                    {row.time && <span class="time">{row.time}</span>}
+                    <span class="label">{row.label}</span>
+                    {row.note && <span class="fine">{row.note}</span>}
+                  </li>
+                ))}
+                {screen.id === 'itinerary' && (
+                  <li class="row proposal strip" data-proposal-row>
+                    <span class="chip chip-idea">{proposal.label}</span>
+                    <span class="label">{proposal.title} <span class="by">{proposal.by}</span></span>
+                  </li>
+                )}
+              </ul>
+            </div>
+          ))
+        }
+      </div>
+
+      <aside class="dock" aria-label="Assistant">
+        <div class="dock-head">
+          <span class="avatar avatar-agent"><Icon name="agent" /></span>
+          <b>Assistant</b>
+          <span class="fine">Private to you</span>
+        </div>
+        <p class="chip chip-agent context" aria-live="off">
+          <span class="fine-label">Looking at</span>
+          <span data-context-text>{first.context}</span>
+        </p>
+        <div class="thread-wrap">
+        <div class="thread">
+          <p class="step">{steps.ask}</p>
+          <p class="line me" data-question>{firstQa.question}</p>
+          <p class="step">{steps.answer}</p>
+          <div class="line bot" data-reply>
+            <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span data-answer>{firstQa.answer}</span>
+          </div>
+        </div>
+        {
+          screens.flatMap((screen) =>
+            screen.qas.map((qa) => (
+              <div class="thread sizer" aria-hidden="true">
+                <p class="step">{steps.ask}</p>
+                <p class="line me">{qa.question}</p>
+                <p class="step">{steps.answer}</p>
+                <div class="line bot">{qa.answer}</div>
+              </div>
+            ))
+          )
+        }
+        </div>
+        <p class="visually-hidden" role="status" data-status>{firstQa.question} {firstQa.answer}</p>
+        <div class="chips" role="group" aria-label="Suggested questions">
+          {
+            screens.map((screen, n) => (
+              <div class="chip-set" data-chip-set={screen.id} data-off={n !== 0 ? '' : undefined}>
+                {screen.qas.map((qa, i) => (
+                  <button
+                    class="ask"
+                    type="button"
+                    aria-pressed={n === 0 && i === 0}
+                    data-qa={`${screen.id}:${i}`}
+                    data-question={qa.question}
+                    data-answer={qa.answer}
+                    data-highlight={qa.highlight.join(',')}
+                    data-proposal={qa.proposal ? 'true' : undefined}
+                  >
+                    {qa.question}
+                  </button>
+                ))}
+              </div>
+            ))
+          }
+        </div>
+      </aside>
+    </div>
+  </div>
+  <figcaption class="fine">{caption}</figcaption>
+</figure>
+
+<script>
+  import { playAiDemo } from '@/scripts/feature-ai-demo';
+
+  for (const demo of document.querySelectorAll<HTMLElement>('[data-ai-demo]')) playAiDemo(demo);
+</script>
+
+<style>
+  .demo {
+    margin: 0;
+    display: grid;
+    gap: 12px;
+    margin-inline: auto;
+  }
+  .workspace {
+    overflow: hidden;
+  }
+  .bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 12px 16px;
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .bar b {
+    font-weight: 850;
+    font-stretch: 64%;
+    word-spacing: var(--caps-space);
+    font-size: 1.35rem;
+    text-transform: uppercase;
+  }
+  .bar .example-label {
+    margin-left: auto;
+  }
+  .pause[hidden] {
+    display: none;
+  }
+  .pause:hover {
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .pause :global(.i-play),
+  .paused .pause :global(.i-pause) {
+    display: none;
+  }
+  .paused .pause :global(.i-play) {
+    display: block;
+  }
+  .body {
+    display: grid;
+    grid-template-columns: 170px minmax(0, 1fr) minmax(300px, 380px);
+  }
+  .nav {
+    display: grid;
+    align-content: start;
+    gap: 0;
+    padding: 18px 0 18px 16px;
+    border-right: var(--rule) solid var(--ink);
+  }
+  .tab {
+    min-height: 48px;
+    padding: 0 14px;
+    border: 2px solid var(--ink);
+    border-right: 0;
+    margin-bottom: -2px;
+    background: var(--paper);
+    color: var(--ink);
+    font: 850 16px/1 var(--font-sans);
+    font-stretch: 78%;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+  .tab:hover {
+    background: var(--strip);
+    color: var(--strip-ink);
+  }
+  .tab[aria-selected='true'] {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .main {
+    display: grid;
+    padding: 18px 20px;
+    min-width: 0;
+  }
+  .panel {
+    grid-area: 1 / 1;
+    min-width: 0;
+    transition:
+      opacity 0.4s var(--ease) 0.16s,
+      visibility 0s;
+  }
+  .panel[data-off],
+  .chip-set[data-off] {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity 0.16s var(--ease),
+      visibility 0s 0.16s;
+  }
+  .rows {
+    display: grid;
+    padding-bottom: 36px;
+  }
+  .row {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    min-height: 72px;
+    padding: 10px 92px 10px 12px;
+    border-bottom: 1.5px solid var(--ink-line);
+    transition:
+      background-color 0.45s var(--ease),
+      border-color 0.45s var(--ease),
+      color 0.45s var(--ease);
+  }
+  .row:not(:has(.time)):not(.lead):not(.proposal) {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .row.lead {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+  .row .chip {
+    justify-self: start;
+  }
+  .row .fine {
+    color: inherit;
+  }
+  .row .time {
+    font-size: 16px;
+    color: var(--ink);
+  }
+  .label {
+    font-weight: 850;
+    font-stretch: 68%;
+    word-spacing: var(--caps-space);
+    font-size: clamp(1.4rem, 2.6vw, 1.9rem);
+    line-height: 1;
+    text-transform: uppercase;
+  }
+  .row.hl {
+    background: var(--agent);
+    color: var(--agent-ink);
+    border-bottom-color: var(--agent-ink);
+  }
+  .row.hl .time {
+    color: var(--agent-ink);
+  }
+  .row::after {
+    content: attr(data-copy-label) / '';
+    opacity: 0;
+    transition: opacity 0.4s var(--ease);
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    translate: 0 -50%;
+    padding: 3px 8px;
+    border: 1.5px solid var(--agent-ink);
+    font-size: 12px;
+    font-weight: 800;
+    font-stretch: 80%;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .row.hl::after {
+    opacity: 1;
+  }
+  .row.proposal {
+    grid-template-columns: auto minmax(0, 1fr);
+    margin: 14px 4px 0;
+    padding: 14px;
+    border-bottom: 0;
+    opacity: 0;
+    transform: translateY(-14px);
+    box-shadow: none;
+    outline-color: transparent;
+    transition:
+      opacity 0.5s var(--ease),
+      transform 0.7s var(--ease),
+      box-shadow 0.7s var(--ease);
+  }
+  .proposal.show {
+    opacity: 1;
+    transform: rotate(-1deg);
+    box-shadow: var(--lift);
+    outline-color: color-mix(in srgb, var(--strip-ink) 45%, transparent);
+  }
+  .rows .row.proposal {
+    grid-template-columns: auto minmax(0, 1fr);
+    padding-right: 14px;
+  }
+  .proposal .chip {
+    justify-self: start;
+    background: var(--strip-ink);
+    border-color: var(--strip-ink);
+    color: var(--strip);
+  }
+  .proposal .label {
+    font-size: 1.5rem;
+  }
+  .by {
+    font-size: 14px;
+    font-weight: 600;
+    font-stretch: 100%;
+    text-transform: none;
+  }
+  .dock {
+    --focus: var(--agent-ink);
+    display: grid;
+    align-content: start;
+    gap: 14px;
+    padding: 18px;
+    border-left: var(--rule) solid var(--ink);
+    background: var(--agent);
+    color: var(--agent-ink);
+    min-width: 0;
+  }
+  .dock-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .dock-head b {
+    font-weight: 850;
+    font-stretch: 64%;
+    word-spacing: var(--caps-space);
+    font-size: 1.5rem;
+    text-transform: uppercase;
+  }
+  .dock-head .fine {
+    margin-left: auto;
+    color: var(--agent-ink);
+  }
+  .dock .avatar-agent {
+    background: var(--agent-ink);
+    color: var(--agent);
+    box-shadow: none;
+  }
+  .context {
+    min-width: min(100%, 19.5rem);
+    justify-self: start;
+    gap: 8px;
+    margin: 0;
+    background: transparent;
+    border-color: var(--agent-ink);
+    color: var(--agent-ink);
+  }
+  .fine-label {
+    opacity: 0.8;
+  }
+  .thread-wrap {
+    display: grid;
+  }
+  .thread {
+    grid-area: 1 / 1;
+    display: grid;
+    gap: 6px;
+    align-content: start;
+  }
+  .sizer {
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .step {
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 2px solid var(--agent-ink);
+    font-size: 12px;
+    font-weight: 800;
+    font-stretch: 82%;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .line {
+    font-size: 15.5px;
+    line-height: 1.45;
+    min-height: 2.4em;
+  }
+  .me {
+    font-weight: 850;
+    font-stretch: 70%;
+    word-spacing: var(--caps-space);
+    font-size: 1.4rem;
+    line-height: 1.05;
+    text-transform: uppercase;
+  }
+  .bot {
+    position: relative;
+    font-weight: 600;
+  }
+  [data-answer] :global(.caret),
+  [data-question] :global(.caret) {
+    position: relative;
+    display: inline-block;
+    width: 0;
+    height: 1em;
+    vertical-align: -0.15em;
+  }
+  [data-answer] :global(.caret)::after,
+  [data-question] :global(.caret)::after {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 0;
+    width: 3px;
+    height: 100%;
+    background: currentColor;
+    animation: blink 0.9s steps(1) infinite;
+  }
+  .thinking :global(.caret) {
+    visibility: hidden;
+  }
+  :global(.paused) :global(.caret)::after {
+    animation: none;
+  }
+  :global(.rest) {
+    visibility: hidden;
+  }
+  .thinking [data-answer] {
+    visibility: hidden;
+  }
+  .dots {
+    position: absolute;
+    display: inline-flex;
+    gap: 4px;
+    padding-block: 6px;
+    opacity: 0;
+    transition: opacity 0.35s var(--ease);
+  }
+  .thinking .dots {
+    opacity: 1;
+  }
+  /* The dots only bounce while the agent is thinking and the demo is playing. */
+  .thinking .dots i {
+    animation-play-state: running;
+  }
+  :global(.paused) .thinking .dots i {
+    animation-play-state: paused;
+  }
+  .dots i {
+    width: 8px;
+    height: 8px;
+    background: var(--agent-ink);
+    animation: dot 1s var(--ease) infinite;
+    animation-play-state: paused;
+  }
+  .dots i:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+  .dots i:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+  .chips {
+    display: grid;
+  }
+  .chip-set {
+    grid-area: 1 / 1;
+    display: grid;
+    gap: 8px;
+    align-content: start;
+    transition:
+      opacity 0.4s var(--ease) 0.16s,
+      visibility 0s;
+  }
+  .ask {
+    min-height: 40px;
+    padding: 8px 12px;
+    border: 2px solid var(--agent-ink);
+    background: transparent;
+    color: var(--agent-ink);
+    font: 700 14px/1.25 var(--font-sans);
+    text-align: left;
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+  .ask:hover,
+  .ask[aria-pressed='true'] {
+    background: var(--agent-ink);
+    color: var(--agent);
+  }
+  @keyframes blink {
+    50% {
+      opacity: 0;
+    }
+  }
+  @keyframes dot {
+    0%,
+    100% {
+      opacity: 0.35;
+    }
+    40% {
+      opacity: 1;
+    }
+  }
+  @media (max-width: 480px) {
+    .rows .row,
+    .rows .row.lead {
+      grid-template-columns: auto minmax(0, 1fr);
+      padding: 10px 12px 44px;
+      gap: 6px 12px;
+    }
+    .rows .row:not(:has(.time)):not(.lead):not(.proposal) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .row .fine {
+      grid-column: 2;
+    }
+    .rows .row.proposal {
+      padding: 14px;
+    }
+    .row::after {
+      right: 12px;
+      top: auto;
+      bottom: 10px;
+      translate: none;
+    }
+  }
+  @media (max-width: 960px) {
+    .body {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .nav {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      padding: 14px 16px 0;
+      border-right: 0;
+      border-bottom: var(--rule) solid var(--ink);
+    }
+    .tab {
+      min-width: 0;
+      margin: 0 -2px -2px 0;
+      border: 2px solid var(--ink);
+      text-align: center;
+      padding: 0 6px;
+    }
+    .dock {
+      border-left: 0;
+      border-top: var(--rule) solid var(--ink);
+    }
+  }
+  @media (max-width: 560px) {
+    .nav {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .tab {
+      min-height: 44px;
+      font-size: 14px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :global(.caret)::after,
+    .dots i {
+      animation: none;
+    }
+    .row,
+    .row::after,
+    .panel,
+    .panel[data-off],
+    .chip-set,
+    .chip-set[data-off],
+    .dots,
+    .proposal {
+      transition: none;
+    }
+  }
+</style>

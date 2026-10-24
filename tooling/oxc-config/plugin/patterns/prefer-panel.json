@@ -1,0 +1,51 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "node-text",
+  "nodes": ["JSXOpeningElement"],
+  "pattern": "<(?:section|div)\\s(?=.*(?<![\\w:\\[/-])rounded-lg(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])border(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])border-border(?![\\w./\\[-]))(?=.*(?<![\\w:\\[/-])overflow-hidden(?![\\w./\\[-])).*",
+  "message": "A clipped, bordered rounded-lg frame is Panel (@groam/ui/components/panel); add bg-card or padding through className, and as=\"section\" with an aria-label for a named region.",
+  "files": ["**/apps/web/src/features/**/*.tsx", "**/packages/ai/src/ui/**/*.tsx"],
+  "excludeFiles": ["**/*.test.tsx"],
+  "examples": [
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <section className=\"overflow-hidden rounded-lg border border-border\">x</section>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <div className=\"overflow-hidden rounded-lg border border-border bg-card\">x</div>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <section className=\"min-w-0 overflow-hidden rounded-lg border border-border bg-card\">x</section>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <section className=\"rounded-lg border border-border bg-card px-4\">x</section>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <section className=\"overflow-hidden rounded-xl border border-border\">x</section>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <section className=\"overflow-hidden rounded-lg border border-dashed\">x</section>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <section className=\"overflow-hidden rounded-lg border border-border/70\">x</section>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "import { Panel } from \"@groam/ui/components/panel\";\nexport const v = <Panel className=\"bg-card\">x</Panel>;",
+      "reports": false
+    }
+  ]
+}

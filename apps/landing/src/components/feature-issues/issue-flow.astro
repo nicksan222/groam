@@ -1,0 +1,166 @@
+---
+import Icon from '@groam/icons/astro';
+import PageSection from '@/components/page-section.astro';
+import { flowCopy } from '@/content/feature-issues';
+import { tripIssues } from '@/content/example-trip';
+---
+
+<PageSection layout="split" tone="bill" class="flow" aria-labelledby="flow-title" data-issue-flow>
+    <div class="intro">
+      <h2 id="flow-title" class="section-title">{flowCopy.title}</h2>
+      <p class="section-lede">{flowCopy.lede}</p>
+      <button class="btn btn-outline" type="button" data-reset>{flowCopy.reset}</button>
+    </div>
+    <div class="cols">
+      <div class="col" role="group" aria-label="Open issues">
+        <h3>Open</h3>
+        <div class="stack" data-col="open">
+          {
+            tripIssues.map((issue) => (
+              <article class="card surface" data-card data-state="open" data-copy-label="Closed">
+                <p class="title">{issue.title}</p>
+                <p class="idea strip">
+                  <span class="chip chip-idea">Idea linked</span>
+                  <span>{issue.fix}</span>
+                </p>
+                <button class="btn btn-primary" type="button" data-apply-card>
+                  <Icon name="check" />
+                  {flowCopy.apply}
+                  <span class="visually-hidden">: {issue.title}</span>
+                </button>
+              </article>
+            ))
+          }
+        </div>
+      </div>
+      <div class="col closed" role="group" aria-label="Closed issues">
+        <h3>Closed</h3>
+        <div class="stack" data-col="closed" data-empty="Closed issues land here"></div>
+      </div>
+    </div>
+</PageSection>
+
+<script>
+  import { playIssueFlow } from '@/scripts/feature-issues-flow';
+
+  for (const flow of document.querySelectorAll<HTMLElement>('[data-issue-flow]')) playIssueFlow(flow);
+</script>
+
+<style>
+  .intro .btn {
+    margin-top: 28px;
+  }
+  .btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .btn :global(svg) {
+    width: 15px;
+    height: 15px;
+  }
+  .cols {
+    display: grid;
+    gap: 24px;
+  }
+  @media (min-width: 640px) {
+    .cols {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .col h3 {
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+    border-bottom: var(--rule) solid var(--bill-ink);
+    font-weight: 850;
+    font-stretch: 64%;
+    word-spacing: var(--caps-space);
+    font-size: 2rem;
+    text-transform: uppercase;
+  }
+  .stack {
+    display: grid;
+    gap: 16px;
+    align-content: start;
+    min-height: 110px;
+  }
+  .stack:empty::after {
+    content: attr(data-empty);
+    display: grid;
+    place-items: center;
+    min-height: 110px;
+    border: 2px dashed var(--bill-line);
+    color: var(--bill-soft);
+    font-weight: 650;
+  }
+  .card {
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+    justify-items: start;
+  }
+  .card .title {
+    font-weight: 850;
+    font-stretch: 66%;
+    word-spacing: var(--caps-space);
+    font-size: 1.7rem;
+    line-height: 0.98;
+    text-transform: uppercase;
+    text-decoration: line-through 0.12em transparent;
+    transition: text-decoration-color 0.5s var(--ease);
+  }
+  .idea {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    padding: 8px 12px;
+    font-size: 14.5px;
+    font-weight: 600;
+  }
+  .idea :global(.chip) {
+    background: var(--strip-ink);
+    border-color: var(--strip-ink);
+    color: var(--strip);
+  }
+  .card[data-state='closed'] .title {
+    text-decoration-color: var(--ink);
+    color: var(--ink-soft);
+  }
+  .card[data-state='closed'] .idea {
+    outline-color: transparent;
+    box-shadow: none;
+    transform: none;
+  }
+  .card[data-state='closed']::after {
+    content: attr(data-copy-label);
+    padding: 4px 10px 3px;
+    border: 3px solid var(--done);
+    color: var(--done);
+    font-weight: 850;
+    font-stretch: 70%;
+    word-spacing: var(--caps-space);
+    font-size: 1.1rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transform: rotate(-3deg);
+    animation: close-stamp 0.48s var(--ease) both;
+  }
+  .card [hidden] {
+    display: none;
+  }
+  @keyframes close-stamp {
+    from {
+      opacity: 0;
+      transform: translateY(-5px) rotate(-3deg);
+    }
+    to {
+      opacity: 1;
+      transform: rotate(-3deg);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .card[data-state='closed']::after {
+      animation: none;
+    }
+  }
+</style>

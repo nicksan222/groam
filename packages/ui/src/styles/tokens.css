@@ -1,0 +1,378 @@
+/* ========== Light Mode Variables ========== */
+
+:root {
+  color-scheme: light;
+  --background: #fdfdfd;
+  --canvas: #f4f4f6;
+  --foreground: #32343b;
+  --card: #fafafa;
+  --card-foreground: #32343b;
+  --popover: #f8f8fa;
+  --popover-foreground: #32343b;
+  --primary: #496b9b;
+  --primary-hover: #3c5b86;
+  --primary-foreground: #ffffff;
+  --secondary: color-mix(in srgb, var(--muted) 40%, var(--background));
+  --secondary-hover: color-mix(in srgb, var(--muted) 70%, var(--background));
+  --secondary-foreground: #32343b;
+  --muted: #efeff2;
+  --muted-foreground: #636671;
+  --accent: #e9eaee;
+  --accent-foreground: #32343b;
+  --destructive: #a14c5e;
+  --destructive-foreground: #ffffff;
+  --info: #496b9b;
+  --info-foreground: #496b9b;
+  --success: #416e61;
+  --success-foreground: #416e61;
+  --warning: #875f2e;
+  --warning-foreground: #875f2e;
+  --border: #e1e2e6;
+  --lift-card-border-hover: color-mix(in oklch, var(--foreground) 22%, var(--border));
+  --input: #cccfd5;
+  --ring: #496b9b;
+  --scrim: #24242440;
+  --chart-1: #496b9b;
+  --chart-2: #416e61;
+  --chart-3: #875f2e;
+  --chart-4: #81659b;
+  --chart-5: #a14c5e;
+  --sidebar: #efeff2;
+  --sidebar-foreground: #636671;
+  --sidebar-primary: #496b9b;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #dcdde3;
+  --sidebar-accent-foreground: #32343b;
+  --sidebar-border: #e1e2e6;
+  --sidebar-ring: #496b9b;
+  --code: #f8f8fa;
+  --code-foreground: #32343b;
+  --code-highlight: #efeff2;
+  /* What a plan is, on the Plan cards: the palette's own roles (info, success, warning, chart-4). */
+  --plan-activity: var(--info);
+  --plan-place: var(--success);
+  --plan-travel: var(--warning);
+  --plan-stay: var(--chart-4);
+  /* Restrained auth accents in the Graphite color family. */
+  --auth-aurora-1: #496b9b;
+  --auth-aurora-2: #8c76ab;
+  --auth-aurora-3: #87aeb8;
+  /* Desaturated auxiliary hues for light-mode identities. */
+  --catppuccin-rosewater: oklch(0.71 0.07 33);
+  --catppuccin-flamingo: oklch(0.69 0.091 21);
+  --catppuccin-pink: oklch(0.73 0.119 338);
+  --catppuccin-mauve: oklch(0.55 0.175 297);
+  --catppuccin-red: oklch(0.55 0.154 20);
+  --catppuccin-maroon: oklch(0.63 0.14 20);
+  --catppuccin-peach: oklch(0.69 0.14 42);
+  --catppuccin-yellow: oklch(0.71 0.105 68);
+  --catppuccin-green: oklch(0.63 0.126 140);
+  --catppuccin-teal: oklch(0.6 0.07 201);
+  --catppuccin-sky: oklch(0.68 0.098 235);
+  --catppuccin-sapphire: oklch(0.65 0.077 213);
+  --catppuccin-blue: oklch(0.56 0.161 262);
+  --catppuccin-lavender: oklch(0.66 0.126 273);
+  --catppuccin-text: oklch(0.44 0.028 279);
+  --catppuccin-base: oklch(0.96 0.007 265);
+  --catppuccin-crust: oklch(0.91 0.007 265);
+  --avatar-rosewater: color-mix(in srgb, var(--catppuccin-rosewater) 12%, var(--catppuccin-base));
+  --avatar-rosewater-foreground: #7f1d1d;
+  --avatar-flamingo: color-mix(in srgb, var(--catppuccin-flamingo) 12%, var(--catppuccin-base));
+  --avatar-flamingo-foreground: #7f1d1d;
+  --avatar-pink: color-mix(in srgb, var(--catppuccin-pink) 12%, var(--catppuccin-base));
+  --avatar-pink-foreground: #881337;
+  --avatar-mauve: color-mix(in srgb, var(--catppuccin-mauve) 12%, var(--catppuccin-base));
+  --avatar-mauve-foreground: #4c1d95;
+  --avatar-red: color-mix(in srgb, var(--catppuccin-red) 12%, var(--catppuccin-base));
+  --avatar-red-foreground: #7f1d1d;
+  --avatar-maroon: color-mix(in srgb, var(--catppuccin-maroon) 12%, var(--catppuccin-base));
+  --avatar-maroon-foreground: #881337;
+  --avatar-peach: color-mix(in srgb, var(--catppuccin-peach) 12%, var(--catppuccin-base));
+  --avatar-peach-foreground: #7c2d12;
+  --avatar-yellow: color-mix(in srgb, var(--catppuccin-yellow) 12%, var(--catppuccin-base));
+  --avatar-yellow-foreground: #78350f;
+  --avatar-green: color-mix(in srgb, var(--catppuccin-green) 12%, var(--catppuccin-base));
+  --avatar-green-foreground: #064e3b;
+  --avatar-teal: color-mix(in srgb, var(--catppuccin-teal) 12%, var(--catppuccin-base));
+  --avatar-teal-foreground: #134e4a;
+  --avatar-sky: color-mix(in srgb, var(--catppuccin-sky) 12%, var(--catppuccin-base));
+  --avatar-sky-foreground: #164e63;
+  --avatar-sapphire: color-mix(in srgb, var(--catppuccin-sapphire) 12%, var(--catppuccin-base));
+  --avatar-sapphire-foreground: #164e63;
+  --avatar-blue: color-mix(in srgb, var(--catppuccin-blue) 12%, var(--catppuccin-base));
+  --avatar-blue-foreground: #1e3a8a;
+  --avatar-lavender: color-mix(in srgb, var(--catppuccin-lavender) 12%, var(--catppuccin-base));
+  --avatar-lavender-foreground: #312e81;
+  --font-heading: 'Google Sans Flex Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-sans:
+    'Google Sans Flex Variable', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-serif: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+  --font-mono:
+    'Google Sans Code', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  --radius: 0.5rem;
+  --shadow-2xs: 0px 1px 2px 0px hsl(0 0% 0% / 0.04);
+  --shadow-xs: 0px 1px 2px 0px hsl(0 0% 0% / 0.05);
+  --shadow-sm: 0px 1px 3px 0px hsl(0 0% 0% / 0.08), 0px 1px 2px -1px hsl(0 0% 0% / 0.08);
+  --shadow: 0px 1px 3px 0px hsl(0 0% 0% / 0.1), 0px 1px 2px -1px hsl(0 0% 0% / 0.1);
+  --shadow-md: 0px 2px 4px -1px hsl(0 0% 0% / 0.1), 0px 4px 6px -1px hsl(0 0% 0% / 0.08);
+  --shadow-lg: 0px 4px 6px -1px hsl(0 0% 0% / 0.08), 0px 10px 15px -3px hsl(0 0% 0% / 0.06);
+  --shadow-xl: 0px 8px 10px -1px hsl(0 0% 0% / 0.08), 0px 20px 25px -5px hsl(0 0% 0% / 0.06);
+  --shadow-2xl: 0px 25px 50px -12px hsl(0 0% 0% / 0.2);
+  --shadow-card: 0 2px 8px rgb(0 0 0 / 4%);
+  --tracking-normal: -0.011em;
+  --spacing: 0.25rem;
+}
+
+/* ========== Dark Mode Variables ========== */
+
+.dark {
+  color-scheme: dark;
+  /* Quiet neutral surfaces; muted blue actions and distinct, softened status hues. */
+  --background: #191a20;
+  --canvas: #121318;
+  --foreground: #c5c7d0;
+  --card: #191a20;
+  --card-foreground: #c5c7d0;
+  --popover: #202127;
+  --popover-foreground: #c5c7d0;
+  --primary: #8b9fc4;
+  --primary-hover: #9baccb;
+  --primary-foreground: #15161b;
+  --secondary: color-mix(in srgb, var(--muted) 40%, var(--background));
+  --secondary-hover: color-mix(in srgb, var(--muted) 70%, var(--background));
+  --secondary-foreground: #c5c7d0;
+  --muted: #262831;
+  --muted-foreground: #a0a3af;
+  --accent: #2b303c;
+  --accent-foreground: #c5c7d0;
+  --destructive: #d58c98;
+  --destructive-foreground: #15161b;
+  --info: #8b9fc4;
+  --info-foreground: #8b9fc4;
+  --success: #8fbaad;
+  --success-foreground: #8fbaad;
+  --warning: #c7a17e;
+  --warning-foreground: #c7a17e;
+  --border: #30323b;
+  --lift-card-border-hover: color-mix(in oklch, var(--foreground) 22%, var(--border));
+  --input: #41444f;
+  --ring: #8b9fc4;
+  --scrim: #000000b8;
+  --chart-1: #8b9fc4;
+  --chart-2: #8fbaad;
+  --chart-3: #c7a17e;
+  --chart-4: #ada0c8;
+  --chart-5: #d58c98;
+  --sidebar: #15161b;
+  --sidebar-foreground: #a0a3af;
+  --sidebar-primary: #8b9fc4;
+  --sidebar-primary-foreground: #15161b;
+  --sidebar-accent: #24262e;
+  --sidebar-accent-foreground: #c5c7d0;
+  --sidebar-border: #25262e;
+  --sidebar-ring: #8b9fc4;
+  --code: #202127;
+  --code-foreground: #c5c7d0;
+  --code-highlight: #262831;
+  /* Chart-4 sits next to info in dark, so stays take the palette's mauve to read as violet. */
+  --plan-stay: var(--catppuccin-mauve);
+  /* Graphite auth surfaces with a muted slate-blue finish. */
+  --auth-aurora-1: #15161b;
+  --auth-aurora-2: #24262e;
+  --auth-aurora-3: #414f6b;
+  /* Desaturated auxiliary hues for dark-mode identities. */
+  --catppuccin-rosewater: oklch(0.92 0.014 30);
+  --catppuccin-flamingo: oklch(0.88 0.028 18);
+  --catppuccin-pink: oklch(0.87 0.056 336);
+  --catppuccin-mauve: oklch(0.79 0.084 305);
+  --catppuccin-red: oklch(0.76 0.091 3);
+  --catppuccin-maroon: oklch(0.78 0.063 9);
+  --catppuccin-peach: oklch(0.82 0.07 53);
+  --catppuccin-yellow: oklch(0.92 0.049 87);
+  --catppuccin-green: oklch(0.86 0.077 143);
+  --catppuccin-teal: oklch(0.86 0.056 183);
+  --catppuccin-sky: oklch(0.85 0.056 210);
+  --catppuccin-sapphire: oklch(0.79 0.07 229);
+  --catppuccin-blue: oklch(0.77 0.077 260);
+  --catppuccin-lavender: oklch(0.82 0.063 277);
+  --catppuccin-text: oklch(0.88 0.028 272);
+  --catppuccin-base: oklch(0.24 0.021 284);
+  --catppuccin-crust: oklch(0.18 0.014 284);
+  --avatar-rosewater: color-mix(in srgb, var(--catppuccin-rosewater) 28%, var(--catppuccin-crust));
+  --avatar-rosewater-foreground: var(--catppuccin-text);
+  --avatar-flamingo: color-mix(in srgb, var(--catppuccin-flamingo) 28%, var(--catppuccin-crust));
+  --avatar-flamingo-foreground: var(--catppuccin-text);
+  --avatar-pink: color-mix(in srgb, var(--catppuccin-pink) 28%, var(--catppuccin-crust));
+  --avatar-pink-foreground: var(--catppuccin-text);
+  --avatar-mauve: color-mix(in srgb, var(--catppuccin-mauve) 28%, var(--catppuccin-crust));
+  --avatar-mauve-foreground: var(--catppuccin-text);
+  --avatar-red: color-mix(in srgb, var(--catppuccin-red) 28%, var(--catppuccin-crust));
+  --avatar-red-foreground: var(--catppuccin-text);
+  --avatar-maroon: color-mix(in srgb, var(--catppuccin-maroon) 28%, var(--catppuccin-crust));
+  --avatar-maroon-foreground: var(--catppuccin-text);
+  --avatar-peach: color-mix(in srgb, var(--catppuccin-peach) 28%, var(--catppuccin-crust));
+  --avatar-peach-foreground: var(--catppuccin-text);
+  --avatar-yellow: color-mix(in srgb, var(--catppuccin-yellow) 28%, var(--catppuccin-crust));
+  --avatar-yellow-foreground: var(--catppuccin-text);
+  --avatar-green: color-mix(in srgb, var(--catppuccin-green) 28%, var(--catppuccin-crust));
+  --avatar-green-foreground: var(--catppuccin-text);
+  --avatar-teal: color-mix(in srgb, var(--catppuccin-teal) 28%, var(--catppuccin-crust));
+  --avatar-teal-foreground: var(--catppuccin-text);
+  --avatar-sky: color-mix(in srgb, var(--catppuccin-sky) 28%, var(--catppuccin-crust));
+  --avatar-sky-foreground: var(--catppuccin-text);
+  --avatar-sapphire: color-mix(in srgb, var(--catppuccin-sapphire) 28%, var(--catppuccin-crust));
+  --avatar-sapphire-foreground: var(--catppuccin-text);
+  --avatar-blue: color-mix(in srgb, var(--catppuccin-blue) 28%, var(--catppuccin-crust));
+  --avatar-blue-foreground: var(--catppuccin-text);
+  --avatar-lavender: color-mix(in srgb, var(--catppuccin-lavender) 28%, var(--catppuccin-crust));
+  --avatar-lavender-foreground: var(--catppuccin-text);
+  --font-heading: 'Google Sans Flex Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-sans:
+    'Google Sans Flex Variable', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-serif: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+  --font-mono:
+    'Google Sans Code', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  --radius: 0.5rem;
+  --shadow-2xs: 0px 1px 2px 0px hsl(0 0% 0% / 0.08);
+  --shadow-xs: 0px 1px 2px 0px hsl(0 0% 0% / 0.1);
+  --shadow-sm: 0px 1px 3px 0px hsl(0 0% 0% / 0.15), 0px 1px 2px -1px hsl(0 0% 0% / 0.12);
+  --shadow: 0px 1px 3px 0px hsl(0 0% 0% / 0.15), 0px 1px 2px -1px hsl(0 0% 0% / 0.12);
+  --shadow-md: 0px 2px 4px -1px hsl(0 0% 0% / 0.15), 0px 4px 6px -1px hsl(0 0% 0% / 0.12);
+  --shadow-lg: 0px 4px 6px -1px hsl(0 0% 0% / 0.12), 0px 10px 15px -3px hsl(0 0% 0% / 0.1);
+  --shadow-xl: 0px 8px 10px -1px hsl(0 0% 0% / 0.15), 0px 20px 25px -5px hsl(0 0% 0% / 0.1);
+  --shadow-2xl: 0px 25px 50px -12px hsl(0 0% 0% / 0.35);
+  --shadow-card: 0 2px 8px rgb(0 0 0 / 15%);
+}
+
+@theme {
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-serif: var(--font-serif);
+  --font-heading: var(--font-heading);
+
+  /* Radius language (tiny / elegant):
+   * sm  — dense chips, subtle accents
+   * md  — menu item hover, compact chrome (xs/icon buttons, tooltips, sidebar rows)
+   * lg  — controls + floating menus (input, button, select, dropdown, popover, tabs)
+   * xl  — surfaces (cards, wells, dialogs, panels, padded notices)
+   * 2xl — soft conversational chrome only (chat bubbles / composers)
+   * none — flush page chrome bands (NoticeBanner)
+   * full — pills, avatars, true circles
+   */
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  --color-background: var(--background);
+  --color-canvas: var(--canvas);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-hover: var(--secondary-hover);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-scrim: var(--scrim);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-plan-activity: var(--plan-activity);
+  --color-plan-place: var(--plan-place);
+  --color-plan-travel: var(--plan-travel);
+  --color-plan-stay: var(--plan-stay);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-code: var(--code);
+  --color-code-foreground: var(--code-foreground);
+  --color-code-highlight: var(--code-highlight);
+  --color-catppuccin-peach: var(--catppuccin-peach);
+  --color-catppuccin-text: var(--catppuccin-text);
+  --color-avatar-rosewater: var(--avatar-rosewater);
+  --color-avatar-rosewater-foreground: var(--avatar-rosewater-foreground);
+  --color-avatar-flamingo: var(--avatar-flamingo);
+  --color-avatar-flamingo-foreground: var(--avatar-flamingo-foreground);
+  --color-avatar-pink: var(--avatar-pink);
+  --color-avatar-pink-foreground: var(--avatar-pink-foreground);
+  --color-avatar-mauve: var(--avatar-mauve);
+  --color-avatar-mauve-foreground: var(--avatar-mauve-foreground);
+  --color-avatar-red: var(--avatar-red);
+  --color-avatar-red-foreground: var(--avatar-red-foreground);
+  --color-avatar-maroon: var(--avatar-maroon);
+  --color-avatar-maroon-foreground: var(--avatar-maroon-foreground);
+  --color-avatar-peach: var(--avatar-peach);
+  --color-avatar-peach-foreground: var(--avatar-peach-foreground);
+  --color-avatar-yellow: var(--avatar-yellow);
+  --color-avatar-yellow-foreground: var(--avatar-yellow-foreground);
+  --color-avatar-green: var(--avatar-green);
+  --color-avatar-green-foreground: var(--avatar-green-foreground);
+  --color-avatar-teal: var(--avatar-teal);
+  --color-avatar-teal-foreground: var(--avatar-teal-foreground);
+  --color-avatar-sky: var(--avatar-sky);
+  --color-avatar-sky-foreground: var(--avatar-sky-foreground);
+  --color-avatar-sapphire: var(--avatar-sapphire);
+  --color-avatar-sapphire-foreground: var(--avatar-sapphire-foreground);
+  --color-avatar-blue: var(--avatar-blue);
+  --color-avatar-blue-foreground: var(--avatar-blue-foreground);
+  --color-avatar-lavender: var(--avatar-lavender);
+  --color-avatar-lavender-foreground: var(--avatar-lavender-foreground);
+
+  --shadow-2xs: var(--shadow-2xs);
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow: var(--shadow);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+  --shadow-2xl: var(--shadow-2xl);
+
+  --tracking-tighter: calc(var(--tracking-normal) - 0.05em);
+  --tracking-tight: calc(var(--tracking-normal) - 0.025em);
+  --tracking-normal: var(--tracking-normal);
+  --tracking-wide: calc(var(--tracking-normal) + 0.025em);
+  --tracking-wider: calc(var(--tracking-normal) + 0.05em);
+  --tracking-widest: calc(var(--tracking-normal) + 0.1em);
+
+  --animate-shimmer: shimmer 2s linear infinite;
+
+  @keyframes shimmer {
+    from {
+      background-position: 100% 0;
+    }
+    to {
+      background-position: 0 0;
+    }
+  }
+}

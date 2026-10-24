@@ -1,0 +1,22 @@
+{
+  "$schema": "../rule.schema.json",
+  "harness": "only-allowed-content",
+  "message": "Keep custom CSS in packages/ui; web stylesheets only import shared styles and declare sources",
+  "include": ["apps/web/src/**/*.css"],
+  "allowed": "@(?:import|source)\\s+[^;{}]+;",
+  "examples": [
+    {
+      "files": {
+        "apps/web/src/index.css": "/* Shared UI owns styling. */\n@import '@groam/ui/styles';\n@source '../node_modules/widgets/*.js';",
+        "packages/ui/src/styles/workspace.css": ".panel { background: var(--card); }"
+      },
+      "reports": []
+    },
+    {
+      "files": {
+        "apps/web/src/custom.css": "@keyframes reveal { to { opacity: 1; } }"
+      },
+      "reports": ["apps/web/src/custom.css"]
+    }
+  ]
+}

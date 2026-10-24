@@ -1,0 +1,46 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "node-text",
+  "nodes": ["CallExpression", "MemberExpression"],
+  "pattern": "(?:window\\.)?(?:localStorage|sessionStorage)(?:\\.|\\s*\\(|$).*",
+  "message": "Access browser storage through a feature store or shared adapter. Direct storage calls scatter persistence, validation, and test setup across components.",
+  "files": ["**/apps/web/src/**"],
+  "excludeFiles": ["**/apps/web/src/**/*.test.ts", "**/apps/web/src/**/*.test.tsx"],
+  "examples": [
+    {
+      "file": "apps/web/src/features/example/run.ts",
+      "source": "export function run(value) { return localStorage.getItem(\"draft\"); }",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/example/run.ts",
+      "source": "export function run(value) { return window.localStorage.setItem(\"draft\", value); }",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/example/run.ts",
+      "source": "export function run(value) { return sessionStorage.removeItem(\"draft\"); }",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/example/run.ts",
+      "source": "export function run(value) { return window.sessionStorage.clear(); }",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/example/run.ts",
+      "source": "export function run(adapter) { return adapter.persist(window.localStorage); }",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/example/run.ts",
+      "source": "export function run(store) { return store.getItem(\"draft\"); }",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/example/run.test.ts",
+      "source": "localStorage.setItem(\"draft\", \"fixture\");",
+      "reports": false
+    }
+  ]
+}

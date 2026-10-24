@@ -1,0 +1,560 @@
+---
+import Icon from '@groam/icons/astro';
+import { hubBlurbs } from '@/content/features-hub';
+import { exampleTrip, planBefore, saturdayAfter, sintraIdea, tripIssues } from '@/content/example-trip';
+import { features, featurePath } from '@/content/site';
+---
+
+<div class="explorer" data-explorer>
+  <ul class="list">
+    {
+      features.map((feature, n) => (
+        <li class:list={['item', n === 0 && 'active']} data-item>
+          <button type="button" aria-pressed={n === 0} aria-controls={`hub-preview-${feature.slug}`}>
+            <span class="text">
+              <b>{feature.name}</b>
+              <span class="blurb"><span class="in">{hubBlurbs[feature.slug]}</span></span>
+            </span>
+          </button>
+          <span class="more-wrap">
+            <a class="more" href={`${featurePath(feature.slug).replace(/\/$/, '')}/`}>
+              Read more<span class="visually-hidden"> about {feature.name}</span>
+              <Icon name="arrow-right" />
+            </a>
+          </span>
+          <span class="bar" aria-hidden="true"></span>
+        </li>
+      ))
+    }
+  </ul>
+
+  <div class="stage surface">
+    <header class="stage-head">
+      <b>{exampleTrip.name}</b>
+      <span class="time trip-dates">{exampleTrip.dates}</span>
+      <span class="example-label">Example trip</span>
+      <button class="pause loop-toggle" type="button" data-toggle data-hub-toggle hidden aria-pressed="false">
+        <Icon name="pause" class="i-pause" />
+        <Icon name="play" class="i-play" />
+        <span class="visually-hidden">Pause the feature tour</span>
+      </button>
+    </header>
+    <div class="previews" role="group" aria-label="Preview of the selected feature">
+      <div class="preview active" id="hub-preview-itinerary" data-preview>
+        <p class="head"><b>Saturday</b><span class="time">Sat 14 Nov</span></p>
+        <ul class="stack">
+          {
+            saturdayAfter.map((stop, n) => (
+              <li class="r" style={`--i:${n}`}>
+                <span class="time">{stop.time}</span>
+                {stop.title}
+              </li>
+            ))
+          }
+        </ul>
+        <p class="head sub"><b>Sunday</b><span class="time">Sun 15 Nov</span></p>
+        <ul class="stack">
+          {
+            planBefore.sun.map((stop, n) => (
+              <li class="r" style={`--i:${n + 5}`}>
+                <span class="time">{stop.time}</span>
+                {stop.title}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+      <div class="preview" id="hub-preview-ideas" data-preview>
+        <p class="head"><b>{sintraIdea.title}</b><span class="chip chip-idea">Idea</span></p>
+        <ul class="stack">
+          {
+            sintraIdea.removes.map((stop, n) => (
+              <li class="r del" style={`--i:${n}`}>
+                <span class="sign" aria-hidden="true">&minus;</span>
+                <span class="time">{stop.time}</span>
+                {stop.title}
+              </li>
+            ))
+          }
+          <li class="paste strip" style="--i:2">
+            <ul>
+              {
+                sintraIdea.adds.map((stop) => (
+                  <li class="r add">
+                    <span class="sign" aria-hidden="true">+</span>
+                    <span class="time">{stop.time}</span>
+                    {stop.title}
+                  </li>
+                ))
+              }
+            </ul>
+          </li>
+        </ul>
+        <p class="r note" style="--i:6">
+          <span class="avatar avatar-agent"><Icon name="agent" /></span>
+          {sintraIdea.agentNote}
+        </p>
+      </div>
+      <div class="preview" id="hub-preview-issues" data-preview>
+        <p class="head"><b>Issues</b><span class="time">{tripIssues.length} on the trip</span></p>
+        <ul class="stack">
+          {
+            tripIssues.map((issue, n) => (
+              <li class:list={['r', 'issue', n === 2 && 'closing']} style={`--i:${n}`}>
+                {n === 2 ? (
+                  <span class="chip chip-done">
+                    <Icon name="check" />
+                    Closed
+                  </span>
+                ) : (
+                  <span class="chip">Open</span>
+                )}
+                <span class="issue-text">
+                  <b>{issue.title}</b>
+                  <span class="fine">Linked idea: {issue.fix}</span>
+                </span>
+              </li>
+            ))
+          }
+        </ul>
+        <p class="fine r" style="--i:3">1 closed, 2 open. Closed when its linked idea, {sintraIdea.title}, was applied.</p>
+      </div>
+      <div class="preview" id="hub-preview-conversations" data-preview>
+        <p class="head"><b>Trip chat</b><span class="time">{exampleTrip.name}</span></p>
+        <ul class="stack chat">
+          <li class="r bubble" style="--i:0"><span class="avatar avatar-maya" aria-hidden="true">M</span>What about Sintra on Saturday instead of Belém?</li>
+          <li class="r bubble" style="--i:1"><span class="avatar avatar-jonas" aria-hidden="true">J</span>Put it in as an idea and we will look.</li>
+          <li class="r bubble" style="--i:2"><span class="avatar avatar-priya" aria-hidden="true">P</span>Sam, can you check the 09:30 train?</li>
+          <li class="r bubble" style="--i:3"><span class="avatar avatar-sam" aria-hidden="true">S</span>On it. I will reply here.</li>
+          <li class="r bubble" style="--i:4"><span class="avatar avatar-sam" aria-hidden="true">S</span>It leaves Rossio at 09:30 and takes about 40 minutes.</li>
+          <li class="r bubble" style="--i:5"><span class="avatar avatar-maya" aria-hidden="true">M</span>Perfect. Then Pena Palace at 11:00 works.</li>
+        </ul>
+      </div>
+      <div class="preview" id="hub-preview-ai" data-preview>
+        <p class="head"><b>Assistant</b><span class="chip chip-agent">Looking at Itinerary</span></p>
+        <ul class="stack chat">
+          <li class="r bubble me" style="--i:0">Does the Sintra idea clash with anything?</li>
+          <li class="r bubble bot" style="--i:1">
+            <span class="avatar avatar-agent"><Icon name="agent" /></span>
+            {sintraIdea.clashCheck}
+          </li>
+          <li class="r proposal" style="--i:2"><span class="chip chip-idea">Idea</span>{sintraIdea.title} <span class="by">by {sintraIdea.author}</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { playFeaturesHub } from '@/scripts/features-hub-explorer';
+
+  for (const explorer of document.querySelectorAll<HTMLElement>('[data-explorer]')) playFeaturesHub(explorer);
+</script>
+
+<style>
+  .explorer {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: clamp(28px, 5vw, 80px);
+    align-items: start;
+  }
+  .list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
+    border-top: var(--rule) solid var(--ink);
+  }
+  .item {
+    position: relative;
+    display: grid;
+    border-bottom: var(--rule) solid var(--ink);
+  }
+  .item {
+    transition: background-color 0.5s var(--ease);
+  }
+  .item.active {
+    background: var(--bill);
+    color: var(--bill-ink);
+  }
+  .item button {
+    display: block;
+    width: 100%;
+    padding: clamp(14px, 1.8vw, 24px) 0;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    text-align: left;
+    cursor: pointer;
+    transition:
+      color 0.5s var(--ease),
+      padding 0.5s var(--ease);
+  }
+  .item button:focus-visible,
+  .more:focus-visible,
+  .pause:focus-visible {
+    outline: 3px solid var(--ink);
+    outline-offset: 2px;
+  }
+  .active button:focus-visible,
+  .active .more:focus-visible {
+    outline-color: var(--bill-ink);
+    outline-offset: -6px;
+  }
+  .text {
+    display: grid;
+  }
+  .text b {
+    font-weight: 850;
+    font-stretch: 62%;
+    word-spacing: var(--caps-space);
+    text-transform: uppercase;
+    font-size: clamp(2.6rem, 6.4vw, 6.8rem);
+    overflow-wrap: anywhere;
+    line-height: 0.88;
+    color: color-mix(in srgb, var(--ink) 58%, var(--paper));
+    transition: color 0.3s ease;
+  }
+  .item button:hover .text b {
+    color: var(--ink);
+  }
+  .explorer {
+    interpolate-size: allow-keywords;
+  }
+  .blurb,
+  .more-wrap {
+    display: block;
+    height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition:
+      height 0.5s var(--ease),
+      opacity 0.5s var(--ease);
+  }
+  .blurb > .in {
+    display: block;
+    max-width: 44ch;
+    padding-top: 8px;
+    color: var(--bill-ink);
+    font-size: 1.05rem;
+    min-height: 0;
+    text-wrap: pretty;
+  }
+  .active .blurb,
+  .active .more-wrap {
+    height: auto;
+    opacity: 1;
+  }
+  .item:not(.active) .more {
+    visibility: hidden;
+  }
+  .active button {
+    padding-inline: clamp(12px, 1.6vw, 22px);
+  }
+  .active .text b,
+  .active button:hover .text b {
+    color: var(--bill-ink);
+  }
+  .more {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 0 0 clamp(12px, 1.6vw, 22px);
+    justify-self: start;
+    font-weight: 800;
+    font-stretch: 86%;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-size: 14px;
+    color: var(--bill-ink);
+    text-decoration: none;
+  }
+  .more-wrap > .more {
+    padding-block: 10px 18px;
+    padding-inline-end: clamp(12px, 1.6vw, 22px);
+    width: max-content;
+  }
+  .more :global(svg) {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2.4;
+    transition: transform 0.3s var(--ease);
+  }
+  .more:hover :global(svg) {
+    transform: translateX(4px);
+  }
+  .more:focus-visible {
+    outline-color: var(--bill-ink);
+  }
+  .bar {
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 6px;
+    background: var(--bill-ink);
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  .stage {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    position: sticky;
+    top: 24px;
+    overflow: hidden;
+  }
+  .stage-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: nowrap;
+    padding: 12px 16px;
+    border-bottom: var(--rule) solid var(--ink);
+  }
+  .stage-head b {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 850;
+    font-stretch: 64%;
+    word-spacing: var(--caps-space);
+    text-transform: uppercase;
+    font-size: 1.35rem;
+    line-height: 1;
+  }
+  .previews {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
+    padding: 20px;
+  }
+  .preview {
+    grid-area: 1 / 1;
+    display: grid;
+    align-content: start;
+    gap: 10px;
+    min-width: 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition:
+      opacity 0.18s var(--ease),
+      transform 0.5s var(--ease),
+      visibility 0s linear 0.6s;
+  }
+  /* With JS the stage takes the height of the preview on show and eases between them. */
+  .sized .previews {
+    display: block;
+    position: relative;
+    box-sizing: content-box;
+    transition: height 0.45s var(--ease) 0.2s;
+  }
+  .sized .preview {
+    position: absolute;
+    inset: 20px 20px auto;
+  }
+  .preview.active {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition:
+      opacity 0.45s var(--ease) 0.2s,
+      transform 0.6s var(--ease) 0.2s,
+      visibility 0s;
+  }
+  .head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1.5px solid var(--ink);
+  }
+  .head b {
+    font-weight: 850;
+    font-stretch: 64%;
+    word-spacing: var(--caps-space);
+    text-transform: uppercase;
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+  .trip-dates {
+    margin-left: auto;
+    font-size: 13px;
+  }
+  .stack {
+    display: grid;
+    gap: 0;
+  }
+  .r .chip {
+    min-width: 5.6rem;
+    justify-content: center;
+  }
+  .sub {
+    margin-top: 10px;
+  }
+  .r {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    padding: 9px 0;
+    border-bottom: 1.5px solid var(--ink-line);
+    font-weight: 600;
+  }
+  .r .time {
+    min-width: 3.2rem;
+    font-size: 15px;
+    font-weight: 750;
+    color: var(--ink);
+  }
+  .fine.r,
+  .note {
+    border: 0;
+  }
+  .fine.r {
+    text-wrap: pretty;
+    padding-inline: 0;
+    flex-wrap: wrap;
+    font-weight: 400;
+  }
+  .paste {
+    margin: 10px 4px 6px;
+    padding: 6px 10px;
+    outline-offset: -6px;
+  }
+  .active .paste {
+    animation: rise 0.7s var(--ease) backwards;
+    animation-delay: 230ms;
+  }
+  .add {
+    border-bottom: 1.5px solid color-mix(in srgb, var(--strip-ink) 30%, var(--strip));
+    padding-inline: 8px;
+  }
+  .add:last-child {
+    border-bottom: 0;
+  }
+  .add .time {
+    color: var(--strip-ink);
+  }
+  .del {
+    color: var(--gone);
+    text-decoration: line-through;
+    text-decoration-thickness: 2px;
+  }
+  .del .time {
+    color: var(--gone);
+  }
+  .sign {
+    width: 1ch;
+    font-weight: 850;
+  }
+  .chat .bubble {
+    align-items: flex-start;
+    font-weight: 500;
+  }
+  .chat .me {
+    background: var(--ink);
+    color: var(--paper);
+    padding-inline: 10px;
+  }
+  .chat .avatar {
+    flex: none;
+  }
+  .active .r {
+    animation: rise 0.7s var(--ease) backwards;
+    animation-delay: calc(var(--i) * 70ms + 300ms);
+  }
+  .note {
+    align-items: flex-start;
+    margin-top: 8px;
+    padding: 10px;
+    background: var(--agent);
+    color: var(--agent-ink);
+    font-weight: 500;
+  }
+  .issue-text {
+    display: grid;
+    gap: 2px;
+  }
+  .proposal {
+    flex-wrap: wrap;
+    font-weight: 700;
+  }
+  .proposal .by {
+    font-weight: 400;
+    color: var(--ink-soft);
+  }
+  .active .closing .chip-done {
+    animation: rise 0.5s var(--ease) 0.4s backwards;
+  }
+  .pause {
+    flex: none;
+    margin-left: 0;
+    color: var(--ink);
+  }
+  .pause[hidden] {
+    display: none;
+  }
+  .pause :global(.i-play),
+  .pause :global(.i-pause) {
+    grid-area: 1 / 1;
+    transition:
+      opacity 0.16s ease,
+      transform 0.25s var(--ease);
+  }
+  .pause :global(.i-play),
+  .paused .pause :global(.i-pause) {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+  @media (max-width: 480px) {
+    .trip-dates {
+      display: none;
+    }
+    .stage-head {
+      gap: 8px;
+      padding-inline: 12px;
+    }
+    .stage-head b {
+      font-size: 1.05rem;
+      white-space: normal;
+      line-height: 1;
+    }
+  }
+  @media (max-width: 860px) {
+    .explorer {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .stage {
+      order: -1;
+      position: static;
+      min-height: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pause :global(.i-play),
+    .pause :global(.i-pause) {
+      transition: none;
+    }
+    .preview.active,
+    .active .r,
+    .active .closing .chip-done {
+      animation: none;
+    }
+    .sized .previews,
+    .preview,
+    .item button,
+    .blurb,
+    .more-wrap,
+    .item,
+    .more :global(svg) {
+      transition: none;
+    }
+  }
+</style>

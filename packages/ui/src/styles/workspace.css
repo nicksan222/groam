@@ -1,0 +1,400 @@
+/* Shared workspace surfaces, responsive shell layout and state-driven motion. */
+.dashboard-panel {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+}
+
+.dashboard-lift-card {
+  background: transparent;
+  transition:
+    border-color 180ms ease,
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dashboard-lift-card:hover {
+  border-color: var(--lift-card-border-hover);
+  transform: translateY(-1px);
+}
+
+.dashboard-reveal {
+  animation: dashboard-reveal 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes dashboard-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(0.35rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.trip-page-shell .dashboard-reveal,
+.trip-page-shell [data-slot='skeleton'],
+.dashboard-home .dashboard-reveal,
+.dashboard-home .dashboard-lift-card,
+.dashboard-home [data-slot='skeleton'] {
+  animation: none;
+}
+
+.trip-page-ready {
+  animation: trip-page-ready 140ms ease-out both;
+}
+
+@keyframes trip-page-ready {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-reveal,
+  .dashboard-lift-card,
+  .trip-page-ready {
+    animation: none;
+  }
+
+  .dashboard-lift-card:hover {
+    transform: none;
+  }
+}
+
+/* A block that appears after its data loads: its row of space opens (0fr to 1fr) so what sits below
+   glides down instead of jumping, while the block settles in. Wrap the block in `.expand-in`. */
+.expand-in {
+  display: grid;
+  grid-template-rows: 1fr;
+  animation: expand-in-rows 420ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.expand-in > * {
+  min-height: 0;
+  animation:
+    expand-in-fade 420ms cubic-bezier(0.22, 1, 0.36, 1) backwards,
+    expand-in-clip 420ms linear backwards;
+}
+
+@keyframes expand-in-rows {
+  from {
+    grid-template-rows: 0fr;
+  }
+}
+
+@keyframes expand-in-fade {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem) scale(0.98);
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Clipped only while the row opens, so focus rings and shadows are not cut off afterwards. */
+@keyframes expand-in-clip {
+  from,
+  99% {
+    overflow: hidden;
+  }
+  to {
+    overflow: visible;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .expand-in,
+  .expand-in > * {
+    animation: none;
+  }
+}
+
+/* Trip columns follow their available space, including a docked assistant. */
+.trip-page-shell {
+  container-name: trip-workspace;
+  container-type: inline-size;
+}
+
+.trip-page-shell [data-slot='shell-two-columns'] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.trip-page-shell [data-slot='shell-right-column'] {
+  position: static;
+}
+
+@container trip-workspace (min-width: 64rem) {
+  .trip-page-shell [data-slot='shell-two-columns'] {
+    grid-template-columns: minmax(0, 1fr) 18rem;
+  }
+
+  .trip-page-shell [data-slot='shell-right-column'] {
+    position: sticky;
+  }
+}
+
+/* Packing tab: short, state-driven motion. Transform and opacity only; none when reduced. */
+.packing-pop-in {
+  animation: packing-pop-in 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.packing-slide-in {
+  animation: packing-slide-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.packing-fade-in {
+  animation: packing-fade-in 200ms ease-out both;
+}
+
+.packing-check-pop {
+  animation: packing-check-pop 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.packing-row-flash {
+  animation: packing-row-flash 800ms ease-out both;
+}
+
+.packing-pop-out {
+  animation: packing-pop-out 150ms ease-in both;
+  pointer-events: none;
+}
+
+.packing-check-draw path {
+  stroke-dasharray: 24;
+  animation: packing-check-draw 220ms ease-out both;
+}
+
+@keyframes packing-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes packing-pop-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+@keyframes packing-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes packing-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes packing-check-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.25);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes packing-row-flash {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes packing-check-draw {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .packing-pop-in,
+  .packing-slide-in,
+  .packing-fade-in,
+  .packing-check-pop,
+  .packing-pop-out,
+  .packing-row-flash,
+  .packing-check-draw path {
+    animation: none;
+  }
+
+  .packing-row-flash,
+  .packing-pop-out {
+    display: none;
+  }
+}
+
+/* On phones the on-screen keyboard rides over the action dock, so the dock steps aside while a text
+   field has focus. */
+@media (max-width: 767px) {
+  /* :read-write is exactly the text-entry set: typing inputs, textareas, and contenteditable. */
+  body:has(:read-write:focus) {
+    --shell-dock-visibility: hidden;
+  }
+
+  [data-slot='shell-header-actions'] {
+    visibility: var(--shell-dock-visibility, visible);
+  }
+}
+
+/* People manifest: the group as faces, a card's saved check, and where a moved person landed.
+   Transform and opacity only; none when reduced. */
+.people-face-in {
+  animation: people-face-in 160ms ease-out both;
+}
+
+.people-check-pop {
+  animation: people-check-pop 150ms ease-out both;
+}
+
+[data-traveler][data-arrived] {
+  position: relative;
+}
+
+[data-traveler][data-arrived]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  animation: people-arrived 1200ms ease-out both;
+}
+
+@keyframes people-face-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes people-check-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes people-arrived {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .people-face-in,
+  .people-check-pop {
+    animation: none;
+  }
+
+  [data-traveler][data-arrived]::after {
+    display: none;
+  }
+}
+
+/* PageLoading: delayed reveal, orbiting arc, breathing tile. */
+.page-loading {
+  animation: page-loading-reveal 360ms ease-out 240ms both;
+}
+
+.page-loading-orbit {
+  animation: page-loading-orbit 1.6s cubic-bezier(0.5, 0.15, 0.5, 0.85) infinite;
+}
+
+.page-loading-tile {
+  animation: page-loading-breathe 2.8s ease-in-out infinite;
+}
+
+@keyframes page-loading-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(0.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes page-loading-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes page-loading-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes page-loading-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-loading {
+    animation: page-loading-fade 200ms ease-out 240ms both;
+  }
+
+  .page-loading-orbit,
+  .page-loading-tile {
+    animation: none;
+  }
+}

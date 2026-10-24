@@ -1,0 +1,41 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "node-text",
+  "nodes": ["JSXOpeningElement"],
+  "pattern": "<(?:Shell\\.Header|DiscussionThreadHeader)\\s.*\\bactions=\\{.*<(?:Icon)?Button(?:\\s|/|>).*",
+  "message": "A page header's actions are Shell.Action (icon, label, tone): it is a labelled button on desktop and a round icon in the bottom-right dock on phones. Do not put <Button> or <IconButton> in `actions`.",
+  "files": ["**/apps/web/src/features/**/*.tsx"],
+  "excludeFiles": ["**/apps/web/src/**/*.test.tsx"],
+  "examples": [
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <Shell.Header actions={<Button>New</Button>} title=\"Trips\" />;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <Shell.Header actions={ok ? <><IconButton /></> : null} title=\"Trips\" />;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <Shell.Header actions={<Shell.Action icon={Plus} label=\"New\" />} title=\"Trips\" />;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <Shell.Header title=\"Trips\">{null}</Shell.Header>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <StatusPage actions={<Button>Retry</Button>} title=\"Oops\" />;",
+      "reports": false
+    },
+    {
+      "file": "packages/ui/src/components/a.tsx",
+      "source": "export const v = <Shell.Header actions={<Button>New</Button>} title=\"Trips\" />;",
+      "reports": false
+    }
+  ]
+}

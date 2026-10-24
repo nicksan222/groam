@@ -1,0 +1,51 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "node-text",
+  "nodes": ["JSXOpeningElement"],
+  "pattern": "<Shell\\.PageBody(?:\\s|/|>).*",
+  "message": "TripPageShell already provides the page body. Render tab content directly instead of adding another Shell.PageBody and doubling page padding.",
+  "files": ["**/apps/web/src/features/trips/**", "**/apps/web/src/features/ideas/**"],
+  "excludeFiles": [
+    "**/apps/web/src/features/trips/trip-detail/trip-page-shell.tsx",
+    "**/apps/web/src/features/trips/trip-list/**",
+    "**/apps/web/src/**/*.test.ts",
+    "**/apps/web/src/**/*.test.tsx"
+  ],
+  "examples": [
+    {
+      "file": "apps/web/src/features/trips/trip-itinerary/view.tsx",
+      "source": "export const view = <Shell.PageBody />;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/trips/trip-itinerary/view.tsx",
+      "source": "export const view = <Shell.PageBody>Content</Shell.PageBody>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/ideas/idea-changes/view.tsx",
+      "source": "export const view = <Shell.PageBody />;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/ideas/idea-changes/view.tsx",
+      "source": "export const view = <Shell.PageBody>Content</Shell.PageBody>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/trips/trip-itinerary/view.tsx",
+      "source": "export const view = <Shell.Section><div className=\"p-4\">Content</div></Shell.Section>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/settings/settings-view.tsx",
+      "source": "export const view = <Shell.PageBody variant=\"compact\" />;",
+      "reports": false
+    },
+    {
+      "file": "packages/ui/src/components/example.tsx",
+      "source": "export const view = <Shell.PageBody variant=\"compact\" />;",
+      "reports": false
+    }
+  ]
+}

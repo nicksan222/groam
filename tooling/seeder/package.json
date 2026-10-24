@@ -1,0 +1,24 @@
+{
+  "name": "@groam/seeder",
+  "version": "0.0.0",
+  "dependencies": {
+    "@groam/app-actions": "workspace:*",
+    "@groam/env": "workspace:*"
+  },
+  "devDependencies": {
+    "@groam/typescript-config": "workspace:*",
+    "@groam/vitest-config": "workspace:*",
+    "@types/node": "^26.6.3",
+    "typescript": "~7.0.2",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "lint": "vp check src",
+    "test": "vp test run",
+    "typecheck": "tsc --noEmit"
+  },
+  "type": "module"
+}

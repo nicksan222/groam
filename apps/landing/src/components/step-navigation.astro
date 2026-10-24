@@ -1,0 +1,152 @@
+---
+type StepAttribute = 'data-journey-step' | 'data-background-step';
+
+type Step = {
+  label: string;
+  controls: string;
+  attributes?: Record<string, string | boolean | undefined>;
+};
+
+type Props = {
+  steps: Step[];
+  stepAttribute: StepAttribute;
+  active: number;
+  label: string;
+  progress?: boolean;
+  class?: string;
+};
+
+const {
+  steps,
+  stepAttribute,
+  active,
+  label,
+  progress = false,
+  class: className
+} = Astro.props;
+---
+
+<div
+  class:list={['step-navigation', className]}
+  role="group"
+  aria-label={label}
+  style={`--step-count: ${steps.length}`}
+>
+  {
+    steps.map((step, index) => {
+      const stepAttributes = {
+        [stepAttribute]: index,
+        ...step.attributes
+      };
+
+      return (
+        <button
+          type="button"
+          {...stepAttributes}
+          aria-controls={step.controls}
+          aria-pressed={String(index === active)}
+          tabindex={index === active ? 0 : -1}
+        >
+          <span class="step-number" aria-hidden="true">
+            {String(index + 1).padStart(2, '0')}
+          </span>
+          <span class="step-label">{step.label}</span>
+          {progress && <span class="step-progress" aria-hidden="true"></span>}
+        </button>
+      );
+    })
+  }
+</div>
+
+<style>
+  .step-navigation {
+    display: none;
+    grid-template-columns: repeat(var(--step-count), minmax(0, 1fr));
+    gap: 1px;
+    overflow: hidden;
+    border-block: var(--rule) solid var(--ink);
+    background: var(--paper);
+  }
+  :global([data-ready]) .step-navigation {
+    display: grid;
+  }
+  .step-navigation button {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 5px 10px;
+    align-items: center;
+    min-width: 0;
+    min-height: 62px;
+    padding: 9px 11px;
+    border: 0;
+    border-radius: 0;
+    border-right: 1px solid var(--ink-line);
+    background: transparent;
+    color: var(--ink);
+    font: 800 12px/1.15 var(--font-sans);
+    font-stretch: 84%;
+    letter-spacing: 0.04em;
+    text-align: left;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+      background-color 0.28s var(--ease),
+      color 0.28s var(--ease);
+  }
+  .step-navigation button:hover,
+  .step-navigation button:focus-visible {
+    background: var(--ink-line);
+  }
+  .step-navigation button:focus-visible {
+    z-index: 1;
+    outline: var(--rule) solid var(--ink);
+    outline-offset: calc(var(--rule) * -1);
+  }
+  .step-navigation button[aria-pressed='true'] {
+    background: var(--strip);
+    color: var(--strip-ink);
+  }
+  .step-number {
+    align-self: stretch;
+    min-width: 2.1em;
+    padding-right: 9px;
+    border-right: 1px solid currentColor;
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.25;
+  }
+  .step-label {
+    min-width: 0;
+  }
+  .step-progress {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  @media (max-width: 1040px) {
+    .step-navigation {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 520px) {
+    .step-navigation {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .step-navigation button {
+      min-height: 58px;
+      padding-inline: 9px;
+      font-size: 11px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .step-navigation button {
+      transition: none;
+    }
+  }
+</style>

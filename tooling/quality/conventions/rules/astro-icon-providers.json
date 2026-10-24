@@ -1,0 +1,27 @@
+{
+  "$schema": "../rule.schema.json",
+  "harness": "pattern",
+  "message": "Use @groam/icons/astro instead of importing an icon library in Astro templates",
+  "include": ["apps/**/*.astro", "packages/**/*.astro"],
+  "exclude": ["packages/icons/**"],
+  "report": "file",
+  "pattern": "(?:from\\s+|import\\(\\s*|^import\\s+)['\"](?:lucide(?:-[\\w-]+)?|react-icons|@(?:lucide|heroicons|tabler|phosphor-icons|iconify|fortawesome)\\/[^/'\"]+|@radix-ui\\/react-icons)(?:\\/|['\"])",
+  "examples": [
+    {
+      "files": {
+        "apps/landing/src/components/example.astro": "---\nimport Icon from '@groam/icons/astro';\n---\n<Icon name=\"check\" />"
+      },
+      "reports": []
+    },
+    {
+      "files": {
+        "apps/landing/src/components/example.astro": "---\nimport { Check } from 'lucide-react';\n---",
+        "apps/landing/src/components/b.astro": "---\nconst icons = import('@heroicons/react/24/outline');\n---"
+      },
+      "reports": [
+        "apps/landing/src/components/example.astro",
+        "apps/landing/src/components/b.astro"
+      ]
+    }
+  ]
+}

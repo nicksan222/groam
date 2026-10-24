@@ -1,0 +1,43 @@
+import { type FormEvent, useCallback, useRef, useState } from 'react';
+
+export function useThreadMessageEdit({
+  initialText,
+  onSave
+}: {
+  initialText: string;
+  onSave: (text: string) => void;
+}) {
+  const [draft, setDraftState] = useState(initialText);
+  const draftRef = useRef(initialText);
+  const setDraft = useCallback((value: string) => {
+    draftRef.current = value;
+    setDraftState(value);
+  }, []);
+  const trimmed = draft.trim();
+  const canSave = trimmed.length > 0;
+
+  const submit = useCallback(
+    (event?: FormEvent) => {
+      event?.preventDefault();
+      const content = draftRef.current.trim();
+      if (!content) return;
+      onSave(content);
+    },
+    [onSave]
+  );
+
+  return {
+    canSave,
+    draft,
+    setDraft,
+    submit,
+    trimmed
+  };
+}
+
+export function useThreadMessageEditing() {
+  const [editing, setEditing] = useState(false);
+  const startEditing = useCallback(() => setEditing(true), []);
+  const stopEditing = useCallback(() => setEditing(false), []);
+  return { editing, setEditing, startEditing, stopEditing };
+}

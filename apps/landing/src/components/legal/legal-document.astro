@@ -1,0 +1,172 @@
+---
+// Long-form frame for /privacy and /terms: a dashed draft strip, a printed index that sticks on
+// desktop, and a 68ch reading column. Sections are <section id> with an h2 in the default slot.
+import PageSection from '@/components/page-section.astro';
+type Props = { draftNote?: string; toc: { id: string; title: string }[]; updated: string };
+const {
+  draftNote = 'This plain-language draft is being completed before Groam launches paid invites.',
+  toc,
+  updated
+} = Astro.props;
+---
+
+<PageSection class="legal" aria-label="Legal document">
+  <p class="notice" role="note">
+    <span class="tag">Draft</span>
+    <span>Last updated {updated}. {draftNote}</span>
+  </p>
+  <div class="layout">
+    <nav class="toc" aria-label="On this page">
+      <p class="toc-title" aria-hidden="true">On this page</p>
+      <ol>
+        {
+          toc.map((item) => (
+            <li>
+              <a href={`#${item.id}`}>{item.title}</a>
+            </li>
+          ))
+        }
+      </ol>
+    </nav>
+    <article class="doc">
+      <slot />
+    </article>
+  </div>
+</PageSection>
+
+<style>
+  .notice {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    margin-bottom: var(--content-gap);
+    padding: 12px 16px;
+    border: 2px dashed var(--ink);
+    color: var(--ink);
+    font-size: 15px;
+    line-height: 1.4;
+  }
+  .tag {
+    padding: 2px 10px;
+    background: var(--ink);
+    color: var(--paper);
+    font-weight: 850;
+    font-stretch: 70%;
+    font-size: 15px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    word-spacing: var(--caps-space);
+  }
+  .layout {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    gap: var(--column-gap);
+    align-items: start;
+  }
+  .toc {
+    position: sticky;
+    top: 24px;
+    border-top: var(--rule) solid var(--ink);
+  }
+  .toc-title {
+    padding-block: 10px;
+    border-bottom: 1.5px solid var(--ink-line);
+    font-weight: 800;
+    font-stretch: 80%;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    word-spacing: var(--caps-space);
+  }
+  .toc ol {
+    list-style: none;
+    display: grid;
+  }
+  .toc a {
+    display: block;
+    padding: 10px 0;
+    border-bottom: 1.5px solid var(--ink-line);
+    color: var(--ink);
+    font-weight: 700;
+    font-stretch: 88%;
+    font-size: 15px;
+    text-decoration: none;
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease;
+  }
+  .toc a:hover {
+    color: color-mix(in srgb, var(--bill) 62%, var(--ink));
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+  }
+  .doc :global(p),
+  .doc :global(li) {
+    text-wrap: pretty;
+  }
+  .doc :global(p),
+  .doc :global(ul),
+  .doc :global(h3) {
+    max-width: 68ch;
+  }
+  .doc {
+    font-size: 1.0625rem;
+    line-height: 1.7;
+  }
+  .doc :global(section) {
+    scroll-margin-top: 24px;
+    padding-bottom: 48px;
+  }
+  .doc :global(h2) {
+    margin-bottom: 18px;
+    padding-top: 12px;
+    border-top: var(--rule) solid var(--ink);
+    font-weight: 850;
+    font-stretch: 64%;
+    font-size: clamp(2rem, 4vw, 3rem);
+    line-height: 0.95;
+    text-transform: uppercase;
+    word-spacing: var(--caps-space);
+  }
+  .doc :global(h3) {
+    margin: 22px 0 6px;
+    font-weight: 800;
+    font-stretch: 80%;
+    font-size: 1.15rem;
+    text-transform: uppercase;
+    word-spacing: var(--caps-space);
+  }
+  .doc :global(p + p),
+  .doc :global(p + ul),
+  .doc :global(ul + p) {
+    margin-top: 14px;
+  }
+  .doc :global(ul) {
+    display: grid;
+    gap: 10px;
+    padding-left: 1.3em;
+    list-style: square;
+  }
+  .doc :global(li::marker) {
+    color: var(--ink);
+  }
+  .doc :global(a) {
+    color: var(--bill-text);
+    text-underline-offset: 3px;
+    text-decoration-thickness: 2px;
+  }
+  @media (max-width: 880px) {
+    .layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .toc {
+      position: static;
+    }
+    .toc ol {
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      column-gap: 24px;
+    }
+  }
+</style>

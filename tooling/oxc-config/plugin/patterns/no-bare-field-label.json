@@ -1,0 +1,26 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "node-text",
+  "nodes": ["JSXOpeningElement"],
+  "pattern": "<(?:Label|label)(?:\\s|/|>).*",
+  "message": "Wrap the control in FormField from @groam/ui/components/form-field instead of pairing a Label with it. FormField wires the label id, required/optional marks, helper text, counter, and error the same way everywhere.",
+  "files": ["**/apps/web/src/features/**/*.tsx"],
+  "excludeFiles": ["**/apps/web/src/features/**/*.test.tsx"],
+  "examples": [
+    {
+      "file": "apps/web/src/features/example/example-form.tsx",
+      "source": "import { Label } from '@groam/ui/components/label';\nexport const view = <Label htmlFor=\"name\">Name</Label>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/example/example-form.tsx",
+      "source": "export const view = <label htmlFor=\"name\">Name</label>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/example/example-form.tsx",
+      "source": "import { FormField } from '@groam/ui/components/form-field';\nexport const view = <FormField label=\"Name\"><span /></FormField>;",
+      "reports": false
+    }
+  ]
+}

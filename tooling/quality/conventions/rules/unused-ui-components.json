@@ -1,0 +1,60 @@
+{
+  "$schema": "../rule.schema.json",
+  "harness": "referenced-elsewhere",
+  "message": "Every packages/ui component must be imported by an app, packages/ai, or a reachable ui component (not just by other dead ones). Wire an unused one where features rebuild it, or delete it (file, test, and package.json export).",
+  "include": ["packages/ui/src/components/**/*.ts", "packages/ui/src/components/**/*.tsx"],
+  "exclude": [
+    "packages/ui/src/components/**/*.test.ts",
+    "packages/ui/src/components/**/*.test.tsx"
+  ],
+  "searchIn": ["apps/*/src/**", "apps/*/pages/**", "packages/*/src/**"],
+  "ignore": ["**/*.test.ts", "**/*.test.tsx"],
+  "examples": [
+    {
+      "files": {
+        "packages/ui/src/components/muted-copy.tsx": "",
+        "packages/ui/src/components/card.tsx": "",
+        "packages/ui/src/components/shell/sub-components.ts": "import Eyebrow from './components/eyebrow';",
+        "packages/ui/src/components/shell/components/eyebrow.tsx": "",
+        "packages/ui/src/components/shell/client.tsx": "import { x } from './sub-components';",
+        "packages/ui/src/components/list/index.ts": "",
+        "apps/web/src/features/a/view.tsx": "import { MutedCopy } from '@groam/ui/components/muted-copy';\nimport { Shell } from '@groam/ui/components/shell/client';\nimport * as List from '@groam/ui/components/list';",
+        "packages/ui/src/components/dialog.tsx": "import { Card } from './card';",
+        "packages/ui/package.json": "{\"name\": \"@groam/ui\", \"exports\": {\"./components/muted-copy\": \"./src/components/muted-copy.tsx\", \"./components/shell/client\": \"./src/components/shell/client.tsx\", \"./components/list\": \"./src/components/list/index.ts\", \"./components/button\": \"./src/components/button.tsx\", \"./components/plan\": \"./src/components/plan/plan.tsx\"}}",
+        "packages/ui/src/components/plan/plan.tsx": "",
+        "apps/web/src/features/a/plan.tsx": "import { Plan } from '@groam/ui/components/plan';",
+        "packages/ui/src/hooks/use-dialog.ts": "import { Dialog } from '#tsx/components/dialog';"
+      },
+      "reports": []
+    },
+    {
+      "files": {
+        "packages/ui/src/components/muted-copy.tsx": "",
+        "packages/ui/src/components/muted-copy.test.tsx": "import { MutedCopy } from './muted-copy';",
+        "packages/ui/src/components/stepper.tsx": "import { Tabs } from './tabs';",
+        "packages/ui/src/components/tabs.tsx": "import { Stepper } from './stepper';",
+        "packages/ui/src/components/section-header.tsx": "",
+        "packages/ui/src/components/shell/sub-components.ts": "import Header from './components/section-header';",
+        "packages/ui/src/components/shell/components/section-header.tsx": "",
+        "packages/ui/src/components/dialog.tsx": "export const note = \"@groam/ui/components/dialog'\";",
+        "apps/web/src/features/a/muted-copy.tsx": "",
+        "apps/web/src/features/a/view.tsx": "import { Button } from '@groam/ui/components/button';\nimport { x } from './muted-copy';\nimport { y } from './section-header';",
+        "packages/ui/package.json": "{\"name\": \"@groam/ui\", \"exports\": {\"./components/muted-copy\": \"./src/components/muted-copy.tsx\", \"./components/shell/client\": \"./src/components/shell/client.tsx\", \"./components/list\": \"./src/components/list/index.ts\", \"./components/button\": \"./src/components/button.tsx\", \"./components/plan\": \"./src/components/plan/plan.tsx\"}}"
+      },
+      "reports": [
+        "packages/ui/src/components/muted-copy.tsx",
+        "packages/ui/src/components/stepper.tsx",
+        "packages/ui/src/components/tabs.tsx",
+        "packages/ui/src/components/section-header.tsx",
+        "packages/ui/src/components/shell/sub-components.ts",
+        "packages/ui/src/components/shell/components/section-header.tsx",
+        "packages/ui/src/components/dialog.tsx"
+      ]
+    }
+  ],
+  "aliases": {
+    "#tsx/": "packages/ui/src/",
+    "#src/": "packages/ui/src/"
+  },
+  "manifests": ["packages/ui/package.json"]
+}

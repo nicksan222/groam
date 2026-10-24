@@ -1,0 +1,509 @@
+---
+import Icon from '@groam/icons/astro';
+import StepNavigation from '@/components/step-navigation.astro';
+import PageSection from '@/components/page-section.astro';
+import SectionHeading from '@/components/section-heading.astro';
+import type { ExampleJourney } from '@/content/example-journeys';
+
+type Props = { journey: ExampleJourney };
+const { journey } = Astro.props;
+const initials = { Maya: 'M', Jonas: 'J', Priya: 'P', Sam: 'S' } as const;
+---
+
+<PageSection class="journey-section" aria-labelledby={`${journey.id}-journey-title`}>
+    <SectionHeading title={journey.title} body={journey.lede} headingId={`${journey.id}-journey-title`} />
+
+    <figure class:list={['journey', journey.id === 'home' && 'journey-home']} data-example-journey data-journey-id={journey.id} data-autoplay={journey.id === 'home' ? '' : undefined}>
+      <StepNavigation
+        class="journey-rail"
+        steps={journey.steps.map((item, index) => ({
+          label: item.tab,
+          controls: `${journey.id}-journey-panel-${index}`
+        }))}
+        stepAttribute="data-journey-step"
+        active={0}
+        label="Example journey steps"
+        progress={journey.id === 'home'}
+      />
+
+      <div class="journey-stage surface">
+        {
+          journey.steps.map((item, index) => (
+            <article
+              class="journey-panel"
+              id={`${journey.id}-journey-panel-${index}`}
+              data-journey-panel={index}
+              data-plan-state={item.planState}
+              aria-labelledby={`${journey.id}-journey-heading-${index}`}
+            >
+              <header class="panel-head">
+                <div>
+                  <p class="step-caption">Step {index + 1} of {journey.steps.length}</p>
+                  <h3 id={`${journey.id}-journey-heading-${index}`}>{item.heading}</h3>
+                </div>
+                <span class:list={['status', item.planState === 'applied' && 'status-applied']}>{item.status}</span>
+              </header>
+
+              <div class="story-grid">
+                <section class="conversation" aria-label={`Conversation at step ${index + 1}`}>
+                  <h4>Conversation</h4>
+                  <ol>
+                    {item.messages.map((message) => (
+                      <li class:list={['message', message.author === 'Trip record' && 'message-record']}>
+                        <span class:list={['speaker', `speaker-${message.author.toLowerCase().replace(' ', '-')}`]} aria-hidden="true">
+                          {message.author === 'Trip record' ? <Icon name="check" /> : initials[message.author]}
+                        </span>
+                        <p><b>{message.author}</b>{message.text}</p>
+                      </li>
+                    ))}
+                  </ol>
+                </section>
+
+                <section class:list={['change-sheet', 'strip', item.planState === 'applied' && 'flush']} aria-label="Idea state">
+                  <div class="sheet-head">
+                    <p>{item.planState === 'applied' ? 'Applied change' : 'Idea under review'}</p>
+                    <span>{item.status}</span>
+                  </div>
+                  <h4>{item.change.title}</h4>
+                  <ul>
+                    {item.change.lines.map((line) => (
+                      <li data-sign={line.sign}>
+                        <span aria-hidden="true">{line.sign}</span>
+                        <span>{line.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+
+                <section class="live-plan bill" aria-label="Live plan" data-journey-plan>
+                  <div class="plan-head">
+                    <div>
+                      <p>Live plan</p>
+                      <h4>{journey.id === 'conversations' ? 'Sunday' : journey.id === 'ideas' || journey.id === 'issues' ? 'Friday' : 'Saturday'}</h4>
+                    </div>
+                    <span class:list={['plan-state', item.planState === 'applied' && 'plan-state-applied']}>
+                      {item.planState === 'applied' ? 'Updated' : 'Unchanged'}
+                    </span>
+                  </div>
+                  <ol class="plan-rows">
+                    {item.rows.map((row) => (
+                      <li>
+                        <time>{row.time}</time>
+                        <span>{row.title}</span>
+                      </li>
+                    ))}
+                  </ol>
+                  <p class="plan-note">{item.planNote}</p>
+                </section>
+              </div>
+            </article>
+          ))
+        }
+      </div>
+
+      <footer class="journey-footer">
+        <p>
+          <span class="example-label">Example trip</span>
+          <span aria-live="polite" data-journey-live>{journey.steps[0]?.heading}</span>
+        </p>
+        <div class="journey-actions">
+          {journey.id === 'home' && (
+            <button class="journey-nav journey-toggle" type="button" data-journey-toggle hidden aria-pressed="false" aria-label="Pause the group story">
+              <Icon name="pause" class="i-pause" />
+              <Icon name="play" class="i-play" />
+              <span data-toggle-label>Pause</span>
+            </button>
+          )}
+          <button type="button" class="journey-nav" data-journey-prev disabled>Previous</button>
+          <span class="journey-progress" data-journey-progress>1 / {journey.steps.length}</span>
+          <button type="button" class="journey-nav journey-next" data-journey-next>Next step</button>
+          <button type="button" class="journey-nav journey-replay" data-journey-replay hidden>Replay</button>
+        </div>
+        {journey.id === 'home' && (
+          <a class="ai-link" href="/features/ai/">
+            Explore AI
+            <Icon name="arrow-right" />
+          </a>
+        )}
+      </footer>
+    </figure>
+</PageSection>
+
+<script>
+  import { setupExampleJourney } from '@/scripts/example-journey';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-example-journey]')) {
+    setupExampleJourney(root);
+  }
+</script>
+
+<style>
+  .journey-section {
+    overflow: clip;
+  }
+  .journey {
+    margin: 0;
+  }
+  .journey:not([data-ready]) .journey-actions {
+    display: none;
+  }
+  .journey-stage {
+    position: relative;
+    border: 2px solid var(--ink);
+    border-top-width: var(--rule);
+  }
+  .journey-home[data-ready] .journey-stage {
+    min-height: var(--journey-height, 0px);
+  }
+  .journey-home[data-measuring] .journey-stage {
+    display: grid;
+    min-height: 0;
+  }
+  .journey-home[data-measuring] .journey-panel {
+    grid-area: 1 / 1;
+    visibility: hidden;
+  }
+  .journey-home .panel-head {
+    min-height: 130px;
+  }
+  .journey-home .panel-head h3 {
+    font-size: clamp(1.8rem, 3.3vw, 2.8rem);
+  }
+  .journey-panel {
+    padding: var(--panel-padding);
+  }
+  .journey-ghost {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    background: var(--paper-raised);
+    pointer-events: none;
+  }
+  .journey[data-ready] .journey-panel[hidden] {
+    display: none;
+  }
+  .journey:not([data-ready]) .journey-panel + .journey-panel {
+    border-top: var(--rule) solid var(--ink);
+  }
+  .panel-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    align-items: start;
+    padding-bottom: clamp(18px, 2.4vw, 28px);
+    border-bottom: var(--rule) solid var(--ink);
+  }
+  .step-caption,
+  .conversation h4,
+  .sheet-head,
+  .plan-head > div > p {
+    font-size: 12px;
+    font-weight: 800;
+    font-stretch: 84%;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .step-caption {
+    margin-bottom: 7px;
+    color: var(--ink-soft);
+  }
+  .panel-head h3 {
+    max-width: 22ch;
+    font-size: clamp(1.8rem, 4vw, 3.6rem);
+    font-weight: 850;
+    font-stretch: 64%;
+    line-height: 0.94;
+    text-transform: uppercase;
+    word-spacing: var(--caps-space);
+  }
+  .status,
+  .plan-state {
+    flex: none;
+    padding: 7px 9px;
+    border: 1.5px dashed currentColor;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .status-applied {
+    border-style: solid;
+    background: var(--done);
+    color: var(--paper-raised);
+  }
+  .story-grid {
+    display: grid;
+    grid-template-columns: minmax(210px, 0.78fr) minmax(240px, 0.94fr) minmax(280px, 1.18fr);
+    gap: clamp(18px, 2.5vw, 34px);
+    align-items: start;
+    padding-top: clamp(20px, 3vw, 36px);
+  }
+  .conversation {
+    min-width: 0;
+  }
+  .conversation h4 {
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .conversation ol {
+    display: grid;
+  }
+  .message {
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 10px;
+    padding-block: 13px;
+    border-bottom: 1.5px solid var(--ink-line);
+  }
+  .speaker {
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--tint-maya);
+    color: var(--tint-ink);
+    font-size: 12px;
+    font-weight: 850;
+  }
+  .speaker-jonas { background: var(--tint-jonas); }
+  .speaker-priya { background: var(--tint-priya); }
+  .speaker-sam { background: var(--tint-sam); }
+  .speaker-trip-record { background: var(--agent); color: var(--agent-ink); }
+  .speaker :global(svg) {
+    width: 17px;
+    height: 17px;
+  }
+  .message p {
+    min-width: 0;
+    font-size: 14px;
+    line-height: 1.42;
+  }
+  .message b {
+    display: block;
+    margin-bottom: 2px;
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .message-record p {
+    color: var(--agent-ink);
+    background: var(--agent);
+    padding: 8px 10px;
+  }
+  .change-sheet {
+    display: grid;
+    gap: 14px;
+    padding: clamp(16px, 2vw, 24px);
+  }
+  .change-sheet.flush {
+    box-shadow: none;
+  }
+  .sheet-head,
+  .plan-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .sheet-head span {
+    text-align: right;
+  }
+  .change-sheet h4,
+  .live-plan h4 {
+    font-size: clamp(1.5rem, 2.6vw, 2.3rem);
+    font-weight: 850;
+    font-stretch: 64%;
+    line-height: 0.95;
+    text-transform: uppercase;
+    word-spacing: var(--caps-space);
+  }
+  .change-sheet ul {
+    border-top: 2px solid var(--strip-ink);
+  }
+  .change-sheet li {
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    gap: 5px;
+    padding: 8px 0;
+    border-bottom: 1.5px solid color-mix(in srgb, var(--strip-ink) 34%, var(--strip));
+    font-size: 13px;
+    font-weight: 650;
+  }
+  .change-sheet li[data-sign='−'] {
+    text-decoration: line-through;
+    text-decoration-color: var(--gone);
+    text-decoration-thickness: 2px;
+  }
+  .live-plan {
+    padding: clamp(16px, 2vw, 26px);
+  }
+  .plan-head {
+    align-items: start;
+    padding-bottom: 12px;
+    border-bottom: var(--rule) solid var(--bill-ink);
+  }
+  .plan-state {
+    border-color: var(--bill-ink);
+  }
+  .plan-state-applied {
+    border-style: solid;
+    background: var(--strip);
+    color: var(--strip-ink);
+  }
+  .plan-rows li {
+    display: grid;
+    grid-template-columns: 4.2rem minmax(0, 1fr);
+    gap: 9px;
+    padding: 10px 0;
+    border-bottom: 1.5px solid var(--bill-line);
+    font-size: 14px;
+    font-weight: 650;
+  }
+  .plan-rows time {
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+  }
+  .plan-note {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 2px dashed var(--bill-line);
+    color: var(--bill-soft);
+    font-size: 13px;
+  }
+  .journey-footer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 14px 24px;
+    align-items: center;
+    padding-top: 14px;
+  }
+  .journey-footer > p {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+  .journey-actions {
+    display: flex;
+    align-items: center;
+    justify-content: end;
+    gap: 0;
+  }
+  .journey-nav {
+    min-height: 44px;
+    padding: 0 14px;
+    border: 2px solid var(--ink);
+    background: var(--paper);
+    color: var(--ink);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 800;
+    font-stretch: 84%;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .journey-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-right: 10px;
+  }
+  .journey-toggle[hidden] {
+    display: none;
+  }
+  .journey-toggle :global(svg) {
+    width: 16px;
+    height: 16px;
+  }
+  .journey-toggle :global(.i-play),
+  .journey-toggle[aria-pressed='true'] :global(.i-pause) {
+    display: none;
+  }
+  .journey-toggle[aria-pressed='true'] :global(.i-play) {
+    display: block;
+  }
+  .journey-nav:hover:not(:disabled) {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .journey-nav:disabled {
+    color: var(--ink-soft);
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+  .journey-next,
+  .journey-replay {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .journey-progress {
+    min-width: 58px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+  .ai-link {
+    grid-column: 1 / -1;
+    width: fit-content;
+    color: var(--bill-text);
+    font-size: 14px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .ai-link :global(svg) {
+    width: 17px;
+    height: 17px;
+    transition: transform 0.35s var(--ease);
+  }
+  .ai-link:hover :global(svg) {
+    transform: translateX(3px);
+  }
+  @media (max-width: 960px) {
+    .story-grid {
+      grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    }
+    .conversation {
+      grid-column: 1 / -1;
+    }
+    .conversation ol {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0 18px;
+    }
+  }
+  @media (max-width: 680px) {
+    .story-grid,
+    .journey-footer {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .conversation ol {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .panel-head {
+      display: grid;
+    }
+    .status {
+      width: fit-content;
+    }
+    .journey-actions {
+      justify-content: stretch;
+    }
+    .journey-nav {
+      flex: 1;
+      padding-inline: 9px;
+    }
+    .journey-progress {
+      min-width: 48px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .journey-nav {
+      transition: none;
+    }
+  }
+</style>

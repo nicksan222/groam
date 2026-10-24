@@ -1,0 +1,29 @@
+{
+  "name": "@groam/payments",
+  "version": "0.0.0",
+  "dependencies": {
+    "zod": "^4.6.6"
+  },
+  "devDependencies": {
+    "@groam/typescript-config": "workspace:*",
+    "@groam/vitest-config": "workspace:*",
+    "typescript": "~7.0.2",
+    "vite": "catalog:",
+    "vite-plus": "catalog:",
+    "vitest": "catalog:"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "lint": "vp check src",
+    "test": "vp test run",
+    "typecheck": "tsc --noEmit"
+  },
+  "type": "module"
+}

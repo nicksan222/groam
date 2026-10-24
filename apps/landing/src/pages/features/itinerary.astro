@@ -1,0 +1,13 @@
+---
+import ExampleJourney from '@/components/example-journey.astro';
+import ItineraryDemo from '@/components/feature-itinerary/itinerary-demo.astro';
+import ItinerarySections from '@/components/feature-itinerary/itinerary-sections.astro';
+import { exampleJourneys } from '@/content/example-journeys';
+import FeatureLayout from '@/layouts/feature-layout.astro';
+---
+
+<FeatureLayout slug="itinerary">
+  <ItineraryDemo slot="demo" />
+  <ExampleJourney journey={exampleJourneys.itinerary} />
+  <ItinerarySections />
+</FeatureLayout>

@@ -1,0 +1,45 @@
+---
+import { env } from '@groam/env/landing';
+import ClosingCall from '@/components/closing-call.astro';
+import PageIntro from '@/components/page-intro.astro';
+import PricingCalculator from '@/components/pricing/pricing-calculator.astro';
+import PricingFaq from '@/components/pricing/pricing-faq.astro';
+import PricingLane from '@/components/pricing/pricing-lane.astro';
+import PricingPlan from '@/components/pricing/pricing-plan.astro';
+import SubpageLayout from '@/layouts/subpage-layout.astro';
+import { pricingIntro, pricingMeta } from '@/content/pricing';
+---
+
+<SubpageLayout title={pricingMeta.title} description={pricingMeta.description}>
+  <PageIntro title={pricingIntro.title} lede={pricingIntro.lede}>
+    <div class="actions">
+      <a class="btn btn-primary btn-lg" href={env.appUrl}>Start a trip</a>
+      <p class="note">Paid once per trip through Stripe Checkout. Existing trips stay free.</p>
+    </div>
+  </PageIntro>
+  <PricingPlan />
+  <PricingCalculator />
+  <PricingLane />
+  <PricingFaq />
+  <ClosingCall />
+</SubpageLayout>
+
+<style>
+  .actions {
+    display: grid;
+    justify-items: start;
+    gap: 12px;
+  }
+  .note {
+    max-width: 30ch;
+    color: var(--bill-ink);
+    font-weight: 700;
+    font-stretch: 86%;
+    font-size: 14px;
+    letter-spacing: 0.03em;
+    line-height: 1.35;
+    text-transform: uppercase;
+    word-spacing: var(--caps-space);
+    text-wrap: pretty;
+  }
+</style>

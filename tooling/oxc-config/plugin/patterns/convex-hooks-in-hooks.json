@@ -1,0 +1,24 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "module-source",
+  "pattern": "convex/react",
+  "message": "Move Convex React hooks into features/<domain>/hooks and expose feature-focused async state to components.",
+  "files": ["**/apps/web/src/features/**"],
+  "excludeFiles": [
+    "**/apps/web/src/features/**/hooks/**",
+    "**/apps/web/src/**/*.test.ts",
+    "**/apps/web/src/**/*.test.tsx"
+  ],
+  "examples": [
+    {
+      "file": "apps/web/src/features/example/example-view.tsx",
+      "source": "import { useQuery } from 'convex/react';\nexport function View() { return useQuery(api.example); }",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/example/hooks/use-example.ts",
+      "source": "import { useQuery } from 'convex/react';\nexport function useExample() { return useQuery(api.example); }",
+      "reports": false
+    }
+  ]
+}

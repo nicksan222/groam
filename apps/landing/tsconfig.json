@@ -1,0 +1,20 @@
+{
+  "extends": "@groam/typescript-config/base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "paths": {
+      "@/*": ["./src/*"],
+      "vitest": ["./node_modules/vitest"],
+      "vitest/internal/browser": ["./node_modules/vitest/dist/browser.d.ts"]
+    },
+    "types": ["node"]
+  },
+  "include": [
+    "astro.config.ts",
+    "vite.config.ts",
+    "void.config.ts",
+    "e2e/**/*.ts",
+    "src/**/*.ts",
+    "scripts/**/*.ts"
+  ]
+}

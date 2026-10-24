@@ -1,0 +1,39 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "node-text",
+  "nodes": ["JSXOpeningElement"],
+  "pattern": "<header(?:\\s|>)(?=.*\\bborder-b\\b).*|<\\w+\\s(?=.*\\brole=\"banner\").*",
+  "message": "Page headers are Shell.Header: no rule under them and no banner landmark. Use a div or section for a card or lane heading.",
+  "files": ["**/apps/web/src/features/**/*.tsx"],
+  "excludeFiles": [
+    "**/apps/web/src/**/*.test.tsx",
+    "**/apps/web/src/features/workspace/workspace-shell/mobile-top-bar.tsx"
+  ],
+  "examples": [
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <header className=\"flex border-b border-border px-4\">x</header>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <div role=\"banner\">x</div>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <header className=\"flex gap-2\">x</header>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <div className=\"border-b\">x</div>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/workspace/workspace-shell/mobile-top-bar.tsx",
+      "source": "export const v = <header className=\"h-12 border-b\">x</header>;",
+      "reports": false
+    }
+  ]
+}

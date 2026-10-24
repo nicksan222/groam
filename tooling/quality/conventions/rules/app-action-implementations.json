@@ -1,0 +1,22 @@
+{
+  "$schema": "../rule.schema.json",
+  "harness": "companion-files",
+  "message": "Every app action contract needs a backend implementation at src/backend/<verb>.ts",
+  "include": ["tooling/app-actions/src/actions/*.ts"],
+  "requires": ["tooling/app-actions/src/backend/{name}.ts"],
+  "examples": [
+    {
+      "files": {
+        "tooling/app-actions/src/actions/create-trip.ts": "",
+        "tooling/app-actions/src/backend/create-trip.ts": ""
+      },
+      "reports": []
+    },
+    {
+      "files": {
+        "tooling/app-actions/src/actions/archive-trip.ts": ""
+      },
+      "reports": ["tooling/app-actions/src/actions/archive-trip.ts"]
+    }
+  ]
+}

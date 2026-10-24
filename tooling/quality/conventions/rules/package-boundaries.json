@@ -1,0 +1,38 @@
+{
+  "$schema": "../rule.schema.json",
+  "harness": "dependency-boundaries",
+  "message": "Product packages may depend only on the @groam packages listed for them in rules/package-boundaries.json",
+  "include": ["packages/*/package.json"],
+  "allowed": {
+    "@groam/ai": ["@groam/icons", "@groam/ui"],
+    "@groam/auth": ["@groam/env"],
+    "@groam/backend": ["@groam/ai", "@groam/env", "@groam/payments"],
+    "@groam/brand": [],
+    "@groam/env": [],
+    "@groam/icons": [],
+    "@groam/payments": [],
+    "@groam/ui": ["@groam/brand", "@groam/icons"]
+  },
+  "examples": [
+    {
+      "files": {
+        "packages/ui/package.json": "{\"name\": \"@groam/ui\", \"dependencies\": {\"@groam/brand\": \"workspace:*\", \"@groam/icons\": \"workspace:*\"}}",
+        "packages/backend/package.json": "{\"name\": \"@groam/backend\", \"dependencies\": {\"@groam/ai\": \"workspace:*\"}, \"devDependencies\": {\"@groam/vitest-config\": \"workspace:*\"}}",
+        "apps/web/package.json": "{\"name\": \"@groam/web\", \"dependencies\": {\"@groam/backend\": \"workspace:*\"}}"
+      },
+      "reports": []
+    },
+    {
+      "files": {
+        "packages/ai/package.json": "{\"name\": \"@groam/ai\", \"dependencies\": {\"@groam/backend\": \"workspace:*\"}}",
+        "packages/ui/package.json": "{\"name\": \"@groam/ui\", \"dependencies\": {\"@groam/ai\": \"workspace:*\"}}",
+        "packages/new/package.json": "{\"name\": \"@groam/new\", \"dependencies\": {}}"
+      },
+      "reports": [
+        "@groam/ai -> @groam/backend",
+        "@groam/ui -> @groam/ai",
+        "@groam/new is not in the boundary map"
+      ]
+    }
+  ]
+}

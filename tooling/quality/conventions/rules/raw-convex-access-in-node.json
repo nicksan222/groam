@@ -1,0 +1,27 @@
+{
+  "$schema": "../rule.schema.json",
+  "harness": "pattern",
+  "message": "\"use node\" modules cannot touch the Convex database; call a query or mutation instead",
+  "include": [
+    "packages/backend/convex/components/**",
+    "packages/backend/convex/modules/**",
+    "packages/backend/convex/routes/**"
+  ],
+  "exclude": ["**/*.test.ts"],
+  "onlyIfFileMatches": "^\\s*['\"]use node['\"]",
+  "pattern": "\\b(?:ctx|this\\.ctx)\\s*\\.\\s*db\\b",
+  "examples": [
+    {
+      "files": {
+        "packages/backend/convex/modules/travel/trips/ctx.ts": "export const run = async (ctx) => ctx.db.get(\"trips\", id);"
+      },
+      "reports": []
+    },
+    {
+      "files": {
+        "packages/backend/convex/modules/travel/versions/git.ts": "'use node';\nexport const run = async (ctx) => ctx.db.get(\"trips\", id);"
+      },
+      "reports": ["packages/backend/convex/modules/travel/versions/git.ts:2"]
+    }
+  ]
+}

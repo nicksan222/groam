@@ -1,0 +1,31 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "node-text",
+  "nodes": ["JSXOpeningElement"],
+  "pattern": "<(?:table|thead|tbody|tfoot|tr|th|td|caption)(?:\\s|/|>).*",
+  "message": "Use Table (@groam/ui/components/table), or DataTable (@groam/ui/components/data-table) for sortable data, instead of native table elements.",
+  "files": ["**/apps/web/src/features/**/*.tsx", "**/packages/ai/src/ui/**/*.tsx"],
+  "excludeFiles": ["**/*.test.tsx"],
+  "examples": [
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <table><tbody><tr><td>x</td></tr></tbody></table>;",
+      "reports": true
+    },
+    {
+      "file": "packages/ai/src/ui/x/view.tsx",
+      "source": "export const v = <th scope=\"col\">x</th>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "import { Table, TableCell } from \"@groam/ui/components/table\";\nexport const v = <Table><TableCell>x</TableCell></Table>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/x/view.tsx",
+      "source": "export const v = <track kind=\"captions\" />;",
+      "reports": false
+    }
+  ]
+}

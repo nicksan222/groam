@@ -1,0 +1,30 @@
+{
+  "$schema": "../rule.schema.json",
+  "harness": "companion-files",
+  "message": "Feature hooks need a co-located use-*.test.ts(x) file beside the hook",
+  "include": ["apps/web/src/features/*/hooks/use-*.{ts,tsx}"],
+  "exclude": ["**/*.{test,spec}.*"],
+  "requires": ["{base}.test.ts", "{base}.test.tsx"],
+  "examples": [
+    {
+      "files": {
+        "apps/web/src/features/trips/hooks/use-new-capability.ts": "",
+        "apps/web/src/features/trips/hooks/use-new-capability.test.tsx": ""
+      },
+      "reports": []
+    },
+    {
+      "files": {
+        "apps/web/src/features/trips/hooks/use-new-capability.ts": ""
+      },
+      "reports": ["apps/web/src/features/trips/hooks/use-new-capability.ts"]
+    },
+    {
+      "files": {
+        "apps/web/src/features/trips/hooks/use-new-capability.ts": "",
+        "apps/web/src/features/trips/use-new-capability.test.ts": ""
+      },
+      "reports": ["apps/web/src/features/trips/hooks/use-new-capability.ts"]
+    }
+  ]
+}

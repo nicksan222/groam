@@ -1,0 +1,143 @@
+/*
+ * Groam's look for the vendored Kloq calendar (src/vendor/kloq).
+ *
+ * Kloq scopes its own neutral theme to every [data-kloq-root], including the root it portals
+ * panels and menus into under <body>, so Groam's tokens cannot simply be inherited. They are
+ * captured once on the page root (where `.dark` already applies) under a `--groam-` name, and
+ * every Kloq root reads them back. The repeated attribute outranks Kloq's own `.dark` and theme
+ * selectors without editing the vendored stylesheet.
+ */
+:root,
+.dark {
+  --groam-accent: var(--accent);
+  --groam-accent-foreground: var(--accent-foreground);
+  --groam-background: var(--background);
+  --groam-border: var(--border);
+  --groam-card: var(--card);
+  --groam-card-foreground: var(--card-foreground);
+  --groam-code: var(--code);
+  --groam-code-foreground: var(--code-foreground);
+  --groam-code-highlight: var(--code-highlight);
+  --groam-destructive: var(--destructive);
+  --groam-destructive-foreground: var(--destructive-foreground);
+  --groam-foreground: var(--foreground);
+  --groam-info: var(--info);
+  --groam-info-foreground: var(--info-foreground);
+  --groam-input: var(--input);
+  --groam-muted: var(--muted);
+  --groam-muted-foreground: var(--muted-foreground);
+  --groam-popover: var(--popover);
+  --groam-popover-foreground: var(--popover-foreground);
+  --groam-primary: var(--primary);
+  --groam-primary-foreground: var(--primary-foreground);
+  --groam-radius: var(--radius);
+  --groam-radius-sm: var(--radius-sm);
+  --groam-radius-md: var(--radius-md);
+  --groam-radius-lg: var(--radius-lg);
+  --groam-radius-xl: var(--radius-xl);
+  --groam-radius-2xl: var(--radius-2xl);
+  --groam-radius-3xl: var(--radius-3xl);
+  --groam-radius-4xl: var(--radius-4xl);
+  --groam-ring: var(--ring);
+  --groam-scrim: var(--scrim);
+  --groam-secondary: var(--secondary);
+  --groam-secondary-foreground: var(--secondary-foreground);
+  --groam-shadow-xs: var(--shadow-xs);
+  --groam-shadow-sm: var(--shadow-sm);
+  --groam-shadow-md: var(--shadow-md);
+  --groam-shadow-lg: var(--shadow-lg);
+  --groam-shadow-xl: var(--shadow-xl);
+  --groam-sidebar: var(--sidebar);
+  --groam-sidebar-accent: var(--sidebar-accent);
+  --groam-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --groam-sidebar-border: var(--sidebar-border);
+  --groam-sidebar-foreground: var(--sidebar-foreground);
+  --groam-sidebar-primary: var(--sidebar-primary);
+  --groam-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --groam-sidebar-ring: var(--sidebar-ring);
+  --groam-success: var(--success);
+  --groam-success-foreground: var(--success-foreground);
+  --groam-warning: var(--warning);
+  --groam-warning-foreground: var(--warning-foreground);
+}
+
+[data-kloq-root][data-kloq-root][data-kloq-root] {
+  --accent: var(--groam-accent);
+  --accent-foreground: var(--groam-accent-foreground);
+  --background: var(--groam-background);
+  --border: var(--groam-border);
+  --card: var(--groam-card);
+  --card-foreground: var(--groam-card-foreground);
+  --code: var(--groam-code);
+  --code-foreground: var(--groam-code-foreground);
+  --code-highlight: var(--groam-code-highlight);
+  --destructive: var(--groam-destructive);
+  --destructive-foreground: var(--groam-destructive-foreground);
+  --foreground: var(--groam-foreground);
+  --info: var(--groam-info);
+  --info-foreground: var(--groam-info-foreground);
+  --input: var(--groam-input);
+  --muted: var(--groam-muted);
+  --muted-foreground: var(--groam-muted-foreground);
+  --popover: var(--groam-popover);
+  --popover-foreground: var(--groam-popover-foreground);
+  --primary: var(--groam-primary);
+  --primary-foreground: var(--groam-primary-foreground);
+  --radius: var(--groam-radius);
+  --radius-sm: var(--groam-radius-sm);
+  --radius-md: var(--groam-radius-md);
+  --radius-lg: var(--groam-radius-lg);
+  --radius-xl: var(--groam-radius-xl);
+  --radius-2xl: var(--groam-radius-2xl);
+  --radius-3xl: var(--groam-radius-3xl);
+  --radius-4xl: var(--groam-radius-4xl);
+  --ring: var(--groam-ring);
+  --scrim: var(--groam-scrim);
+  --secondary: var(--groam-secondary);
+  --secondary-foreground: var(--groam-secondary-foreground);
+  --shadow-xs: var(--groam-shadow-xs);
+  --shadow-sm: var(--groam-shadow-sm);
+  --shadow-md: var(--groam-shadow-md);
+  --shadow-lg: var(--groam-shadow-lg);
+  --shadow-xl: var(--groam-shadow-xl);
+  --sidebar: var(--groam-sidebar);
+  --sidebar-accent: var(--groam-sidebar-accent);
+  --sidebar-accent-foreground: var(--groam-sidebar-accent-foreground);
+  --sidebar-border: var(--groam-sidebar-border);
+  --sidebar-foreground: var(--groam-sidebar-foreground);
+  --sidebar-primary: var(--groam-sidebar-primary);
+  --sidebar-primary-foreground: var(--groam-sidebar-primary-foreground);
+  --sidebar-ring: var(--groam-sidebar-ring);
+  --success: var(--groam-success);
+  --success-foreground: var(--groam-success-foreground);
+  --warning: var(--groam-warning);
+  --warning-foreground: var(--groam-warning-foreground);
+  --brand: var(--groam-primary);
+  --brand-foreground: var(--groam-primary);
+  --kloq-now: var(--groam-primary);
+  --kloq-draft: var(--groam-primary);
+  --kloq-draft-ink: var(--groam-foreground);
+}
+
+.dark [data-kloq-root][data-kloq-root] {
+  color-scheme: dark;
+}
+
+/* Trip plans have no guests, repeats, reminders, call links or busy state: the panel offers none. */
+[data-kloq-theme='groam'] [aria-label='Add recurrence'],
+[data-kloq-theme='groam'] [aria-label='Add reminder'],
+[data-kloq-theme='groam'] [aria-label='Add video call'],
+[data-kloq-theme='groam'] [aria-label='Add guests'],
+[data-kloq-theme='groam'] [aria-label='Export .ics'],
+[data-kloq-theme='groam'] [aria-label='Availability'] {
+  display: none;
+}
+
+/*
+ * The trip calendar scrolls by wheel, touch and keyboard, as Kloq's own demo does. A native bar
+ * would sit in the grid and push the hours out of line with the day heads above them.
+ */
+[data-plan-calendar] [data-cal-scroll],
+[data-plan-calendar] .overflow-y-auto {
+  scrollbar-width: none;
+}

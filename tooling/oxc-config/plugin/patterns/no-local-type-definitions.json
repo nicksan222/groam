@@ -1,0 +1,25 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "node-text",
+  "nodes": ["TSTypeAliasDeclaration", "TSInterfaceDeclaration"],
+  "pattern": ".*",
+  "message": "Put type and interface definitions in apps/web/src/types. Use an oxlint-disable-next-line comment only when a definition must stay local.",
+  "files": ["**/apps/web/src/**"],
+  "excludeFiles": [
+    "**/apps/web/src/types/**",
+    "**/apps/web/src/**/*.test.ts",
+    "**/apps/web/src/**/*.test.tsx"
+  ],
+  "examples": [
+    {
+      "file": "apps/web/src/features/example/example-view.tsx",
+      "source": "export type Example = { id: string };",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/types/example.ts",
+      "source": "export type Example = { id: string };",
+      "reports": false
+    }
+  ]
+}

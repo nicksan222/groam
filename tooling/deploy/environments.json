@@ -1,0 +1,19 @@
+{
+  "$schema": "./environments.schema.json",
+  "production": {
+    "convexUrl": "",
+    "cloudflareAccountId": "",
+    "workersSubdomain": "",
+    "emailFrom": "Groam <noreply@groam.app>",
+    "web": { "worker": "groam-app", "host": "app.groam.app" },
+    "landing": { "worker": "groam-landing", "host": "groam.app" }
+  },
+  "beta": {
+    "convexUrl": "",
+    "cloudflareAccountId": "",
+    "workersSubdomain": "",
+    "emailFrom": "Groam Beta <noreply@beta.groam.app>",
+    "web": { "worker": "groam-app-beta", "host": "app.beta.groam.app" },
+    "landing": { "worker": "groam-landing-beta", "host": "beta.groam.app" }
+  }
+}

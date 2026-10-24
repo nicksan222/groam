@@ -1,0 +1,254 @@
+---
+import AuthorAvatar from '@/components/author-avatar.astro';
+import Icon from '@groam/icons/astro';
+import { authors, tripActivity, visibleEntries } from '@/content/trip-activity';
+
+// Newest first, like any feed: the opening entries reversed, then the rest waiting (hidden) in order.
+const ordered = [
+  ...tripActivity.slice(0, visibleEntries).map((entry, index) => ({ entry, index })).reverse(),
+  ...tripActivity.slice(visibleEntries).map((entry, index) => ({ entry, index: index + visibleEntries }))
+];
+---
+
+<section class="log" aria-label="Example trip activity" data-activity-log>
+  <header class="head">
+    <span class="live" aria-hidden="true"></span>
+    <b>Lisbon long weekend</b>
+    <span class="fine">Activity</span>
+    <span class="example-label">Example trip</span>
+    <button class="toggle" type="button" data-toggle aria-pressed="false" hidden>
+      <Icon name="pause" class="when-playing" />
+      <Icon name="play" class="when-paused" />
+      <span class="visually-hidden">Pause activity</span>
+    </button>
+  </header>
+  <div class="clip" data-clip>
+  <ol class="entries" data-entries>
+    {
+      ordered.map(({ entry, index }) => {
+        const author = authors[entry.author];
+        const detailKind = entry.verb.includes('idea')
+          ? entry.verb.startsWith('applied')
+            ? 'idea applied'
+            : entry.verb.startsWith('reviewed')
+              ? 'agent'
+              : 'idea proposed'
+          : author.agent
+            ? 'agent'
+            : undefined;
+        return (
+          <li class:list={['entry', { now: index === visibleEntries - 1 }]} hidden={index >= visibleEntries}>
+            <AuthorAvatar author={entry.author} />
+            <p>
+              <span class="who">{author.name}</span> <span class="verb">{entry.verb}</span>
+              {entry.detail && <span class:list={['detail', detailKind, detailKind?.startsWith('idea') && 'strip', detailKind === 'idea applied' && 'flush']}>{entry.detail}</span>}
+            </p>
+            <span class="time"><span class="now-tag">now ·</span>{entry.time}</span>
+          </li>
+        );
+      })
+    }
+  </ol>
+  </div>
+  <p class="earlier" aria-hidden="true">Earlier on the trip</p>
+</section>
+
+<script>
+  import { playActivityLog } from '@/scripts/activity-feed';
+
+  for (const log of document.querySelectorAll<HTMLElement>('[data-activity-log]')) playActivityLog(log);
+</script>
+
+<style>
+  .log {
+    overflow: hidden;
+    background: var(--paper);
+    color: var(--ink);
+    --on: var(--ink);
+    --on-soft: var(--ink-soft);
+  }
+  .head {
+    --focus: var(--press-ink);
+    border-bottom: var(--rule) solid var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    background: var(--press);
+    color: var(--press-ink);
+    font-size: 14px;
+  }
+  .head b {
+    font-weight: 850;
+    font-stretch: 66%;
+    word-spacing: var(--caps-space);
+    font-size: 22px;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+  .head .fine {
+    color: color-mix(in srgb, var(--press-ink) 70%, var(--press));
+    font-weight: 600;
+  }
+  .head .example-label {
+    margin-left: auto;
+  }
+  .live {
+    flex: none;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--done);
+  }
+  .log.paused .live {
+    background: transparent;
+    box-shadow: inset 0 0 0 2px currentColor;
+  }
+  .toggle {
+    flex: none;
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border: 2px solid currentColor;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+  .toggle:hover {
+    background: var(--press-ink);
+    color: var(--press);
+  }
+  .toggle[hidden],
+  .entry[hidden] {
+    display: none;
+  }
+  .toggle :global(svg) {
+    width: 15px;
+    height: 15px;
+  }
+  .toggle :global(.when-paused),
+  .log.paused .toggle :global(.when-playing) {
+    display: none;
+  }
+  .log.paused .toggle :global(.when-paused) {
+    display: block;
+  }
+  .clip {
+    overflow: hidden;
+  }
+  /* A printed fold at the foot of the card: while the log plays, older entries slide under it. */
+  .earlier {
+    position: relative;
+    z-index: 1;
+    height: 34px;
+    padding: 8px 18px;
+    line-height: 16.5px;
+    border-top: 1.5px solid var(--ink-line);
+    background: var(--paper);
+    color: var(--ink-soft);
+    font-size: 12px;
+    font-weight: 750;
+    font-stretch: 84%;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .log:global(.running) .earlier {
+    margin-top: -34px;
+  }
+  .entry {
+    position: relative;
+    display: grid;
+    grid-template-columns: 26px minmax(0, 1fr) 7.4em;
+    gap: 14px;
+    overflow: hidden;
+    padding: 14px 18px;
+    border-bottom: 1.5px solid var(--ink-line);
+    font-size: 15px;
+    line-height: 1.45;
+  }
+  .entry .time {
+    padding-top: 3px;
+    text-align: right;
+    transition: color 0.6s var(--ease);
+    font-size: 14px;
+    color: var(--ink);
+  }
+  .who {
+    font-weight: 750;
+  }
+  .verb {
+    color: var(--ink-soft);
+  }
+  .detail {
+    display: block;
+    margin-top: 8px;
+    padding: 8px 10px;
+    border: 1.5px solid var(--ink);
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .detail.agent {
+    border-color: var(--agent);
+    background: var(--agent);
+    color: var(--agent-ink);
+  }
+  .detail.idea {
+    position: relative;
+    border-color: transparent;
+    background: var(--strip);
+    color: var(--strip-ink);
+    padding: 12px 14px;
+  }
+  .detail.idea.proposed {
+    transform: rotate(-0.45deg) translateY(-1px);
+  }
+  .detail.idea.applied {
+    box-shadow: none;
+    transform: none;
+  }
+  .entry:global(.now) .time {
+    color: var(--bill-text);
+  }
+  /* The "now" mark eases between entries instead of jumping. */
+  .now-tag {
+    display: inline-block;
+    max-width: 0;
+    overflow: hidden;
+    vertical-align: bottom;
+    opacity: 0;
+    font-weight: 800;
+    transition:
+      max-width 0.6s var(--ease),
+      opacity 0.5s var(--ease);
+  }
+  .entry:global(.now) .now-tag {
+    max-width: 4em;
+    margin-right: 0.3em;
+    opacity: 1;
+  }
+  .log.paused .entry:global(.now) .time {
+    color: var(--ink);
+  }
+  @media (max-width: 420px) {
+    .head .fine {
+      display: none;
+    }
+    .head {
+      flex-wrap: wrap;
+      row-gap: 8px;
+    }
+    .head b {
+      flex: 1 1 60%;
+    }
+    .entry {
+      grid-template-columns: 26px minmax(0, 1fr);
+    }
+    .entry .time {
+      text-align: left;
+      grid-column: 2;
+      grid-row: 2;
+      padding-top: 0;
+    }
+  }
+</style>

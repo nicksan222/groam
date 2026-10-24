@@ -1,0 +1,26 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "node-text",
+  "nodes": ["JSXAttribute"],
+  "pattern": "maxLength=\\{\\s*[0-9][0-9_]*\\s*\\}",
+  "message": "Import the field's limit from its backend domain's leaf lengths.ts instead of typing a number. The Convex write enforces the same constant, so the form and the server cannot drift.",
+  "files": ["**/apps/web/src/features/**/*.tsx", "**/packages/ai/src/ui/**/*.tsx"],
+  "excludeFiles": ["**/apps/web/src/features/**/*.test.tsx", "**/packages/ai/src/ui/**/*.test.tsx"],
+  "examples": [
+    {
+      "file": "apps/web/src/features/example/example-form.tsx",
+      "source": "export const view = <textarea maxLength={240} />;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/example/example-form.tsx",
+      "source": "const MAX_NOTES_LENGTH = 240;\nexport const view = <textarea maxLength={MAX_NOTES_LENGTH} />;",
+      "reports": false
+    },
+    {
+      "file": "packages/ai/src/ui/example/example-card.tsx",
+      "source": "export const view = <textarea maxLength={500} />;",
+      "reports": true
+    }
+  ]
+}

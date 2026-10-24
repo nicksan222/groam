@@ -1,0 +1,33 @@
+# Logs
+logs
+*.log
+
+node_modules
+*.tsbuildinfo
+.astro
+dist
+coverage
+**/test-results
+*.local
+# Personal agent overrides (models, providers, env, MCP, notes).
+.claude/settings.local.json
+CLAUDE.local.md
+AGENTS.local.md
+.codex/config.local.toml
+.worktrees/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.sw?
+
+# Void generated types, local state, Cloudflare config, and local Worker values
+.void/
+.void-wrangler.jsonc
+apps/web/.env
+
+# Void writes app-local locks during a deploy; committed copies live in tooling/deploy/locks.
+apps/web/void.lock.json
+apps/landing/void.lock.json

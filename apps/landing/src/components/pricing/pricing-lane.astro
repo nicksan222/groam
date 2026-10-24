@@ -1,0 +1,333 @@
+---
+import Icon from '@groam/icons/astro';
+import { lane, laneTrips } from '@/content/pricing';
+import PageSection from '@/components/page-section.astro';
+
+const copies = [0, 1];
+---
+
+<PageSection class="lane" aria-labelledby="lane-title" data-pricing-lane>
+  <div class="head">
+    <div>
+      <h2 class="section-title" id="lane-title">Every trip, <span>€1 per traveler</span></h2>
+      <p class="section-lede">{lane.lede}</p>
+    </div>
+    <div class="tools">
+      <span class="example-label">Example trips</span>
+      <button class="loop-toggle" type="button" data-toggle data-paused="false" hidden>
+        <span class="icon when-playing" aria-hidden="true">
+          <Icon name="pause" />
+        </span>
+        <span class="icon when-paused" aria-hidden="true">
+          <Icon name="play" filled />
+        </span>
+        <span class="sr">Pause trip lane</span>
+      </button>
+    </div>
+  </div>
+
+  <div slot="bleed" class="viewport" role="group" aria-label="Example trips where each invited traveler pays €1 per trip">
+    <div class="track" data-track>
+      {
+        copies.map((copy) => (
+          <ul class="set" aria-hidden={copy === 1 ? 'true' : undefined}>
+            {laneTrips.map((trip) => (
+              <li class="surface trip">
+                <div class="stub">
+                  <h3>{trip.name}<span class="when">{trip.when}</span></h3>
+                  <p class="fare">
+                    €{trip.roster.filter((who) => who.state === 'paid').length}
+                  </p>
+                </div>
+                <ul class="roster">
+                  {trip.roster.map((who, i) => (
+                    <li class={`who ${who.state}`} style={`--i:${i}`}>
+                      <span class="hop">
+                        <span class={`avatar big avatar-${who.id}`}>{who.initial}</span>
+                      </span>
+                      <span class="chip-state">
+                        {who.state === 'paid' ? '€1' : 'trip creator'}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                {trip.roster.length === 1 && <p class="solo">No invited travelers, so no charge.</p>}
+              </li>
+            ))}
+            <li class="trip endcap">
+              <p>{lane.endcap}</p>
+            </li>
+          </ul>
+        ))
+      }
+    </div>
+  </div>
+</PageSection>
+
+<script>
+  import { playPricingLane } from '@/scripts/pricing-lane';
+
+  for (const lane of document.querySelectorAll<HTMLElement>('[data-pricing-lane]')) playPricingLane(lane);
+</script>
+
+<style>
+  .lane {
+    display: grid;
+    gap: var(--content-gap);
+  }
+  .section-title {
+    text-wrap: balance;
+  }
+  .section-lede {
+    text-wrap: pretty;
+  }
+  .viewport:focus-visible {
+    outline: 3px solid var(--ink);
+    outline-offset: 3px;
+  }
+  .head {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .head .section-lede {
+    color: var(--ink-soft);
+  }
+  .tools {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: none;
+  }
+  .loop-toggle[hidden] {
+    display: none;
+  }
+  .loop-toggle:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .icon :global(svg) {
+    width: 16px;
+    height: 16px;
+    display: block;
+  }
+  .icon {
+    grid-area: 1 / 1;
+    transition:
+      opacity 0.16s ease,
+      transform 0.25s var(--ease);
+  }
+  .when-paused,
+  .loop-toggle[data-paused='true'] .when-playing {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+  .sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .viewport {
+    padding-inline: var(--gutter);
+    overflow: hidden;
+  }
+  .track {
+    display: flex;
+    width: max-content;
+    animation: lane 80s linear infinite;
+  }
+  .viewport[data-state='paused'] :global(*),
+  .viewport[data-state='offscreen'] :global(*),
+  .viewport[data-state='paused'] .track,
+  .viewport[data-state='offscreen'] .track {
+    animation-play-state: paused;
+  }
+  .set {
+    display: flex;
+    gap: 22px;
+    padding-right: 22px;
+    list-style: none;
+  }
+  .trip {
+    flex: none;
+    width: 420px;
+    display: grid;
+    align-content: start;
+  }
+  .stub {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px 12px;
+    background: var(--ink);
+    color: var(--paper);
+    border-bottom: 3px dashed var(--paper);
+  }
+  .trip h3 {
+    font-weight: 850;
+    font-stretch: 68%;
+    font-size: 1.7rem;
+    line-height: 0.95;
+    text-transform: uppercase;
+    word-spacing: var(--caps-space);
+  }
+  .when {
+    display: block;
+    margin-top: 6px;
+    font-weight: 700;
+    font-stretch: 84%;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    word-spacing: var(--caps-space);
+    color: color-mix(in srgb, var(--paper) 72%, var(--ink));
+  }
+  .fare {
+    font-weight: 850;
+    font-stretch: 62%;
+    font-size: 3rem;
+    line-height: 0.8;
+    font-variant-numeric: tabular-nums;
+  }
+  .roster {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 0;
+    padding: 18px 14px 20px;
+    align-content: start;
+  }
+  .who {
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    width: 60px;
+  }
+  .who.organizer {
+    width: 76px;
+  }
+  .big {
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
+  }
+  .hop {
+    display: inline-flex;
+    animation: hop 3.6s var(--ease) infinite;
+    animation-delay: calc(var(--i) * 0.35s);
+  }
+  .chip-state {
+    font-weight: 750;
+    font-stretch: 82%;
+    font-size: 11px;
+    line-height: 1.3;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    word-spacing: var(--caps-space);
+    color: var(--ink-soft);
+  }
+  .who.paid .chip-state {
+    padding: 1px 6px;
+    background: var(--bill);
+    color: var(--bill-ink);
+  }
+  .solo {
+    padding: 0 18px 18px;
+    font-weight: 700;
+    font-stretch: 86%;
+    font-size: 13px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    word-spacing: var(--caps-space);
+    color: var(--ink-soft);
+  }
+  .endcap {
+    flex: none;
+    width: 300px;
+    display: grid;
+    align-content: center;
+    align-self: stretch;
+    padding: 22px;
+    border: 2px dashed var(--ink);
+  }
+  .endcap p {
+    font-weight: 850;
+    font-stretch: 68%;
+    font-size: 1.6rem;
+    line-height: 1;
+    text-transform: uppercase;
+    word-spacing: var(--caps-space);
+  }
+  .avatar-lena {
+    background: var(--avatar-green);
+    color: var(--avatar-green-foreground);
+  }
+  .avatar-ravi {
+    background: var(--strip);
+    color: var(--strip-ink);
+  }
+  .avatar-ana {
+    background: var(--avatar-mauve);
+    color: var(--avatar-mauve-foreground);
+  }
+  .avatar-noor {
+    background: var(--agent);
+    color: var(--agent-ink);
+  }
+  @keyframes lane {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @keyframes hop {
+    0%,
+    70%,
+    100% {
+      transform: translateY(0);
+    }
+    82% {
+      transform: translateY(-6px);
+    }
+  }
+  @media (max-width: 640px) {
+    .head {
+      flex-direction: column;
+      align-items: start;
+    }
+    .trip {
+      width: 340px;
+    }
+    .trip h3 {
+      font-size: 1.35rem;
+    }
+    .who {
+      width: 56px;
+    }
+    .who.organizer {
+      width: 72px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .icon {
+      transition: none;
+    }
+    .viewport {
+      overflow-x: auto;
+    }
+    .track {
+      animation: none;
+      width: auto;
+    }
+    .set[aria-hidden='true'] {
+      display: none;
+    }
+    .hop {
+      animation: none;
+    }
+  }
+</style>

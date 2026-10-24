@@ -1,0 +1,51 @@
+---
+import PageSection from '@/components/page-section.astro';
+// Opening bill of every subpage: the masthead above runs straight into it, so the page reads as
+// one printed sheet. `tail` leaves room at the bottom for a demo to overlap the bill's edge.
+type Props = { title: string; lede: string; tail?: boolean };
+const { title, lede, tail = false } = Astro.props;
+---
+
+<PageSection tone="bill" class:list={['intro', { tail }]}>
+  <div class="inner">
+    <slot name="before" />
+    <h1 class="display">{title}</h1>
+    <div class="foot">
+      <p class="lede">{lede}</p>
+      <slot />
+    </div>
+  </div>
+</PageSection>
+
+<style>
+  .intro.tail {
+    padding-bottom: calc(var(--demo-overlap) + var(--section));
+  }
+  .inner {
+    display: grid;
+    gap: var(--content-gap);
+  }
+  h1 {
+    max-width: 15ch;
+    font-size: clamp(3.2rem, 9.2vw, 8.6rem);
+  }
+  .foot {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 24px var(--column-gap);
+    align-items: end;
+    padding-top: 22px;
+    border-top: var(--rule) solid var(--bill-ink);
+  }
+  .lede {
+    max-width: 52ch;
+    color: var(--bill-ink);
+    font-size: clamp(1.08rem, 1.5vw, 1.3rem);
+    line-height: 1.45;
+  }
+  @media (max-width: 760px) {
+    .foot {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

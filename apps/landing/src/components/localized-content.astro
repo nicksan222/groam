@@ -1,0 +1,11 @@
+---
+import { localizeMarkup } from '@/i18n/markup';
+import { localeFromPath, withoutLocale } from '@/i18n/locale';
+
+const locale = localeFromPath(Astro.url.pathname);
+const { html, messages } = localizeMarkup(await Astro.slots.render('default'), locale, withoutLocale(Astro.url.pathname));
+const serialized = JSON.stringify(messages).replaceAll('<', '\\u003c');
+---
+
+<Fragment set:html={html} />
+{locale === 'it' && <script is:inline type="application/json" id="landing-translations" set:html={serialized} />}

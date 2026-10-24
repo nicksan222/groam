@@ -1,0 +1,49 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "node-text",
+  "nodes": ["CallExpression"],
+  "pattern": "(?:.*\\.getByTestId\\s*\\(\\s*[\\x22\\x27]|by\\s*\\(\\s*(?:[^,]+,\\s*)?[\\x22\\x27]).*",
+  "message": "Use ids from @groam/app-actions/ids for browser test locators instead of a raw test-ID string.",
+  "files": [
+    "**/apps/web/e2e/**",
+    "**/tooling/app-actions/src/playwright/**",
+    "**/tooling/app-actions/src/vitest/**"
+  ],
+  "examples": [
+    {
+      "file": "apps/web/e2e/example.test.tsx",
+      "source": "page.getByTestId('save-trip');",
+      "reports": true
+    },
+    {
+      "file": "apps/web/e2e/example.test.tsx",
+      "source": "by(page, 'save-trip');",
+      "reports": true
+    },
+    {
+      "file": "apps/web/e2e/example.test.tsx",
+      "source": "by('save-trip');",
+      "reports": true
+    },
+    {
+      "file": "tooling/app-actions/src/vitest/example.ts",
+      "source": "page.getByTestId('save-trip');",
+      "reports": true
+    },
+    {
+      "file": "tooling/app-actions/src/vitest/example.ts",
+      "source": "by(page, 'save-trip');",
+      "reports": true
+    },
+    {
+      "file": "tooling/app-actions/src/vitest/example.ts",
+      "source": "by('save-trip');",
+      "reports": true
+    },
+    {
+      "file": "tooling/app-actions/src/vitest/example.ts",
+      "source": "page.getByTestId(ids.saveTrip); by(page, ids.saveTrip); by(ids.saveTrip); page.getByTestId(`${ids.dialog}-submit`);",
+      "reports": false
+    }
+  ]
+}

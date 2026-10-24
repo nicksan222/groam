@@ -1,0 +1,4 @@
+{
+  "extends": "@groam/typescript-config/react.json",
+  "include": ["src"]
+}

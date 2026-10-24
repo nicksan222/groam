@@ -1,0 +1,44 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "node-text",
+  "nodes": ["JSXOpeningElement"],
+  "pattern": "<(?:h1|Shell\\.Title)(?:\\s|/|>).*",
+  "message": "A page title belongs to Shell.Header (title, parent, status, actions). Do not render <h1> or Shell.Title in features.",
+  "files": ["**/apps/web/src/features/**/*.tsx"],
+  "excludeFiles": [
+    "**/apps/web/src/**/*.test.tsx",
+    "**/apps/web/src/features/workspace/workspace-shell/workspace-context.tsx"
+  ],
+  "examples": [
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <h1 className=\"text-xl\">Trips</h1>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <Shell.Title>Trips</Shell.Title>;",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <Shell.Header title=\"Trips\" />;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/a/view.tsx",
+      "source": "export const v = <h2>Runs</h2>;",
+      "reports": false
+    },
+    {
+      "file": "apps/web/src/features/workspace/workspace-shell/workspace-context.tsx",
+      "source": "export const v = <h1>Unable to load workspace</h1>;",
+      "reports": false
+    },
+    {
+      "file": "packages/ui/src/components/a.tsx",
+      "source": "export const v = <h1>Title</h1>;",
+      "reports": false
+    }
+  ]
+}

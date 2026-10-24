@@ -1,0 +1,22 @@
+{
+  "$schema": "../rule.schema.json",
+  "harness": "pattern",
+  "message": "Compose journey product interactions through @groam/app-actions/vitest steps",
+  "include": ["apps/web/e2e/**"],
+  "pattern": "\\.(?:check|click|dblclick|dragTo|fill|goto|hover|press|reload|selectOption|setInputFiles|uncheck)\\s*\\(",
+  "examples": [
+    {
+      "files": {
+        "apps/web/e2e/trips/create.test.tsx": "await steps.createTrip(page);",
+        "tooling/app-actions/src/vitest/create-trip.ts": "await button.click();"
+      },
+      "reports": []
+    },
+    {
+      "files": {
+        "apps/web/e2e/trips/create.test.tsx": "await steps.createTrip(page);\nawait page.getByRole(\"button\").click();"
+      },
+      "reports": ["apps/web/e2e/trips/create.test.tsx:2"]
+    }
+  ]
+}

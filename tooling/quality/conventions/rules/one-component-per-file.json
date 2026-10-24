@@ -1,0 +1,29 @@
+{
+  "$schema": "../rule.schema.json",
+  "harness": "max-matches",
+  "message": "Feature TSX files must export at most one component; split the others into their own kebab-case files",
+  "include": ["apps/web/**/*.tsx", "packages/ai/src/ui/**/*.tsx"],
+  "exclude": ["**/*.{test,spec}.*"],
+  "max": 1,
+  "pattern": "^export (?:default )?(?:async )?function ([A-Z][A-Za-z0-9]*[a-z][A-Za-z0-9]*)\\b|^export const ([A-Z][A-Za-z0-9]*[a-z][A-Za-z0-9]*) = |^export (?:default )?class ([A-Z][A-Za-z0-9]*[a-z][A-Za-z0-9]*)\\b",
+  "examples": [
+    {
+      "files": {
+        "packages/ui/src/components/card.tsx": "export function TripList() { return null; }\nexport function TripRow() { return null; }\n",
+        "apps/web/src/features/trips/trip-list.test.tsx": "export function TripList() { return null; }\nexport function TripRow() { return null; }\n",
+        "apps/web/src/features/trips/trip-row.tsx": "export function TripRow() {}\nexport default memo(TripRow);"
+      },
+      "reports": []
+    },
+    {
+      "files": {
+        "apps/web/src/features/trips/trip-list.tsx": "export function TripList() { return null; }\nexport function TripRow() { return null; }\n",
+        "apps/web/src/features/trips/trip-card.tsx": "export default function TripCard() { return null; }\nexport class TripBadge {}\n"
+      },
+      "reports": [
+        "apps/web/src/features/trips/trip-list.tsx: TripList, TripRow",
+        "apps/web/src/features/trips/trip-card.tsx: TripCard, TripBadge"
+      ]
+    }
+  ]
+}

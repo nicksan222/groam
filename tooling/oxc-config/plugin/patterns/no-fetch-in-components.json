@@ -1,0 +1,26 @@
+{
+  "$schema": "../pattern.schema.json",
+  "match": "node-text",
+  "nodes": ["CallExpression"],
+  "pattern": "(?:window\\.)?fetch\\s*\\(.*",
+  "message": "Move network requests out of TSX components and into a feature hook or focused client adapter.",
+  "files": ["**/apps/web/src/**/*.tsx"],
+  "excludeFiles": ["**/apps/web/src/**/*.test.tsx"],
+  "examples": [
+    {
+      "file": "apps/web/src/features/example/example-view.tsx",
+      "source": "export async function View() { return fetch(\"/api/report\"); }",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/example/example-view.tsx",
+      "source": "export async function View() { return window.fetch(\"/api/report\"); }",
+      "reports": true
+    },
+    {
+      "file": "apps/web/src/features/example/report-client.ts",
+      "source": "export async function load() { return fetch(\"/api/report\"); }",
+      "reports": false
+    }
+  ]
+}

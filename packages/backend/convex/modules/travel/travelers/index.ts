@@ -1,0 +1,133 @@
+import { ConvexError } from 'convex/values';
+import type { Doc } from '#convex-generated/dataModel';
+import type { MutationCtx } from '#convex-generated/server';
+import { systemWorkspace, workspaceRoster } from '#convex/modules/auth/workspace';
+import { assertTripPaid, participantsForTrip } from '#convex/modules/payments/index';
+import { PollSignals } from '#convex/modules/polls/signals';
+import { syncTripConditions } from '#convex/modules/travel/issues/sync';
+import {
+  entitledStatus,
+  statusesForTrip,
+  type TravelerStatus,
+  travelersForTrip
+} from '#convex/modules/travel/travelers/statuses';
+import { attachTrip, isTripAdmin, type TripCtx } from '#convex/modules/travel/trips/ctx';
+
+export type { TravelerStatus };
+
+export async function listTravelers(ctx: TripCtx) {
+  const roster = await workspaceRoster(ctx, ctx.workspace);
+  const rows = await travelersForTrip(
+    ctx,
+    ctx.trip._id,
+    roster.members.map((member) => member.userId)
+  );
+  const byUserId = new Map(rows.flatMap((row) => (row.userId ? [[row.userId, row] as const] : [])));
+  const entitled = await participantsForTrip(
+    ctx,
+    ctx.trip,
+    roster.members.map((member) => member.userId)
+  );
+  return roster.members
+    .map((member) => {
+      const row = byUserId.get(member.userId);
+      return {
+        handle: member.handle,
+        id: member.userId,
+        image: member.image ?? null,
+        name: member.name,
+        status: entitledStatus(row?.status, entitled.has(member.userId)),
+        userId: member.userId
+      };
+    })
+    .sort((left, right) => left.name.localeCompare(right.name));
+}
+
+export async function seedTravelers(ctx: MutationCtx, trip: TripCtx<MutationCtx>): Promise<void> {
+  const roster = await workspaceRoster(ctx, trip.workspace);
+  const now = Date.now();
+  await Promise.all(
+    roster.members.map((member) =>
+      ctx.db.insert('tripTravelers', {
+        handle: member.handle,
+        name: member.name,
+        organizationId: trip.workspace.organizationId,
+        status: 'going',
+        tripId: trip.trip._id,
+        updatedAt: now,
+        userId: member.userId
+      })
+    )
+  );
+}
+
+export async function setTravelerStatus(
+  ctx: TripCtx<MutationCtx>,
+  userId: string,
+  status: TravelerStatus
+): Promise<null> {
+  if (ctx.trip.archive !== undefined) throw new ConvexError('Archived trips are read-only');
+  if (status === 'invited') throw new ConvexError('RSVP with going, maybe, or not going');
+  if (userId !== ctx.workspace.userId && !isTripAdmin(ctx)) {
+    throw new ConvexError('You can only update your own RSVP');
+  }
+  if (status === 'going') await assertTripPaid(ctx, userId);
+  const roster = await workspaceRoster(ctx, ctx.workspace);
+  const member = roster.members.find((item) => item.userId === userId);
+  if (!member) throw new ConvexError('Traveler not found in this group');
+  const existing = await ctx.db
+    .query('tripTravelers')
+    .withIndex('by_tripId_and_userId', (query) =>
+      query.eq('tripId', ctx.trip._id).eq('userId', userId)
+    )
+    .unique();
+  const now = Date.now();
+  if (existing) {
+    await ctx.db.patch('tripTravelers', existing._id, { status, updatedAt: now });
+  } else {
+    await ctx.db.insert('tripTravelers', {
+      handle: member.handle,
+      name: member.name,
+      organizationId: ctx.workspace.organizationId,
+      status,
+      tripId: ctx.trip._id,
+      updatedAt: now,
+      userId
+    });
+  }
+  await refreshTravelerSignals(ctx);
+  return null;
+}
+
+/** Effective RSVPs changed (a status or a seat), so rules and waits over them re-check. */
+async function refreshTravelerSignals(ctx: TripCtx<MutationCtx>) {
+  // RSVPs change the shared trip directly, so "done when" rules over them re-check here.
+  await syncTripConditions(ctx);
+  // RSVP waits and trip-poll eligibility (not going travelers cannot vote) re-check after.
+  await PollSignals.scheduleTripTravelers(ctx, {
+    organizationId: ctx.trip.organizationId,
+    tripId: ctx.trip._id
+  });
+}
+
+export async function goingCount(ctx: TripCtx): Promise<number> {
+  return (await listTravelers(ctx)).filter((traveler) => traveler.status === 'going').length;
+}
+
+/** A new seat reveals the traveler's stored RSVP, so rules and waits over it re-check. */
+export async function seatConfirmed(ctx: MutationCtx, trip: Doc<'trips'>) {
+  await refreshTravelerSignals(
+    attachTrip(ctx, trip, systemWorkspace(trip.organizationId), 'organizer')
+  );
+}
+
+/** Per-trip RSVP overlay on the workspace roster. */
+// oxlint-disable-next-line unicorn/no-static-only-class -- callers use this class, not loose functions
+export class TripTravelers {
+  static goingCount = goingCount;
+  static list = listTravelers;
+  static seatConfirmed = seatConfirmed;
+  static seed = seedTravelers;
+  static setStatus = setTravelerStatus;
+  static statusesForTrip = statusesForTrip;
+}

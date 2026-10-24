@@ -1,0 +1,240 @@
+# Releases one environment: Convex first, then the web app and the landing site through Void.
+# From the repo root: `just deploy setup`, `just deploy preflight beta`. CI runs `release`.
+
+set shell := ["bash", "-euo", "pipefail", "-c"]
+
+root := clean(source_directory() / "../..")
+settings := source_directory() / "environments.json"
+self := quote(just_executable()) + " --justfile " + quote(source_file())
+
+# Show what each environment still needs and how to get it.
+setup:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    cd "{{ root }}"
+    for environment in production beta; do
+      github_environment="$([[ $environment == production ]] && echo prod || echo beta)"
+      switch="CONVEX_$([[ $environment == production ]] && echo PRODUCTION || echo BETA)_ENABLED"
+      echo "$environment (GitHub environment \"$github_environment\")"
+      if problems="$({{ self }} _target "$environment" 2>&1 >/dev/null)"; then
+        echo "  ✓ settings in tooling/deploy/environments.json"
+      else
+        echo "  ✗ settings in tooling/deploy/environments.json"
+        grep -v '^error: recipe' <<<"$problems" | sed 's/^/      /'
+      fi
+      for app in web landing; do
+        lock="tooling/deploy/locks/$environment/$app.void.lock.json"
+        if git ls-files --error-unmatch "$lock" >/dev/null 2>&1; then echo "  ✓ $lock"; else echo "  ✗ $lock"; fi
+      done
+      if secrets="$(gh secret list --env "$github_environment" --json name --jq '.[].name' 2>/dev/null)"; then
+        missing="$({{ self }} _missing github $secrets)"
+        if [[ -z $missing ]]; then echo "  ✓ GitHub environment secrets"; else echo "  ✗ GitHub environment secrets: $missing"; fi
+      else
+        echo "  · GitHub environment secrets not checked: run \`gh auth login\` to include them"
+      fi
+      if [[ "$(gh variable get "$switch" 2>/dev/null)" == true ]]; then
+        echo "  ✓ $switch: releases are on"
+      else
+        echo "  ✗ $switch: releases are off"
+      fi
+      echo "  · Convex variables and web Worker secrets: checked by \`just deploy preflight $environment\`"
+    done
+    echo
+    echo "How to set each value: docs/deployment.md#one-time-setup-per-environment"
+
+# Check that an environment has everything it needs, reporting every gap at once.
+preflight environment:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd "{{ root }}"
+    target="$({{ self }} _target {{ quote(environment) }})"
+    eval "$target"
+    convex() { env -u CLOUDFLARE_API_TOKEN -u CONVEX_DEPLOYMENT CONVEX_AGENT_MODE=anonymous node_modules/.bin/convex "$@"; }
+    problems=()
+
+    missing="$({{ self }} _missing github $(env | sed -n 's/^\([A-Z_]*\)=..*/\1/p'))"
+    [[ -z $missing ]] || problems+=("The GitHub environment is missing $missing.")
+
+    # Without the right key, the Convex CLI would answer for another deployment.
+    if [[ ${CONVEX_DEPLOY_KEY:-} =~ ^prod:([a-z0-9-]+)\| && ${BASH_REMATCH[1]} == "$deployment_name" ]]; then
+      missing="$({{ self }} _missing convex $(convex env list --prod --names-only))"
+      [[ -z $missing ]] || problems+=("The Convex deployment is missing $missing.")
+    else
+      problems+=("CONVEX_DEPLOY_KEY is not a production key for $convex_url.")
+    fi
+
+    declare -A workers=([web]="$web_worker" [landing]="$landing_worker")
+    for app in web landing; do
+      lock="tooling/deploy/locks/{{ environment }}/$app.void.lock.json"
+      if ! git ls-files --error-unmatch "$lock" >/dev/null 2>&1; then
+        problems+=("Commit $lock (see tooling/deploy/locks/README.md).")
+      elif ! jq -e --arg name "${workers[$app]}" --arg account "$cloudflare_account_id" '
+          .version == 1 and ([.source, .resolved] | all(
+            .name == $name and ($account == "" or .account_id == null or .account_id == $account)))
+        ' "$lock" >/dev/null; then
+        problems+=("$lock belongs to another Worker or account than ${workers[$app]}.")
+      fi
+      [[ ! -e apps/$app/void.lock.json ]] || problems+=("Remove apps/$app/void.lock.json; releases use tooling/deploy/locks.")
+    done
+
+    if [[ -n ${CLOUDFLARE_API_TOKEN:-} ]]; then
+      lock="tooling/deploy/locks/{{ environment }}/web.void.lock.json"
+      account="${cloudflare_account_id:-$(jq -r '.resolved.account_id // ""' "$lock" 2>/dev/null || true)}"
+      if [[ ! $account =~ ^[a-f0-9]{32}$ ]]; then
+        problems+=("No Cloudflare account for the web Worker: set cloudflareAccountId or commit its Void lock.")
+      # The token goes through stdin, never argv.
+      elif secrets="$(curl -fsS --proto =https --max-redirs 0 -H @- \
+          "https://api.cloudflare.com/client/v4/accounts/$account/workers/scripts/$web_worker/secrets" \
+          <<<"authorization: Bearer $CLOUDFLARE_API_TOKEN" | jq -er '.result[].name')"; then
+        missing="$({{ self }} _missing worker $secrets)"
+        [[ -z $missing ]] || problems+=("The web Worker ($web_worker) is missing $missing.")
+      else
+        problems+=("Could not read the web Worker ($web_worker) secrets from Cloudflare.")
+      fi
+    fi
+
+    if (( ${#problems[@]} )); then
+      echo "{{ environment }} is not ready to release:" >&2
+      printf '  - %s\n' "${problems[@]}" >&2
+      echo "Run \`just deploy setup\` for how to fix each." >&2
+      exit 1
+    fi
+    echo "{{ environment }} has everything it needs to release."
+
+# Publish Convex, then web, then landing. Not atomic: a later failure leaves earlier ones live.
+release environment: _trusted-publisher (preflight environment)
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd "{{ root }}"
+    target="$({{ self }} _target {{ quote(environment) }})"
+    eval "$target"
+    convex() { env -u CLOUDFLARE_API_TOKEN -u CONVEX_DEPLOYMENT CONVEX_AGENT_MODE=anonymous node_modules/.bin/convex "$@"; }
+    assert_clean() {
+      local changes
+      changes="$(git status --porcelain)"
+      [[ -z $changes ]] || { printf 'The deploy checkout has uncommitted changes:\n%s\n' "$changes" >&2; exit 1; }
+    }
+    [[ "$(git rev-parse HEAD)" == "$GITHUB_SHA" ]] || { echo "Deploy checkout does not match the tested commit." >&2; exit 1; }
+    assert_clean
+
+    # SITE_URL follows the web origin; BETTER_AUTH_SECRET is generated once, never replaced or printed.
+    names="$(convex env list --prod --names-only | tr -s '[:space:]' '\n')"
+    if ! grep -qx SITE_URL <<<"$names" || [[ "$(convex env get SITE_URL --prod)" != "$site_url" ]]; then
+      printf %s "$site_url" | convex env set SITE_URL --prod
+    fi
+    if ! grep -qx BETTER_AUTH_SECRET <<<"$names"; then
+      openssl rand -base64 32 | tr '+/' '-_' | tr -d '=\n' | convex env set BETTER_AUTH_SECRET --prod
+    fi
+    convex deploy --typecheck-components --codegen disable --message "GitHub {{ environment }} main $GITHUB_SHA"
+
+    # Void hardcodes apps/<app>/void.lock.json, so each deploy gets the committed lock for its
+    # duration only. Builds receive public destinations and the Cloudflare token, never Convex's key.
+    for app in web landing; do
+      committed="tooling/deploy/locks/{{ environment }}/$app.void.lock.json"
+      transient="apps/$app/void.lock.json"
+      cp "$committed" "$transient"
+      trap 'rm -f "$transient"' EXIT
+      flags=()
+      # The web app sends authentication mail, so it never deploys without working email.
+      [[ $app == web ]] && flags=(--require-email)
+      (
+        cd "apps/$app"
+        env -u CONVEX_DEPLOY_KEY -u CONVEX_DEPLOYMENT \
+          ${cloudflare_account_id:+CLOUDFLARE_ACCOUNT_ID="$cloudflare_account_id"} \
+          GROAM_ENVIRONMENT={{ quote(environment) }} \
+          CLOUDFLARE_WORKERS_SUBDOMAIN="$workers_subdomain" \
+          VITE_CONVEX_URL="$convex_url" \
+          VITE_CONVEX_SITE_URL="$backend_site_url" \
+          VITE_SITE_URL="$site_url" \
+          VITE_LANDING_URL="$landing_url" \
+          LANDING_SITE_URL="$landing_url/" \
+          ASTRO_TELEMETRY_DISABLED=1 \
+          "{{ root }}/apps/web/node_modules/.bin/void" deploy --platform cloudflare "${flags[@]}"
+      )
+      cmp -s "$committed" "$transient" || { echo "Void resource state changed. Review and commit $committed." >&2; exit 1; }
+      rm -f "$transient"
+      trap - EXIT
+    done
+
+    # Void records newly provisioned resources in its lock; a change must be committed first.
+    assert_clean
+
+# Only the trusted main-branch workflow may publish, on a main push or a manual release.
+[private]
+_trusted-publisher:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "${GITHUB_ACTIONS:-}" != true || "${GITHUB_REPOSITORY:-}" != nicksan222/groam ||
+          "${GITHUB_REF:-}" != refs/heads/main || ! "${GITHUB_EVENT_NAME:-}" =~ ^(push|workflow_dispatch)$ ||
+          ! "${GITHUB_SHA:-}" =~ ^[a-f0-9]{40}$ ]]; then
+      echo "Release publishing is restricted to the trusted main-branch GitHub Actions workflow." >&2
+      exit 1
+    fi
+
+# Validated destinations for one environment, printed as shell assignments for `eval`.
+[private]
+_target environment:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    case {{ quote(environment) }} in beta | production) ;; *)
+      echo "Unknown environment \"{{ environment }}\"; use beta or production." >&2; exit 1 ;;
+    esac
+    setting() { jq -r --arg environment {{ quote(environment) }} ".[\$environment].$1 // \"\"" "{{ settings }}"; }
+    problems=()
+    label='[a-z0-9]([a-z0-9-]*[a-z0-9])?'
+
+    convex_url="$(setting convexUrl)"
+    if [[ $convex_url =~ ^https://(([a-z0-9]+(-[a-z0-9]+)*)(\.[a-z]{2}-[a-z]+-[0-9]+)?)\.convex\.cloud$ ]]; then
+      deployment_name="${BASH_REMATCH[2]}"
+      backend_site_url="https://${BASH_REMATCH[1]}.convex.site"
+    else
+      problems+=("convexUrl must be the Convex production deployment URL (https://<name>.convex.cloud).")
+    fi
+
+    web_host="$(setting web.host)"
+    landing_host="$(setting landing.host)"
+    for host in "$web_host" "$landing_host"; do
+      if [[ ! $host =~ ^$label(\.$label)+$ || $host =~ \.convex\.(site|cloud)$ ]]; then
+        problems+=("\"$host\" must be a bare hostname served by Void, not Convex.")
+      fi
+    done
+    [[ $web_host != "$landing_host" ]] || problems+=("The web app and the landing site need their own hosts.")
+
+    web_worker="$(setting web.worker)"
+    landing_worker="$(setting landing.worker)"
+    for worker in "$web_worker" "$landing_worker"; do
+      [[ $worker =~ ^[a-z0-9-]+$ ]] || problems+=("Invalid Worker name \"$worker\".")
+    done
+
+    cloudflare_account_id="$(setting cloudflareAccountId)"
+    [[ -z $cloudflare_account_id || $cloudflare_account_id =~ ^[a-f0-9]{32}$ ]] ||
+      problems+=("cloudflareAccountId must be a Cloudflare account ID.")
+
+    # Accept `my-team` or `my-team.workers.dev`; Void checks new versions there (preview URLs are off).
+    workers_subdomain="$(setting workersSubdomain)"
+    workers_subdomain="${workers_subdomain%.workers.dev}"
+    [[ $workers_subdomain =~ ^$label$ ]] ||
+      problems+=("workersSubdomain must be the account's workers.dev subdomain, e.g. \"my-team\".")
+
+    # Void sets up Cloudflare Email for the sender's domain, so it must be a real address.
+    email_from="$(setting emailFrom)"
+    angled='<([^<>[:space:]]+)>$'
+    [[ $email_from =~ $angled ]] && email="${BASH_REMATCH[1]}" || email="$email_from"
+    if [[ ! $email =~ ^[^@[:space:]]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$ || $email =~ \.(localhost|example)$ ]]; then
+      problems+=("emailFrom must be the sender address, e.g. \"Groam <noreply@groam.app>\".")
+    fi
+
+    if (( ${#problems[@]} )); then
+      printf '%s\n' "${problems[@]}" >&2
+      exit 1
+    fi
+    for name in convex_url deployment_name backend_site_url web_worker landing_worker \
+        cloudflare_account_id workers_subdomain; do
+      printf '%s=%q\n' "$name" "${!name}"
+    done
+    printf 'site_url=%q\nlanding_url=%q\n' "https://$web_host" "https://$landing_host"
+
+# The variables of one store (github, convex, worker) still missing, given the names present.
+[private]
+_missing store *present:
+    @bun --no-env-file -e 'import { missingVariables } from "@groam/env/deployment"; const [store, ...present] = process.argv.slice(1); console.log(missingVariables(store, new Set(present)).join(", "))' -- {{ quote(store) }} {{ present }}
