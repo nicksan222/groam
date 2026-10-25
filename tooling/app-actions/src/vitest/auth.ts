@@ -22,7 +22,13 @@ export async function signUp(user: TestUserCredentials): Promise<void> {
 }
 
 export async function expectWorkspaceReady(): Promise<void> {
-  await expect.element(by(ids.navHome)).toBeVisible();
+  await expect
+    .poll(() =>
+      Boolean(
+        by(ids.navHome).query()?.checkVisibility() || by(ids.mobileMenu).query()?.checkVisibility()
+      )
+    )
+    .toBe(true);
 }
 
 export async function createFirstGroup(groupName: string): Promise<void> {
@@ -46,6 +52,12 @@ export async function completeOnboarding(input?: CompleteOnboardingInput) {
 
 /** Signs out through the user menu and waits for the auth form. */
 export async function signOut(): Promise<void> {
+  if (
+    by(ids.mobileMenu).query()?.checkVisibility() &&
+    !by(ids.navUserTrigger).query()?.checkVisibility()
+  ) {
+    await tap(by(ids.mobileMenu));
+  }
   await tap(by(ids.navUserTrigger));
   await tap(page.getByRole('menuitem', { name: 'Sign out' }));
   await expect.element(by(ids.authSubmit)).toBeVisible();

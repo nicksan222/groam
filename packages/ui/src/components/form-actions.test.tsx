@@ -1,7 +1,18 @@
 import { render } from '@groam/vitest-config/react';
+import { useViewport } from '@groam/vitest-config/viewport';
 import { expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { FormActions } from './form-actions';
+
+test('full-width stacked actions preserve button height on phones', async () => {
+  await useViewport(390, 844);
+  await render(<FormActions fullWidth submitLabel="Create account" />);
+  const button = page.getByRole('button', { name: 'Create account' }).element();
+  expect(button.getBoundingClientRect().height).toBeGreaterThanOrEqual(32);
+  expect(button.getBoundingClientRect().width).toBe(
+    button.parentElement!.getBoundingClientRect().width
+  );
+});
 
 test('renders Cancel and a submit button', async () => {
   const onCancel = vi.fn();

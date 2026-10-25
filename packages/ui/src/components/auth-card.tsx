@@ -9,8 +9,8 @@ import { cn } from '@groam/ui/lib/utils';
 import type { ReactNode } from 'react';
 
 const sizeClasses = {
-  default: 'max-w-none md:max-w-md',
-  wide: 'max-w-none md:max-w-xl'
+  default: 'max-w-md',
+  wide: 'max-w-xl'
 } as const;
 
 export type AuthCardProps = {
@@ -32,13 +32,16 @@ function AuthCard({
 }: AuthCardProps) {
   return (
     <div
-      className={cn('flex w-full flex-1 flex-col gap-6 md:mx-auto md:flex-none', sizeClasses[size])}
+      className={cn(
+        'flex w-full flex-1 flex-col gap-6 [&_input]:h-11 [&_button]:min-h-11 md:mx-auto md:flex-none md:[&_input]:h-9 md:[&_button]:min-h-0',
+        sizeClasses[size]
+      )}
       data-slot="auth-card"
     >
       <Card className="flex-none rounded-none border-0 bg-background px-0 md:rounded-xl md:border [view-transition-name:auth-card]">
         <CardHeader className="flex flex-col items-start gap-2 px-0 pt-0 text-left md:items-center md:px-6 md:pt-6 md:text-center">
           {headerExtra}
-          <CardTitle className="text-xl text-balance">{title}</CardTitle>
+          <CardTitle className="text-2xl leading-tight text-balance md:text-xl">{title}</CardTitle>
           {description ? (
             <CardDescription className="text-balance">{description}</CardDescription>
           ) : null}

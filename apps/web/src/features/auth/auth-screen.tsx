@@ -23,13 +23,6 @@ export function AuthScreen() {
               : 'Start building with Groam'
         }
         footer={<AuthLegal />}
-        headerExtra={
-          isSignIn || isRecovery ? null : (
-            <span className="inline-flex rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground/80">
-              Your realtime workspace awaits
-            </span>
-          )
-        }
         title={
           resetToken
             ? 'Reset your password'

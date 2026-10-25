@@ -31,13 +31,19 @@ function AuthShell({
   const lightMode = mounted ? resolvedTheme !== 'dark' : false;
 
   return (
-    <div className="relative min-h-dvh w-full overflow-hidden bg-muted" data-slot="auth-shell">
-      <AuroraBackground className="opacity-90 dark:opacity-80" lightMode={lightMode} />
-      <div className="pointer-events-none absolute inset-0 bg-muted/55 dark:bg-muted/35" />
-      <div className="relative z-10 flex min-h-dvh w-full flex-col gap-6 px-6 py-8 md:items-center md:justify-center md:p-12">
+    <div
+      className="relative min-h-dvh w-full overflow-x-clip bg-background md:bg-muted"
+      data-slot="auth-shell"
+    >
+      <AuroraBackground
+        className="hidden opacity-90 md:block dark:opacity-80"
+        lightMode={lightMode}
+      />
+      <div className="pointer-events-none absolute inset-0 hidden bg-muted/55 md:block dark:bg-muted/35" />
+      <div className="relative z-10 flex min-h-dvh w-full flex-col items-center gap-8 px-6 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] md:justify-center md:gap-6 md:p-12">
         <a
           aria-label={homeLabel}
-          className="flex items-center gap-2 self-start font-medium md:self-center"
+          className="flex min-h-11 w-full max-w-md items-center gap-2 font-medium md:min-h-0 md:w-auto"
           href={homeHref}
         >
           <BrandMark className="size-8 shrink-0" decorative />

@@ -1,5 +1,6 @@
 import { env } from '@groam/env/web-client';
 import { render } from '@groam/vitest-config/react';
+import { useViewport } from '@groam/vitest-config/viewport';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { page } from 'vite-plus/test/browser';
 import { authHandlers, resolveAuthDoubles } from '@/features/auth/testing/auth-doubles';
@@ -12,6 +13,19 @@ const doubles = await vi.hoisted(async () => {
 });
 
 const auth = authHandlers(doubles);
+
+function expectUsableLayout(width: number, height: number) {
+  const shell = document.querySelector('[data-slot=auth-shell]')!;
+  expect(shell.scrollWidth).toBeLessThanOrEqual(width);
+  const minimumHeight = width < 768 ? 44 : 32;
+  for (const control of shell.querySelectorAll('input, button[type=submit]')) {
+    if (!control.checkVisibility()) continue;
+    expect(control.getBoundingClientRect().height).toBeGreaterThanOrEqual(minimumHeight);
+  }
+  const privacy = page.getByRole('link', { name: 'Privacy Policy' }).element();
+  privacy.scrollIntoView({ behavior: 'instant' });
+  expect(privacy.getBoundingClientRect().bottom).toBeLessThanOrEqual(height);
+}
 
 vi.mock('@groam/auth/client', async () => {
   const { authClientMock } = await import('@/features/auth/testing/auth-doubles');
@@ -35,6 +49,26 @@ afterEach(() => {
 });
 
 describe('AuthScreen', () => {
+  test.each([
+    [320, 568],
+    [390, 844],
+    [844, 390],
+    [1280, 800]
+  ])('auth flows have usable controls and a reachable footer at %s×%s', async (width, height) => {
+    await useViewport(width, height);
+    await render(<AuthScreen />);
+    await expect.element(page.getByText('Welcome back')).toBeVisible();
+
+    for (const flow of ['signIn', 'signUp', 'recover'] as const) {
+      if (flow === 'signUp') await page.getByRole('button', { name: 'Sign up' }).click();
+      if (flow === 'recover') {
+        await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+        await page.getByRole('button', { name: 'Recover account with a saved code' }).click();
+      }
+      expectUsableLayout(width, height);
+    }
+  });
+
   test('renders the sign-in form by default', async () => {
     await render(<AuthScreen />);
 

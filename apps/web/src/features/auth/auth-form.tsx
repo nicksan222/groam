@@ -104,6 +104,7 @@ export function AuthForm({
           </p>
         </div>
       }
+      className="gap-4 md:gap-6"
       density="relaxed"
       error={state.error ?? form.error}
       isPending={state.isPending}

@@ -75,7 +75,11 @@ function FormActions({
         className={cn(
           'flex gap-2',
           stacks ? 'flex-col-reverse sm:flex-row' : 'ml-auto items-center',
-          fullWidth ? 'w-full [&>*]:flex-1' : stacks && 'sm:shrink-0'
+          fullWidth
+            ? stacks
+              ? 'w-full sm:[&>*]:flex-1'
+              : 'w-full [&>*]:flex-1'
+            : stacks && 'sm:shrink-0'
         )}
       >
         {onCancel ? (
