@@ -31,7 +31,7 @@ async function mountApp(path: string): Promise<void> {
   // A page load starts the auth form over; its store would otherwise outlive the remount.
   useAuthFormStore.getState().reset();
   history.replaceState(null, '', path);
-  const client = new ConvexReactClient(env.convexUrl, { expectAuth: true });
+  const client = new ConvexReactClient(env.convexUrl);
   mounted = {
     app: await render(<JourneyPages root={(page) => <AppRoot client={client}>{page}</AppRoot>} />),
     client
