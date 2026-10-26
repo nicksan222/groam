@@ -242,7 +242,12 @@ test('deleting a chat removes its polls and cancels their waits', async () => {
   });
   await trip.owner.test.run(async (ctx) => {
     expect(await ctx.db.get('polls', pollId)).toBeNull();
-    expect(await ctx.db.query('pollVotes').take(1)).toEqual([]);
+    expect(
+      await ctx.db
+        .query('pollVotes')
+        .withIndex('by_pollId_and_userId', (query) => query.eq('pollId', pollId))
+        .take(1)
+    ).toEqual([]);
   });
 });
 
@@ -264,7 +269,23 @@ test(
     const onTrip = await pollWaitRun(trip, tripPoll, [{ kind: 'closed' }]);
     const onGroup = await pollWaitRun(trip, groupPoll, [{ kind: 'closed' }], { tripId: null });
     const left = () =>
-      trip.owner.test.run(async (ctx) => (await ctx.db.query('polls').take(1)).length);
+      trip.owner.test.run(async (ctx) => {
+        const [open, closed] = await Promise.all([
+          ctx.db
+            .query('polls')
+            .withIndex('by_organizationId_and_status', (query) =>
+              query.eq('organizationId', trip.owner.organizationId!).eq('status', 'open')
+            )
+            .take(1),
+          ctx.db
+            .query('polls')
+            .withIndex('by_organizationId_and_status', (query) =>
+              query.eq('organizationId', trip.owner.organizationId!).eq('status', 'closed')
+            )
+            .take(1)
+        ]);
+        return open.length + closed.length;
+      });
     for (let step = 0; step < 100 && (await left()) > 0; step++) {
       await trip.owner.test.mutation(
         internal.modules.organizations.cleanup.removeOrganizationData,
@@ -275,7 +296,17 @@ test(
     }
     expect(await left()).toBe(0);
     expect(
-      await trip.owner.test.run(async (ctx) => (await ctx.db.query('pollVotes').take(1)).length)
+      await trip.owner.test.run(async (ctx) => {
+        const votes = await Promise.all(
+          [tripPoll, groupPoll].map((pollId) =>
+            ctx.db
+              .query('pollVotes')
+              .withIndex('by_pollId_and_userId', (query) => query.eq('pollId', pollId))
+              .take(1)
+          )
+        );
+        return votes.flat().length;
+      })
     ).toBe(0);
     expect((await onTrip.wait())?.status).toBe('cancelled');
     expect((await onGroup.wait())?.status).toBe('cancelled');

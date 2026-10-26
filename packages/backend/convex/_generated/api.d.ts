@@ -98,6 +98,10 @@ import type * as modules_media_library_commit from "../modules/media/library/com
 import type * as modules_media_library_index from "../modules/media/library/index.js";
 import type * as modules_media_library_validators from "../modules/media/library/validators.js";
 import type * as modules_notifications_index from "../modules/notifications/index.js";
+import type * as modules_onboarding_agents from "../modules/onboarding/agents.js";
+import type * as modules_onboarding_index from "../modules/onboarding/index.js";
+import type * as modules_onboarding_planning from "../modules/onboarding/planning.js";
+import type * as modules_onboarding_trip from "../modules/onboarding/trip.js";
 import type * as modules_organizations_cleanup from "../modules/organizations/cleanup.js";
 import type * as modules_organizations_invitations_index from "../modules/organizations/invitations/index.js";
 import type * as modules_organizations_lengths from "../modules/organizations/lengths.js";
@@ -495,6 +499,10 @@ declare const fullApi: ApiFromModules<{
   "modules/media/library/index": typeof modules_media_library_index;
   "modules/media/library/validators": typeof modules_media_library_validators;
   "modules/notifications/index": typeof modules_notifications_index;
+  "modules/onboarding/agents": typeof modules_onboarding_agents;
+  "modules/onboarding/index": typeof modules_onboarding_index;
+  "modules/onboarding/planning": typeof modules_onboarding_planning;
+  "modules/onboarding/trip": typeof modules_onboarding_trip;
   "modules/organizations/cleanup": typeof modules_organizations_cleanup;
   "modules/organizations/invitations/index": typeof modules_organizations_invitations_index;
   "modules/organizations/lengths": typeof modules_organizations_lengths;

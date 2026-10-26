@@ -155,7 +155,12 @@ test('repeating a create request does not duplicate starter issues', async () =>
   expect(second.issues).toHaveLength(STARTER_ISSUE_COUNT);
   expect(second.issues.map((issue) => issue.id)).toEqual(first.issues.map((issue) => issue.id));
   await expect(
-    owner.client.run((ctx) => ctx.db.query('tripIssues').take(20))
+    owner.client.run((ctx) =>
+      ctx.db
+        .query('tripIssues')
+        .withIndex('by_tripId_and_updatedAt', (query) => query.eq('tripId', first.tripId))
+        .take(20)
+    )
   ).resolves.toHaveLength(STARTER_ISSUE_COUNT);
 });
 

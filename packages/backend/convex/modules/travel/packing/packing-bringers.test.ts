@@ -102,7 +102,12 @@ test('removing an item clears its bringers', { timeout: 15_000 }, async () => {
     userId: owner.userId
   });
   await owner.client.mutation(api.routes.trips.packing.remove.run, { itemId: tent.id, tripId });
-  const leftovers = await owner.test.run((ctx) => ctx.db.query('tripPackingBringers').collect());
+  const leftovers = await owner.test.run((ctx) =>
+    ctx.db
+      .query('tripPackingBringers')
+      .withIndex('by_tripId', (query) => query.eq('tripId', tripId))
+      .take(10)
+  );
   expect(leftovers).toEqual([]);
 });
 
@@ -146,11 +151,38 @@ test('deleting a trip clears bringers and personal items', { timeout: 30_000 }, 
       }
     });
   }
-  const counts = await owner.test.run(async (ctx) => [
-    (await ctx.db.query('tripPackingItems').collect()).length,
-    (await ctx.db.query('tripPackingBringers').collect()).length,
-    (await ctx.db.query('tripPersonalPackingItems').collect()).length
-  ]);
+  const counts = await owner.test.run(async (ctx) => {
+    const targetTripIds = [tripId, sharedTripId];
+    const [items, bringers, personalItems] = await Promise.all([
+      Promise.all(
+        targetTripIds.map((targetTripId) =>
+          ctx.db
+            .query('tripPackingItems')
+            .withIndex('by_tripId_and_sortOrder', (query) => query.eq('tripId', targetTripId))
+            .take(10)
+        )
+      ),
+      Promise.all(
+        targetTripIds.map((targetTripId) =>
+          ctx.db
+            .query('tripPackingBringers')
+            .withIndex('by_tripId', (query) => query.eq('tripId', targetTripId))
+            .take(10)
+        )
+      ),
+      Promise.all(
+        targetTripIds.map((targetTripId) =>
+          ctx.db
+            .query('tripPersonalPackingItems')
+            .withIndex('by_tripId_and_userId_and_sortOrder', (query) =>
+              query.eq('tripId', targetTripId)
+            )
+            .take(10)
+        )
+      )
+    ]);
+    return [items.flat().length, bringers.flat().length, personalItems.flat().length];
+  });
   expect(counts).toEqual([0, 0, 0]);
 });
 

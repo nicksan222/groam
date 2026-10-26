@@ -25,6 +25,7 @@ import {
   assertMutable,
   attachTrip,
   isSeedWrite,
+  isOfflineSeedWrite,
   loadTripContext,
   type MutableTripCtx,
   patchTrip,
@@ -313,6 +314,25 @@ async function deleteBatch(ctx: MutationCtx, trip: Doc<'trips'>): Promise<void> 
   await ctx.db.delete('trips', trip._id);
 }
 
+async function addPrimaryDestination(
+  ctx: MutableTripCtx,
+  location: Pick<Doc<'tripDestinations'>, 'coordinates' | 'countryCode' | 'name' | 'placeId'>
+): Promise<void> {
+  const destinationId = await ctx.db.insert('tripDestinations', {
+    ...location,
+    ...(isOfflineSeedWrite() ? {} : { cover: DestinationCover.initial() }),
+    position: 0,
+    tripId: ctx.trip._id
+  });
+  if (!isOfflineSeedWrite()) await DestinationCover.schedule(ctx, destinationId, 1);
+  await TripLocations.setDestination(ctx, {
+    coordinates: location.coordinates,
+    destinationId,
+    organizationId: ctx.workspace.organizationId,
+    tripId: ctx.trip._id
+  });
+}
+
 async function synchronizePrimaryDestination(
   ctx: MutableTripCtx,
   destination: TripDestinationInput
@@ -378,19 +398,7 @@ async function synchronizePrimaryDestination(
       });
     }
   } else {
-    const destinationId = await ctx.db.insert('tripDestinations', {
-      ...location,
-      cover: DestinationCover.initial(),
-      position: 0,
-      tripId: ctx.trip._id
-    });
-    await DestinationCover.schedule(ctx, destinationId, 1);
-    await TripLocations.setDestination(ctx, {
-      coordinates: location.coordinates,
-      destinationId,
-      organizationId: ctx.workspace.organizationId,
-      tripId: ctx.trip._id
-    });
+    await addPrimaryDestination(ctx, location);
   }
   await TripLocations.setTrip(ctx, {
     coordinates: destination.coordinates,

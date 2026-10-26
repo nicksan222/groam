@@ -70,7 +70,20 @@ test('an idea working copy id resolves to the shared trip', { timeout: 15_000 },
   await expect(
     owner.client.query(api.routes.trips.packing.personal.list.run, { tripId: sharedTripId })
   ).resolves.toEqual([item]);
-  const rows = await owner.test.run((ctx) => ctx.db.query('tripPersonalPackingItems').collect());
+  const rows = await owner.test.run(async (ctx) =>
+    (
+      await Promise.all(
+        [sharedTripId, tripId].map((id) =>
+          ctx.db
+            .query('tripPersonalPackingItems')
+            .withIndex('by_tripId_and_userId_and_sortOrder', (query) =>
+              query.eq('tripId', id).eq('userId', owner.userId)
+            )
+            .take(10)
+        )
+      )
+    ).flat()
+  );
   expect(rows.map((row) => row.tripId)).toEqual([sharedTripId]);
 });
 

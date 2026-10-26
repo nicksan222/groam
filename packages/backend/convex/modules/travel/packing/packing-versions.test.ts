@@ -428,8 +428,13 @@ test('removing an item in an idea removes its bringers when applied', async () =
   expect(await approveAndApply(owner, reviewer, idea.proposalId)).toBe('applied');
   const items = await owner.client.query(api.routes.trips.packing.list.run, { tripId });
   expect(items.some((item) => item.id === hat.id)).toBe(false);
-  const bringers = await owner.test.run((ctx) => ctx.db.query('tripPackingBringers').collect());
-  expect(bringers.filter((row) => row.tripId === tripId)).toEqual([]);
+  const bringers = await owner.test.run((ctx) =>
+    ctx.db
+      .query('tripPackingBringers')
+      .withIndex('by_tripId', (query) => query.eq('tripId', tripId))
+      .take(10)
+  );
+  expect(bringers).toEqual([]);
 });
 
 test('legacy checklist files never show in diffs', () => {
@@ -457,7 +462,12 @@ test('the cleanup drops legacy rows and keeps current ones', { timeout: 15_000 }
   await expect(
     owner.test.mutation(internal.modules.travel.packing.cleanup.dropLegacyItems, {})
   ).resolves.toEqual({ deleted: 1, done: true });
-  const rows = await owner.test.run((ctx) => ctx.db.query('tripPackingItems').collect());
+  const rows = await owner.test.run((ctx) =>
+    ctx.db
+      .query('tripPackingItems')
+      .withIndex('by_tripId_and_sortOrder', (query) => query.eq('tripId', tripId))
+      .take(10)
+  );
   expect(rows.map((row) => row.label)).toEqual(['Hat']);
 });
 
@@ -507,8 +517,13 @@ test(
     ).resolves.toBe('applied');
     const items = await owner.client.query(api.routes.trips.packing.list.run, { tripId });
     expect(items.some((item) => item.id === hat.id)).toBe(false);
-    const bringers = await owner.test.run((ctx) => ctx.db.query('tripPackingBringers').collect());
-    expect(bringers.filter((row) => row.tripId === tripId)).toEqual([]);
+    const bringers = await owner.test.run((ctx) =>
+      ctx.db
+        .query('tripPackingBringers')
+        .withIndex('by_tripId', (query) => query.eq('tripId', tripId))
+        .take(10)
+    );
+    expect(bringers).toEqual([]);
   }
 );
 

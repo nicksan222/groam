@@ -110,9 +110,30 @@ test('deleting an organization removes its trips, discussions, media, and stored
   const hasRemainingData = () =>
     owner.client.run(
       async (ctx) =>
-        (await ctx.db.query('trips').first()) !== null ||
-        (await ctx.db.query('discussions').first()) !== null ||
-        (await ctx.db.query('media').first()) !== null
+        (
+          await ctx.db
+            .query('trips')
+            .withIndex('by_organizationId_and_updatedAt', (query) =>
+              query.eq('organizationId', owner.organizationId!)
+            )
+            .take(1)
+        ).length > 0 ||
+        (
+          await ctx.db
+            .query('discussions')
+            .withIndex('by_organizationId', (query) =>
+              query.eq('organizationId', owner.organizationId!)
+            )
+            .take(1)
+        ).length > 0 ||
+        (
+          await ctx.db
+            .query('media')
+            .withIndex('by_organizationId', (query) =>
+              query.eq('organizationId', owner.organizationId!)
+            )
+            .take(1)
+        ).length > 0
     );
   do {
     await owner.client.mutation(internal.modules.organizations.cleanup.removeOrganizationData, {
@@ -170,9 +191,18 @@ test('deleting an organization removes its trips, discussions, media, and stored
         .query('tripDestinations')
         .withIndex('by_tripId_and_position', (query) => query.eq('tripId', tripId))
         .take(1),
-      issueComments: await ctx.db.query('tripIssueComments').take(1),
-      issueConditions: await ctx.db.query('tripIssueConditions').take(1),
-      issues: await ctx.db.query('tripIssues').take(1),
+      issueComments: await ctx.db
+        .query('tripIssueComments')
+        .withIndex('by_issueId', (query) => query.eq('issueId', starter.id))
+        .take(1),
+      issueConditions: await ctx.db
+        .query('tripIssueConditions')
+        .withIndex('by_tripId', (query) => query.eq('tripId', sharedTripId))
+        .take(1),
+      issues: await ctx.db
+        .query('tripIssues')
+        .withIndex('by_tripId_and_updatedAt', (query) => query.eq('tripId', sharedTripId))
+        .take(1),
       itinerary: await ctx.db
         .query('tripDestinationActivities')
         .withIndex('by_tripId_and_position', (query) => query.eq('tripId', tripId))

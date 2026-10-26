@@ -35,6 +35,7 @@ const TITLE_GENERATION_DELAY_MS = 10_000;
 export const MAX_ACTIVITY_ITEMS = 30;
 
 export {
+  isOfflineSeedWrite,
   assertDayWithinTrip,
   assertMutable,
   assertPlanner,

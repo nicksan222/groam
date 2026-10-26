@@ -6,6 +6,7 @@ import { discussionLinkTables } from './modules/discussions/links/schema';
 import { discussionTables } from './modules/discussions/threads/schema';
 import { mediaTables } from './modules/media/library/schema';
 import { notificationTables } from './modules/notifications/schema';
+import { onboardingTables } from './modules/onboarding/schema';
 import { organizationInvitationTables } from './modules/organizations/invitations/schema';
 import { paymentTables } from './modules/payments/schema';
 import { pollTables } from './modules/polls/schema';
@@ -30,6 +31,7 @@ export default defineSchema({
   ...discussionTables,
   ...discussionLinkTables,
   ...notificationTables,
+  ...onboardingTables,
   ...organizationInvitationTables,
   ...pollTables,
   ...tripTables,
