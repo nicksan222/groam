@@ -47,6 +47,8 @@ export type Workspace = {
   tokenIdentifier: string;
   userId: string;
   viewerName: string;
+  /** Server-bound roster snapshot for transactional bootstrap before a session exists. */
+  roster?: OrganizationRoster;
   /** Set when an agent turn acts for its run's creator. */
   runId?: Id<'agentRuns'>;
 };
@@ -178,6 +180,7 @@ export async function workspaceRoster(
   ctx: WorkspaceFunctionCtx,
   workspace: Workspace
 ): Promise<OrganizationRoster> {
+  if (workspace.roster) return workspace.roster;
   if (workspace.tokenIdentifier === SYSTEM_TOKEN_IDENTIFIER || workspace.runId !== undefined) {
     return await systemRoster(ctx, workspace.organizationId);
   }

@@ -4,7 +4,7 @@ import type { MutationCtx } from '#convex-generated/server';
 import { Attachments } from '#convex/modules/media/attachments/index';
 import { DestinationCover } from '#convex/modules/travel/covers/destination/index';
 import { TripLocations } from '#convex/modules/travel/locations/index';
-import type { MutableTripCtx } from '#convex/modules/travel/trips/ctx';
+import { isOfflineSeedWrite, type MutableTripCtx } from '#convex/modules/travel/trips/ctx';
 import { type TripVersionContent, VersionContent } from '#convex/modules/travel/versions/content';
 
 type Target = Exclude<Doc<'attachmentReferences'>['target'], { type: 'comment' }>;
@@ -282,5 +282,5 @@ export async function cloneTripContent(
       tripId: workingTripId
     });
   }
-  await DestinationCover.ensureForTrip(ctx, workingTripId);
+  if (!isOfflineSeedWrite()) await DestinationCover.ensureForTrip(ctx, workingTripId);
 }

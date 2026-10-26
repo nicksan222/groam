@@ -399,12 +399,48 @@ test(
     if (deletion.error) throw new Error(deletion.error.message ?? 'Unable to delete organization');
     const remaining = () =>
       owner.client.run(async (ctx) => ({
-        discussions: (await ctx.db.query('discussions').take(1)).length,
-        links: (await ctx.db.query('discussionLinks').take(1)).length,
-        members: (await ctx.db.query('discussionMembers').take(1)).length,
-        messages: (await ctx.db.query('discussionMessages').take(1)).length,
-        reactions: (await ctx.db.query('discussionMessageReactions').take(1)).length,
-        trips: (await ctx.db.query('trips').take(1)).length
+        discussions: (
+          await ctx.db
+            .query('discussions')
+            .withIndex('by_organizationId', (query) =>
+              query.eq('organizationId', owner.organizationId!)
+            )
+            .take(1)
+        ).length,
+        links: (
+          await ctx.db
+            .query('discussionLinks')
+            .withIndex('by_discussionId', (query) => query.eq('discussionId', discussionId))
+            .take(1)
+        ).length,
+        members: (
+          await ctx.db
+            .query('discussionMembers')
+            .withIndex('by_discussionId', (query) => query.eq('discussionId', discussionId))
+            .take(1)
+        ).length,
+        messages: (
+          await ctx.db
+            .query('discussionMessages')
+            .withIndex('by_discussionId', (query) => query.eq('discussionId', discussionId))
+            .take(1)
+        ).length,
+        reactions: (
+          await ctx.db
+            .query('discussionMessageReactions')
+            .withIndex('by_discussionId_and_messageId', (query) =>
+              query.eq('discussionId', discussionId).eq('messageId', messageId)
+            )
+            .take(1)
+        ).length,
+        trips: (
+          await ctx.db
+            .query('trips')
+            .withIndex('by_organizationId_and_updatedAt', (query) =>
+              query.eq('organizationId', owner.organizationId!)
+            )
+            .take(1)
+        ).length
       }));
     for (let attempt = 0; attempt < 200; attempt += 1) {
       await owner.client.mutation(internal.modules.organizations.cleanup.removeOrganizationData, {

@@ -27,7 +27,16 @@ test('creates one organization-scoped trip shared with the whole group', async (
     destination: { status: 'undecided' },
     name: 'Summer beach idea'
   });
-  await expect(owner.client.run((ctx) => ctx.db.query('trips').take(10))).resolves.toHaveLength(1);
+  await expect(
+    owner.client.run((ctx) =>
+      ctx.db
+        .query('trips')
+        .withIndex('by_organizationId_and_updatedAt', (query) =>
+          query.eq('organizationId', owner.organizationId!)
+        )
+        .take(10)
+    )
+  ).resolves.toHaveLength(1);
   await expect(
     owner.client.query(internal.modules.travel.covers.stock.request, {
       generation: 1,
@@ -149,7 +158,14 @@ test('rejects invalid durations, locations, and covers without writes', async ()
     } as never)
   ).rejects.toThrow(/Validator|ArgumentValidation|currency/i);
 
-  const trips = await owner.client.run((ctx) => ctx.db.query('trips').take(20));
+  const trips = await owner.client.run((ctx) =>
+    ctx.db
+      .query('trips')
+      .withIndex('by_organizationId_and_updatedAt', (query) =>
+        query.eq('organizationId', owner.organizationId!)
+      )
+      .take(20)
+  );
   expect(trips).toEqual([]);
 });
 

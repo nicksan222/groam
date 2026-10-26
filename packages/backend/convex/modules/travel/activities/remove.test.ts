@@ -49,6 +49,11 @@ test('deleting a destination also removes its activities', async () => {
     tripId
   });
   await expect(
-    owner.client.run((ctx) => ctx.db.query('tripDestinationActivities').take(10))
+    owner.client.run((ctx) =>
+      ctx.db
+        .query('tripDestinationActivities')
+        .withIndex('by_tripId_and_position', (query) => query.eq('tripId', tripId))
+        .take(10)
+    )
   ).resolves.toEqual([]);
 });

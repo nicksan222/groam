@@ -13,6 +13,12 @@
   Shared chats live in `modules/discussions` (`Messages`, `Discussions`).
 - Local development seeding is orchestrated by `tooling/seeder/src/seed-workspace.ts`
   and calls real product procedures.
+- New accounts receive their own private **Demo group** through the Better Auth
+  user-creation trigger (`modules/onboarding`). Group, membership, itinerary and
+  labeled example agent work are created transactionally. Terminal sample runs
+  and native chat messages execute no models or external image lookups. The
+  indexed `userDemos` marker prevents repeat initialization from overwriting edits
+  or restoring a deleted group; existing users are not backfilled.
 
 Production frontends publish to one Vercel project: landing at `/` and the web app under `/app/`; Convex owns the backend
 HTTP endpoints. Two legacy `@convex-dev/static-hosting` instances (`landing`, `web`) still serve

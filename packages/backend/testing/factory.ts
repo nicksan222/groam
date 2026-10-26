@@ -61,8 +61,12 @@ function decodeJwtClaims(token: string): ConvexJwtClaims {
   };
 }
 
-export function createTest() {
-  const test = convexTest(schema, appModules);
+export function createTest(options: { transactionLimits?: boolean } = {}) {
+  const test = convexTest({
+    schema,
+    modules: appModules,
+    transactionLimits: options.transactionLimits ?? false
+  });
   registerBetterAuth(test);
   registerAgent(test);
   registerGeospatial(test);

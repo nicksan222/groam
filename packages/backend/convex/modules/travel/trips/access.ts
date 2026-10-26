@@ -21,19 +21,30 @@ export function assertPlanner(ctx: TripCtx): void {
 }
 
 let seedWriteDepth = 0;
+let offlineSeedWriteDepth = 0;
 
-/** Lets the local itinerary seeder write onto a shared trip in one transaction. */
-export async function withSeedWrites<T>(write: () => Promise<T>): Promise<T> {
+/** Lets trusted seeders populate a shared trip in one transaction. */
+export async function withSeedWrites<T>(
+  write: () => Promise<T>,
+  options?: { offline?: boolean }
+): Promise<T> {
   seedWriteDepth += 1;
+  if (options?.offline) offlineSeedWriteDepth += 1;
   try {
     return await write();
   } finally {
     seedWriteDepth -= 1;
+    if (options?.offline) offlineSeedWriteDepth -= 1;
   }
 }
 
 export function isSeedWrite(): boolean {
   return seedWriteDepth > 0;
+}
+
+/** Signup examples must not schedule external image lookups. Local fixtures can still do so. */
+export function isOfflineSeedWrite(): boolean {
+  return offlineSeedWriteDepth > 0;
 }
 
 export function assertMutable(ctx: TripCtx): void {
