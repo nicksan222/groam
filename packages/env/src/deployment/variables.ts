@@ -48,6 +48,10 @@ export const deploymentVariables = {
     }
   },
   github: {
+    VERCEL_TOKEN: {
+      setBy: 'you',
+      how: 'Vercel account settings → Tokens; create a token scoped to the deployment team and store it in the GitHub prod environment.'
+    },
     CONVEX_DEPLOY_KEY: {
       setBy: 'you',
       how: 'Convex dashboard → production deployment → Settings → generate a production deploy key; store it as a secret of the GitHub environment.'

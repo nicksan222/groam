@@ -59,7 +59,13 @@ test('explains hosted deployment unavailability and disables connection', async 
   ai.remote.available = false;
   ai.remote.unavailableReason = 'This hosted deployment requires approved ChatGPT plan access.';
   await render(<AiSettings />);
-  await expect.element(page.getByText(ai.remote.unavailableReason)).toBeInTheDocument();
+  await expect
+    .element(
+      page.getByText(
+        'This is a demo not yet approved to run AI workflows. Download and self-host to test agents.'
+      )
+    )
+    .toBeInTheDocument();
   await expect.element(page.getByRole('button', { name: 'Continue with ChatGPT' })).toBeDisabled();
 });
 test('shows the one-time plan usage explanation after connection', async () => {

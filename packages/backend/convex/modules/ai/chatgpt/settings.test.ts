@@ -15,7 +15,12 @@ test('requires loopback authorization and refuses arbitrary hosted origins', () 
     'invalid',
     ''
   ]) {
-    expect(chatGptAvailability(site)).toMatchObject({ available: false, redirectUri: null });
+    expect(chatGptAvailability(site)).toMatchObject({
+      available: false,
+      redirectUri: null,
+      unavailableReason:
+        'This is a demo not yet approved to run AI workflows. Download and self-host to test agents.'
+    });
   }
 });
 test('user deletion clears ChatGPT registrations and pending authorization', async () => {

@@ -14,11 +14,11 @@
 - Local development seeding is orchestrated by `tooling/seeder/src/seed-workspace.ts`
   and calls real product procedures.
 
-Two `@convex-dev/static-hosting` instances (`landing`, `web`) host the frontends on the deployment's HTTP origin:
-the landing site at `/` and the web app under `/app/`. The app owns HTTP routing (`http.ts`), so Better Auth,
-the payment webhook and the ChatGPT callback keep their URLs and win over the frontend catch-alls
-(`modules/hosting/site.ts`). On a hosted environment the frontends share the custom domain; locally they
-run on their Vite and Astro dev servers. See [deployment](../../../docs/deployment.md) for setup and release steps.
+Production frontends publish to one Vercel project: landing at `/` and the web app under `/app/`; Convex owns the backend
+HTTP endpoints. Two legacy `@convex-dev/static-hosting` instances (`landing`, `web`) still serve
+previously uploaded assets at `/` and `/app/` during cutover. They no longer receive releases.
+Better Auth, the payment webhook, and ChatGPT callback keep their Convex URLs and take precedence
+over those legacy catch-alls. See [deployment](../../../docs/deployment.md).
 
 ## Procedure convention
 

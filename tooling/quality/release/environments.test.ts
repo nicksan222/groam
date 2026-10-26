@@ -30,10 +30,7 @@ describe('release environments', () => {
       'a regional Convex URL',
       (production) => (production.convexUrl = 'https://pastel-ocelot-555.eu-west-1.convex.cloud')
     ],
-    [
-      'an unconfigured host, served from the deployment origin',
-      (production) => (production.host = '')
-    ],
+    ['an unconfigured host (preflight rejects it)', (production) => (production.host = '')],
     ['a custom domain', (production) => (production.host = 'groam.app')],
     ['a bare sender address', (production) => (production.emailFrom = 'noreply@groam.app')]
   ])('accepts %s', (_, change) => {
@@ -56,7 +53,8 @@ describe('release environments', () => {
     ['a host with a path', (production) => (production.host = 'groam.example/app')],
     ['a missing host', (production) => Reflect.deleteProperty(production, 'host')],
     ['a separate web host', (production) => (production.web = { host: 'app.groam.app' })],
-    ['an unknown setting', (production) => (production.siteUrl = 'https://app.groam.app')]
+    ['an unknown setting', (production) => (production.siteUrl = 'https://app.groam.app')],
+    ['a malformed project ID', (production) => (production.vercelProjectId = '../project')]
   ])('rejects %s', (_, change) => {
     expect(schema.safeParse(withProduction(change)).success).toBe(false);
   });

@@ -2,7 +2,9 @@
   "name": "@groam/deploy",
   "version": "0.0.0",
   "exports": {
-    "./environments": "./environments.json"
+    "./environments": "./environments.json",
+    "./vercel": "./prepare-vercel.ts",
+    "./publish-vercel": "./publish-vercel.ts"
   },
   "license": "MIT",
   "private": true,

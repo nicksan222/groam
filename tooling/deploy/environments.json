@@ -2,7 +2,9 @@
   "$schema": "./environments.schema.json",
   "production": {
     "convexUrl": "https://pastel-ocelot-555.eu-west-1.convex.cloud",
-    "host": "",
-    "emailFrom": "Groam <noreply@groam.app>"
+    "emailFrom": "Groam <noreply@groam.app>",
+    "host": "groam.vercel.app",
+    "vercelOrgId": "team_Dw6yA5oLvrbFabgtybBdSP2X",
+    "vercelProjectId": "prj_ewWJ1a9vH4cqEAdaTKXk5eX42ZVh"
   }
 }

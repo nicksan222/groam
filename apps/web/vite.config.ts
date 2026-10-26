@@ -40,8 +40,8 @@ const testConfig = createWebVitestConfig(import.meta.dirname, {
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
-  // The release hosts the app under a path (`/app/`); locally it stays at the root. `loadEnv`
-  // reads the prefixed variable from the shell without a raw `process.env` access.
+  // Production serves the app under `/app/`; locally it stays at the root. `loadEnv` reads the
+  // prefixed variable from the shell without a raw `process.env` access.
   const { STATIC_HOSTING_BASE_PATH: base = '/' } = loadEnv(
     mode,
     path.resolve(import.meta.dirname, '../..'),

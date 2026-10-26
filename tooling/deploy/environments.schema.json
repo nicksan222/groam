@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://groam.app/schemas/deploy-environments.json",
   "title": "Groam release environments",
-  "description": "Public settings for the hosted environment. Secrets never go here; they live in the matching GitHub environment. An empty convexUrl or emailFrom means not configured yet; `just deploy preflight` rejects it. An empty host is valid.",
+  "description": "Public production destinations and Vercel project IDs. Empty values mark unfinished setup; release preflight rejects them. Secrets live in the GitHub prod environment.",
   "type": "object",
   "properties": {
     "$schema": {
@@ -23,18 +23,28 @@
           "type": "string",
           "pattern": "^$|^https://[a-z0-9]+(-[a-z0-9]+)*(\\.[a-z]{2}-[a-z]+-[0-9]+)?\\.convex\\.cloud$"
         },
-        "host": {
-          "description": "Optional custom domain attached to the Convex deployment (intended: groam.app). Empty means the release serves from the deployment's own HTTP origin (the convexUrl with .convex.cloud replaced by .convex.site). When set it must be a bare hostname, never a Convex one; it serves the landing site at / and the web app at /app/.",
-          "type": "string",
-          "pattern": "^$|^(?!.*\\.convex\\.(site|cloud)$)[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$"
-        },
         "emailFrom": {
           "description": "Sender of authentication mail, optionally with a display name; Resend sends from it, so its domain must be verified there.",
           "type": "string",
           "pattern": "^$|^(?!.*\\.(localhost|example)>?$)([^<>@]+ <[^<>\\s@]+@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)+>|[^<>\\s@]+@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)+)$"
+        },
+        "host": {
+          "description": "Bare production hostname assigned to the Vercel project. Empty until configured.",
+          "type": "string",
+          "pattern": "^$|^(?!.*\\.convex\\.(site|cloud)$)[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$"
+        },
+        "vercelOrgId": {
+          "description": "Vercel team/account ID.",
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_]*$"
+        },
+        "vercelProjectId": {
+          "description": "Vercel project ID (prj_\u2026).",
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_]*$"
         }
       },
-      "required": ["convexUrl", "host", "emailFrom"],
+      "required": ["convexUrl", "emailFrom", "host", "vercelOrgId", "vercelProjectId"],
       "additionalProperties": false
     }
   }

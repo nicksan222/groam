@@ -115,7 +115,7 @@ Source: [`packages/env/README.md`](../../../packages/env/README.md),
 ## HTTP router composition and auth origins
 
 The Convex HTTP router serves backend HTTP endpoints: Better Auth routes and
-the ChatGPT OAuth callback. After those routes, `registerSiteRoutes` adds the frontend catch-alls: the web SPA under `/app/` and the
+the ChatGPT OAuth callback. After those routes, `registerSiteRoutes` retains legacy frontend catch-alls during the Vercel cutover: the web SPA under `/app/` and the
 landing site at `/` (longer and exact routes win). Better Auth trusts the `SITE_URL` origin; when either `SITE_URL` or `CONVEX_SITE_URL`
 is local, it also trusts the Vite origins on ports 5173 (app) and 5174
 (journeys) for `localhost`, `127.0.0.1` and `[::1]`.
@@ -149,28 +149,26 @@ its fail-closed opt-in
 
 The release checks out the immutable tested `github.sha` and installs the
 lockfile. Immediately before publishing, it verifies that the SHA is still the
-remote `main` tip. `just deploy release production` checks the publisher, the clean checkout,
-It runs the Convex environment preflight, deploys the Convex backend
-with the production-scoped `CONVEX_DEPLOY_KEY`, and then runs
-builds the landing site and the web app, and uploads each with the static-hosting CLI
-into its component instance (`landing`, `web`). The web app uses SPA fallback, the landing
-site its 404 page. Builds receive public destinations only; the deploy key reaches only the
-Convex and upload commands. Production
-jobs are serialized and never cancel one another.
+remote `main` tip. `just deploy release production` checks the publisher and clean checkout,
+runs preflight for Convex and the Vercel project, deploys the backend, and builds both frontends
+without release credentials. It packages only public `dist` assets as Vercel Build Output API v3
+and uploads the combined artifact through Vercel's REST API. The web app has SPA fallback under
+`/app/`; landing directory pages have explicit routes and unknown paths return 404. Production jobs are
+serialized and never cancel one another. Publications are sequential, not atomic.
 
 ```sh
 # CI push-main or manual Release main
 uses test-reusable.yml
 uses release.yml
   production: git ls-remote … ; bunx just deploy release production
-# tooling/deploy/justfile: convex deploy, then build and `static-hosting upload`
-# for apps/landing and then apps/web
+# tooling/deploy/justfile: convex deploy, build both apps, publish one Vercel artifact
 ```
 
-Production's public settings (Convex URL, optional custom domain, mail sender) live in [`environments.json`](../../../tooling/deploy/environments.json). The release sets Convex `SITE_URL` (`https://<host>/app`, or the deployment's `.convex.site` origin while `host` is empty) and
-`AUTH_EMAIL_FROM`, and generates `BETTER_AUTH_SECRET` once if it is missing. The backend HTTP origin is derived
-from the Convex URL. The GitHub `prod` environment holds only `CONVEX_DEPLOY_KEY`. See the [deployment runbook](../../deployment.md) for
-the exact setup and operating procedure.
+Production's public Convex URL, frontend host, Vercel IDs, and mail sender live in
+[`environments.json`](../../../tooling/deploy/environments.json). The release sets Convex `SITE_URL`
+to `https://<host>/app` and `AUTH_EMAIL_FROM`, generating `BETTER_AUTH_SECRET` only when absent.
+The backend HTTP origin is derived from the Convex URL. GitHub's `prod` environment holds
+`CONVEX_DEPLOY_KEY` and `VERCEL_TOKEN`. See the [deployment runbook](../../deployment.md).
 
 Source: [`ci.yml`](../../../.github/workflows/ci.yml),
 [`release.yml`](../../../.github/workflows/release.yml),

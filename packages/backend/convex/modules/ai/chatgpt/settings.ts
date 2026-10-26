@@ -1,3 +1,4 @@
+import { AI_DEMO_NOTICE } from '@groam/ai/backend/errors';
 import { ConvexError } from 'convex/values';
 import type { Id } from '#convex-generated/dataModel';
 import { env, type MutationCtx, type QueryCtx } from '#convex-generated/server';
@@ -25,8 +26,7 @@ export function chatGptAvailability(siteUrl: string | undefined = env.CONVEX_SIT
   }
   return {
     available: false,
-    unavailableReason:
-      'ChatGPT plan usage on a shared hosted service requires OpenAI-approved access. Connect from a local development backend until this deployment is supported.',
+    unavailableReason: AI_DEMO_NOTICE,
     redirectUri: null
   };
 }

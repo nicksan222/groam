@@ -17,11 +17,10 @@ independent of network services.
 
 ## Hosting and configuration
 
-Convex static hosting (`@convex-dev/static-hosting`) is the sole production frontend host. One Convex
-deployment per environment serves both frontends from one custom-domain origin: the Astro landing site
-(`apps/landing`, static output) at `/`, and the web app (`apps/web`) under `/app/`. Convex also serves
-application procedures and backend HTTP routes, including authentication and external authorization
-callbacks, which keep their URLs.
+One Vercel project serves the Astro landing site at `/` and the web SPA under `/app/` on the same
+origin. Convex serves application procedures and backend HTTP routes, including
+authentication and external authorization callbacks. Legacy Convex static-hosting assets remain
+available during cutover but no longer receive release uploads.
 During development, `vp dev` serves the application at the root of
 `localhost:5173`, separately from the local backend and the landing site on
 `localhost:4321`.

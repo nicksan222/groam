@@ -1,3 +1,4 @@
+import { AI_DEMO_NOTICE } from '@groam/ai/backend/errors';
 import { ConvexError } from 'convex/values';
 import {
   ChatGptAuthorizationError,
@@ -21,7 +22,7 @@ export async function beginChatGptConnection(
 ): Promise<{ authorizationUrl: string }> {
   const availability = chatGptAvailability();
   if (!availability.redirectUri)
-    throw new ConvexError(availability.unavailableReason ?? 'ChatGPT is unavailable.');
+    throw new ConvexError(availability.unavailableReason ?? AI_DEMO_NOTICE);
   const prepared = await ctx.runMutation(storage.prepare, {
     userId,
     ...(connectionId ? { connectionId } : {}),
@@ -59,8 +60,7 @@ export async function usableChatGptConnection(
   userId: string,
   connectionId?: Id<'chatgptConnections'>
 ): Promise<UsableChatGptConnection> {
-  if (!chatGptAvailability().available)
-    throw new ConvexError('ChatGPT plan usage is unavailable on this hosted deployment.');
+  if (!chatGptAvailability().available) throw new ConvexError(AI_DEMO_NOTICE);
   for (let attempt = 0; attempt < 25; attempt++) {
     const record = await ctx.runQuery(storage.connection, {
       userId,

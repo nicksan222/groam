@@ -62,3 +62,17 @@ test.each([false, true])(
     expect(protocol.revoke).not.toHaveBeenCalled();
   }
 );
+
+test('hosted agent requests explain the demo restriction before accessing a connection', async () => {
+  vi.stubEnv('CONVEX_SITE_URL', 'https://groam.example');
+  try {
+    const { ctx, runMutation } = context();
+    await expect(usableChatGptConnection(ctx, 'owner')).rejects.toThrow(
+      'This is a demo not yet approved to run AI workflows. Download and self-host to test agents.'
+    );
+    expect(ctx.runQuery).not.toHaveBeenCalled();
+    expect(runMutation).not.toHaveBeenCalled();
+  } finally {
+    vi.unstubAllEnvs();
+  }
+});

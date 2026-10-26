@@ -94,7 +94,7 @@ test('connect is refused on hosted deployments without contacting OpenAI', async
   const { owner } = await setupGroup();
   vi.stubEnv('CONVEX_SITE_URL', 'https://groam.example');
   await expect(owner.client.action(api.routes.settings.ai.connect.run, {})).rejects.toThrow(
-    'OpenAI-approved access'
+    'This is a demo not yet approved to run AI workflows. Download and self-host to test agents.'
   );
   expect(protocol.create).not.toHaveBeenCalled();
 });

@@ -5,6 +5,9 @@ export const DEFAULT_ASSISTANT_FAILURE =
 
 export const CHATGPT_RECONNECT = 'Reconnect ChatGPT in Settings → AI to continue using your plan.';
 
+export const AI_DEMO_NOTICE =
+  'This is a demo not yet approved to run AI workflows. Download and self-host to test agents.';
+
 const PROVIDER_PREFIX = 'The model provider said: ';
 const MAX_FORWARDED_MESSAGE = 400;
 
@@ -115,6 +118,7 @@ function sanitizeFailureMessage(text: string): string | null {
 
 function isGroamAuthored(message: string): boolean {
   return (
+    message === AI_DEMO_NOTICE ||
     message.startsWith('Groam AI') ||
     message.startsWith(PROVIDER_PREFIX) ||
     message.startsWith('ChatGPT') ||

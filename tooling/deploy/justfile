@@ -1,4 +1,4 @@
-# Releases the production environment: Convex first, then the landing site (at /) and the web app (under /app/) uploaded to Convex static hosting.
+# Releases production: Convex backend, then prebuilt landing and web sites on Vercel.
 # From the repo root: `just deploy setup`, `just deploy preflight production`. CI runs `release`.
 
 set shell := ["bash", "-euo", "pipefail", "-c"]
@@ -65,11 +65,13 @@ preflight environment:
       problems+=("CONVEX_DEPLOY_KEY is not a production key for $convex_url.")
     fi
 
-    # With a custom domain, the smoke checks fetch https://<host>/, so it must already be attached.
-    # Without one, the deployment's own origin serves the sites and exists as soon as Convex does.
-    if [[ -n $host ]] && ! curl -fsS --max-time 15 -o /dev/null "https://$host/" 2>/dev/null; then
-      warning="https://$host/ is unreachable: the custom domain may not be attached to the Convex deployment yet, and the release smoke checks will fail until it is."
-      if [[ ${GITHUB_ACTIONS:-} == true ]]; then echo "::warning::$warning"; else echo "warning: $warning" >&2; fi
+    # Verify the token can access the frontend project before changing the backend.
+    if [[ -n ${VERCEL_TOKEN:-} ]]; then
+      if ! curl -fsS --max-time 20 -o /dev/null \
+        -H "Authorization: Bearer $VERCEL_TOKEN" \
+        "https://api.vercel.com/v9/projects/$vercel_project_id?teamId=$vercel_org_id"; then
+        problems+=("VERCEL_TOKEN cannot access project $vercel_project_id in $vercel_org_id.")
+      fi
     fi
 
     if (( ${#problems[@]} )); then
@@ -80,7 +82,7 @@ preflight environment:
     fi
     echo "{{ environment }} has everything it needs to release."
 
-# Publish Convex, then landing, then web. Not atomic: a later failure leaves earlier ones live.
+# Publish Convex, then Vercel landing and web. A later failure leaves earlier publications live.
 release environment: _trusted-publisher (preflight environment)
     #!/usr/bin/env bash
     set -euo pipefail
@@ -96,7 +98,7 @@ release environment: _trusted-publisher (preflight environment)
     [[ "$(git rev-parse HEAD)" == "$GITHUB_SHA" ]] || { echo "Deploy checkout does not match the tested commit." >&2; exit 1; }
     assert_clean
 
-    # SITE_URL follows the web app's URL (https://<host or deployment origin>/app) and AUTH_EMAIL_FROM the environment's emailFrom;
+    # SITE_URL follows the Vercel web origin and AUTH_EMAIL_FROM the environment's emailFrom;
     # BETTER_AUTH_SECRET is generated once, never replaced or printed.
     names="$(convex env list --prod --names-only | tr -s '[:space:]' '\n')"
     if ! grep -qx SITE_URL <<<"$names" || [[ "$(convex env get SITE_URL --prod)" != "$site_url" ]]; then
@@ -110,30 +112,31 @@ release environment: _trusted-publisher (preflight environment)
     fi
     convex deploy --typecheck-components --codegen disable --message "GitHub {{ environment }} main $GITHUB_SHA"
 
-    # Builds receive public destinations, never Convex's key. Each site is built first, then
-    # uploaded to its static-hosting component instance (see packages/backend/convex/http.ts):
-    # the landing site is a multi-page site (--no-spa: unknown paths 404), the web app a SPA
-    # served under /app/. The key-bearing upload runs only after both builds succeeded.
+    # Builds receive only public destinations. Upload only the prebuilt output afterwards.
     build() {
       (
         cd "apps/$1"
+        base=/
+        [[ $1 == web ]] && base=/app/
         export PATH="$PWD/node_modules/.bin:{{ root }}/node_modules/.bin:$PATH"
-        env -u CONVEX_DEPLOY_KEY -u CONVEX_DEPLOYMENT \
+        env -u CONVEX_DEPLOY_KEY -u CONVEX_DEPLOYMENT -u VERCEL_TOKEN \
           VITE_CONVEX_URL="$convex_url" \
           VITE_CONVEX_SITE_URL="$backend_site_url" \
           VITE_SITE_URL="$site_url" \
           VITE_LANDING_URL="$landing_url" \
           LANDING_SITE_URL="$landing_url/" \
-          STATIC_HOSTING_BASE_PATH="$2" \
+          STATIC_HOSTING_BASE_PATH="$base" \
           ASTRO_TELEMETRY_DISABLED=1 \
           bun run build
       )
     }
+    staging="$(mktemp -d)"
+    trap 'rm -rf "$staging"' EXIT
     upload() {
-      # The CLI resolves the Convex CLI from the working directory, so it runs from the root.
-      convex_env=(env -u CONVEX_DEPLOYMENT CONVEX_AGENT_MODE=anonymous)
-      "${convex_env[@]}" node packages/backend/node_modules/.bin/static-hosting upload \
-        --prod --component "$1" --dist "apps/$1/dist" "${@:2}"
+      bun tooling/deploy/prepare-vercel.ts apps/landing/dist apps/web/dist "$staging" \
+        "$vercel_project_id" "$vercel_org_id"
+      printf %s "$VERCEL_TOKEN" | env -u CONVEX_DEPLOY_KEY -u CONVEX_DEPLOYMENT -u VERCEL_TOKEN \
+        bun tooling/deploy/publish-vercel.ts "$staging"
     }
     smoke() {
       curl -fsS --retry 3 --retry-delay 5 --retry-all-errors --max-time 30 -o /dev/null "$1" ||
@@ -146,14 +149,15 @@ release environment: _trusted-publisher (preflight environment)
         { echo "Smoke check failed: $site_url/ did not respond after deploying web." >&2; exit 1; }
       asset="$(grep -oE '/app/assets/[^"'"'"' <>]+\.js' <<<"$html" | head -n 1 || true)"
       [[ -n $asset ]] || { echo "Smoke check failed: $site_url/ references no /app/assets/*.js bundle." >&2; exit 1; }
-      smoke "$landing_url$asset" "web (asset $asset)"
+      smoke "https://$host$asset" "web (asset $asset)"
     }
-    build landing /
-    build web /app/
-    upload landing --no-spa
+    build landing
+    build web
+    upload
     smoke "$landing_url/" landing
-    upload web --spa
     smoke "$site_url/" web
+    smoke "$site_url/settings/ai" "web deep link"
+    smoke "$landing_url/it/" "localized landing"
     smoke_web_assets
 
     assert_clean
@@ -190,14 +194,18 @@ _target environment:
       problems+=("convexUrl must be the Convex production deployment URL (https://<name>.convex.cloud).")
     fi
 
-    # Both sites share one origin: the optional custom domain attached to the Convex deployment
-    # (host), else the deployment's own HTTP origin (empty host means "use the deployment origin").
     host="$(setting host)"
-    if [[ -n $host && ( ! $host =~ ^$label(\.$label)+$ || $host =~ \.convex\.(site|cloud)$ ) ]]; then
-      problems+=("host \"$host\" must be empty or a bare custom domain attached to the Convex deployment, not a .convex.* address.")
+    if [[ ! $host =~ ^$label(\.$label)+$ || $host =~ \.convex\.(site|cloud)$ ]]; then
+      problems+=("host must be a production hostname assigned to the Vercel project (without a scheme or path).")
     fi
-    origin=
-    if [[ -n $host ]]; then origin="https://$host"; elif [[ -n ${backend_site_url:-} ]]; then origin="$backend_site_url"; fi
+    for key in vercelOrgId vercelProjectId; do
+      value="$(setting "$key")"
+      [[ $value =~ ^[A-Za-z0-9_]+$ ]] || problems+=("$key must be the Vercel ID from project settings.")
+      case "$key" in
+        vercelOrgId) vercel_org_id="$value" ;;
+        vercelProjectId) vercel_project_id="$value" ;;
+      esac
+    done
 
     # Resend sends from this address, so it must be a real one on a verified domain.
     email_from="$(setting emailFrom)"
@@ -211,10 +219,10 @@ _target environment:
       printf '%s\n' "${problems[@]}" >&2
       exit 1
     fi
-    for name in convex_url deployment_name backend_site_url host email_from; do
+    for name in convex_url deployment_name backend_site_url host vercel_org_id vercel_project_id email_from; do
       printf '%s=%q\n' "$name" "${!name}"
     done
-    printf 'site_url=%q\nlanding_url=%q\n' "$origin/app" "$origin"
+    printf 'site_url=%q\nlanding_url=%q\n' "https://$host/app" "https://$host"
 
 # The variables of one store (github, convex) still missing, given the names present.
 [private]

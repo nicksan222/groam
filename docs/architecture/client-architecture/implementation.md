@@ -65,8 +65,8 @@ Source: [`app.tsx`](../../../apps/web/src/app.tsx#L30),
 
 `apps/web/src/routes/route-tree.tsx` builds the route tree: `$tripId` is a param, the
 pathless `workspace` route wraps every product page in `WorkspaceLayout` without adding a URL
-segment, and each page in `apps/web/pages/(workspace)/*.tsx` (imported through `#pages/*`) is lazy-loaded. Convex static hosting serves
-`index.html` for every path under `/app/`, so the browser mounts a client-only shell. Layout routes (such as
+segment, and each page in `apps/web/pages/(workspace)/*.tsx` (imported through `#pages/*`) is lazy-loaded. Vercel serves
+`index.html` for client routes under `/app/`, so the browser mounts a client-only shell. Layout routes (such as
 `chat`) stay mounted while their pages change, and the router enables view transitions through
 `defaultViewTransition`.
 

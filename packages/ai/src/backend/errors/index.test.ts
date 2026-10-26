@@ -7,6 +7,11 @@ import {
 } from './index';
 
 describe('assistantFailureMessage', () => {
+  test('preserves the hosted demo notice in persisted agent failures', () => {
+    const notice =
+      'This is a demo not yet approved to run AI workflows. Download and self-host to test agents.';
+    expect(assistantFailureMessage(new Error(notice))).toBe(notice);
+  });
   test('keeps opaque SDK failures safe', () => {
     expect(assistantFailureMessage(new Error('An error occurred.'))).toBe(
       DEFAULT_ASSISTANT_FAILURE

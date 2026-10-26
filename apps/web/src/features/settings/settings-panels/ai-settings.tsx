@@ -1,3 +1,4 @@
+import { AI_DEMO_NOTICE } from '@groam/ai/backend/errors';
 import { Sparkles } from '@groam/icons';
 import { Button } from '@groam/ui/components/button';
 import { FormFeedback } from '@groam/ui/components/form-feedback';
@@ -27,17 +28,16 @@ export function AiSettings() {
   return (
     <SettingsPanel>
       <SettingsPanelHeading
-        description="Sign in with ChatGPT to authorize eligible AI requests using your plan."
+        description={
+          remote.available
+            ? 'Sign in with ChatGPT to authorize eligible AI requests using your plan.'
+            : 'AI workflows are disabled in this demo.'
+        }
         icon={Sparkles}
         title="ChatGPT"
       />
       <div className="grid gap-6">
-        {!remote.available ? (
-          <MutedCopy role="status">
-            {remote.unavailableReason ??
-              'ChatGPT plan access is not available for this deployment.'}
-          </MutedCopy>
-        ) : null}
+        {!remote.available ? <MutedCopy role="status">{AI_DEMO_NOTICE}</MutedCopy> : null}
         <div className="grid gap-4">
           {remote.connections.length > 0 ? (
             <div className="grid gap-3">
