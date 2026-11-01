@@ -2,11 +2,11 @@
   "name": "@groam/env",
   "version": "0.0.0",
   "dependencies": {
-    "envalid": "^8.1.0"
+    "envalid": "^9.0.0"
   },
   "devDependencies": {
     "@groam/typescript-config": "workspace:*",
-    "@types/node": "^26.6.3",
+    "@types/node": "^26.6.6",
     "typescript": "~7.0.2",
     "vite": "catalog:",
     "vite-plus": "catalog:"

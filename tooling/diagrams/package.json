@@ -3,12 +3,12 @@
   "description": "Render the Excalidraw sources under docs/ to committed SVG files.",
   "version": "0.0.0",
   "dependencies": {
-    "@excalidraw/utils": "0.1.5",
-    "playwright": "^1.63.0"
+    "@excalidraw/utils": "0.1.8",
+    "playwright": "^1.64.1"
   },
   "devDependencies": {
     "@groam/typescript-config": "workspace:*",
-    "@types/node": "^26.6.3",
+    "@types/node": "^26.6.6",
     "typescript": "~7.0.2"
   },
   "license": "MIT",
