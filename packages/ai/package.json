@@ -2,13 +2,13 @@
   "name": "@groam/ai",
   "version": "0.0.0",
   "dependencies": {
-    "@convex-dev/agent": "^0.7.3",
+    "@convex-dev/agent": "^0.7.9",
     "@groam/icons": "workspace:*",
     "@groam/ui": "workspace:*",
-    "@json-render/core": "0.21.0",
-    "@json-render/react": "0.21.0",
-    "@json-render/shadcn": "0.21.0",
-    "convex": "^1.46.0",
+    "@json-render/core": "0.21.3",
+    "@json-render/react": "0.21.3",
+    "@json-render/shadcn": "0.21.3",
+    "convex": "^1.48.0",
     "zod": "^4.6.6"
   },
   "devDependencies": {

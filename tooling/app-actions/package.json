@@ -5,12 +5,12 @@
   "dependencies": {
     "@groam/backend": "workspace:*",
     "@groam/env": "workspace:*",
-    "convex": "^1.46.0"
+    "convex": "^1.48.0"
   },
   "devDependencies": {
     "@groam/typescript-config": "workspace:*",
     "@groam/vitest-config": "workspace:*",
-    "@types/node": "^26.6.3",
+    "@types/node": "^26.6.6",
     "typescript": "~7.0.2",
     "vite": "catalog:",
     "vite-plus": "catalog:",

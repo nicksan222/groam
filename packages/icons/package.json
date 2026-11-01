@@ -2,7 +2,7 @@
   "name": "@groam/icons",
   "version": "0.0.0",
   "dependencies": {
-    "lucide-react": "^1.48.0"
+    "lucide-react": "^1.64.0"
   },
   "devDependencies": {
     "@groam/typescript-config": "workspace:*",
